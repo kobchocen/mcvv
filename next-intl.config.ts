@@ -6,5 +6,6 @@ export default defineRouting({
   localePrefix: "always",
   pathnames: {
     "/": "/",
+    "/program": "/program",
   },
 });

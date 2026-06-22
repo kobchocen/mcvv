@@ -8,30 +8,44 @@
     "nav": {
       "register": "Přihlásit se",
       "menuLabel": "Otevřít menu",
-      "links": [
+      "closeLabel": "Zavřít menu",
+      "home": {
+        "label": "Home",
+        "href": "/"
+      },
+      "raceLabel": "Závod",
+      "raceLinks": [
         {
-          "label": "O závodě",
-          "href": "#about"
-        },
-        {
-          "label": "Trať",
-          "href": "#route"
+          "label": "Rozpis",
+          "href": "/program",
+          "description": "Termín, startovné, kategorie",
+          "icon": "clipboard-list"
         },
         {
           "label": "Termín",
-          "href": "#date"
+          "href": "#date",
+          "description": "Datum, místo a čas startu",
+          "icon": "calendar"
         },
         {
-          "label": "Info",
-          "href": "#info"
-        },
+          "label": "Trať",
+          "href": "#route",
+          "description": "Profil tratě a převýšení",
+          "icon": "route"
+        }
+      ],
+      "links": [
         {
-          "label": "Výsledky",
+          "label": "Historie",
           "href": "#results"
         },
         {
-          "label": "Galerie",
+          "label": "Fotky",
           "href": "#gallery"
+        },
+        {
+          "label": "Partneři",
+          "href": "#partners"
         }
       ]
     },
@@ -281,6 +295,83 @@
       ],
       "copyright": "© 2026 Malá cena Velké Verandy · SK Veranda Choceň",
       "made": "Vyrobeno s láskou k lesu."
+    }
+  },
+  "Program": {
+    "header": {
+      "eyebrow": "Informace · ročník 2026",
+      "title": "Rozpis závodu",
+      "lead": "Všechny praktické informace k závodu na jednom místě — termín, startovné, kategorie, příjezd i zázemí. Přečti si rozpis dříve, než vyrazíš do lesa.",
+      "meta": [
+        {
+          "label": "Ne 6. 12. 2026",
+          "icon": "calendar"
+        },
+        {
+          "label": "Choceň",
+          "icon": "map-pin"
+        },
+        {
+          "label": "4,3 km · 200 m+",
+          "icon": "route"
+        }
+      ]
+    },
+    "tocTitle": "Na této stránce",
+    "sections": [
+      {
+        "title": "Datum a čas",
+        "summary": "Neděle 6. prosince 2026",
+        "body": "Start hlavního závodu v 11:00, dětské závody od 9:30. Vyhlášení výsledků ve 13:30 v centru závodu.",
+        "icon": "calendar"
+      },
+      {
+        "title": "Centrum závodu",
+        "summary": "Sokolovna Choceň — Tyršovo náměstí 1, Choceň",
+        "body": "Prezentace, šatny i cíl jsou na jednom místě. Od centra na start je to přibližně 300 metrů.",
+        "icon": "map-pin"
+      },
+      {
+        "title": "Příjezd a parkování",
+        "summary": "Parkování u sokolovny a v okolních ulicích",
+        "body": "Prosíme závodníky, aby přijeli s rezervou. Po 10:30 bude provoz v okolí startu omezen pořadateli.",
+        "icon": "car"
+      },
+      {
+        "title": "Startovné",
+        "summary": "200 Kč předem, 300 Kč na místě",
+        "body": "Dětské závody jsou zdarma. Startovné zahrnuje čipovou časomíru, občerstvení v cíli a zázemí závodu.",
+        "icon": "wallet"
+      },
+      {
+        "title": "Kategorie",
+        "summary": "Muži, ženy, junioři a veteráni",
+        "body": "Kategorie budou vyhlášeny podle počtu přihlášených. Pořadatel si vyhrazuje právo sloučit méně obsazené kategorie.",
+        "icon": "users"
+      },
+      {
+        "title": "Prezentace a přihlášky",
+        "summary": "9:00-10:30 v centru závodu",
+        "body": "Přihlášky na místě jsou možné do naplnění kapacity. Startovní číslo a čip si vyzvedni nejpozději 30 minut před startem.",
+        "icon": "clipboard-list"
+      },
+      {
+        "title": "Tratě",
+        "summary": "Hlavní trať 4,3 km · převýšení 200 m+",
+        "body": "Lesní cesty, pěšiny, krátké prudké výběhy a technické seběhy. Dětské tratě budou vedené v okolí centra závodu.",
+        "icon": "route"
+      },
+      {
+        "title": "Zázemí a občerstvení",
+        "summary": "Šatny, WC, teplý čaj a občerstvení v cíli",
+        "body": "Po doběhu bude k dispozici teplé občerstvení. Prosíme, respektuj pokyny pořadatelů a udržuj prostor závodu čistý.",
+        "icon": "coffee"
+      }
+    ],
+    "cta": {
+      "title": "Připraven na start?",
+      "description": "Zajisti si místo na startu dalšího ročníku a doraz s časovou rezervou.",
+      "button": "Přihlásit se na závod"
     }
   },
   "LanguageSwitcher": {

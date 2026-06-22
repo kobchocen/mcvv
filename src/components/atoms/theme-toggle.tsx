@@ -36,11 +36,11 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       title={t("label")}
       onClick={toggleTheme}
       className={cn(
-        "size-9 rounded-full border border-border/60 bg-background/70 text-foreground shadow-sm transition-none hover:bg-accent hover:text-accent-foreground",
+        "size-10 rounded-[12px] border border-white/15 bg-white/8 text-white shadow-none transition-colors hover:bg-white/14 hover:text-white",
         className,
       )}
     >
-      <Icon className="size-4" />
+      <Icon className="size-[18px]" />
       <span className="sr-only">{t("label")}</span>
     </Button>
   );

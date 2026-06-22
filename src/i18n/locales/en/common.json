@@ -8,30 +8,44 @@
     "nav": {
       "register": "Register",
       "menuLabel": "Open menu",
-      "links": [
+      "closeLabel": "Close menu",
+      "home": {
+        "label": "Home",
+        "href": "/"
+      },
+      "raceLabel": "Race",
+      "raceLinks": [
         {
-          "label": "About",
-          "href": "#about"
-        },
-        {
-          "label": "Course",
-          "href": "#route"
+          "label": "Program",
+          "href": "/program",
+          "description": "Date, entry fee, categories",
+          "icon": "clipboard-list"
         },
         {
           "label": "Date",
-          "href": "#date"
+          "href": "#date",
+          "description": "Date, place, and start time",
+          "icon": "calendar"
         },
         {
-          "label": "Info",
-          "href": "#info"
-        },
+          "label": "Course",
+          "href": "#route",
+          "description": "Course profile and elevation",
+          "icon": "route"
+        }
+      ],
+      "links": [
         {
-          "label": "Results",
+          "label": "History",
           "href": "#results"
         },
         {
-          "label": "Gallery",
+          "label": "Photos",
           "href": "#gallery"
+        },
+        {
+          "label": "Partners",
+          "href": "#partners"
         }
       ]
     },
@@ -281,6 +295,83 @@
       ],
       "copyright": "© 2026 Mala cena Velke Verandy · SK Veranda Chocen",
       "made": "Made with respect for the forest."
+    }
+  },
+  "Program": {
+    "header": {
+      "eyebrow": "Information · 2026 edition",
+      "title": "Race program",
+      "lead": "All practical race information in one place: date, entry fee, categories, arrival, and facilities. Read the program before you head into the woods.",
+      "meta": [
+        {
+          "label": "Sun, Dec 6, 2026",
+          "icon": "calendar"
+        },
+        {
+          "label": "Chocen",
+          "icon": "map-pin"
+        },
+        {
+          "label": "4.3 km · 200 m+",
+          "icon": "route"
+        }
+      ]
+    },
+    "tocTitle": "On this page",
+    "sections": [
+      {
+        "title": "Date and time",
+        "summary": "Sunday, December 6, 2026",
+        "body": "The main race starts at 11:00, kids races from 9:30. The awards ceremony is planned for 13:30 in the race center.",
+        "icon": "calendar"
+      },
+      {
+        "title": "Race center",
+        "summary": "Sokolovna Chocen — Tyrsovo namesti 1, Chocen",
+        "body": "Check-in, changing rooms, and the finish are in one place. The start is roughly 300 meters from the center.",
+        "icon": "map-pin"
+      },
+      {
+        "title": "Arrival and parking",
+        "summary": "Parking by the sports hall and in nearby streets",
+        "body": "Please arrive with enough time. After 10:30, traffic near the start will be managed by organizers.",
+        "icon": "car"
+      },
+      {
+        "title": "Entry fee",
+        "summary": "CZK 200 in advance, CZK 300 on site",
+        "body": "Kids races are free. The fee includes chip timing, finish refreshments, and race facilities.",
+        "icon": "wallet"
+      },
+      {
+        "title": "Categories",
+        "summary": "Men, women, juniors, and masters",
+        "body": "Categories will be confirmed based on registrations. The organizer may merge categories with low participation.",
+        "icon": "users"
+      },
+      {
+        "title": "Check-in and registration",
+        "summary": "9:00-10:30 in the race center",
+        "body": "On-site registration is available until capacity is reached. Pick up your bib and chip no later than 30 minutes before the start.",
+        "icon": "clipboard-list"
+      },
+      {
+        "title": "Courses",
+        "summary": "Main course 4.3 km · 200 m+ elevation",
+        "body": "Forest roads, paths, short steep climbs, and technical descents. Kids courses will be marked near the race center.",
+        "icon": "route"
+      },
+      {
+        "title": "Facilities and refreshments",
+        "summary": "Changing rooms, toilets, hot tea, and finish refreshments",
+        "body": "Warm refreshments will be available after the finish. Please follow organizer instructions and keep the race area clean.",
+        "icon": "coffee"
+      }
+    ],
+    "cta": {
+      "title": "Ready to start?",
+      "description": "Secure your place on the next edition's start line and arrive with time to spare.",
+      "button": "Register for the race"
     }
   },
   "LanguageSwitcher": {

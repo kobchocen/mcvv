@@ -5,6 +5,11 @@ export type NavLink = {
   href: string;
 };
 
+export type NavMenuLink = NavLink & {
+  description: string;
+  icon: "clipboard-list" | "calendar" | "route";
+};
+
 export type StatItem = {
   value: string;
   label: string;
@@ -39,9 +44,13 @@ export type McvvHomepageContent = {
     bottom: string;
   };
   nav: {
+    home: NavLink;
+    raceLabel: string;
+    raceLinks: NavMenuLink[];
     links: NavLink[];
     register: string;
     menuLabel: string;
+    closeLabel: string;
   };
   hero: {
     kicker: string;

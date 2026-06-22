@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "wix.vscode-import-cost",
+    "EditorConfig.EditorConfig",
+    "bradlc.vscode-tailwindcss",
+    "csstools.postcss",
+    "yoavbls.pretty-ts-errors",
+    "streetsidesoftware.code-spell-checker",
+    "formulahendry.auto-rename-tag",
+    "eamodio.gitlens",
+    "PKief.material-icon-theme",
+    "GitHub.copilot",
+    "GitHub.copilot-chat"
+  ]
+}

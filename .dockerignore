@@ -1,0 +1,54 @@
+# Node & package manager artifacts
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local build output (container will have its own build)
+.next
+dist
+out
+build
+
+# Environment & secret files
+.env
+.env.*
+*.local
+
+# Docker & Git internals
+.git
+.gitignore
+.gitattributes
+.gitmodules
+.dockerignore
+
+# Editor / IDE config
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Test / coverage output
+coverage
+*.lcov
+
+# Logs
+*.log
+logs
+
+# Cache / tooling artifacts
+.cache
+.next-cache
+
+# Husky & misc scripts (not needed in the runtime image)
+.husky
+
+# Optional: documentation & examples (uncomment if you want a slimmer image)
+# docs
+# examples
+# storybook-static

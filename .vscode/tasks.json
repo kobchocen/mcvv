@@ -1,0 +1,59 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Run Next.js dev server using pnpm
+      "label": "pnpm: dev",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      // Build the Next.js app
+      "label": "pnpm: build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      // Run ESLint over the project
+      "label": "pnpm: lint",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["lint"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      // Format code with Prettier
+      "label": "pnpm: format",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["format"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

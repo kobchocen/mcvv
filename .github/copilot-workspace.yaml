@@ -1,0 +1,84 @@
+# High-level guidelines for GitHub Copilot / workspace-style agents in this repo.
+# Focus: Next.js 16, TypeScript, Tailwind v4, shadcn/ui, pnpm.
+
+workspace:
+  name: "chc-web"
+  description: >
+    Next.js 16 application using the App Router, TypeScript, Tailwind CSS v4,
+    shadcn/ui components, and pnpm as the package manager.
+
+  tech_stack:
+    runtime: "Node.js >= 20.9"
+    package_manager: "pnpm >= 10.20"
+    framework: "Next.js 16 (App Router)"
+    language: "TypeScript"
+    ui:
+      - "React 19"
+      - "Tailwind CSS 4"
+      - "shadcn/ui"
+      - "lucide-react"
+    lint_and_format:
+      - "ESLint (flat config via eslint.config.*)"
+      - "Prettier (prettier.config.mjs)"
+
+  commands:
+    dev: "pnpm dev"
+    build: "pnpm build"
+    lint: "pnpm lint"
+    format: "pnpm format"
+    # Add tests later, for example:
+    # test: "pnpm test"
+
+  layout:
+    app_directory: "app"
+    components_directory: "components"
+    ui_directory: "components/ui"
+    shared_lib_directory: "lib"
+    styles:
+      - "app/globals.css"
+      - "tailwind.config.ts"
+
+  conventions:
+    - "Use TypeScript for all new files (.ts / .tsx)."
+    - "Prefer React Server Components by default; add 'use client' only when strictly necessary."
+    - "Use shadcn/ui primitives (Button, Card, Input, Dialog, etc.) instead of raw HTML where appropriate."
+    - "Use Tailwind utility classes for layout, spacing, and typography; avoid custom CSS unless needed."
+    - "Keep components small and focused; extract reusable pieces into components/ or components/ui/."
+    - "Follow existing file/folder naming patterns (kebab-case for routes, PascalCase for components)."
+    - "Do not touch generated or build artifacts (.next, dist, out)."
+    - "Run `pnpm format` and `pnpm lint` before opening a pull request."
+
+  planning_tips:
+    feature_workflow:
+      - "When implementing a new feature, start from the relevant route in app/ and identify the affected components."
+      - "Prefer composition of smaller components over large monolithic pages."
+      - "Update types and API contracts together with the UI that consumes them."
+      - "Keep server-side data fetching close to the route (e.g. page.tsx / layout.tsx) and pass typed props down."
+
+    bugfix_workflow:
+      - "Reproduce the bug and add or adjust a test if the project has tests for the affected area."
+      - "Limit changes to the minimal set of files needed to fix the issue."
+      - "Preserve existing public APIs and props signatures unless the bug is caused by them."
+
+  context_priority:
+    high:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "eslint.config.*"
+      - "prettier.config.*"
+      - "tailwind.config.*"
+    medium:
+      - ".vscode/**"
+      - ".github/**"
+      - "tsconfig.*"
+    low:
+      - ".next/**"
+      - "dist/**"
+      - "out/**"
+      - "node_modules/**"
+
+  notes_for_ai:
+    - "When creating new UI, use existing shadcn/ui components and Tailwind classes to match the current design."
+    - "When refactoring, keep public behavior identical unless the issue explicitly requires a breaking change."
+    - "Prefer readability and explicit types over over-optimization."

@@ -1,0 +1,80 @@
+# --- CORE: normalize all text files to LF ---
+* text=auto eol=lf
+
+# --- SOURCE CODE & CONFIG (explicitly marked as text) ---
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.env   text eol=lf
+
+*.css   text eol=lf
+*.scss  text eol=lf
+*.html  text eol=lf
+*.svg   text eol=lf
+
+*.md    text eol=lf
+*.mdx   text eol=lf
+*.txt   text eol=lf
+*.ini   text eol=lf
+*.editorconfig  text eol=lf
+*.gitattributes text eol=lf
+*.gitignore     text eol=lf
+
+# --- LOCKFILES & SNAPSHOTS (should be diff-able) ---
+pnpm-lock.yaml     text eol=lf
+yarn.lock          text eol=lf
+package-lock.json  text eol=lf
+*.snap             text eol=lf
+
+# --- SHELL / SCRIPTS ---
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.cmd   text
+*.ps1   text
+
+# --- BINARY ASSETS (no diff) ---
+# images
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
+
+# fonts
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+
+# other binaries
+*.pdf   binary
+*.zip   binary
+*.gz    binary
+*.tgz   binary
+*.tar   binary
+*.7z    binary
+*.mp4   binary
+*.mp3   binary
+*.mov   binary
+*.webm  binary
+*.node  binary
+
+# --- BUILD / GENERATED ARTIFACTS (also usually in .gitignore) ---
+.next/**  binary
+out/**    binary
+dist/**   binary
+
+# Optional (for GitHub linguist, uncomment if you want):
+# dist/**  linguist-generated=true
+# .next/** linguist-generated=true

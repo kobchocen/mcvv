@@ -1,0 +1,53 @@
+# Ignore build and output directories
+.next/
+out/
+dist/
+build/
+
+# Ignore dependencies
+node_modules/
+.pnp/
+.pnp.cjs
+
+# Ignore lockfiles (not useful as context)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore environment files and secrets
+.env
+.env.*
+*.local
+
+# Ignore Git and editor configuration internals
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+*.log
+
+# Ignore OS / editor junk
+.DS_Store
+Thumbs.db
+
+# Ignore test snapshots and coverage (usually noisy)
+coverage/
+*.snap
+
+# Ignore static assets that don't help AI reasoning
+public/**/*.png
+public/**/*.jpg
+public/**/*.jpeg
+public/**/*.gif
+public/**/*.webp
+public/**/*.avif
+public/**/*.ico
+public/**/*.mp4
+public/**/*.mp3
+public/**/*.webm
+public/**/*.pdf
+
+# Ignore generated types / artifacts (adjust if you have such files)
+**/*.d.ts.map
+**/*.map

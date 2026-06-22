@@ -1,0 +1,26 @@
+# Řekneme editorům, že tohle je kořenová konfigurace
+root = true
+
+# Default nastavení pro všechny soubory
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Markdown – často chceš zachovat koncové mezery (např. ruční zalomení řádku)
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# MDX – stejné chování jako Markdown
+[*.mdx]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Makefile – musí používat taby, jinak přestanou fungovat
+[Makefile]
+indent_style = tab
+indent_size = 4

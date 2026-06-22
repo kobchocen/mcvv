@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Start Next.js dev server and debug server-side code (API routes, server components)
+      "name": "Next.js: Debug server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
+      "args": ["dev"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "runtimeArgs": ["--nolazy"],
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Attach a Chrome instance to debug client-side React code
+      "name": "Next.js: Debug client (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true
+    }
+  ],
+  "compounds": [
+    {
+      // Run both server + client debuggers at once
+      "name": "Next.js: Full-stack debug",
+      "configurations": ["Next.js: Debug server", "Next.js: Debug client (Chrome)"]
+    }
+  ]
+}

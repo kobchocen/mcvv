@@ -1,0 +1,19 @@
+{
+  "Home": {
+    "eyebrow": "Next.js + shadcn/ui starter",
+    "title": "To get started, edit the page.tsx file.",
+    "description": "Opinionated Next.js 16 boilerplate with typed routing, next-intl, and shadcn/ui primitives so you can focus on product logic.",
+    "primaryCta": "Deploy Now",
+    "secondaryCta": "Documentation",
+    "announcement": "This hero is already localized and theme-aware. Update copy or styles and ship.",
+    "localeHint": "Switch locale or theme above to see how the starter responds instantly."
+  },
+  "LanguageSwitcher": {
+    "label": "Language"
+  },
+  "ThemeToggle": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  }
+}

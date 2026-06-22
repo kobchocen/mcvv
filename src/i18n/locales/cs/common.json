@@ -1,0 +1,19 @@
+{
+  "Home": {
+    "eyebrow": "Next.js + shadcn/ui starter",
+    "title": "Chcete-li začít, upravte soubor page.tsx.",
+    "description": "Odlehčený boilerplate pro Next.js 16 s typovaným routováním, next-intl a komponentami shadcn/ui, abyste mohli řešit produkt.",
+    "primaryCta": "Nasadit nyní",
+    "secondaryCta": "Dokumentace",
+    "announcement": "Tento hero je lokalizovaný a reaguje na motiv už v základu. Stačí upravit texty nebo styly.",
+    "localeHint": "Přepnutím jazyka nebo motivu nahoře hned uvidíte, jak starter reaguje."
+  },
+  "LanguageSwitcher": {
+    "label": "Jazyk"
+  },
+  "ThemeToggle": {
+    "label": "Motiv",
+    "light": "Světlý",
+    "dark": "Tmavý"
+  }
+}

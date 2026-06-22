@@ -1,0 +1,9 @@
+# Run linters and format check before committing
+echo "Running pnpm lint..."
+pnpm lint
+
+echo "Running pnpm format:check..."
+pnpm format:check
+
+#echo "Running pnpm test..."
+#pnpm test

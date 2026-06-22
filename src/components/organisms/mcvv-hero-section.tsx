@@ -14,7 +14,7 @@ export type McvvHeroSectionProps = {
 export function McvvHeroSection({ content }: McvvHeroSectionProps) {
   return (
     <section className="relative min-h-[760px] bg-race-forest text-white lg:min-h-[820px]">
-      <Image src="/mcvv/hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
+      <Image src="/images/hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.16_0.035_150_/_0.95)_0%,oklch(0.16_0.035_150_/_0.38)_45%,oklch(0.16_0.035_150_/_0.9)_100%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.16_0.035_150_/_0.82)_0%,transparent_58%)]" />
 

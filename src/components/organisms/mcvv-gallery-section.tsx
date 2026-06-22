@@ -4,10 +4,10 @@ import { SectionHeader } from "@/components/molecules";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 const galleryImages = [
-  "/mcvv/runner-climb.jpg",
-  "/mcvv/trail-map.jpg",
-  "/mcvv/hero.jpg",
-  "/mcvv/topographic-map.jpg",
+  "/images/runner-climb.jpg",
+  "/illustrations/trail-map.jpg",
+  "/images/hero.jpg",
+  "/illustrations/topographic-map.jpg",
 ];
 
 export type McvvGallerySectionProps = {

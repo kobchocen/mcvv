@@ -55,7 +55,7 @@ export function McvvScheduleSection({ content }: McvvScheduleSectionProps) {
 
         <div className="relative min-h-[340px] overflow-hidden border border-race-line/60 bg-race-deep lg:min-h-[560px]">
           <Image
-            src="/mcvv/trail-map.jpg"
+            src="/illustrations/trail-map.jpg"
             alt=""
             fill
             sizes="(min-width: 1024px) 50vw, 100vw"

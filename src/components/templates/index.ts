@@ -1,2 +1,2 @@
-// Barrel file for templates. Re-export template-level components from here when they are added.
-export {};
+export * from "./mcvv-homepage-content";
+export * from "./mcvv-homepage-template";

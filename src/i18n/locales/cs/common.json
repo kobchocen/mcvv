@@ -1,12 +1,287 @@
 {
   "Home": {
-    "eyebrow": "Next.js + shadcn/ui starter",
-    "title": "Chcete-li začít, upravte soubor page.tsx.",
-    "description": "Odlehčený boilerplate pro Next.js 16 s typovaným routováním, next-intl a komponentami shadcn/ui, abyste mohli řešit produkt.",
-    "primaryCta": "Nasadit nyní",
-    "secondaryCta": "Dokumentace",
-    "announcement": "Tento hero je lokalizovaný a reaguje na motiv už v základu. Stačí upravit texty nebo styly.",
-    "localeHint": "Přepnutím jazyka nebo motivu nahoře hned uvidíte, jak starter reaguje."
+    "brand": {
+      "mark": "V",
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
+    },
+    "nav": {
+      "register": "Přihlásit se",
+      "menuLabel": "Otevřít menu",
+      "links": [
+        {
+          "label": "O závodě",
+          "href": "#about"
+        },
+        {
+          "label": "Trať",
+          "href": "#route"
+        },
+        {
+          "label": "Termín",
+          "href": "#date"
+        },
+        {
+          "label": "Info",
+          "href": "#info"
+        },
+        {
+          "label": "Výsledky",
+          "href": "#results"
+        },
+        {
+          "label": "Galerie",
+          "href": "#gallery"
+        }
+      ]
+    },
+    "hero": {
+      "kicker": "Tradiční lesní kros",
+      "place": "Choceň · každou první prosincovou neděli",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
+      "claim": "Lesní kros, který tě prověří v každém kopci. Krátká, intenzivní a nemilosrdná trať plná výběhů a prudkých seběhů.",
+      "primaryCta": "Přihlásit se",
+      "secondaryCta": "Propozice",
+      "tertiaryCta": "Výsledky",
+      "stats": [
+        {
+          "value": "4300",
+          "label": "m délka tratě"
+        },
+        {
+          "value": "200",
+          "label": "m převýšení"
+        },
+        {
+          "value": "4",
+          "label": "výrazné kopce"
+        },
+        {
+          "value": "4",
+          "label": "prudké seběhy"
+        }
+      ]
+    },
+    "overview": {
+      "eyebrow": "01 — O závodě",
+      "title": "Není to běh. Je to výzva.",
+      "body": [
+        "Malá cena Velké Verandy je tradiční lesní kros v srdci chocenských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
+        "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
+      ],
+      "heritage": {
+        "value": "20+",
+        "label": "ročníků tradice a stovky běžců na startu"
+      },
+      "cards": [
+        {
+          "title": "Krátký, ale brutální",
+          "description": "4300 m, které tě donutí jet naplno od startu do cíle. Žádný prostor na rozjezd."
+        },
+        {
+          "title": "Technický terén",
+          "description": "Lesní cesty, úzké pěšiny, kořeny a bahno. Trať, kde rozhoduje technika i odvaha."
+        },
+        {
+          "title": "Atmosféra a tradice",
+          "description": "Mrazivá prosincová neděle, fandící diváci a legendární výběhy. Závod s duší."
+        }
+      ]
+    },
+    "profile": {
+      "eyebrow": "02 — Trať a profil",
+      "title": "Čtyři kopce. Čtyři seběhy. Žádné výmluvy.",
+      "description": "Výškový profil tratě, který nepustí. Každý metr převýšení je znát.",
+      "axis": ["START", "1 km", "2 km", "3 km", "CÍL · 4,3 km"],
+      "points": ["1", "2", "3", "4"],
+      "stats": [
+        {
+          "title": "4 kopce",
+          "description": "Výrazné výběhy, které prověří nohy i hlavu."
+        },
+        {
+          "title": "4 prudké seběhy",
+          "description": "Technické klesání, kde rozhoduje odvaha."
+        },
+        {
+          "title": "200 m+ převýšení",
+          "description": "Nahuštěné do pouhých 4,3 kilometru."
+        },
+        {
+          "title": "Lesní povrch",
+          "description": "Cesty, pěšiny, kořeny a prosincové bahno."
+        }
+      ]
+    },
+    "schedule": {
+      "eyebrow": "03 — Termín a místo",
+      "title": "Neděle 6. prosince",
+      "items": [
+        "Každou první prosincovou neděli",
+        "Choceň · start u Velké Verandy",
+        "Start hlavního závodu v 11:00"
+      ],
+      "countdownLabel": "Do startu dalšího ročníku zbývá",
+      "countdown": [
+        {
+          "value": "187",
+          "unit": "dnů"
+        },
+        {
+          "value": "14",
+          "unit": "hodin"
+        },
+        {
+          "value": "32",
+          "unit": "minut"
+        },
+        {
+          "value": "08",
+          "unit": "sekund"
+        }
+      ],
+      "cta": "Rezervovat startovné",
+      "mapTitle": "START · CÍL",
+      "mapAddress": "Restaurace Velká Veranda, Choceň 565 01"
+    },
+    "info": {
+      "eyebrow": "04 — Informace pro závodníky",
+      "title": "Vše, co potřebuješ vědět",
+      "cards": [
+        {
+          "title": "Prezentace",
+          "description": "9:00-10:30 v cíli u Velké Verandy. Vyzvednutí čísla a čipu."
+        },
+        {
+          "title": "Start",
+          "description": "Hromadný start hlavního závodu v 11:00. Dětské závody od 10:00."
+        },
+        {
+          "title": "Kategorie",
+          "description": "Muži, ženy, veteráni i junioři. Pro každého se najde souboj."
+        },
+        {
+          "title": "Startovné",
+          "description": "200 Kč v předregistraci, 300 Kč na místě. Děti zdarma."
+        },
+        {
+          "title": "Občerstvení",
+          "description": "Horký čaj, klobása a něco ostřejšího na zahřátí v cíli."
+        },
+        {
+          "title": "Zázemí",
+          "description": "Vytápěné šatny, WC a posezení přímo ve Velké Verandě."
+        }
+      ],
+      "contactTitle": "Máš dotaz? Ozvi se pořadateli.",
+      "contactDescription": "SK Veranda Choceň · +420 777 123 456 · info@velkaveranda.cz",
+      "contactCta": "Napsat e-mail"
+    },
+    "results": {
+      "eyebrow": "05 — Výsledky a historie",
+      "title": "Generace běžců, jedna trať",
+      "allLabel": "Všechny ročníky",
+      "years": [
+        {
+          "year": "2025",
+          "label": "Ročník",
+          "winners": [
+            {
+              "category": "Muži",
+              "name": "Jan Novák",
+              "time": "15:42"
+            },
+            {
+              "category": "Ženy",
+              "name": "Eva Dvořáková",
+              "time": "18:09"
+            }
+          ],
+          "linkLabel": "Zobrazit kompletní výsledky"
+        },
+        {
+          "year": "2024",
+          "label": "Ročník",
+          "winners": [
+            {
+              "category": "Muži",
+              "name": "Petr Svoboda",
+              "time": "15:58"
+            },
+            {
+              "category": "Ženy",
+              "name": "Lucie Marková",
+              "time": "18:31"
+            }
+          ],
+          "linkLabel": "Zobrazit kompletní výsledky"
+        },
+        {
+          "year": "2023",
+          "label": "Ročník",
+          "winners": [
+            {
+              "category": "Muži",
+              "name": "Jan Novák",
+              "time": "16:04"
+            },
+            {
+              "category": "Ženy",
+              "name": "Eva Dvořáková",
+              "time": "18:50"
+            }
+          ],
+          "linkLabel": "Zobrazit kompletní výsledky"
+        }
+      ]
+    },
+    "gallery": {
+      "eyebrow": "06 — Fotogalerie",
+      "title": "Atmosféra mrazivé neděle",
+      "description": "Bahno, mlha, emoce v cíli a kopce, které tě dostanou.",
+      "alt": [
+        "Běžkyně v zimním lese stoupá po kamenité stezce.",
+        "Topografická mapa lesní tratě.",
+        "Skupina běžců v mlžném zimním lese.",
+        "Detail temné mapy trailového okruhu."
+      ]
+    },
+    "partners": {
+      "eyebrow": "07 — Partneři a pořadatelé",
+      "title": "Závod, který drží pohromadě parta nadšenců",
+      "names": ["VERANDA", "CHOCEŇ", "RUNTECH", "FOREST", "SPORTIA", "AKTIV"],
+      "organizer": "Pořádá SK Veranda Choceň ve spolupráci s městem Choceň."
+    },
+    "finalCta": {
+      "title": "Připraven na čtyři kopce?",
+      "description": "Místa mizí rychleji než síly ve čtvrtém výběhu. Zajisti si startovní číslo na další ročník.",
+      "cta": "Přihlásit se na závod"
+    },
+    "footer": {
+      "description": "Tradiční lesní kros v Chocni. 4300 metrů, 200 metrů převýšení a charakter, který si zapamatuješ.",
+      "columns": [
+        {
+          "title": "Závod",
+          "links": ["O závodě", "Trať a profil", "Termín a místo", "Informace"]
+        },
+        {
+          "title": "Výsledky",
+          "links": ["Aktuální ročník", "Archiv výsledků", "Historie závodu", "Fotogalerie"]
+        },
+        {
+          "title": "Kontakt",
+          "links": [
+            "SK Veranda Choceň",
+            "info@velkaveranda.cz",
+            "+420 777 123 456",
+            "Choceň 565 01"
+          ]
+        }
+      ],
+      "copyright": "© 2026 Malá cena Velké Verandy · SK Veranda Choceň",
+      "made": "Vyrobeno s láskou k lesu."
+    }
   },
   "LanguageSwitcher": {
     "label": "Jazyk"

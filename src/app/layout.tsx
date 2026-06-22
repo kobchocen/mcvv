@@ -1,33 +1,34 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Oswald } from "next/font/google";
 
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const oswald = Oswald({
+  variable: "--font-oswald",
+  subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Next Starter Boilerplate",
-  description: "Production-ready Next.js starter with i18n, theming, and component primitives.",
+  title: "Malá cena Velké Verandy",
+  description: "Tradiční zimní lesní kros v Chocni.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={cn(
-          geistSans.variable,
-          geistMono.variable,
+          inter.variable,
+          oswald.variable,
           "min-h-screen bg-background font-sans text-foreground antialiased",
         )}
       >

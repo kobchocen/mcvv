@@ -1,18 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { Check, Languages } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { localeLabels, type Locale, usePathname, useRouter } from "@/i18n/routing";
+import { locales, localeLabels, type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export type LanguageSwitcherProps = {
   className?: string;
@@ -24,41 +26,53 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const pathname = usePathname();
   const t = useTranslations("LanguageSwitcher");
 
-  const options = useMemo(() => Object.entries(localeLabels) as [Locale, string][], []);
-
-  const handleChange = (nextLocale: string) => {
-    router.replace({ pathname }, { locale: nextLocale as Locale });
+  const handleChange = (nextLocale: Locale) => {
+    if (nextLocale === locale) return;
+    router.replace({ pathname }, { locale: nextLocale });
   };
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-2 py-1 shadow-sm",
-        className,
-      )}
-    >
-      <span className="pl-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {t("label")}
-      </span>
-      <Select value={locale} onValueChange={handleChange}>
-        <SelectTrigger className="min-w-[130px] rounded-full border-none bg-transparent px-2 py-1 text-sm font-medium text-foreground">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent
-          align="end"
-          className="min-w-[140px] rounded-xl border border-border/60 shadow-xl"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={t("label")}
+          title={t("label")}
+          className={cn(
+            "size-9 rounded-full border border-border/60 bg-background/70 text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground",
+            className,
+          )}
         >
-          {options.map(([value, label]) => (
-            <SelectItem
+          <Languages className="size-4" />
+          <span className="sr-only">{t("label")}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44 rounded-xl" sideOffset={8}>
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <Languages className="size-4" />
+          {t("label")}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {locales.map((value) => {
+          const isSelected = value === locale;
+
+          return (
+            <DropdownMenuItem
               key={value}
-              value={value}
-              className="rounded-lg py-2 text-sm font-medium text-foreground data-[state=checked]:bg-primary/10"
+              onClick={() => handleChange(value)}
+              className={cn(
+                "flex cursor-pointer items-center gap-3 rounded-lg py-2",
+                isSelected && "bg-accent text-accent-foreground",
+              )}
             >
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+              <span className="min-w-0 flex-1 truncate font-medium">{localeLabels[value]}</span>
+              {isSelected && <Check className="size-4 text-accent-foreground" />}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

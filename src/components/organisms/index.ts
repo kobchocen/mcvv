@@ -1,2 +1,10 @@
-// Barrel file for organism components. Extend this file as the design system evolves.
-export {};
+export * from "./mcvv-final-cta-section";
+export * from "./mcvv-footer";
+export * from "./mcvv-gallery-section";
+export * from "./mcvv-hero-section";
+export * from "./mcvv-info-section";
+export * from "./mcvv-overview-section";
+export * from "./mcvv-partners-section";
+export * from "./mcvv-profile-section";
+export * from "./mcvv-results-section";
+export * from "./mcvv-schedule-section";

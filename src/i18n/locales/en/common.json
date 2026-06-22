@@ -1,12 +1,287 @@
 {
   "Home": {
-    "eyebrow": "Next.js + shadcn/ui starter",
-    "title": "To get started, edit the page.tsx file.",
-    "description": "Opinionated Next.js 16 boilerplate with typed routing, next-intl, and shadcn/ui primitives so you can focus on product logic.",
-    "primaryCta": "Deploy Now",
-    "secondaryCta": "Documentation",
-    "announcement": "This hero is already localized and theme-aware. Update copy or styles and ship.",
-    "localeHint": "Switch locale or theme above to see how the starter responds instantly."
+    "brand": {
+      "mark": "V",
+      "top": "MALA CENA",
+      "bottom": "VELKE VERANDY"
+    },
+    "nav": {
+      "register": "Register",
+      "menuLabel": "Open menu",
+      "links": [
+        {
+          "label": "About",
+          "href": "#about"
+        },
+        {
+          "label": "Course",
+          "href": "#route"
+        },
+        {
+          "label": "Date",
+          "href": "#date"
+        },
+        {
+          "label": "Info",
+          "href": "#info"
+        },
+        {
+          "label": "Results",
+          "href": "#results"
+        },
+        {
+          "label": "Gallery",
+          "href": "#gallery"
+        }
+      ]
+    },
+    "hero": {
+      "kicker": "Traditional forest cross",
+      "place": "Chocen · every first Sunday in December",
+      "titleLine1": "MALA CENA",
+      "titleLine2": "VELKE VERANDY",
+      "claim": "A forest cross that tests you on every climb. Short, intense, and unforgiving, with steep uphills and fast technical descents.",
+      "primaryCta": "Register",
+      "secondaryCta": "Race details",
+      "tertiaryCta": "Results",
+      "stats": [
+        {
+          "value": "4300",
+          "label": "m course length"
+        },
+        {
+          "value": "200",
+          "label": "m elevation gain"
+        },
+        {
+          "value": "4",
+          "label": "major climbs"
+        },
+        {
+          "value": "4",
+          "label": "steep descents"
+        }
+      ]
+    },
+    "overview": {
+      "eyebrow": "01 — About",
+      "title": "It is not a run. It is a challenge.",
+      "body": [
+        "Mala cena Velke Verandy is a traditional forest cross in the heart of the Chocen woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
+        "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
+      ],
+      "heritage": {
+        "value": "20+",
+        "label": "editions of tradition and hundreds of runners on the start line"
+      },
+      "cards": [
+        {
+          "title": "Short, but brutal",
+          "description": "4300 m that force you to go hard from start to finish. No space for a gentle warm-up."
+        },
+        {
+          "title": "Technical terrain",
+          "description": "Forest roads, narrow paths, roots, and mud. A course where technique and courage matter."
+        },
+        {
+          "title": "Atmosphere and tradition",
+          "description": "A cold December Sunday, cheering spectators, and legendary climbs. A race with soul."
+        }
+      ]
+    },
+    "profile": {
+      "eyebrow": "02 — Course and profile",
+      "title": "Four climbs. Four descents. No excuses.",
+      "description": "An elevation profile that never lets go. Every meter of climbing is noticeable.",
+      "axis": ["START", "1 km", "2 km", "3 km", "FINISH · 4.3 km"],
+      "points": ["1", "2", "3", "4"],
+      "stats": [
+        {
+          "title": "4 climbs",
+          "description": "Clear uphill sections that test your legs and your head."
+        },
+        {
+          "title": "4 steep descents",
+          "description": "Technical downhill running where confidence matters."
+        },
+        {
+          "title": "200 m+ elevation",
+          "description": "Packed into only 4.3 kilometers."
+        },
+        {
+          "title": "Forest surface",
+          "description": "Roads, paths, roots, and December mud."
+        }
+      ]
+    },
+    "schedule": {
+      "eyebrow": "03 — Date and place",
+      "title": "Sunday, December 6",
+      "items": [
+        "Every first Sunday in December",
+        "Chocen · start by Velka Veranda",
+        "Main race starts at 11:00"
+      ],
+      "countdownLabel": "Time until the next edition",
+      "countdown": [
+        {
+          "value": "187",
+          "unit": "days"
+        },
+        {
+          "value": "14",
+          "unit": "hours"
+        },
+        {
+          "value": "32",
+          "unit": "minutes"
+        },
+        {
+          "value": "08",
+          "unit": "seconds"
+        }
+      ],
+      "cta": "Reserve entry",
+      "mapTitle": "START · FINISH",
+      "mapAddress": "Velka Veranda Restaurant, Chocen 565 01"
+    },
+    "info": {
+      "eyebrow": "04 — Runner information",
+      "title": "Everything you need to know",
+      "cards": [
+        {
+          "title": "Check-in",
+          "description": "9:00-10:30 at the finish by Velka Veranda. Pick up your bib and chip."
+        },
+        {
+          "title": "Start",
+          "description": "Mass start of the main race at 11:00. Kids races start from 10:00."
+        },
+        {
+          "title": "Categories",
+          "description": "Men, women, masters, and juniors. There is a contest for everyone."
+        },
+        {
+          "title": "Entry fee",
+          "description": "CZK 200 in pre-registration, CZK 300 on site. Kids race free."
+        },
+        {
+          "title": "Refreshments",
+          "description": "Hot tea, sausage, and something stronger to warm up at the finish."
+        },
+        {
+          "title": "Facilities",
+          "description": "Heated changing rooms, toilets, and indoor seating at Velka Veranda."
+        }
+      ],
+      "contactTitle": "Have a question? Contact the organizer.",
+      "contactDescription": "SK Veranda Chocen · +420 777 123 456 · info@velkaveranda.cz",
+      "contactCta": "Write an email"
+    },
+    "results": {
+      "eyebrow": "05 — Results and history",
+      "title": "Generations of runners, one course",
+      "allLabel": "All editions",
+      "years": [
+        {
+          "year": "2025",
+          "label": "Edition",
+          "winners": [
+            {
+              "category": "Men",
+              "name": "Jan Novak",
+              "time": "15:42"
+            },
+            {
+              "category": "Women",
+              "name": "Eva Dvorakova",
+              "time": "18:09"
+            }
+          ],
+          "linkLabel": "View complete results"
+        },
+        {
+          "year": "2024",
+          "label": "Edition",
+          "winners": [
+            {
+              "category": "Men",
+              "name": "Petr Svoboda",
+              "time": "15:58"
+            },
+            {
+              "category": "Women",
+              "name": "Lucie Markova",
+              "time": "18:31"
+            }
+          ],
+          "linkLabel": "View complete results"
+        },
+        {
+          "year": "2023",
+          "label": "Edition",
+          "winners": [
+            {
+              "category": "Men",
+              "name": "Jan Novak",
+              "time": "16:04"
+            },
+            {
+              "category": "Women",
+              "name": "Eva Dvorakova",
+              "time": "18:50"
+            }
+          ],
+          "linkLabel": "View complete results"
+        }
+      ]
+    },
+    "gallery": {
+      "eyebrow": "06 — Gallery",
+      "title": "The atmosphere of a freezing Sunday",
+      "description": "Mud, fog, finish-line emotion, and climbs that take everything out of you.",
+      "alt": [
+        "A runner climbs a rocky trail in a winter forest.",
+        "Topographic map of the forest course.",
+        "Runners in a foggy winter forest.",
+        "Detail of a dark trail loop map."
+      ]
+    },
+    "partners": {
+      "eyebrow": "07 — Partners and organizers",
+      "title": "A race held together by a group of enthusiasts",
+      "names": ["VERANDA", "CHOCEN", "RUNTECH", "FOREST", "SPORTIA", "AKTIV"],
+      "organizer": "Organized by SK Veranda Chocen in cooperation with the town of Chocen."
+    },
+    "finalCta": {
+      "title": "Ready for four climbs?",
+      "description": "Start slots disappear faster than your legs on the fourth climb. Secure your bib for the next edition.",
+      "cta": "Register for the race"
+    },
+    "footer": {
+      "description": "A traditional forest cross in Chocen. 4300 meters, 200 meters of elevation gain, and a character you will remember.",
+      "columns": [
+        {
+          "title": "Race",
+          "links": ["About", "Course and profile", "Date and place", "Information"]
+        },
+        {
+          "title": "Results",
+          "links": ["Current edition", "Results archive", "Race history", "Photo gallery"]
+        },
+        {
+          "title": "Contact",
+          "links": [
+            "SK Veranda Chocen",
+            "info@velkaveranda.cz",
+            "+420 777 123 456",
+            "Chocen 565 01"
+          ]
+        }
+      ],
+      "copyright": "© 2026 Mala cena Velke Verandy · SK Veranda Chocen",
+      "made": "Made with respect for the forest."
+    }
   },
   "LanguageSwitcher": {
     "label": "Language"

@@ -2,6 +2,8 @@ import React from "react";
 
 import { prisma } from "@/lib/db/client";
 
+/* eslint-disable @next/next/no-img-element -- test/debug page only; dynamic DB blobs via API */
+
 /**
  * Simple verification page for imported BLOB images from mcvv_fotky.
  *

@@ -107,6 +107,15 @@ const eslintConfig = defineConfig([
   ...fixupConfigRules(nextVitals),
   ...fixupConfigRules(nextTs),
 
+  // Shadcn/ui generated components intentionally use `any` for complex integrations
+  // (recharts, radix, etc.). Do not edit the primitives; relax the rule for this folder.
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

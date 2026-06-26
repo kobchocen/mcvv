@@ -1,7 +1,6 @@
-import Link from "next/link";
-
 import { RaceResultCard, SectionHeader } from "@/components/molecules";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvResultsSectionProps = {
@@ -22,7 +21,7 @@ export function McvvResultsSection({ content }: McvvResultsSectionProps) {
               variant="outline"
               className="border-white/15 bg-white/10 font-display font-semibold text-foreground hover:bg-white/15 dark:text-white"
             >
-              <Link href="#results">{content.allLabel}</Link>
+              <Link href={"/results" as never}>{content.allLabel}</Link>
             </Button>
           }
         />

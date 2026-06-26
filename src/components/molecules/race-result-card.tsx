@@ -1,5 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 
+import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 export type RaceWinner = {
@@ -13,6 +14,8 @@ export type RaceResultCardProps = {
   label: string;
   winners: RaceWinner[];
   linkLabel: string;
+  href?: string;
+  count?: number;
   className?: string;
 };
 
@@ -21,6 +24,8 @@ export function RaceResultCard({
   label,
   winners,
   linkLabel,
+  href,
+  count,
   className,
 }: RaceResultCardProps) {
   return (
@@ -33,7 +38,7 @@ export function RaceResultCard({
           <p className="mt-2 text-xs font-semibold uppercase text-race-accent">{label}</p>
         </div>
         <span className="bg-race-accent/15 px-3 py-2 text-xs font-semibold text-race-accent">
-          {winners.length}
+          {count ?? winners.length}
         </span>
       </div>
 
@@ -54,13 +59,35 @@ export function RaceResultCard({
         ))}
       </div>
 
-      <a
-        href="#results"
-        className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
-      >
-        {linkLabel}
-        <ArrowUpRight className="size-4" aria-hidden="true" />
-      </a>
+      {href ? (
+        href.startsWith("http") ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
+          >
+            {linkLabel}
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </a>
+        ) : (
+          <Link
+            href={href as never}
+            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
+          >
+            {linkLabel}
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </Link>
+        )
+      ) : (
+        <a
+          href="#results"
+          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
+        >
+          {linkLabel}
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </a>
+      )}
     </article>
   );
 }

@@ -35,6 +35,8 @@ export type ResultItem = {
   label: string;
   winners: RaceWinner[];
   linkLabel: string;
+  href?: string;
+  count?: number;
 };
 
 export type McvvHomepageContent = {

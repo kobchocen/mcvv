@@ -1,0 +1,82 @@
+# compose.dev.yaml
+# Development MariaDB database for MCVV (Malá cena Velké Verandy)
+#
+# Purpose:
+#   - Local development database (relational DB for backend)
+#   - Matches .env.example connection string
+#
+# Project name is set explicitly to "mcvv-dev" so that Docker Compose
+# (and OrbStack) does NOT use the current directory name ("web").
+#
+# Usage:
+#   docker compose -f compose.dev.yaml up -d
+#   docker compose -f compose.dev.yaml down
+#   docker compose -f compose.dev.yaml logs -f
+#
+# After running, you should see in OrbStack:
+#   mcvv-dev
+#   └── db   (mariadb:lts)
+#
+# Connection (from your host machine):
+#   DATABASE_URL="mysql://mcvv:mcvv@localhost:3306/mcvv"
+#
+# After starting (or after changes to command):
+#   docker compose -f compose.dev.yaml down -v     # -v removes old data so users are recreated with correct auth plugin
+#   docker compose -f compose.dev.yaml up -d
+#
+#   # One-time: create shadow DB and grant rights to mcvv user (needed for prisma migrate dev)
+#   docker compose -f compose.dev.yaml exec db \
+#     mariadb -uroot -proot -e '
+#       CREATE DATABASE IF NOT EXISTS mcvv_shadow;
+#       GRANT ALL PRIVILEGES ON mcvv_shadow.* TO "mcvv"@"%";
+#       FLUSH PRIVILEGES;
+#     '
+#
+#   pnpm prisma:generate
+#   pnpm prisma:migrate
+#   pnpm prisma:seed   # (once seed is ready)
+#
+# Current stable MariaDB LTS (as of 2026)
+
+name: mcvv-dev
+
+services:
+  db:
+    image: mariadb:lts
+    container_name: mcvv-db-dev
+    restart: unless-stopped
+
+    environment:
+      # Root password (for admin tasks)
+      MARIADB_ROOT_PASSWORD: root
+      # Application database + user (matches .env.example)
+      MARIADB_DATABASE: mcvv
+      MARIADB_USER: mcvv
+      MARIADB_PASSWORD: mcvv
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      # Persistent data for development
+      - mcvv-dev-data:/var/lib/mysql
+
+    # Modern defaults + Czech-friendly collation + native password for better client compatibility (DBeaver, etc.)
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      # Optional: log slow queries during development
+      # - --slow-query-log=1
+      # - --long-query-time=2
+
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mcvv-dev-data:
+    driver: local

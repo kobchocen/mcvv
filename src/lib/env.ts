@@ -6,12 +6,14 @@ const envSchema = z.object({
     .string()
     .min(1, "DATABASE_URL is required")
     .url("DATABASE_URL must be a valid URL"),
+  SHADOW_DATABASE_URL: z.string().url("SHADOW_DATABASE_URL must be a valid URL").optional(),
   TIME_ZONE: z.string().min(1, "TIME_ZONE cannot be empty").default("Europe/Prague"),
 });
 
 const parsedEnv = envSchema.safeParse({
   NODE_ENV: process.env.NODE_ENV,
   DATABASE_URL: process.env.DATABASE_URL,
+  SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL,
   TIME_ZONE: process.env.TIME_ZONE,
 });
 

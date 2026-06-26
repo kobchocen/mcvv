@@ -1,18 +1,343 @@
-// Prisma schema prepared for Prisma v7 usage.
+// Prisma schema for MCVV (Malá cena Velké Verandy)
+// Generated from legacy MySQL CREATE TABLE statements in docs/sql_create.sql
+// Includes referential integrity via @relation where columns clearly reference PKs.
+// Table and column names are preserved via @@map / @map for compatibility with old data.
+// Models use camelCase fields for better DX.
+
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = []
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  // url and shadowDatabaseUrl are provided via prisma.config.ts (Prisma 7+ style)
+  // For dev we point shadow to the same DB to avoid needing CREATE DATABASE privilege.
 }
 
-// Define your models below. Example:
-// model User {
-//   id    String @id @default(cuid())
-//   email String @unique
-//   name  String?
-//   createdAt DateTime @default(now())
-// }
+// ============================================
+// Číselníky (dictionaries / lookups)
+// ============================================
+
+/// Číselník kategorií MCVV
+model Category {
+  id       String @id @map("id") @db.Char(1)
+  name     String @map("jmeno") @db.VarChar(20)
+  age      Int    @map("age") @db.SmallInt
+  sort     Int    @map("sort") @db.SmallInt
+  sex      String @map("sex") @db.Char(1)
+  record   Int    @map("rekord") @db.SmallInt
+  entryFee Int    @map("startovne") @db.SmallInt
+  bibFrom  Int    @map("cislo_od") @db.SmallInt
+  bibTo    Int    @map("cislo_do") @db.SmallInt
+
+  // Relations (reverse)
+  registrationLines RegistrationLine[]
+  startEntries      StartEntry[]
+  results           Result[]
+
+  @@map("cis_mcvv_kateg")
+}
+
+/// Číselník běžců (master data)
+model Runner {
+  id      String    @id @map("id") @db.Char(8)
+  name    String    @map("jmeno") @db.VarChar(50)
+  created DateTime? @map("created")
+  author  String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
+
+  // Relations
+  runnerPhotos    RunnerPhoto[]
+  webImages       WebImage[]
+  registrationLines RegistrationLine[]
+  startEntries    StartEntry[]
+  results         Result[]
+
+  @@map("cis_bezec")
+}
+
+/// Číselník fotografů
+model PhotoAuthor {
+  id    String @id @map("id") @db.Char(1)
+  desc  String @map("popis") @db.VarChar(30)
+
+  // photos Photo[]  // can be added if data uses 1-char codes consistently
+
+  @@map("cis_fotka_autor")
+}
+
+/// Číselník místa fotografie
+model PhotoLocation {
+  id    String @id @map("id") @db.Char(1)
+  desc  String @map("popis") @db.VarChar(20)
+  sort  Int    @map("sort") @db.SmallInt
+
+  photos Photo[]
+
+  @@map("cis_fotka_kde")
+}
+
+/// Číselník klubů v rámci roků (composite key: id + rok)
+model Club {
+  id      String    @map("id") @db.Char(3)
+  year    Int       @map("rok") @db.SmallInt
+  name    String    @map("jmeno") @db.VarChar(50)
+  created DateTime? @map("created")
+  author  String?   @map("autor") @db.VarChar(64)
+
+  @@id([id, year])
+
+  // Relations
+  registrationLines RegistrationLine[]
+  startEntries      StartEntry[]
+  results           Result[]
+
+  @@map("cis_klub")
+}
+
+/// Číselník typů obrázků pro web
+model WebImageType {
+  id   Int    @id @default(autoincrement()) @map("id") @db.SmallInt
+  desc String @map("popis") @db.VarChar(20)
+
+  webImages WebImage[]
+
+  @@map("cis_typ_webimages")
+}
+
+// ============================================
+// Hlavní doménové tabulky
+// ============================================
+
+/// Základní info o jednotlivých ročnících závodu
+model Edition {
+  id              Int       @id @default(autoincrement()) @map("id") @db.SmallInt
+  date            DateTime  @map("datum") @db.Date
+  weather         String?   @map("weather") @db.VarChar(64)
+  temp            Int?      @map("temp") @db.SmallInt
+  zhl             Boolean?  @default(true) @map("zhl")
+  isCarEx         Boolean?  @default(false) @map("iscarex")
+  regDeadline     DateTime? @map("prihl_datum") @db.Date
+  regEmail        String?   @default("mcvv@mcvv.org") @map("prihl_mail") @db.VarChar(32)
+  startKidsMail   Int?      @default(20) @map("start_deti_mail") @db.SmallInt
+  startKidsPlace  Int?      @default(50) @map("start_deti_mist") @db.SmallInt
+  startAdultMail  Int?      @default(50) @map("start_dosp_mail") @db.SmallInt
+  startAdultPlace Int?      @default(100) @map("start_dosp_mist") @db.SmallInt
+  startInterval   Int?      @default(15) @map("st_interval") @db.SmallInt
+  infoEmail       String?   @default("mcvv@mcvv.org") @map("infomail") @db.VarChar(32)
+  infoWww         String?   @default("www.mcvv.org") @map("infowww") @db.VarChar(32)
+  infoTel         String?   @default("") @map("infotel") @db.VarChar(16)
+  // Ceny v cíli
+  finAdult1       Int?      @default(2000) @map("fin_dosp_1") @db.SmallInt
+  finAdult2       Int?      @default(1000) @map("fin_dosp_2") @db.SmallInt
+  finAdult3       Int?      @default(500) @map("fin_dosp_3") @db.SmallInt
+  finAdult4       Int?      @default(200) @map("fin_dosp_4") @db.SmallInt
+  finAdult5       Int?      @default(100) @map("fin_dosp_5") @db.SmallInt
+  finVet1         Int?      @default(300) @map("fin_vet_1") @db.SmallInt
+  finVet2         Int?      @default(200) @map("fin_vet_2") @db.SmallInt
+  finVet3         Int?      @default(100) @map("fin_vet_3") @db.SmallInt
+
+  @@map("mcvv_info")
+}
+
+/// Data fotek (včetně původního blobu)
+model Photo {
+  id               Int       @id @default(autoincrement()) @map("id") @db.Int
+  year             Int       @map("rok") @db.SmallInt
+  locationId       String    @map("kde_id") @db.Char(1)
+  debugText        String?   @map("debug_text") @db.Text
+  created          DateTime? @map("created")
+  originalFilename String?   @map("original_filename") @db.VarChar(255)
+  authorId         String?   @map("autor") @db.VarChar(8) // could reference users or PhotoAuthor
+  image            Bytes?    @map("image") // mediumblob
+
+  location PhotoLocation @relation(fields: [locationId], references: [id])
+  runners  RunnerPhoto[]
+
+  @@map("mcvv_fotky")
+}
+
+/// Asociační tabulka běžec ↔ fotka
+model RunnerPhoto {
+  photoId       Int    @map("fotka_id") @db.Int
+  runnerId      String @map("bezec_id") @db.Char(8)
+  orderFromLeft Int?   @map("poradi_zleva") @db.SmallInt
+
+  @@id([photoId, runnerId])
+
+  photo  Photo  @relation(fields: [photoId], references: [id])
+  runner Runner @relation(fields: [runnerId], references: [id])
+
+  @@map("mcvv_bezec_fotka")
+}
+
+/// Novinky na webu
+model News {
+  id         Int      @id @default(autoincrement()) @map("id") @db.SmallInt
+  date       DateTime @default(now()) @map("datum")
+  title      String?  @map("nadpis") @db.VarChar(64)
+  lead       String?  @map("uvod") @db.MediumText
+  content    String?  @map("obsah") @db.Text
+  webImageId Int      @map("webimage_id") @db.SmallInt
+
+  webImage WebImage @relation(fields: [webImageId], references: [id])
+
+  @@map("mcvv_news")
+}
+
+/// Obrázky pro web (včetně blobu)
+model WebImage {
+  id       Int       @id @default(autoincrement()) @map("id") @db.SmallInt
+  typeId   Int       @map("typ_id") @db.SmallInt
+  runnerId String?   @map("bezec_id") @db.Char(8)
+  desc     String    @map("popis") @db.VarChar(128)
+  year     Int?      @map("rok") @db.SmallInt
+  image    Bytes?    @map("image") // mediumblob
+
+  type   WebImageType @relation(fields: [typeId], references: [id])
+  runner Runner?      @relation(fields: [runnerId], references: [id])
+
+  news News[]
+
+  @@map("webimages")
+}
+
+// ============================================
+// Přihlášky a výsledky
+// ============================================
+
+/// Hlavička přihlášky (composite PK: rok + id)
+model Registration {
+  year         Int       @map("rok") @db.SmallInt
+  id           Int       @map("id") @db.SmallInt
+  email        String?   @map("email") @db.VarChar(128)
+  type         String?   @map("typ") @db.Char(1)
+  note         String?   @map("poznamka") @db.MediumText
+  created      DateTime? @map("created")
+  name         String?   @map("nazev") @db.VarChar(128)
+  securityCode String?   @map("securitycode") @db.VarChar(32)
+  status       Int?      @map("stav") @db.SmallInt
+  author       String?   @map("autor") @db.VarChar(64)
+  promotion    String?   @map("promotion") @db.VarChar(32)
+
+  @@id([year, id])
+
+  lines RegistrationLine[]
+
+  @@map("mcvv_prihlaska")
+}
+
+/// Řádek přihlášky (jeden běžec v přihlášce)
+model RegistrationLine {
+  runnerId       String @map("bezec_id") @db.Char(8)
+  clubId         String @map("klub_id") @db.Char(3)
+  categoryId     String @map("kateg_id") @db.Char(1)
+  year           Int    @map("rok") @db.SmallInt
+  bib            Int?   @map("cislo") @db.SmallInt
+  registrationId Int    @map("prihlaska_id") @db.SmallInt
+  entryFee       Int?   @map("startovne") @db.SmallInt
+  note           String? @map("poznamka") @db.VarChar(128)
+  created        DateTime? @map("created")
+  author         String?  @map("autor") @db.VarChar(64)
+
+  @@id([year, runnerId])
+
+  runner       Runner       @relation(fields: [runnerId], references: [id])
+  club         Club         @relation(fields: [clubId, year], references: [id, year])
+  category     Category     @relation(fields: [categoryId], references: [id])
+  registration Registration @relation(fields: [year, registrationId], references: [year, id])
+
+  @@map("mcvv_prihlaska_radek")
+}
+
+/// Platby za startovné
+/// Pozn: prihlaska_id je v legacy definováno jako char(3) – zachováno, relace není striktní.
+model Payment {
+  id             Int       @id @default(autoincrement()) @map("id") @db.Int
+  year           Int       @default(2018) @map("rok") @db.SmallInt
+  registrationId String    @map("prihlaska_id") @db.Char(3)
+  date           DateTime? @map("datum") @db.Date
+  amount         Int?      @map("castka") @db.SmallInt
+  created        DateTime  @default(now()) @map("created")
+  author         String?   @default("admin") @map("autor") @db.VarChar(8)
+
+  @@map("mcvv_platba")
+}
+
+/// Startovní listina (přiřazená čísla)
+model StartEntry {
+  runnerId   String  @map("bezec_id") @db.Char(8)
+  clubId     String  @map("klub_id") @db.Char(3)
+  categoryId String  @map("kateg_id") @db.Char(1)
+  year       Int     @map("rok") @db.SmallInt
+  bib        Int     @map("cislo") @db.SmallInt
+  runnerName String? @map("bezec_name") @db.VarChar(50)
+  clubName   String? @map("klub_name") @db.VarChar(50)
+
+  @@id([year, runnerId])
+
+  runner   Runner   @relation(fields: [runnerId], references: [id])
+  club     Club     @relation(fields: [clubId, year], references: [id, year])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@map("mcvv_start")
+}
+
+/// Výsledky / časy
+model Result {
+  runnerId   String  @map("bezec_id") @db.Char(8)
+  year       Int     @map("rok") @db.SmallInt
+  clubId     String  @map("klub_id") @db.Char(3)
+  categoryId String  @map("kateg_id") @db.Char(1)
+  time       Int     @map("time") @db.SmallInt // v sekundách
+  runnerName String? @map("bezec_name") @db.VarChar(50)
+  clubName   String? @map("klub_name") @db.VarChar(50)
+
+  @@id([year, runnerId])
+
+  runner   Runner   @relation(fields: [runnerId], references: [id])
+  club     Club     @relation(fields: [clubId, year], references: [id, year])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@map("mcvv_time")
+}
+
+/// Mezičasy (splits)
+model Split {
+  bib     Int       @map("cislo") @db.SmallInt
+  year    Int       @map("rok") @db.SmallInt
+  split   String    @map("split") @db.Char(1)
+  time    Int       @map("time") @db.SmallInt
+  created DateTime? @map("created")
+  author  String?   @map("autor") @db.VarChar(8)
+
+  @@id([bib, year, split])
+
+  @@map("mcvv_split")
+}
+
+// ============================================
+// Ostatní
+// ============================================
+
+/// Uživatelé (admin přístup k původnímu webu)
+model User {
+  username String @id @map("a_user") @db.VarChar(8)
+  password String? @map("a_passwd") @db.VarChar(8)
+
+  @@map("users")
+}
+
+/// Sponzoři / partneři
+model Sponsor {
+  id          Int     @id @default(autoincrement()) @map("id") @db.SmallInt
+  name        String? @map("nazev") @db.VarChar(128)
+  link        String? @map("link") @db.VarChar(128)
+  image       String? @map("image") @db.VarChar(64)
+  category    Int     @map("category") @db.SmallInt
+  order       Int     @map("poradi") @db.SmallInt
+  active      Boolean? @map("active")
+  description String  @map("description") @db.VarChar(1024)
+
+  @@map("sponsors")
+}

@@ -189,7 +189,7 @@
         }
       ],
       "contactTitle": "Máš dotaz? Ozvi se pořadateli.",
-      "contactDescription": "SK Veranda Choceň · +420 777 123 456 · info@velkaveranda.cz",
+      "contactDescription": "K.O.B. Choceň, z.s. · +420 777 123 456 · info@velkaveranda.cz",
       "contactCta": "Napsat e-mail"
     },
     "results": {
@@ -265,7 +265,7 @@
       "eyebrow": "07 — Partneři a pořadatelé",
       "title": "Závod, který drží pohromadě parta nadšenců",
       "names": ["VERANDA", "CHOCEŇ", "RUNTECH", "FOREST", "SPORTIA", "AKTIV"],
-      "organizer": "Pořádá SK Veranda Choceň ve spolupráci s městem Choceň."
+      "organizer": "Pořádá K.O.B. Choceň, z.s. ve spolupráci s městem Choceň."
     },
     "finalCta": {
       "title": "Připraven na čtyři kopce?",
@@ -286,14 +286,14 @@
         {
           "title": "Kontakt",
           "links": [
-            "SK Veranda Choceň",
+            "K.O.B. Choceň, z.s.",
             "info@velkaveranda.cz",
             "+420 777 123 456",
             "Choceň 565 01"
           ]
         }
       ],
-      "copyright": "© 2026 Malá cena Velké Verandy · SK Veranda Choceň",
+      "copyright": "© 2026 Malá cena Velké Verandy · K.O.B. Choceň, z.s.",
       "made": "Vyrobeno s láskou k lesu."
     }
   },

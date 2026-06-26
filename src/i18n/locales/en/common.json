@@ -189,7 +189,7 @@
         }
       ],
       "contactTitle": "Have a question? Contact the organizer.",
-      "contactDescription": "SK Veranda Chocen · +420 777 123 456 · info@velkaveranda.cz",
+      "contactDescription": "K.O.B. Chocen, z.s. · +420 777 123 456 · info@velkaveranda.cz",
       "contactCta": "Write an email"
     },
     "results": {
@@ -265,7 +265,7 @@
       "eyebrow": "07 — Partners and organizers",
       "title": "A race held together by a group of enthusiasts",
       "names": ["VERANDA", "CHOCEN", "RUNTECH", "FOREST", "SPORTIA", "AKTIV"],
-      "organizer": "Organized by SK Veranda Chocen in cooperation with the town of Chocen."
+      "organizer": "Organized by K.O.B. Chocen, z.s. in cooperation with the town of Chocen."
     },
     "finalCta": {
       "title": "Ready for four climbs?",
@@ -286,14 +286,14 @@
         {
           "title": "Contact",
           "links": [
-            "SK Veranda Chocen",
+            "K.O.B. Chocen, z.s.",
             "info@velkaveranda.cz",
             "+420 777 123 456",
             "Chocen 565 01"
           ]
         }
       ],
-      "copyright": "© 2026 Mala cena Velke Verandy · SK Veranda Chocen",
+      "copyright": "© 2026 Mala cena Velke Verandy · K.O.B. Chocen, z.s.",
       "made": "Made with respect for the forest."
     }
   },

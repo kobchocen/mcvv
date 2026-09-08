@@ -2,7 +2,7 @@ allowBuilds:
   "@parcel/watcher": true
   "@prisma/engines": true
   "@swc/core": true
-  core-js: set this to true or false
+  core-js: true
   esbuild: true
   prisma: true
   sharp: true

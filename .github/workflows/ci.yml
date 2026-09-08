@@ -1,0 +1,31 @@
+name: Verify application
+
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+      - name: Enable the pinned package manager
+        run: npm install --global corepack@0.34.0 && corepack enable
+      - name: Install dependencies and generate Prisma Client
+        run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm exec next typegen && pnpm exec tsc --noEmit
+      - name: Verify Docker images, MySQL TLS and persistence
+        run: pnpm test:integration

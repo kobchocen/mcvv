@@ -5,7 +5,10 @@ const envSchema = z.object({
   DATABASE_URL: z
     .string()
     .min(1, "DATABASE_URL is required")
-    .url("DATABASE_URL must be a valid URL"),
+    .url("DATABASE_URL must be a valid URL")
+    .optional(),
+  DATABASE_TLS: z.enum(["true", "false"]).optional(),
+  DATABASE_SSL_CA: z.string().min(1).optional(),
   SHADOW_DATABASE_URL: z.string().url("SHADOW_DATABASE_URL must be a valid URL").optional(),
   TIME_ZONE: z.string().min(1, "TIME_ZONE cannot be empty").default("Europe/Prague"),
 });
@@ -13,6 +16,8 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse({
   NODE_ENV: process.env.NODE_ENV,
   DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_TLS: process.env.DATABASE_TLS,
+  DATABASE_SSL_CA: process.env.DATABASE_SSL_CA,
   SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL,
   TIME_ZONE: process.env.TIME_ZONE,
 });

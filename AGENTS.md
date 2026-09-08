@@ -26,7 +26,7 @@ Import validated configuration from `@/lib/env`, locale-aware navigation from `@
 
 ## Testing Guidelines
 
-No automated test framework or coverage threshold is configured yet. Before submitting changes, run `pnpm lint`, `pnpm format:check`, and `pnpm build`. When introducing tests, use `*.test.ts` or `*.test.tsx`, colocated with the feature or under `src/__tests__`, and add the runner command to `package.json`.
+Use Node's built-in test runner through `pnpm test` for colocated `*.test.ts` files. No coverage threshold is configured. Before submitting changes, run `pnpm test`, `pnpm lint`, `pnpm format:check`, and `pnpm build`. Deployment changes also require `pnpm test:integration` (Docker, Python 3 and OpenSSL), which builds both images and checks isolated MySQL/TLS, migrations, persistence and health probes. See `docs/DEPLOYMENT.md`. Never run integration fixtures against an existing application database.
 
 ## Commit & Pull Request Guidelines
 

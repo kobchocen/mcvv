@@ -1,0 +1,82 @@
+name: Deploy published application release
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published application tag (vX.Y.Z or vX.Y.Z-develop.N)
+        type: string
+        required: true
+      environment:
+        type: choice
+        options: [staging, production]
+        required: true
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: platform-mutations
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 60
+    env:
+      INFRA_CONFIG_JSON: ${{ vars.INFRA_CONFIG_JSON }}
+      ACR_NAME: ${{ vars.ACR_NAME }}
+      APP_SOURCE_PATH: .local/application
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      DEPLOY_ENV: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Validate deployment request
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-develop\.[1-9][0-9]*)?$ ]]
+          case "$DEPLOY_ENV" in
+            production) branch=main ;;
+            staging) branch=develop ;;
+            *) exit 1 ;;
+          esac
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+      - name: Checkout the current application release branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: kobchocen/mcvv
+          ref: refs/heads/${{ steps.source.outputs.branch }}
+          fetch-depth: 0
+          path: .local/application
+          token: ${{ secrets.APPLICATION_READ_TOKEN || github.token }}
+          persist-credentials: false
+      - name: Download the published release manifest
+        env:
+          GH_TOKEN: ${{ secrets.APPLICATION_READ_TOKEN || github.token }}
+        run: gh release download "$RELEASE_TAG" --repo kobchocen/mcvv --pattern release.json --pattern SHA256SUMS --dir .local/release
+      - name: Validate application contract and release provenance
+        id: release
+        run: |
+          node scripts/application.mjs
+          node scripts/config.mjs
+          python3 scripts/release-source.py --tag "$RELEASE_TAG" --environment "$DEPLOY_ENV"
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Migrate, deploy published digests and smoke test
+        env:
+          TARGET: ${{ steps.release.outputs.target }}
+          WEB_IMAGE: ${{ steps.release.outputs.web }}
+          MIGRATION_IMAGE: ${{ steps.release.outputs.migration }}
+        run: python3 scripts/platform.py deploy --environment "$TARGET" --web-image "$WEB_IMAGE" --migration-image "$MIGRATION_IMAGE"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: deployed-${{ inputs.release_tag }}-${{ github.run_id }}
+          path: .local/release/
+          include-hidden-files: true
+          retention-days: 90

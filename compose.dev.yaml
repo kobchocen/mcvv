@@ -32,9 +32,9 @@
 #       FLUSH PRIVILEGES;
 #     '
 #
-#   pnpm prisma:generate
-#   pnpm prisma:migrate
-#   pnpm prisma:seed   # (once seed is ready)
+#   pnpm db:generate
+#   pnpm db:migrate:dev
+#   pnpm db:seed   # (once seed is ready)
 #
 # Current stable MariaDB LTS (as of 2026)
 

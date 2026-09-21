@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 COPY . .
-RUN pnpm test && pnpm build && test -f .next/standalone/server.js
+RUN pnpm build && test -f .next/standalone/server.js
 
 FROM deps AS migration
 COPY . .

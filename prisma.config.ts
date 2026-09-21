@@ -13,7 +13,7 @@ import { env } from "./src/lib/env";
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
-    // Configures `prisma db seed` / `pnpm prisma:seed`
+    // Configures `prisma db seed` / `pnpm db:seed`
     seed: "tsx prisma/seed.ts",
   },
   datasource: {

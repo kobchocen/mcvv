@@ -13,8 +13,8 @@ Components follow an atomic hierarchy: project components live in `src/component
 - `pnpm build`: create a production build and catch Next.js/type errors.
 - `pnpm lint`: run ESLint with Next.js Core Web Vitals and TypeScript rules.
 - `pnpm format` / `pnpm format:check`: write or verify Prettier formatting.
-- `pnpm prisma:generate`: regenerate Prisma Client after schema changes.
-- `pnpm prisma:migrate`: create and apply a development migration.
+- `pnpm db:generate`: regenerate Prisma Client after schema changes.
+- `pnpm db:migrate:dev`: create and apply a development migration.
 
 Use Node `24.15.0` (`nvm use`) and pnpm `11.4.0` through Corepack.
 
@@ -26,7 +26,7 @@ Import validated configuration from `@/lib/env`, locale-aware navigation from `@
 
 ## Testing Guidelines
 
-Use Node's built-in test runner through `pnpm test` for colocated `*.test.ts` files. No coverage threshold is configured. Before submitting changes, run `pnpm test`, `pnpm lint`, `pnpm format:check`, and `pnpm build`. Deployment changes also require `pnpm test:integration` (Docker, Python 3 and OpenSSL), which builds both images and checks isolated MySQL/TLS, migrations, persistence and health probes. See `docs/DEPLOYMENT.md`. Never run integration fixtures against an existing application database.
+Use Node's built-in test runner through `pnpm test` for colocated `*.test.ts` files. No coverage threshold is configured. Before submitting changes, run `pnpm verify` and `pnpm build`. Deployment changes also require `pnpm test:integration` (Docker, Python 3 and OpenSSL), which builds both images and checks isolated MySQL/TLS, migrations, persistence and health probes. See `docs/DEPLOYMENT.md`. Never run integration fixtures against an existing application database.
 
 ## Commit & Pull Request Guidelines
 
@@ -37,3 +37,15 @@ Pull requests should explain the problem and solution, link related issues, list
 ## Security & Configuration
 
 Copy `.env.example` locally and never commit secrets. Document every new variable there and validate it in `src/lib/env.ts`; avoid direct `process.env` access elsewhere.
+
+## Release Delivery
+
+Use English Conventional Commits. Working branches (`feature/*`, `bugfix/*`,
+`refactor/*` and related prefixes) merge into develop. Publish production through
+one active `release/vX.Y.Z` branch into main, preserving history; hotfixes may target
+main. Backmerge main into develop. See `docs/APPLICATION-DELIVERY.md`.
+Semantic-release owns version changes: package.json, Helm version/appVersion and
+src/lib/build-info.json must match. Do not hand-edit versions for releases.
+`pnpm chart:check` validates the distributable Helm chart. Azure Container Apps
+remain the automatic deployment target. Keep infrastructure gateway protection.
+Package.json is the canonical command interface; do not add duplicate Make aliases.

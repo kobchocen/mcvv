@@ -13,7 +13,7 @@ pnpm build
 pnpm test:integration
 ```
 
-`postinstall` i `build` generují Prisma Client. Build nevyžaduje `DATABASE_URL`
+`postinstall` generuje Prisma Client; po změně schématu použít `pnpm db:generate`. Build nevyžaduje `DATABASE_URL`
 ani běžící databázi. Next.js vytváří `.next/standalone/server.js`; existující
 `next/font/google` během buildu potřebuje přístup ke Google Fonts.
 
@@ -81,57 +81,13 @@ SQL migrace používá MySQL kolaci `utf8mb4_unicode_ci` a standardní cizí kl�
 Příznak `mysql_compatible` se smí potvrdit až po průchodu integračního testu;
 statická kontrola SQL sama kompatibilitu nepotvrzuje.
 
-## Stav ověření a navazující GitHub krok
+## Vydávání a ověření
 
-V tomto prostředí prošlo generování Prisma klienta bez přihlašovacích údajů,
-všech 12 testů, lint, formátování a TypeScript kontrola. Docker build v čistém kontextu i mimo
-sandbox blokuje `operation not permitted` na `/var/run/docker.sock`.
-Produkční Next.js build narazil na nedostupné Google Fonts i mimo sandbox. Úspěšný Docker
-build, živé MySQL/TLS a perzistence proto zatím nejsou potvrzené.
+Automatické verzování, větve, ACR, Helm, oprávnění a obnova jsou popsány v
+[APPLICATION-DELIVERY.md](APPLICATION-DELIVERY.md).
 
-Infrastrukturní auditové příznaky se zatím nesmí přepnout na true.
-Navazující GitHub příprava doplnila lokální `.github/workflows/ci.yml` a
-`.github/workflows/deploy-azure.yml`. Push do `main` nebo `develop` nejdříve
-spustí všechny kontroly včetně Docker/MySQL integrace na GitHub runneru.
-Dispatch závisí na jejich úspěchu a přeskočí se, pokud `INFRA_REPOSITORY`
-není nastavená. PR spouští pouze kontroly. Jde o rozšíření připraveného
-infrastrukturního workflow o ověření aplikace před nasazením.
-
-GitHub konektor při pokusu vytvořit `develop` v `kobchocen/mcvv` vrátil
-403 `Resource not accessible by integration`. Větev tedy nebyla vytvořená
-a lokální změny zatím nejsou publikované. `kobchocen/chc-azure-terraform`
-vrací přes konektor 404; existenci a oprávnění je potřeba ověřit.
-
-Z aktuální lokální větve `main` lze připravené změny publikovat na novou
-větev přes vlastní terminál s GitHub oprávněním k zápisu:
-
-```bash
-git switch -c develop
-git add .dockerignore .env.example AGENTS.md Dockerfile next.config.ts package.json pnpm-workspace.yaml prisma.config.ts prisma/schema.prisma src/lib/env.ts src/lib/db src/app/healthz src/app/readyz/route.test.ts scripts docs/DEPLOYMENT.md .github/workflows
-git commit -m "feat: prepare deployment and staging verification"
-git push -u origin develop
-```
-
-V GitHub Actions zkontrolovat `Request Azure deployment` → `verify`.
-Dokud infrastruktura není připravená, ponechat `INFRA_REPOSITORY` nenastavenou.
-Po úspěšné integraci dokončit infra audit, publikování, bootstrap a tokeny;
-pak nastavit `INFRA_REPOSITORY` a znovu spustit celý běh přes Actions → Re-run all jobs
-(pokud jde stále o aktuální commit), případně udělat další push do `develop`.
-Produkční `main` získá stejné workflow až sloučením PR z ověřeného `develop`.
-
-Návod a zdrojový aplikační workflow jsou v sousedním infrastrukturním repozitáři:
-
-- `../chc-azure-terraform/docs/APPLICATION-DELIVERY.md`
-- `../chc-azure-terraform/config/application-deploy.workflow.yml`
-
-Po úspěšném ověření publikovat infrastrukturní změny. V aplikaci nastavit `INFRA_REPOSITORY` a secret
-`INFRA_DEPLOY_TOKEN` s přístupem pouze k infrastruktuře a `Actions: write`.
-U privátní aplikace v infrastruktuře nastavit `APPLICATION_READ_TOKEN`
-s přístupem pouze k MCVV a `Contents: read`. Tokeny zadávat přes GitHub Settings,
-nikdy do souborů nebo konverzace. V infrastruktuře nastavit environments
-`production` a `staging` podle uvedeného návodu. Skutečný název infra repozitáře,
-bootstrap a dostupnost tokenů je nutné ověřit před aktivací push nasazení.
-
-Dokumentace Next.js standalone byla ověřena v oficiálním repozitáři pro v16.2.9.
-Context7 selhal na DNS `registry.npmjs.org` i mimo sandbox; konfigurace driveru
-byla kontrolována proti nainstalovanému adaptéru a TLS implementaci driveru.
+Dodaný GitHub CI log potvrzuje úspěšný standalone build obou Docker image, ale
+následná databázová migrace selhala. Oprava nyní používá skutečný Prisma CLI
+entry point `prisma/build/index.js`; test ho spouští bez přihlašovacích údajů.
+Úspěch celé MySQL/TLS/perzistenční integrace je stále potřeba potvrdit novým
+během CI. Auditové příznaky infrastruktury proto zůstávají nepotvrzené.

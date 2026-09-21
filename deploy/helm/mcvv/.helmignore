@@ -1,0 +1,14 @@
+.DS_Store
+.git/
+.github/
+*.swp
+*.tmp
+*.tgz
+*.key
+*.pem
+.env
+.env.*
+secrets/
+credentials*
+tests/
+README.local.md

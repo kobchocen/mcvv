@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mcvv.name" . }}
+  labels:
+    {{- include "mcvv.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: mcvv
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      name: http

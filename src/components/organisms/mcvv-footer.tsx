@@ -1,4 +1,4 @@
-import { RaceBrand } from "@/components/atoms";
+import { RaceBrand, BuildVersion } from "@/components/atoms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvFooterProps = {
@@ -36,6 +36,7 @@ export function McvvFooter({ content }: McvvFooterProps) {
         <div className="mt-10 flex flex-col gap-3 border-t border-race-line/55 pt-6 text-xs text-race-dim sm:flex-row sm:items-center sm:justify-between">
           <p>{content.footer.copyright}</p>
           <p>{content.footer.made}</p>
+          <BuildVersion />
         </div>
       </div>
     </footer>

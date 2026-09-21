@@ -1,5 +1,8 @@
 .next
 node_modules
+deploy/helm/mcvv/templates
+.local
+.pnpm-store
 pnpm-lock.yaml
 dist
 coverage

@@ -1,0 +1,82 @@
+name: Release and deploy
+
+on:
+  push:
+    branches: [main, develop, "release/**"]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: mcvv-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: verify
+    if: github.repository == 'kobchocen/mcvv' && (github.ref_name == 'main' || github.ref_name == 'develop' || startsWith(github.ref_name, 'release/'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'develop' && 'staging' || 'release' }}
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+      INFRA_DEPLOY_TOKEN: ${{ secrets.INFRA_DEPLOY_TOKEN }}
+      INFRA_REPOSITORY: ${{ vars.INFRA_REPOSITORY }}
+      INFRA_BUILD_REF: ${{ vars.INFRA_BUILD_REF }}
+      INFRA_SOURCE_PATH: .local/infra
+      ACR_NAME: ${{ vars.ACR_NAME }}
+      PUBLIC_BUILD_ENV_JSON: ${{ vars.PUBLIC_BUILD_ENV_JSON || '{}' }}
+      HELM_REGISTRY_CONFIG: /home/runner/.docker/config.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+      - name: Ignore an outdated queued release
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+      - name: Require a pinned infrastructure commit
+        run: '[[ "$INFRA_BUILD_REF" =~ ^[a-f0-9]{40}$ ]]'
+      - name: Checkout the infrastructure build contract
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ vars.INFRA_REPOSITORY }}
+          ref: ${{ vars.INFRA_BUILD_REF }}
+          token: ${{ secrets.INFRA_READ_TOKEN }}
+          path: .local/infra
+          persist-credentials: false
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
+        with:
+          version: v3.19.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+      - run: npm install --global corepack@0.34.0 && corepack enable
+      - run: pnpm install --frozen-lockfile
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: az acr login --name "$ACR_NAME"
+      - name: Publish version, images, chart and GitHub Release
+        run: pnpm release
+      - name: Upload the release manifest and chart as a workflow artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mcvv-release-${{ github.run_number }}-${{ github.run_attempt }}
+          path: dist/release/
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Update production latest and request digest deployment
+        run: pnpm release:complete

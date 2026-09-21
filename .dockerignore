@@ -15,6 +15,18 @@ build
 .env
 .env.*
 *.local
+*.key
+*.pem
+*.pfx
+*.p12
+credentials*
+id_rsa*
+id_ed25519*
+secrets
+.local
+.pnpm-store
+docs
+*.tsbuildinfo
 
 # Docker & Git internals
 .git

@@ -1,61 +1,35 @@
-# ---- Base image (with pnpm via Corepack) ----
-FROM node:24.15-alpine AS base
-
-# Enable Corepack so we can use pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
+# syntax=docker/dockerfile:1.7
+FROM node:24.15.0-bookworm-slim AS base
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates openssl \
+    && rm -rf /var/lib/apt/lists/*
+RUN npm install --global corepack@0.34.0 && corepack enable
 
-# ---- Dependencies layer ----
 FROM base AS deps
-
-# Only copy files needed for installing dependencies to maximize cache hits
-COPY package.json pnpm-lock.yaml .npmrc ./
-
-# Install all dependencies (dev + prod) for building
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc prisma.config.ts ./
+COPY prisma ./prisma
+COPY src/lib/env.ts ./src/lib/env.ts
 RUN pnpm install --frozen-lockfile
 
-# ---- Build layer ----
-FROM base AS build
-
-# Reuse installed node_modules from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy the rest of the source code
+FROM deps AS build
 COPY . .
+RUN pnpm build && test -f .next/standalone/server.js
 
-# Build the Next.js app for production
-RUN pnpm build
-
-# ---- Production runtime image ----
-FROM node:24.15-alpine AS runner
-
-WORKDIR /app
+FROM deps AS migration
+COPY . .
 ENV NODE_ENV=production
-ENV PORT=3000
+USER node
+CMD ["node", "--import", "tsx", "scripts/db-migrate.ts"]
 
-# Optional: non-root user (good practice)
-# RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
-# USER nextjs
-
-# Copy only necessary runtime files
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=build /app/.npmrc ./.npmrc
-
-# Enable pnpm again in the runtime image
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod
-
+FROM node:24.15.0-bookworm-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
+USER node
 EXPOSE 3000
-
-# Start Next.js in production mode
-CMD ["pnpm", "start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e 'fetch("http://127.0.0.1:3000/healthz").then(async r => { if (r.status !== 200 || await r.text() !== "ok") process.exit(1); }).catch(() => process.exit(1))'
+CMD ["node", "server.js"]

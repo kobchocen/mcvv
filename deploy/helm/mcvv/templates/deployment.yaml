@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mcvv.name" . }}
+  labels:
+    {{- include "mcvv.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcvv
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcvv
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: {{ include "mcvv.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: APP_ENV
+              value: {{ .Values.environment | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.databaseSecret }}
+                  key: DATABASE_URL
+            {{- if eq .Values.environment "stg" }}
+            - name: STAGING_BASIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.stagingSecret }}
+                  key: STAGING_BASIC_PASSWORD
+            {{- end }}
+            {{- if .Values.caSecret }}
+            - name: DATABASE_SSL_CA
+              value: /run/mysql-ca/ca.crt
+            {{- end }}
+          {{- if .Values.caSecret }}
+          volumeMounts:
+            - name: mysql-ca
+              mountPath: /run/mysql-ca
+              readOnly: true
+          {{- end }}
+          startupProbe:
+            httpGet: {path: /healthz, port: http}
+            failureThreshold: 30
+            periodSeconds: 2
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+          # The gateway protects /readyz on staging; probe the loopback server.
+          readinessProbe:
+            exec:
+              command: [node, -e, "fetch('http://127.0.0.1:3001/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+            timeoutSeconds: 4
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.caSecret }}
+      volumes:
+        - name: mysql-ca
+          secret:
+            secretName: {{ .Values.caSecret }}
+      {{- end }}

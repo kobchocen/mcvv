@@ -20,6 +20,10 @@
 
 # production
 /build
+/dist/
+/.local/
+/.pnpm-store/
+__pycache__/
 
 # misc
 .DS_Store

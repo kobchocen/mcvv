@@ -72,26 +72,30 @@ corepack install
 
    <http://localhost:3000>
 
-## Užitečné příkazy
+## Příkazy a vydávání
 
 ```bash
-pnpm dev              # vývojový server
-pnpm build            # produkční build
-pnpm start            # spuštění produkčního buildu
-pnpm lint             # ESLint
-pnpm format           # Prettier, zapíše změny
-pnpm format:check     # Prettier kontrola bez zápisu
-pnpm prisma:generate  # regenerování Prisma Clientu
-pnpm prisma:migrate   # vývojová migrace, pokud se začne používat databáze
+pnpm dev                # vývojový server
+pnpm verify             # lint, formát, typy, testy, pravidla vydávání
+pnpm build              # standalone produkční build
+pnpm test:integration   # Docker + izolovaná MySQL/TLS + perzistence
+pnpm chart:check        # Helm lint a render obou prostředí
+pnpm db:generate        # po změně Prisma schématu; při instalaci automaticky
+pnpm db:migrate:dev     # vytvoření lokální vývojové migrace
+pnpm db:migrate         # aplikace verzovaných migrací při nasazení
+pnpm db:check           # TLS, schéma a historie migrací bez zápisu
+pnpm format             # formátování zdrojů
 ```
 
-Před odesláním změn spusťte:
+Před odesláním změn spustit `pnpm verify`, `pnpm build` a pro změny nasazení také
+`pnpm chart:check` a `pnpm test:integration`. Testy navíc potřebují Python 3,
+integrační test Docker a OpenSSL, chart Helm 3.19+.
 
-```bash
-pnpm lint
-pnpm format:check
-pnpm build
-```
+Pracovní větve míří do develop (staging), vydání přes release/vX.Y.Z do main
+(produkce). Conventional Commits zpracovává semantic-release; vytváří GitHub
+Release, ACR image, OCI Helm chart a synchronní verzi/build v zápatí webu.
+Postup a nastavení: [APPLICATION-DELIVERY.md](docs/APPLICATION-DELIVERY.md).
+Databáze, TLS a health probes: [DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Kde měnit obsah
 
@@ -142,10 +146,8 @@ sdílené chování všech UI prvků.
 
 ## Poznámky k databázi
 
-Prisma konfigurace je připravená pro MariaDB/MySQL přes `DATABASE_URL` ve formátu
-`mysql://USER:PASSWORD@HOST:PORT/DATABASE`. Současná landing page je ale statická a
-data čerpá z překladových JSON souborů a assetů v `public/mcvv/`.
-
-Databázi budete potřebovat až ve chvíli, kdy se začne ukládat dynamický obsah,
-registrace nebo výsledky. Po změně Prisma schématu spusťte `pnpm prisma:generate` a
-pro lokální migrace použijte `pnpm prisma:migrate`.
+Prisma používá MySQL/MariaDB přes DATABASE_URL. Dynamické výsledky a fotografie
+se čtou z databáze; fotografie se ukládají jako LONGBLOB. /healthz ověřuje běh
+procesu, /readyz dostupnost databáze. Produkční připojení vyžaduje ověřené TLS.
+Po změně schématu spustit `pnpm db:generate` a vytvořit verzovanou migraci pomocí
+`pnpm db:migrate:dev`. Produkce používá výhradně `pnpm db:migrate`.

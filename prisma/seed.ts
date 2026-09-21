@@ -4,7 +4,7 @@ import { prisma } from "../src/lib/db/client";
  * Prisma seed script for dictionary / lookup tables ("číselníky").
  * Data is taken from docs/sql_pl_data.sql.
  *
- * Run with: pnpm prisma:seed  (or `prisma db seed`)
+ * Run with: pnpm db:seed  (or `prisma db seed`)
  * Configured in prisma.config.ts under migrations.seed
  *
  * These tables are small, static reference data → upsert by natural PK.

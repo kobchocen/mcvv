@@ -6,13 +6,13 @@
 
 generator client {
   provider   = "prisma-client-js"
-  engineType = "library"
+  engineType = "client"
 }
 
 datasource db {
   provider = "mysql"
   // url and shadowDatabaseUrl are provided via prisma.config.ts (Prisma 7+ style)
-  // For dev we point shadow to the same DB to avoid needing CREATE DATABASE privilege.
+  // Development requires a separate shadow database; production uses migrate deploy.
 }
 
 // ============================================

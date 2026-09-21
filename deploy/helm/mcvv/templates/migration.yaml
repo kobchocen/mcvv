@@ -1,0 +1,67 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "mcvv.name" . }}-migrate
+  labels:
+    {{- include "mcvv.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: migrate
+          {{- $repo := required "migration.repository is required" .Values.migration.repository }}
+          {{- if .Values.migration.digest }}
+          image: {{ printf "%s@%s" $repo .Values.migration.digest | quote }}
+          {{- else }}
+          image: {{ printf "%s:%s" $repo .Chart.AppVersion | quote }}
+          {{- end }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.databaseSecret }}
+                  key: MIGRATION_DATABASE_URL
+            - name: RUNTIME_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.databaseSecret }}
+                  key: DATABASE_URL
+            {{- if .Values.caSecret }}
+            - name: DATABASE_SSL_CA
+              value: /run/mysql-ca/ca.crt
+            {{- end }}
+          {{- if .Values.caSecret }}
+          volumeMounts:
+            - name: mysql-ca
+              mountPath: /run/mysql-ca
+              readOnly: true
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.caSecret }}
+      volumes:
+        - name: mysql-ca
+          secret:
+            secretName: {{ .Values.caSecret }}
+      {{- end }}
+{{- end }}

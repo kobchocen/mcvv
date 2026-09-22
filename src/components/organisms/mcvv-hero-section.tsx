@@ -10,10 +10,24 @@ export type McvvHeroSectionProps = {
   content: Pick<McvvHomepageContent, "hero">;
 };
 
+const HERO_VARIANT = "mlha" as "mlha" | "kopec";
+
+const heroImages = {
+  mlha: "/images/hero-trat-mlha.jpg",
+  kopec: "/images/hero-trat-kopec.jpg",
+} as const;
+
 export function McvvHeroSection({ content }: McvvHeroSectionProps) {
   return (
     <section className="relative min-h-[760px] bg-race-forest text-white lg:min-h-[820px]">
-      <Image src="/images/hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
+      <Image
+        src={heroImages[HERO_VARIANT]}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.16_0.035_150_/_0.95)_0%,oklch(0.16_0.035_150_/_0.38)_45%,oklch(0.16_0.035_150_/_0.9)_100%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.16_0.035_150_/_0.82)_0%,transparent_58%)]" />
 

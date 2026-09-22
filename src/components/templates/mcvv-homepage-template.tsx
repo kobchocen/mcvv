@@ -1,9 +1,10 @@
+import { BackToTop } from "@/components/molecules";
 import {
   McvvFinalCtaSection,
   McvvFooter,
   McvvGallerySection,
   McvvHeroSection,
-  McvvInfoSection,
+  McvvNavbar,
   McvvOverviewSection,
   McvvPartnersSection,
   McvvProfileSection,
@@ -19,17 +20,18 @@ export type McvvHomepageTemplateProps = {
 
 export function McvvHomepageTemplate({ content, galleryPhotoIds }: McvvHomepageTemplateProps) {
   return (
-    <main className="min-h-screen overflow-hidden bg-race-deep text-foreground">
+    <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvNavbar content={content} variant="solid" />
       <McvvHeroSection content={content} />
       <McvvOverviewSection content={content.overview} />
       <McvvProfileSection content={content.profile} />
       <McvvScheduleSection content={content.schedule} />
-      <McvvInfoSection content={content.info} />
       <McvvResultsSection content={content.results} />
       <McvvGallerySection content={content.gallery} photoIds={galleryPhotoIds} />
       <McvvPartnersSection content={content.partners} />
       <McvvFinalCtaSection content={content.finalCta} />
       <McvvFooter content={content} />
+      <BackToTop label={content.backToTop} />
     </main>
   );
 }

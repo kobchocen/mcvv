@@ -1,14 +1,13 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowRight, Trees } from "lucide-react";
 
 import { RaceStatCard } from "@/components/molecules";
-import { McvvNavbar } from "@/components/organisms/mcvv-navbar";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvHeroSectionProps = {
-  content: Pick<McvvHomepageContent, "brand" | "nav" | "hero">;
+  content: Pick<McvvHomepageContent, "hero">;
 };
 
 export function McvvHeroSection({ content }: McvvHeroSectionProps) {
@@ -18,9 +17,7 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.16_0.035_150_/_0.95)_0%,oklch(0.16_0.035_150_/_0.38)_45%,oklch(0.16_0.035_150_/_0.9)_100%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.16_0.035_150_/_0.82)_0%,transparent_58%)]" />
 
-      <McvvNavbar content={content} />
-
-      <div className="relative mx-auto flex min-h-[760px] w-full max-w-7xl flex-col px-4 pt-32 pb-5 sm:px-6 lg:min-h-[820px] lg:px-8 lg:pt-[120px]">
+      <div className="relative mx-auto flex min-h-[760px] w-full max-w-7xl flex-col px-4 py-16 sm:px-6 lg:min-h-[820px] lg:px-8 lg:py-20">
         <div className="flex flex-1 items-center py-16">
           <div className="w-full max-w-3xl">
             <div className="flex flex-wrap items-center gap-3">
@@ -45,7 +42,7 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 size="lg"
                 className="h-12 bg-race-accent px-6 font-display text-base font-semibold text-white hover:bg-race-accent-hover"
               >
-                <Link href="#register">
+                <Link href={content.hero.primaryHref as "/prihlasky"}>
                   {content.hero.primaryCta}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
@@ -56,7 +53,9 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 variant="outline"
                 className="h-12 border-white/15 bg-white/10 px-6 font-display text-base font-semibold text-white hover:bg-white/15 hover:text-white"
               >
-                <Link href="#info">{content.hero.secondaryCta}</Link>
+                <Link href={content.hero.secondaryHref as "/program"}>
+                  {content.hero.secondaryCta}
+                </Link>
               </Button>
               <Button
                 asChild
@@ -64,7 +63,9 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 variant="ghost"
                 className="h-12 px-6 font-display text-base font-semibold text-white hover:bg-white/10 hover:text-white"
               >
-                <Link href="#results">{content.hero.tertiaryCta}</Link>
+                <Link href={content.hero.tertiaryHref as "/results"}>
+                  {content.hero.tertiaryCta}
+                </Link>
               </Button>
             </div>
           </div>

@@ -10,43 +10,16 @@
       "menuLabel": "Open menu",
       "closeLabel": "Close menu",
       "home": {
-        "label": "Home",
+        "label": "Malá cena Velké Verandy",
         "href": "/"
       },
-      "raceLabel": "Race",
-      "raceLinks": [
-        {
-          "label": "Program",
-          "href": "/program",
-          "description": "Date, entry fee, categories",
-          "icon": "clipboard-list"
-        },
-        {
-          "label": "Date",
-          "href": "#date",
-          "description": "Date, place, and start time",
-          "icon": "calendar"
-        },
-        {
-          "label": "Course",
-          "href": "#route",
-          "description": "Course profile and elevation",
-          "icon": "route"
-        }
-      ],
       "links": [
-        {
-          "label": "History",
-          "href": "#results"
-        },
-        {
-          "label": "Photos",
-          "href": "#gallery"
-        },
-        {
-          "label": "Partners",
-          "href": "#partners"
-        }
+        { "label": "About", "href": "#about" },
+        { "label": "Course", "href": "#route" },
+        { "label": "Date", "href": "#date" },
+        { "label": "Results", "href": "#results" },
+        { "label": "Photos", "href": "#gallery" },
+        { "label": "Partners", "href": "#partners" }
       ]
     },
     "hero": {
@@ -56,8 +29,11 @@
       "titleLine2": "VELKE VERANDY",
       "claim": "A forest cross that tests you on every climb. Short, intense, and unforgiving, with steep uphills and fast technical descents.",
       "primaryCta": "Register",
-      "secondaryCta": "Race details",
+      "primaryHref": "/prihlasky",
+      "secondaryCta": "Race notice",
+      "secondaryHref": "/program",
       "tertiaryCta": "Results",
+      "tertiaryHref": "/results",
       "stats": [
         {
           "value": "4300",
@@ -72,8 +48,8 @@
           "label": "major climbs"
         },
         {
-          "value": "4",
-          "label": "steep descents"
+          "value": "30+",
+          "label": "editions of tradition"
         }
       ]
     },
@@ -84,10 +60,14 @@
         "Mala cena Velke Verandy is a traditional forest cross in the heart of the Chocen woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
         "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
       ],
-      "heritage": {
-        "value": "20+",
-        "label": "editions of tradition and hundreds of runners on the start line"
-      },
+      "actions": [
+        { "label": "Registration", "href": "/prihlasky" },
+        { "label": "Race notice", "href": "/program" },
+        { "label": "Instructions", "href": "/pokyny" },
+        { "label": "Start list", "href": "/startovka" },
+        { "label": "Results", "href": "/results" },
+        { "label": "Have a question? Contact the organizer.", "href": "/kontakt" }
+      ],
       "cards": [
         {
           "title": "Short, but brutal",
@@ -100,6 +80,24 @@
         {
           "title": "Atmosphere and tradition",
           "description": "A cold December Sunday, cheering spectators, and legendary climbs. A race with soul."
+        }
+      ],
+      "facts": [
+        {
+          "title": "Check-in",
+          "description": "On-site registration until 9:45 at Velká Veranda. Bib pickup for online entries."
+        },
+        {
+          "title": "Start",
+          "description": "Interval start in pairs every 15 s from 10:15."
+        },
+        {
+          "title": "Categories",
+          "description": "Adults, veterans, and youth. There is a contest for everyone."
+        },
+        {
+          "title": "Entry fee",
+          "description": "Adults CZK 100 online / CZK 200 on site. Youth CZK 50 / 100."
         }
       ]
     },
@@ -126,134 +124,102 @@
           "title": "Forest surface",
           "description": "Roads, paths, roots, and December mud."
         }
-      ]
+      ],
+      "mapKicker": "RACE COURSE",
+      "mapTitle": "START · FINISH",
+      "mapAddress": "Velká Veranda, Choceň",
+      "mapAlt": "Course map of Malá cena Velké Verandy",
+      "mapExpandLabel": "Enlarge course map"
     },
     "schedule": {
       "eyebrow": "03 — Date and place",
       "title": "Sunday, December 6",
       "items": [
-        "Every first Sunday in December",
-        "Chocen · start by Velka Veranda",
-        "Main race starts at 11:00"
+        { "icon": "calendar", "text": "Every first Sunday in December" },
+        { "icon": "clock", "text": "Race start at 10:15" },
+        {
+          "icon": "pin",
+          "text": "Choceň - Velká Veranda - ",
+          "gpsLabel": "GPS: 49°59'45\"N, 16°12'10\"E",
+          "gpsHref": "https://goo.gl/PT3Eoq"
+        }
       ],
       "countdownLabel": "Time until the next edition",
-      "countdown": [
+      "countdownUnits": {
+        "days": "days",
+        "hours": "hours",
+        "minutes": "minutes",
+        "seconds": "seconds"
+      },
+      "raceInProgress": "Race in progress",
+      "travel": [
         {
-          "value": "187",
-          "unit": "days"
+          "title": "By car",
+          "description": "Parking in the bend 1 km past Choceň towards Sruby (road 315), then 300 m on foot. Alternative: Krále Jiřího embankment, follow the green waymarks 500 m to Veranda."
         },
         {
-          "value": "14",
-          "unit": "hours"
+          "title": "By train",
+          "description": "Choceň station. Through the tunnel and park, along the left bank of the Tichá Orlice (Krále Jiřího embankment) to the gamekeeper's lodge, under the railway towards Týniště, green waymark NW, 2 km in total to the race centre."
         },
         {
-          "value": "32",
-          "unit": "minutes"
-        },
-        {
-          "value": "08",
-          "unit": "seconds"
+          "title": "By bus",
+          "description": "ČSAD station by the cinema. SW across the bridge to the left bank, then the same as from the train."
         }
-      ],
-      "cta": "Reserve entry",
-      "mapTitle": "START · FINISH",
-      "mapAddress": "Velka Veranda Restaurant, Chocen 565 01"
-    },
-    "info": {
-      "eyebrow": "04 — Runner information",
-      "title": "Everything you need to know",
-      "cards": [
-        {
-          "title": "Check-in",
-          "description": "9:00-10:30 at the finish by Velka Veranda. Pick up your bib and chip."
-        },
-        {
-          "title": "Start",
-          "description": "Mass start of the main race at 11:00. Kids races start from 10:00."
-        },
-        {
-          "title": "Categories",
-          "description": "Men, women, masters, and juniors. There is a contest for everyone."
-        },
-        {
-          "title": "Entry fee",
-          "description": "CZK 200 in pre-registration, CZK 300 on site. Kids race free."
-        },
-        {
-          "title": "Refreshments",
-          "description": "Hot tea, sausage, and something stronger to warm up at the finish."
-        },
-        {
-          "title": "Facilities",
-          "description": "Heated changing rooms, toilets, and indoor seating at Velka Veranda."
-        }
-      ],
-      "contactTitle": "Have a question? Contact the organizer.",
-      "contactDescription": "K.O.B. Chocen, z.s. · +420 777 123 456 · info@velkaveranda.cz",
-      "contactCta": "Write an email"
+      ]
     },
     "results": {
-      "eyebrow": "05 — Results and history",
+      "eyebrow": "04 — Results and statistics",
       "title": "Generations of runners, one course",
-      "allLabel": "All editions",
-      "years": [
+      "allLabel": "Results archive",
+      "yearLabel": "Latest edition",
+      "linkLabel": "Full results",
+      "empty": "Results will appear after the next race.",
+      "searchPlaceholder": "Search runners…",
+      "searchEmpty": "No matching runner.",
+      "stats": [
         {
-          "year": "2025",
-          "label": "Edition",
-          "winners": [
-            {
-              "category": "Men",
-              "name": "Jan Novak",
-              "time": "15:42"
-            },
-            {
-              "category": "Women",
-              "name": "Eva Dvorakova",
-              "time": "18:09"
-            }
-          ],
-          "linkLabel": "View complete results"
+          "slug": "rekordy",
+          "title": "Course records",
+          "description": "When and who improved each category record.",
+          "linkLabel": "Record evolution"
         },
         {
-          "year": "2024",
-          "label": "Edition",
-          "winners": [
-            {
-              "category": "Men",
-              "name": "Petr Svoboda",
-              "time": "15:58"
-            },
-            {
-              "category": "Women",
-              "name": "Lucie Markova",
-              "time": "18:31"
-            }
-          ],
-          "linkLabel": "View complete results"
+          "slug": "vitezove",
+          "title": "Winners",
+          "description": "Absolute men's and women's winners in each edition.",
+          "linkLabel": "Absolute winners"
         },
         {
-          "year": "2023",
-          "label": "Edition",
-          "winners": [
-            {
-              "category": "Men",
-              "name": "Jan Novak",
-              "time": "16:04"
-            },
-            {
-              "category": "Women",
-              "name": "Eva Dvorakova",
-              "time": "18:50"
-            }
-          ],
-          "linkLabel": "View complete results"
+          "slug": "casy",
+          "title": "Best times",
+          "description": "Fastest men's and women's performances across all editions.",
+          "linkLabel": "TOP 20"
+        },
+        {
+          "slug": "vek",
+          "title": "Records by age",
+          "description": "Best time by age in the year of the race.",
+          "linkLabel": "By age"
+        },
+        {
+          "slug": "veterani",
+          "title": "MCVV veterans",
+          "description": "Runners with the most starts in the race's history.",
+          "linkLabel": "Veterans' club"
+        },
+        {
+          "slug": "ucast",
+          "title": "Attendance",
+          "description": "Participants, newcomers, and personal records by year.",
+          "linkLabel": "Overall attendance"
         }
       ]
     },
     "gallery": {
-      "eyebrow": "06 — Gallery",
+      "eyebrow": "05 — Gallery",
       "title": "The atmosphere of a freezing Sunday",
       "description": "Mud, fog, finish-line emotion, and climbs that take everything out of you.",
+      "allLabel": "Full photo gallery",
       "alt": [
         "A runner climbs a rocky trail in a winter forest.",
         "Topographic map of the forest course.",
@@ -262,10 +228,9 @@
       ]
     },
     "partners": {
-      "eyebrow": "07 — Partners and organizers",
+      "eyebrow": "06 — Partners and organizers",
       "title": "A race held together by a group of enthusiasts",
-      "names": ["VERANDA", "CHOCEN", "RUNTECH", "FOREST", "SPORTIA", "AKTIV"],
-      "organizer": "Organized by K.O.B. Chocen, z.s. in cooperation with the town of Chocen."
+      "organizer": "Organized by K.O.B. Choceň, z.s. in cooperation with the town of Choceň."
     },
     "finalCta": {
       "title": "Ready for four climbs?",
@@ -277,101 +242,268 @@
       "columns": [
         {
           "title": "Race",
-          "links": ["About", "Course and profile", "Date and place", "Information"]
+          "links": [
+            { "label": "About", "href": "#about" },
+            { "label": "Course and profile", "href": "#route" },
+            { "label": "Date and place", "href": "#date" },
+            { "label": "Race notice", "href": "/program" },
+            { "label": "Registration", "href": "/prihlasky" }
+          ]
         },
         {
           "title": "Results",
-          "links": ["Current edition", "Results archive", "Race history", "Photo gallery"]
+          "links": [
+            { "label": "Latest edition", "href": "/results/{year}" },
+            { "label": "Results archive", "href": "/results" },
+            { "label": "Course records", "href": "/statistiky/rekordy" },
+            { "label": "Winners", "href": "/statistiky/vitezove" },
+            { "label": "Photo gallery", "href": "/fotogalerie" }
+          ]
         },
         {
           "title": "Contact",
           "links": [
-            "K.O.B. Chocen, z.s.",
-            "info@velkaveranda.cz",
-            "+420 777 123 456",
-            "Chocen 565 01"
+            { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
+            { "label": "Contact the organizer", "href": "/kontakt" },
+            { "label": "Choceň" }
           ]
         }
       ],
       "copyright": "© 2026 Mala cena Velke Verandy · K.O.B. Chocen, z.s.",
       "made": "Made with respect for the forest."
-    }
+    },
+    "backToTop": "Back to top"
   },
   "Program": {
     "header": {
-      "eyebrow": "Information · 2026 edition",
-      "title": "Race program",
-      "lead": "All practical race information in one place: date, entry fee, categories, arrival, and facilities. Read the program before you head into the woods.",
-      "meta": [
-        {
-          "label": "Sun, Dec 6, 2026",
-          "icon": "calendar"
-        },
-        {
-          "label": "Chocen",
-          "icon": "map-pin"
-        },
-        {
-          "label": "4.3 km · 200 m+",
-          "icon": "route"
-        }
-      ]
+      "eyebrow": "K.O.B. Choceň · 2026",
+      "title": "Race notice",
+      "lead": "{n}. edition of Malá cena Velké Verandy"
     },
     "tocTitle": "On this page",
-    "sections": [
-      {
-        "title": "Date and time",
-        "summary": "Sunday, December 6, 2026",
-        "body": "The main race starts at 11:00, kids races from 9:30. The awards ceremony is planned for 13:30 in the race center.",
-        "icon": "calendar"
+    "emptyCategories": "Categories will be added.",
+    "dash": "—",
+    "gpsLabel": "Open map (GPS)",
+    "backToTop": "Back to top",
+    "onlineEntry": "Online registration",
+    "contactLabel": "Contact the organizer",
+    "fees": {
+      "onlineAdult": "Adults online",
+      "onlineKids": "Youth online",
+      "onsiteAdult": "Adults on site",
+      "onsiteKids": "Youth on site",
+      "refund": "Entry fees are refunded if you withdraw by the online registration deadline ({date}). After that date fees are not refunded.",
+      "refundOpen": "Entry fees are refunded if you withdraw by the online registration deadline. After that date fees are not refunded.",
+      "freeEntry": "Winners of the main men's and women's categories and members of the MCVV veterans club enter free if they register online in time."
+    },
+    "prizes": {
+      "adult": "Men and women",
+      "veterans": "Veterans",
+      "place": "{n}. place",
+      "material": "Prizes in kind for the best in the youth and junior categories."
+    },
+    "categories": {
+      "name": "Category",
+      "birthYear": "Year of birth",
+      "open": "no age limit",
+      "younger": "{year} and younger",
+      "older": "{year} and older"
+    },
+    "timetable": {
+      "registration": "Until 9:45 — on-site registration",
+      "start": "10:15 — start (15 s interval)",
+      "ceremony": "12:20 — awards ceremony"
+    },
+    "sections": {
+      "intro": {
+        "title": "Race notice",
+        "summary": "Basic information for this edition",
+        "body": "One forest course and an interval start."
       },
-      {
-        "title": "Race center",
-        "summary": "Sokolovna Chocen — Tyrsovo namesti 1, Chocen",
-        "body": "Check-in, changing rooms, and the finish are in one place. The start is roughly 300 meters from the center.",
-        "icon": "map-pin"
+      "date": {
+        "title": "Date",
+        "summary": "Sunday 6 December 2026",
+        "body": "The traditional first Sunday in December."
       },
-      {
-        "title": "Arrival and parking",
-        "summary": "Parking by the sports hall and in nearby streets",
-        "body": "Please arrive with enough time. After 10:30, traffic near the start will be managed by organizers.",
-        "icon": "car"
+      "venue": {
+        "title": "Venue",
+        "summary": "Velká Veranda, Choceň",
+        "body": "Start and finish at Velká Veranda. GPS 49°59′45″N, 16°12′10″E."
       },
-      {
-        "title": "Entry fee",
-        "summary": "CZK 200 in advance, CZK 300 on site",
-        "body": "Kids races are free. The fee includes chip timing, finish refreshments, and race facilities.",
-        "icon": "wallet"
+      "organizer": {
+        "title": "Organizer",
+        "summary": "K.O.B. Choceň",
+        "body": "Choceň orienteering club."
       },
-      {
+      "course": {
+        "title": "Course",
+        "summary": "4 300 m · 200 m climb",
+        "body": "Forest roads and paths, 400 m of asphalt. 200 m of climb. Marked with streamers. One course for all categories."
+      },
+      "registration": {
+        "title": "Registration",
+        "summary": "Online registration · on site until 9:45",
+        "body": "On race day you can register on site until 9:45. An online entry is valid only after the payment is received."
+      },
+      "fees": {
+        "title": "Entry fees",
+        "summary": "By category, cheaper online",
+        "body": "Fees follow the rates below."
+      },
+      "categories": {
         "title": "Categories",
-        "summary": "Men, women, juniors, and masters",
-        "body": "Categories will be confirmed based on registrations. The organizer may merge categories with low participation.",
-        "icon": "users"
+        "summary": "Age limits for 2026",
+        "body": ""
       },
-      {
-        "title": "Check-in and registration",
-        "summary": "9:00-10:30 in the race center",
-        "body": "On-site registration is available until capacity is reached. Pick up your bib and chip no later than 30 minutes before the start.",
-        "icon": "clipboard-list"
+      "prizes": {
+        "title": "Prizes",
+        "summary": "Men and women, veterans, youth and juniors",
+        "body": "Cash prizes in CZK in the men's and women's categories (1st–5th) and veterans (1st–3rd)."
       },
-      {
-        "title": "Courses",
-        "summary": "Main course 4.3 km · 200 m+ elevation",
-        "body": "Forest roads, paths, short steep climbs, and technical descents. Kids courses will be marked near the race center.",
-        "icon": "route"
+      "start": {
+        "title": "Start",
+        "summary": "15 s interval from 10:15",
+        "body": "Start interval {seconds} s from 10:15. One wave, no separate kids' start. One course for all categories."
       },
-      {
-        "title": "Facilities and refreshments",
-        "summary": "Changing rooms, toilets, hot tea, and finish refreshments",
-        "body": "Warm refreshments will be available after the finish. Please follow organizer instructions and keep the race area clean.",
-        "icon": "coffee"
+      "timetable": {
+        "title": "Timetable",
+        "summary": "9:45 · 10:15 · 12:20",
+        "body": "On-site registration closes at 9:45. Start from 10:15. Awards at 12:20."
+      },
+      "privacy": {
+        "title": "Privacy",
+        "summary": "GDPR and photos",
+        "body": "We process personal data to run the race and publish results. Photos and video may be used to present the event. Objections can be sent to the organizer."
+      },
+      "notice": {
+        "title": "Notice",
+        "summary": "At your own risk",
+        "body": "Participation is at your own risk. The race is not suitable for children under 6. Only those who complete the whole course without help from another person are listed in the results. Sales and stalls only with the organizer's consent."
+      },
+      "info": {
+        "title": "Information",
+        "summary": "mcvv.org",
+        "body": "Current information is on the website. Send questions through the form; we do not publish e-mail or phone."
       }
-    ],
-    "cta": {
-      "title": "Ready to start?",
-      "description": "Secure your place on the next edition's start line and arrive with time to spare.",
-      "button": "Register for the race"
+    }
+  },
+  "Contact": {
+    "eyebrow": "Contact",
+    "title": "Contact the organizer",
+    "intro": "Write to us. We will reply by e-mail. We do not publish the address or phone on the site.",
+    "name": "Name",
+    "email": "Your e-mail",
+    "message": "Message",
+    "submit": "Send",
+    "sending": "Sending…",
+    "success": "Message sent. We will get back to you.",
+    "errorInvalid": "Please check your name, e-mail, and message.",
+    "errorSend": "The message could not be sent. Please try again.",
+    "back": "Back to home"
+  },
+  "Instructions": {
+    "eyebrow": "34th edition",
+    "title": "Instructions",
+    "status": "Instructions are being prepared",
+    "back": "Back to the race notice"
+  },
+  "StartList": {
+    "eyebrow": "34th edition",
+    "title": "Start list",
+    "status": "The start list has not been published yet",
+    "back": "Back to the race notice"
+  },
+  "Entries": {
+    "eyebrow": "34th edition",
+    "title": "Registration",
+    "closed": "Registration is not open yet",
+    "raceDate": "Race: Sunday 6 December 2026",
+    "onlineAdult": "Adults online",
+    "onlineKids": "Youth online",
+    "onsiteAdult": "Adults on site",
+    "onsiteKids": "Youth on site",
+    "back": "Back to the race notice"
+  },
+  "PhotoGallery": {
+    "eyebrow": "Gallery",
+    "title": "Photos by edition",
+    "intro": "Photos grouped by race year. Pick a year above.",
+    "count": "{count} photos · {year}",
+    "photoAlt": "Photo from the {year} edition",
+    "empty": "The gallery is empty.",
+    "back": "Back to home"
+  },
+  "Runner": {
+    "eyebrow": "Runner",
+    "starts": "Starts",
+    "record": "Personal best",
+    "average": "Average time",
+    "lastStart": "Last start",
+    "year": "Year",
+    "time": "Time",
+    "graph": "Performance chart",
+    "graphTitle": "Gap to course record {course} / PB {pb} / average {avg}",
+    "loss": "Gap to PB",
+    "club": "Club",
+    "category": "Category",
+    "os": "PB",
+    "medalAbs": "Overall {rank}. place",
+    "medalAge": "Category {rank}. place",
+    "photos": "Photos",
+    "photoAlt": "Photo — {name}",
+    "loadMore": "Load more",
+    "close": "Close",
+    "empty": "No results for this runner yet.",
+    "back": "Results archive"
+  },
+  "Stats": {
+    "eyebrow": "Statistics",
+    "colName": "Runner",
+    "colTime": "Time",
+    "colYear": "Year",
+    "colBirth": "Born",
+    "colClub": "Club",
+    "colRank": "Rank",
+    "colAge": "Age",
+    "colStarts": "Starts",
+    "colRecord": "Personal best",
+    "colAverage": "Average",
+    "colCount": "Runners",
+    "colNewcomers": "Newcomers",
+    "colPrs": "Personal records",
+    "colBest": "Best time",
+    "men": "Men",
+    "women": "Women",
+    "menTime": "Time M",
+    "womenTime": "Time W",
+    "menYear": "Year M",
+    "womenYear": "Year W",
+    "chartCaption": "Attendance men / women",
+    "empty": "Nothing here yet.",
+    "back": "Back to home",
+    "rekordy": {
+      "title": "Course records and their evolution",
+      "intro": ""
+    },
+    "vitezove": {
+      "title": "Absolute winners",
+      "intro": "Best men's and women's time in each edition."
+    },
+    "casy": {
+      "title": "Best times",
+      "intro": "TOP 20 men and TOP 20 women across all editions."
+    },
+    "vek": {
+      "title": "Records by age",
+      "intro": "Best time at a given age (race year − year of birth) for men and women."
+    },
+    "veterani": {
+      "title": "MCVV veterans",
+      "intro": "Veterans' club: runners with more starts than half the number of editions with results."
+    },
+    "ucast": {
+      "title": "Overall attendance",
+      "intro": "Participants, newcomers, and personal records in each year."
     }
   },
   "LanguageSwitcher": {

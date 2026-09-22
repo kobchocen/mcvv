@@ -7,5 +7,13 @@ export default defineRouting({
   pathnames: {
     "/": "/",
     "/program": "/program",
+    "/prihlasky": "/prihlasky",
+    "/pokyny": "/pokyny",
+    "/startovka": "/startovka",
+    "/kontakt": "/kontakt",
+    "/results": "/results",
+    "/statistiky/[slug]": "/statistiky/[slug]",
+    "/bezec/[id]": "/bezec/[id]",
+    "/fotogalerie": "/fotogalerie",
   },
 });

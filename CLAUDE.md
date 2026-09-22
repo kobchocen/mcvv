@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Malá cena Velké Verandy** — a presentation landing page for a traditional forest cross-country race in Choceň. Currently a static site; the Prisma setup is prepared for future dynamic content (registrations, results).
+**Malá cena Velké Verandy** — a presentation site for a traditional forest cross-country race in Choceň. The app is dynamic: copy and race regulations live in translation JSON, while results, editions, and gallery photos are read from MariaDB via Prisma at request time. Homepage and results routes set `dynamic = "force-dynamic"`. Registration UI is not built yet; the Prisma models already exist.
 
 ## Commands
 
@@ -17,8 +17,11 @@ pnpm format            # Prettier (write)
 pnpm format:check      # Prettier (check only)
 pnpm prisma:generate   # regenerate Prisma Client after schema changes
 pnpm prisma:migrate    # create & apply a dev migration
+pnpm prisma:seed       # seed dictionary tables (categories, photo authors, locations)
 pnpm prisma:studio     # open Prisma Studio
 ```
+
+Local MariaDB: `docker compose -f compose.dev.yaml up -d`. The app will not render homepage, gallery, or results without a reachable `DATABASE_URL`.
 
 Requires Node 24.15.0 (`.nvmrc`) and pnpm 11.4.0 via Corepack. Run `nvm use && corepack enable` before anything else on a fresh machine.
 
@@ -30,7 +33,7 @@ The husky `pre-commit` hook runs `pnpm lint` and `pnpm format:check` on every co
 
 Copy `.env.example` → `.env` and set `DATABASE_URL` (MySQL/MariaDB connection string, e.g. `mysql://mcvv:mcvv@localhost:3306/mcvv`). `src/lib/env.ts` validates env vars with Zod on boot and throws if required values are missing or malformed. **Import `{ env }` from `@/lib/env` everywhere** — never read `process.env` directly.
 
-Validated variables: `NODE_ENV`, `DATABASE_URL`, `TIME_ZONE` (defaults to `Europe/Prague`).
+Validated variables: `NODE_ENV`, `DATABASE_URL`, `TIME_ZONE` (defaults to `Europe/Prague`), `CONTACT_TO` (defaults to `mcvv@mcvv.org`). Optional SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`. Without `SMTP_HOST` the contact form logs the message and still succeeds.
 
 ## Architecture
 
@@ -46,7 +49,12 @@ Translation messages live at `src/i18n/locales/<locale>/common.json` and are loa
 
 ### Content data flow
 
-The landing page is **entirely content-driven through translations**. No CMS or DB reads happen at render time. `src/app/[locale]/page.tsx` calls `t.raw("namespace")` for each section and casts the result to the corresponding slice of `McvvHomepageContent` (defined in `src/components/templates/mcvv-homepage-content.ts`). When adding or changing content, edit both locale JSON files and keep the `McvvHomepageContent` type in sync.
+Copy and race regulations stay in translations; live race data comes from Prisma.
+
+- **Copy / i18n:** `src/i18n/locales/<locale>/common.json`. Homepage and `/program` call `t.raw(...)` and cast to `McvvHomepageContent` / `McvvProgramContent` (`src/components/templates/`). When changing copy, edit both locale files and keep the TypeScript types in sync.
+- **Results:** `/results` and `/results/[year]` query `Result`, `Category`, `Club`, `Edition`, `StartEntry`, and `Split`. Homepage result cards use the latest three years from the same tables (JSON winners are fallback only).
+- **Gallery:** homepage samples portrait blobs from `Photo` (`mcvv_fotky`) and serves them through `/api/test/fotka?id=`. Static files in `public/images/` and `public/illustrations/` are fallbacks.
+- **Not wired yet:** registration UI, `News`, and `Sponsor` (partner names still come from JSON).
 
 ### Provider stack
 
@@ -58,7 +66,7 @@ The locale layout at `src/app/[locale]/layout.tsx` injects `locale`, `messages`,
 
 Shared Prisma client is in `src/lib/db/client.ts` — attached to `global.prisma` to survive hot reloads. Import `{ prisma }` from there; don't instantiate `PrismaClient` elsewhere.
 
-Schema lives in `prisma/schema.prisma` (MySQL/MariaDB datasource). After editing the schema, run `pnpm prisma:generate` and commit the generated client alongside the migration.
+Schema lives in `prisma/schema.prisma` (MySQL/MariaDB datasource mapped onto legacy table names). `pnpm prisma:seed` upserts dictionary tables only; historical results and photos are imported from the old site (`docs/sql_create.sql`, `docs/sql_pl_data.sql`). After editing the schema, run `pnpm prisma:generate` and commit the generated client alongside the migration. `prisma migrate dev` needs the `mcvv_shadow` database (see `compose.dev.yaml`).
 
 ### Components
 

@@ -53,6 +53,13 @@ export function isPortraitImage(buffer: Buffer): boolean {
   return !!(dims && dims.height > dims.width);
 }
 
+export function formatCzk(value: number | null | undefined, locale: string, dash = "—"): string {
+  if (value == null) {
+    return dash;
+  }
+  return locale === "cs" ? `${value}\u00a0Kč` : `CZK ${value}`;
+}
+
 /** Convert race time in seconds to MM:SS format (e.g. 910 -> "15:10") */
 export function formatRaceTime(seconds: number): string {
   const min = Math.floor(seconds / 60);

@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvFinalCtaSectionProps = {
@@ -24,7 +24,7 @@ export function McvvFinalCtaSection({ content }: McvvFinalCtaSectionProps) {
           size="lg"
           className="mt-8 h-12 bg-white px-7 font-display text-base font-bold text-race-deep hover:bg-white/90"
         >
-          <Link href="#register">
+          <Link href="/prihlasky">
             {content.cta}
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>

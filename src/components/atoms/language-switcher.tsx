@@ -2,6 +2,7 @@
 
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 
 import { locales, localeLabels, type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -33,10 +34,25 @@ export function LanguageSwitcher({
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const t = useTranslations("LanguageSwitcher");
 
   const handleChange = (nextLocale: Locale) => {
     if (nextLocale === locale) return;
+    if (pathname === "/bezec/[id]") {
+      router.replace(
+        { pathname: "/bezec/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    if (pathname === "/statistiky/[slug]") {
+      router.replace(
+        { pathname: "/statistiky/[slug]", params: { slug: String(params.slug ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
     router.replace({ pathname }, { locale: nextLocale });
   };
 

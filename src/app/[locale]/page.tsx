@@ -78,7 +78,7 @@ export default async function Home({ params }: PageProps) {
       }),
     ]);
 
-    const winners: { category: string; name: string; time: string }[] = [];
+    const winners: { category: string; name: string; time: string; runnerId?: string }[] = [];
     if (topMen) {
       winners.push({
         category: isCs ? "Muži" : "Men",

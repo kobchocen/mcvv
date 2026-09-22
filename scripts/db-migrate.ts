@@ -21,8 +21,13 @@ try {
   stage = "Prisma CLI resolution";
   const cli = prismaCliPath();
   stage = "Prisma migrate deploy";
+  const { SMTP_PORT, ...restEnv } = env;
   const result = spawnSync(process.execPath, [cli, "migrate", "deploy"], {
-    env: { ...env, DATABASE_URL: migrationUrl(env.DATABASE_URL!, caPath) },
+    env: {
+      ...restEnv,
+      ...(SMTP_PORT !== undefined ? { SMTP_PORT: String(SMTP_PORT) } : {}),
+      DATABASE_URL: migrationUrl(env.DATABASE_URL!, caPath),
+    },
     encoding: "utf8",
     timeout: 300_000,
     maxBuffer: 4 * 1024 * 1024,

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { PhotoGalleryGrid } from "@/components/molecules";
 import { McvvNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/db/client";
+import { photoCaption } from "@/lib/photos/caption";
 import { cn } from "@/lib/utils";
 import type { McvvHomepageContent } from "@/components/templates";
 import { type Locale } from "@/i18n/routing";
@@ -44,9 +45,31 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
       ? []
       : await prisma.photo.findMany({
           where: { year: selectedYear, image: { not: null } },
-          select: { id: true, originalFilename: true },
+          select: {
+            id: true,
+            year: true,
+            debugText: true,
+            location: { select: { desc: true } },
+            runners: {
+              select: { runner: { select: { name: true } } },
+              orderBy: { orderFromLeft: "asc" },
+            },
+          },
           orderBy: { id: "asc" },
         });
+  const gallery = photos.map((photo) => {
+    const caption = photoCaption({
+      year: photo.year,
+      description: photo.debugText,
+      place: photo.location.desc,
+      people: photo.runners.map((row) => row.runner.name),
+    });
+    return {
+      id: photo.id,
+      caption,
+      alt: caption || copy("photoAlt", { year: selectedYear ?? "" }),
+    };
+  });
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -95,22 +118,11 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
                 {copy("count", { count: photos.length, year: selectedYear ?? "" })}
               </p>
 
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {photos.map((photo) => (
-                  <div
-                    key={photo.id}
-                    className="relative aspect-[3/4] overflow-hidden border border-race-line/60 bg-race-forest"
-                  >
-                    <Image
-                      src={`/api/fotka?id=${photo.id}`}
-                      alt={photo.originalFilename || copy("photoAlt", { year: selectedYear ?? "" })}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
+              <PhotoGalleryGrid
+                photos={gallery}
+                loadMoreLabel={copy("loadMore")}
+                closeLabel={copy("close")}
+              />
             </>
           )}
 

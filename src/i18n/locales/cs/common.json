@@ -230,7 +230,7 @@
     "partners": {
       "eyebrow": "06 — Partneři a pořadatelé",
       "title": "Závod, který drží pohromadě parta nadšenců",
-      "organizer": "Pořádá K.O.B. Choceň, z.s. ve spolupráci s městem Choceň."
+      "organizer": "Pořádá K.O.B. Choceň, z.s."
     },
     "finalCta": {
       "title": "Připraven na čtyři kopce?",
@@ -244,8 +244,6 @@
           "title": "Závod",
           "links": [
             { "label": "O závodě", "href": "#about" },
-            { "label": "Trať a profil", "href": "#route" },
-            { "label": "Termín a místo", "href": "#date" },
             { "label": "Rozpis", "href": "/program" },
             { "label": "Přihláška", "href": "/prihlasky" }
           ]
@@ -255,17 +253,14 @@
           "links": [
             { "label": "Poslední ročník", "href": "/results/{year}" },
             { "label": "Archiv výsledků", "href": "/results" },
-            { "label": "Traťové rekordy", "href": "/statistiky/rekordy" },
-            { "label": "Vítězové", "href": "/statistiky/vitezove" },
-            { "label": "Fotogalerie", "href": "/fotogalerie" }
+            { "label": "Traťové rekordy", "href": "/statistiky/rekordy" }
           ]
         },
         {
           "title": "Kontakt",
           "links": [
             { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
-            { "label": "Napsat pořadateli", "href": "/kontakt" },
-            { "label": "Choceň" }
+            { "label": "Napsat pořadateli", "href": "/kontakt" }
           ]
         }
       ],
@@ -431,6 +426,8 @@
     "count": "{count} fotek · {year}",
     "photoAlt": "Fotografie z ročníku {year}",
     "empty": "V galerii zatím nic není.",
+    "loadMore": "Načíst další",
+    "close": "Zavřít",
     "back": "Zpět na úvod"
   },
   "Runner": {

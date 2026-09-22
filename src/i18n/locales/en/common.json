@@ -230,7 +230,7 @@
     "partners": {
       "eyebrow": "06 — Partners and organizers",
       "title": "A race held together by a group of enthusiasts",
-      "organizer": "Organized by K.O.B. Choceň, z.s. in cooperation with the town of Choceň."
+      "organizer": "Organized by K.O.B. Choceň, z.s."
     },
     "finalCta": {
       "title": "Ready for four climbs?",
@@ -244,8 +244,6 @@
           "title": "Race",
           "links": [
             { "label": "About", "href": "#about" },
-            { "label": "Course and profile", "href": "#route" },
-            { "label": "Date and place", "href": "#date" },
             { "label": "Race notice", "href": "/program" },
             { "label": "Registration", "href": "/prihlasky" }
           ]
@@ -255,17 +253,14 @@
           "links": [
             { "label": "Latest edition", "href": "/results/{year}" },
             { "label": "Results archive", "href": "/results" },
-            { "label": "Course records", "href": "/statistiky/rekordy" },
-            { "label": "Winners", "href": "/statistiky/vitezove" },
-            { "label": "Photo gallery", "href": "/fotogalerie" }
+            { "label": "Course records", "href": "/statistiky/rekordy" }
           ]
         },
         {
           "title": "Contact",
           "links": [
             { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
-            { "label": "Contact the organizer", "href": "/kontakt" },
-            { "label": "Choceň" }
+            { "label": "Contact the organizer", "href": "/kontakt" }
           ]
         }
       ],
@@ -431,6 +426,8 @@
     "count": "{count} photos · {year}",
     "photoAlt": "Photo from the {year} edition",
     "empty": "The gallery is empty.",
+    "loadMore": "Load more",
+    "close": "Close",
     "back": "Back to home"
   },
   "Runner": {

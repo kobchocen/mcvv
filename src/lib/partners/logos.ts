@@ -41,7 +41,7 @@ export async function loadPartners() {
   try {
     const rows = await prisma.sponsor.findMany({
       where: { active: true },
-      orderBy: [{ order: "asc" }, { id: "asc" }],
+      orderBy: [{ category: "asc" }, { order: "asc" }, { id: "asc" }],
       select: { name: true, link: true, image: true },
     });
     return rows

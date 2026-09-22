@@ -1,4 +1,5 @@
 export * from "./back-to-top";
+export * from "./photo-gallery-grid";
 export * from "./race-countdown";
 export * from "./highlight-hashed-row";
 export * from "./runner-name-link";

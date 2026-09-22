@@ -11,7 +11,7 @@ export type McvvResultsSectionProps = {
 
 export function McvvResultsSection({ content }: McvvResultsSectionProps) {
   return (
-    <section id="results" className="bg-race-forest px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section id="results" className="bg-race-deep px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
           eyebrow={content.eyebrow}

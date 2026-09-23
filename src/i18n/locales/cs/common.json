@@ -453,6 +453,20 @@
     "empty": "Pro tohoto běžce zatím nejsou výsledky.",
     "back": "Archiv výsledků"
   },
+  "Auth": {
+    "title": "Přihlášení",
+    "email": "E-mail",
+    "password": "Heslo",
+    "submit": "Přihlásit se",
+    "error": "Neplatný e-mail nebo heslo.",
+    "logout": "Odhlásit se",
+    "signedIn": "Jste přihlášeni jako {name}."
+  },
+  "Admin": {
+    "eyebrow": "Správa",
+    "title": "Administrace",
+    "placeholder": "Ročníky a kategorie v další vlně."
+  },
   "Stats": {
     "eyebrow": "Statistiky",
     "colName": "Běžec",

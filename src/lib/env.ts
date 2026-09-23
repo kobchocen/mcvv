@@ -22,6 +22,13 @@ const envSchema = z.object({
   SMTP_USER: emptyToUndefined,
   SMTP_PASS: emptyToUndefined,
   SMTP_FROM: emptyToUndefined,
+  SESSION_SECRET: emptyToUndefined,
+  ADMIN_EMAIL: emptyToUndefined,
+  ADMIN_PASSWORD: emptyToUndefined,
+  ADMIN_NAME: emptyToUndefined,
+  ORGANIZER_EMAIL: emptyToUndefined,
+  ORGANIZER_PASSWORD: emptyToUndefined,
+  ORGANIZER_NAME: emptyToUndefined,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -37,6 +44,13 @@ const parsedEnv = envSchema.safeParse({
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
   SMTP_FROM: process.env.SMTP_FROM,
+  SESSION_SECRET: process.env.SESSION_SECRET,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  ADMIN_NAME: process.env.ADMIN_NAME,
+  ORGANIZER_EMAIL: process.env.ORGANIZER_EMAIL,
+  ORGANIZER_PASSWORD: process.env.ORGANIZER_PASSWORD,
+  ORGANIZER_NAME: process.env.ORGANIZER_NAME,
 });
 
 if (!parsedEnv.success) {

@@ -453,6 +453,20 @@
     "empty": "No results for this runner yet.",
     "back": "Results archive"
   },
+  "Auth": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "error": "Invalid email or password.",
+    "logout": "Sign out",
+    "signedIn": "You are signed in as {name}."
+  },
+  "Admin": {
+    "eyebrow": "Back office",
+    "title": "Administration",
+    "placeholder": "Editions and categories will follow in the next wave."
+  },
   "Stats": {
     "eyebrow": "Statistics",
     "colName": "Runner",

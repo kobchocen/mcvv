@@ -15,5 +15,7 @@ export default defineRouting({
     "/statistiky/[slug]": "/statistiky/[slug]",
     "/bezec/[id]": "/bezec/[id]",
     "/fotogalerie": "/fotogalerie",
+    "/prihlaseni": "/prihlaseni",
+    "/admin": "/admin",
   },
 });

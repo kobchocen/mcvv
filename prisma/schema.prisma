@@ -320,12 +320,31 @@ model Split {
 // Ostatní
 // ============================================
 
-/// Uživatelé (admin přístup k původnímu webu)
-model User {
-  username String @id @map("a_user") @db.VarChar(8)
+/// Legacy admin users (plaintext, do not use for login)
+model LegacyUser {
+  username String  @id @map("a_user") @db.VarChar(8)
   password String? @map("a_passwd") @db.VarChar(8)
 
   @@map("users")
+}
+
+enum UserRole {
+  registrar
+  organizer
+  admin
+}
+
+/// Application accounts (hashed passwords). Not the legacy `users` table.
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  name         String   @db.VarChar(80)
+  role         UserRole
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("mcvv_user")
 }
 
 /// Sponzoři / partneři

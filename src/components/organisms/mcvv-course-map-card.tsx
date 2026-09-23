@@ -31,12 +31,14 @@ function MapFace({
   return (
     <>
       <McvvCourseMap alt={alt} />
-      <p className="absolute right-3 top-3 z-10 max-w-[calc(100%-1.5rem)] bg-race-deep/85 px-2.5 py-1.5 text-right font-display text-[10px] font-semibold tracking-[0.14em] text-race-accent sm:text-xs">
+      <p className="absolute top-3 left-3 z-10 max-w-[calc(100%-4.5rem)] bg-race-surface/90 px-2.5 py-1.5 text-left font-display text-[10px] font-semibold tracking-[0.14em] text-race-accent backdrop-blur sm:text-xs dark:bg-race-deep/85">
         {kicker}
       </p>
       <div className="absolute inset-x-3 bottom-3 z-10 sm:left-3 sm:right-auto sm:w-[16rem]">
-        <div className="border-2 border-race-accent bg-race-deep/90 p-3 backdrop-blur sm:p-4">
-          <p className="font-display text-base font-semibold text-white sm:text-lg">{title}</p>
+        <div className="border-2 border-race-accent bg-race-surface/90 p-3 backdrop-blur sm:p-4 dark:bg-race-deep/90">
+          <p className="font-display text-base font-semibold text-foreground sm:text-lg dark:text-white">
+            {title}
+          </p>
           <p className="mt-1 text-xs leading-5 text-race-muted sm:text-sm sm:leading-6">
             {address}
           </p>
@@ -90,7 +92,7 @@ export function McvvCourseMapCard({
   return (
     <McvvCourseMapLightbox
       expandLabel={expandLabel}
-      preview={<MapFace {...overlay} alt="" showArrow={false} />}
+      preview={<MapFace {...overlay} alt="" showArrow />}
       expanded={<MapFace {...overlay} alt={alt} showArrow />}
     />
   );

@@ -28,7 +28,7 @@ export function McvvResultsSection({ content }: McvvResultsSectionProps) {
               <Button
                 asChild
                 variant="outline"
-                className="border-white/15 bg-white/10 font-display font-semibold text-foreground hover:bg-white/15 dark:text-white"
+                className="border-race-line bg-race-surface font-display font-semibold text-foreground hover:bg-race-accent hover:text-white dark:border-white/15 dark:bg-white/10 dark:text-white"
               >
                 <Link href={"/results" as never}>{content.allLabel}</Link>
               </Button>

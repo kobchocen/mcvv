@@ -11,14 +11,14 @@ export function RaceStatCard({ value, label, accent = false, className }: RaceSt
   return (
     <div
       className={cn(
-        "min-w-0 border border-white/10 bg-race-surface/75 p-4 text-left backdrop-blur",
+        "min-w-0 border border-race-line/60 bg-race-surface/90 p-4 text-left backdrop-blur dark:border-white/10 dark:bg-race-surface/75",
         "sm:p-5",
         className,
       )}
     >
       <p
         className={cn(
-          "font-display text-4xl font-bold leading-none text-white sm:text-5xl",
+          "font-display text-4xl font-bold leading-none text-foreground sm:text-5xl dark:text-white",
           accent && "text-race-accent",
         )}
       >

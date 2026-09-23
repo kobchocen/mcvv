@@ -50,8 +50,8 @@ function MobileLink({ link, locale, active }: { link: NavLink; locale: string; a
       <Link
         href={getLocalizedHref(link.href, locale)}
         className={cn(
-          "flex min-h-12 items-center rounded-[10px] px-3.5 text-[17px] font-medium text-white/78 transition-colors hover:bg-white/8 hover:text-white",
-          active && "bg-race-accent/10 font-semibold text-white",
+          "flex min-h-12 items-center rounded-[10px] px-3.5 text-[17px] font-medium text-foreground/80 transition-colors hover:bg-race-forest-2 hover:text-foreground dark:text-white/78 dark:hover:bg-white/8 dark:hover:text-white",
+          active && "bg-race-accent/10 font-semibold text-foreground dark:text-white",
         )}
       >
         {link.label}
@@ -68,7 +68,7 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full border-b border-race-line bg-race-forest px-4 py-4 text-white sm:px-6 lg:px-8",
+        "sticky top-0 z-50 w-full border-b border-race-line bg-race-forest px-4 py-4 text-foreground sm:px-6 lg:px-8 dark:text-white",
         className,
       )}
     >
@@ -89,8 +89,9 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
               key={link.href}
               href={getLocalizedHref(link.href, locale)}
               className={cn(
-                "text-sm font-medium text-white/78 transition-colors hover:text-white",
-                isActivePath(pathname, link.href) && "font-semibold text-white",
+                "text-sm font-medium text-foreground/80 transition-colors hover:text-foreground dark:text-white/78 dark:hover:text-white",
+                isActivePath(pathname, link.href) &&
+                  "font-semibold text-foreground dark:text-white",
               )}
             >
               {link.label}
@@ -121,14 +122,14 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={content.nav.menuLabel}
-                className="size-[38px] rounded-[10px] border border-white/15 bg-white/8 text-white shadow-none hover:bg-white/14 hover:text-white"
+                className="size-[38px] rounded-[10px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white"
               >
                 <Menu className="size-[18px]" aria-hidden="true" />
               </Button>
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[min(100vw,390px)] border-l border-race-line bg-race-deep p-0 text-white sm:max-w-[390px] [&>button.absolute]:hidden"
+              className="w-[min(100vw,390px)] border-l border-race-line bg-race-deep p-0 text-foreground sm:max-w-[390px] dark:text-white [&>button.absolute]:hidden"
             >
               <SheetHeader className="flex-row items-center justify-between border-b border-race-line/70 px-5 py-5">
                 <SheetTitle className="sr-only">{content.nav.menuLabel}</SheetTitle>
@@ -142,7 +143,7 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
                     variant="ghost"
                     size="icon"
                     aria-label={content.nav.closeLabel}
-                    className="size-[38px] rounded-[10px] border border-white/15 bg-white/8 text-white shadow-none hover:bg-white/14 hover:text-white"
+                    className="size-[38px] rounded-[10px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white"
                   >
                     <X className="size-[18px]" aria-hidden="true" />
                   </Button>

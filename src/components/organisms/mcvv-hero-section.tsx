@@ -1,26 +1,37 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowRight, Trees } from "lucide-react";
 
 import { RaceStatCard } from "@/components/molecules";
-import { McvvNavbar } from "@/components/organisms/mcvv-navbar";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvHeroSectionProps = {
-  content: Pick<McvvHomepageContent, "brand" | "nav" | "hero">;
+  content: Pick<McvvHomepageContent, "hero">;
 };
+
+const HERO_VARIANT = "kopec" as "mlha" | "kopec";
+
+const heroImages = {
+  mlha: "/images/hero-trat-mlha.jpg",
+  kopec: "/images/hero-trat-kopec.jpg",
+} as const;
 
 export function McvvHeroSection({ content }: McvvHeroSectionProps) {
   return (
     <section className="relative min-h-[760px] bg-race-forest text-white lg:min-h-[820px]">
-      <Image src="/images/hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.16_0.035_150_/_0.95)_0%,oklch(0.16_0.035_150_/_0.38)_45%,oklch(0.16_0.035_150_/_0.9)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.16_0.035_150_/_0.82)_0%,transparent_58%)]" />
+      <Image
+        src={heroImages[HERO_VARIANT]}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.16_0.035_150_/_0.38)_0%,oklch(0.16_0.035_150_/_0.1)_42%,oklch(0.16_0.035_150_/_0.35)_100%)] dark:bg-[linear-gradient(180deg,oklch(0.16_0.035_150_/_0.95)_0%,oklch(0.16_0.035_150_/_0.38)_45%,oklch(0.16_0.035_150_/_0.9)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.16_0.035_150_/_0.55)_0%,transparent_50%)] dark:bg-[linear-gradient(90deg,oklch(0.16_0.035_150_/_0.82)_0%,transparent_58%)]" />
 
-      <McvvNavbar content={content} />
-
-      <div className="relative mx-auto flex min-h-[760px] w-full max-w-7xl flex-col px-4 pt-32 pb-5 sm:px-6 lg:min-h-[820px] lg:px-8 lg:pt-[120px]">
+      <div className="relative mx-auto flex min-h-[760px] w-full max-w-7xl flex-col px-4 py-16 sm:px-6 lg:min-h-[820px] lg:px-8 lg:py-20">
         <div className="flex flex-1 items-center py-16">
           <div className="w-full max-w-3xl">
             <div className="flex flex-wrap items-center gap-3">
@@ -31,11 +42,11 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
               <span className="text-sm font-medium text-race-muted">{content.hero.place}</span>
             </div>
 
-            <h1 className="mt-6 font-display text-6xl font-bold leading-[0.95] text-white sm:text-7xl lg:text-8xl">
+            <h1 className="mt-6 font-display text-6xl font-bold leading-[0.95] text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.7)] sm:text-7xl lg:text-8xl">
               <span className="block">{content.hero.titleLine1}</span>
               <span className="block text-race-accent">{content.hero.titleLine2}</span>
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-white/88 sm:text-xl sm:leading-8">
+            <p className="mt-6 max-w-xl text-base leading-7 text-white/92 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)] sm:text-xl sm:leading-8">
               {content.hero.claim}
             </p>
 
@@ -45,7 +56,7 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 size="lg"
                 className="h-12 bg-race-accent px-6 font-display text-base font-semibold text-white hover:bg-race-accent-hover"
               >
-                <Link href="#register">
+                <Link href={content.hero.primaryHref as "/prihlasky"}>
                   {content.hero.primaryCta}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
@@ -56,7 +67,9 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 variant="outline"
                 className="h-12 border-white/15 bg-white/10 px-6 font-display text-base font-semibold text-white hover:bg-white/15 hover:text-white"
               >
-                <Link href="#info">{content.hero.secondaryCta}</Link>
+                <Link href={content.hero.secondaryHref as "/program"}>
+                  {content.hero.secondaryCta}
+                </Link>
               </Button>
               <Button
                 asChild
@@ -64,13 +77,15 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 variant="ghost"
                 className="h-12 px-6 font-display text-base font-semibold text-white hover:bg-white/10 hover:text-white"
               >
-                <Link href="#results">{content.hero.tertiaryCta}</Link>
+                <Link href={content.hero.tertiaryHref as "/results"}>
+                  {content.hero.tertiaryCta}
+                </Link>
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-3 border border-white/10 bg-race-deep/80 p-3 backdrop-blur sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 border border-race-line/50 bg-race-surface/80 p-3 backdrop-blur sm:grid-cols-2 lg:grid-cols-4 dark:border-white/10 dark:bg-race-deep/80">
           {content.hero.stats.map((stat, index) => (
             <RaceStatCard key={stat.label} {...stat} accent={index > 1} />
           ))}

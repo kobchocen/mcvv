@@ -5,10 +5,7 @@ export type NavLink = {
   href: string;
 };
 
-export type NavMenuLink = NavLink & {
-  description: string;
-  icon: "clipboard-list" | "calendar" | "route";
-};
+export type OverviewAction = NavLink;
 
 export type StatItem = {
   value: string;
@@ -21,13 +18,17 @@ export type TextBlock = {
 };
 
 export type ScheduleItem = {
-  label: string;
-  value: string;
+  text: string;
+  icon: "calendar" | "clock" | "pin";
+  gpsLabel?: string;
+  gpsHref?: string;
 };
 
-export type CountdownItem = {
-  value: string;
-  unit: string;
+export type CountdownUnits = {
+  days: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
 };
 
 export type ResultItem = {
@@ -39,6 +40,29 @@ export type ResultItem = {
   count?: number;
 };
 
+export function withFooterYear(
+  footer: McvvHomepageContent["footer"],
+  year: number | null,
+): McvvHomepageContent["footer"] {
+  return {
+    ...footer,
+    columns: footer.columns.map((column) => ({
+      ...column,
+      links: column.links
+        .map((link) => {
+          if (!link.href?.includes("{year}")) {
+            return link;
+          }
+          if (!year) {
+            return null;
+          }
+          return { ...link, href: link.href.replace("{year}", String(year)) };
+        })
+        .filter((link): link is NonNullable<typeof link> => link !== null),
+    })),
+  };
+}
+
 export type McvvHomepageContent = {
   brand: {
     mark: string;
@@ -47,8 +71,6 @@ export type McvvHomepageContent = {
   };
   nav: {
     home: NavLink;
-    raceLabel: string;
-    raceLinks: NavMenuLink[];
     links: NavLink[];
     register: string;
     menuLabel: string;
@@ -61,16 +83,20 @@ export type McvvHomepageContent = {
     titleLine2: string;
     claim: string;
     primaryCta: string;
+    primaryHref: string;
     secondaryCta: string;
+    secondaryHref: string;
     tertiaryCta: string;
+    tertiaryHref: string;
     stats: StatItem[];
   };
   overview: {
     eyebrow: string;
     title: string;
     body: string[];
-    heritage: StatItem;
     cards: TextBlock[];
+    facts: TextBlock[];
+    actions: OverviewAction[];
   };
   profile: {
     eyebrow: string;
@@ -79,29 +105,31 @@ export type McvvHomepageContent = {
     axis: string[];
     points: string[];
     stats: TextBlock[];
+    mapKicker: string;
+    mapTitle: string;
+    mapAddress: string;
+    mapAlt: string;
+    mapExpandLabel: string;
   };
   schedule: {
     eyebrow: string;
     title: string;
-    items: string[];
+    items: ScheduleItem[];
     countdownLabel: string;
-    countdown: CountdownItem[];
-    cta: string;
-    mapTitle: string;
-    mapAddress: string;
-  };
-  info: {
-    eyebrow: string;
-    title: string;
-    cards: TextBlock[];
-    contactTitle: string;
-    contactDescription: string;
-    contactCta: string;
+    countdownUnits: CountdownUnits;
+    raceInProgress: string;
+    travel: TextBlock[];
   };
   results: {
     eyebrow: string;
     title: string;
     allLabel: string;
+    yearLabel: string;
+    linkLabel: string;
+    empty: string;
+    searchPlaceholder: string;
+    searchEmpty: string;
+    stats: { slug: string; title: string; description: string; linkLabel: string }[];
     years: ResultItem[];
   };
   gallery: {
@@ -109,12 +137,13 @@ export type McvvHomepageContent = {
     title: string;
     description: string;
     alt: string[];
+    allLabel: string;
   };
   partners: {
     eyebrow: string;
     title: string;
-    names: string[];
     organizer: string;
+    items: { name: string; href: string | null; logoSrc: string | null }[];
   };
   finalCta: {
     title: string;
@@ -125,9 +154,10 @@ export type McvvHomepageContent = {
     description: string;
     columns: {
       title: string;
-      links: string[];
+      links: { label: string; href?: string }[];
     }[];
     copyright: string;
     made: string;
   };
+  backToTop: string;
 };

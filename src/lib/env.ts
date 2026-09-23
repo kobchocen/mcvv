@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const emptyToUndefined = z
+  .string()
+  .optional()
+  .transform((value) => (value && value.length > 0 ? value : undefined));
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z
@@ -11,6 +16,12 @@ const envSchema = z.object({
   DATABASE_SSL_CA: z.string().min(1).optional(),
   SHADOW_DATABASE_URL: z.string().url("SHADOW_DATABASE_URL must be a valid URL").optional(),
   TIME_ZONE: z.string().min(1, "TIME_ZONE cannot be empty").default("Europe/Prague"),
+  CONTACT_TO: z.string().email().default("mcvv@mcvv.org"),
+  SMTP_HOST: emptyToUndefined,
+  SMTP_PORT: z.number().int().positive().optional(),
+  SMTP_USER: emptyToUndefined,
+  SMTP_PASS: emptyToUndefined,
+  SMTP_FROM: emptyToUndefined,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -20,6 +31,12 @@ const parsedEnv = envSchema.safeParse({
   DATABASE_SSL_CA: process.env.DATABASE_SSL_CA,
   SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL,
   TIME_ZONE: process.env.TIME_ZONE,
+  CONTACT_TO: process.env.CONTACT_TO,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  SMTP_FROM: process.env.SMTP_FROM,
 });
 
 if (!parsedEnv.success) {

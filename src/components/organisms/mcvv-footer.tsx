@@ -1,11 +1,40 @@
-import { RaceBrand, BuildVersion } from "@/components/atoms";
+"use client";
+
+import { useLocale } from "next-intl";
+
+import { RaceBrand } from "@/components/atoms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvFooterProps = {
   content: Pick<McvvHomepageContent, "brand" | "footer">;
 };
 
+function FooterHref({
+  href,
+  locale,
+  children,
+}: {
+  href: string;
+  locale: string;
+  children: string;
+}) {
+  if (href.startsWith("http")) {
+    return (
+      <a href={href} className="hover:text-race-accent">
+        {children}
+      </a>
+    );
+  }
+  const path = href.startsWith("#") ? `/${locale}${href}` : `/${locale}${href}`;
+  return (
+    <a href={path} className="hover:text-race-accent">
+      {children}
+    </a>
+  );
+}
+
 export function McvvFooter({ content }: McvvFooterProps) {
+  const locale = useLocale();
   return (
     <footer className="bg-race-deep px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -24,8 +53,14 @@ export function McvvFooter({ content }: McvvFooterProps) {
                 </h3>
                 <ul className="mt-4 grid gap-3">
                   {column.links.map((link) => (
-                    <li key={link} className="text-sm text-race-muted">
-                      {link}
+                    <li key={link.label} className="text-sm text-race-muted">
+                      {link.href ? (
+                        <FooterHref href={link.href} locale={locale}>
+                          {link.label}
+                        </FooterHref>
+                      ) : (
+                        link.label
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -36,7 +71,6 @@ export function McvvFooter({ content }: McvvFooterProps) {
         <div className="mt-10 flex flex-col gap-3 border-t border-race-line/55 pt-6 text-xs text-race-dim sm:flex-row sm:items-center sm:justify-between">
           <p>{content.footer.copyright}</p>
           <p>{content.footer.made}</p>
-          <BuildVersion />
         </div>
       </div>
     </footer>

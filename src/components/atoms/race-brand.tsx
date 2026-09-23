@@ -14,7 +14,7 @@ export function RaceBrand({ top, bottom, mark, className }: RaceBrandProps) {
         {mark}
       </span>
       <span className="grid leading-none">
-        <span className="font-display text-base font-semibold tracking-[0.03em] text-white">
+        <span className="font-display text-base font-semibold tracking-[0.03em] text-foreground dark:text-white">
           {top}
         </span>
         <span className="font-display text-base font-semibold tracking-[0.03em] text-race-accent">

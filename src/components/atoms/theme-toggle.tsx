@@ -36,7 +36,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       title={t("label")}
       onClick={toggleTheme}
       className={cn(
-        "size-10 rounded-[12px] border border-white/15 bg-white/8 text-white shadow-none transition-colors hover:bg-white/14 hover:text-white",
+        "size-10 rounded-[12px] border border-race-line/70 bg-transparent text-foreground shadow-none transition-colors hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white",
         className,
       )}
     >

@@ -10,43 +10,16 @@
       "menuLabel": "Otevřít menu",
       "closeLabel": "Zavřít menu",
       "home": {
-        "label": "Home",
+        "label": "Malá cena Velké Verandy",
         "href": "/"
       },
-      "raceLabel": "Závod",
-      "raceLinks": [
-        {
-          "label": "Rozpis",
-          "href": "/program",
-          "description": "Termín, startovné, kategorie",
-          "icon": "clipboard-list"
-        },
-        {
-          "label": "Termín",
-          "href": "#date",
-          "description": "Datum, místo a čas startu",
-          "icon": "calendar"
-        },
-        {
-          "label": "Trať",
-          "href": "#route",
-          "description": "Profil tratě a převýšení",
-          "icon": "route"
-        }
-      ],
       "links": [
-        {
-          "label": "Historie",
-          "href": "#results"
-        },
-        {
-          "label": "Fotky",
-          "href": "#gallery"
-        },
-        {
-          "label": "Partneři",
-          "href": "#partners"
-        }
+        { "label": "O závodě", "href": "#about" },
+        { "label": "Trať", "href": "#route" },
+        { "label": "Termín", "href": "#date" },
+        { "label": "Výsledky", "href": "#results" },
+        { "label": "Fotky", "href": "#gallery" },
+        { "label": "Partneři", "href": "#partners" }
       ]
     },
     "hero": {
@@ -56,8 +29,11 @@
       "titleLine2": "VELKÉ VERANDY",
       "claim": "Lesní kros, který tě prověří v každém kopci. Krátká, intenzivní a nemilosrdná trať plná výběhů a prudkých seběhů.",
       "primaryCta": "Přihlásit se",
-      "secondaryCta": "Propozice",
+      "primaryHref": "/prihlasky",
+      "secondaryCta": "Rozpis",
+      "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
+      "tertiaryHref": "/results",
       "stats": [
         {
           "value": "4300",
@@ -72,8 +48,8 @@
           "label": "výrazné kopce"
         },
         {
-          "value": "4",
-          "label": "prudké seběhy"
+          "value": "30+",
+          "label": "ročníků tradice"
         }
       ]
     },
@@ -81,13 +57,17 @@
       "eyebrow": "01 — O závodě",
       "title": "Není to běh. Je to výzva.",
       "body": [
-        "Malá cena Velké Verandy je tradiční lesní kros v srdci chocenských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
+        "Malá cena Velké Verandy je tradiční lesní kros v srdci choceňských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
         "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
       ],
-      "heritage": {
-        "value": "20+",
-        "label": "ročníků tradice a stovky běžců na startu"
-      },
+      "actions": [
+        { "label": "Přihláška", "href": "/prihlasky" },
+        { "label": "Rozpis", "href": "/program" },
+        { "label": "Pokyny", "href": "/pokyny" },
+        { "label": "Startovka", "href": "/startovka" },
+        { "label": "Výsledky", "href": "/results" },
+        { "label": "Máš dotaz? Ozvi se pořadateli.", "href": "/kontakt" }
+      ],
       "cards": [
         {
           "title": "Krátký, ale brutální",
@@ -100,6 +80,24 @@
         {
           "title": "Atmosféra a tradice",
           "description": "Mrazivá prosincová neděle, fandící diváci a legendární výběhy. Závod s duší."
+        }
+      ],
+      "facts": [
+        {
+          "title": "Prezentace",
+          "description": "Přihlášky na místě do 9:45 u Velké Verandy. Vyzvednutí čísla pro online přihlášené."
+        },
+        {
+          "title": "Start",
+          "description": "Intervalový ve dvojicích po 15 s od 10:15."
+        },
+        {
+          "title": "Kategorie",
+          "description": "Dospělí, veteráni i žactvo a dorost. Pro každého se najde souboj."
+        },
+        {
+          "title": "Startovné",
+          "description": "Dospělí 100 Kč online / 200 Kč na místě. Žactvo a dorost 50 / 100 Kč."
         }
       ]
     },
@@ -119,141 +117,109 @@
           "description": "Technické klesání, kde rozhoduje odvaha."
         },
         {
-          "title": "200 m+ převýšení",
+          "title": "200 m převýšení",
           "description": "Nahuštěné do pouhých 4,3 kilometru."
         },
         {
           "title": "Lesní povrch",
           "description": "Cesty, pěšiny, kořeny a prosincové bahno."
         }
-      ]
+      ],
+      "mapKicker": "TRAŤ ZÁVODU",
+      "mapTitle": "START · CÍL",
+      "mapAddress": "Velká Veranda, Choceň",
+      "mapAlt": "Mapa tratě Malé ceny Velké Verandy",
+      "mapExpandLabel": "Zvětšit mapu tratě"
     },
     "schedule": {
       "eyebrow": "03 — Termín a místo",
       "title": "Neděle 6. prosince",
       "items": [
-        "Každou první prosincovou neděli",
-        "Choceň · start u Velké Verandy",
-        "Start hlavního závodu v 11:00"
+        { "icon": "calendar", "text": "Každou první prosincovou neděli" },
+        { "icon": "clock", "text": "Start závodu v 10:15" },
+        {
+          "icon": "pin",
+          "text": "Choceň - Velká Veranda - ",
+          "gpsLabel": "GPS: 49°59'45\"N, 16°12'10\"E",
+          "gpsHref": "https://goo.gl/PT3Eoq"
+        }
       ],
       "countdownLabel": "Do startu dalšího ročníku zbývá",
-      "countdown": [
+      "countdownUnits": {
+        "days": "dnů",
+        "hours": "hodin",
+        "minutes": "minut",
+        "seconds": "sekund"
+      },
+      "raceInProgress": "Závod probíhá",
+      "travel": [
         {
-          "value": "187",
-          "unit": "dnů"
+          "title": "Autem",
+          "description": "Parkování v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud 300 m pěšky. Alternativa: nábřeží Krále Jiřího, po zelené značce 500 m k Verandě."
         },
         {
-          "value": "14",
-          "unit": "hodin"
+          "title": "Vlakem",
+          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 2 km do centra."
         },
         {
-          "value": "32",
-          "unit": "minut"
-        },
-        {
-          "value": "08",
-          "unit": "sekund"
+          "title": "Autobusem",
+          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku."
         }
-      ],
-      "cta": "Rezervovat startovné",
-      "mapTitle": "START · CÍL",
-      "mapAddress": "Restaurace Velká Veranda, Choceň 565 01"
-    },
-    "info": {
-      "eyebrow": "04 — Informace pro závodníky",
-      "title": "Vše, co potřebuješ vědět",
-      "cards": [
-        {
-          "title": "Prezentace",
-          "description": "9:00-10:30 v cíli u Velké Verandy. Vyzvednutí čísla a čipu."
-        },
-        {
-          "title": "Start",
-          "description": "Hromadný start hlavního závodu v 11:00. Dětské závody od 10:00."
-        },
-        {
-          "title": "Kategorie",
-          "description": "Muži, ženy, veteráni i junioři. Pro každého se najde souboj."
-        },
-        {
-          "title": "Startovné",
-          "description": "200 Kč v předregistraci, 300 Kč na místě. Děti zdarma."
-        },
-        {
-          "title": "Občerstvení",
-          "description": "Horký čaj, klobása a něco ostřejšího na zahřátí v cíli."
-        },
-        {
-          "title": "Zázemí",
-          "description": "Vytápěné šatny, WC a posezení přímo ve Velké Verandě."
-        }
-      ],
-      "contactTitle": "Máš dotaz? Ozvi se pořadateli.",
-      "contactDescription": "K.O.B. Choceň, z.s. · +420 777 123 456 · info@velkaveranda.cz",
-      "contactCta": "Napsat e-mail"
+      ]
     },
     "results": {
-      "eyebrow": "05 — Výsledky a historie",
+      "eyebrow": "04 — Výsledky a statistiky",
       "title": "Generace běžců, jedna trať",
-      "allLabel": "Všechny ročníky",
-      "years": [
+      "allLabel": "Archiv výsledků",
+      "yearLabel": "Poslední ročník",
+      "linkLabel": "Kompletní výsledky",
+      "empty": "Výsledky se doplní po doběhu ročníku.",
+      "searchPlaceholder": "Hledat běžce…",
+      "searchEmpty": "Nikdo takový v databázi není.",
+      "stats": [
         {
-          "year": "2025",
-          "label": "Ročník",
-          "winners": [
-            {
-              "category": "Muži",
-              "name": "Jan Novák",
-              "time": "15:42"
-            },
-            {
-              "category": "Ženy",
-              "name": "Eva Dvořáková",
-              "time": "18:09"
-            }
-          ],
-          "linkLabel": "Zobrazit kompletní výsledky"
+          "slug": "rekordy",
+          "title": "Traťové rekordy",
+          "description": "Kdy a kdo vylepšil rekord jednotlivých kategorií.",
+          "linkLabel": "Vývoj rekordů"
         },
         {
-          "year": "2024",
-          "label": "Ročník",
-          "winners": [
-            {
-              "category": "Muži",
-              "name": "Petr Svoboda",
-              "time": "15:58"
-            },
-            {
-              "category": "Ženy",
-              "name": "Lucie Marková",
-              "time": "18:31"
-            }
-          ],
-          "linkLabel": "Zobrazit kompletní výsledky"
+          "slug": "vitezove",
+          "title": "Vítězové",
+          "description": "Absolutní vítězové mužů a žen v každém ročníku.",
+          "linkLabel": "Absolutní vítězové"
         },
         {
-          "year": "2023",
-          "label": "Ročník",
-          "winners": [
-            {
-              "category": "Muži",
-              "name": "Jan Novák",
-              "time": "16:04"
-            },
-            {
-              "category": "Ženy",
-              "name": "Eva Dvořáková",
-              "time": "18:50"
-            }
-          ],
-          "linkLabel": "Zobrazit kompletní výsledky"
+          "slug": "casy",
+          "title": "Nejlepší časy",
+          "description": "Nejrychlejší výkony mužů a žen napříč všemi ročníky.",
+          "linkLabel": "TOP 20"
+        },
+        {
+          "slug": "vek",
+          "title": "Rekordy dle věku",
+          "description": "Nejlepší čas podle věku v roce závodu.",
+          "linkLabel": "Podle věku"
+        },
+        {
+          "slug": "veterani",
+          "title": "Veteráni MCVV",
+          "description": "Běžci s nejvíce starty v historii závodu.",
+          "linkLabel": "Klub veteránů"
+        },
+        {
+          "slug": "ucast",
+          "title": "Účast",
+          "description": "Počty účastníků, nováčků a osobních rekordů po letech.",
+          "linkLabel": "Celková účast"
         }
       ]
     },
     "gallery": {
-      "eyebrow": "06 — Fotogalerie",
+      "eyebrow": "05 — Fotogalerie",
       "title": "Atmosféra mrazivé neděle",
       "description": "Bahno, mlha, emoce v cíli a kopce, které tě dostanou.",
+      "allLabel": "Kompletní fotogalerie",
       "alt": [
         "Běžkyně v zimním lese stoupá po kamenité stezce.",
         "Topografická mapa lesní tratě.",
@@ -262,10 +228,9 @@
       ]
     },
     "partners": {
-      "eyebrow": "07 — Partneři a pořadatelé",
+      "eyebrow": "06 — Partneři a pořadatelé",
       "title": "Závod, který drží pohromadě parta nadšenců",
-      "names": ["VERANDA", "CHOCEŇ", "RUNTECH", "FOREST", "SPORTIA", "AKTIV"],
-      "organizer": "Pořádá K.O.B. Choceň, z.s. ve spolupráci s městem Choceň."
+      "organizer": "Pořádá K.O.B. Choceň, z.s."
     },
     "finalCta": {
       "title": "Připraven na čtyři kopce?",
@@ -277,101 +242,265 @@
       "columns": [
         {
           "title": "Závod",
-          "links": ["O závodě", "Trať a profil", "Termín a místo", "Informace"]
+          "links": [
+            { "label": "O závodě", "href": "#about" },
+            { "label": "Rozpis", "href": "/program" },
+            { "label": "Přihláška", "href": "/prihlasky" }
+          ]
         },
         {
           "title": "Výsledky",
-          "links": ["Aktuální ročník", "Archiv výsledků", "Historie závodu", "Fotogalerie"]
+          "links": [
+            { "label": "Poslední ročník", "href": "/results/{year}" },
+            { "label": "Archiv výsledků", "href": "/results" },
+            { "label": "Traťové rekordy", "href": "/statistiky/rekordy" }
+          ]
         },
         {
           "title": "Kontakt",
           "links": [
-            "K.O.B. Choceň, z.s.",
-            "info@velkaveranda.cz",
-            "+420 777 123 456",
-            "Choceň 565 01"
+            { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
+            { "label": "Napsat pořadateli", "href": "/kontakt" }
           ]
         }
       ],
       "copyright": "© 2026 Malá cena Velké Verandy · K.O.B. Choceň, z.s.",
       "made": "Vyrobeno s láskou k lesu."
-    }
+    },
+    "backToTop": "Nahoru"
   },
   "Program": {
     "header": {
-      "eyebrow": "Informace · ročník 2026",
-      "title": "Rozpis závodu",
-      "lead": "Všechny praktické informace k závodu na jednom místě — termín, startovné, kategorie, příjezd i zázemí. Přečti si rozpis dříve, než vyrazíš do lesa.",
-      "meta": [
-        {
-          "label": "Ne 6. 12. 2026",
-          "icon": "calendar"
-        },
-        {
-          "label": "Choceň",
-          "icon": "map-pin"
-        },
-        {
-          "label": "4,3 km · 200 m+",
-          "icon": "route"
-        }
-      ]
+      "eyebrow": "K.O.B. Choceň · 2026",
+      "title": "Rozpis",
+      "lead": "{n}. ročník Malé ceny Velké Verandy"
     },
     "tocTitle": "Na této stránce",
-    "sections": [
-      {
-        "title": "Datum a čas",
-        "summary": "Neděle 6. prosince 2026",
-        "body": "Start hlavního závodu v 11:00, dětské závody od 9:30. Vyhlášení výsledků ve 13:30 v centru závodu.",
-        "icon": "calendar"
+    "emptyCategories": "Kategorie se doplní.",
+    "dash": "—",
+    "gpsLabel": "Otevřít mapu (GPS)",
+    "backToTop": "Nahoru",
+    "onlineEntry": "Online přihláška",
+    "contactLabel": "Napsat pořadateli",
+    "fees": {
+      "onlineAdult": "Dospělí online",
+      "onlineKids": "Děti a dorost online",
+      "onsiteAdult": "Dospělí na místě",
+      "onsiteKids": "Děti a dorost na místě",
+      "refund": "Startovné vracíme při odhlášení do termínu online přihlášek ({date}). Po tomto termínu startovné nevracíme.",
+      "refundOpen": "Startovné vracíme při odhlášení do termínu online přihlášek. Po termínu startovné nevracíme.",
+      "freeEntry": "Vítězové hlavní kategorie muži a ženy a členové klubu veteránů MCVV mají startovné zdarma při včasné online přihlášce."
+    },
+    "prizes": {
+      "adult": "Muži a ženy",
+      "veterans": "Veteráni",
+      "place": "{n}. místo",
+      "material": "Věcné ceny pro nejlepší v žákovských a dorosteneckých kategoriích."
+    },
+    "categories": {
+      "name": "Kategorie",
+      "birthYear": "Ročník narození",
+      "open": "bez omezení",
+      "younger": "{year} a mladší",
+      "older": "{year} a starší"
+    },
+    "timetable": {
+      "registration": "Do 9:45 — přihlášky na místě",
+      "start": "10:15 — start (interval 15 s)",
+      "ceremony": "12:20 — vyhlášení výsledků"
+    },
+    "sections": {
+      "intro": {
+        "title": "Rozpis",
+        "summary": "Základní informace k ročníku",
+        "body": "Jedna lesní trať, intervalový start."
       },
-      {
-        "title": "Centrum závodu",
-        "summary": "Sokolovna Choceň — Tyršovo náměstí 1, Choceň",
-        "body": "Prezentace, šatny i cíl jsou na jednom místě. Od centra na start je to přibližně 300 metrů.",
-        "icon": "map-pin"
+      "date": {
+        "title": "Datum",
+        "summary": "Neděle 6. 12. 2026",
+        "body": "Tradiční první prosincová neděle."
       },
-      {
-        "title": "Příjezd a parkování",
-        "summary": "Parkování u sokolovny a v okolních ulicích",
-        "body": "Prosíme závodníky, aby přijeli s rezervou. Po 10:30 bude provoz v okolí startu omezen pořadateli.",
-        "icon": "car"
+      "venue": {
+        "title": "Místo",
+        "summary": "Velká Veranda, Choceň",
+        "body": "Start i cíl u Velké Verandy. GPS 49°59′45″N, 16°12′10″E."
       },
-      {
+      "organizer": {
+        "title": "Pořadatel",
+        "summary": "K.O.B. Choceň",
+        "body": "Klub orientačního běhu Choceň."
+      },
+      "course": {
+        "title": "Popis tratě",
+        "summary": "4 300 m · převýšení 200 m",
+        "body": "Lesní cesty a pěšiny, 400 m asfaltu. Převýšení 200 m. Značeno fáborky. Jedna trať pro všechny kategorie."
+      },
+      "registration": {
+        "title": "Přihlášky",
+        "summary": "Online přihláška · na místě do 9:45",
+        "body": "V den závodu lze podat přihlášku na místě do 9:45. Online přihláška platí až po připsání platby."
+      },
+      "fees": {
         "title": "Startovné",
-        "summary": "200 Kč předem, 300 Kč na místě",
-        "body": "Dětské závody jsou zdarma. Startovné zahrnuje čipovou časomíru, občerstvení v cíli a zázemí závodu.",
-        "icon": "wallet"
+        "summary": "Podle kategorie, online výhodněji",
+        "body": "Startovné se platí podle sazeb níže."
       },
-      {
+      "categories": {
         "title": "Kategorie",
-        "summary": "Muži, ženy, junioři a veteráni",
-        "body": "Kategorie budou vyhlášeny podle počtu přihlášených. Pořadatel si vyhrazuje právo sloučit méně obsazené kategorie.",
-        "icon": "users"
+        "summary": "Věkové hranice k roku 2026",
+        "body": ""
       },
-      {
-        "title": "Prezentace a přihlášky",
-        "summary": "9:00-10:30 v centru závodu",
-        "body": "Přihlášky na místě jsou možné do naplnění kapacity. Startovní číslo a čip si vyzvedni nejpozději 30 minut před startem.",
-        "icon": "clipboard-list"
+      "prizes": {
+        "title": "Ceny",
+        "summary": "Muži a ženy, veteráni, žáci a dorost",
+        "body": "Finanční ceny v Kč v kategoriích muži a ženy (1.–5. místo) a veteráni (1.–3. místo)."
       },
-      {
-        "title": "Tratě",
-        "summary": "Hlavní trať 4,3 km · převýšení 200 m+",
-        "body": "Lesní cesty, pěšiny, krátké prudké výběhy a technické seběhy. Dětské tratě budou vedené v okolí centra závodu.",
-        "icon": "route"
+      "start": {
+        "title": "Start",
+        "summary": "Interval 15 s od 10:15",
+        "body": "Startovní interval {seconds} s od 10:15. Jedna vlna, bez samostatného dětského startu. Jedna trať pro všechny kategorie."
       },
-      {
-        "title": "Zázemí a občerstvení",
-        "summary": "Šatny, WC, teplý čaj a občerstvení v cíli",
-        "body": "Po doběhu bude k dispozici teplé občerstvení. Prosíme, respektuj pokyny pořadatelů a udržuj prostor závodu čistý.",
-        "icon": "coffee"
+      "timetable": {
+        "title": "Časový harmonogram",
+        "summary": "9:45 · 10:15 · 12:20",
+        "body": "Přihlášky na místě končí v 9:45. Start od 10:15. Vyhlášení výsledků ve 12:20."
+      },
+      "privacy": {
+        "title": "Ochrana údajů",
+        "summary": "GDPR a fotografie",
+        "body": "Osobní údaje zpracováváme kvůli organizaci závodu a zveřejnění výsledků. Fotografie a video z akce můžeme použít k prezentaci závodu. Námitku lze poslat pořadateli."
+      },
+      "notice": {
+        "title": "Upozornění",
+        "summary": "Vlastní nebezpečí",
+        "body": "Účast je na vlastní nebezpečí. Závod není vhodný pro děti mladší 6 let. Do výsledkové listiny se započítá jen ten, kdo absolvuje celou trať bez pomoci jiné osoby. Prodej a stánky jen se souhlasem pořadatele."
+      },
+      "info": {
+        "title": "Informace",
+        "summary": "mcvv.org",
+        "body": "Aktuální informace na webu. Dotazy posílejte formulářem, e-mail ani telefon na webu neuveřejňujeme."
       }
-    ],
-    "cta": {
-      "title": "Připraven na start?",
-      "description": "Zajisti si místo na startu dalšího ročníku a doraz s časovou rezervou.",
-      "button": "Přihlásit se na závod"
+    }
+  },
+  "Contact": {
+    "eyebrow": "Kontakt",
+    "title": "Ozvi se pořadateli",
+    "intro": "Napište nám. Odpovíme e-mailem. Adresu ani telefon na webu neuveřejňujeme.",
+    "name": "Jméno",
+    "email": "Váš e-mail",
+    "message": "Zpráva",
+    "submit": "Odeslat",
+    "sending": "Odesílám…",
+    "success": "Zpráva je odeslaná. Ozveme se.",
+    "errorInvalid": "Zkontrolujte jméno, e-mail a text zprávy.",
+    "errorSend": "Zprávu se teď nepodařilo odeslat. Zkuste to znovu.",
+    "back": "Zpět na úvod"
+  },
+  "Instructions": {
+    "eyebrow": "34. ročník",
+    "title": "Pokyny",
+    "status": "Pokyny se připravují",
+    "back": "Zpět na Rozpis"
+  },
+  "StartList": {
+    "eyebrow": "34. ročník",
+    "title": "Startovní listina",
+    "status": "Startovní listina ještě není zveřejněna",
+    "back": "Zpět na Rozpis"
+  },
+  "Entries": {
+    "eyebrow": "34. ročník",
+    "title": "Přihlášky",
+    "closed": "Přihlášky ještě nejsou otevřeny",
+    "raceDate": "Závod: neděle 6. 12. 2026",
+    "onlineAdult": "Dospělí online",
+    "onlineKids": "Děti a dorost online",
+    "onsiteAdult": "Dospělí na místě",
+    "onsiteKids": "Děti a dorost na místě",
+    "back": "Zpět na Rozpis"
+  },
+  "PhotoGallery": {
+    "eyebrow": "Fotogalerie",
+    "title": "Fotky z ročníků",
+    "intro": "Fotografie podle roku závodu. Klikni na ročník nahoře.",
+    "count": "{count} fotek · {year}",
+    "photoAlt": "Fotografie z ročníku {year}",
+    "empty": "V galerii zatím nic není.",
+    "loadMore": "Načíst další",
+    "close": "Zavřít",
+    "back": "Zpět na úvod"
+  },
+  "Runner": {
+    "eyebrow": "Běžec",
+    "starts": "Účasti",
+    "record": "Osobní rekord",
+    "average": "Průměrný čas",
+    "lastStart": "Poslední účast",
+    "year": "Rok",
+    "time": "Čas",
+    "graph": "Graf výkonnosti",
+    "graphTitle": "Ztráta na traťový rekord {course} / na OR {pb} / na průměr {avg}",
+    "loss": "Ztráta na OR",
+    "club": "Klub",
+    "category": "Kategorie",
+    "os": "OR",
+    "medalAbs": "Absolutně {rank}. místo",
+    "medalAge": "Kategorie {rank}. místo",
+    "photos": "Fotky",
+    "photoAlt": "Fotka — {name}",
+    "loadMore": "Načíst další",
+    "close": "Zavřít",
+    "empty": "Pro tohoto běžce zatím nejsou výsledky.",
+    "back": "Archiv výsledků"
+  },
+  "Stats": {
+    "eyebrow": "Statistiky",
+    "colName": "Běžec",
+    "colTime": "Čas",
+    "colYear": "Rok",
+    "colBirth": "Rok nar.",
+    "colClub": "Klub",
+    "colRank": "Pořadí",
+    "colAge": "Věk",
+    "colStarts": "Účasti",
+    "colRecord": "Osobní rekord",
+    "colAverage": "Průměr",
+    "colCount": "Účastníků",
+    "colNewcomers": "Nováčků",
+    "colPrs": "Osobních rekordů",
+    "colBest": "Nejlepší čas",
+    "men": "Muži",
+    "women": "Ženy",
+    "menTime": "Čas M",
+    "womenTime": "Čas Ž",
+    "menYear": "Rok M",
+    "womenYear": "Rok Ž",
+    "chartCaption": "Účast muži / ženy",
+    "empty": "Zatím tu nic není.",
+    "back": "Zpět na úvod",
+    "rekordy": {
+      "title": "Traťové rekordy a jejich vývoj",
+      "intro": ""
+    },
+    "vitezove": {
+      "title": "Absolutní vítězové",
+      "intro": "Nejlepší čas mužů a žen v každém ročníku."
+    },
+    "casy": {
+      "title": "Nejlepší časy",
+      "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
+    },
+    "vek": {
+      "title": "Rekordy dle věku",
+      "intro": "Nejlepší čas daného věku (rok závodu − rok narození) u mužů a žen."
+    },
+    "veterani": {
+      "title": "Veteráni MCVV",
+      "intro": "Klub veteránů: běžci s více starty, než je polovina počtu ročníků s výsledky."
+    },
+    "ucast": {
+      "title": "Celková účast",
+      "intro": "Počet účastníků, nováčků a osobních rekordů v jednotlivých letech."
     }
   },
   "LanguageSwitcher": {

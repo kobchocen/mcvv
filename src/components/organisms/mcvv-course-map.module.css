@@ -1,0 +1,83 @@
+.wrap {
+  width: 100%;
+}
+
+.wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+.wrap :global([id="Louky"]) path {
+  fill: color-mix(in oklch, var(--race-forest-2) 82%, oklch(0.78 0.1 95)) !important;
+}
+
+.wrap :global([id="Parkoviště"]) path {
+  fill: color-mix(in oklch, var(--race-surface) 65%, var(--race-line)) !important;
+}
+
+.wrap :global([id="Řeka"]) path {
+  fill: oklch(0.52 0.08 220 / 0.48) !important;
+}
+
+.wrap :global([id="Vrstevnice"]) path {
+  stroke: var(--race-line) !important;
+  stroke-opacity: 0.75 !important;
+}
+
+.wrap :global([id="Potoky"]) path {
+  stroke: oklch(0.55 0.08 215) !important;
+}
+
+.wrap :global([id="Železnice"]) path {
+  stroke: var(--race-dim) !important;
+}
+
+.wrap :global([id="Železnice"]) path[style*="stroke:white"] {
+  stroke: var(--race-muted) !important;
+}
+
+.wrap :global([id="Cesty"]) path {
+  stroke: var(--race-dim) !important;
+}
+
+.wrap :global([id="Cesty"]) path:not([style*="fill:none"]) {
+  fill: var(--race-dim) !important;
+}
+
+.wrap :global([id="Trasa"]) path {
+  stroke: var(--race-accent) !important;
+  stroke-width: 18px !important;
+}
+
+.wrap :global([id="Popisky"]) circle,
+.wrap :global([id="Popisky"]) rect {
+  fill: var(--race-accent) !important;
+}
+
+.wrap :global([id="Popisky"]) path {
+  stroke: var(--race-accent) !important;
+}
+
+.wrap :global([id="Popisky"]) text {
+  fill: white !important;
+}
+
+.wrap :global([id="Místopis"]) text,
+.wrap :global([id="Místopis"]) tspan {
+  fill: var(--foreground) !important;
+}
+
+.wrap :global([id="Místopis"]) image,
+.wrap :global([id="Místopis"]) use {
+  display: none;
+}
+
+:global(.dark) .wrap :global([id="Řeka"]) path {
+  fill: oklch(0.46 0.07 220 / 0.42) !important;
+}
+
+:global(.dark) .wrap :global([id="Potoky"]) path {
+  stroke: oklch(0.58 0.07 215 / 0.85) !important;
+}

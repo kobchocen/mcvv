@@ -2,6 +2,7 @@
 
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 
 import { locales, localeLabels, type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -33,10 +34,25 @@ export function LanguageSwitcher({
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const t = useTranslations("LanguageSwitcher");
 
   const handleChange = (nextLocale: Locale) => {
     if (nextLocale === locale) return;
+    if (pathname === "/bezec/[id]") {
+      router.replace(
+        { pathname: "/bezec/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    if (pathname === "/statistiky/[slug]") {
+      router.replace(
+        { pathname: "/statistiky/[slug]", params: { slug: String(params.slug ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
     router.replace({ pathname }, { locale: nextLocale });
   };
 
@@ -51,8 +67,8 @@ export function LanguageSwitcher({
           title={t("label")}
           className={cn(
             compact
-              ? "size-[38px] rounded-[10px] border border-white/15 bg-white/8 p-0 text-white shadow-none hover:bg-white/14 hover:text-white"
-              : "h-10 rounded-[10px] border border-white/15 bg-white/8 px-3 text-white shadow-none hover:bg-white/14 hover:text-white",
+              ? "size-[38px] rounded-[10px] border border-race-line/70 bg-transparent p-0 text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white"
+              : "h-10 rounded-[10px] border border-race-line/70 bg-transparent px-3 text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white",
             className,
           )}
         >
@@ -60,11 +76,19 @@ export function LanguageSwitcher({
           {!compact && (
             <>
               <span
-                className={cn("text-sm font-semibold", showLabel && "font-medium text-white/82")}
+                className={cn(
+                  "text-sm font-semibold",
+                  showLabel && "font-medium text-foreground/80 dark:text-white/82",
+                )}
               >
                 {showLabel ? localeLabels[locale] : localeCodes[locale]}
               </span>
-              {!showLabel && <ChevronDown className="size-3.5 text-white/72" aria-hidden="true" />}
+              {!showLabel && (
+                <ChevronDown
+                  className="size-3.5 text-foreground/70 dark:text-white/72"
+                  aria-hidden="true"
+                />
+              )}
             </>
           )}
           <span className="sr-only">{t("label")}</span>
@@ -72,7 +96,7 @@ export function LanguageSwitcher({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[184px] rounded-[12px] border-race-line bg-race-deep/95 p-1.5 text-white shadow-2xl shadow-black/35 backdrop-blur"
+        className="w-[184px] rounded-[12px] border-race-line bg-race-surface p-1.5 text-foreground shadow-2xl shadow-black/20 backdrop-blur dark:bg-race-deep/95 dark:text-white dark:shadow-black/35"
         sideOffset={10}
       >
         {locales.map((value) => {
@@ -83,11 +107,11 @@ export function LanguageSwitcher({
               key={value}
               onClick={() => handleChange(value)}
               className={cn(
-                "flex cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 text-white outline-none focus:bg-white/10",
-                isSelected && "bg-white/10",
+                "flex cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 text-foreground outline-none focus:bg-race-forest-2 dark:text-white dark:focus:bg-white/10",
+                isSelected && "bg-race-forest-2 dark:bg-white/10",
               )}
             >
-              <span className="flex h-[19px] w-[26px] shrink-0 items-center justify-center rounded-[5px] bg-white/10 text-[10px] font-bold tracking-[0.04em] text-white/86">
+              <span className="flex h-[19px] w-[26px] shrink-0 items-center justify-center rounded-[5px] bg-race-forest-2 text-[10px] font-bold tracking-[0.04em] text-foreground dark:bg-white/10 dark:text-white/86">
                 {localeCodes[value]}
               </span>
               <span

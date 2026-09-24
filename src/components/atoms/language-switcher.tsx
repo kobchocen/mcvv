@@ -53,7 +53,21 @@ export function LanguageSwitcher({
       );
       return;
     }
-    router.replace({ pathname }, { locale: nextLocale });
+    if (pathname === "/admin/partneri/[id]") {
+      router.replace(
+        { pathname: "/admin/partneri/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    if (pathname === "/admin/rocniky/[id]") {
+      router.replace(
+        { pathname: "/admin/rocniky/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    router.replace(pathname, { locale: nextLocale });
   };
 
   return (

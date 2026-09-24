@@ -21,9 +21,9 @@ export default async function AdminPage({ params }: PageProps) {
 
   return (
     <main className="px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-6xl">
         <h1 className="font-display text-4xl font-bold text-foreground dark:text-white">
-          {copy("title")}
+          {copy("overviewTitle")}
         </h1>
         <p className="mt-4 max-w-xl text-base leading-7 text-race-muted">{copy("placeholder")}</p>
       </div>

@@ -16,12 +16,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import type { McvvHomepageContent, NavLink } from "@/components/templates";
+import { logout } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
+
+export type McvvNavbarAccount = {
+  name: string;
+  email: string;
+};
 
 export type McvvNavbarProps = {
   content: Pick<McvvHomepageContent, "brand" | "nav">;
   className?: string;
   variant?: "overlay" | "solid";
+  account?: McvvNavbarAccount | null;
 };
 
 function getLocalizedHref(href: string, locale: string) {
@@ -60,10 +67,9 @@ function MobileLink({ link, locale, active }: { link: NavLink; locale: string; a
   );
 }
 
-export function McvvNavbar({ content, className }: McvvNavbarProps) {
+export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
   const locale = useLocale();
   const pathname = usePathname();
-  const hideRegisterCta = pathname.endsWith("/prihlasky") || pathname.endsWith("/kontakt");
 
   return (
     <header
@@ -102,12 +108,36 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher />
           <ThemeToggle />
-          {hideRegisterCta ? null : (
+          {account ? (
+            <>
+              <span
+                className="max-w-[10rem] truncate text-sm font-medium text-foreground dark:text-white"
+                title={account.email}
+              >
+                {account.name}
+              </span>
+              <Button
+                asChild
+                className="h-10 rounded-[10px] bg-race-accent px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-hover"
+              >
+                <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
+              </Button>
+              <form action={logout}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="h-10 rounded-[10px] border-race-line bg-race-surface font-display text-[15px] font-semibold uppercase tracking-[0.03em]"
+                >
+                  {content.nav.logout}
+                </Button>
+              </form>
+            </>
+          ) : (
             <Button
               asChild
               className="h-10 rounded-[10px] bg-race-accent px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-hover"
             >
-              <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.register}</Link>
+              <Link href={getLocalizedHref("/prihlaseni", locale)}>{content.nav.register}</Link>
             </Button>
           )}
         </div>
@@ -167,16 +197,47 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
                     <LanguageSwitcher showLabel />
                     <ThemeToggle className="size-11" />
                   </div>
-                  {hideRegisterCta ? null : (
-                    <Button
-                      asChild
-                      className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
-                    >
-                      <Link href={getLocalizedHref("/prihlasky", locale)}>
-                        {content.nav.register}
-                        <ArrowRight className="size-[17px]" aria-hidden="true" />
-                      </Link>
-                    </Button>
+                  {account ? (
+                    <>
+                      <p
+                        className="truncate text-sm font-medium text-foreground dark:text-white"
+                        title={account.email}
+                      >
+                        {account.name}
+                      </p>
+                      <SheetClose asChild>
+                        <Button
+                          asChild
+                          className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
+                        >
+                          <Link href={getLocalizedHref("/prihlasky", locale)}>
+                            {content.nav.myEntry}
+                            <ArrowRight className="size-[17px]" aria-hidden="true" />
+                          </Link>
+                        </Button>
+                      </SheetClose>
+                      <form action={logout}>
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          className="h-12 w-full rounded-[11px] border-race-line bg-race-surface text-base font-semibold"
+                        >
+                          {content.nav.logout}
+                        </Button>
+                      </form>
+                    </>
+                  ) : (
+                    <SheetClose asChild>
+                      <Button
+                        asChild
+                        className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
+                      >
+                        <Link href={getLocalizedHref("/prihlaseni", locale)}>
+                          {content.nav.register}
+                          <ArrowRight className="size-[17px]" aria-hidden="true" />
+                        </Link>
+                      </Button>
+                    </SheetClose>
                   )}
                 </div>
               </div>

@@ -5,7 +5,7 @@ import NextLink from "next/link";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { HighlightHashedRow, RunnerNameLink } from "@/components/molecules";
-import { McvvFooter, McvvNavbar } from "@/components/organisms";
+import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
 import { DownloadResultsButton } from "@/components/results/DownloadResultsButton";
 import type { Locale } from "@/i18n/routing";
@@ -111,7 +111,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar content={{ brand, nav }} variant="solid" />
+      <McvvPublicNavbar content={{ brand, nav }} variant="solid" />
       <HighlightHashedRow />
       <div className="px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">

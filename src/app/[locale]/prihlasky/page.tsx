@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { addExistingRunner, removeRunner, saveEntryHeader } from "@/lib/entries/actions";
-import { logout } from "@/lib/auth/actions";
 import { loadMyEntry } from "@/lib/entries/load";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { dateInputValue } from "@/lib/admin/parse";
@@ -42,7 +41,7 @@ export default async function EntriesPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar content={{ brand, nav }} variant="solid" />
+      <McvvPublicNavbar content={{ brand, nav }} variant="solid" />
       <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center gap-3">
@@ -55,23 +54,7 @@ export default async function EntriesPage({ params }: PageProps) {
             {copy("title")}
           </h1>
           {session ? (
-            <>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-race-muted">
-                  {session.name} · {session.email}
-                </p>
-                <form action={logout}>
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    className="h-10 border-race-line bg-race-surface font-display text-sm font-semibold"
-                  >
-                    {auth("logout")}
-                  </Button>
-                </form>
-              </div>
-              <EntryBody email={session.email} name={session.name} copy={copy} />
-            </>
+            <EntryBody email={session.email} name={session.name} copy={copy} />
           ) : (
             <div className="mt-8 grid max-w-md gap-4">
               <p className="text-base leading-7 text-race-muted">{copy("needAccount")}</p>

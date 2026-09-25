@@ -6,7 +6,9 @@
       "bottom": "VELKE VERANDY"
     },
     "nav": {
-      "register": "Register",
+      "register": "Sign in",
+      "myEntry": "My entry",
+      "logout": "Sign out",
       "menuLabel": "Open menu",
       "closeLabel": "Close menu",
       "home": {

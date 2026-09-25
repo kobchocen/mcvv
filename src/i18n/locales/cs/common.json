@@ -7,6 +7,8 @@
     },
     "nav": {
       "register": "Přihlásit se",
+      "myEntry": "Moje přihláška",
+      "logout": "Odhlásit se",
       "menuLabel": "Otevřít menu",
       "closeLabel": "Zavřít menu",
       "home": {

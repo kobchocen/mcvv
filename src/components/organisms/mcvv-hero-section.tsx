@@ -8,6 +8,7 @@ import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-c
 
 export type McvvHeroSectionProps = {
   content: Pick<McvvHomepageContent, "hero">;
+  signedIn?: boolean;
 };
 
 const HERO_VARIANT = "kopec" as "mlha" | "kopec";
@@ -17,7 +18,8 @@ const heroImages = {
   kopec: "/images/hero-trat-kopec.jpg",
 } as const;
 
-export function McvvHeroSection({ content }: McvvHeroSectionProps) {
+export function McvvHeroSection({ content, signedIn = false }: McvvHeroSectionProps) {
+  const primaryHref = signedIn ? "/prihlasky" : "/prihlaseni";
   return (
     <section className="relative min-h-[760px] bg-race-forest text-white lg:min-h-[820px]">
       <Image
@@ -56,7 +58,7 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 size="lg"
                 className="h-12 bg-race-accent px-6 font-display text-base font-semibold text-white hover:bg-race-accent-hover"
               >
-                <Link href={content.hero.primaryHref as "/prihlasky"}>
+                <Link href={primaryHref}>
                   {content.hero.primaryCta}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>

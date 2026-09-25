@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvContactForm } from "@/components/organisms/mcvv-contact-form";
-import { McvvNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
@@ -28,7 +28,7 @@ export default async function ContactPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar
+      <McvvPublicNavbar
         content={{
           brand: home.raw("brand") as McvvHomepageContent["brand"],
           nav: home.raw("nav") as McvvHomepageContent["nav"],

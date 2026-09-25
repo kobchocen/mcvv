@@ -5,6 +5,7 @@ export * from "./mcvv-footer";
 export * from "./mcvv-gallery-section";
 export * from "./mcvv-hero-section";
 export * from "./mcvv-navbar";
+export * from "./mcvv-public-navbar";
 export * from "./mcvv-overview-section";
 export * from "./mcvv-partners-section";
 export * from "./mcvv-profile-section";

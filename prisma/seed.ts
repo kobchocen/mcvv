@@ -280,12 +280,13 @@ async function seedStaffAccounts() {
     const passwordHash = await bcrypt.hash(account.password, 12);
     await prisma.user.upsert({
       where: { email: account.email.toLowerCase() },
-      update: { name: account.name, role: account.role, passwordHash },
+      update: { name: account.name, role: account.role, passwordHash, emailVerified: new Date() },
       create: {
         email: account.email.toLowerCase(),
         name: account.name,
         role: account.role,
         passwordHash,
+        emailVerified: new Date(),
       },
     });
     console.log(`  upsert ${account.role}`);

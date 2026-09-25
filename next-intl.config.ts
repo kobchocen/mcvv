@@ -16,6 +16,8 @@ export default defineRouting({
     "/bezec/[id]": "/bezec/[id]",
     "/fotogalerie": "/fotogalerie",
     "/prihlaseni": "/prihlaseni",
+    "/registrace": "/registrace",
+    "/overeni": "/overeni",
     "/admin": "/admin",
     "/admin/partneri": "/admin/partneri",
     "/admin/partneri/novy": "/admin/partneri/novy",

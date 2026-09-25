@@ -29,6 +29,8 @@ const envSchema = z.object({
   ORGANIZER_EMAIL: emptyToUndefined,
   ORGANIZER_PASSWORD: emptyToUndefined,
   ORGANIZER_NAME: emptyToUndefined,
+  RESEND_API_KEY: emptyToUndefined,
+  MAIL_FROM: emptyToUndefined,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -51,6 +53,8 @@ const parsedEnv = envSchema.safeParse({
   ORGANIZER_EMAIL: process.env.ORGANIZER_EMAIL,
   ORGANIZER_PASSWORD: process.env.ORGANIZER_PASSWORD,
   ORGANIZER_NAME: process.env.ORGANIZER_NAME,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  MAIL_FROM: process.env.MAIL_FROM,
 });
 
 if (!parsedEnv.success) {

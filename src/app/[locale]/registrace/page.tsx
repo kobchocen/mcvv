@@ -2,13 +2,11 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { RaceBrand } from "@/components/atoms";
-import { McvvLoginForm } from "@/components/organisms/mcvv-login-form";
-import { logout } from "@/lib/auth/actions";
+import { McvvRegisterForm } from "@/components/organisms/mcvv-register-form";
 import { getSession, isStaffRole } from "@/lib/auth/session";
 import { Link, redirect } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
-import { Button } from "@/components/ui/button";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -17,16 +15,14 @@ type PageProps = Readonly<{
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale: requestedLocale } = await params;
   const t = await getTranslations({ locale: requestedLocale as Locale, namespace: "Auth" });
-  return { title: t("title") };
+  return { title: t("registerTitle") };
 }
 
-export default async function LoginPage({ params }: PageProps) {
+export default async function RegisterPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-
   const session = await getSession();
-
   if (session && isStaffRole(session.role)) {
     redirect({ href: "/admin", locale });
   }
@@ -45,43 +41,28 @@ export default async function LoginPage({ params }: PageProps) {
           <RaceBrand {...brand} />
         </Link>
         <h1 className="mt-10 font-display text-4xl font-bold text-foreground dark:text-white">
-          {copy("title")}
+          {copy("registerTitle")}
         </h1>
-        {session ? (
-          <div className="mt-6 grid gap-4">
-            <p className="text-base leading-7 text-race-muted">
-              {copy("signedIn", { name: session.name })}
-            </p>
-            <form action={logout}>
-              <Button
-                type="submit"
-                variant="outline"
-                className="h-11 w-full border-race-line bg-race-surface font-display font-semibold"
-              >
-                {copy("logout")}
-              </Button>
-            </form>
-          </div>
-        ) : (
-          <div className="mt-8">
-            <McvvLoginForm
-              copy={{
-                email: copy("email"),
-                password: copy("password"),
-                submit: copy("submit"),
-                error: copy("error"),
-                unverified: copy("unverified"),
-                resend: copy("resend"),
-                sent: copy("verifySent"),
-              }}
-            />
-            <p className="mt-6 text-sm text-race-muted">
-              <Link href="/registrace" className="font-medium text-race-accent hover:underline">
-                {copy("registerTitle")}
-              </Link>
-            </p>
-          </div>
-        )}
+        <div className="mt-8">
+          <McvvRegisterForm
+            copy={{
+              name: copy("name"),
+              email: copy("email"),
+              password: copy("password"),
+              submit: copy("registerSubmit"),
+              sent: copy("verifySent"),
+              exists: copy("alreadyVerified"),
+              mail: copy("mailMissing"),
+              generic: copy("registerGeneric"),
+              signIn: copy("title"),
+            }}
+          />
+        </div>
+        <p className="mt-6 text-sm text-race-muted">
+          <Link href="/prihlaseni" className="font-medium text-race-accent hover:underline">
+            {copy("title")}
+          </Link>
+        </p>
       </div>
     </main>
   );

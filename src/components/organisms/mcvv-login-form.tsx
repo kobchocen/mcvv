@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login, type LoginState } from "@/lib/auth/actions";
+import { resendVerification } from "@/lib/auth/register-actions";
 
 export type McvvLoginFormCopy = {
   email: string;
   password: string;
   submit: string;
   error: string;
+  unverified: string;
+  resend: string;
+  sent: string;
 };
 
 export type McvvLoginFormProps = {
@@ -22,6 +26,30 @@ const initial: LoginState = {};
 
 export function McvvLoginForm({ copy }: McvvLoginFormProps) {
   const [state, action, pending] = useActionState(login, initial);
+  const [resendState, resendAction, resendPending] = useActionState(resendVerification, {});
+
+  if (state.unverified) {
+    return (
+      <div className="grid gap-4">
+        <p className="text-sm text-destructive">{copy.unverified}</p>
+        {resendState.sent ? <p className="text-sm text-race-muted">{copy.sent}</p> : null}
+        {resendState.error === "mail" ? (
+          <p className="text-sm text-destructive">{copy.error}</p>
+        ) : null}
+        <form action={resendAction}>
+          <input type="hidden" name="email" value={state.email} />
+          <Button
+            type="submit"
+            disabled={resendPending}
+            variant="outline"
+            className="h-11 w-full border-race-line bg-race-surface font-display font-semibold"
+          >
+            {copy.resend}
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <form action={action} className="grid gap-4">

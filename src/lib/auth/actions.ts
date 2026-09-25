@@ -9,6 +9,8 @@ import { redirect } from "@/i18n/routing";
 
 export type LoginState = {
   error?: boolean;
+  unverified?: boolean;
+  email?: string;
 };
 
 export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
@@ -27,6 +29,10 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     return { error: true };
   }
 
+  if (!user.emailVerified && !isStaffRole(user.role)) {
+    return { unverified: true, email: user.email };
+  }
+
   const written = await setSession({
     id: user.id,
     email: user.email,
@@ -41,7 +47,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   if (isStaffRole(user.role)) {
     redirect({ href: "/admin", locale });
   }
-  redirect({ href: "/", locale });
+  redirect({ href: "/prihlasky", locale });
   return {};
 }
 

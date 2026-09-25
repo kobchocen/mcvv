@@ -27,11 +27,15 @@ export function McvvNewRunnerForm({
   year,
   registrationId,
   categories,
+  clubs,
+  defaultClubId,
   copy,
 }: {
   year: number;
   registrationId: number;
   categories: CategoryOption[];
+  clubs: { id: string; name: string }[];
+  defaultClubId: string;
   copy: {
     firstName: string;
     lastName: string;
@@ -40,6 +44,7 @@ export function McvvNewRunnerForm({
     male: string;
     female: string;
     category: string;
+    club: string;
     add: string;
   };
 }) {
@@ -53,6 +58,12 @@ export function McvvNewRunnerForm({
         : [],
     [born, categories, sex, year],
   );
+  const defaultCategoryId = useMemo(() => {
+    if (eligible.length === 0) {
+      return "";
+    }
+    return eligible.reduce((best, category) => (category.age > best.age ? category : best)).id;
+  }, [eligible]);
 
   return (
     <form action={addNewRunner} className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -97,11 +108,29 @@ export function McvvNewRunnerForm({
           id="categoryId"
           name="categoryId"
           required
+          key={defaultCategoryId}
+          defaultValue={defaultCategoryId}
           className="h-10 border border-race-line bg-race-surface px-3"
         >
           {eligible.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="grid gap-1.5 sm:col-span-2">
+        <Label htmlFor="clubId">{copy.club}</Label>
+        <select
+          id="clubId"
+          name="clubId"
+          required={clubs.length > 0}
+          defaultValue={defaultClubId}
+          className="h-10 border border-race-line bg-race-surface px-3"
+        >
+          {clubs.map((club) => (
+            <option key={club.id} value={club.id}>
+              {club.name}
             </option>
           ))}
         </select>

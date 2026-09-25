@@ -57,16 +57,12 @@ export function pickCategory<T extends { sex: string; age: number }>(
   categories: T[],
 ): T | null {
   const eligible = categories.filter((category) => isEligible(runnerId, raceYear, category));
-  if (eligible.length === 0) {
+  return defaultCategory(eligible);
+}
+
+export function defaultCategory<T extends { age: number }>(categories: T[]): T | null {
+  if (categories.length === 0) {
     return null;
   }
-  const juniors = eligible.filter((category) => category.age > 0 && category.age <= 20);
-  if (juniors.length > 0) {
-    return juniors.sort((a, b) => b.age - a.age)[0];
-  }
-  const veterans = eligible.filter((category) => category.age > 20);
-  if (veterans.length > 0) {
-    return veterans.sort((a, b) => b.age - a.age)[0];
-  }
-  return eligible[0] ?? null;
+  return categories.reduce((best, category) => (category.age > best.age ? category : best));
 }

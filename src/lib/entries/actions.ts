@@ -67,7 +67,9 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   if (!category) {
     return;
   }
-  const clubId = await resolveClubId(registration.name ?? session.name, year);
+  const clubId =
+    formString(formData, "clubId") ||
+    (await resolveClubId(registration.name ?? session.name, year));
   if (!clubId) {
     return;
   }
@@ -126,7 +128,9 @@ export async function addNewRunner(formData: FormData): Promise<void> {
   if (taken) {
     return;
   }
-  const clubId = await resolveClubId(registration.name ?? session.name, year);
+  const clubId =
+    formString(formData, "clubId") ||
+    (await resolveClubId(registration.name ?? session.name, year));
   if (!clubId) {
     return;
   }
@@ -140,6 +144,30 @@ export async function addNewRunner(formData: FormData): Promise<void> {
       entryFee: category.entryFee,
       author: session.email,
     },
+  });
+  revalidatePath("/[locale]/prihlasky", "page");
+}
+
+export async function updateLineClub(formData: FormData): Promise<void> {
+  const session = await getSession();
+  const year = formInt(formData, "year");
+  const registrationId = formInt(formData, "registrationId");
+  const runnerId = formString(formData, "runnerId");
+  const clubId = formString(formData, "clubId");
+  if (!session || year === null || registrationId === null || !runnerId || !clubId) {
+    return;
+  }
+  const { open } = await currentRaceYear();
+  if (!open) {
+    return;
+  }
+  const registration = await ownRegistration(year, registrationId, session.email);
+  if (!registration) {
+    return;
+  }
+  await prisma.registrationLine.update({
+    where: { year_runnerId: { year, runnerId } },
+    data: { clubId },
   });
   revalidatePath("/[locale]/prihlasky", "page");
 }

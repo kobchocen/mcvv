@@ -14,7 +14,7 @@ export async function loadMyEntry(email: string, displayName: string) {
       lines: {
         include: {
           runner: { select: { id: true, name: true } },
-          club: { select: { name: true } },
+          club: { select: { id: true, name: true } },
           category: { select: { name: true, entryFee: true } },
         },
         orderBy: { runnerId: "asc" },
@@ -39,7 +39,7 @@ export async function loadMyEntry(email: string, displayName: string) {
         lines: {
           include: {
             runner: { select: { id: true, name: true } },
-            club: { select: { name: true } },
+            club: { select: { id: true, name: true } },
             category: { select: { name: true, entryFee: true } },
           },
           orderBy: { runnerId: "asc" },

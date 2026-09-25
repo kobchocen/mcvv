@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvNavbar } from "@/components/organisms";
+import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { addExistingRunner, removeRunner, saveEntryHeader } from "@/lib/entries/actions";
+import { logout } from "@/lib/auth/actions";
 import { loadMyEntry } from "@/lib/entries/load";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { dateInputValue } from "@/lib/admin/parse";
@@ -53,7 +55,23 @@ export default async function EntriesPage({ params }: PageProps) {
             {copy("title")}
           </h1>
           {session ? (
-            <EntryBody email={session.email} name={session.name} copy={copy} />
+            <>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-race-muted">
+                  {session.name} · {session.email}
+                </p>
+                <form action={logout}>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="h-10 border-race-line bg-race-surface font-display text-sm font-semibold"
+                  >
+                    {auth("logout")}
+                  </Button>
+                </form>
+              </div>
+              <EntryBody email={session.email} name={session.name} copy={copy} />
+            </>
           ) : (
             <div className="mt-8 grid max-w-md gap-4">
               <p className="text-base leading-7 text-race-muted">{copy("needAccount")}</p>
@@ -88,6 +106,23 @@ async function EntryBody({
     name,
   );
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
+  const yearClubs = await prisma.club.findMany({
+    where: { year },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  const clubOptions = [...yearClubs];
+  if (registration) {
+    for (const line of registration.lines) {
+      if (!clubOptions.some((club) => club.id === line.clubId)) {
+        clubOptions.push({ id: line.clubId, name: line.club.name });
+      }
+    }
+  }
+  const defaultClubId =
+    clubOptions.find((club) => club.name.trim() === (registration?.name ?? name).trim())?.id ??
+    clubOptions[0]?.id ??
+    "";
   const fee =
     registration?.lines.reduce(
       (sum, line) => sum + (line.entryFee ?? line.category.entryFee ?? 0),
@@ -167,10 +202,12 @@ async function EntryBody({
 
       <section>
         <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
-        <table className="mt-4 w-full min-w-[32rem] border-collapse text-left text-sm">
+        <table className="mt-4 w-full min-w-[40rem] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
               <th className="py-2 pr-3">{copy("runnerName")}</th>
+              <th className="py-2 pr-3">{copy("birthCol")}</th>
+              <th className="py-2 pr-3">{copy("club")}</th>
               <th className="py-2 pr-3">{copy("category")}</th>
               <th className="py-2 pr-3">{copy("fee")}</th>
               <th className="py-2" />
@@ -180,6 +217,20 @@ async function EntryBody({
             {registration.lines.map((line) => (
               <tr key={line.runnerId} className="border-b border-race-line/40">
                 <td className="py-2.5 pr-3">{line.runner.name}</td>
+                <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
+                <td className="py-2.5 pr-3">
+                  {open ? (
+                    <McvvLineClubSelect
+                      year={year}
+                      registrationId={registration.id}
+                      runnerId={line.runnerId}
+                      clubId={line.clubId}
+                      clubs={clubOptions}
+                    />
+                  ) : (
+                    line.club.name
+                  )}
+                </td>
                 <td className="py-2.5 pr-3">{line.category.name}</td>
                 <td className="py-2.5 pr-3">{line.entryFee ?? line.category.entryFee}</td>
                 <td className="py-2.5">
@@ -209,6 +260,9 @@ async function EntryBody({
                     <input type="hidden" name="year" value={year} />
                     <input type="hidden" name="registrationId" value={registration.id} />
                     <input type="hidden" name="runnerId" value={runner.id} />
+                    {defaultClubId ? (
+                      <input type="hidden" name="clubId" value={defaultClubId} />
+                    ) : null}
                     <Button
                       type="submit"
                       variant="outline"
@@ -230,6 +284,8 @@ async function EntryBody({
               year={year}
               registrationId={registration.id}
               categories={categories}
+              clubs={clubOptions}
+              defaultClubId={defaultClubId}
               copy={{
                 firstName: copy("firstName"),
                 lastName: copy("lastName"),
@@ -238,6 +294,7 @@ async function EntryBody({
                 male: copy("male"),
                 female: copy("female"),
                 category: copy("category"),
+                club: copy("club"),
                 add: copy("add"),
               }}
             />

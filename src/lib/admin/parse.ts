@@ -32,3 +32,12 @@ export function dateInputValue(value: Date | null | undefined): string {
 export function formChecked(data: FormData, key: string): boolean {
   return data.get(key) === "on" || data.get(key) === "true";
 }
+
+/** Legacy `mcvv_platba.prihlaska_id` is CHAR — match as a number, not padded text. */
+export function paymentRegistrationId(value: string | number): number {
+  return Number.parseInt(String(value).trim(), 10);
+}
+
+export function toPaymentRegistrationId(id: number): string {
+  return String(id);
+}

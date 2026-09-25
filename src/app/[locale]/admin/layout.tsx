@@ -44,6 +44,7 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
               { href: "/admin/partneri", label: copy("navPartners") },
               { href: "/admin/rocniky", label: copy("navEditions") },
               { href: "/admin/ciselniky", label: copy("navDictionaries") },
+              { href: "/admin/prihlasky", label: copy("navRegistrations") },
             ]}
           />
           <div className="flex items-center gap-3">

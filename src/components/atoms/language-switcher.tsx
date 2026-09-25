@@ -67,6 +67,16 @@ export function LanguageSwitcher({
       );
       return;
     }
+    if (pathname === "/admin/prihlasky/[rok]/[id]") {
+      router.replace(
+        {
+          pathname: "/admin/prihlasky/[rok]/[id]",
+          params: { rok: String(params.rok ?? ""), id: String(params.id ?? "") },
+        },
+        { locale: nextLocale },
+      );
+      return;
+    }
     router.replace(pathname, { locale: nextLocale });
   };
 

@@ -3,7 +3,7 @@
 import { Link, usePathname } from "@/i18n/routing";
 
 export type AdminNavItem = {
-  href: "/admin" | "/admin/partneri" | "/admin/rocniky" | "/admin/ciselniky";
+  href: "/admin" | "/admin/partneri" | "/admin/rocniky" | "/admin/ciselniky" | "/admin/prihlasky";
   label: string;
 };
 

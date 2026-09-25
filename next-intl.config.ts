@@ -26,5 +26,7 @@ export default defineRouting({
     "/admin/ciselniky": "/admin/ciselniky",
     "/admin/ciselniky/kategorie": "/admin/ciselniky/kategorie",
     "/admin/ciselniky/kluby": "/admin/ciselniky/kluby",
+    "/admin/prihlasky": "/admin/prihlasky",
+    "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
   },
 });

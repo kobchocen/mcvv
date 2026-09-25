@@ -57,3 +57,10 @@ export async function logout(): Promise<void> {
   redirect({ href: "/prihlaseni", locale });
   return;
 }
+
+export async function logoutHome(): Promise<void> {
+  await clearSession();
+  const locale = await getLocale();
+  redirect({ href: "/", locale });
+  return;
+}

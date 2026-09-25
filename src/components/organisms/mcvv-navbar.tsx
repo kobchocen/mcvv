@@ -16,7 +16,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import type { McvvHomepageContent, NavLink } from "@/components/templates";
-import { logout } from "@/lib/auth/actions";
+import { logoutHome } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
 
 export type McvvNavbarAccount = {
@@ -122,7 +122,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               >
                 <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
               </Button>
-              <form action={logout}>
+              <form action={logoutHome}>
                 <Button
                   type="submit"
                   variant="outline"
@@ -216,7 +216,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                           </Link>
                         </Button>
                       </SheetClose>
-                      <form action={logout}>
+                      <form action={logoutHome}>
                         <Button
                           type="submit"
                           variant="outline"

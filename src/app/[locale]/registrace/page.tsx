@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { RaceBrand } from "@/components/atoms";
 import { McvvRegisterForm } from "@/components/organisms/mcvv-register-form";
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { getSession } from "@/lib/auth/session";
 import { Link, redirect } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
@@ -23,11 +23,8 @@ export default async function RegisterPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const session = await getSession();
-  if (session && isStaffRole(session.role)) {
-    redirect({ href: "/admin", locale });
-  }
   if (session) {
-    redirect({ href: "/prihlasky", locale });
+    redirect({ href: "/", locale });
   }
 
   const home = await getTranslations({ locale, namespace: "Home" });

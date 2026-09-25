@@ -20,11 +20,12 @@ export type McvvLoginFormCopy = {
 
 export type McvvLoginFormProps = {
   copy: McvvLoginFormCopy;
+  next?: string | null;
 };
 
 const initial: LoginState = {};
 
-export function McvvLoginForm({ copy }: McvvLoginFormProps) {
+export function McvvLoginForm({ copy, next }: McvvLoginFormProps) {
   const [state, action, pending] = useActionState(login, initial);
   const [resendState, resendAction, resendPending] = useActionState(resendVerification, {});
 
@@ -53,6 +54,7 @@ export function McvvLoginForm({ copy }: McvvLoginFormProps) {
 
   return (
     <form action={action} className="grid gap-4">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="grid gap-2">
         <Label htmlFor="email">{copy.email}</Label>
         <Input

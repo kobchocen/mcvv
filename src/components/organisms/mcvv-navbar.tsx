@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 export type McvvNavbarAccount = {
   name: string;
   email: string;
+  staff?: boolean;
 };
 
 export type McvvNavbarProps = {
@@ -122,6 +123,15 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               >
                 <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
               </Button>
+              {account.staff ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-10 rounded-[10px] border-race-line bg-race-surface font-display text-[15px] font-semibold uppercase tracking-[0.03em]"
+                >
+                  <Link href={getLocalizedHref("/admin", locale)}>{content.nav.admin}</Link>
+                </Button>
+              ) : null}
               <form action={logoutHome}>
                 <Button
                   type="submit"
@@ -216,6 +226,19 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                           </Link>
                         </Button>
                       </SheetClose>
+                      {account.staff ? (
+                        <SheetClose asChild>
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="h-12 rounded-[11px] border-race-line bg-race-surface text-base font-semibold"
+                          >
+                            <Link href={getLocalizedHref("/admin", locale)}>
+                              {content.nav.admin}
+                            </Link>
+                          </Button>
+                        </SheetClose>
+                      ) : null}
                       <form action={logoutHome}>
                         <Button
                           type="submit"

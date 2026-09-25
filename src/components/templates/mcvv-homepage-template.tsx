@@ -12,7 +12,7 @@ import {
   McvvScheduleSection,
 } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
-import { getSession } from "@/lib/auth/session";
+import { getSession, isStaffRole } from "@/lib/auth/session";
 
 export type McvvHomepageTemplateProps = {
   content: McvvHomepageContent;
@@ -29,7 +29,11 @@ export async function McvvHomepageTemplate({
       <McvvNavbar
         content={content}
         variant="solid"
-        account={session ? { name: session.name, email: session.email } : null}
+        account={
+          session
+            ? { name: session.name, email: session.email, staff: isStaffRole(session.role) }
+            : null
+        }
       />
       <McvvHeroSection content={content} signedIn={Boolean(session)} />
       <McvvOverviewSection content={content.overview} />

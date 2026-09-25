@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth/session";
+import { getSession, isStaffRole } from "@/lib/auth/session";
 
 import { McvvNavbar, type McvvNavbarProps } from "./mcvv-navbar";
 
@@ -13,7 +13,11 @@ export async function McvvPublicNavbar({
       content={content}
       className={className}
       variant={variant}
-      account={session ? { name: session.name, email: session.email } : null}
+      account={
+        session
+          ? { name: session.name, email: session.email, staff: isStaffRole(session.role) }
+          : null
+      }
     />
   );
 }

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPartnerForm } from "@/components/organisms/mcvv-admin-partner-form";
 import { prisma } from "@/lib/db/client";
-import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -34,14 +34,7 @@ export default async function AdminEditPartnerPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <p className="mb-4">
-          <Link
-            href="/admin/partneri"
-            className="text-sm font-medium text-race-accent hover:underline"
-          >
-            {copy("back")}
-          </Link>
-        </p>
+        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="mb-8 font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("edit")} — {row.name}
         </h1>

@@ -5,8 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { deletePayment, savePayment, saveRegistrationHeader } from "@/lib/admin/registrations";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
-import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
+import { McvvAdminHomeLink } from "@/components/organisms";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,14 +65,7 @@ export default async function AdminRegistrationDetailPage({ params }: PageProps)
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-12">
         <div>
-          <p className="mb-4">
-            <Link
-              href={{ pathname: "/admin/prihlasky", query: { rok: String(year) } }}
-              className="text-sm font-medium text-race-accent hover:underline"
-            >
-              {copy("regsBack")}
-            </Link>
-          </p>
+          <McvvAdminHomeLink label={copy("title")} />
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {copy("regsTitle")} {year}/{id}
           </h1>

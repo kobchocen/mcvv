@@ -8,6 +8,7 @@
     "nav": {
       "register": "Přihlásit se",
       "myEntry": "Moje přihláška",
+      "admin": "Administrace",
       "logout": "Odhlásit se",
       "menuLabel": "Otevřít menu",
       "closeLabel": "Zavřít menu",
@@ -508,6 +509,7 @@
     "eyebrow": "Správa",
     "title": "Administrace",
     "overviewTitle": "Přehled",
+    "intro": "Správa partnerů, ročníků, číselníků a přihlášek.",
     "placeholder": "Přihlášky a newsletter přijdou v další vlně.",
     "navOverview": "Přehled",
     "navPartners": "Partneři",

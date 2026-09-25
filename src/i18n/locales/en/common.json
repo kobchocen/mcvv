@@ -8,6 +8,7 @@
     "nav": {
       "register": "Sign in",
       "myEntry": "My entry",
+      "admin": "Administration",
       "logout": "Sign out",
       "menuLabel": "Open menu",
       "closeLabel": "Close menu",
@@ -508,6 +509,7 @@
     "eyebrow": "Back office",
     "title": "Administration",
     "overviewTitle": "Overview",
+    "intro": "Manage partners, editions, lists, and entries.",
     "placeholder": "Registrations and newsletter will follow in the next wave.",
     "navOverview": "Overview",
     "navPartners": "Partners",

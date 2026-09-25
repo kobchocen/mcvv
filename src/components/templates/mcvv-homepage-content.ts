@@ -74,6 +74,7 @@ export type McvvHomepageContent = {
     links: NavLink[];
     register: string;
     myEntry: string;
+    admin: string;
     logout: string;
     menuLabel: string;
     closeLabel: string;

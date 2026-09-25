@@ -7,7 +7,7 @@ import { formInt, formString } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 
 function revalidateDicts() {
-  revalidatePath("/[locale]/admin/ciselniky", "page");
+  revalidatePath("/[locale]/admin/ciselniky", "layout");
 }
 
 export async function saveCategory(formData: FormData): Promise<void> {

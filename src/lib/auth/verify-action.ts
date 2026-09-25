@@ -29,13 +29,12 @@ export async function consumeVerificationToken(
     }
     return { error: true };
   }
-  await prisma.$transaction([
-    prisma.user.update({
+  if (!row.user.emailVerified) {
+    await prisma.user.update({
       where: { id: row.userId },
       data: { emailVerified: new Date() },
-    }),
-    prisma.emailVerificationToken.deleteMany({ where: { userId: row.userId } }),
-  ]);
+    });
+  }
   const written = await setSession({
     id: row.user.id,
     email: row.user.email,

@@ -5,8 +5,9 @@ import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
+import { confirmRegistration } from "@/lib/admin/registrations";
+import { ENTRY_STATUS } from "@/lib/entries/status";
 import { McvvAdminHomeLink } from "@/components/organisms";
-import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -102,15 +103,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       <div className="mx-auto max-w-6xl">
         <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
-          {copy("regsTitle")}
+          {copy("regsTitle")} {selectedYear}
         </h1>
         <form className="mt-4 flex flex-wrap items-end gap-3" method="get">
-          <AdminField
-            name="rok"
-            label={copy("regsYear")}
-            type="number"
-            defaultValue={selectedYear}
-          />
+          <input type="hidden" name="rok" value={selectedYear} />
           <label className="grid gap-1 text-sm">
             <span className="text-race-muted">{copy("regsStatus")}</span>
             <select
@@ -132,7 +128,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {copy("includeCancelled")}
           </label>
           <Button type="submit" variant="outline" className="h-10 border-race-line bg-race-surface">
-            {copy("regsYear")}
+            {copy("filter")}
           </Button>
         </form>
         {years.length > 1 ? (
@@ -192,15 +188,31 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       </td>
                       <td className="py-2.5 pr-3">{row.promotion ?? ""}</td>
                       <td className="py-2.5">
-                        <Link
-                          href={{
-                            pathname: "/admin/prihlasky/[rok]/[id]",
-                            params: { rok: String(row.year), id: String(row.id) },
-                          }}
-                          className="font-semibold text-race-accent hover:underline"
-                        >
-                          {copy("edit")}
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-3">
+                          {row.status === ENTRY_STATUS.paid ||
+                          row.status === ENTRY_STATUS.overpaid ? (
+                            <form action={confirmRegistration}>
+                              <input type="hidden" name="year" value={row.year} />
+                              <input type="hidden" name="id" value={row.id} />
+                              <input type="hidden" name="from" value="list" />
+                              <button
+                                type="submit"
+                                className="font-semibold text-race-accent hover:underline"
+                              >
+                                {copy("confirmEntry")}
+                              </button>
+                            </form>
+                          ) : null}
+                          <Link
+                            href={{
+                              pathname: "/admin/prihlasky/[rok]/[id]",
+                              params: { rok: String(row.year), id: String(row.id) },
+                            }}
+                            className="font-semibold text-race-accent hover:underline"
+                          >
+                            {copy("edit")}
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -126,7 +126,6 @@ export function McvvNewRunnerForm({
           id="clubName"
           clubs={clubs}
           defaultValue={defaultClubName}
-          required
           listId="new-runner-club"
           className="h-10"
         />

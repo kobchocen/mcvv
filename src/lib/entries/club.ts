@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db/client";
 
+export const EMPTY_CLUB_ID = "000";
+
 function numericClubId(id: string): number | null {
   const trimmed = id.trim();
   if (trimmed >= "AAA" || !/^\d+$/.test(trimmed)) {
@@ -8,10 +10,24 @@ function numericClubId(id: string): number | null {
   return Number.parseInt(trimmed, 10);
 }
 
-export async function resolveClubId(name: string, year: number): Promise<string | null> {
+export async function ensureEmptyClub(year: number): Promise<string> {
+  const existing = await prisma.club.findUnique({
+    where: { id_year: { id: EMPTY_CLUB_ID, year } },
+    select: { id: true },
+  });
+  if (existing) {
+    return EMPTY_CLUB_ID;
+  }
+  await prisma.club.create({
+    data: { id: EMPTY_CLUB_ID, year, name: "", author: "web" },
+  });
+  return EMPTY_CLUB_ID;
+}
+
+export async function resolveClubId(name: string, year: number): Promise<string> {
   const label = name.trim().slice(0, 50);
   if (!label) {
-    return null;
+    return ensureEmptyClub(year);
   }
   const thisYear = await prisma.club.findFirst({
     where: { year, name: label },

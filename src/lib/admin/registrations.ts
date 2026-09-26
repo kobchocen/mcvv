@@ -14,7 +14,7 @@ import { redirect } from "@/i18n/routing";
 function revalidateRegistrations() {
   revalidatePath("/[locale]/admin/prihlasky", "layout");
   revalidatePath("/[locale]/prihlasky", "page");
-  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
 }
 
@@ -179,6 +179,12 @@ export async function confirmRegistration(formData: FormData): Promise<void> {
   });
   revalidateRegistrations();
   const locale = await getLocale();
+  if (formString(formData, "from") === "list") {
+    redirect({
+      href: { pathname: "/admin/prihlasky", query: { rok: String(year) } },
+      locale,
+    });
+  }
   if (!sent) {
     redirect({
       href: {

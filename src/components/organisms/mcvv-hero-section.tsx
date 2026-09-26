@@ -64,7 +64,7 @@ export function McvvHeroSection({
                 size="lg"
                 className="h-12 bg-race-accent px-6 font-display text-base font-semibold text-white hover:bg-race-accent-hover"
               >
-                <Link href="/startovka">
+                <Link href="/prihlaseni-zavodnici">
                   {content.hero.primaryCta}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
@@ -80,14 +80,9 @@ export function McvvHeroSection({
                 </Link>
               </Button>
             </div>
-            {showCountdown && deadlineMs ? (
-              <McvvDeadlineCountdown
-                targetMs={deadlineMs}
-                units={content.schedule.countdownUnits}
-              />
-            ) : null}
+            {showCountdown && deadlineMs ? <McvvDeadlineCountdown targetMs={deadlineMs} /> : null}
             {enrolledLabel ? (
-              <p className="mt-4 font-display text-sm font-semibold uppercase tracking-wide text-white/85">
+              <p className="mt-2 text-sm text-white/75 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
                 {enrolledLabel}
               </p>
             ) : null}

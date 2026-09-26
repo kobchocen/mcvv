@@ -13,6 +13,7 @@ export function McvvRegisterForm({
 }: {
   copy: {
     name: string;
+    clubName: string;
     email: string;
     password: string;
     submit: string;
@@ -40,6 +41,10 @@ export function McvvRegisterForm({
           autoComplete="name"
           className="h-11 bg-race-surface"
         />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="clubName">{copy.clubName}</Label>
+        <Input id="clubName" name="clubName" maxLength={50} className="h-11 bg-race-surface" />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="email">{copy.email}</Label>

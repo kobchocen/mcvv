@@ -45,7 +45,7 @@ export function McvvClubCombobox({
           }
           const next = event.currentTarget.value.trim();
           const initial = (controlled ? value : defaultValue)?.trim() ?? "";
-          if (!next || next === initial) {
+          if (next === initial) {
             return;
           }
           event.currentTarget.form?.requestSubmit();
@@ -56,9 +56,11 @@ export function McvvClubCombobox({
         )}
       />
       <datalist id={listId}>
-        {clubs.map((club) => (
-          <option key={club.id} value={club.name} />
-        ))}
+        {clubs
+          .filter((club) => club.id !== "000" && club.name.trim())
+          .map((club) => (
+            <option key={club.id} value={club.name} />
+          ))}
       </datalist>
     </>
   );

@@ -18,6 +18,10 @@ export async function registerAccount(
   formData: FormData,
 ): Promise<RegisterState> {
   const name = String(formData.get("name") ?? "").trim();
+  const clubName =
+    String(formData.get("clubName") ?? "")
+      .trim()
+      .slice(0, 50) || null;
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
@@ -45,6 +49,7 @@ export async function registerAccount(
       data: {
         email,
         name: name.slice(0, 80),
+        clubName,
         passwordHash: await bcrypt.hash(password, 12),
         role: "registrar",
       },
@@ -53,7 +58,11 @@ export async function registerAccount(
   } else if (!isStaffRole(existing.role)) {
     await prisma.user.update({
       where: { id: existing.id },
-      data: { name: name.slice(0, 80), passwordHash: await bcrypt.hash(password, 12) },
+      data: {
+        name: name.slice(0, 80),
+        clubName,
+        passwordHash: await bcrypt.hash(password, 12),
+      },
     });
   }
 

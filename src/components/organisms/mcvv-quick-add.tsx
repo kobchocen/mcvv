@@ -35,7 +35,6 @@ export function McvvQuickAdd({
           value={clubName}
           onChange={setClubName}
           listId="quick-club"
-          required
           className="h-10"
         />
       </div>
@@ -50,7 +49,6 @@ export function McvvQuickAdd({
               <Button
                 type="submit"
                 variant="outline"
-                disabled={!clubName.trim()}
                 className="h-9 border-race-line bg-race-surface"
               >
                 {runner.name}

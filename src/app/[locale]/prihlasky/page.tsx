@@ -56,7 +56,7 @@ export default async function EntriesPage({ params }: PageProps) {
             {copy("title")}
           </h1>
           {session ? (
-            <EntryBody email={session.email} name={session.name} copy={copy} />
+            <EntryBody email={session.email} userId={session.id} name={session.name} copy={copy} />
           ) : (
             <div className="mt-8 grid max-w-md gap-4">
               <p className="text-base leading-7 text-race-muted">{copy("needAccount")}</p>
@@ -79,16 +79,24 @@ export default async function EntriesPage({ params }: PageProps) {
 
 async function EntryBody({
   email,
+  userId,
   name,
   copy,
 }: {
   email: string;
+  userId: number;
   name: string;
   copy: Awaited<ReturnType<typeof getTranslations>>;
 }) {
+  const account = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { clubName: true },
+  });
+  const accountClubName = account?.clubName?.trim() || "";
   const { year, open, deadline, registration, past, quick, payments } = await loadMyEntry(
     email,
     name,
+    accountClubName,
   );
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
   const yearClubs = await prisma.club.findMany({
@@ -104,7 +112,7 @@ async function EntryBody({
       }
     }
   }
-  const defaultClubName = registration?.lines.at(-1)?.club.name ?? "";
+  const defaultClubName = accountClubName ? (registration?.name ?? accountClubName).trim() : "";
   const feeReasons = new Map<string, string | null>();
   if (registration) {
     for (const line of registration.lines) {

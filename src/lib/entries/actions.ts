@@ -70,9 +70,6 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
     return;
   }
   const clubId = await resolveClubId(formString(formData, "clubName"), year);
-  if (!clubId) {
-    return;
-  }
   const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
     data: {
@@ -87,7 +84,7 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   });
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
-  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
 }
 
@@ -133,9 +130,6 @@ export async function addNewRunner(formData: FormData): Promise<void> {
     return;
   }
   const clubId = await resolveClubId(formString(formData, "clubName"), year);
-  if (!clubId) {
-    return;
-  }
   const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
     data: {
@@ -150,7 +144,7 @@ export async function addNewRunner(formData: FormData): Promise<void> {
   });
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
-  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
 }
 
@@ -159,8 +153,7 @@ export async function updateLineClub(formData: FormData): Promise<void> {
   const year = formInt(formData, "year");
   const registrationId = formInt(formData, "registrationId");
   const runnerId = formString(formData, "runnerId");
-  const clubName = formString(formData, "clubName");
-  if (!session || year === null || registrationId === null || !runnerId || !clubName) {
+  if (!session || year === null || registrationId === null || !runnerId) {
     return;
   }
   const { open } = await currentRaceYear();
@@ -171,15 +164,13 @@ export async function updateLineClub(formData: FormData): Promise<void> {
   if (!registration) {
     return;
   }
-  const clubId = await resolveClubId(clubName, year);
-  if (!clubId) {
-    return;
-  }
+  const clubId = await resolveClubId(formString(formData, "clubName"), year);
   await prisma.registrationLine.update({
     where: { year_runnerId: { year, runnerId } },
     data: { clubId },
   });
   revalidatePath("/[locale]/prihlasky", "page");
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
 }
 
 export async function removeRunner(formData: FormData): Promise<void> {
@@ -203,6 +194,6 @@ export async function removeRunner(formData: FormData): Promise<void> {
   });
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
-  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
 }

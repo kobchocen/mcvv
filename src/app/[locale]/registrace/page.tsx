@@ -44,6 +44,7 @@ export default async function RegisterPage({ params }: PageProps) {
           <McvvRegisterForm
             copy={{
               name: copy("name"),
+              clubName: copy("clubName"),
               email: copy("email"),
               password: copy("password"),
               submit: copy("registerSubmit"),

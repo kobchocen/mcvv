@@ -24,7 +24,6 @@ export function McvvLineClubSelect({
       <McvvClubCombobox
         clubs={clubs}
         defaultValue={clubName}
-        required
         listId={`club-${runnerId}`}
         onBlurSubmit
       />

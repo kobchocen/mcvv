@@ -7,7 +7,7 @@
     },
     "nav": {
       "register": "Sign in",
-      "myEntry": "My entry",
+      "myEntry": "Entry",
       "admin": "Administration",
       "logout": "Sign out",
       "menuLabel": "Open menu",

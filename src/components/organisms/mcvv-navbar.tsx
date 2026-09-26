@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, LogOut, Menu, Settings, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -43,6 +43,9 @@ function getLocalizedHref(href: string, locale: string) {
 
   return `/${locale}${href.startsWith("/") ? href : `/${href}`}`;
 }
+
+const navIconButtonClass =
+  "size-10 rounded-[12px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white";
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
@@ -126,19 +129,29 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               {account.staff ? (
                 <Button
                   asChild
-                  variant="outline"
-                  className="h-10 rounded-[10px] border-race-line bg-race-surface font-display text-[15px] font-semibold uppercase tracking-[0.03em]"
+                  variant="ghost"
+                  size="icon"
+                  className={navIconButtonClass}
+                  aria-label={content.nav.admin}
+                  title={content.nav.admin}
                 >
-                  <Link href={getLocalizedHref("/admin", locale)}>{content.nav.admin}</Link>
+                  <Link href={getLocalizedHref("/admin", locale)}>
+                    <Settings className="size-[18px]" aria-hidden="true" />
+                    <span className="sr-only">{content.nav.admin}</span>
+                  </Link>
                 </Button>
               ) : null}
               <form action={logoutHome}>
                 <Button
                   type="submit"
-                  variant="outline"
-                  className="h-10 rounded-[10px] border-race-line bg-race-surface font-display text-[15px] font-semibold uppercase tracking-[0.03em]"
+                  variant="ghost"
+                  size="icon"
+                  className={navIconButtonClass}
+                  aria-label={content.nav.logout}
+                  title={content.nav.logout}
                 >
-                  {content.nav.logout}
+                  <LogOut className="size-[18px]" aria-hidden="true" />
+                  <span className="sr-only">{content.nav.logout}</span>
                 </Button>
               </form>
             </>
@@ -203,8 +216,8 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                 </nav>
 
                 <div className="mt-auto grid gap-3 border-t border-race-line/70 pt-5">
-                  <div className="grid grid-cols-[1fr_auto] gap-2">
-                    <LanguageSwitcher showLabel />
+                  <div className="flex items-center gap-2">
+                    <LanguageSwitcher />
                     <ThemeToggle className="size-11" />
                   </div>
                   {account ? (
@@ -226,28 +239,38 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                           </Link>
                         </Button>
                       </SheetClose>
-                      {account.staff ? (
-                        <SheetClose asChild>
+                      <div className="flex items-center gap-2">
+                        {account.staff ? (
+                          <SheetClose asChild>
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon"
+                              className={cn(navIconButtonClass, "size-11")}
+                              aria-label={content.nav.admin}
+                              title={content.nav.admin}
+                            >
+                              <Link href={getLocalizedHref("/admin", locale)}>
+                                <Settings className="size-[18px]" aria-hidden="true" />
+                                <span className="sr-only">{content.nav.admin}</span>
+                              </Link>
+                            </Button>
+                          </SheetClose>
+                        ) : null}
+                        <form action={logoutHome}>
                           <Button
-                            asChild
-                            variant="outline"
-                            className="h-12 rounded-[11px] border-race-line bg-race-surface text-base font-semibold"
+                            type="submit"
+                            variant="ghost"
+                            size="icon"
+                            className={cn(navIconButtonClass, "size-11")}
+                            aria-label={content.nav.logout}
+                            title={content.nav.logout}
                           >
-                            <Link href={getLocalizedHref("/admin", locale)}>
-                              {content.nav.admin}
-                            </Link>
+                            <LogOut className="size-[18px]" aria-hidden="true" />
+                            <span className="sr-only">{content.nav.logout}</span>
                           </Button>
-                        </SheetClose>
-                      ) : null}
-                      <form action={logoutHome}>
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          className="h-12 w-full rounded-[11px] border-race-line bg-race-surface text-base font-semibold"
-                        >
-                          {content.nav.logout}
-                        </Button>
-                      </form>
+                        </form>
+                      </div>
                     </>
                   ) : (
                     <SheetClose asChild>

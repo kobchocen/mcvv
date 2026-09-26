@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
-import { addNewRunner } from "@/lib/entries/actions";
+import { addNewRunner, type AddRunnerState } from "@/lib/entries/actions";
 import { McvvClubCombobox, type ClubOption } from "@/components/organisms/mcvv-club-combobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +47,11 @@ export function McvvNewRunnerForm({
     category: string;
     club: string;
     add: string;
+    ambiguous: string;
+    taken: string;
   };
 }) {
+  const [state, action] = useActionState(addNewRunner, {} as AddRunnerState);
   const [sex, setSex] = useState<"M" | "F">("M");
   const [birthYear, setBirthYear] = useState("");
   const born = Number.parseInt(birthYear, 10);
@@ -67,7 +70,7 @@ export function McvvNewRunnerForm({
   }, [eligible]);
 
   return (
-    <form action={addNewRunner} className="mt-6 grid gap-3 sm:grid-cols-2">
+    <form action={action} className="mt-6 grid gap-3 sm:grid-cols-2">
       <input type="hidden" name="year" value={year} />
       <input type="hidden" name="registrationId" value={registrationId} />
       <div className="grid gap-1.5">
@@ -130,6 +133,12 @@ export function McvvNewRunnerForm({
           className="h-10"
         />
       </div>
+      {state.error === "ambiguous" ? (
+        <p className="sm:col-span-2 text-sm text-destructive">{copy.ambiguous}</p>
+      ) : null}
+      {state.error === "taken" ? (
+        <p className="sm:col-span-2 text-sm text-destructive">{copy.taken}</p>
+      ) : null}
       <Button
         type="submit"
         disabled={eligible.length === 0}

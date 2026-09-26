@@ -76,6 +76,7 @@ export type McvvHomepageContent = {
     myEntry: string;
     admin: string;
     logout: string;
+    loggingOut: string;
     menuLabel: string;
     closeLabel: string;
   };

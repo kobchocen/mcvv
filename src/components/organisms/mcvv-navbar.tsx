@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, LogOut, Menu, Settings, X } from "lucide-react";
+import { ArrowRight, Menu, Settings, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -16,7 +16,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import type { McvvHomepageContent, NavLink } from "@/components/templates";
-import { logoutHome } from "@/lib/auth/actions";
+import { McvvLogoutButton } from "@/components/organisms/mcvv-logout-button";
 import { cn } from "@/lib/utils";
 
 export type McvvNavbarAccount = {
@@ -141,19 +141,11 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                   </Link>
                 </Button>
               ) : null}
-              <form action={logoutHome}>
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="icon"
-                  className={navIconButtonClass}
-                  aria-label={content.nav.logout}
-                  title={content.nav.logout}
-                >
-                  <LogOut className="size-[18px]" aria-hidden="true" />
-                  <span className="sr-only">{content.nav.logout}</span>
-                </Button>
-              </form>
+              <McvvLogoutButton
+                label={content.nav.logout}
+                pendingLabel={content.nav.loggingOut}
+                className={navIconButtonClass}
+              />
             </>
           ) : (
             <Button
@@ -257,19 +249,11 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                             </Button>
                           </SheetClose>
                         ) : null}
-                        <form action={logoutHome}>
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="icon"
-                            className={cn(navIconButtonClass, "size-11")}
-                            aria-label={content.nav.logout}
-                            title={content.nav.logout}
-                          >
-                            <LogOut className="size-[18px]" aria-hidden="true" />
-                            <span className="sr-only">{content.nav.logout}</span>
-                          </Button>
-                        </form>
+                        <McvvLogoutButton
+                          label={content.nav.logout}
+                          pendingLabel={content.nav.loggingOut}
+                          className={cn(navIconButtonClass, "size-11")}
+                        />
                       </div>
                     </>
                   ) : (

@@ -7,11 +7,7 @@ function emailMatch(value: string | null | undefined, email: string): boolean {
   return value?.trim().toLowerCase() === email.toLowerCase();
 }
 
-export async function loadMyEntry(
-  email: string,
-  displayName: string,
-  accountClubName?: string | null,
-) {
+export async function loadMyEntry(email: string, displayName: string) {
   const { year, open, deadline } = await currentRaceYear();
   const yearRegs = await prisma.registration.findMany({
     where: { year },
@@ -34,7 +30,7 @@ export async function loadMyEntry(
         year,
         id: nextId,
         email,
-        name: (accountClubName?.trim() || displayName).slice(0, 128),
+        name: displayName.slice(0, 128),
         type: "O",
         status: 1,
         author: email,

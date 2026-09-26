@@ -10,6 +10,7 @@
       "myEntry": "Entry",
       "admin": "Administration",
       "logout": "Sign out",
+      "loggingOut": "Signing out…",
       "menuLabel": "Open menu",
       "closeLabel": "Close menu",
       "home": {
@@ -420,7 +421,9 @@
     "deadline": "Online entry deadline",
     "register": "Enter",
     "closed": "Online entries have closed. On site you can enter until 9:45 for double the fee (adults {adult} CZK / juniors {kids} CZK).",
-    "empty": "No confirmed runners yet."
+    "empty": "No confirmed runners yet.",
+    "newbie": "newcomer",
+    "starts": "{count, plural, one {# start} other {# starts}}"
   },
   "Entries": {
     "eyebrow": "Entry",
@@ -454,6 +457,8 @@
     "male": "Male",
     "female": "Female",
     "add": "Add",
+    "ambiguous": "Please be more specific — more than one runner matches this name and year.",
+    "taken": "This runner is already entered this year.",
     "payment": "Payment",
     "feeTotal": "Entry fee total",
     "paid": "Paid",
@@ -519,7 +524,9 @@
     "verifyTitle": "Email verification",
     "verifyError": "The link is invalid or has expired.",
     "unverified": "This email is not verified yet. You can request a new link.",
-    "resend": "Send verification link"
+    "resend": "Send verification link",
+    "google": "Sign in with Google",
+    "apple": "Sign in with Apple"
   },
   "Admin": {
     "eyebrow": "Back office",

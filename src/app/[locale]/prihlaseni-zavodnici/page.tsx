@@ -44,9 +44,23 @@ export default async function EntrantsPage({ params }: PageProps) {
       category: { select: { name: true, sort: true } },
     },
   });
+  const runnerIds = [...new Set(lines.map((line) => line.runnerId))];
+  const startRows =
+    runnerIds.length === 0
+      ? []
+      : await prisma.result.groupBy({
+          by: ["runnerId"],
+          where: { runnerId: { in: runnerIds }, year: { not: year } },
+          _count: { _all: true },
+        });
+  const startsById = new Map(startRows.map((row) => [row.runnerId, row._count._all]));
   const groups = new Map<
     string,
-    { sort: number; name: string; runners: { name: string; birth: string; club: string }[] }
+    {
+      sort: number;
+      name: string;
+      runners: { id: string; name: string; birth: string; club: string; starts: number }[];
+    }
   >();
   for (const line of lines) {
     const group = groups.get(line.categoryId) ?? {
@@ -55,9 +69,11 @@ export default async function EntrantsPage({ params }: PageProps) {
       runners: [],
     };
     group.runners.push({
+      id: line.runnerId,
       name: line.runner.name,
       birth: line.runnerId.slice(0, 4),
       club: line.club.name,
+      starts: startsById.get(line.runnerId) ?? 0,
     });
     groups.set(line.categoryId, group);
   }
@@ -110,15 +126,17 @@ export default async function EntrantsPage({ params }: PageProps) {
                   <h2 className="font-display text-2xl font-semibold">{group.name}</h2>
                   <ul className="mt-3 divide-y divide-race-line/40">
                     {group.runners.map((runner) => (
-                      <li
-                        key={`${group.name}-${runner.name}-${runner.birth}-${runner.club}`}
-                        className="flex flex-wrap gap-x-4 py-2 text-sm"
-                      >
+                      <li key={runner.id} className="flex flex-wrap gap-x-4 py-2 text-sm">
                         <span className="min-w-[10rem] font-medium">{runner.name}</span>
                         <span className="text-race-muted">{runner.birth}</span>
                         {runner.club ? (
                           <span className="text-race-muted">{runner.club}</span>
                         ) : null}
+                        <span className="text-race-muted">
+                          {runner.starts > 0
+                            ? copy("starts", { count: runner.starts })
+                            : copy("newbie")}
+                        </span>
                       </li>
                     ))}
                   </ul>

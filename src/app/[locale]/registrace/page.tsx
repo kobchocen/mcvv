@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { RaceBrand } from "@/components/atoms";
 import { McvvRegisterForm } from "@/components/organisms/mcvv-register-form";
+import { McvvOauthButtons } from "@/components/organisms/mcvv-oauth-buttons";
+import { appleEnabled, googleEnabled } from "@/lib/auth/oauth";
 import { getSession } from "@/lib/auth/session";
 import { Link, redirect } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
@@ -54,6 +56,12 @@ export default async function RegisterPage({ params }: PageProps) {
               generic: copy("registerGeneric"),
               signIn: copy("title"),
             }}
+          />
+          <McvvOauthButtons
+            locale={locale}
+            google={googleEnabled()}
+            apple={appleEnabled()}
+            copy={{ google: copy("google"), apple: copy("apple") }}
           />
         </div>
         <p className="mt-6 text-sm text-race-muted">

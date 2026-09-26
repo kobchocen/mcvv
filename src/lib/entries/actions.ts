@@ -88,7 +88,12 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]", "page");
 }
 
-export async function addNewRunner(formData: FormData): Promise<void> {
+export type AddRunnerState = { error?: "ambiguous" | "taken" };
+
+export async function addNewRunner(
+  _prev: AddRunnerState,
+  formData: FormData,
+): Promise<AddRunnerState> {
   const session = await getSession();
   const year = formInt(formData, "year");
   const registrationId = formInt(formData, "registrationId");
@@ -108,33 +113,36 @@ export async function addNewRunner(formData: FormData): Promise<void> {
     !sex ||
     !categoryId
   ) {
-    return;
+    return {};
   }
   const { open } = await currentRaceYear();
   if (!open) {
-    return;
+    return {};
   }
   const registration = await ownRegistration(year, registrationId, session.email);
   if (!registration) {
-    return;
+    return {};
   }
   const categories = await prisma.category.findMany();
   const eligible = eligibleCategories(birthYear, sex, year, categories);
   const category = eligible.find((row) => row.id === categoryId);
   if (!category) {
-    return;
+    return {};
   }
-  const runnerId = await resolveRunner({ firstName, lastName, birthYear, sex });
-  const taken = await prisma.registrationLine.findFirst({ where: { year, runnerId } });
+  const resolved = await resolveRunner({ firstName, lastName, birthYear, sex });
+  if ("error" in resolved) {
+    return { error: "ambiguous" };
+  }
+  const taken = await prisma.registrationLine.findFirst({ where: { year, runnerId: resolved.id } });
   if (taken) {
-    return;
+    return { error: "taken" };
   }
   const clubId = await resolveClubId(formString(formData, "clubName"), year);
-  const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
+  const { fee } = await computeLineFee(session.email, resolved.id, category.entryFee);
   await prisma.registrationLine.create({
     data: {
       year,
-      runnerId,
+      runnerId: resolved.id,
       clubId,
       categoryId: category.id,
       registrationId,
@@ -146,6 +154,7 @@ export async function addNewRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
+  return {};
 }
 
 export async function updateLineClub(formData: FormData): Promise<void> {

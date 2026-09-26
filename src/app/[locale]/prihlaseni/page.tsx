@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { RaceBrand } from "@/components/atoms";
 import { McvvLoginForm } from "@/components/organisms/mcvv-login-form";
+import { McvvOauthButtons } from "@/components/organisms/mcvv-oauth-buttons";
+import { appleEnabled, googleEnabled } from "@/lib/auth/oauth";
 import { redirectAfterLogin, safeAdminNext } from "@/lib/auth/login-next";
 import { getSession, isStaffRole } from "@/lib/auth/session";
 import { Link } from "@/i18n/routing";
@@ -58,6 +60,13 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
               sent: copy("verifySent"),
             }}
             next={next}
+          />
+          <McvvOauthButtons
+            locale={locale}
+            next={next}
+            google={googleEnabled()}
+            apple={appleEnabled()}
+            copy={{ google: copy("google"), apple: copy("apple") }}
           />
           <p className="mt-6 text-sm text-race-muted">
             <Link href="/registrace" className="font-medium text-race-accent hover:underline">

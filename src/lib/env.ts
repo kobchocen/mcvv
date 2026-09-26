@@ -31,6 +31,13 @@ const envSchema = z.object({
   ORGANIZER_NAME: emptyToUndefined,
   RESEND_API_KEY: emptyToUndefined,
   MAIL_FROM: emptyToUndefined,
+  AUTH_ORIGIN: emptyToUndefined,
+  GOOGLE_CLIENT_ID: emptyToUndefined,
+  GOOGLE_CLIENT_SECRET: emptyToUndefined,
+  APPLE_CLIENT_ID: emptyToUndefined,
+  APPLE_TEAM_ID: emptyToUndefined,
+  APPLE_KEY_ID: emptyToUndefined,
+  APPLE_PRIVATE_KEY: emptyToUndefined,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -55,6 +62,13 @@ const parsedEnv = envSchema.safeParse({
   ORGANIZER_NAME: process.env.ORGANIZER_NAME,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   MAIL_FROM: process.env.MAIL_FROM,
+  AUTH_ORIGIN: process.env.AUTH_ORIGIN,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,
+  APPLE_TEAM_ID: process.env.APPLE_TEAM_ID,
+  APPLE_KEY_ID: process.env.APPLE_KEY_ID,
+  APPLE_PRIVATE_KEY: process.env.APPLE_PRIVATE_KEY,
 });
 
 if (!parsedEnv.success) {

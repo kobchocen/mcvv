@@ -10,6 +10,7 @@
       "myEntry": "Přihláška",
       "admin": "Administrace",
       "logout": "Odhlásit se",
+      "loggingOut": "Odhlašuji…",
       "menuLabel": "Otevřít menu",
       "closeLabel": "Zavřít menu",
       "home": {
@@ -420,7 +421,9 @@
     "deadline": "Uzávěrka online přihlášek",
     "register": "Přihlásit se",
     "closed": "Online přihlášky skončily. Na místě se lze přihlásit do 9:45 za dvojnásobné startovné (dospělí {adult} Kč / žáci {kids} Kč).",
-    "empty": "Zatím tu není žádný potvrzený běžec."
+    "empty": "Zatím tu není žádný potvrzený běžec.",
+    "newbie": "nováček",
+    "starts": "{count, plural, one {# start} few {# starty} other {# startů}}"
   },
   "Entries": {
     "eyebrow": "Přihláška",
@@ -454,6 +457,8 @@
     "male": "Muž",
     "female": "Žena",
     "add": "Přidat",
+    "ambiguous": "Upřesněte, existuje víc běžců se stejným jménem a rokem.",
+    "taken": "Tento běžec už je letos přihlášený.",
     "payment": "Platba",
     "feeTotal": "Startovné celkem",
     "paid": "Zaplaceno",
@@ -519,7 +524,9 @@
     "verifyTitle": "Ověření e-mailu",
     "verifyError": "Odkaz je neplatný nebo vypršel.",
     "unverified": "E-mail ještě není ověřený. Můžete si nechat poslat odkaz znovu.",
-    "resend": "Poslat ověřovací odkaz"
+    "resend": "Poslat ověřovací odkaz",
+    "google": "Přihlásit se přes Google",
+    "apple": "Přihlásit se přes Apple"
   },
   "Admin": {
     "eyebrow": "Správa",

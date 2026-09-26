@@ -9,27 +9,39 @@ export function runnerPrefix(birthYear: number, sex: "M" | "F"): string {
   return `${birthYear}${sexDigit(sex)}`;
 }
 
+export type ResolveRunnerResult = { id: string } | { error: "ambiguous" };
+
+function normalizeRunnerName(firstName: string, lastName: string): string {
+  return `${lastName.trim()} ${firstName.trim()}`.replace(/\s+/g, " ").slice(0, 50);
+}
+
 export async function resolveRunner(input: {
   firstName: string;
   lastName: string;
   birthYear: number;
   sex: "M" | "F";
-}): Promise<string> {
-  const name = `${input.lastName.trim()} ${input.firstName.trim()}`
-    .replace(/\s+/g, " ")
-    .slice(0, 50);
-  const prefix = runnerPrefix(input.birthYear, input.sex);
-  const existing = await prisma.runner.findFirst({
-    where: { name, id: { startsWith: prefix } },
-    select: { id: true },
+}): Promise<ResolveRunnerResult> {
+  const name = normalizeRunnerName(input.firstName, input.lastName);
+  const yearPrefix = String(input.birthYear);
+  const sex = sexDigit(input.sex);
+  const yearMates = await prisma.runner.findMany({
+    where: { id: { startsWith: yearPrefix } },
+    select: { id: true, name: true },
   });
-  if (existing) {
-    return existing.id;
+  const wanted = name.toLowerCase();
+  const matches = yearMates.filter((row) => row.name.trim().toLowerCase() === wanted);
+  if (matches.length === 1) {
+    return { id: matches[0].id };
   }
-  const siblings = await prisma.runner.findMany({
-    where: { id: { startsWith: prefix } },
-    select: { id: true },
-  });
+  if (matches.length > 1) {
+    const sexMatches = matches.filter((row) => row.id.charAt(4) === sex);
+    if (sexMatches.length === 1) {
+      return { id: sexMatches[0].id };
+    }
+    return { error: "ambiguous" };
+  }
+  const prefix = runnerPrefix(input.birthYear, input.sex);
+  const siblings = yearMates.filter((row) => row.id.startsWith(prefix));
   const seqs = siblings
     .map((row) => Number.parseInt(row.id.slice(5), 10))
     .filter((value) => Number.isFinite(value));
@@ -38,7 +50,7 @@ export async function resolveRunner(input: {
   await prisma.runner.create({
     data: { id, name, author: "web" },
   });
-  return id;
+  return { id };
 }
 
 export function eligibleCategories<T extends { sex: string; age: number }>(

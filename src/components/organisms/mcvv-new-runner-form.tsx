@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { addNewRunner } from "@/lib/entries/actions";
+import { McvvClubCombobox, type ClubOption } from "@/components/organisms/mcvv-club-combobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,14 +29,14 @@ export function McvvNewRunnerForm({
   registrationId,
   categories,
   clubs,
-  defaultClubId,
+  defaultClubName,
   copy,
 }: {
   year: number;
   registrationId: number;
   categories: CategoryOption[];
-  clubs: { id: string; name: string }[];
-  defaultClubId: string;
+  clubs: ClubOption[];
+  defaultClubName: string;
   copy: {
     firstName: string;
     lastName: string;
@@ -120,20 +121,15 @@ export function McvvNewRunnerForm({
         </select>
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor="clubId">{copy.club}</Label>
-        <select
-          id="clubId"
-          name="clubId"
-          required={clubs.length > 0}
-          defaultValue={defaultClubId}
-          className="h-10 border border-race-line bg-race-surface px-3"
-        >
-          {clubs.map((club) => (
-            <option key={club.id} value={club.id}>
-              {club.name}
-            </option>
-          ))}
-        </select>
+        <Label htmlFor="clubName">{copy.club}</Label>
+        <McvvClubCombobox
+          id="clubName"
+          clubs={clubs}
+          defaultValue={defaultClubName}
+          required
+          listId="new-runner-club"
+          className="h-10"
+        />
       </div>
       <Button
         type="submit"

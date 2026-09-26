@@ -328,6 +328,14 @@ model LegacyUser {
   @@map("users")
 }
 
+/// Klíč–hodnota nastavení webu
+model Setting {
+  key  String @id @map("klic") @db.VarChar(64)
+  text String @map("text") @db.MediumText
+
+  @@map("mcvv_setting")
+}
+
 enum UserRole {
   registrar
   organizer

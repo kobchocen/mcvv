@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { Trash2 } from "lucide-react";
+
 import { McvvPublicNavbar } from "@/components/organisms";
+import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
-import { addExistingRunner, removeRunner, saveEntryHeader } from "@/lib/entries/actions";
+import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
+import { removeRunner } from "@/lib/entries/actions";
+import { computeLineFee } from "@/lib/entries/fee";
 import { loadMyEntry } from "@/lib/entries/load";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { dateInputValue } from "@/lib/admin/parse";
@@ -14,9 +19,6 @@ import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -102,10 +104,27 @@ async function EntryBody({
       }
     }
   }
-  const defaultClubId =
-    clubOptions.find((club) => club.name.trim() === (registration?.name ?? name).trim())?.id ??
-    clubOptions[0]?.id ??
-    "";
+  const defaultClubName = registration?.lines.at(-1)?.club.name ?? "";
+  const feeReasons = new Map<string, string | null>();
+  if (registration) {
+    for (const line of registration.lines) {
+      const stored = line.entryFee ?? line.category.entryFee ?? 0;
+      if (stored !== 0) {
+        continue;
+      }
+      const { reason } = await computeLineFee(email, line.runnerId, line.category.entryFee);
+      feeReasons.set(
+        line.runnerId,
+        reason === "organizer"
+          ? copy("feeReasonOrganizer")
+          : reason === "winner"
+            ? copy("feeReasonWinner")
+            : reason === "veteran"
+              ? copy("feeReasonVeteran")
+              : null,
+      );
+    }
+  }
   const fee =
     registration?.lines.reduce(
       (sum, line) => sum + (line.entryFee ?? line.category.entryFee ?? 0),
@@ -135,52 +154,24 @@ async function EntryBody({
       ) : null}
 
       <section>
-        <form action={saveEntryHeader} className="grid max-w-xl gap-4">
-          <input type="hidden" name="year" value={year} />
-          <input type="hidden" name="id" value={registration.id} />
-          <div className="grid gap-1.5">
-            <Label htmlFor="entry-name">{copy("name")}</Label>
-            <Input
-              id="entry-name"
-              name="name"
-              defaultValue={registration.name ?? ""}
-              disabled={!open}
-              className="h-10 bg-race-surface"
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label>{copy("email")}</Label>
-            <Input value={email} disabled className="h-10 bg-race-surface" />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="note">{copy("note")}</Label>
-            <Textarea
-              id="note"
-              name="note"
-              defaultValue={registration.note ?? ""}
-              disabled={!open}
-              className="min-h-24 bg-race-surface"
-            />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="noMail"
-              value="N"
-              defaultChecked={registration.promotion === "N"}
-              disabled={!open}
-            />
-            {copy("noMail")}
-          </label>
-          {open ? (
-            <Button
-              type="submit"
-              className="h-10 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
-            >
-              {copy("save")}
-            </Button>
-          ) : null}
-        </form>
+        <McvvEntryHeaderForm
+          key={`${registration.name ?? ""}:${registration.note ?? ""}:${registration.promotion ?? ""}`}
+          year={year}
+          id={registration.id}
+          name={registration.name ?? ""}
+          note={registration.note ?? ""}
+          noMail={registration.promotion === "N"}
+          email={email}
+          open={open}
+          copy={{
+            name: copy("name"),
+            email: copy("email"),
+            note: copy("note"),
+            noMail: copy("noMail"),
+            save: copy("save"),
+            saved: copy("saved"),
+          }}
+        />
       </section>
 
       <section>
@@ -207,7 +198,7 @@ async function EntryBody({
                       year={year}
                       registrationId={registration.id}
                       runnerId={line.runnerId}
-                      clubId={line.clubId}
+                      clubName={line.club.name}
                       clubs={clubOptions}
                     />
                   ) : (
@@ -215,15 +206,26 @@ async function EntryBody({
                   )}
                 </td>
                 <td className="py-2.5 pr-3">{line.category.name}</td>
-                <td className="py-2.5 pr-3">{line.entryFee ?? line.category.entryFee}</td>
+                <td className="py-2.5 pr-3">
+                  {line.entryFee ?? line.category.entryFee}
+                  {feeReasons.get(line.runnerId) ? (
+                    <span className="ml-2 text-xs text-race-muted">
+                      {feeReasons.get(line.runnerId)}
+                    </span>
+                  ) : null}
+                </td>
                 <td className="py-2.5">
                   {open ? (
                     <form action={removeRunner}>
                       <input type="hidden" name="year" value={year} />
                       <input type="hidden" name="registrationId" value={registration.id} />
                       <input type="hidden" name="runnerId" value={line.runnerId} />
-                      <button type="submit" className="text-sm text-race-muted hover:underline">
-                        {copy("remove")}
+                      <button
+                        type="submit"
+                        aria-label={copy("remove")}
+                        className="inline-flex size-9 items-center justify-center text-race-muted hover:text-foreground"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     </form>
                   ) : null}
@@ -234,30 +236,14 @@ async function EntryBody({
         </table>
 
         {open && quick.length > 0 ? (
-          <div className="mt-6">
-            <h3 className="font-display text-lg font-semibold">{copy("quickAdd")}</h3>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {quick.map((runner) => (
-                <li key={runner.id}>
-                  <form action={addExistingRunner}>
-                    <input type="hidden" name="year" value={year} />
-                    <input type="hidden" name="registrationId" value={registration.id} />
-                    <input type="hidden" name="runnerId" value={runner.id} />
-                    {defaultClubId ? (
-                      <input type="hidden" name="clubId" value={defaultClubId} />
-                    ) : null}
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      className="h-9 border-race-line bg-race-surface"
-                    >
-                      {runner.name}
-                    </Button>
-                  </form>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <McvvQuickAdd
+            year={year}
+            registrationId={registration.id}
+            runners={quick}
+            clubs={clubOptions}
+            defaultClubName={defaultClubName}
+            copy={{ club: copy("club"), quickAdd: copy("quickAdd") }}
+          />
         ) : null}
 
         {open ? (
@@ -268,7 +254,7 @@ async function EntryBody({
               registrationId={registration.id}
               categories={categories}
               clubs={clubOptions}
-              defaultClubId={defaultClubId}
+              defaultClubName={defaultClubName}
               copy={{
                 firstName: copy("firstName"),
                 lastName: copy("lastName"),

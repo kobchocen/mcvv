@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { deletePayment, savePayment, saveRegistrationHeader } from "@/lib/admin/registrations";
+import {
+  cancelRegistration,
+  confirmRegistration,
+  deletePayment,
+  savePayment,
+  saveRegistrationHeader,
+} from "@/lib/admin/registrations";
+import { ENTRY_STATUS } from "@/lib/entries/status";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
@@ -13,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
+  searchParams: Promise<{ mail?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -21,8 +29,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("regsTitle") };
 }
 
-export default async function AdminRegistrationDetailPage({ params }: PageProps) {
+export default async function AdminRegistrationDetailPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale, rok, id: rawId } = await params;
+  const { mail } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const year = Number.parseInt(rok, 10);
@@ -71,8 +80,51 @@ export default async function AdminRegistrationDetailPage({ params }: PageProps)
           </h1>
           <p className="mt-2 text-sm text-race-muted">
             {copy("regsFee")} {fee} · {copy("regsPaid")} {paid} · {copy("regsDiff")} {paid - fee} ·{" "}
-            {copy("regsStatus")} {registration.status ?? "—"}
+            {copy("regsStatus")}{" "}
+            {registration.status === 0
+              ? copy("status0")
+              : registration.status === 1
+                ? copy("status1")
+                : registration.status === 2
+                  ? copy("status2")
+                  : registration.status === 3
+                    ? copy("status3")
+                    : registration.status === 4
+                      ? copy("status4")
+                      : registration.status === 5
+                        ? copy("status5")
+                        : "—"}
           </p>
+          {mail === "0" ? (
+            <p className="mt-3 text-sm text-red-600 dark:text-red-400">{copy("confirmMailFail")}</p>
+          ) : null}
+          {registration.status === ENTRY_STATUS.empty ||
+          registration.status === ENTRY_STATUS.unpaid ? (
+            <form action={cancelRegistration} className="mt-4">
+              <input type="hidden" name="year" value={year} />
+              <input type="hidden" name="id" value={id} />
+              <Button
+                type="submit"
+                variant="outline"
+                className="h-10 border-race-line bg-race-surface"
+              >
+                {copy("cancelEntry")}
+              </Button>
+            </form>
+          ) : null}
+          {registration.status === ENTRY_STATUS.paid ||
+          registration.status === ENTRY_STATUS.overpaid ? (
+            <form action={confirmRegistration} className="mt-4">
+              <input type="hidden" name="year" value={year} />
+              <input type="hidden" name="id" value={id} />
+              <Button
+                type="submit"
+                className="h-10 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+              >
+                {copy("confirmEntry")}
+              </Button>
+            </form>
+          ) : null}
         </div>
 
         <section>

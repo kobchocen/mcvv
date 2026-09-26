@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ rok?: string }>;
+  searchParams: Promise<{ rok?: string; stav?: string; zrusene?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -21,17 +21,35 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("regsTitle") };
 }
 
-function rowClass(lineCount: number, fee: number, paid: number): string {
-  if (lineCount === 0) {
-    return "bg-race-muted/10";
+function statusClass(status: number | null | undefined): string {
+  switch (status) {
+    case 0:
+      return "text-race-dim";
+    case 1:
+      return "text-race-muted";
+    case 2:
+      return "font-semibold text-red-600 dark:text-red-400";
+    case 3:
+      return "font-semibold text-emerald-700 dark:text-emerald-400";
+    case 4:
+      return "font-semibold text-amber-700 dark:text-amber-400";
+    case 5:
+      return "font-semibold text-race-accent";
+    default:
+      return "";
   }
-  if (paid < fee) {
-    return "bg-red-500/15";
-  }
-  if (paid > fee) {
-    return "bg-amber-500/15";
-  }
-  return "";
+}
+
+function statusKey(
+  status: number | null | undefined,
+): "status0" | "status1" | "status2" | "status3" | "status4" | "status5" | "statusUnknown" {
+  if (status === 0) return "status0";
+  if (status === 1) return "status1";
+  if (status === 2) return "status2";
+  if (status === 3) return "status3";
+  if (status === 4) return "status4";
+  if (status === 5) return "status5";
+  return "statusUnknown";
 }
 
 export default async function AdminRegistrationsPage({ params, searchParams }: PageProps) {
@@ -39,7 +57,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const { rok } = await searchParams;
+  const { rok, stav, zrusene } = await searchParams;
 
   const [latest, yearRows] = await Promise.all([
     prisma.edition.findFirst({ orderBy: { id: "desc" }, select: { date: true, id: true } }),
@@ -50,10 +68,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     (a, b) => b - a,
   );
   const selectedYear = Number.parseInt(rok ?? "", 10) || defaultYear;
+  const statusFilter = Number.parseInt(stav ?? "", 10);
+  const includeCancelled = zrusene === "1" || statusFilter === 0;
+  const statusWhere = Number.isFinite(statusFilter)
+    ? { status: statusFilter }
+    : includeCancelled
+      ? {}
+      : { OR: [{ status: { not: 0 } }, { status: null }] };
 
   const [registrations, payments] = await Promise.all([
     prisma.registration.findMany({
-      where: { year: selectedYear },
+      where: { year: selectedYear, ...statusWhere },
       include: { lines: { select: { entryFee: true } } },
       orderBy: { id: "asc" },
     }),
@@ -86,6 +111,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             type="number"
             defaultValue={selectedYear}
           />
+          <label className="grid gap-1 text-sm">
+            <span className="text-race-muted">{copy("regsStatus")}</span>
+            <select
+              name="stav"
+              defaultValue={Number.isFinite(statusFilter) ? String(statusFilter) : ""}
+              className="h-10 border border-race-line bg-race-surface px-2"
+            >
+              <option value="">{copy("statusAll")}</option>
+              <option value="1">{copy("status1")}</option>
+              <option value="2">{copy("status2")}</option>
+              <option value="3">{copy("status3")}</option>
+              <option value="4">{copy("status4")}</option>
+              <option value="5">{copy("status5")}</option>
+              <option value="0">{copy("status0")}</option>
+            </select>
+          </label>
+          <label className="flex h-10 items-center gap-2 text-sm">
+            <input type="checkbox" name="zrusene" value="1" defaultChecked={includeCancelled} />
+            {copy("includeCancelled")}
+          </label>
           <Button type="submit" variant="outline" className="h-10 border-race-line bg-race-surface">
             {copy("regsYear")}
           </Button>
@@ -133,13 +178,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   const paid = paidById.get(row.id) ?? 0;
                   const diff = paid - fee;
                   return (
-                    <tr
-                      key={`${row.year}-${row.id}`}
-                      className={cn(
-                        "border-b border-race-line/40",
-                        rowClass(row.lines.length, fee, paid),
-                      )}
-                    >
+                    <tr key={`${row.year}-${row.id}`} className="border-b border-race-line/40">
                       <td className="py-2.5 pr-3 font-medium">{row.id}</td>
                       <td className="py-2.5 pr-3">{row.name}</td>
                       <td className="py-2.5 pr-3">{row.email}</td>
@@ -148,7 +187,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       <td className="py-2.5 pr-3">{fee}</td>
                       <td className="py-2.5 pr-3">{paid}</td>
                       <td className="py-2.5 pr-3">{diff}</td>
-                      <td className="py-2.5 pr-3">{row.status ?? ""}</td>
+                      <td className={cn("py-2.5 pr-3", statusClass(row.status))}>
+                        {copy(statusKey(row.status))}
+                      </td>
                       <td className="py-2.5 pr-3">{row.promotion ?? ""}</td>
                       <td className="py-2.5">
                         <Link

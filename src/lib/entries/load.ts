@@ -1,5 +1,6 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
+import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
 
 function emailMatch(value: string | null | undefined, email: string): boolean {
@@ -31,7 +32,7 @@ export async function loadMyEntry(email: string, displayName: string) {
         email,
         name: displayName.slice(0, 128),
         type: "O",
-        status: 2,
+        status: 1,
         author: email,
         created: new Date(),
       },
@@ -71,6 +72,23 @@ export async function loadMyEntry(email: string, displayName: string) {
       seen.add(line.runnerId);
       quick.push({ id: line.runnerId, name: line.runner.name });
     }
+  }
+
+  if (registration) {
+    await recalculateRegistrationStatus(registration.year, registration.id);
+    registration = await prisma.registration.findUnique({
+      where: { year_id: { year: registration.year, id: registration.id } },
+      include: {
+        lines: {
+          include: {
+            runner: { select: { id: true, name: true } },
+            club: { select: { id: true, name: true } },
+            category: { select: { name: true, entryFee: true } },
+          },
+          orderBy: { runnerId: "asc" },
+        },
+      },
+    });
   }
 
   const payments = registration

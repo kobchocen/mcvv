@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { formInt, formString } from "@/lib/admin/parse";
 import { getSession } from "@/lib/auth/session";
 import { resolveClubId } from "@/lib/entries/club";
+import { computeLineFee } from "@/lib/entries/fee";
 import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/runner";
+import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 
@@ -67,12 +69,11 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   if (!category) {
     return;
   }
-  const clubId =
-    formString(formData, "clubId") ||
-    (await resolveClubId(registration.name ?? session.name, year));
+  const clubId = await resolveClubId(formString(formData, "clubName"), year);
   if (!clubId) {
     return;
   }
+  const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
     data: {
       year,
@@ -80,11 +81,14 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
       clubId,
       categoryId: category.id,
       registrationId,
-      entryFee: category.entryFee,
+      entryFee: fee,
       author: session.email,
     },
   });
+  await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
+  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]", "page");
 }
 
 export async function addNewRunner(formData: FormData): Promise<void> {
@@ -128,12 +132,11 @@ export async function addNewRunner(formData: FormData): Promise<void> {
   if (taken) {
     return;
   }
-  const clubId =
-    formString(formData, "clubId") ||
-    (await resolveClubId(registration.name ?? session.name, year));
+  const clubId = await resolveClubId(formString(formData, "clubName"), year);
   if (!clubId) {
     return;
   }
+  const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
     data: {
       year,
@@ -141,11 +144,14 @@ export async function addNewRunner(formData: FormData): Promise<void> {
       clubId,
       categoryId: category.id,
       registrationId,
-      entryFee: category.entryFee,
+      entryFee: fee,
       author: session.email,
     },
   });
+  await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
+  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]", "page");
 }
 
 export async function updateLineClub(formData: FormData): Promise<void> {
@@ -153,8 +159,8 @@ export async function updateLineClub(formData: FormData): Promise<void> {
   const year = formInt(formData, "year");
   const registrationId = formInt(formData, "registrationId");
   const runnerId = formString(formData, "runnerId");
-  const clubId = formString(formData, "clubId");
-  if (!session || year === null || registrationId === null || !runnerId || !clubId) {
+  const clubName = formString(formData, "clubName");
+  if (!session || year === null || registrationId === null || !runnerId || !clubName) {
     return;
   }
   const { open } = await currentRaceYear();
@@ -163,6 +169,10 @@ export async function updateLineClub(formData: FormData): Promise<void> {
   }
   const registration = await ownRegistration(year, registrationId, session.email);
   if (!registration) {
+    return;
+  }
+  const clubId = await resolveClubId(clubName, year);
+  if (!clubId) {
     return;
   }
   await prisma.registrationLine.update({
@@ -191,5 +201,8 @@ export async function removeRunner(formData: FormData): Promise<void> {
   await prisma.registrationLine.deleteMany({
     where: { year, runnerId, registrationId },
   });
+  await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
+  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]", "page");
 }

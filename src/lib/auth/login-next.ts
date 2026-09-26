@@ -52,6 +52,7 @@ function adminHref(next: string) {
   const query = rokQuery ? { rok: rokQuery } : undefined;
 
   if (path === "/admin") return "/admin" as const;
+  if (path === "/admin/nastaveni") return "/admin/nastaveni" as const;
   if (path === "/admin/partneri") return "/admin/partneri" as const;
   if (path === "/admin/partneri/novy") return "/admin/partneri/novy" as const;
   const partner = path.match(/^\/admin\/partneri\/(\d+)$/);
@@ -89,4 +90,5 @@ export function redirectAfterLogin(next: string | null, staff: boolean, locale: 
     redirect({ href: adminHref(next), locale });
   }
   redirect({ href: "/", locale });
+  throw new Error("redirect");
 }

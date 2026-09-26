@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { getSession } from "@/lib/auth/session";
 import { Link, type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -18,13 +19,25 @@ export default async function AdminPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const session = await getSession();
 
-  const tiles = [
-    { href: "/admin/partneri" as const, title: copy("navPartners") },
-    { href: "/admin/rocniky" as const, title: copy("navEditions") },
-    { href: "/admin/ciselniky" as const, title: copy("navDictionaries") },
-    { href: "/admin/prihlasky" as const, title: copy("navRegistrations") },
+  const tiles: {
+    href:
+      | "/admin/partneri"
+      | "/admin/rocniky"
+      | "/admin/ciselniky"
+      | "/admin/prihlasky"
+      | "/admin/nastaveni";
+    title: string;
+  }[] = [
+    { href: "/admin/partneri", title: copy("navPartners") },
+    { href: "/admin/rocniky", title: copy("navEditions") },
+    { href: "/admin/ciselniky", title: copy("navDictionaries") },
+    { href: "/admin/prihlasky", title: copy("navRegistrations") },
   ];
+  if (session?.role === "admin") {
+    tiles.push({ href: "/admin/nastaveni", title: copy("navSettings") });
+  }
 
   return (
     <main className="px-4 py-16 sm:px-6 lg:px-8">

@@ -91,6 +91,7 @@ export type McvvHomepageContent = {
     secondaryHref: string;
     tertiaryCta: string;
     tertiaryHref: string;
+    enrolled: string;
     stats: StatItem[];
   };
   overview: {

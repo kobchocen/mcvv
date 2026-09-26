@@ -6,7 +6,7 @@ import { getLocale } from "next-intl/server";
 import { prisma } from "@/lib/db/client";
 import { redirectAfterLogin, safeAdminNext } from "@/lib/auth/login-next";
 import { clearSession, isStaffRole, setSession } from "@/lib/auth/session";
-import { redirect } from "@/i18n/routing";
+import { redirect, type Locale } from "@/i18n/routing";
 
 export type LoginState = {
   error?: boolean;
@@ -44,7 +44,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     return { error: true };
   }
 
-  const locale = await getLocale();
+  const locale = (await getLocale()) as Locale;
   const next = safeAdminNext(formData.get("next"));
   redirectAfterLogin(next, isStaffRole(user.role), locale);
   return {};

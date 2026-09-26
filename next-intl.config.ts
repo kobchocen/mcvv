@@ -19,6 +19,7 @@ export default defineRouting({
     "/registrace": "/registrace",
     "/overeni": "/overeni",
     "/admin": "/admin",
+    "/admin/nastaveni": "/admin/nastaveni",
     "/admin/partneri": "/admin/partneri",
     "/admin/partneri/novy": "/admin/partneri/novy",
     "/admin/partneri/[id]": "/admin/partneri/[id]",

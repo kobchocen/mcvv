@@ -1,6 +1,19 @@
-import { dateInputValue } from "@/lib/admin/parse";
+import { zonedCivilToUtc } from "@/lib/date/race-schedule";
 import { prisma } from "@/lib/db/client";
-import { env } from "@/lib/env";
+
+export function registrationDeadlineEnd(deadline: Date | null | undefined): Date | null {
+  if (!deadline) {
+    return null;
+  }
+  return zonedCivilToUtc(
+    deadline.getUTCFullYear(),
+    deadline.getUTCMonth() + 1,
+    deadline.getUTCDate(),
+    23,
+    59,
+    59,
+  );
+}
 
 export async function currentRaceYear(): Promise<{
   year: number;
@@ -13,12 +26,7 @@ export async function currentRaceYear(): Promise<{
   });
   const year = latest?.date.getUTCFullYear() ?? latest?.id ?? new Date().getFullYear();
   const deadline = latest?.regDeadline ?? null;
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: env.TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-  const open = !deadline || today <= dateInputValue(deadline);
+  const end = registrationDeadlineEnd(deadline);
+  const open = !end || Date.now() <= end.getTime();
   return { year, deadline, open };
 }

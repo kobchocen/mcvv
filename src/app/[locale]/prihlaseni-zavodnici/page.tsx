@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import { dateInputValue } from "@/lib/admin/parse";
+import { countPastStarts } from "@/lib/entries/starts";
 import { ENTRY_STATUS } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
@@ -44,16 +45,7 @@ export default async function EntrantsPage({ params }: PageProps) {
       category: { select: { name: true, sort: true } },
     },
   });
-  const runnerIds = [...new Set(lines.map((line) => line.runnerId))];
-  const startRows =
-    runnerIds.length === 0
-      ? []
-      : await prisma.result.groupBy({
-          by: ["runnerId"],
-          where: { runnerId: { in: runnerIds }, year: { not: year } },
-          _count: { _all: true },
-        });
-  const startsById = new Map(startRows.map((row) => [row.runnerId, row._count._all]));
+  const startsById = await countPastStarts([...new Set(lines.map((line) => line.runnerId))], year);
   const groups = new Map<
     string,
     {

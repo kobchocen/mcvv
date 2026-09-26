@@ -11,6 +11,7 @@ import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
 import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
 import { loadMyEntry } from "@/lib/entries/load";
+import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { dateInputValue } from "@/lib/admin/parse";
 import { getSession } from "@/lib/auth/session";
@@ -56,7 +57,7 @@ export default async function EntriesPage({ params }: PageProps) {
             {copy("title")}
           </h1>
           {session ? (
-            <EntryBody email={session.email} name={session.name} copy={copy} />
+            <EntryBody email={session.email} name={session.name} locale={locale} copy={copy} />
           ) : (
             <div className="mt-8 grid max-w-md gap-4">
               <p className="text-base leading-7 text-race-muted">{copy("needAccount")}</p>
@@ -80,10 +81,12 @@ export default async function EntriesPage({ params }: PageProps) {
 async function EntryBody({
   email,
   name,
+  locale,
   copy,
 }: {
   email: string;
   name: string;
+  locale: Locale;
   copy: Awaited<ReturnType<typeof getTranslations>>;
 }) {
   const { year, open, deadline, registration, past, quick, payments } = await loadMyEntry(
@@ -105,6 +108,11 @@ async function EntryBody({
     }
   }
   const defaultClubName = (registration?.name ?? "").trim();
+  const startsById = await countPastStarts(
+    registration ? registration.lines.map((line) => line.runnerId) : [],
+    year,
+  );
+  const startsCopy = await getTranslations({ locale, namespace: "Entrants" });
   const feeReasons = new Map<string, string | null>();
   if (registration) {
     for (const line of registration.lines) {
@@ -188,50 +196,58 @@ async function EntryBody({
             </tr>
           </thead>
           <tbody>
-            {registration.lines.map((line) => (
-              <tr key={line.runnerId} className="border-b border-race-line/40">
-                <td className="py-2.5 pr-3">{line.runner.name}</td>
-                <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
-                <td className="py-2.5 pr-3">
-                  {open ? (
-                    <McvvLineClubSelect
-                      year={year}
-                      registrationId={registration.id}
-                      runnerId={line.runnerId}
-                      clubName={line.club.name}
-                      clubs={clubOptions}
-                    />
-                  ) : (
-                    line.club.name
-                  )}
-                </td>
-                <td className="py-2.5 pr-3">{line.category.name}</td>
-                <td className="py-2.5 pr-3">
-                  {line.entryFee ?? line.category.entryFee}
-                  {feeReasons.get(line.runnerId) ? (
+            {registration.lines.map((line) => {
+              const starts = startsById.get(line.runnerId) ?? 0;
+              return (
+                <tr key={line.runnerId} className="border-b border-race-line/40">
+                  <td className="py-2.5 pr-3">
+                    {line.runner.name}
                     <span className="ml-2 text-xs text-race-muted">
-                      {feeReasons.get(line.runnerId)}
+                      {starts > 0 ? startsCopy("starts", { count: starts }) : startsCopy("newbie")}
                     </span>
-                  ) : null}
-                </td>
-                <td className="py-2.5">
-                  {open ? (
-                    <form action={removeRunner}>
-                      <input type="hidden" name="year" value={year} />
-                      <input type="hidden" name="registrationId" value={registration.id} />
-                      <input type="hidden" name="runnerId" value={line.runnerId} />
-                      <button
-                        type="submit"
-                        aria-label={copy("remove")}
-                        className="inline-flex size-9 items-center justify-center text-race-muted hover:text-foreground"
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </button>
-                    </form>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
+                  <td className="py-2.5 pr-3">
+                    {open ? (
+                      <McvvLineClubSelect
+                        year={year}
+                        registrationId={registration.id}
+                        runnerId={line.runnerId}
+                        clubName={line.club.name}
+                        clubs={clubOptions}
+                      />
+                    ) : (
+                      line.club.name
+                    )}
+                  </td>
+                  <td className="py-2.5 pr-3">{line.category.name}</td>
+                  <td className="py-2.5 pr-3">
+                    {line.entryFee ?? line.category.entryFee}
+                    {feeReasons.get(line.runnerId) ? (
+                      <span className="ml-2 text-xs text-race-muted">
+                        {feeReasons.get(line.runnerId)}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="py-2.5">
+                    {open ? (
+                      <form action={removeRunner}>
+                        <input type="hidden" name="year" value={year} />
+                        <input type="hidden" name="registrationId" value={registration.id} />
+                        <input type="hidden" name="runnerId" value={line.runnerId} />
+                        <button
+                          type="submit"
+                          aria-label={copy("remove")}
+                          className="inline-flex size-9 items-center justify-center text-race-muted hover:text-foreground"
+                        >
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </button>
+                      </form>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

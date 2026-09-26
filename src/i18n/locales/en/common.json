@@ -423,7 +423,14 @@
     "closed": "Online entries have closed. On site you can enter until 9:45 for double the fee (adults {adult} CZK / juniors {kids} CZK).",
     "empty": "No confirmed runners yet.",
     "newbie": "newcomer",
-    "starts": "{count, plural, one {# start} other {# starts}}"
+    "starts": "{count, plural, one {# start} other {# starts}}",
+    "total": "{count, plural, one {# entered runner} other {# entered runners}}",
+    "paidOnly": "Only entries with a paid start fee are shown.",
+    "colName": "Name",
+    "colBirth": "Year",
+    "colClub": "Club",
+    "colStarts": "Starts",
+    "colRecord": "PB"
   },
   "Entries": {
     "eyebrow": "Entry",

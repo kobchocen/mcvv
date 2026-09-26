@@ -423,7 +423,14 @@
     "closed": "Online přihlášky skončily. Na místě se lze přihlásit do 9:45 za dvojnásobné startovné (dospělí {adult} Kč / žáci {kids} Kč).",
     "empty": "Zatím tu není žádný potvrzený běžec.",
     "newbie": "nováček",
-    "starts": "{count, plural, one {# start} few {# starty} other {# startů}}"
+    "starts": "{count, plural, one {# start} few {# starty} other {# startů}}",
+    "total": "Celkem {count} přihlášených",
+    "paidOnly": "Zobrazují se pouze přihlášky se zaplaceným startovným.",
+    "colName": "Jméno",
+    "colBirth": "Ročník",
+    "colClub": "Klub",
+    "colStarts": "Starty",
+    "colRecord": "OR"
   },
   "Entries": {
     "eyebrow": "Přihláška",

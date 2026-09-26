@@ -73,6 +73,10 @@ export type McvvHomepageContent = {
     home: NavLink;
     links: NavLink[];
     register: string;
+    myEntry: string;
+    admin: string;
+    logout: string;
+    loggingOut: string;
     menuLabel: string;
     closeLabel: string;
   };
@@ -88,6 +92,7 @@ export type McvvHomepageContent = {
     secondaryHref: string;
     tertiaryCta: string;
     tertiaryHref: string;
+    enrolled: string;
     stats: StatItem[];
   };
   overview: {

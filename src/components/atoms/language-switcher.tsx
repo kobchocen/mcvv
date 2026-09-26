@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, ChevronDown, Globe } from "lucide-react";
+import { Check, Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
-import { locales, localeLabels, type Locale, usePathname, useRouter } from "@/i18n/routing";
+import { locales, type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 import {
@@ -26,11 +26,7 @@ const localeCodes: Record<Locale, string> = {
   en: "EN",
 };
 
-export function LanguageSwitcher({
-  className,
-  compact = false,
-  showLabel = false,
-}: LanguageSwitcherProps) {
+export function LanguageSwitcher({ className, compact = false }: LanguageSwitcherProps) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +49,31 @@ export function LanguageSwitcher({
       );
       return;
     }
-    router.replace({ pathname }, { locale: nextLocale });
+    if (pathname === "/admin/partneri/[id]") {
+      router.replace(
+        { pathname: "/admin/partneri/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    if (pathname === "/admin/rocniky/[id]") {
+      router.replace(
+        { pathname: "/admin/rocniky/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    if (pathname === "/admin/prihlasky/[rok]/[id]") {
+      router.replace(
+        {
+          pathname: "/admin/prihlasky/[rok]/[id]",
+          params: { rok: String(params.rok ?? ""), id: String(params.id ?? "") },
+        },
+        { locale: nextLocale },
+      );
+      return;
+    }
+    router.replace(pathname, { locale: nextLocale });
   };
 
   return (
@@ -62,41 +82,22 @@ export function LanguageSwitcher({
         <Button
           type="button"
           variant="ghost"
-          size={compact ? "icon" : "default"}
           aria-label={t("label")}
           title={t("label")}
           className={cn(
-            compact
-              ? "size-[38px] rounded-[10px] border border-race-line/70 bg-transparent p-0 text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white"
-              : "h-10 rounded-[10px] border border-race-line/70 bg-transparent px-3 text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white",
+            "h-10 rounded-[10px] border border-race-line/70 bg-transparent px-2.5 text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white",
+            compact && "h-[38px]",
             className,
           )}
         >
-          <Globe className="size-[17px]" />
-          {!compact && (
-            <>
-              <span
-                className={cn(
-                  "text-sm font-semibold",
-                  showLabel && "font-medium text-foreground/80 dark:text-white/82",
-                )}
-              >
-                {showLabel ? localeLabels[locale] : localeCodes[locale]}
-              </span>
-              {!showLabel && (
-                <ChevronDown
-                  className="size-3.5 text-foreground/70 dark:text-white/72"
-                  aria-hidden="true"
-                />
-              )}
-            </>
-          )}
+          <Globe className="size-[17px]" aria-hidden="true" />
+          <span className="text-sm font-semibold">{localeCodes[locale]}</span>
           <span className="sr-only">{t("label")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[184px] rounded-[12px] border-race-line bg-race-surface p-1.5 text-foreground shadow-2xl shadow-black/20 backdrop-blur dark:bg-race-deep/95 dark:text-white dark:shadow-black/35"
+        className="min-w-[7.5rem] rounded-[12px] border-race-line bg-race-surface p-1.5 text-foreground shadow-2xl shadow-black/20 backdrop-blur dark:bg-race-deep/95 dark:text-white dark:shadow-black/35"
         sideOffset={10}
       >
         {locales.map((value) => {
@@ -111,13 +112,13 @@ export function LanguageSwitcher({
                 isSelected && "bg-race-forest-2 dark:bg-white/10",
               )}
             >
-              <span className="flex h-[19px] w-[26px] shrink-0 items-center justify-center rounded-[5px] bg-race-forest-2 text-[10px] font-bold tracking-[0.04em] text-foreground dark:bg-white/10 dark:text-white/86">
-                {localeCodes[value]}
-              </span>
               <span
-                className={cn("min-w-0 flex-1 truncate text-sm", isSelected && "font-semibold")}
+                className={cn(
+                  "min-w-0 flex-1 text-sm font-semibold tracking-[0.04em]",
+                  isSelected && "text-foreground",
+                )}
               >
-                {localeLabels[value]}
+                {localeCodes[value]}
               </span>
               {isSelected && <Check className="size-[15px] text-race-accent" />}
             </DropdownMenuItem>

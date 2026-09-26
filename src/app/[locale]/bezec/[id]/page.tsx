@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import {
   RunnerPerfBar,
   RunnerPhotoGrid,
@@ -118,7 +118,7 @@ export default async function RunnerPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar
+      <McvvPublicNavbar
         content={{
           brand: home.raw("brand") as McvvHomepageContent["brand"],
           nav: home.raw("nav") as McvvHomepageContent["nav"],

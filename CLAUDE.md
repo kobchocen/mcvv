@@ -33,7 +33,7 @@ The husky `pre-commit` hook runs `pnpm lint` and `pnpm format:check` on every co
 
 Copy `.env.example` → `.env` and set `DATABASE_URL` (MySQL/MariaDB connection string, e.g. `mysql://mcvv:mcvv@localhost:3306/mcvv`). `src/lib/env.ts` validates env vars with Zod on boot and throws if required values are missing or malformed. **Import `{ env }` from `@/lib/env` everywhere** — never read `process.env` directly.
 
-Validated variables: `NODE_ENV`, `DATABASE_URL`, `TIME_ZONE` (defaults to `Europe/Prague`), `CONTACT_TO` (defaults to `mcvv@mcvv.org`). Optional SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`. Without `SMTP_HOST` the contact form logs the message and still succeeds.
+Validated variables: `NODE_ENV`, `DATABASE_URL`, `TIME_ZONE` (defaults to `Europe/Prague`), `CONTACT_TO` (defaults to `mcvv@mcvv.org`). Optional SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`. Without `SMTP_HOST` the contact form logs the message and still succeeds. Optional auth: `SESSION_SECRET` (min. 32 characters), `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME`, `ORGANIZER_EMAIL` / `ORGANIZER_PASSWORD` / `ORGANIZER_NAME`. Seed creates Pavel (admin) and Martin (organizer) when those pairs are set. Never commit passwords.
 
 ## Architecture
 

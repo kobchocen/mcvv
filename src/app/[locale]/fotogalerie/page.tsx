@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PhotoGalleryGrid } from "@/components/molecules";
-import { McvvNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/db/client";
 import { photoCaption } from "@/lib/photos/caption";
@@ -73,7 +73,7 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar
+      <McvvPublicNavbar
         content={{
           brand: home.raw("brand") as McvvHomepageContent["brand"],
           nav: home.raw("nav") as McvvHomepageContent["nav"],

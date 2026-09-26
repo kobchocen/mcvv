@@ -1,4 +1,4 @@
-import { McvvNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import { RunnerNameLink } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
@@ -53,7 +53,7 @@ export function McvvStatsPage({
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar content={{ brand, nav }} variant="solid" />
+      <McvvPublicNavbar content={{ brand, nav }} variant="solid" />
       <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, Menu, Settings, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -16,12 +16,20 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import type { McvvHomepageContent, NavLink } from "@/components/templates";
+import { McvvLogoutButton } from "@/components/organisms/mcvv-logout-button";
 import { cn } from "@/lib/utils";
+
+export type McvvNavbarAccount = {
+  name: string;
+  email: string;
+  staff?: boolean;
+};
 
 export type McvvNavbarProps = {
   content: Pick<McvvHomepageContent, "brand" | "nav">;
   className?: string;
   variant?: "overlay" | "solid";
+  account?: McvvNavbarAccount | null;
 };
 
 function getLocalizedHref(href: string, locale: string) {
@@ -35,6 +43,9 @@ function getLocalizedHref(href: string, locale: string) {
 
   return `/${locale}${href.startsWith("/") ? href : `/${href}`}`;
 }
+
+const navIconButtonClass =
+  "size-10 rounded-[12px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white";
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
@@ -60,10 +71,9 @@ function MobileLink({ link, locale, active }: { link: NavLink; locale: string; a
   );
 }
 
-export function McvvNavbar({ content, className }: McvvNavbarProps) {
+export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
   const locale = useLocale();
   const pathname = usePathname();
-  const hideRegisterCta = pathname.endsWith("/prihlasky") || pathname.endsWith("/kontakt");
 
   return (
     <header
@@ -102,12 +112,47 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher />
           <ThemeToggle />
-          {hideRegisterCta ? null : (
+          {account ? (
+            <>
+              <span
+                className="max-w-[10rem] truncate text-sm font-medium text-foreground dark:text-white"
+                title={account.email}
+              >
+                {account.name}
+              </span>
+              <Button
+                asChild
+                className="h-10 rounded-[10px] bg-race-accent px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-hover"
+              >
+                <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
+              </Button>
+              {account.staff ? (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className={navIconButtonClass}
+                  aria-label={content.nav.admin}
+                  title={content.nav.admin}
+                >
+                  <Link href={getLocalizedHref("/admin", locale)}>
+                    <Settings className="size-[18px]" aria-hidden="true" />
+                    <span className="sr-only">{content.nav.admin}</span>
+                  </Link>
+                </Button>
+              ) : null}
+              <McvvLogoutButton
+                label={content.nav.logout}
+                pendingLabel={content.nav.loggingOut}
+                className={navIconButtonClass}
+              />
+            </>
+          ) : (
             <Button
               asChild
               className="h-10 rounded-[10px] bg-race-accent px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-hover"
             >
-              <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.register}</Link>
+              <Link href={getLocalizedHref("/prihlaseni", locale)}>{content.nav.register}</Link>
             </Button>
           )}
         </div>
@@ -163,20 +208,66 @@ export function McvvNavbar({ content, className }: McvvNavbarProps) {
                 </nav>
 
                 <div className="mt-auto grid gap-3 border-t border-race-line/70 pt-5">
-                  <div className="grid grid-cols-[1fr_auto] gap-2">
-                    <LanguageSwitcher showLabel />
+                  <div className="flex items-center gap-2">
+                    <LanguageSwitcher />
                     <ThemeToggle className="size-11" />
                   </div>
-                  {hideRegisterCta ? null : (
-                    <Button
-                      asChild
-                      className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
-                    >
-                      <Link href={getLocalizedHref("/prihlasky", locale)}>
-                        {content.nav.register}
-                        <ArrowRight className="size-[17px]" aria-hidden="true" />
-                      </Link>
-                    </Button>
+                  {account ? (
+                    <>
+                      <p
+                        className="truncate text-sm font-medium text-foreground dark:text-white"
+                        title={account.email}
+                      >
+                        {account.name}
+                      </p>
+                      <SheetClose asChild>
+                        <Button
+                          asChild
+                          className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
+                        >
+                          <Link href={getLocalizedHref("/prihlasky", locale)}>
+                            {content.nav.myEntry}
+                            <ArrowRight className="size-[17px]" aria-hidden="true" />
+                          </Link>
+                        </Button>
+                      </SheetClose>
+                      <div className="flex items-center gap-2">
+                        {account.staff ? (
+                          <SheetClose asChild>
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon"
+                              className={cn(navIconButtonClass, "size-11")}
+                              aria-label={content.nav.admin}
+                              title={content.nav.admin}
+                            >
+                              <Link href={getLocalizedHref("/admin", locale)}>
+                                <Settings className="size-[18px]" aria-hidden="true" />
+                                <span className="sr-only">{content.nav.admin}</span>
+                              </Link>
+                            </Button>
+                          </SheetClose>
+                        ) : null}
+                        <McvvLogoutButton
+                          label={content.nav.logout}
+                          pendingLabel={content.nav.loggingOut}
+                          className={cn(navIconButtonClass, "size-11")}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <SheetClose asChild>
+                      <Button
+                        asChild
+                        className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
+                      >
+                        <Link href={getLocalizedHref("/prihlaseni", locale)}>
+                          {content.nav.register}
+                          <ArrowRight className="size-[17px]" aria-hidden="true" />
+                        </Link>
+                      </Button>
+                    </SheetClose>
                   )}
                 </div>
               </div>

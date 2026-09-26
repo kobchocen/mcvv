@@ -2,12 +2,15 @@ import Image from "next/image";
 import { ArrowRight, Trees } from "lucide-react";
 
 import { RaceStatCard } from "@/components/molecules";
+import { McvvDeadlineCountdown } from "@/components/organisms/mcvv-deadline-countdown";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type McvvHeroSectionProps = {
-  content: Pick<McvvHomepageContent, "hero">;
+  content: Pick<McvvHomepageContent, "hero" | "schedule">;
+  deadlineMs?: number | null;
+  enrolledLabel?: string;
 };
 
 const HERO_VARIANT = "kopec" as "mlha" | "kopec";
@@ -17,7 +20,12 @@ const heroImages = {
   kopec: "/images/hero-trat-kopec.jpg",
 } as const;
 
-export function McvvHeroSection({ content }: McvvHeroSectionProps) {
+export function McvvHeroSection({
+  content,
+  deadlineMs = null,
+  enrolledLabel,
+}: McvvHeroSectionProps) {
+  const showCountdown = deadlineMs != null;
   return (
     <section className="relative min-h-[760px] bg-race-forest text-white lg:min-h-[820px]">
       <Image
@@ -56,7 +64,7 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                 size="lg"
                 className="h-12 bg-race-accent px-6 font-display text-base font-semibold text-white hover:bg-race-accent-hover"
               >
-                <Link href={content.hero.primaryHref as "/prihlasky"}>
+                <Link href="/prihlaseni-zavodnici">
                   {content.hero.primaryCta}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
@@ -71,17 +79,13 @@ export function McvvHeroSection({ content }: McvvHeroSectionProps) {
                   {content.hero.secondaryCta}
                 </Link>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="ghost"
-                className="h-12 px-6 font-display text-base font-semibold text-white hover:bg-white/10 hover:text-white"
-              >
-                <Link href={content.hero.tertiaryHref as "/results"}>
-                  {content.hero.tertiaryCta}
-                </Link>
-              </Button>
             </div>
+            {showCountdown && deadlineMs ? <McvvDeadlineCountdown targetMs={deadlineMs} /> : null}
+            {enrolledLabel ? (
+              <p className="mt-2 text-sm text-white/75 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                {enrolledLabel}
+              </p>
+            ) : null}
           </div>
         </div>
 

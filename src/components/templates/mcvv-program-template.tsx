@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { BackToTop } from "@/components/molecules";
-import { McvvNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import {
   PROGRAM_SECTION_ORDER,
@@ -81,7 +81,7 @@ export function McvvProgramTemplate({
 }: McvvProgramTemplateProps) {
   return (
     <main id="top" className="min-h-screen bg-race-deep text-foreground">
-      <McvvNavbar content={content} variant="solid" />
+      <McvvPublicNavbar content={content} variant="solid" />
       <div className="bg-race-forest">
         <section className="px-4 py-10 sm:px-6 lg:px-8 lg:py-[60px]">
           <div className="mx-auto grid max-w-7xl gap-5">

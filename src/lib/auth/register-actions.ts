@@ -9,7 +9,7 @@ import { issueVerificationEmail } from "@/lib/auth/tokens";
 import { mailConfigured } from "@/lib/mail/resend";
 
 export type RegisterState = {
-  error?: "mail" | "exists" | "generic";
+  error?: "mail" | "exists" | "generic" | "mismatch";
   sent?: boolean;
 };
 
@@ -26,9 +26,13 @@ export async function registerAccount(
     .trim()
     .toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
 
   if (!name || !email || password.length < 8) {
     return { error: "generic" };
+  }
+  if (password !== passwordConfirm) {
+    return { error: "mismatch" };
   }
 
   if (!mailConfigured()) {

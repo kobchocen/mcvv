@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { getSession } from "@/lib/auth/session";
+import buildInfo from "@/lib/build-info.json";
 import { Link, type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -46,6 +47,13 @@ export default async function AdminPage({ params }: PageProps) {
           {copy("title")}
         </h1>
         <p className="mt-4 max-w-xl text-base leading-7 text-race-muted">{copy("intro")}</p>
+        <p className="mt-3 text-sm text-race-muted">
+          {copy("versionLine", {
+            version: buildInfo.version,
+            buildNumber: buildInfo.buildNumber,
+            revision: buildInfo.revision,
+          })}
+        </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           {tiles.map((tile) => (
             <Link

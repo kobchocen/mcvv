@@ -535,8 +535,8 @@
     "verifyError": "Odkaz je neplatný nebo vypršel.",
     "unverified": "E-mail ještě není ověřený. Můžete si nechat poslat odkaz znovu.",
     "resend": "Poslat ověřovací odkaz",
-    "google": "Přihlásit se přes Google",
-    "apple": "Přihlásit se přes Apple"
+    "google": "Pokračovat přes Google",
+    "apple": "Pokračovat přes Apple"
   },
   "Admin": {
     "eyebrow": "Správa",

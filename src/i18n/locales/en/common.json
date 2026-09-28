@@ -535,8 +535,8 @@
     "verifyError": "The link is invalid or has expired.",
     "unverified": "This email is not verified yet. You can request a new link.",
     "resend": "Send verification link",
-    "google": "Sign in with Google",
-    "apple": "Sign in with Apple"
+    "google": "Continue with Google",
+    "apple": "Continue with Apple"
   },
   "Admin": {
     "eyebrow": "Back office",

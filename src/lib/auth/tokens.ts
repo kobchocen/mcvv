@@ -40,7 +40,8 @@ export async function issueVerificationEmail(input: {
     },
   });
   const origin = await appOrigin();
-  const url = `${origin}/${input.locale}/overeni?token=${token}`;
+  const locale = input.locale === "en" ? "en" : "cs";
+  const url = `${origin}/api/auth/verify?token=${token}&locale=${locale}`;
   return sendResendEmail({
     to: input.email,
     subject: input.subject,

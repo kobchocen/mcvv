@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { RaceBrand } from "@/components/atoms";
 import { McvvLoginForm } from "@/components/organisms/mcvv-login-form";
+import { McvvResendVerification } from "@/components/organisms/mcvv-resend-verification";
 import { McvvOauthButtons } from "@/components/organisms/mcvv-oauth-buttons";
 import { appleEnabled, googleEnabled } from "@/lib/auth/oauth";
 import { redirectAfterLogin, safeAdminNext } from "@/lib/auth/login-next";
@@ -13,7 +14,7 @@ import type { McvvHomepageContent } from "@/components/templates";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; overeni?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -27,7 +28,8 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
 
-  const { next: nextParam } = await searchParams;
+  const { next: nextParam, overeni } = await searchParams;
+  const verifyInvalid = overeni === "neplatne";
   const next = safeAdminNext(nextParam);
   const session = await getSession();
 
@@ -48,6 +50,22 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
         <h1 className="mt-10 font-display text-4xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
+        {verifyInvalid ? (
+          <div
+            role="alert"
+            className="mt-6 grid gap-4 rounded-md border border-destructive/40 bg-destructive/10 p-4"
+          >
+            <p className="text-sm leading-6 text-destructive">{copy("verifyInvalid")}</p>
+            <McvvResendVerification
+              copy={{
+                email: copy("email"),
+                resend: copy("resend"),
+                sent: copy("resendSent"),
+                error: copy("mailMissing"),
+              }}
+            />
+          </div>
+        ) : null}
         <div className="mt-8">
           <McvvLoginForm
             copy={{

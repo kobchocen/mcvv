@@ -510,6 +510,9 @@
     "back": "Results archive"
   },
   "Auth": {
+    "verifySuccess": "Your e-mail has been verified. You are signed in and can submit an entry.",
+    "verifyInvalid": "The verification link is invalid, already used, or expired. Enter your e-mail and we will send a new one.",
+    "resendSent": "If the account is awaiting verification, we have sent a new link.",
     "title": "Sign in",
     "email": "Email",
     "password": "Password",
@@ -641,6 +644,8 @@
     "regsBack": "Back to entries"
   },
   "Stats": {
+    "comingSoonTitle": "Statistics",
+    "comingSoonBody": "Coming soon. Race statistics will be added shortly.",
     "eyebrow": "Statistics",
     "colName": "Runner",
     "colTime": "Time",

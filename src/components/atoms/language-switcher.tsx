@@ -63,6 +63,13 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       );
       return;
     }
+    if (pathname === "/admin/newsletter/[id]") {
+      router.replace(
+        { pathname: "/admin/newsletter/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
     if (pathname === "/admin/prihlasky/[rok]/[id]") {
       router.replace(
         {

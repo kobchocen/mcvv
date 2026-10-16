@@ -1,0 +1,15 @@
+name: "💡 Návrh / vylepšení"
+description: Nápad, jak něco zlepšit
+labels: ["enhancement", "test"]
+body:
+  - type: input
+    id: kde
+    attributes: {label: Kde, description: "URL nebo název stránky"}
+    validations: {required: true}
+  - type: textarea
+    id: popis
+    attributes: {label: Popis, description: "Co navrhuješ změnit / přidat"}
+    validations: {required: true}
+  - type: textarea
+    id: proc
+    attributes: {label: Proč, description: "Jaký problém to vyřeší, komu to pomůže"}

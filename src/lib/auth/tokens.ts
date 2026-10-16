@@ -5,9 +5,19 @@ import { prisma } from "@/lib/db/client";
 import { mailConfigured, sendResendEmail } from "@/lib/mail/resend";
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
+}
+
+export function newToken(): { token: string; tokenHash: string } {
+  const token = randomBytes(32).toString("hex");
+  return { token, tokenHash: hashToken(token) };
+}
+
+export function isTokenShape(token: unknown): token is string {
+  return typeof token === "string" && /^[a-f0-9]{64}$/.test(token);
 }
 
 export async function appOrigin(): Promise<string> {
@@ -29,13 +39,15 @@ export async function issueVerificationEmail(input: {
   if (!mailConfigured()) {
     return false;
   }
-  const token = randomBytes(32).toString("hex");
-  const tokenHash = hashToken(token);
-  await prisma.emailVerificationToken.deleteMany({ where: { userId: input.userId } });
+  const { token, tokenHash } = newToken();
+  await prisma.emailVerificationToken.deleteMany({
+    where: { userId: input.userId, purpose: "verify" },
+  });
   await prisma.emailVerificationToken.create({
     data: {
       userId: input.userId,
       tokenHash,
+      purpose: "verify",
       expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
     },
   });
@@ -47,5 +59,40 @@ export async function issueVerificationEmail(input: {
     subject: input.subject,
     text: `${input.intro}\n${url}\n`,
     html: `<p>${input.intro}</p><p><a href="${url}">${input.action}</a></p>`,
+  });
+}
+
+export async function issuePasswordResetEmail(input: {
+  userId: number;
+  email: string;
+  locale: string;
+  subject: string;
+  intro: string;
+  action: string;
+  outro: string;
+}): Promise<boolean> {
+  if (!mailConfigured()) {
+    return false;
+  }
+  const { token, tokenHash } = newToken();
+  await prisma.emailVerificationToken.deleteMany({
+    where: { userId: input.userId, purpose: "reset" },
+  });
+  await prisma.emailVerificationToken.create({
+    data: {
+      userId: input.userId,
+      tokenHash,
+      purpose: "reset",
+      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    },
+  });
+  const origin = await appOrigin();
+  const locale = input.locale === "en" ? "en" : "cs";
+  const url = `${origin}/${locale}/obnova-hesla?token=${token}`;
+  return sendResendEmail({
+    to: input.email,
+    subject: input.subject,
+    text: `${input.intro}\n${url}\n\n${input.outro}\n`,
+    html: `<p>${input.intro}</p><p><a href="${url}">${input.action}</a></p><p>${input.outro}</p>`,
   });
 }

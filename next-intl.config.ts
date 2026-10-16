@@ -20,6 +20,8 @@ export default defineRouting({
     "/prihlaseni": "/prihlaseni",
     "/registrace": "/registrace",
     "/overeni": "/overeni",
+    "/zapomenute-heslo": "/zapomenute-heslo",
+    "/obnova-hesla": "/obnova-hesla",
     "/admin": "/admin",
     "/admin/nastaveni": "/admin/nastaveni",
     "/admin/partneri": "/admin/partneri",

@@ -1,0 +1,36 @@
+name: "🐞 Chyba"
+description: Něco nefunguje, jak má
+labels: ["bug", "test"]
+body:
+  - type: input
+    id: kde
+    attributes:
+      { label: Kde, description: "URL nebo název stránky", placeholder: "https://dev.mcvv.org/..." }
+    validations: { required: true }
+  - type: dropdown
+    id: prostredi
+    attributes: { label: Prostředí, options: ["STG dev.mcvv.org", "PROD", "lokál"], default: 0 }
+    validations: { required: true }
+  - type: textarea
+    id: kroky
+    attributes: { label: Kroky k reprodukci, placeholder: "1. Otevřu...\n2. Kliknu na...\n3. ..." }
+    validations: { required: true }
+  - type: textarea
+    id: ocekavani
+    attributes: { label: Co jsi očekával }
+    validations: { required: true }
+  - type: textarea
+    id: skutecnost
+    attributes: { label: Co se stalo }
+    validations: { required: true }
+  - type: textarea
+    id: screenshot
+    attributes:
+      { label: Screenshot, description: "Vlož obrázek (Ctrl/Cmd+V nebo přetáhni soubor sem)" }
+  - type: input
+    id: zarizeni
+    attributes:
+      { label: Zařízení a prohlížeč, placeholder: "např. iPhone 13, Safari / Windows, Chrome" }
+  - type: dropdown
+    id: zavaznost
+    attributes: { label: Závažnost, options: ["Blokující", "Vysoká", "Střední", "Nízká"] }

@@ -1,0 +1,11 @@
+name: "❓ Dotaz"
+description: Nejsem si jistý, jak to má fungovat
+labels: ["otázka", "test"]
+body:
+  - type: input
+    id: kde
+    attributes: { label: Kde, description: "URL nebo název stránky (pokud se týká)" }
+  - type: textarea
+    id: dotaz
+    attributes: { label: Dotaz }
+    validations: { required: true }

@@ -16,7 +16,9 @@ async function main() {
   try {
     if (process.argv[2] === "write") {
       await client.photoLocation.create({ data: { id: "Z", desc: "TLS persistence", sort: 0 } });
-      await client.photo.create({ data: { id: 1, year: 2026, locationId: "Z", image } });
+      await client.photo.create({
+        data: { id: 1, year: 2026, locationId: "Z", image, hasImage: true },
+      });
     } else {
       assert.equal(process.argv[2], "read");
       const photo = await client.photo.findUniqueOrThrow({ where: { id: 1 } });

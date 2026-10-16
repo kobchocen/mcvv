@@ -16,6 +16,8 @@ export function McvvRegisterForm({
     clubName: string;
     email: string;
     password: string;
+    passwordConfirm: string;
+    mismatch: string;
     submit: string;
     sent: string;
     exists: string;
@@ -69,6 +71,21 @@ export function McvvRegisterForm({
           className="h-11 bg-race-surface"
         />
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="passwordConfirm">{copy.passwordConfirm}</Label>
+        <Input
+          id="passwordConfirm"
+          name="passwordConfirm"
+          type="password"
+          required
+          minLength={8}
+          autoComplete="new-password"
+          className="h-11 bg-race-surface"
+        />
+      </div>
+      {state.error === "mismatch" ? (
+        <p className="text-sm text-destructive">{copy.mismatch}</p>
+      ) : null}
       {state.error === "exists" ? (
         <p className="text-sm text-destructive">
           {copy.exists}{" "}

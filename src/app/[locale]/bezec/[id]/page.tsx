@@ -56,7 +56,7 @@ export default async function RunnerPage({ params }: PageProps) {
       },
     }),
     prisma.runnerPhoto.findMany({
-      where: { runnerId: id, photo: { image: { not: null } } },
+      where: { runnerId: id, photo: { hasImage: true } },
       select: {
         photoId: true,
         photo: {

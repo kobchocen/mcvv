@@ -149,11 +149,15 @@ model Photo {
   created          DateTime? @map("created")
   originalFilename String?   @map("original_filename") @db.VarChar(255)
   authorId         String?   @map("autor") @db.VarChar(8) // could reference users or PhotoAuthor
-  image            Bytes?    @map("image") // mediumblob
+  image            Bytes?    @map("image") // longblob – never select in list queries
+  hasImage         Boolean   @default(false) @map("has_image")
+  width            Int?      @map("width")
+  height           Int?      @map("height")
 
   location PhotoLocation @relation(fields: [locationId], references: [id])
   runners  RunnerPhoto[]
 
+  @@index([year, hasImage], map: "mcvv_fotky_rok_has_image_idx")
   @@map("mcvv_fotky")
 }
 

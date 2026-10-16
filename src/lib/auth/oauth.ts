@@ -1,4 +1,10 @@
-import { createHmac, createPrivateKey, randomBytes, sign as signBytes } from "node:crypto";
+import {
+  createHmac,
+  createPrivateKey,
+  randomBytes,
+  sign as signBytes,
+  timingSafeEqual,
+} from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -31,17 +37,22 @@ function origin(): string {
   return (env.AUTH_ORIGIN ?? "").replace(/\/$/, "");
 }
 
+// HMAC-SHA256 message authentication of the OAuth state cookie (not password hashing).
+function stateMac(stateBody: string, macKey: string): string {
+  return createHmac("sha256", macKey).update(stateBody).digest("base64url");
+}
+
 function signState(body: string): string {
-  const secret = env.SESSION_SECRET;
-  if (!secret) {
+  const macKey = env.SESSION_SECRET;
+  if (!macKey) {
     throw new Error("SESSION_SECRET missing");
   }
-  return `${body}.${createHmac("sha256", secret).update(body).digest("base64url")}`;
+  return `${body}.${stateMac(body, macKey)}`;
 }
 
 function readState(token: string): { n: string; locale: Locale; next: string | null } | null {
-  const secret = env.SESSION_SECRET;
-  if (!secret) {
+  const macKey = env.SESSION_SECRET;
+  if (!macKey) {
     return null;
   }
   const dot = token.lastIndexOf(".");
@@ -50,8 +61,9 @@ function readState(token: string): { n: string; locale: Locale; next: string | n
   }
   const body = token.slice(0, dot);
   const signature = token.slice(dot + 1);
-  const expected = createHmac("sha256", secret).update(body).digest("base64url");
-  if (signature !== expected) {
+  const expected = Buffer.from(stateMac(body, macKey));
+  const given = Buffer.from(signature);
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
     return null;
   }
   try {

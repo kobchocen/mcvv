@@ -14,7 +14,7 @@ import type { McvvHomepageContent } from "@/components/templates";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string; overeni?: string }>;
+  searchParams: Promise<{ next?: string; overeni?: string; heslo?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -28,7 +28,7 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
 
-  const { next: nextParam, overeni } = await searchParams;
+  const { next: nextParam, overeni, heslo } = await searchParams;
   const verifyInvalid = overeni === "neplatne";
   const next = safeAdminNext(nextParam);
   const session = await getSession();
@@ -50,6 +50,14 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
         <h1 className="mt-10 font-display text-4xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
+        {heslo === "zmeneno" ? (
+          <p
+            role="status"
+            className="mt-6 rounded-md border border-race-accent/40 bg-race-accent/10 p-4 text-sm leading-6 text-foreground dark:text-white"
+          >
+            {copy("passwordChanged")}
+          </p>
+        ) : null}
         {verifyInvalid ? (
           <div
             role="alert"
@@ -86,6 +94,11 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
             apple={appleEnabled()}
             copy={{ google: copy("google"), apple: copy("apple") }}
           />
+          <p className="mt-4 text-sm text-race-muted">
+            <Link href="/zapomenute-heslo" className="font-medium text-race-accent hover:underline">
+              {copy("forgotLink")}
+            </Link>
+          </p>
           <p className="mt-6 text-sm text-race-muted">
             <Link href="/registrace" className="font-medium text-race-accent hover:underline">
               {copy("registerTitle")}

@@ -17,7 +17,7 @@ export async function verifyEmailToken(token: string | null | undefined): Promis
     where: { tokenHash: hashToken(token) },
     include: { user: true },
   });
-  if (!row) {
+  if (!row || row.purpose !== "verify") {
     return "invalid";
   }
   if (row.expiresAt.getTime() < Date.now()) {
@@ -31,7 +31,9 @@ export async function verifyEmailToken(token: string | null | undefined): Promis
     });
   }
   // single use: drop every outstanding verification token of the user
-  await prisma.emailVerificationToken.deleteMany({ where: { userId: row.userId } });
+  await prisma.emailVerificationToken.deleteMany({
+    where: { userId: row.userId, purpose: "verify" },
+  });
   await setSession({
     id: row.user.id,
     email: row.user.email,

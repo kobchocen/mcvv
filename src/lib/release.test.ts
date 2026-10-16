@@ -7,7 +7,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BuildVersion } from "../components/atoms/build-version";
 import { GET } from "../app/api/version/route";
-import info from "./build-info.json";
+import { getBuildInfo } from "./build-info";
 import {
   releaseIdentity,
   validateBranch,
@@ -83,10 +83,15 @@ test("release preparation keeps package, chart and frontend build identity in sy
 });
 
 test("footer and version endpoint expose the same immutable version/build", async () => {
+  const info = getBuildInfo();
   const html = renderToStaticMarkup(createElement(BuildVersion));
   assert.ok(html.includes(`v${info.version}`));
   assert.ok(html.includes(`build ${info.buildNumber}`));
+  assert.ok(html.includes(`data-build-number="${info.buildNumber}"`));
   const response = GET();
   assert.equal(response.headers.get("cache-control"), "no-store");
-  assert.deepEqual(await response.json(), info);
+  const body = await response.json();
+  assert.deepEqual(body, info);
+  if (process.env.BUILD_NUMBER) assert.equal(body.buildNumber, process.env.BUILD_NUMBER);
+  if (process.env.APP_REVISION) assert.equal(body.revision, process.env.APP_REVISION);
 });

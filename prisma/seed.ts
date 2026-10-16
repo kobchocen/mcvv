@@ -1,4 +1,8 @@
+import bcrypt from "bcryptjs";
+
+import { env } from "../src/lib/env";
 import { prisma } from "../src/lib/db/client";
+import type { UserRole } from "@prisma/client";
 
 /**
  * Prisma seed script for dictionary / lookup tables ("číselníky").
@@ -245,6 +249,50 @@ async function seedPhotoAuthors() {
   }
 }
 
+async function seedStaffAccounts() {
+  const accounts: {
+    email?: string;
+    password?: string;
+    name: string;
+    role: UserRole;
+  }[] = [
+    {
+      email: env.ADMIN_EMAIL,
+      password: env.ADMIN_PASSWORD,
+      name: env.ADMIN_NAME ?? "Pavel",
+      role: "admin",
+    },
+    {
+      email: env.ORGANIZER_EMAIL,
+      password: env.ORGANIZER_PASSWORD,
+      name: env.ORGANIZER_NAME ?? "Martin",
+      role: "organizer",
+    },
+  ];
+
+  console.log("Seeding staff accounts (mcvv_user)...");
+
+  for (const account of accounts) {
+    if (!account.email || !account.password) {
+      console.log(`  skip ${account.role} (email/password not set)`);
+      continue;
+    }
+    const passwordHash = await bcrypt.hash(account.password, 12);
+    await prisma.user.upsert({
+      where: { email: account.email.toLowerCase() },
+      update: { name: account.name, role: account.role, passwordHash, emailVerified: new Date() },
+      create: {
+        email: account.email.toLowerCase(),
+        name: account.name,
+        role: account.role,
+        passwordHash,
+        emailVerified: new Date(),
+      },
+    });
+    console.log(`  upsert ${account.role}`);
+  }
+}
+
 async function main() {
   console.log("🌱 Starting seed of dictionary tables (číselníky)...\n");
 
@@ -252,6 +300,7 @@ async function main() {
   await seedCategories();
   await seedPhotoLocations();
   await seedPhotoAuthors();
+  await seedStaffAccounts();
 
   console.log("\n✅ Seed completed successfully.");
 }

@@ -1,6 +1,8 @@
 import Image from "next/image";
 
 import { SectionHeader } from "@/components/molecules";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 const fallbackImages = [
@@ -17,14 +19,14 @@ export type McvvGallerySectionProps = {
 
 export function McvvGallerySection({ content, photoIds }: McvvGallerySectionProps) {
   const realSources =
-    photoIds && photoIds.length > 0 ? photoIds.map((id) => `/api/test/fotka?id=${id}`) : [];
+    photoIds && photoIds.length > 0 ? photoIds.map((id) => `/api/fotka?id=${id}`) : [];
   const imageSources = [...realSources, ...fallbackImages].slice(0, 7);
 
   const largeSrc = imageSources[0];
   const smallSrcs = imageSources.slice(1, 7);
 
   return (
-    <section id="gallery" className="bg-race-deep px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section id="gallery" className="bg-race-forest px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
           eyebrow={content.eyebrow}
@@ -32,6 +34,15 @@ export function McvvGallerySection({ content, photoIds }: McvvGallerySectionProp
           description={content.description}
           className="lg:flex-row lg:items-end lg:justify-between"
           titleClassName="max-w-3xl"
+          action={
+            <Button
+              asChild
+              variant="outline"
+              className="border-race-line bg-race-surface font-display font-semibold text-foreground hover:bg-race-accent hover:text-white dark:border-white/15 dark:bg-white/10 dark:text-white"
+            >
+              <Link href={"/fotogalerie" as never}>{content.allLabel}</Link>
+            </Button>
+          }
         />
         {/* 
           Responsive spanning grid:
@@ -49,6 +60,7 @@ export function McvvGallerySection({ content, photoIds }: McvvGallerySectionProp
               src={largeSrc}
               alt={content.alt[0] ?? content.title}
               fill
+              sizes="(max-width: 768px) 100vw, 40vw"
               className="object-cover object-top"
             />
           </div>
@@ -65,6 +77,7 @@ export function McvvGallerySection({ content, photoIds }: McvvGallerySectionProp
                 src={src}
                 alt={content.alt[(index + 1) % content.alt.length] ?? content.title}
                 fill
+                sizes="(max-width: 768px) 33vw, 20vw"
                 className="object-cover object-top"
               />
             </div>

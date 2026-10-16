@@ -1,12 +1,14 @@
 import { ArrowUpRight } from "lucide-react";
 
 import { Link } from "@/i18n/routing";
+import { RunnerNameLink } from "@/components/molecules/runner-name-link";
 import { cn } from "@/lib/utils";
 
 export type RaceWinner = {
   category: string;
   name: string;
   time: string;
+  runnerId?: string;
 };
 
 export type RaceResultCardProps = {
@@ -28,8 +30,9 @@ export function RaceResultCard({
   count,
   className,
 }: RaceResultCardProps) {
-  return (
-    <article className={cn("border border-race-line/55 bg-race-surface p-5", className)}>
+  const namesAsLinks = !href;
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-display text-4xl font-bold leading-none text-foreground dark:text-white">
@@ -51,7 +54,11 @@ export function RaceResultCard({
             <div>
               <p className="text-xs font-semibold uppercase text-race-dim">{winner.category}</p>
               <p className="mt-1 text-sm font-semibold text-foreground dark:text-white">
-                {winner.name}
+                {namesAsLinks ? (
+                  <RunnerNameLink id={winner.runnerId} name={winner.name} />
+                ) : (
+                  winner.name
+                )}
               </p>
             </div>
             <p className="font-display text-lg font-semibold text-race-accent">{winner.time}</p>
@@ -59,35 +66,41 @@ export function RaceResultCard({
         ))}
       </div>
 
-      {href ? (
-        href.startsWith("http") ? (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
-          >
-            {linkLabel}
-            <ArrowUpRight className="size-4" aria-hidden="true" />
-          </a>
-        ) : (
-          <Link
-            href={href as never}
-            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
-          >
-            {linkLabel}
-            <ArrowUpRight className="size-4" aria-hidden="true" />
-          </Link>
-        )
-      ) : (
-        <a
-          href="#results"
-          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-race-muted transition-colors hover:text-foreground dark:hover:text-white"
-        >
-          {linkLabel}
-          <ArrowUpRight className="size-4" aria-hidden="true" />
-        </a>
-      )}
-    </article>
+      <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-semibold text-race-muted">
+        {linkLabel}
+        <ArrowUpRight className="size-4" aria-hidden="true" />
+      </span>
+    </>
   );
+
+  const classes = cn(
+    "flex h-full flex-col border border-race-line/55 bg-race-surface p-5",
+    className,
+  );
+
+  if (href?.startsWith("http")) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(classes, "transition-colors hover:border-race-accent/50")}
+      >
+        {body}
+      </a>
+    );
+  }
+
+  if (href) {
+    return (
+      <Link
+        href={href as never}
+        className={cn(classes, "transition-colors hover:border-race-accent/50")}
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return <article className={classes}>{body}</article>;
 }

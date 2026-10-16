@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const emptyToUndefined = z
+  .string()
+  .optional()
+  .transform((value) => (value && value.length > 0 ? value : undefined));
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z
@@ -11,6 +16,28 @@ const envSchema = z.object({
   DATABASE_SSL_CA: z.string().min(1).optional(),
   SHADOW_DATABASE_URL: z.string().url("SHADOW_DATABASE_URL must be a valid URL").optional(),
   TIME_ZONE: z.string().min(1, "TIME_ZONE cannot be empty").default("Europe/Prague"),
+  CONTACT_TO: z.string().email().default("mcvv@mcvv.org"),
+  SMTP_HOST: emptyToUndefined,
+  SMTP_PORT: z.number().int().positive().optional(),
+  SMTP_USER: emptyToUndefined,
+  SMTP_PASS: emptyToUndefined,
+  SMTP_FROM: emptyToUndefined,
+  SESSION_SECRET: emptyToUndefined,
+  ADMIN_EMAIL: emptyToUndefined,
+  ADMIN_PASSWORD: emptyToUndefined,
+  ADMIN_NAME: emptyToUndefined,
+  ORGANIZER_EMAIL: emptyToUndefined,
+  ORGANIZER_PASSWORD: emptyToUndefined,
+  ORGANIZER_NAME: emptyToUndefined,
+  RESEND_API_KEY: emptyToUndefined,
+  MAIL_FROM: emptyToUndefined,
+  AUTH_ORIGIN: emptyToUndefined,
+  GOOGLE_CLIENT_ID: emptyToUndefined,
+  GOOGLE_CLIENT_SECRET: emptyToUndefined,
+  APPLE_CLIENT_ID: emptyToUndefined,
+  APPLE_TEAM_ID: emptyToUndefined,
+  APPLE_KEY_ID: emptyToUndefined,
+  APPLE_PRIVATE_KEY: emptyToUndefined,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -20,6 +47,28 @@ const parsedEnv = envSchema.safeParse({
   DATABASE_SSL_CA: process.env.DATABASE_SSL_CA,
   SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL,
   TIME_ZONE: process.env.TIME_ZONE,
+  CONTACT_TO: process.env.CONTACT_TO,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  SMTP_FROM: process.env.SMTP_FROM,
+  SESSION_SECRET: process.env.SESSION_SECRET,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  ADMIN_NAME: process.env.ADMIN_NAME,
+  ORGANIZER_EMAIL: process.env.ORGANIZER_EMAIL,
+  ORGANIZER_PASSWORD: process.env.ORGANIZER_PASSWORD,
+  ORGANIZER_NAME: process.env.ORGANIZER_NAME,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  MAIL_FROM: process.env.MAIL_FROM,
+  AUTH_ORIGIN: process.env.AUTH_ORIGIN,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,
+  APPLE_TEAM_ID: process.env.APPLE_TEAM_ID,
+  APPLE_KEY_ID: process.env.APPLE_KEY_ID,
+  APPLE_PRIVATE_KEY: process.env.APPLE_PRIVATE_KEY,
 });
 
 if (!parsedEnv.success) {

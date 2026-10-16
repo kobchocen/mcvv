@@ -13,6 +13,7 @@ export default defineRouting({
     "/prihlaseni-zavodnici": "/prihlaseni-zavodnici",
     "/kontakt": "/kontakt",
     "/results": "/results",
+    "/statistiky": "/statistiky",
     "/statistiky/[slug]": "/statistiky/[slug]",
     "/bezec/[id]": "/bezec/[id]",
     "/fotogalerie": "/fotogalerie",

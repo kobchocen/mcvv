@@ -62,7 +62,7 @@ export default async function FotkaTestPage({
       // Prefer a photo that has at least one runner assigned
       photo = await prisma.photo.findFirst({
         where: {
-          image: { not: null },
+          hasImage: true,
           runners: { some: {} },
         },
         orderBy: { id: "asc" },
@@ -71,7 +71,7 @@ export default async function FotkaTestPage({
       if (!photo) {
         // fallback to any with image
         photo = await prisma.photo.findFirst({
-          where: { image: { not: null } },
+          where: { hasImage: true },
           orderBy: { id: "asc" },
           select: { id: true, year: true, originalFilename: true, debugText: true },
         });

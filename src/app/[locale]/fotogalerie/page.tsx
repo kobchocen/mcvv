@@ -4,8 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PhotoGalleryGrid } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
-import { prisma } from "@/lib/db/client";
 import { photoCaption } from "@/lib/photos/caption";
+import { getGalleryPhotos, getPhotoYearCounts } from "@/lib/photos/queries";
 import { cn } from "@/lib/utils";
 import type { McvvHomepageContent } from "@/components/templates";
 import { type Locale } from "@/i18n/routing";
@@ -30,33 +30,12 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "PhotoGallery" });
 
-  const yearRows = await prisma.photo.groupBy({
-    by: ["year"],
-    where: { image: { not: null } },
-    _count: { id: true },
-    orderBy: { year: "desc" },
-  });
+  const yearRows = await getPhotoYearCounts();
   const years = yearRows.map((row) => row.year);
   const requested = yearParam ? Number(yearParam) : null;
   const selectedYear = requested && years.includes(requested) ? requested : (years[0] ?? null);
 
-  const photos =
-    selectedYear === null
-      ? []
-      : await prisma.photo.findMany({
-          where: { year: selectedYear, image: { not: null } },
-          select: {
-            id: true,
-            year: true,
-            debugText: true,
-            location: { select: { desc: true } },
-            runners: {
-              select: { runner: { select: { name: true } } },
-              orderBy: { orderFromLeft: "asc" },
-            },
-          },
-          orderBy: { id: "asc" },
-        });
+  const photos = selectedYear === null ? [] : await getGalleryPhotos(selectedYear);
   const gallery = photos.map((photo) => {
     const caption = photoCaption({
       year: photo.year,

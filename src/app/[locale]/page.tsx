@@ -2,7 +2,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
 import { loadPartners } from "@/lib/partners/logos";
-import { formatRaceTime, isPortraitImage } from "@/lib/utils";
+import { pickGalleryPhotoIds } from "@/lib/photos/gallery";
+import { getHomepagePhotoCandidates } from "@/lib/photos/queries";
+import { formatRaceTime } from "@/lib/utils";
 import {
   McvvHomepageTemplate,
   type McvvHomepageContent,
@@ -20,39 +22,11 @@ export default async function Home({ params }: PageProps) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "Home" });
 
-  // Fetch random real photos from mcvv_fotky for the gallery.
-  // Use only portrait photos from the last 3 years and display them in uniform 3:4 (preserve portrait AR).
-  const currentYear = new Date().getFullYear();
-  const minYear = currentYear - 2;
-  const allPhotos = await prisma.photo.findMany({
-    where: { image: { not: null }, year: { gte: minYear } },
-    select: { id: true },
-  });
-
-  // Shuffle using Math.random is intentional for dynamic random gallery selection on each request (force-dynamic).
-  const shuffled = allPhotos.length > 0 ? [...allPhotos].sort(() => 0.5 - Math.random()) : []; // eslint-disable-line react-hooks/purity
-
-  // Sample candidates, load their blobs, keep only portrait ones.
-  const CANDIDATES = 60;
-  const candidateIds = shuffled.slice(0, CANDIDATES).map((p) => p.id);
-
-  const withImages =
-    candidateIds.length > 0
-      ? await prisma.photo.findMany({
-          where: { id: { in: candidateIds } },
-          select: { id: true, image: true },
-        })
-      : [];
-  const portraitIds = withImages
-    .filter((p) => p.image && isPortraitImage(Buffer.from(p.image)))
-    .map((p) => p.id)
-    .slice(0, 20);
-
-  // Fallback to any if not enough portrait photos (should be rare)
-  const galleryPhotoIds =
-    portraitIds.length >= 7
-      ? [...portraitIds].sort(() => 0.5 - Math.random()).slice(0, 7) // eslint-disable-line react-hooks/purity
-      : shuffled.slice(0, 7).map((p) => p.id);
+  // Random portrait photos from the last 3 years. Candidate list (ids + stored
+  // dimensions) is cached for ~10 min and served by index (rok, has_image); no blob reads.
+  const minYear = new Date().getFullYear() - 2;
+  const candidates = await getHomepagePhotoCandidates(minYear);
+  const galleryPhotoIds = pickGalleryPhotoIds(candidates, 7);
 
   const rawResults = t.raw("results") as McvvHomepageContent["results"];
   const isCs = locale === "cs";

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ overeno?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("title") };
 }
 
-export default async function EntriesPage({ params }: PageProps) {
+export default async function EntriesPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -39,6 +40,7 @@ export default async function EntriesPage({ params }: PageProps) {
   const copy = await getTranslations({ locale, namespace: "Entries" });
   const auth = await getTranslations({ locale, namespace: "Auth" });
   const session = await getSession();
+  const { overeno } = await searchParams;
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
 
@@ -56,6 +58,14 @@ export default async function EntriesPage({ params }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {copy("title")}
           </h1>
+          {overeno === "1" && session ? (
+            <p
+              role="status"
+              className="mt-6 rounded-md border border-race-accent/40 bg-race-accent/10 p-4 text-sm leading-6 text-foreground dark:text-white"
+            >
+              {auth("verifySuccess")}
+            </p>
+          ) : null}
           {session ? (
             <EntryBody email={session.email} name={session.name} locale={locale} copy={copy} />
           ) : (

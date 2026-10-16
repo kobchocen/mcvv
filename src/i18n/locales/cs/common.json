@@ -510,6 +510,9 @@
     "back": "Archiv výsledků"
   },
   "Auth": {
+    "verifySuccess": "E-mail byl ověřen. Jste přihlášeni a můžete podat přihlášku.",
+    "verifyInvalid": "Ověřovací odkaz je neplatný, už byl použit, nebo vypršel. Zadejte e-mail a pošleme vám nový.",
+    "resendSent": "Pokud účet čeká na ověření, poslali jsme na e-mail nový odkaz.",
     "title": "Přihlášení",
     "email": "E-mail",
     "password": "Heslo",
@@ -641,6 +644,8 @@
     "regsBack": "Zpět na přihlášky"
   },
   "Stats": {
+    "comingSoonTitle": "Statistiky",
+    "comingSoonBody": "Připravujeme. Statistiky závodu brzy doplníme.",
     "eyebrow": "Statistiky",
     "colName": "Běžec",
     "colTime": "Čas",

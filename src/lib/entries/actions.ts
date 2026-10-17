@@ -88,7 +88,7 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]", "page");
 }
 
-export type AddRunnerState = { error?: "ambiguous" | "taken" };
+export type AddRunnerState = { error?: "ambiguous" | "taken" | "invalid"; ok?: boolean };
 
 export async function addNewRunner(
   _prev: AddRunnerState,
@@ -113,21 +113,21 @@ export async function addNewRunner(
     !sex ||
     !categoryId
   ) {
-    return {};
+    return { error: "invalid" };
   }
   const { open } = await currentRaceYear();
   if (!open) {
-    return {};
+    return { error: "invalid" };
   }
   const registration = await ownRegistration(year, registrationId, session.email);
   if (!registration) {
-    return {};
+    return { error: "invalid" };
   }
   const categories = await prisma.category.findMany();
   const eligible = eligibleCategories(birthYear, sex, year, categories);
   const category = eligible.find((row) => row.id === categoryId);
   if (!category) {
-    return {};
+    return { error: "invalid" };
   }
   const resolved = await resolveRunner({ firstName, lastName, birthYear, sex });
   if ("error" in resolved) {
@@ -154,7 +154,7 @@ export async function addNewRunner(
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
-  return {};
+  return { ok: true };
 }
 
 export async function updateLineClub(formData: FormData): Promise<void> {

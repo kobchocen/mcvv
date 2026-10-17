@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
+import { currentRaceYear } from "@/lib/entries/year";
+import { formatRaceDay } from "@/lib/format/date";
 import { loadPartners } from "@/lib/partners/logos";
 import { pickGalleryPhotoIds } from "@/lib/photos/gallery";
 import { getHomepagePhotoCandidates } from "@/lib/photos/queries";
@@ -82,13 +84,19 @@ export default async function Home({ params }: PageProps) {
     ];
   }
 
+  const { raceDate } = await currentRaceYear();
+  const rawSchedule = t.raw("schedule") as McvvHomepageContent["schedule"];
+  const schedule: McvvHomepageContent["schedule"] = raceDate
+    ? { ...rawSchedule, title: formatRaceDay(raceDate, locale) }
+    : rawSchedule;
+
   const content: McvvHomepageContent = {
     brand: t.raw("brand") as McvvHomepageContent["brand"],
     nav: t.raw("nav") as McvvHomepageContent["nav"],
     hero: t.raw("hero") as McvvHomepageContent["hero"],
     overview: t.raw("overview") as McvvHomepageContent["overview"],
     profile: t.raw("profile") as McvvHomepageContent["profile"],
-    schedule: t.raw("schedule") as McvvHomepageContent["schedule"],
+    schedule,
     results: {
       ...rawResults,
       years: dynamicYears,

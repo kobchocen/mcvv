@@ -40,7 +40,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
       "tertiaryHref": "/results",
-      "enrolled": "Přihlášeno {count} běžců",
+      "enrolled": "Přihlášených běžců: {count}",
       "stats": [
         {
           "value": "4300",
@@ -467,6 +467,7 @@
     "female": "Žena",
     "add": "Přidat",
     "ambiguous": "Upřesněte, existuje víc běžců se stejným jménem a rokem.",
+    "invalidRunner": "Běžce se nepodařilo přidat. Zkontrolujte prosím údaje a zkuste to znovu.",
     "taken": "Tento běžec už je letos přihlášený.",
     "payment": "Platba",
     "feeTotal": "Startovné celkem",
@@ -474,6 +475,8 @@
     "due": "K úhradě",
     "account": "Účet",
     "vs": "Variabilní symbol",
+    "addRunnersFirst": "Přihláška zatím nemá žádné běžce. Přidejte je níže v sekci Běžci, pak se zobrazí startovné a platební údaje.",
+    "noFeeDue": "Startovné je 0 Kč, není co hradit.",
     "paidInFull": "Startovné je uhrazené.",
     "past": "Minulé ročníky"
   },
@@ -540,6 +543,9 @@
     "signedIn": "Jste přihlášeni jako {name}.",
     "name": "Jméno",
     "clubName": "Název klubu (nepovinné)",
+    "passwordAgain": "Heslo znovu",
+    "passwordHint": "Alespoň 8 znaků.",
+    "passwordAgainHint": "Pro kontrolu zadejte stejné heslo ještě jednou.",
     "newPassword": "Zadejte nové heslo",
     "newPasswordAgain": "Zadejte nové heslo znovu",
     "passwordMismatch": "Hesla se neshodují.",

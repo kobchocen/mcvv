@@ -19,6 +19,7 @@ export async function currentRaceYear(): Promise<{
   year: number;
   deadline: Date | null;
   open: boolean;
+  raceDate: Date | null;
 }> {
   const latest = await prisma.edition.findFirst({
     orderBy: { id: "desc" },
@@ -28,5 +29,5 @@ export async function currentRaceYear(): Promise<{
   const deadline = latest?.regDeadline ?? null;
   const end = registrationDeadlineEnd(deadline);
   const open = !end || Date.now() <= end.getTime();
-  return { year, deadline, open };
+  return { year, deadline, open, raceDate: latest?.date ?? null };
 }

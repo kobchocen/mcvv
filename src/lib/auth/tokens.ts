@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 
 import { prisma } from "@/lib/db/client";
+import { renderTransactionalEmail } from "@/lib/mail/layout";
 import { mailConfigured, sendResendEmail } from "@/lib/mail/resend";
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
@@ -54,12 +55,14 @@ export async function issueVerificationEmail(input: {
   const origin = await appOrigin();
   const locale = input.locale === "en" ? "en" : "cs";
   const url = `${origin}/api/auth/verify?token=${token}&locale=${locale}`;
-  return sendResendEmail({
-    to: input.email,
+  const { html, text } = renderTransactionalEmail({
     subject: input.subject,
-    text: `${input.intro}\n${url}\n`,
-    html: `<p>${input.intro}</p><p><a href="${url}">${input.action}</a></p>`,
+    locale,
+    site: origin,
+    paragraphs: [input.intro],
+    action: { label: input.action, url },
   });
+  return sendResendEmail({ to: input.email, subject: input.subject, text, html });
 }
 
 export async function issuePasswordResetEmail(input: {
@@ -89,10 +92,13 @@ export async function issuePasswordResetEmail(input: {
   const origin = await appOrigin();
   const locale = input.locale === "en" ? "en" : "cs";
   const url = `${origin}/${locale}/obnova-hesla?token=${token}`;
-  return sendResendEmail({
-    to: input.email,
+  const { html, text } = renderTransactionalEmail({
     subject: input.subject,
-    text: `${input.intro}\n${url}\n\n${input.outro}\n`,
-    html: `<p>${input.intro}</p><p><a href="${url}">${input.action}</a></p><p>${input.outro}</p>`,
+    locale,
+    site: origin,
+    paragraphs: [input.intro],
+    action: { label: input.action, url },
+    after: [input.outro],
   });
+  return sendResendEmail({ to: input.email, subject: input.subject, text, html });
 }

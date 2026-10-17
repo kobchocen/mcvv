@@ -324,14 +324,6 @@ model Split {
 // Ostatní
 // ============================================
 
-/// Legacy admin users (plaintext, do not use for login)
-model LegacyUser {
-  username String  @id @map("a_user") @db.VarChar(8)
-  password String? @map("a_passwd") @db.VarChar(8)
-
-  @@map("users")
-}
-
 /// Klíč–hodnota nastavení webu
 model Setting {
   key  String @id @map("klic") @db.VarChar(64)

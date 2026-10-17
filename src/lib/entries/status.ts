@@ -67,3 +67,17 @@ export async function countConfirmedRunners(year: number): Promise<number> {
     where: { year, registration: { status: ENTRY_STATUS.confirmed } },
   });
 }
+
+/** Statuses that count as a valid (paid or confirmed) entry for public counters. */
+export const VALID_ENTRY_STATUSES: number[] = [
+  ENTRY_STATUS.paid,
+  ENTRY_STATUS.overpaid,
+  ENTRY_STATUS.confirmed,
+];
+
+/** Runners on paid/overpaid/confirmed applications of the given race year. */
+export async function countValidRunners(year: number): Promise<number> {
+  return prisma.registrationLine.count({
+    where: { year, registration: { status: { in: VALID_ENTRY_STATUSES } } },
+  });
+}

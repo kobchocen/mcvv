@@ -7,6 +7,7 @@ import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ logo?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -15,7 +16,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("partnersTitle") };
 }
 
-export default async function AdminNewPartnerPage({ params }: PageProps) {
+export default async function AdminNewPartnerPage({ params, searchParams }: PageProps) {
+  const { logo: logoStatus } = await searchParams;
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -43,6 +45,8 @@ export default async function AdminNewPartnerPage({ params }: PageProps) {
             link: copy("partnersLink"),
             image: copy("partnersImage"),
             upload: copy("partnersUpload"),
+            uploadHint: copy("partnersUploadHint"),
+            logoError: logoStatus === "invalid" ? copy("partnersLogoInvalid") : undefined,
             category: copy("partnersCategory"),
             order: copy("partnersOrder"),
             active: copy("active"),

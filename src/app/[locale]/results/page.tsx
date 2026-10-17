@@ -4,6 +4,7 @@ import NextLink from "next/link";
 import { RunnerNameLink } from "@/components/molecules";
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
@@ -58,18 +59,32 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
       : (years[0] ?? new Date().getFullYear());
 
   // Fetch top male + female for the default year (for summary)
-  const [topMale, topFemale] = await Promise.all([
+  const [topMaleRaw, topFemaleRaw] = await Promise.all([
     prisma.result.findFirst({
       where: { year: defaultYear, category: { sex: "M" } },
       orderBy: { time: "asc" },
-      select: { runnerName: true, time: true, categoryId: true, runnerId: true },
+      select: {
+        runnerName: true,
+        time: true,
+        categoryId: true,
+        runnerId: true,
+        runner: { select: { name: true } },
+      },
     }),
     prisma.result.findFirst({
       where: { year: defaultYear, category: { sex: "F" } },
       orderBy: { time: "asc" },
-      select: { runnerName: true, time: true, categoryId: true, runnerId: true },
+      select: {
+        runnerName: true,
+        time: true,
+        categoryId: true,
+        runnerId: true,
+        runner: { select: { name: true } },
+      },
     }),
   ]);
+  const topMale = withDisplayName(topMaleRaw);
+  const topFemale = withDisplayName(topFemaleRaw);
 
   const fullResultsRaw = await prisma.result.findMany({
     where: { year: defaultYear },
@@ -77,11 +92,13 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     include: {
       category: { select: { name: true, sex: true } },
       club: { select: { name: true } },
+      runner: { select: { name: true } },
     },
   });
 
-  const fullResults: ResultRow[] = fullResultsRaw.map((r) => ({
+  const fullResults: ResultRow[] = fullResultsRaw.map(({ runner, ...r }) => ({
     ...r,
+    runnerName: displayRunnerName(r.runnerName, runner?.name),
     _splits: [],
   })) as ResultRow[];
 
@@ -239,7 +256,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                     href={`/${locale}/results?year=${y}`}
                     className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                       isActive
-                        ? "bg-race-accent text-white"
+                        ? "bg-race-accent-solid text-white"
                         : "border border-race-line/50 hover:bg-race-forest"
                     }`}
                   >
@@ -260,7 +277,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                     {isCs ? "Ročník" : "Edition"}
                   </div>
                 </div>
-                <div className="bg-race-accent/15 px-4 py-1 text-sm font-semibold text-race-accent">
+                <div className="bg-race-accent/15 px-4 py-1 text-sm font-semibold text-race-accent dark:text-orange-300">
                   {total} {isCs ? "účastníků" : "participants"}
                 </div>
               </div>
@@ -530,7 +547,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
           {/* Floating back to top */}
           <a
             href="#"
-            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent text-white shadow-lg transition hover:bg-race-accent-hover"
+            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent-solid text-white shadow-lg transition hover:bg-race-accent-solid-hover"
             aria-label="Nahoru"
           >
             ↑
@@ -543,3 +560,11 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
 }
 
 export const dynamic = "force-dynamic";
+
+function withDisplayName<T extends { runnerName: string | null; runner: { name: string } | null }>(
+  row: T | null,
+): (Omit<T, "runner"> & { runnerName: string | null }) | null {
+  if (!row) return null;
+  const { runner, ...rest } = row;
+  return { ...rest, runnerName: displayRunnerName(row.runnerName, runner?.name) };
+}

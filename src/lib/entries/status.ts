@@ -1,16 +1,11 @@
 import { prisma } from "@/lib/db/client";
+import { paymentRegistrationId } from "@/lib/admin/parse";
 import { paidAmount } from "@/lib/entries/fee";
+import { isEntryValid } from "@/lib/entries/valid";
 
-export const ENTRY_STATUS = {
-  cancelled: 0,
-  empty: 1,
-  unpaid: 2,
-  paid: 3,
-  overpaid: 4,
-  confirmed: 5,
-} as const;
+import { ENTRY_STATUS } from "@/lib/entries/status-codes";
 
-export type EntryStatus = (typeof ENTRY_STATUS)[keyof typeof ENTRY_STATUS];
+export { ENTRY_STATUS, type EntryStatus } from "@/lib/entries/status-codes";
 
 export function nextStatus(
   current: number | null | undefined,
@@ -62,8 +57,53 @@ export async function recalculateRegistrationStatus(year: number, id: number): P
   }
 }
 
-export async function countConfirmedRunners(year: number): Promise<number> {
-  return prisma.registrationLine.count({
-    where: { year, registration: { status: ENTRY_STATUS.confirmed } },
-  });
+/**
+ * Registration ids of the given race year that count as registered (see isEntryValid).
+ * Payment coverage is evaluated per application from the payments table, so a stale
+ * stored status does not hide fully paid or 0 Kč applications.
+ */
+export async function validRegistrationIds(year: number): Promise<Set<number>> {
+  const [registrations, payments] = await Promise.all([
+    prisma.registration.findMany({
+      where: { year },
+      select: {
+        id: true,
+        status: true,
+        lines: { select: { entryFee: true, category: { select: { entryFee: true } } } },
+      },
+    }),
+    prisma.payment.findMany({ where: { year }, select: { registrationId: true, amount: true } }),
+  ]);
+  const paidById = new Map<number, number>();
+  for (const payment of payments) {
+    const id = paymentRegistrationId(payment.registrationId);
+    paidById.set(id, (paidById.get(id) ?? 0) + (payment.amount ?? 0));
+  }
+  const valid = new Set<number>();
+  for (const registration of registrations) {
+    const fee = registration.lines.reduce(
+      (sum, line) => sum + (line.entryFee ?? line.category.entryFee ?? 0),
+      0,
+    );
+    if (
+      isEntryValid({
+        status: registration.status,
+        lineCount: registration.lines.length,
+        fee,
+        paid: paidById.get(registration.id) ?? 0,
+      })
+    ) {
+      valid.add(registration.id);
+    }
+  }
+  return valid;
+}
+
+/** Number of runners on valid applications of the given race year. */
+export async function countValidRunners(year: number): Promise<number> {
+  const ids = await validRegistrationIds(year);
+  if (ids.size === 0) {
+    return 0;
+  }
+  return prisma.registrationLine.count({ where: { year, registrationId: { in: [...ids] } } });
 }

@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 
+import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { addNewRunner, type AddRunnerState } from "@/lib/entries/actions";
 import { McvvClubCombobox, type ClubOption } from "@/components/organisms/mcvv-club-combobox";
 import { Button } from "@/components/ui/button";
@@ -9,20 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type CategoryOption = { id: string; name: string; sex: string; age: number };
-
-function isEligible(birthYear: number, sex: "M" | "F", raceYear: number, category: CategoryOption) {
-  if (category.sex !== sex) {
-    return false;
-  }
-  if (category.age === 0) {
-    return true;
-  }
-  const cutoff = raceYear - category.age;
-  if (category.age <= 20) {
-    return birthYear >= cutoff;
-  }
-  return birthYear <= cutoff;
-}
 
 export function McvvNewRunnerForm({
   year,
@@ -49,25 +36,50 @@ export function McvvNewRunnerForm({
     add: string;
     ambiguous: string;
     taken: string;
+    invalid: string;
   };
 }) {
-  const [state, action] = useActionState(addNewRunner, {} as AddRunnerState);
+  // All fields are controlled so that React's automatic form reset after a server action
+  // does not wipe the user's input on a validation/server error. Clear only on success.
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [sex, setSex] = useState<"M" | "F">("M");
   const [birthYear, setBirthYear] = useState("");
+  const [categoryChoice, setCategoryChoice] = useState("");
+  const [state, action] = useActionState(
+    async (prev: AddRunnerState, formData: FormData): Promise<AddRunnerState> => {
+      const result = await addNewRunner(prev, formData);
+      if (result.ok) {
+        setFirstName("");
+        setLastName("");
+        setBirthYear("");
+        setCategoryChoice("");
+      }
+      return result;
+    },
+    {} as AddRunnerState,
+  );
   const born = Number.parseInt(birthYear, 10);
+  // Keep the club field in sync with the application name (default) after it is saved,
+  // unless the user already typed a different club.
+  const [club, setClub] = useState(defaultClubName);
+  const [syncedDefault, setSyncedDefault] = useState(defaultClubName);
+  if (defaultClubName !== syncedDefault) {
+    setSyncedDefault(defaultClubName);
+    if (!club.trim() || club.trim() === syncedDefault.trim()) {
+      setClub(defaultClubName);
+    }
+  }
   const eligible = useMemo(
-    () =>
-      Number.isFinite(born)
-        ? categories.filter((category) => isEligible(born, sex, year, category))
-        : [],
+    () => (Number.isFinite(born) ? eligibleCategoriesFor(born, sex, year, categories) : []),
     [born, categories, sex, year],
   );
   const defaultCategoryId = useMemo(() => {
-    if (eligible.length === 0) {
-      return "";
-    }
-    return eligible.reduce((best, category) => (category.age > best.age ? category : best)).id;
+    return defaultCategory(eligible)?.id ?? "";
   }, [eligible]);
+  const categoryId = eligible.some((category) => category.id === categoryChoice)
+    ? categoryChoice
+    : defaultCategoryId;
 
   return (
     <form action={action} className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -75,11 +87,25 @@ export function McvvNewRunnerForm({
       <input type="hidden" name="registrationId" value={registrationId} />
       <div className="grid gap-1.5">
         <Label htmlFor="lastName">{copy.lastName}</Label>
-        <Input id="lastName" name="lastName" required className="h-10 bg-race-surface" />
+        <Input
+          id="lastName"
+          name="lastName"
+          required
+          value={lastName}
+          onChange={(event) => setLastName(event.target.value)}
+          className="h-10 bg-race-surface"
+        />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="firstName">{copy.firstName}</Label>
-        <Input id="firstName" name="firstName" required className="h-10 bg-race-surface" />
+        <Input
+          id="firstName"
+          name="firstName"
+          required
+          value={firstName}
+          onChange={(event) => setFirstName(event.target.value)}
+          className="h-10 bg-race-surface"
+        />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="birthYear">{copy.birthYear}</Label>
@@ -112,8 +138,8 @@ export function McvvNewRunnerForm({
           id="categoryId"
           name="categoryId"
           required
-          key={defaultCategoryId}
-          defaultValue={defaultCategoryId}
+          value={categoryId}
+          onChange={(event) => setCategoryChoice(event.target.value)}
           className="h-10 border border-race-line bg-race-surface px-3"
         >
           {eligible.map((category) => (
@@ -125,10 +151,12 @@ export function McvvNewRunnerForm({
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor="clubName">{copy.club}</Label>
+        <input type="hidden" name="clubName" value={club} />
         <McvvClubCombobox
           id="clubName"
           clubs={clubs}
-          defaultValue={defaultClubName}
+          value={club}
+          onChange={setClub}
           listId="new-runner-club"
           className="h-10"
         />
@@ -139,10 +167,13 @@ export function McvvNewRunnerForm({
       {state.error === "taken" ? (
         <p className="sm:col-span-2 text-sm text-destructive">{copy.taken}</p>
       ) : null}
+      {state.error === "invalid" ? (
+        <p className="sm:col-span-2 text-sm text-destructive">{copy.invalid}</p>
+      ) : null}
       <Button
         type="submit"
         disabled={eligible.length === 0}
-        className="h-10 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {copy.add}
       </Button>

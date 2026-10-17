@@ -54,7 +54,7 @@ function TocLinks({
         <a
           key={id}
           href={`#${id}`}
-          className="grid grid-cols-[2rem_1fr] items-center rounded-lg px-2.5 py-2 text-sm text-white/78 transition-colors hover:bg-race-accent/10 hover:text-white"
+          className="grid grid-cols-[2rem_1fr] items-center rounded-lg px-2.5 py-2 text-sm text-foreground/80 transition-colors hover:bg-race-accent/10 hover:text-foreground dark:text-white/78 dark:hover:text-white"
         >
           <span className="text-race-dim">{String(index + 1).padStart(2, "0")}</span>
           <span>{content.sections[id].title}</span>
@@ -91,10 +91,10 @@ export function McvvProgramTemplate({
                 {content.header.eyebrow}
               </p>
             </div>
-            <h1 className="font-display text-5xl font-bold leading-none tracking-normal text-white sm:text-6xl lg:text-[66px]">
+            <h1 className="font-display text-5xl font-bold leading-none tracking-normal text-foreground dark:text-white sm:text-6xl lg:text-[66px]">
               {content.header.title}
             </h1>
-            <p className="max-w-2xl text-base leading-7 text-white/84 sm:text-lg sm:leading-8">
+            <p className="max-w-2xl text-base leading-7 text-race-muted dark:text-white/84 sm:text-lg sm:leading-8">
               {content.header.lead.replace("{n}", String(editionId))}
             </p>
           </div>
@@ -134,12 +134,12 @@ export function McvvProgramTemplate({
                     <span className="flex size-11 shrink-0 items-center justify-center rounded-[11px] bg-race-accent/10 text-race-accent">
                       <Icon className="size-[21px]" aria-hidden="true" />
                     </span>
-                    <h2 className="font-display text-2xl font-semibold leading-tight text-white">
+                    <h2 className="font-display text-2xl font-semibold leading-tight text-foreground dark:text-white">
                       {section.title}
                     </h2>
                   </div>
                   <div className="grid gap-3">
-                    <p className="text-base font-semibold leading-7 text-white">
+                    <p className="text-base font-semibold leading-7 text-foreground dark:text-white">
                       {section.summary}
                     </p>
                     {section.body ? (
@@ -183,7 +183,7 @@ export function McvvProgramTemplate({
                               <dt className="text-xs font-semibold uppercase tracking-wide text-race-dim">
                                 {row.label}
                               </dt>
-                              <dd className="mt-1 font-display text-xl font-semibold text-white">
+                              <dd className="mt-1 font-display text-xl font-semibold text-foreground dark:text-white">
                                 {row.value}
                               </dd>
                             </div>
@@ -215,7 +215,9 @@ export function McvvProgramTemplate({
                             <tbody>
                               {categories.map((row) => (
                                 <tr key={row.id} className="border-b border-race-line/40">
-                                  <td className="py-2.5 pr-4 font-medium text-white">{row.name}</td>
+                                  <td className="py-2.5 pr-4 font-medium text-foreground dark:text-white">
+                                    {row.name}
+                                  </td>
                                   <td className="py-2.5 text-race-muted">{row.birthYear}</td>
                                 </tr>
                               ))}
@@ -234,7 +236,10 @@ export function McvvProgramTemplate({
                             </p>
                             <ol className="mt-2 grid gap-1.5">
                               {prizeAdult.map((value, index) => (
-                                <li key={`adult-${index}`} className="text-sm text-white">
+                                <li
+                                  key={`adult-${index}`}
+                                  className="text-sm text-foreground dark:text-white"
+                                >
                                   {content.prizes.place.replace("{n}", String(index + 1))}: {value}
                                 </li>
                               ))}
@@ -246,7 +251,10 @@ export function McvvProgramTemplate({
                             </p>
                             <ol className="mt-2 grid gap-1.5">
                               {prizeVeterans.map((value, index) => (
-                                <li key={`vet-${index}`} className="text-sm text-white">
+                                <li
+                                  key={`vet-${index}`}
+                                  className="text-sm text-foreground dark:text-white"
+                                >
                                   {content.prizes.place.replace("{n}", String(index + 1))}: {value}
                                 </li>
                               ))}
@@ -261,13 +269,13 @@ export function McvvProgramTemplate({
 
                     {id === "timetable" ? (
                       <ol className="grid gap-2">
-                        <li className="text-sm leading-7 text-white sm:text-base">
+                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
                           {content.timetable.registration}
                         </li>
-                        <li className="text-sm leading-7 text-white sm:text-base">
+                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
                           {content.timetable.start}
                         </li>
-                        <li className="text-sm leading-7 text-white sm:text-base">
+                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
                           {content.timetable.ceremony}
                         </li>
                       </ol>

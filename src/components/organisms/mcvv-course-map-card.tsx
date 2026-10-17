@@ -21,12 +21,15 @@ function MapFace({
   address,
   alt,
   showArrow,
+  overlayOnMobile,
 }: {
   kicker: string;
   title: string;
   address: string;
   alt: string;
   showArrow: boolean;
+  /** When false, the START · CÍL box is hidden below `sm` (a static caption is shown under the map instead). */
+  overlayOnMobile: boolean;
 }) {
   return (
     <>
@@ -34,7 +37,11 @@ function MapFace({
       <p className="absolute top-3 left-3 z-10 max-w-[calc(100%-4.5rem)] bg-race-surface/90 px-2.5 py-1.5 text-left font-display text-[10px] font-semibold tracking-[0.14em] text-race-accent backdrop-blur sm:text-xs dark:bg-race-deep/85">
         {kicker}
       </p>
-      <div className="absolute inset-x-3 bottom-3 z-10 sm:left-3 sm:right-auto sm:w-[16rem]">
+      <div
+        className={`absolute inset-x-3 bottom-3 z-10 sm:left-3 sm:right-auto sm:block sm:w-[16rem] ${
+          overlayOnMobile ? "" : "hidden"
+        }`}
+      >
         <div className="border-2 border-race-accent bg-race-surface/90 p-3 backdrop-blur sm:p-4 dark:bg-race-deep/90">
           <p className="font-display text-base font-semibold text-foreground sm:text-lg dark:text-white">
             {title}
@@ -90,10 +97,19 @@ export function McvvCourseMapCard({
 }: McvvCourseMapCardProps) {
   const overlay = { kicker, title, address };
   return (
-    <McvvCourseMapLightbox
-      expandLabel={expandLabel}
-      preview={<MapFace {...overlay} alt="" showArrow />}
-      expanded={<MapFace {...overlay} alt={alt} showArrow />}
-    />
+    <div className="lg:h-full">
+      <McvvCourseMapLightbox
+        expandLabel={expandLabel}
+        preview={<MapFace {...overlay} alt="" showArrow overlayOnMobile={false} />}
+        expanded={<MapFace {...overlay} alt={alt} showArrow overlayOnMobile />}
+      />
+      {/* Mobile: static caption under the map so the overlay does not hide the route. */}
+      <div className="mt-2 max-w-sm border-l-4 border-race-accent bg-race-surface px-3 py-2 sm:hidden dark:bg-race-forest">
+        <p className="font-display text-base font-semibold text-foreground dark:text-white">
+          {title}
+        </p>
+        <p className="text-xs leading-5 text-race-muted">{address}</p>
+      </div>
+    </div>
   );
 }

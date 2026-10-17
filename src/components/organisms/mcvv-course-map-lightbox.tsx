@@ -22,7 +22,7 @@ export function McvvCourseMapLightbox({
           <button
             type="button"
             aria-label={expandLabel}
-            className="relative h-full w-full max-w-sm cursor-zoom-in overflow-hidden border border-race-line/60 bg-race-deep text-left lg:max-w-none [&_.mcvv-course-map_svg]:mx-auto [&_.mcvv-course-map_svg]:max-h-52 lg:[&_.mcvv-course-map_svg]:max-h-none"
+            className="relative h-full w-full max-w-sm cursor-zoom-in overflow-hidden border border-race-line/60 bg-race-deep text-left lg:max-w-none [&_.mcvv-course-map_svg]:mx-auto [&_.mcvv-course-map_svg]:max-h-52 lg:[&_.mcvv-course-map_svg]:max-h-none [&_.mcvv-course-map:empty]:max-h-52 lg:[&_.mcvv-course-map:empty]:max-h-none"
           >
             {preview}
           </button>

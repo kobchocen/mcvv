@@ -25,7 +25,7 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
 
   return (
     <form action={action} className="grid gap-4">
-      <label className="grid gap-1.5 text-sm font-medium text-white">
+      <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
         {copy.name}
         <Input
           name="name"
@@ -36,7 +36,7 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
           className="h-11 border-race-line bg-race-surface text-foreground"
         />
       </label>
-      <label className="grid gap-1.5 text-sm font-medium text-white">
+      <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
         {copy.email}
         <Input
           name="email"
@@ -46,7 +46,7 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
           className="h-11 border-race-line bg-race-surface text-foreground"
         />
       </label>
-      <label className="grid gap-1.5 text-sm font-medium text-white">
+      <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
         {copy.message}
         <Textarea
           name="message"
@@ -74,7 +74,7 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
       <Button
         type="submit"
         disabled={pending}
-        className="h-12 w-fit bg-race-accent px-6 font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-12 w-fit bg-race-accent-solid px-6 font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {pending ? copy.sending : copy.submit}
       </Button>

@@ -8,6 +8,7 @@ export default defineRouting({
     "/": "/",
     "/program": "/program",
     "/prihlasky": "/prihlasky",
+    "/navod": "/navod",
     "/pokyny": "/pokyny",
     "/startovka": "/startovka",
     "/prihlaseni-zavodnici": "/prihlaseni-zavodnici",
@@ -34,6 +35,10 @@ export default defineRouting({
     "/admin/ciselniky/kategorie": "/admin/ciselniky/kategorie",
     "/admin/ciselniky/kluby": "/admin/ciselniky/kluby",
     "/admin/prihlasky": "/admin/prihlasky",
+    "/admin/newsletter": "/admin/newsletter",
+    "/admin/newsletter/novy": "/admin/newsletter/novy",
+    "/admin/newsletter/[id]": "/admin/newsletter/[id]",
+    "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
   },
 });

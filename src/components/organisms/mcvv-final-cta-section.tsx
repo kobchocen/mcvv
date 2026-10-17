@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, PlayCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
@@ -21,13 +21,24 @@ export function McvvFinalCtaSection({ content }: McvvFinalCtaSectionProps) {
         <Button
           asChild
           size="lg"
-          className="mt-8 h-12 bg-race-accent px-7 font-display text-base font-bold text-white hover:bg-race-accent-hover"
+          className="mt-8 h-12 bg-race-accent-solid px-7 font-display text-base font-bold text-white hover:bg-race-accent-solid-hover"
         >
           <Link href="/prihlasky">
             {content.cta}
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </Button>
+        {content.guide ? (
+          <p className="mt-5">
+            <Link
+              href="/navod"
+              className="inline-flex items-center gap-2 font-display text-sm font-semibold text-race-accent underline-offset-4 hover:underline"
+            >
+              <PlayCircle className="size-5" aria-hidden="true" />
+              {content.guide}
+            </Link>
+          </p>
+        ) : null}
       </div>
     </section>
   );

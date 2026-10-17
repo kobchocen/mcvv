@@ -11,8 +11,10 @@ import {
   asPodiumRank,
   perfBarSegments,
   podiumRank,
+  RecordBadge,
 } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { runnerSex } from "@/lib/stats/queries";
 import { formatRaceTime } from "@/lib/utils";
@@ -83,7 +85,13 @@ export default async function RunnerPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "Runner" });
-  const name = runner?.name || results[0]?.runnerName || id;
+  // Older results may carry a former (e.g. maiden) name; show it alongside the current one.
+  const formerName = [...results]
+    .reverse()
+    .find(
+      (row) => row.runnerName && displayRunnerName(row.runnerName, runner?.name) !== row.runnerName,
+    )?.runnerName;
+  const name = displayRunnerName(formerName ?? results[0]?.runnerName, runner?.name) || id;
   const birthYear = id.slice(0, 4);
   const times = results.map((row) => row.time);
   const record = Math.min(...times);
@@ -194,7 +202,10 @@ export default async function RunnerPage({ params }: PageProps) {
                           ),
                         )
                       : undefined;
-                  const graph = (
+                  const isCourseRecord = row.time <= sexRecord;
+                  const graph = isCourseRecord ? (
+                    <RecordBadge kind="course" label={copy("courseRecord")} />
+                  ) : (
                     <RunnerPerfBar
                       blue={bar.blue}
                       green={bar.green}
@@ -219,11 +230,6 @@ export default async function RunnerPage({ params }: PageProps) {
                         >
                           {row.year}
                         </Link>
-                        {row.time === record ? (
-                          <span className="ml-2 inline-flex items-center bg-race-accent/15 px-1.5 py-0.5 text-[0.65rem] font-bold tracking-wide text-race-accent">
-                            {copy("os")}
-                          </span>
-                        ) : null}
                         <RunnerPodiumBadges
                           absoluteRank={absRank}
                           categoryRank={ageRank}
@@ -237,7 +243,11 @@ export default async function RunnerPage({ params }: PageProps) {
                       </td>
                       <td className="hidden py-2.5 pr-4 align-middle md:table-cell">{graph}</td>
                       <td className="py-2.5 pr-4 text-race-muted">
-                        {formatLoss(row.time, record, copy("os"))}
+                        {row.time <= record ? (
+                          <RecordBadge kind="personal" label={copy("personalBest")} />
+                        ) : (
+                          formatLoss(row.time, record, copy("os"))
+                        )}
                       </td>
                       <td className="py-2.5 pr-4 text-race-muted">
                         {row.club?.name || row.clubName || "—"}

@@ -102,7 +102,7 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
           <AdminField name="name" label={copy("dictsName")} />
           <Button
             type="submit"
-            className="h-10 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+            className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
           >
             {copy("create")}
           </Button>

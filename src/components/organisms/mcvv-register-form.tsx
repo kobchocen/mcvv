@@ -17,6 +17,8 @@ export function McvvRegisterForm({
     email: string;
     password: string;
     passwordConfirm: string;
+    passwordHint?: string;
+    passwordConfirmHint?: string;
     mismatch: string;
     submit: string;
     sent: string;
@@ -68,8 +70,14 @@ export function McvvRegisterForm({
           required
           minLength={8}
           autoComplete="new-password"
+          aria-describedby={copy.passwordHint ? "password-hint" : undefined}
           className="h-11 bg-race-surface"
         />
+        {copy.passwordHint ? (
+          <p id="password-hint" className="text-xs text-race-muted">
+            {copy.passwordHint}
+          </p>
+        ) : null}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="passwordConfirm">{copy.passwordConfirm}</Label>
@@ -80,8 +88,14 @@ export function McvvRegisterForm({
           required
           minLength={8}
           autoComplete="new-password"
+          aria-describedby={copy.passwordConfirmHint ? "password-confirm-hint" : undefined}
           className="h-11 bg-race-surface"
         />
+        {copy.passwordConfirmHint ? (
+          <p id="password-confirm-hint" className="text-xs text-race-muted">
+            {copy.passwordConfirmHint}
+          </p>
+        ) : null}
       </div>
       {state.error === "mismatch" ? (
         <p className="text-sm text-destructive">{copy.mismatch}</p>
@@ -101,7 +115,7 @@ export function McvvRegisterForm({
       <Button
         type="submit"
         disabled={pending}
-        className="h-11 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-11 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {copy.submit}
       </Button>

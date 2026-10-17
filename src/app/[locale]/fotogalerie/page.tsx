@@ -67,7 +67,7 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
               {copy("eyebrow")}
             </p>
           </div>
-          <h1 className="mt-5 font-display text-4xl font-bold text-white sm:text-5xl">
+          <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {copy("title")}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-race-muted">{copy("intro")}</p>
@@ -84,8 +84,8 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
                     className={cn(
                       "border px-3 py-1.5 text-sm font-semibold",
                       year === selectedYear
-                        ? "border-race-accent bg-race-accent text-white"
-                        : "border-race-line/60 text-race-muted hover:border-race-accent hover:text-white",
+                        ? "border-race-accent bg-race-accent-solid text-white"
+                        : "border-race-line/60 text-race-muted hover:border-race-accent hover:text-foreground dark:hover:text-white",
                     )}
                   >
                     {year}

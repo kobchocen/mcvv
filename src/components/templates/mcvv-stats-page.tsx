@@ -1,5 +1,5 @@
 import { McvvPublicNavbar } from "@/components/organisms";
-import { RunnerNameLink } from "@/components/molecules";
+import { RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
@@ -33,6 +33,7 @@ export type McvvStatsPageProps = {
   chartWomenLabel?: string;
   empty: string;
   back: string;
+  statsNav?: { items: StatsNavItem[]; current: string; ariaLabel: string };
 };
 
 export function McvvStatsPage({
@@ -48,6 +49,7 @@ export function McvvStatsPage({
   chartWomenLabel = "Ž",
   empty,
   back,
+  statsNav,
 }: McvvStatsPageProps) {
   const maxBar = chart?.reduce((max, bar) => Math.max(max, bar.men + bar.women), 0) ?? 0;
 
@@ -62,10 +64,13 @@ export function McvvStatsPage({
               {eyebrow}
             </p>
           </div>
-          <h1 className="mt-5 font-display text-4xl font-bold text-white sm:text-5xl">{title}</h1>
+          <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
+            {title}
+          </h1>
           {intro ? (
             <p className="mt-4 max-w-2xl text-base leading-7 text-race-muted">{intro}</p>
           ) : null}
+          {statsNav ? <StatsNav {...statsNav} /> : null}
 
           {chart && chart.length > 0 ? (
             <div className="mt-10">
@@ -107,7 +112,7 @@ export function McvvStatsPage({
             tables.map((table) => (
               <div key={table.title ?? table.columns.join("-")} className="mt-10">
                 {table.title ? (
-                  <h2 className="mb-4 font-display text-2xl font-semibold text-white">
+                  <h2 className="mb-4 font-display text-2xl font-semibold text-foreground dark:text-white">
                     {table.title}
                   </h2>
                 ) : null}

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { HighlightHashedRow, RunnerNameLink } from "@/components/molecules";
@@ -51,11 +52,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
       club: {
         select: { name: true },
       },
+      runner: { select: { name: true } },
     },
   });
 
-  const results: ResultRow[] = rawResults.map((r) => ({
+  const results: ResultRow[] = rawResults.map(({ runner, ...r }) => ({
     ...r,
+    runnerName: displayRunnerName(r.runnerName, runner?.name),
     _clubName: r.club?.name || r.clubName || "—",
     _birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
   })) as ResultRow[];
@@ -231,7 +234,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
           {/* Floating back to top */}
           <a
             href="#"
-            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent text-white shadow-lg transition hover:bg-race-accent-hover"
+            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent-solid text-white shadow-lg transition hover:bg-race-accent-solid-hover"
             aria-label="Nahoru"
           >
             ↑

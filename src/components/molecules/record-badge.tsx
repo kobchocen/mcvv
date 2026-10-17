@@ -6,7 +6,7 @@ export function RecordBadge({ kind, label }: { kind: "course" | "personal"; labe
   const tone =
     kind === "course"
       ? "bg-race-accent text-white"
-      : "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950";
+      : "bg-emerald-700 text-white dark:bg-emerald-500 dark:text-emerald-950";
   return (
     <span
       className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 font-display text-[0.7rem] font-semibold uppercase tracking-wide shadow-sm ${tone}`}

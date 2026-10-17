@@ -85,7 +85,7 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
                       "border px-3 py-1.5 text-sm font-semibold",
                       year === selectedYear
                         ? "border-race-accent bg-race-accent text-white"
-                        : "border-race-line/60 text-race-muted hover:border-race-accent hover:text-white",
+                        : "border-race-line/60 text-race-muted hover:border-race-accent hover:text-foreground dark:hover:text-white",
                     )}
                   >
                     {year}

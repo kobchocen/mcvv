@@ -18,6 +18,7 @@
   --color-race-dim: var(--race-dim);
   --color-race-accent: var(--race-accent);
   --color-race-accent-hover: var(--race-accent-hover);
+  --color-race-accent-photo: var(--race-accent-photo);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -61,9 +62,12 @@
   --race-surface: oklch(1 0 0);
   --race-line: oklch(0.82 0.04 145);
   --race-muted: oklch(0.45 0.045 145);
-  --race-dim: oklch(0.55 0.04 145);
-  --race-accent: oklch(0.68 0.205 39);
-  --race-accent-hover: oklch(0.72 0.2 39);
+  --race-dim: oklch(0.48 0.04 145);
+  /* Light theme: darker accent so accent text and white-on-accent pass WCAG AA (>= 4.5:1). */
+  --race-accent: oklch(0.52 0.16 39);
+  --race-accent-hover: oklch(0.47 0.15 39);
+  /* Bright accent for text on dark photo overlays (hero) – same in both themes. */
+  --race-accent-photo: oklch(0.68 0.205 39);
   --background: var(--race-deep);
   --foreground: oklch(0.19 0.045 150);
   --card: var(--race-surface);
@@ -107,6 +111,7 @@
   --race-dim: oklch(0.62 0.035 145);
   --race-accent: oklch(0.68 0.205 39);
   --race-accent-hover: oklch(0.72 0.2 39);
+  --race-accent-photo: oklch(0.68 0.205 39);
   --background: var(--race-deep);
   --foreground: oklch(0.96 0.01 145);
   --card: var(--race-surface);

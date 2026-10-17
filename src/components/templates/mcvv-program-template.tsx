@@ -54,7 +54,7 @@ function TocLinks({
         <a
           key={id}
           href={`#${id}`}
-          className="grid grid-cols-[2rem_1fr] items-center rounded-lg px-2.5 py-2 text-sm text-white/78 transition-colors hover:bg-race-accent/10 hover:text-white"
+          className="grid grid-cols-[2rem_1fr] items-center rounded-lg px-2.5 py-2 text-sm text-foreground/80 transition-colors hover:bg-race-accent/10 hover:text-foreground dark:text-white/78 dark:hover:text-white"
         >
           <span className="text-race-dim">{String(index + 1).padStart(2, "0")}</span>
           <span>{content.sections[id].title}</span>
@@ -94,7 +94,7 @@ export function McvvProgramTemplate({
             <h1 className="font-display text-5xl font-bold leading-none tracking-normal text-foreground dark:text-white sm:text-6xl lg:text-[66px]">
               {content.header.title}
             </h1>
-            <p className="max-w-2xl text-base leading-7 text-white/84 sm:text-lg sm:leading-8">
+            <p className="max-w-2xl text-base leading-7 text-race-muted dark:text-white/84 sm:text-lg sm:leading-8">
               {content.header.lead.replace("{n}", String(editionId))}
             </p>
           </div>

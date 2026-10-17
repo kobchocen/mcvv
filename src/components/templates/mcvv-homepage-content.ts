@@ -154,6 +154,7 @@ export type McvvHomepageContent = {
     title: string;
     description: string;
     cta: string;
+    guide?: string;
   };
   footer: {
     description: string;

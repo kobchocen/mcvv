@@ -12,7 +12,7 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
-import { redirectAfterLogin, safeAdminNext } from "@/lib/auth/login-next";
+import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
 import { isStaffRole, setSession, type UserRole } from "@/lib/auth/session";
 import { type Locale } from "@/i18n/routing";
 
@@ -184,7 +184,7 @@ async function finishLogin(
   if (!written) {
     return NextResponse.redirect(new URL(`/${locale}/prihlaseni`, origin()));
   }
-  redirectAfterLogin(safeAdminNext(next), isStaffRole(user.role as UserRole), locale);
+  redirectAfterLogin(safeNext(next), isStaffRole(user.role as UserRole), locale);
 }
 
 export async function finishGoogle(

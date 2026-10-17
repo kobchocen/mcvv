@@ -111,7 +111,7 @@ export function McvvEntryHeaderForm({
           <Button
             type="submit"
             disabled={!dirty}
-            className="h-10 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover disabled:opacity-50"
+            className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover disabled:opacity-50"
           >
             {copy.save}
           </Button>

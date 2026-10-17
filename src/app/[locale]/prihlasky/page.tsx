@@ -81,7 +81,7 @@ export default async function EntriesPage({ params, searchParams }: PageProps) {
               <p className="text-base leading-7 text-race-muted">{copy("needAccount")}</p>
               <Button
                 asChild
-                className="h-11 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+                className="h-11 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
               >
                 <Link href="/prihlaseni">{auth("title")}</Link>
               </Button>

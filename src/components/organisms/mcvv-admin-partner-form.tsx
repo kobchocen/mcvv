@@ -93,7 +93,7 @@ export function McvvAdminPartnerForm({
       </AdminField>
       <Button
         type="submit"
-        className="h-11 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {copy.save}
       </Button>

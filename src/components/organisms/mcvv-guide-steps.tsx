@@ -81,7 +81,7 @@ export function McvvGuideSteps({ steps, copy }: McvvGuideStepsProps) {
             onClick={() => go(k)}
             className={`h-9 min-w-9 rounded-full border px-3 text-sm font-semibold transition ${
               k === index
-                ? "border-race-accent bg-race-accent text-white"
+                ? "border-race-accent bg-race-accent-solid text-white"
                 : "border-race-line bg-race-surface text-foreground hover:border-race-accent"
             }`}
           >
@@ -118,7 +118,7 @@ export function McvvGuideSteps({ steps, copy }: McvvGuideStepsProps) {
         </button>
         <div className="p-5 sm:p-6">
           <h2 className="flex items-center gap-3 font-display text-xl font-semibold text-foreground sm:text-2xl dark:text-white">
-            <span className="inline-flex h-8 min-w-8 items-center justify-center bg-race-accent px-2 text-base text-white">
+            <span className="inline-flex h-8 min-w-8 items-center justify-center bg-race-accent-solid px-2 text-base text-white">
               {index + 1}
             </span>
             {step.title}
@@ -149,7 +149,7 @@ export function McvvGuideSteps({ steps, copy }: McvvGuideStepsProps) {
         </span>
         <Button
           type="button"
-          className="h-11 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+          className="h-11 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
           onClick={() =>
             index === total - 1 ? window.scrollTo({ top: 0, behavior: "smooth" }) : go(index + 1)
           }

@@ -36,7 +36,7 @@ export default async function AdminNewsletterPage({ params }: PageProps) {
           </h1>
           <Button
             asChild
-            className="h-10 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+            className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
           >
             <Link href="/admin/newsletter/novy">Nová kampaň</Link>
           </Button>

@@ -18,7 +18,9 @@ export function McvvNewsletterUnsubscribe({ token }: { token: string }) {
     );
   }
   if (state === "invalid") {
-    return <p className="text-lg text-red-600">Odkaz pro odhlášení je neplatný.</p>;
+    return (
+      <p className="text-lg text-red-600 dark:text-red-400">Odkaz pro odhlášení je neplatný.</p>
+    );
   }
   return (
     <form action={action} className="grid gap-4">
@@ -27,7 +29,7 @@ export function McvvNewsletterUnsubscribe({ token }: { token: string }) {
       <Button
         type="submit"
         disabled={pending}
-        className="h-11 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {pending ? "Odhlašuji…" : "Odhlásit z odběru"}
       </Button>

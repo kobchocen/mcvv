@@ -24,7 +24,7 @@ export function StatsNav({
                 aria-current={active ? "page" : undefined}
                 className={
                   active
-                    ? "inline-flex h-9 items-center whitespace-nowrap rounded-full border border-race-accent bg-race-accent px-4 font-display text-sm font-semibold text-white"
+                    ? "inline-flex h-9 items-center whitespace-nowrap rounded-full border border-race-accent bg-race-accent-solid px-4 font-display text-sm font-semibold text-white"
                     : "inline-flex h-9 items-center whitespace-nowrap rounded-full border border-race-line/70 bg-race-surface/60 px-4 font-display text-sm font-semibold text-race-muted transition hover:border-race-accent hover:text-race-accent"
                 }
               >

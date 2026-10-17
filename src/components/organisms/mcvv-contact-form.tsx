@@ -74,7 +74,7 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
       <Button
         type="submit"
         disabled={pending}
-        className="h-12 w-fit bg-race-accent px-6 font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-12 w-fit bg-race-accent-solid px-6 font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {pending ? copy.sending : copy.submit}
       </Button>

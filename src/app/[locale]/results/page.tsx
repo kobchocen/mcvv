@@ -256,7 +256,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                     href={`/${locale}/results?year=${y}`}
                     className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                       isActive
-                        ? "bg-race-accent text-white"
+                        ? "bg-race-accent-solid text-white"
                         : "border border-race-line/50 hover:bg-race-forest"
                     }`}
                   >
@@ -277,7 +277,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                     {isCs ? "Ročník" : "Edition"}
                   </div>
                 </div>
-                <div className="bg-race-accent/15 px-4 py-1 text-sm font-semibold text-race-accent">
+                <div className="bg-race-accent/15 px-4 py-1 text-sm font-semibold text-race-accent dark:text-orange-300">
                   {total} {isCs ? "účastníků" : "participants"}
                 </div>
               </div>
@@ -547,7 +547,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
           {/* Floating back to top */}
           <a
             href="#"
-            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent text-white shadow-lg transition hover:bg-race-accent-hover"
+            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent-solid text-white shadow-lg transition hover:bg-race-accent-solid-hover"
             aria-label="Nahoru"
           >
             ↑

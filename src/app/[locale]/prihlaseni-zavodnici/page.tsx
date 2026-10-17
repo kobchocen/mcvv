@@ -119,7 +119,7 @@ export default async function EntrantsPage({ params }: PageProps) {
           {open ? (
             <Button
               asChild
-              className="mt-6 h-11 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+              className="mt-6 h-11 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
             >
               <Link href="/prihlasky">{copy("register")}</Link>
             </Button>

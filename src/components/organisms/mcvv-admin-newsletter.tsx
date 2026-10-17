@@ -14,12 +14,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const buttonClass =
-  "h-10 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover";
+  "h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover";
 
 function Message({ state }: { state: ActionState }) {
   if (!state) return null;
   return (
-    <p className={state.ok ? "text-sm text-emerald-600" : "text-sm text-red-600"} role="status">
+    <p
+      className={
+        state.ok
+          ? "text-sm text-emerald-600 dark:text-emerald-400"
+          : "text-sm text-red-600 dark:text-red-400"
+      }
+      role="status"
+    >
       {state.message}
     </p>
   );
@@ -136,7 +143,7 @@ export function McvvNewsletterProgress({
         {percent} % · odesláno {counts.sent} · chyby {counts.failed} · přeskočeno (odhlášení){" "}
         {counts.skipped} · čeká {counts.pending + counts.sending} · celkem {counts.total}
       </p>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
       {active ? (
         running ? (
           <Button

@@ -43,7 +43,7 @@ export function McvvHeroSection({
         <div className="flex flex-1 items-center py-16">
           <div className="w-full max-w-3xl">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 bg-race-accent/15 px-3 py-2 font-display text-xs font-semibold uppercase text-race-accent">
+              <span className="inline-flex items-center gap-2 bg-race-accent-photo/15 px-3 py-2 font-display text-xs font-semibold uppercase text-race-accent-photo">
                 <Trees className="size-4" aria-hidden="true" />
                 {content.hero.kicker}
               </span>
@@ -54,7 +54,7 @@ export function McvvHeroSection({
 
             <h1 className="mt-6 font-display text-6xl font-bold leading-[0.95] text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.7)] sm:text-7xl lg:text-8xl">
               <span className="block">{content.hero.titleLine1}</span>
-              <span className="block text-race-accent">{content.hero.titleLine2}</span>
+              <span className="block text-race-accent-photo">{content.hero.titleLine2}</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)] sm:text-xl sm:leading-8">
               {content.hero.claim}

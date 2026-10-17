@@ -157,6 +157,24 @@ function sanitizeAttributes(raw: string): string {
   return out;
 }
 
+/** Find `</name\s*>` (case-insensitive) from `from` without building a regex from input. */
+function findCloseTag(
+  src: string,
+  from: number,
+  name: string,
+): { start: number; end: number } | null {
+  const lower = src.toLowerCase();
+  const needle = `</${name.toLowerCase()}`;
+  let pos = lower.indexOf(needle, from);
+  while (pos >= 0) {
+    let j = pos + needle.length;
+    while (j < src.length && /\s/.test(src[j])) j++;
+    if (src[j] === ">") return { start: pos, end: j + 1 };
+    pos = lower.indexOf(needle, pos + 1);
+  }
+  return null;
+}
+
 /**
  * Sanitize an SVG document by tokenizing it and rebuilding only allowlisted elements and
  * attributes (no regex removal on the markup itself). Comments, processing instructions,
@@ -238,11 +256,10 @@ export function sanitizeSvg(input: string): string | null {
 
     // Raw text elements: consume content up to the matching close tag without parsing it.
     if (!selfClosing && RAW_TEXT_ELEMENTS.has(local)) {
-      const closeRe = new RegExp(`<\\/${name.replace(/[.]/g, "\\.")}\\s*>`, "i");
-      const cm = closeRe.exec(src.slice(i));
-      if (!cm) return null;
-      const content = src.slice(i, i + cm.index);
-      i += cm.index + cm[0].length;
+      const close = findCloseTag(src, i, name);
+      if (!close) return null;
+      const content = src.slice(i, close.start);
+      i = close.end;
       if (allowed && local === "style") {
         const css = sanitizeCss(content.replace(/<!\[CDATA\[|\]\]>/g, ""));
         if (css === null) return null;

@@ -151,3 +151,6 @@ se čtou z databáze; fotografie se ukládají jako LONGBLOB. /healthz ověřuje
 procesu, /readyz dostupnost databáze. Produkční připojení vyžaduje ověřené TLS.
 Po změně schématu spustit `pnpm db:generate` a vytvořit verzovanou migraci pomocí
 `pnpm db:migrate:dev`. Produkce používá výhradně `pnpm db:migrate`.
+Limit běhu `pnpm db:migrate` nastavuje `DB_MIGRATE_TIMEOUT_SECONDS` (30–3600 s,
+výchozí 900 s). Kanonická doména pro `sitemap.xml` a `robots.txt` je `SITE_URL`
+(výchozí `https://mcvv.org`).

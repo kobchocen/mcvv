@@ -16,6 +16,6 @@ test("transactional e-mail has branded HTML and a text fallback with the link", 
   assert.match(html, /border-bottom:4px solid #e2531c/);
   assert.match(html, /Ahoj &lt;script&gt;/);
   assert.match(html, /token=abc&amp;locale=cs/);
-  assert.doesNotMatch(html, /<script>/);
+  assert.doesNotMatch(html, /<script\b/i);
   assert.match(text, /Ověřit e-mail: https:\/\/mcvv\.org\/api\/auth\/verify\?token=abc&locale=cs/);
 });

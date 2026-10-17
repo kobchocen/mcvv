@@ -119,7 +119,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               <input type="hidden" name="id" value={id} />
               <Button
                 type="submit"
-                className="h-10 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+                className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
               >
                 {copy("confirmEntry")}
               </Button>
@@ -157,7 +157,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
             </AdminField>
             <Button
               type="submit"
-              className="h-11 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+              className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
             >
               {copy("save")}
             </Button>
@@ -259,7 +259,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
             <AdminField name="amount" label={copy("regsAmount")} type="number" />
             <Button
               type="submit"
-              className="h-10 bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+              className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
             >
               {copy("regsNewPayment")}
             </Button>

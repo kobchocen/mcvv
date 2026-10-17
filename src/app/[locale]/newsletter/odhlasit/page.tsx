@@ -31,7 +31,9 @@ export default async function NewsletterUnsubscribePage({ params, searchParams }
         {isUnsubscribeToken(token) ? (
           <McvvNewsletterUnsubscribe token={token} />
         ) : (
-          <p className="text-lg text-red-600">Odkaz pro odhlášení je neplatný nebo neúplný.</p>
+          <p className="text-lg text-red-600 dark:text-red-400">
+            Odkaz pro odhlášení je neplatný nebo neúplný.
+          </p>
         )}
       </div>
     </main>

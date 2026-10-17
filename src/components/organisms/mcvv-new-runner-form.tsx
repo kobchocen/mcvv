@@ -173,7 +173,7 @@ export function McvvNewRunnerForm({
       <Button
         type="submit"
         disabled={eligible.length === 0}
-        className="h-10 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover"
+        className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {copy.add}
       </Button>

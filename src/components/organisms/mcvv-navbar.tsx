@@ -122,7 +122,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               </span>
               <Button
                 asChild
-                className="h-10 rounded-[10px] bg-race-accent px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-hover"
+                className="h-10 rounded-[10px] bg-race-accent-solid px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover"
               >
                 <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
               </Button>
@@ -150,7 +150,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
           ) : (
             <Button
               asChild
-              className="h-10 rounded-[10px] bg-race-accent px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-hover"
+              className="h-10 rounded-[10px] bg-race-accent-solid px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover"
             >
               <Link href={getLocalizedHref("/prihlaseni", locale)}>{content.nav.register}</Link>
             </Button>
@@ -223,7 +223,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                       <SheetClose asChild>
                         <Button
                           asChild
-                          className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
+                          className="h-12 rounded-[11px] bg-race-accent-solid px-6 text-base font-semibold text-white hover:bg-race-accent-solid-hover"
                         >
                           <Link href={getLocalizedHref("/prihlasky", locale)}>
                             {content.nav.myEntry}
@@ -260,7 +260,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                     <SheetClose asChild>
                       <Button
                         asChild
-                        className="h-12 rounded-[11px] bg-race-accent px-6 text-base font-semibold text-white hover:bg-race-accent-hover"
+                        className="h-12 rounded-[11px] bg-race-accent-solid px-6 text-base font-semibold text-white hover:bg-race-accent-solid-hover"
                       >
                         <Link href={getLocalizedHref("/prihlaseni", locale)}>
                           {content.nav.register}

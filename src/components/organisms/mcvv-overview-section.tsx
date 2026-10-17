@@ -73,8 +73,8 @@ export function McvvOverviewSection({ content }: McvvOverviewSectionProps) {
                 variant={isContact ? "default" : "outline"}
                 className={
                   isContact
-                    ? "h-10 bg-race-accent px-4 font-display text-sm font-semibold text-white hover:bg-race-accent-hover"
-                    : "h-10 border-race-line bg-race-surface px-4 font-display text-sm font-semibold text-foreground hover:bg-race-accent hover:text-white"
+                    ? "h-10 bg-race-accent-solid px-4 font-display text-sm font-semibold text-white hover:bg-race-accent-solid-hover"
+                    : "h-10 border-race-line bg-race-surface px-4 font-display text-sm font-semibold text-foreground hover:bg-race-accent-solid hover:text-white"
                 }
               >
                 <Link

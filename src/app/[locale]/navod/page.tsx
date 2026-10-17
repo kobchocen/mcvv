@@ -94,7 +94,7 @@ export default async function GuidePage({ params }: PageProps) {
             </p>
             <Button
               asChild
-              className="h-11 bg-race-accent px-6 font-display font-semibold text-white hover:bg-race-accent-hover"
+              className="h-11 bg-race-accent-solid px-6 font-display font-semibold text-white hover:bg-race-accent-solid-hover"
             >
               <Link href="/prihlasky">
                 {copy("cta")}

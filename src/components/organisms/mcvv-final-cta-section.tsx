@@ -21,7 +21,7 @@ export function McvvFinalCtaSection({ content }: McvvFinalCtaSectionProps) {
         <Button
           asChild
           size="lg"
-          className="mt-8 h-12 bg-race-accent px-7 font-display text-base font-bold text-white hover:bg-race-accent-hover"
+          className="mt-8 h-12 bg-race-accent-solid px-7 font-display text-base font-bold text-white hover:bg-race-accent-solid-hover"
         >
           <Link href="/prihlasky">
             {content.cta}

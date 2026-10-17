@@ -69,7 +69,7 @@ export function McvvHeroSection({
               <Button
                 asChild
                 size="lg"
-                className="h-12 bg-race-accent px-6 font-display text-base font-semibold text-white hover:bg-race-accent-hover"
+                className="h-12 bg-race-accent-solid px-6 font-display text-base font-semibold text-white hover:bg-race-accent-solid-hover"
               >
                 <Link href="/prihlaseni-zavodnici">
                   {content.hero.primaryCta}

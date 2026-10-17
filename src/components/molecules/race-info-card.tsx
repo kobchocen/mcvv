@@ -17,7 +17,7 @@ export function RaceInfoCard({ icon: Icon, title, description, className }: Race
         className,
       )}
     >
-      <span className="flex size-12 items-center justify-center bg-race-accent/15 text-race-accent">
+      <span className="flex size-12 items-center justify-center bg-race-accent/15 text-race-accent dark:text-orange-300">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">

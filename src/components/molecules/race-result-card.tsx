@@ -40,7 +40,7 @@ export function RaceResultCard({
           </p>
           <p className="mt-2 text-xs font-semibold uppercase text-race-accent">{label}</p>
         </div>
-        <span className="bg-race-accent/15 px-3 py-2 text-xs font-semibold text-race-accent">
+        <span className="bg-race-accent/15 px-3 py-2 text-xs font-semibold text-race-accent dark:text-orange-300">
           {count ?? winners.length}
         </span>
       </div>

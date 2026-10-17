@@ -5,7 +5,7 @@ export function RecordBadge({ kind, label }: { kind: "course" | "personal"; labe
   const Icon = kind === "course" ? Trophy : Star;
   const tone =
     kind === "course"
-      ? "bg-race-accent text-white"
+      ? "bg-race-accent-solid text-white"
       : "bg-emerald-700 text-white dark:bg-emerald-500 dark:text-emerald-950";
   return (
     <span

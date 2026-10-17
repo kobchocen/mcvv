@@ -234,7 +234,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
           {/* Floating back to top */}
           <a
             href="#"
-            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent text-white shadow-lg transition hover:bg-race-accent-hover"
+            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent-solid text-white shadow-lg transition hover:bg-race-accent-solid-hover"
             aria-label="Nahoru"
           >
             ↑

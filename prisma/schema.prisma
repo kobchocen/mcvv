@@ -47,19 +47,19 @@ model Runner {
   author  String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
 
   // Relations
-  runnerPhotos    RunnerPhoto[]
-  webImages       WebImage[]
+  runnerPhotos      RunnerPhoto[]
+  webImages         WebImage[]
   registrationLines RegistrationLine[]
-  startEntries    StartEntry[]
-  results         Result[]
+  startEntries      StartEntry[]
+  results           Result[]
 
   @@map("cis_bezec")
 }
 
 /// Číselník fotografů
 model PhotoAuthor {
-  id    String @id @map("id") @db.Char(1)
-  desc  String @map("popis") @db.VarChar(30)
+  id   String @id @map("id") @db.Char(1)
+  desc String @map("popis") @db.VarChar(30)
 
   // photos Photo[]  // can be added if data uses 1-char codes consistently
 
@@ -68,9 +68,9 @@ model PhotoAuthor {
 
 /// Číselník místa fotografie
 model PhotoLocation {
-  id    String @id @map("id") @db.Char(1)
-  desc  String @map("popis") @db.VarChar(20)
-  sort  Int    @map("sort") @db.SmallInt
+  id   String @id @map("id") @db.Char(1)
+  desc String @map("popis") @db.VarChar(20)
+  sort Int    @map("sort") @db.SmallInt
 
   photos Photo[]
 
@@ -85,13 +85,12 @@ model Club {
   created DateTime? @map("created")
   author  String?   @map("autor") @db.VarChar(64)
 
-  @@id([id, year])
-
   // Relations
   registrationLines RegistrationLine[]
   startEntries      StartEntry[]
   results           Result[]
 
+  @@id([id, year])
   @@map("cis_klub")
 }
 
@@ -167,11 +166,10 @@ model RunnerPhoto {
   runnerId      String @map("bezec_id") @db.Char(8)
   orderFromLeft Int?   @map("poradi_zleva") @db.SmallInt
 
-  @@id([photoId, runnerId])
-
   photo  Photo  @relation(fields: [photoId], references: [id])
   runner Runner @relation(fields: [runnerId], references: [id])
 
+  @@id([photoId, runnerId])
   @@map("mcvv_bezec_fotka")
 }
 
@@ -191,12 +189,12 @@ model News {
 
 /// Obrázky pro web (včetně blobu)
 model WebImage {
-  id       Int       @id @default(autoincrement()) @map("id") @db.SmallInt
-  typeId   Int       @map("typ_id") @db.SmallInt
-  runnerId String?   @map("bezec_id") @db.Char(8)
-  desc     String    @map("popis") @db.VarChar(128)
-  year     Int?      @map("rok") @db.SmallInt
-  image    Bytes?    @map("image") // mediumblob
+  id       Int     @id @default(autoincrement()) @map("id") @db.SmallInt
+  typeId   Int     @map("typ_id") @db.SmallInt
+  runnerId String? @map("bezec_id") @db.Char(8)
+  desc     String  @map("popis") @db.VarChar(128)
+  year     Int?    @map("rok") @db.SmallInt
+  image    Bytes?  @map("image") // mediumblob
 
   type   WebImageType @relation(fields: [typeId], references: [id])
   runner Runner?      @relation(fields: [runnerId], references: [id])
@@ -224,33 +222,31 @@ model Registration {
   author       String?   @map("autor") @db.VarChar(64)
   promotion    String?   @map("promotion") @db.VarChar(32)
 
-  @@id([year, id])
-
   lines RegistrationLine[]
 
+  @@id([year, id])
   @@map("mcvv_prihlaska")
 }
 
 /// Řádek přihlášky (jeden běžec v přihlášce)
 model RegistrationLine {
-  runnerId       String @map("bezec_id") @db.Char(8)
-  clubId         String @map("klub_id") @db.Char(3)
-  categoryId     String @map("kateg_id") @db.Char(1)
-  year           Int    @map("rok") @db.SmallInt
-  bib            Int?   @map("cislo") @db.SmallInt
-  registrationId Int    @map("prihlaska_id") @db.SmallInt
-  entryFee       Int?   @map("startovne") @db.SmallInt
-  note           String? @map("poznamka") @db.VarChar(128)
+  runnerId       String    @map("bezec_id") @db.Char(8)
+  clubId         String    @map("klub_id") @db.Char(3)
+  categoryId     String    @map("kateg_id") @db.Char(1)
+  year           Int       @map("rok") @db.SmallInt
+  bib            Int?      @map("cislo") @db.SmallInt
+  registrationId Int       @map("prihlaska_id") @db.SmallInt
+  entryFee       Int?      @map("startovne") @db.SmallInt
+  note           String?   @map("poznamka") @db.VarChar(128)
   created        DateTime? @map("created")
-  author         String?  @map("autor") @db.VarChar(64)
-
-  @@id([year, runnerId])
+  author         String?   @map("autor") @db.VarChar(64)
 
   runner       Runner       @relation(fields: [runnerId], references: [id])
   club         Club         @relation(fields: [clubId, year], references: [id, year])
   category     Category     @relation(fields: [categoryId], references: [id])
   registration Registration @relation(fields: [year, registrationId], references: [year, id])
 
+  @@id([year, runnerId])
   @@map("mcvv_prihlaska_radek")
 }
 
@@ -278,12 +274,11 @@ model StartEntry {
   runnerName String? @map("bezec_name") @db.VarChar(50)
   clubName   String? @map("klub_name") @db.VarChar(50)
 
-  @@id([year, runnerId])
-
   runner   Runner   @relation(fields: [runnerId], references: [id])
   club     Club     @relation(fields: [clubId, year], references: [id, year])
   category Category @relation(fields: [categoryId], references: [id])
 
+  @@id([year, runnerId])
   @@map("mcvv_start")
 }
 
@@ -297,12 +292,11 @@ model Result {
   runnerName String? @map("bezec_name") @db.VarChar(50)
   clubName   String? @map("klub_name") @db.VarChar(50)
 
-  @@id([year, runnerId])
-
   runner   Runner   @relation(fields: [runnerId], references: [id])
   club     Club     @relation(fields: [clubId, year], references: [id, year])
   category Category @relation(fields: [categoryId], references: [id])
 
+  @@id([year, runnerId])
   @@map("mcvv_time")
 }
 
@@ -316,7 +310,6 @@ model Split {
   author  String?   @map("autor") @db.VarChar(8)
 
   @@id([bib, year, split])
-
   @@map("mcvv_split")
 }
 
@@ -351,6 +344,7 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   emailTokens EmailVerificationToken[]
+  newsletters NewsletterCampaign[]
 
   @@map("mcvv_user")
 }
@@ -376,18 +370,93 @@ model EmailVerificationToken {
 
 /// Sponzoři / partneři
 model Sponsor {
-  id          Int     @id @default(autoincrement()) @map("id") @db.SmallInt
-  name        String? @map("nazev") @db.VarChar(128)
-  link        String? @map("link") @db.VarChar(128)
-  image       String? @map("image") @db.VarChar(64)
-  category    Int     @map("category") @db.SmallInt
-  order       Int     @map("poradi") @db.SmallInt
+  id          Int      @id @default(autoincrement()) @map("id") @db.SmallInt
+  name        String?  @map("nazev") @db.VarChar(128)
+  link        String?  @map("link") @db.VarChar(128)
+  image       String?  @map("image") @db.VarChar(64)
+  category    Int      @map("category") @db.SmallInt
+  order       Int      @map("poradi") @db.SmallInt
   active      Boolean? @map("active")
-  description String  @map("description") @db.VarChar(1024)
+  description String   @map("description") @db.VarChar(1024)
   /// Uploaded logo bytes (PNG/JPEG/WebP or sanitized SVG); never select in list queries
-  logo        Bytes?  @map("logo") @db.MediumBlob
-  logoType    String? @map("logo_type") @db.VarChar(32)
-  logoHash    String? @map("logo_hash") @db.Char(16)
+  logo        Bytes?   @map("logo") @db.MediumBlob
+  logoType    String?  @map("logo_type") @db.VarChar(32)
+  logoHash    String?  @map("logo_hash") @db.Char(16)
 
   @@map("sponsors")
+}
+
+// ============================================
+// Newsletter
+// ============================================
+
+enum NewsletterStatus {
+  draft
+  test_sent
+  sending
+  sent
+}
+
+enum NewsletterRecipientStatus {
+  pending
+  sending
+  sent
+  failed
+  skipped
+}
+
+/// Newsletterová kampaň (obsah v Markdownu, odeslání po dávkách).
+model NewsletterCampaign {
+  id            Int              @id @default(autoincrement())
+  subject       String           @db.VarChar(200)
+  body          String           @db.Text
+  status        NewsletterStatus @default(draft)
+  /// Zahrnout ověřené registrované uživatele (mcvv_user).
+  audienceUsers Boolean          @default(true) @map("audience_users")
+  /// Zahrnout e-maily z přihlášek za posledních N let (0 = ne).
+  audienceYears Int              @default(0) @map("audience_years") @db.SmallInt
+  createdById   Int?             @map("created_by_id")
+  testSentAt    DateTime?        @map("test_sent_at")
+  startedAt     DateTime?        @map("started_at")
+  sentAt        DateTime?        @map("sent_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  createdBy  User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  recipients NewsletterRecipient[]
+
+  @@index([createdById])
+  @@map("mcvv_newsletter")
+}
+
+/// Log příjemců kampaně; unikátní (kampaň, e-mail) brání dvojímu odeslání.
+model NewsletterRecipient {
+  id         Int                       @id @default(autoincrement())
+  campaignId Int                       @map("campaign_id")
+  email      String                    @db.VarChar(255)
+  status     NewsletterRecipientStatus @default(pending)
+  error      String?                   @db.VarChar(500)
+  claimToken String?                   @map("claim_token") @db.VarChar(36)
+  claimedAt  DateTime?                 @map("claimed_at")
+  providerId String?                   @map("provider_id") @db.VarChar(64)
+  sentAt     DateTime?                 @map("sent_at")
+  createdAt  DateTime                  @default(now()) @map("created_at")
+
+  campaign NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status])
+  @@index([claimToken])
+  @@map("mcvv_newsletter_recipient")
+}
+
+/// Odhlášení z newsletteru (token v odkazu je stabilní pro daný e-mail).
+model NewsletterOptOut {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique @db.VarChar(255)
+  token          String    @unique @db.VarChar(64)
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@map("mcvv_newsletter_optout")
 }

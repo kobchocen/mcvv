@@ -43,7 +43,7 @@ export default async function ContactPage({ params }: PageProps) {
               {copy("eyebrow")}
             </p>
           </div>
-          <h1 className="font-display text-5xl font-bold text-white sm:text-6xl">
+          <h1 className="font-display text-5xl font-bold text-foreground dark:text-white sm:text-6xl">
             {copy("title")}
           </h1>
           <p className="text-base leading-7 text-race-muted">{copy("intro")}</p>

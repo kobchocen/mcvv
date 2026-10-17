@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { Trash2 } from "lucide-react";
+import { PlayCircle, Trash2 } from "lucide-react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
@@ -58,6 +58,13 @@ export default async function EntriesPage({ params, searchParams }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {copy("title")}
           </h1>
+          <Link
+            href="/navod"
+            className="mt-3 inline-flex items-center gap-2 font-display text-sm font-semibold text-race-accent underline-offset-4 hover:underline"
+          >
+            <PlayCircle className="size-5" aria-hidden="true" />
+            {copy("guideLink")}
+          </Link>
           {overeno === "1" && session ? (
             <p
               role="status"

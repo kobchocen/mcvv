@@ -6,7 +6,7 @@ import { McvvLoginForm } from "@/components/organisms/mcvv-login-form";
 import { McvvResendVerification } from "@/components/organisms/mcvv-resend-verification";
 import { McvvOauthButtons } from "@/components/organisms/mcvv-oauth-buttons";
 import { appleEnabled, googleEnabled } from "@/lib/auth/oauth";
-import { redirectAfterLogin, safeAdminNext } from "@/lib/auth/login-next";
+import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
 import { getSession, isStaffRole } from "@/lib/auth/session";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
@@ -30,7 +30,7 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
 
   const { next: nextParam, overeni, heslo } = await searchParams;
   const verifyInvalid = overeni === "neplatne";
-  const next = safeAdminNext(nextParam);
+  const next = safeNext(nextParam);
   const session = await getSession();
 
   if (session) {

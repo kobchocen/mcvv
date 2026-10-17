@@ -5,7 +5,7 @@ import { locales } from "@/i18n/routing";
 const BASE_URL = "https://mcvv.cz"; // update if real domain differs
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ["", "/results"];
+  const routes = ["", "/results", "/navod"];
 
   const entries: MetadataRoute.Sitemap = [];
 

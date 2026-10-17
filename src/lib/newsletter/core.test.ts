@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   buildAudience,
+  latestPromotionOptOuts,
   legacyFromYear,
   normalizeEmail,
   processBatch,
@@ -42,6 +43,43 @@ test("buildAudience dedupes across sources and excludes unsubscribed", () => {
   const legacyOnly = buildAudience(sources, { users: false, years: 5 });
   assert.deepEqual(legacyOnly.emails, ["a@x.cz", "d@x.cz"]);
   assert.deepEqual(buildAudience(sources, { users: false, years: 0 }).emails, []);
+});
+
+test("latestPromotionOptOuts: latest application per email decides", () => {
+  const r = (email: string, year: number, promotion: string | null, id = 1) => ({
+    email,
+    year,
+    promotion,
+    id,
+    created: null,
+  });
+  const out = latestPromotionOptOuts([
+    r("A@x.cz", 2015, "N"),
+    r("a@x.cz", 2022, ""), // later consent re-enables
+    r("b@x.cz", 2019, null),
+    r("b@x.cz", 2023, "N"), // latest says N
+    r("c@x.cz", 2020, "N", 1),
+    r("c@x.cz", 2020, null, 2), // same year, higher id wins
+    r("d@x.cz", 2018, " n "),
+  ]);
+  assert.deepEqual([...out].sort(), ["b@x.cz", "d@x.cz"]);
+});
+
+test("buildAudience excludes promotion opt-outs from users and legacy", () => {
+  const a = buildAudience(
+    {
+      userEmails: ["u@x.cz", "n@x.cz"],
+      legacyEmails: ["l@x.cz", "N@x.cz", "o@x.cz"],
+      unsubscribed: ["o@x.cz"],
+      noPromotion: ["n@x.cz"],
+    },
+    { users: true, years: 10 },
+  );
+  assert.deepEqual(a.emails, ["l@x.cz", "u@x.cz"]);
+  assert.equal(a.excluded, 2);
+  assert.equal(a.noPromotion, 1);
+  assert.equal(a.users, 1);
+  assert.equal(a.legacy, 1);
 });
 
 test("legacyFromYear counts the current year", () => {

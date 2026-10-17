@@ -21,7 +21,7 @@ const TEMPLATE = `Ahoj,
 Přihlásit se můžete na [mcvv.org](https://mcvv.org).
 
 Těšíme se na vás,
-pořadatelé MCVV`;
+Tým pořadatelů z K.O.B. Choceň`;
 
 export default async function AdminNewsletterNewPage({ params }: PageProps) {
   const { locale } = await params;
@@ -35,7 +35,7 @@ export default async function AdminNewsletterNewPage({ params }: PageProps) {
           Nová kampaň — Newsletter
         </h1>
         <McvvAdminNewsletterForm
-          values={{ subject: "", body: TEMPLATE, audienceUsers: true, audienceYears: 3 }}
+          values={{ subject: "", body: TEMPLATE, audienceUsers: true, audienceYears: 10 }}
           audienceHints={await audienceHints()}
         />
       </div>

@@ -128,8 +128,8 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
               {audience ? (
                 <p className="mb-3 text-sm">
                   Publikum: <strong>{audience.emails.length}</strong> unikátních adres (registrovaní{" "}
-                  {audience.users}, z přihlášek {audience.legacy}, vyřazeno odhlášených{" "}
-                  {audience.excluded}).
+                  {audience.users}, z přihlášek {audience.legacy}, vyřazeno {audience.excluded}, z
+                  toho bez souhlasu s propagací {audience.noPromotion}).
                 </p>
               ) : null}
               {campaign.status === "test_sent" && audience && audience.emails.length > 0 ? (

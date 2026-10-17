@@ -22,24 +22,71 @@ export type AudienceSources = {
   userEmails: (string | null)[];
   legacyEmails: (string | null)[];
   unsubscribed: Iterable<string>;
+  /** Emails whose latest application said promotion = 'N' (see latestPromotionOptOuts). */
+  noPromotion?: Iterable<string>;
 };
+
+export type PromotionRecord = {
+  email: string | null;
+  promotion: string | null;
+  year: number;
+  created: Date | null;
+  id: number;
+};
+
+/**
+ * Emails that refused promotion: for each email the latest application
+ * (by year, then created, then id) decides; 'N' means excluded.
+ * A later application without 'N' re-enables the email.
+ */
+export function latestPromotionOptOuts(records: Iterable<PromotionRecord>): Set<string> {
+  const latest = new Map<string, PromotionRecord>();
+  const key = (r: PromotionRecord) => [r.year, r.created?.getTime() ?? 0, r.id];
+  for (const r of records) {
+    const email = normalizeEmail(r.email);
+    if (!email) continue;
+    const prev = latest.get(email);
+    if (!prev) {
+      latest.set(email, r);
+      continue;
+    }
+    const [a, b] = [key(r), key(prev)];
+    const newer = a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] > b[2];
+    if (newer) latest.set(email, r);
+  }
+  const out = new Set<string>();
+  for (const [email, r] of latest) {
+    if ((r.promotion ?? "").trim().toUpperCase() === "N") out.add(email);
+  }
+  return out;
+}
 
 export type Audience = {
   emails: string[];
   users: number;
   legacy: number;
   excluded: number;
+  /** Of `excluded`, how many because of promotion = 'N'. */
+  noPromotion: number;
 };
 
 /** Deduplicated, validated, opt-outs excluded. Counts are per source after dedupe. */
 export function buildAudience(sources: AudienceSources, options: AudienceOptions): Audience {
   const unsubscribed = new Set<string>();
+  const blockedPromo = new Set<string>();
   for (const email of sources.unsubscribed) {
     const normalized = normalizeEmail(email);
     if (normalized) {
       unsubscribed.add(normalized);
     }
   }
+  for (const email of sources.noPromotion ?? []) {
+    const normalized = normalizeEmail(email);
+    if (normalized) {
+      blockedPromo.add(normalized);
+    }
+  }
+  const blocked = (e: string) => unsubscribed.has(e) || blockedPromo.has(e);
   const users = new Set<string>();
   const legacy = new Set<string>();
   if (options.users) {
@@ -56,10 +103,12 @@ export function buildAudience(sources: AudienceSources, options: AudienceOptions
   }
   const all = new Set([...users, ...legacy]);
   let excluded = 0;
+  let noPromotion = 0;
   const emails: string[] = [];
   for (const email of all) {
-    if (unsubscribed.has(email)) {
+    if (blocked(email)) {
       excluded += 1;
+      if (!unsubscribed.has(email)) noPromotion += 1;
     } else {
       emails.push(email);
     }
@@ -67,9 +116,10 @@ export function buildAudience(sources: AudienceSources, options: AudienceOptions
   emails.sort();
   return {
     emails,
-    users: [...users].filter((e) => !unsubscribed.has(e)).length,
-    legacy: [...legacy].filter((e) => !unsubscribed.has(e)).length,
+    users: [...users].filter((e) => !blocked(e)).length,
+    legacy: [...legacy].filter((e) => !blocked(e)).length,
     excluded,
+    noPromotion,
   };
 }
 

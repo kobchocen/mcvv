@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 
 import {
   buildAudience,
+  latestPromotionOptOuts,
   legacyFromYear,
   type Audience,
   type AudienceOptions,
@@ -13,7 +14,7 @@ import {
 import type { UnsubscribeStore } from "./unsubscribe";
 
 export async function loadAudience(options: AudienceOptions): Promise<Audience> {
-  const [users, legacy, unsubscribed] = await Promise.all([
+  const [users, legacy, unsubscribed, promotion] = await Promise.all([
     options.users
       ? prisma.user.findMany({ where: { emailVerified: { not: null } }, select: { email: true } })
       : Promise.resolve([]),
@@ -28,12 +29,18 @@ export async function loadAudience(options: AudienceOptions): Promise<Audience> 
       where: { unsubscribedAt: { not: null } },
       select: { email: true },
     }),
+    // Latest application per email decides the promotion opt-out (all years, not just the window).
+    prisma.registration.findMany({
+      where: { email: { contains: "@" } },
+      select: { email: true, promotion: true, year: true, created: true, id: true },
+    }),
   ]);
   return buildAudience(
     {
       userEmails: users.map((u) => u.email),
       legacyEmails: legacy.map((r) => r.email),
       unsubscribed: unsubscribed.map((u) => u.email),
+      noPromotion: latestPromotionOptOuts(promotion),
     },
     options,
   );

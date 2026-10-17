@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { env } from "../src/lib/env";
+import { migrateTimeoutMs } from "../src/lib/db/migrate-timeout";
 import { databaseOptions, migrationUrl } from "../src/lib/db/options";
 import { migrationErrorCode, migrationFailure, prismaCliPath } from "../src/lib/db/prisma-cli";
 
@@ -21,6 +22,8 @@ try {
   stage = "Prisma CLI resolution";
   const cli = prismaCliPath();
   stage = "Prisma migrate deploy";
+  // Configurable via DB_MIGRATE_TIMEOUT_SECONDS (default 900 s); slow table rebuilds can exceed 5 min.
+  const timeout = migrateTimeoutMs();
   const { SMTP_PORT, ...restEnv } = env;
   const result = spawnSync(process.execPath, [cli, "migrate", "deploy"], {
     env: {
@@ -29,7 +32,7 @@ try {
       DATABASE_URL: migrationUrl(env.DATABASE_URL!, caPath),
     },
     encoding: "utf8",
-    timeout: 300_000,
+    timeout,
     maxBuffer: 4 * 1024 * 1024,
   });
   // Prisma owns the advisory lock and migration history. Never reset or seed here.

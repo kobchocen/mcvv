@@ -1,18 +1,21 @@
 import { MetadataRoute } from "next";
 
 import { locales } from "@/i18n/routing";
+import { siteUrl } from "@/lib/site/url";
 
-const BASE_URL = "https://mcvv.cz"; // update if real domain differs
+// Read SITE_URL at request time (runtime env on Azure), not at build time.
+export const dynamic = "force-dynamic";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = ["", "/results", "/navod"];
 
+  const base = siteUrl();
   const entries: MetadataRoute.Sitemap = [];
 
   locales.forEach((locale) => {
     routes.forEach((route) => {
       entries.push({
-        url: `${BASE_URL}/${locale}${route}`,
+        url: `${base}/${locale}${route}`,
         lastModified: new Date(),
         changeFrequency: route === "" ? "weekly" : "monthly",
         priority: route === "" ? 1 : 0.8,

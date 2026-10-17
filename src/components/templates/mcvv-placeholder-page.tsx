@@ -30,7 +30,9 @@ export function McvvPlaceholderPage({
               {eyebrow}
             </p>
           </div>
-          <h1 className="font-display text-5xl font-bold text-white sm:text-6xl">{title}</h1>
+          <h1 className="font-display text-5xl font-bold text-foreground dark:text-white sm:text-6xl">
+            {title}
+          </h1>
           <p className="text-lg font-semibold text-race-accent">{status}</p>
           <p>
             <Link

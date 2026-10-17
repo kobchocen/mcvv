@@ -506,6 +506,7 @@
     "club": "Club",
     "category": "Category",
     "courseRecord": "Course record",
+    "personalBest": "Personal best",
     "os": "PB",
     "medalAbs": "Overall {rank}. place",
     "medalAge": "Category {rank}. place",

@@ -1,4 +1,3 @@
-import { Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -12,6 +11,7 @@ import {
   asPodiumRank,
   perfBarSegments,
   podiumRank,
+  RecordBadge,
 } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/db/client";
@@ -197,10 +197,7 @@ export default async function RunnerPage({ params }: PageProps) {
                       : undefined;
                   const isCourseRecord = row.time <= sexRecord;
                   const graph = isCourseRecord ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-race-accent px-2.5 py-1 font-display text-xs font-semibold uppercase tracking-wide whitespace-nowrap text-white shadow-sm">
-                      <Trophy className="size-3.5" aria-hidden="true" />
-                      {copy("courseRecord")}
-                    </span>
+                    <RecordBadge kind="course" label={copy("courseRecord")} />
                   ) : (
                     <RunnerPerfBar
                       blue={bar.blue}
@@ -226,11 +223,6 @@ export default async function RunnerPage({ params }: PageProps) {
                         >
                           {row.year}
                         </Link>
-                        {row.time === record ? (
-                          <span className="ml-2 inline-flex items-center bg-race-accent/15 px-1.5 py-0.5 text-[0.65rem] font-bold tracking-wide text-race-accent">
-                            {copy("os")}
-                          </span>
-                        ) : null}
                         <RunnerPodiumBadges
                           absoluteRank={absRank}
                           categoryRank={ageRank}
@@ -244,7 +236,11 @@ export default async function RunnerPage({ params }: PageProps) {
                       </td>
                       <td className="hidden py-2.5 pr-4 align-middle md:table-cell">{graph}</td>
                       <td className="py-2.5 pr-4 text-race-muted">
-                        {formatLoss(row.time, record, copy("os"))}
+                        {row.time <= record ? (
+                          <RecordBadge kind="personal" label={copy("personalBest")} />
+                        ) : (
+                          formatLoss(row.time, record, copy("os"))
+                        )}
                       </td>
                       <td className="py-2.5 pr-4 text-race-muted">
                         {row.club?.name || row.clubName || "—"}

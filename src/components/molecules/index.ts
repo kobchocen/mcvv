@@ -1,3 +1,4 @@
+export * from "./record-badge";
 export * from "./stats-nav";
 export * from "./back-to-top";
 export * from "./photo-gallery-grid";

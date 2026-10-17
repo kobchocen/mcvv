@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { formatRaceDay } from "@/lib/format/date";
 import { loadPartners } from "@/lib/partners/logos";
 import { pickGalleryPhotoIds } from "@/lib/photos/gallery";
@@ -45,12 +46,22 @@ export default async function Home({ params }: PageProps) {
       prisma.result.findFirst({
         where: { year: latestYear, categoryId: "A" },
         orderBy: { time: "asc" },
-        select: { runnerName: true, time: true, runnerId: true },
+        select: {
+          runnerName: true,
+          time: true,
+          runnerId: true,
+          runner: { select: { name: true } },
+        },
       }),
       prisma.result.findFirst({
         where: { year: latestYear, categoryId: "F" },
         orderBy: { time: "asc" },
-        select: { runnerName: true, time: true, runnerId: true },
+        select: {
+          runnerName: true,
+          time: true,
+          runnerId: true,
+          runner: { select: { name: true } },
+        },
       }),
     ]);
 
@@ -58,7 +69,7 @@ export default async function Home({ params }: PageProps) {
     if (topMen) {
       winners.push({
         category: isCs ? "Muži" : "Men",
-        name: topMen.runnerName || "—",
+        name: displayRunnerName(topMen.runnerName, topMen.runner?.name) || "—",
         time: formatRaceTime(topMen.time),
         runnerId: topMen.runnerId,
       });
@@ -66,7 +77,7 @@ export default async function Home({ params }: PageProps) {
     if (topWomen) {
       winners.push({
         category: isCs ? "Ženy" : "Women",
-        name: topWomen.runnerName || "—",
+        name: displayRunnerName(topWomen.runnerName, topWomen.runner?.name) || "—",
         time: formatRaceTime(topWomen.time),
         runnerId: topWomen.runnerId,
       });

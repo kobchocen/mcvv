@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { HighlightHashedRow, RunnerNameLink } from "@/components/molecules";
@@ -51,11 +52,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
       club: {
         select: { name: true },
       },
+      runner: { select: { name: true } },
     },
   });
 
-  const results: ResultRow[] = rawResults.map((r) => ({
+  const results: ResultRow[] = rawResults.map(({ runner, ...r }) => ({
     ...r,
+    runnerName: displayRunnerName(r.runnerName, runner?.name),
     _clubName: r.club?.name || r.clubName || "—",
     _birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
   })) as ResultRow[];

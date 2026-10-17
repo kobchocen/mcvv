@@ -4,6 +4,7 @@ import NextLink from "next/link";
 import { RunnerNameLink } from "@/components/molecules";
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
@@ -58,18 +59,32 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
       : (years[0] ?? new Date().getFullYear());
 
   // Fetch top male + female for the default year (for summary)
-  const [topMale, topFemale] = await Promise.all([
+  const [topMaleRaw, topFemaleRaw] = await Promise.all([
     prisma.result.findFirst({
       where: { year: defaultYear, category: { sex: "M" } },
       orderBy: { time: "asc" },
-      select: { runnerName: true, time: true, categoryId: true, runnerId: true },
+      select: {
+        runnerName: true,
+        time: true,
+        categoryId: true,
+        runnerId: true,
+        runner: { select: { name: true } },
+      },
     }),
     prisma.result.findFirst({
       where: { year: defaultYear, category: { sex: "F" } },
       orderBy: { time: "asc" },
-      select: { runnerName: true, time: true, categoryId: true, runnerId: true },
+      select: {
+        runnerName: true,
+        time: true,
+        categoryId: true,
+        runnerId: true,
+        runner: { select: { name: true } },
+      },
     }),
   ]);
+  const topMale = withDisplayName(topMaleRaw);
+  const topFemale = withDisplayName(topFemaleRaw);
 
   const fullResultsRaw = await prisma.result.findMany({
     where: { year: defaultYear },
@@ -77,11 +92,13 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     include: {
       category: { select: { name: true, sex: true } },
       club: { select: { name: true } },
+      runner: { select: { name: true } },
     },
   });
 
-  const fullResults: ResultRow[] = fullResultsRaw.map((r) => ({
+  const fullResults: ResultRow[] = fullResultsRaw.map(({ runner, ...r }) => ({
     ...r,
+    runnerName: displayRunnerName(r.runnerName, runner?.name),
     _splits: [],
   })) as ResultRow[];
 
@@ -543,3 +560,11 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
 }
 
 export const dynamic = "force-dynamic";
+
+function withDisplayName<T extends { runnerName: string | null; runner: { name: string } | null }>(
+  row: T | null,
+): (Omit<T, "runner"> & { runnerName: string | null }) | null {
+  if (!row) return null;
+  const { runner, ...rest } = row;
+  return { ...rest, runnerName: displayRunnerName(row.runnerName, runner?.name) };
+}

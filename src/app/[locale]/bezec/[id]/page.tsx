@@ -14,6 +14,7 @@ import {
   RecordBadge,
 } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { runnerSex } from "@/lib/stats/queries";
 import { formatRaceTime } from "@/lib/utils";
@@ -84,7 +85,13 @@ export default async function RunnerPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "Runner" });
-  const name = runner?.name || results[0]?.runnerName || id;
+  // Older results may carry a former (e.g. maiden) name; show it alongside the current one.
+  const formerName = [...results]
+    .reverse()
+    .find(
+      (row) => row.runnerName && displayRunnerName(row.runnerName, runner?.name) !== row.runnerName,
+    )?.runnerName;
+  const name = displayRunnerName(formerName ?? results[0]?.runnerName, runner?.name) || id;
   const birthYear = id.slice(0, 4);
   const times = results.map((row) => row.time);
   const record = Math.min(...times);

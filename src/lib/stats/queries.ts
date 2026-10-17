@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/client";
 import { isEligibleByBirthYear } from "@/lib/entries/category";
+import { displayRunnerName } from "@/lib/format/runner-name";
 import { formatRaceTime } from "@/lib/utils";
 
 export const STAT_SLUGS = ["rekordy", "vitezove", "casy", "vek", "veterani", "ucast"] as const;
@@ -42,13 +43,14 @@ async function loadAllResults(): Promise<RawResult[]> {
       runnerName: true,
       clubName: true,
       club: { select: { name: true } },
+      runner: { select: { name: true } },
     },
   });
   return rows.map((row) => ({
     year: row.year,
     time: row.time,
     runnerId: row.runnerId,
-    runnerName: row.runnerName,
+    runnerName: displayRunnerName(row.runnerName, row.runner?.name),
     clubName: row.club?.name || row.clubName || null,
   }));
 }

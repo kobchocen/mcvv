@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 
+import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { addNewRunner, type AddRunnerState } from "@/lib/entries/actions";
 import { McvvClubCombobox, type ClubOption } from "@/components/organisms/mcvv-club-combobox";
 import { Button } from "@/components/ui/button";
@@ -9,20 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type CategoryOption = { id: string; name: string; sex: string; age: number };
-
-function isEligible(birthYear: number, sex: "M" | "F", raceYear: number, category: CategoryOption) {
-  if (category.sex !== sex) {
-    return false;
-  }
-  if (category.age === 0) {
-    return true;
-  }
-  const cutoff = raceYear - category.age;
-  if (category.age <= 20) {
-    return birthYear >= cutoff;
-  }
-  return birthYear <= cutoff;
-}
 
 export function McvvNewRunnerForm({
   year,
@@ -55,18 +42,22 @@ export function McvvNewRunnerForm({
   const [sex, setSex] = useState<"M" | "F">("M");
   const [birthYear, setBirthYear] = useState("");
   const born = Number.parseInt(birthYear, 10);
+  // Keep the club field in sync with the application name (default) after it is saved,
+  // unless the user already typed a different club.
+  const [club, setClub] = useState(defaultClubName);
+  const [syncedDefault, setSyncedDefault] = useState(defaultClubName);
+  if (defaultClubName !== syncedDefault) {
+    setSyncedDefault(defaultClubName);
+    if (!club.trim() || club.trim() === syncedDefault.trim()) {
+      setClub(defaultClubName);
+    }
+  }
   const eligible = useMemo(
-    () =>
-      Number.isFinite(born)
-        ? categories.filter((category) => isEligible(born, sex, year, category))
-        : [],
+    () => (Number.isFinite(born) ? eligibleCategoriesFor(born, sex, year, categories) : []),
     [born, categories, sex, year],
   );
   const defaultCategoryId = useMemo(() => {
-    if (eligible.length === 0) {
-      return "";
-    }
-    return eligible.reduce((best, category) => (category.age > best.age ? category : best)).id;
+    return defaultCategory(eligible)?.id ?? "";
   }, [eligible]);
 
   return (
@@ -125,10 +116,12 @@ export function McvvNewRunnerForm({
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor="clubName">{copy.club}</Label>
+        <input type="hidden" name="clubName" value={club} />
         <McvvClubCombobox
           id="clubName"
           clubs={clubs}
-          defaultValue={defaultClubName}
+          value={club}
+          onChange={setClub}
           listId="new-runner-club"
           className="h-10"
         />

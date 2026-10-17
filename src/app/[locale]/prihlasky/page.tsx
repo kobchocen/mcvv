@@ -277,7 +277,7 @@ async function EntryBody({
             registrationId={registration.id}
             runners={quick}
             clubName={defaultClubName}
-            copy={{ quickAdd: copy("quickAdd") }}
+            copy={{ quickAdd: copy("quickAdd"), runnerTitle: copy.raw("quickAddTitle") as string }}
           />
         ) : null}
 

@@ -1,6 +1,7 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
+import { buildQuickList } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
 
 function emailMatch(value: string | null | undefined, email: string): boolean {
@@ -62,17 +63,13 @@ export async function loadMyEntry(email: string, displayName: string) {
       (row) => row.runnerId,
     ),
   );
-  const quick: { id: string; name: string }[] = [];
-  const seen = new Set<string>();
-  for (const row of minePast) {
-    for (const line of row.lines) {
-      if (thisYearTaken.has(line.runnerId) || seen.has(line.runnerId)) {
-        continue;
-      }
-      seen.add(line.runnerId);
-      quick.push({ id: line.runnerId, name: line.runner.name });
-    }
-  }
+  const quick = buildQuickList(
+    minePast.flatMap((row) =>
+      row.lines
+        .filter((line) => !thisYearTaken.has(line.runnerId))
+        .map((line) => ({ id: line.runnerId, name: line.runner.name })),
+    ),
+  );
 
   if (registration) {
     await recalculateRegistrationStatus(registration.year, registration.id);

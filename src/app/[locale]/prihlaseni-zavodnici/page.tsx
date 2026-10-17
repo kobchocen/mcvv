@@ -6,7 +6,8 @@ import { McvvPublicNavbar } from "@/components/organisms";
 import { formatDate } from "@/lib/format/date";
 import { isNewbie } from "@/lib/entries/newbie";
 import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
-import { ENTRY_STATUS } from "@/lib/entries/status";
+import { validRegistrationIds } from "@/lib/entries/status";
+import { RunnerNameLink } from "@/components/molecules";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
@@ -40,8 +41,9 @@ export default async function EntrantsPage({ params }: PageProps) {
     orderBy: { id: "desc" },
     select: { startAdultPlace: true, startKidsPlace: true },
   });
+  const validIds = await validRegistrationIds(year);
   const lines = await prisma.registrationLine.findMany({
-    where: { year, registration: { status: ENTRY_STATUS.confirmed } },
+    where: { year, registrationId: { in: [...validIds] } },
     include: {
       runner: { select: { name: true } },
       club: { select: { name: true } },
@@ -165,7 +167,9 @@ export default async function EntrantsPage({ params }: PageProps) {
                         </tr>
                         {group.runners.map((runner) => (
                           <tr key={runner.id} className="border-b border-race-line/40">
-                            <td className="py-2.5 pr-3 font-medium">{runner.name}</td>
+                            <td className="py-2.5 pr-3 font-medium">
+                              <RunnerNameLink id={runner.id} name={runner.name} />
+                            </td>
                             <td className="py-2.5 pr-3 text-race-muted">{runner.birth}</td>
                             <td className="py-2.5 pr-3 text-race-muted">{runner.club}</td>
                             <td className="py-2.5 pr-3 text-race-muted">

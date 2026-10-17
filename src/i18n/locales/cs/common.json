@@ -457,6 +457,7 @@
     "category": "Kategorie",
     "fee": "Startovné",
     "remove": "Odebrat",
+    "quickAddTitle": "{name}, ročník {year}",
     "quickAdd": "Rychlá nabídka",
     "newRunner": "Nový běžec",
     "firstName": "Jméno",
@@ -504,6 +505,7 @@
     "loss": "Ztráta na OR",
     "club": "Klub",
     "category": "Kategorie",
+    "courseRecord": "Traťový rekord",
     "os": "OR",
     "medalAbs": "Absolutně {rank}. místo",
     "medalAge": "Kategorie {rank}. místo",
@@ -609,6 +611,8 @@
     "partnersLink": "Odkaz",
     "partnersImage": "Soubor loga",
     "partnersUpload": "Nahrát logo",
+    "partnersUploadHint": "PNG, JPG, WebP nebo SVG, max. 1 MB. Nahrané logo má přednost před souborem výše; SVG se při nahrání vyčistí (skripty, odkazy).",
+    "partnersLogoInvalid": "Logo se nepodařilo nahrát: podporované jsou PNG, JPG, WebP a SVG do 1 MB bez skriptů.",
     "partnersCategory": "Kategorie",
     "partnersOrder": "Pořadí",
     "partnersDescription": "Popis",
@@ -693,28 +697,35 @@
     "womenYear": "Rok Ž",
     "chartCaption": "Účast muži / ženy",
     "empty": "Zatím tu nic není.",
+    "navLabel": "Navigace statistik",
     "back": "Zpět na úvod",
     "rekordy": {
+      "nav": "Rekordy",
       "title": "Traťové rekordy a jejich vývoj",
       "intro": ""
     },
     "vitezove": {
+      "nav": "Vítězové",
       "title": "Absolutní vítězové",
       "intro": "Nejlepší čas mužů a žen v každém ročníku."
     },
     "casy": {
+      "nav": "Nejlepší časy",
       "title": "Nejlepší časy",
       "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
     },
     "vek": {
+      "nav": "Dle věku",
       "title": "Rekordy dle věku",
       "intro": "Nejlepší čas daného věku (rok závodu − rok narození) u mužů a žen."
     },
     "veterani": {
+      "nav": "Veteráni",
       "title": "Veteráni MCVV",
       "intro": "Klub veteránů: běžci s více starty, než je polovina počtu ročníků s výsledky."
     },
     "ucast": {
+      "nav": "Účast",
       "title": "Celková účast",
       "intro": "Počet účastníků, nováčků a osobních rekordů v jednotlivých letech."
     }

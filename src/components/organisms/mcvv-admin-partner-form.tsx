@@ -2,7 +2,7 @@ import { savePartner } from "@/lib/admin/partners";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { partnerLogoSrc } from "@/lib/partners/logos";
+import { partnerLogo } from "@/lib/partners/logos";
 
 export type PartnerFormValues = {
   id?: number;
@@ -13,6 +13,8 @@ export type PartnerFormValues = {
   order: number;
   active: boolean;
   description: string;
+  logoType?: string | null;
+  logoHash?: string | null;
 };
 
 export function McvvAdminPartnerForm({
@@ -30,9 +32,18 @@ export function McvvAdminPartnerForm({
     active: string;
     description: string;
     save: string;
+    uploadHint: string;
+    logoError?: string;
   };
 }) {
-  const logo = partnerLogoSrc(values.image);
+  const logo = values.id
+    ? partnerLogo({
+        id: values.id,
+        image: values.image,
+        logoType: values.logoType,
+        logoHash: values.logoHash,
+      })
+    : null;
 
   return (
     <form action={savePartner} className="grid max-w-2xl gap-4" encType="multipart/form-data">
@@ -40,10 +51,24 @@ export function McvvAdminPartnerForm({
       <AdminField name="name" label={copy.name} defaultValue={values.name} />
       <AdminField name="link" label={copy.link} defaultValue={values.link} />
       <AdminField name="image" label={copy.image} defaultValue={values.image} />
-      <AdminField name="logo" label={copy.upload} type="file" />
+      <AdminField name="logo" label={copy.upload}>
+        <input
+          id="logo"
+          name="logo"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
+          className="text-sm"
+        />
+      </AdminField>
+      <p className="-mt-2 text-xs text-race-muted">{copy.uploadHint}</p>
+      {copy.logoError ? <p className="text-sm text-destructive">{copy.logoError}</p> : null}
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logo} alt="" className="h-16 w-auto max-w-[12rem] bg-white object-contain p-2" />
+        <img
+          src={logo.src}
+          alt=""
+          className="h-16 w-48 border border-race-line/55 bg-white object-contain p-2"
+        />
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <AdminField

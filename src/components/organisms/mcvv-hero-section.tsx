@@ -56,6 +56,11 @@ export function McvvHeroSection({
               <span className="block">{content.hero.titleLine1}</span>
               <span className="block text-race-accent">{content.hero.titleLine2}</span>
             </h1>
+            {content.hero.memorial ? (
+              <p className="mt-4 border-l-2 border-race-accent pl-3 font-display text-sm font-semibold uppercase tracking-wide text-white/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)] sm:text-base">
+                {content.hero.memorial}
+              </p>
+            ) : null}
             <p className="mt-6 max-w-xl text-base leading-7 text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)] sm:text-xl sm:leading-8">
               {content.hero.claim}
             </p>

@@ -85,6 +85,7 @@ export type McvvHomepageContent = {
     place: string;
     titleLine1: string;
     titleLine2: string;
+    memorial?: string;
     claim: string;
     primaryCta: string;
     primaryHref: string;

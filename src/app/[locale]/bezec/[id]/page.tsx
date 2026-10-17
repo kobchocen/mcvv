@@ -1,3 +1,4 @@
+import { Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -194,7 +195,13 @@ export default async function RunnerPage({ params }: PageProps) {
                           ),
                         )
                       : undefined;
-                  const graph = (
+                  const isCourseRecord = row.time <= sexRecord;
+                  const graph = isCourseRecord ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-race-accent px-2.5 py-1 font-display text-xs font-semibold uppercase tracking-wide whitespace-nowrap text-white shadow-sm">
+                      <Trophy className="size-3.5" aria-hidden="true" />
+                      {copy("courseRecord")}
+                    </span>
+                  ) : (
                     <RunnerPerfBar
                       blue={bar.blue}
                       green={bar.green}

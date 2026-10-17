@@ -21,7 +21,19 @@ export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
           {content.items.map((partner) => {
             const inner = (
               <>
-                {partner.logoSrc ? (
+                {partner.logoSrc && partner.logoPlain ? (
+                  // SVG / uploaded logos: plain <img> (never inlined, no optimizer).
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={partner.logoSrc}
+                    alt={partner.name}
+                    width={240}
+                    height={65}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain"
+                  />
+                ) : partner.logoSrc ? (
                   <Image
                     src={partner.logoSrc}
                     alt={partner.name}

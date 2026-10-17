@@ -9,6 +9,7 @@ import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ logo?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -17,7 +18,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("partnersTitle") };
 }
 
-export default async function AdminEditPartnerPage({ params }: PageProps) {
+export default async function AdminEditPartnerPage({ params, searchParams }: PageProps) {
+  const { logo: logoStatus } = await searchParams;
   const { locale: requestedLocale, id: rawId } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -25,7 +27,7 @@ export default async function AdminEditPartnerPage({ params }: PageProps) {
   if (!Number.isFinite(id)) {
     notFound();
   }
-  const row = await prisma.sponsor.findUnique({ where: { id } });
+  const row = await prisma.sponsor.findUnique({ where: { id }, omit: { logo: true } });
   if (!row) {
     notFound();
   }
@@ -48,12 +50,16 @@ export default async function AdminEditPartnerPage({ params }: PageProps) {
             order: row.order,
             active: row.active !== false,
             description: row.description,
+            logoType: row.logoType,
+            logoHash: row.logoHash,
           }}
           copy={{
             name: copy("partnersName"),
             link: copy("partnersLink"),
             image: copy("partnersImage"),
             upload: copy("partnersUpload"),
+            uploadHint: copy("partnersUploadHint"),
+            logoError: logoStatus === "invalid" ? copy("partnersLogoInvalid") : undefined,
             category: copy("partnersCategory"),
             order: copy("partnersOrder"),
             active: copy("active"),

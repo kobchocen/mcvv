@@ -457,6 +457,7 @@
     "category": "Category",
     "fee": "Fee",
     "remove": "Remove",
+    "quickAddTitle": "{name}, born {year}",
     "quickAdd": "Quick add",
     "newRunner": "New runner",
     "firstName": "First name",
@@ -504,6 +505,7 @@
     "loss": "Gap to PB",
     "club": "Club",
     "category": "Category",
+    "courseRecord": "Course record",
     "os": "PB",
     "medalAbs": "Overall {rank}. place",
     "medalAge": "Category {rank}. place",
@@ -609,6 +611,8 @@
     "partnersLink": "Link",
     "partnersImage": "Logo filename",
     "partnersUpload": "Upload logo",
+    "partnersUploadHint": "PNG, JPG, WebP or SVG, max 1 MB. An uploaded logo overrides the filename above; SVG is sanitized on upload (scripts, links).",
+    "partnersLogoInvalid": "The logo could not be uploaded: PNG, JPG, WebP and SVG up to 1 MB without scripts are supported.",
     "partnersCategory": "Category",
     "partnersOrder": "Order",
     "partnersDescription": "Description",
@@ -693,28 +697,35 @@
     "womenYear": "Year W",
     "chartCaption": "Attendance men / women",
     "empty": "Nothing here yet.",
+    "navLabel": "Statistics navigation",
     "back": "Back to home",
     "rekordy": {
+      "nav": "Records",
       "title": "Course records and their evolution",
       "intro": ""
     },
     "vitezove": {
+      "nav": "Winners",
       "title": "Absolute winners",
       "intro": "Best men's and women's time in each edition."
     },
     "casy": {
+      "nav": "Best times",
       "title": "Best times",
       "intro": "TOP 20 men and TOP 20 women across all editions."
     },
     "vek": {
+      "nav": "By age",
       "title": "Records by age",
       "intro": "Best time at a given age (race year − year of birth) for men and women."
     },
     "veterani": {
+      "nav": "Veterans",
       "title": "MCVV veterans",
       "intro": "Veterans' club: runners with more starts than half the number of editions with results."
     },
     "ucast": {
+      "nav": "Attendance",
       "title": "Overall attendance",
       "intro": "Participants, newcomers, and personal records in each year."
     }

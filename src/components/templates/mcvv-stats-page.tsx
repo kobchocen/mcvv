@@ -1,5 +1,5 @@
 import { McvvPublicNavbar } from "@/components/organisms";
-import { RunnerNameLink } from "@/components/molecules";
+import { RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
@@ -33,6 +33,7 @@ export type McvvStatsPageProps = {
   chartWomenLabel?: string;
   empty: string;
   back: string;
+  statsNav?: { items: StatsNavItem[]; current: string; ariaLabel: string };
 };
 
 export function McvvStatsPage({
@@ -48,6 +49,7 @@ export function McvvStatsPage({
   chartWomenLabel = "Ž",
   empty,
   back,
+  statsNav,
 }: McvvStatsPageProps) {
   const maxBar = chart?.reduce((max, bar) => Math.max(max, bar.men + bar.women), 0) ?? 0;
 
@@ -66,6 +68,7 @@ export function McvvStatsPage({
           {intro ? (
             <p className="mt-4 max-w-2xl text-base leading-7 text-race-muted">{intro}</p>
           ) : null}
+          {statsNav ? <StatsNav {...statsNav} /> : null}
 
           {chart && chart.length > 0 ? (
             <div className="mt-10">

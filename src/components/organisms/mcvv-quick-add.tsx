@@ -14,7 +14,7 @@ export function McvvQuickAdd({
   registrationId: number;
   runners: { id: string; name: string }[];
   clubName: string;
-  copy: { quickAdd: string };
+  copy: { quickAdd: string; runnerTitle: string };
 }) {
   return (
     <div className="mt-6">
@@ -31,6 +31,12 @@ export function McvvQuickAdd({
                 type="submit"
                 variant="outline"
                 className="h-9 border-race-line bg-race-surface"
+                title={copy.runnerTitle
+                  .replace("{name}", runner.name)
+                  .replace("{year}", runner.id.slice(0, 4))}
+                aria-label={copy.runnerTitle
+                  .replace("{name}", runner.name)
+                  .replace("{year}", runner.id.slice(0, 4))}
               >
                 {runner.name}
               </Button>

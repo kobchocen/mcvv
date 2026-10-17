@@ -16,6 +16,7 @@ import {
   getTopTimesBySex,
   getVeteranClub,
   isStatSlug,
+  STAT_SLUGS,
   type StatSlug,
 } from "@/lib/stats/queries";
 import { type Locale } from "@/i18n/routing";
@@ -218,6 +219,11 @@ export default async function StatsSlugPage({ params }: PageProps) {
       chartWomenLabel={stats("women")}
       empty={stats("empty")}
       back={stats("back")}
+      statsNav={{
+        current: slug,
+        ariaLabel: stats("navLabel"),
+        items: STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
+      }}
     />
   );
 }

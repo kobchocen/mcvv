@@ -384,6 +384,10 @@ model Sponsor {
   order       Int     @map("poradi") @db.SmallInt
   active      Boolean? @map("active")
   description String  @map("description") @db.VarChar(1024)
+  /// Uploaded logo bytes (PNG/JPEG/WebP or sanitized SVG); never select in list queries
+  logo        Bytes?  @map("logo") @db.MediumBlob
+  logoType    String? @map("logo_type") @db.VarChar(32)
+  logoHash    String? @map("logo_hash") @db.Char(16)
 
   @@map("sponsors")
 }

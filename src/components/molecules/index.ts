@@ -1,3 +1,4 @@
+export * from "./stats-nav";
 export * from "./back-to-top";
 export * from "./photo-gallery-grid";
 export * from "./race-countdown";

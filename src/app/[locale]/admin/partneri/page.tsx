@@ -24,6 +24,7 @@ export default async function AdminPartnersPage({ params }: PageProps) {
   setRequestLocale(locale);
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const rows = await prisma.sponsor.findMany({
+    omit: { logo: true },
     orderBy: [{ category: "asc" }, { order: "asc" }, { id: "asc" }],
   });
 

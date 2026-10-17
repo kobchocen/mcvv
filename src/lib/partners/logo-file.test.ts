@@ -94,6 +94,18 @@ describe("partner logo upload", () => {
     assert.equal(out, "<svg><rect/></svg>");
   });
 
+  it("finds raw-text close tags case-insensitively without regex injection", () => {
+    assert.equal(
+      sanitizeSvg("<svg><STYLE>.a{fill:red}</style  ><rect/></svg>"),
+      "<svg><STYLE>.a{fill:red}</STYLE><rect/></svg>",
+    );
+    assert.equal(sanitizeSvg("<svg><script>alert(1)</scriptx></svg>"), null);
+    assert.equal(
+      sanitizeSvg("<svg><svg:script>a</svg:script ><rect/></svg>"),
+      "<svg><rect/></svg>",
+    );
+  });
+
   it("validates uploads", () => {
     assert.deepEqual(validateLogo(Buffer.alloc(0), "a.png"), { ok: false, reason: "empty" });
     assert.deepEqual(validateLogo(Buffer.alloc(2 * 1024 * 1024, 1), "a.png"), {

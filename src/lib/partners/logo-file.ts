@@ -30,66 +30,239 @@ export function detectBitmapType(buffer: Uint8Array): LogoType | null {
   return null;
 }
 
-const FORBIDDEN_ELEMENTS = [
-  "script",
-  "foreignObject",
-  "iframe",
-  "embed",
-  "object",
-  "audio",
-  "video",
-  "canvas",
-  "handler",
-  "listener",
-  "set",
-  "animate",
-  "animateMotion",
-  "animateTransform",
-];
+/** SVG elements kept in the output (compared case-insensitively, without namespace prefix). */
+const ALLOWED_ELEMENTS = new Set([
+  "svg",
+  "g",
+  "defs",
+  "symbol",
+  "use",
+  "title",
+  "desc",
+  "path",
+  "rect",
+  "circle",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "text",
+  "tspan",
+  "textpath",
+  "lineargradient",
+  "radialgradient",
+  "stop",
+  "clippath",
+  "mask",
+  "pattern",
+  "image",
+  "style",
+  "marker",
+  "filter",
+  "fegaussianblur",
+  "feoffset",
+  "feblend",
+  "fecolormatrix",
+  "fecomposite",
+  "feflood",
+  "femerge",
+  "femergenode",
+  "femorphology",
+  "fedropshadow",
+]);
+
+/** Elements that are dropped but whose children are kept (e.g. links around shapes). */
+const UNWRAP_ELEMENTS = new Set(["a", "switch", "metadata"]);
+
+/** Elements whose raw text content must never be parsed as markup. */
+const RAW_TEXT_ELEMENTS = new Set(["script", "style"]);
+
+const TAG_RE =
+  /^<(\/?)([A-Za-z_][\w:.-]*)((?:\s+[^\s=/>"'<]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'<>=`]+))?)*)\s*(\/?)>/;
+const ATTR_RE = /([^\s=/>"'<]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>=`]+)))?/g;
+
+function localName(name: string): string {
+  const i = name.indexOf(":");
+  return (i >= 0 ? name.slice(i + 1) : name).toLowerCase();
+}
+
+/** Remove control characters, whitespace and entity-encoded chars to detect obfuscated schemes. */
+function normalizeForSchemeCheck(value: string): string {
+  return value
+    .replace(/&#x?[0-9a-f]+;?|&[a-z]+;/gi, "")
+    .replace(/[\u0000-\u0020\u007f]+/g, "")
+    .toLowerCase();
+}
+
+const DANGEROUS_VALUE =
+  /(?:javascript|vbscript|livescript):|data:(?!image\/(?:png|jpeg|webp|gif);)|expression\(/;
+
+/** Sanitize CSS: repeat until nothing changes so removals cannot recombine into new matches. */
+function sanitizeCss(css: string): string | null {
+  let prev: string;
+  let out = css;
+  do {
+    prev = out;
+    out = out
+      .replace(/@import\b[^;]*;?/gi, "")
+      .replace(/url\(\s*(['"]?)(?!#)[^)]*\1\s*\)/gi, "none")
+      .replace(/expression\s*\(/gi, "")
+      .replace(/<\/?[a-z!]/gi, "");
+  } while (out !== prev);
+  const check = normalizeForSchemeCheck(out);
+  if (/@import|url\((?!['"]?#)|javascript:|expression\(|behavior:|-moz-binding/.test(check)) {
+    return null;
+  }
+  return out;
+}
+
+function escapeAttr(value: string): string {
+  return value.replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeText(value: string): string {
+  return value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Return the serialized allowed attributes, dropping event handlers and unsafe references. */
+function sanitizeAttributes(raw: string): string {
+  let out = "";
+  for (const m of raw.matchAll(ATTR_RE)) {
+    const name = m[1];
+    const value = m[2] ?? m[3] ?? m[4] ?? "";
+    const lname = name.toLowerCase();
+    const local = localName(name);
+    if (!/^[a-z_][\w:.-]*$/i.test(name)) continue;
+    // Event handlers in any namespace (onload, svg:onclick, ...).
+    if (local.startsWith("on")) continue;
+    if (lname.startsWith("xmlns")) {
+      out += ` ${name}="${escapeAttr(value)}"`;
+      continue;
+    }
+    const norm = normalizeForSchemeCheck(value);
+    if (local === "href" || local === "src") {
+      if (!(value.trim().startsWith("#") || /^data:image\/(?:png|jpeg|webp|gif);/.test(norm)))
+        continue;
+    } else if (DANGEROUS_VALUE.test(norm)) {
+      continue;
+    }
+    let clean = value;
+    if (local === "style" || /url\(/i.test(value)) {
+      const css = sanitizeCss(value);
+      if (css === null) continue;
+      clean = css;
+    }
+    out += ` ${name}="${escapeAttr(clean)}"`;
+  }
+  return out;
+}
 
 /**
- * Strip active content from an SVG document and return the cleaned markup, or null when
- * the input is not an SVG or still contains anything suspicious after cleaning.
+ * Sanitize an SVG document by tokenizing it and rebuilding only allowlisted elements and
+ * attributes (no regex removal on the markup itself). Comments, processing instructions,
+ * scripts, foreignObject, event handlers and javascript:/external references are dropped.
+ * Returns null when the input is not an SVG, contains a DTD or cannot be tokenized.
  * The result is additionally served with a sandboxing CSP and only rendered via <img>.
  */
 export function sanitizeSvg(input: string): string | null {
-  let svg = input.replace(/^\uFEFF/, "").trim();
-  // No DTDs/entities (XXE, billion laughs) and no processing instructions except the XML header.
-  if (/<!DOCTYPE|<!ENTITY/i.test(svg)) {
-    return null;
-  }
-  svg = svg
-    .replace(/<\?xml[^>]*\?>/i, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .trim();
-  if (!/^<svg[\s>]/i.test(svg) || !/<\/svg>\s*$/i.test(svg)) {
-    return null;
-  }
-  for (const tag of FORBIDDEN_ELEMENTS) {
-    svg = svg
-      .replace(new RegExp(`<${tag}\\b[\\s\\S]*?<\\/${tag}\\s*>`, "gi"), "")
-      .replace(new RegExp(`<${tag}\\b[^>]*\\/?>`, "gi"), "");
-  }
-  // Event handler attributes (onload=, onclick=, ...).
-  svg = svg.replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
-  // External or script references: keep only internal fragment refs (#id) and data:image.
-  svg = svg.replace(
-    /\s+(?:xlink:)?href\s*=\s*("([^"]*)"|'([^']*)')/gi,
-    (match, _quoted, dq: string | undefined, sq: string | undefined) => {
-      const value = (dq ?? sq ?? "").trim();
-      return value.startsWith("#") || /^data:image\/(png|jpeg|webp|gif);/i.test(value) ? match : "";
-    },
-  );
-  // Remove CSS imports and external url() references.
-  svg = svg.replace(/@import[^;]*;?/gi, "");
-  svg = svg.replace(/url\(\s*(['"]?)(?!#)[^)]*\1\s*\)/gi, "none");
+  const src = input.replace(/^\uFEFF/, "");
+  let i = 0;
+  let out = "";
+  const stack: { name: string; emit: boolean; skipped: boolean }[] = [];
+  let skipDepth = 0; // >0 while inside a dropped subtree
+  let sawRoot = false;
+  let closedRoot = false;
 
-  const suspicious =
-    /<\s*(script|foreignObject|iframe|embed|object)\b|\son[a-z]+\s*=|javascript:|vbscript:|data:text\/html|@import/i;
-  if (suspicious.test(svg)) {
-    return null;
+  while (i < src.length) {
+    const rest = src.slice(i);
+    if (!rest.startsWith("<")) {
+      const next = src.indexOf("<", i);
+      const text = next < 0 ? rest : src.slice(i, next);
+      i += text.length;
+      if (closedRoot || !sawRoot) {
+        if (text.trim() !== "") return null;
+        continue;
+      }
+      if (skipDepth === 0) out += escapeText(text);
+      continue;
+    }
+    if (rest.startsWith("<!--")) {
+      const end = src.indexOf("-->", i + 4);
+      if (end < 0) return null;
+      i = end + 3;
+      continue;
+    }
+    if (rest.startsWith("<![CDATA[")) {
+      const end = src.indexOf("]]>", i + 9);
+      if (end < 0 || !sawRoot) return null;
+      if (skipDepth === 0) out += escapeText(src.slice(i + 9, end));
+      i = end + 3;
+      continue;
+    }
+    if (rest.startsWith("<?")) {
+      const end = src.indexOf("?>", i + 2);
+      if (end < 0) return null;
+      i = end + 2;
+      continue;
+    }
+    if (rest.startsWith("<!")) {
+      return null; // DOCTYPE, ENTITY and other declarations
+    }
+    const m = TAG_RE.exec(rest);
+    if (!m) return null;
+    i += m[0].length;
+    const [, closing, name, attrs, selfClosing] = m;
+    const local = localName(name);
+
+    if (closing) {
+      const top = stack.pop();
+      if (!top || top.name.toLowerCase() !== name.toLowerCase()) return null;
+      if (top.skipped) {
+        skipDepth--;
+      } else if (top.emit) {
+        out += `</${top.name}>`;
+      }
+      if (stack.length === 0) closedRoot = true;
+      continue;
+    }
+
+    if (!sawRoot) {
+      if (local !== "svg") return null;
+      sawRoot = true;
+    } else if (closedRoot || stack.length === 0) {
+      return null;
+    }
+
+    const allowed = skipDepth === 0 && ALLOWED_ELEMENTS.has(local);
+    const unwrap = skipDepth === 0 && !allowed && UNWRAP_ELEMENTS.has(local);
+
+    // Raw text elements: consume content up to the matching close tag without parsing it.
+    if (!selfClosing && RAW_TEXT_ELEMENTS.has(local)) {
+      const closeRe = new RegExp(`<\\/${name.replace(/[.]/g, "\\.")}\\s*>`, "i");
+      const cm = closeRe.exec(src.slice(i));
+      if (!cm) return null;
+      const content = src.slice(i, i + cm.index);
+      i += cm.index + cm[0].length;
+      if (allowed && local === "style") {
+        const css = sanitizeCss(content.replace(/<!\[CDATA\[|\]\]>/g, ""));
+        if (css === null) return null;
+        out += `<${name}${sanitizeAttributes(attrs)}>${escapeText(css)}</${name}>`;
+      }
+      continue;
+    }
+
+    if (allowed) {
+      out += `<${name}${sanitizeAttributes(attrs)}${selfClosing ? "/" : ""}>`;
+    }
+    if (!selfClosing) {
+      const skipped = !allowed && !unwrap;
+      stack.push({ name, emit: allowed, skipped });
+      if (skipped) skipDepth++;
+    }
   }
-  return svg;
+
+  if (!sawRoot || !closedRoot || stack.length > 0) return null;
+  return out.trim();
 }
 
 export type LogoValidation =

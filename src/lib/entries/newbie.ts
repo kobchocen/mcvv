@@ -1,7 +1,7 @@
 /**
- * A runner is a "nováček" (newbie) only when they have no result from another year
- * and were never entered in a previous year (some past entries have no result, e.g. DNS).
+ * A runner is a "nováček" (newbie) when they have no result in any other year.
+ * Past applications without a result (e.g. did not start) do not matter.
  */
-export function isNewbie(pastStarts: number, wasEnteredBefore: boolean): boolean {
-  return pastStarts === 0 && !wasEnteredBefore;
+export function isNewbie(pastStarts: number): boolean {
+  return pastStarts === 0;
 }

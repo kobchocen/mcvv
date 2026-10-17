@@ -12,7 +12,7 @@ import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
-import { countPastStarts, enteredBefore } from "@/lib/entries/starts";
+import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { formatDate } from "@/lib/format/date";
 import { getSession } from "@/lib/auth/session";
@@ -127,10 +127,7 @@ async function EntryBody({
   }
   const defaultClubName = (registration?.name ?? "").trim();
   const lineRunnerIds = registration ? registration.lines.map((line) => line.runnerId) : [];
-  const [startsById, enteredIds] = await Promise.all([
-    countPastStarts(lineRunnerIds, year),
-    enteredBefore(lineRunnerIds, year),
-  ]);
+  const startsById = await countPastStarts(lineRunnerIds, year);
   const startsCopy = await getTranslations({ locale, namespace: "Entrants" });
   const feeReasons = new Map<string, string | null>();
   if (registration) {
@@ -223,13 +220,11 @@ async function EntryBody({
                 <tr key={line.runnerId} className="border-b border-race-line/40">
                   <td className="py-2.5 pr-3">
                     <span className="font-medium">{line.runner.name}</span>
-                    {starts > 0 || isNewbie(starts, enteredIds.has(line.runnerId)) ? (
-                      <span className="mt-0.5 block text-xs text-race-muted sm:ml-2 sm:mt-0 sm:inline">
-                        {starts > 0
-                          ? startsCopy("starts", { count: starts })
-                          : startsCopy("newbie")}
-                      </span>
-                    ) : null}
+                    <span className="mt-0.5 block text-xs text-race-muted sm:ml-2 sm:mt-0 sm:inline">
+                      {isNewbie(starts)
+                        ? startsCopy("newbie")
+                        : startsCopy("starts", { count: starts })}
+                    </span>
                   </td>
                   <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
                   <td className="py-2.5 pr-3">

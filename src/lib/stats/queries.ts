@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client";
+import { isEligibleByBirthYear } from "@/lib/entries/category";
 import { formatRaceTime } from "@/lib/utils";
 
 export const STAT_SLUGS = ["rekordy", "vitezove", "casy", "vek", "veterani", "ucast"] as const;
@@ -29,21 +30,7 @@ export function isEligible(
   raceYear: number,
   category: { sex: string; age: number },
 ): boolean {
-  if (runnerSex(runnerId) !== category.sex) {
-    return false;
-  }
-  const born = runnerBirthYear(runnerId);
-  if (!Number.isFinite(born) || born < 1920 || born > raceYear) {
-    return false;
-  }
-  if (category.age === 0) {
-    return true;
-  }
-  const cutoff = raceYear - category.age;
-  if (category.age <= 20) {
-    return born >= cutoff;
-  }
-  return born <= cutoff;
+  return isEligibleByBirthYear(runnerBirthYear(runnerId), runnerSex(runnerId), raceYear, category);
 }
 
 async function loadAllResults(): Promise<RawResult[]> {

@@ -47,14 +47,16 @@ export function McvvHeroSection({
                 <Trees className="size-4" aria-hidden="true" />
                 {content.hero.kicker}
               </span>
-              <span className="text-sm font-medium text-race-muted">{content.hero.place}</span>
+              <span className="text-sm font-medium text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+                {content.hero.place}
+              </span>
             </div>
 
             <h1 className="mt-6 font-display text-6xl font-bold leading-[0.95] text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.7)] sm:text-7xl lg:text-8xl">
               <span className="block">{content.hero.titleLine1}</span>
               <span className="block text-race-accent">{content.hero.titleLine2}</span>
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-white/92 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)] sm:text-xl sm:leading-8">
+            <p className="mt-6 max-w-xl text-base leading-7 text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)] sm:text-xl sm:leading-8">
               {content.hero.claim}
             </p>
 
@@ -82,7 +84,7 @@ export function McvvHeroSection({
             </div>
             {showCountdown && deadlineMs ? <McvvDeadlineCountdown targetMs={deadlineMs} /> : null}
             {enrolledLabel ? (
-              <p className="mt-2 text-sm text-white/75 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+              <p className="mt-2 text-sm font-medium text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)]">
                 {enrolledLabel}
               </p>
             ) : null}

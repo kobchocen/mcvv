@@ -15,6 +15,22 @@ export async function countPastStarts(
   return new Map(rows.map((row) => [row.runnerId, row._count._all]));
 }
 
+/** Runner ids that were entered (prihlaska_radek) in any year before `currentYear`. */
+export async function enteredBefore(
+  runnerIds: string[],
+  currentYear: number,
+): Promise<Set<string>> {
+  if (runnerIds.length === 0) {
+    return new Set();
+  }
+  const rows = await prisma.registrationLine.findMany({
+    where: { runnerId: { in: runnerIds }, year: { lt: currentYear } },
+    select: { runnerId: true },
+    distinct: ["runnerId"],
+  });
+  return new Set(rows.map((row) => row.runnerId));
+}
+
 export async function bestRaceTimes(runnerIds: string[]): Promise<Map<string, number>> {
   if (runnerIds.length === 0) {
     return new Map();

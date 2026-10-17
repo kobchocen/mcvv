@@ -40,7 +40,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Results",
       "tertiaryHref": "/results",
-      "enrolled": "{count} confirmed runners",
+      "enrolled": "Runners entered: {count}",
       "stats": [
         {
           "value": "4300",
@@ -467,6 +467,7 @@
     "female": "Female",
     "add": "Add",
     "ambiguous": "Please be more specific — more than one runner matches this name and year.",
+    "invalidRunner": "The runner could not be added. Please check the details and try again.",
     "taken": "This runner is already entered this year.",
     "payment": "Payment",
     "feeTotal": "Entry fee total",
@@ -474,6 +475,8 @@
     "due": "Amount due",
     "account": "Account",
     "vs": "Variable symbol",
+    "addRunnersFirst": "This application has no runners yet. Add them below in the Runners section; the entry fee and payment details will appear afterwards.",
+    "noFeeDue": "The entry fee is CZK 0, nothing to pay.",
     "paidInFull": "The entry fee is paid.",
     "past": "Past editions"
   },
@@ -540,6 +543,9 @@
     "signedIn": "You are signed in as {name}.",
     "name": "Name",
     "clubName": "Club name (optional)",
+    "passwordAgain": "Password again",
+    "passwordHint": "At least 8 characters.",
+    "passwordAgainHint": "Enter the same password once more to confirm.",
     "newPassword": "Choose a new password",
     "newPasswordAgain": "Confirm new password",
     "passwordMismatch": "The passwords do not match.",

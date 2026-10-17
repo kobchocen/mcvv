@@ -13,7 +13,7 @@ import {
 } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 import { getSession, isStaffRole } from "@/lib/auth/session";
-import { countConfirmedRunners } from "@/lib/entries/status";
+import { countValidRunners } from "@/lib/entries/status";
 import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
 
 export type McvvHomepageTemplateProps = {
@@ -27,7 +27,7 @@ export async function McvvHomepageTemplate({
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
   const { year, deadline, open } = await currentRaceYear();
-  const enrolledCount = await countConfirmedRunners(year);
+  const enrolledCount = await countValidRunners(year);
   const deadlineEnd = registrationDeadlineEnd(deadline);
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -43,10 +43,14 @@ export async function McvvHomepageTemplate({
       <McvvHeroSection
         content={content}
         deadlineMs={open ? (deadlineEnd?.getTime() ?? null) : null}
-        enrolledLabel={(content.hero.enrolled ?? "Přihlášeno {count} běžců").replaceAll(
-          "{count}",
-          String(enrolledCount),
-        )}
+        enrolledLabel={
+          enrolledCount > 0
+            ? (content.hero.enrolled ?? "Přihlášeno {count} běžců").replaceAll(
+                "{count}",
+                String(enrolledCount),
+              )
+            : undefined
+        }
       />
       <McvvOverviewSection content={content.overview} />
       <McvvProfileSection content={content.profile} />

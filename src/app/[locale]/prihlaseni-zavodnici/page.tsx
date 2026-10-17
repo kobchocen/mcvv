@@ -3,8 +3,9 @@ import { Fragment } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPublicNavbar } from "@/components/organisms";
-import { dateInputValue } from "@/lib/admin/parse";
-import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
+import { formatDate } from "@/lib/format/date";
+import { isNewbie } from "@/lib/entries/newbie";
+import { bestRaceTimes, countPastStarts, enteredBefore } from "@/lib/entries/starts";
 import { ENTRY_STATUS } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
@@ -48,8 +49,9 @@ export default async function EntrantsPage({ params }: PageProps) {
     },
   });
   const runnerIds = [...new Set(lines.map((line) => line.runnerId))];
-  const [startsById, recordsById] = await Promise.all([
+  const [startsById, enteredIds, recordsById] = await Promise.all([
     countPastStarts(runnerIds, year),
+    enteredBefore(runnerIds, year),
     bestRaceTimes(runnerIds),
   ]);
   const groups = new Map<
@@ -63,6 +65,7 @@ export default async function EntrantsPage({ params }: PageProps) {
         birth: string;
         club: string;
         starts: number;
+        newbie: boolean;
         record: number | null;
       }[];
     }
@@ -79,6 +82,7 @@ export default async function EntrantsPage({ params }: PageProps) {
       birth: line.runnerId.slice(0, 4),
       club: line.club.name,
       starts: startsById.get(line.runnerId) ?? 0,
+      newbie: isNewbie(startsById.get(line.runnerId) ?? 0, enteredIds.has(line.runnerId)),
       record: recordsById.get(line.runnerId) ?? null,
     });
     groups.set(line.categoryId, group);
@@ -108,7 +112,7 @@ export default async function EntrantsPage({ params }: PageProps) {
           <p className="mt-2 text-sm text-race-muted">{copy("paidOnly")}</p>
           {deadline ? (
             <p className="mt-2 text-sm text-race-muted">
-              {copy("deadline")}: {dateInputValue(deadline)}
+              {copy("deadline")}: {formatDate(deadline, locale)}
             </p>
           ) : null}
           {open ? (
@@ -168,7 +172,9 @@ export default async function EntrantsPage({ params }: PageProps) {
                             <td className="py-2.5 pr-3 text-race-muted">
                               {runner.starts > 0
                                 ? copy("starts", { count: runner.starts })
-                                : copy("newbie")}
+                                : runner.newbie
+                                  ? copy("newbie")
+                                  : ""}
                             </td>
                             <td className="py-2.5 tabular-nums text-race-muted">
                               {runner.record != null ? formatRaceTime(runner.record) : ""}

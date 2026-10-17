@@ -17,7 +17,7 @@ export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
           align="center"
           titleClassName="mx-auto max-w-3xl text-3xl sm:text-4xl"
         />
-        <div className="mt-10 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
           {content.items.map((partner) => {
             const inner = (
               <>
@@ -25,9 +25,10 @@ export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
                   <Image
                     src={partner.logoSrc}
                     alt={partner.name}
-                    width={180}
-                    height={64}
-                    className="max-h-16 w-auto object-contain"
+                    width={240}
+                    height={65}
+                    sizes="(min-width: 1024px) 300px, (min-width: 768px) 33vw, 50vw"
+                    className="h-full w-full object-contain"
                   />
                 ) : (
                   <span className="font-display text-base font-bold text-race-dim">
@@ -38,7 +39,7 @@ export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
             );
 
             const className =
-              "flex h-24 items-center justify-center border border-race-line/55 bg-white px-4 dark:bg-white/95";
+              "flex h-20 items-center justify-center border border-race-line/55 bg-white px-2 py-2 sm:h-28 sm:px-4 sm:py-3 dark:bg-white/95";
 
             if (partner.href) {
               return (

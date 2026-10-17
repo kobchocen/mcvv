@@ -7,6 +7,7 @@ import {
   type McvvProgramContent,
   type ProgramCategoryRow,
 } from "@/components/templates";
+import { formatRaceDate } from "@/lib/format/date";
 import { prisma } from "@/lib/db/client";
 import { formatCzk } from "@/lib/utils";
 import { type Locale } from "@/i18n/routing";
@@ -75,6 +76,9 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   const rawSections = program.raw("sections") as McvvProgramContent["sections"];
   const sections: McvvProgramContent["sections"] = {
     ...rawSections,
+    date: edition?.date
+      ? { ...rawSections.date, summary: formatRaceDate(edition.date, locale) }
+      : rawSections.date,
     start: {
       ...rawSections.start,
       body: program("sections.start.body", { seconds: intervalSeconds }),

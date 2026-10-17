@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { Trash2 } from "lucide-react";
+import { PlayCircle, Trash2 } from "lucide-react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
@@ -11,9 +11,10 @@ import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
 import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
 import { loadMyEntry } from "@/lib/entries/load";
+import { isNewbie } from "@/lib/entries/newbie";
 import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
-import { dateInputValue } from "@/lib/admin/parse";
+import { formatDate } from "@/lib/format/date";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
@@ -58,6 +59,13 @@ export default async function EntriesPage({ params, searchParams }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {copy("title")}
           </h1>
+          <Link
+            href="/navod"
+            className="mt-3 inline-flex items-center gap-2 font-display text-sm font-semibold text-race-accent underline-offset-4 hover:underline"
+          >
+            <PlayCircle className="size-5" aria-hidden="true" />
+            {copy("guideLink")}
+          </Link>
           {overeno === "1" && session ? (
             <p
               role="status"
@@ -118,10 +126,8 @@ async function EntryBody({
     }
   }
   const defaultClubName = (registration?.name ?? "").trim();
-  const startsById = await countPastStarts(
-    registration ? registration.lines.map((line) => line.runnerId) : [],
-    year,
-  );
+  const lineRunnerIds = registration ? registration.lines.map((line) => line.runnerId) : [];
+  const startsById = await countPastStarts(lineRunnerIds, year);
   const startsCopy = await getTranslations({ locale, namespace: "Entrants" });
   const feeReasons = new Map<string, string | null>();
   if (registration) {
@@ -150,14 +156,16 @@ async function EntryBody({
     ) ?? 0;
   const paid = payments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
   const due = fee - paid;
-  const qr = registration && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
+  const hasLines = (registration?.lines.length ?? 0) > 0;
+  const qr =
+    registration && hasLines && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
   const vs = registration ? variableSymbol(year, registration.id) : "";
 
   if (!registration) {
     return (
       <p className="mt-8 text-base leading-7 text-race-muted">
         {copy("closedRead")}
-        {deadline ? ` (${dateInputValue(deadline)})` : ""}
+        {deadline ? ` (${formatDate(deadline, locale)})` : ""}
       </p>
     );
   }
@@ -166,7 +174,7 @@ async function EntryBody({
     <div className="mt-8 space-y-12">
       {deadline ? (
         <p className="text-sm text-race-muted">
-          {copy("deadline")}: {dateInputValue(deadline)}
+          {copy("deadline")}: {formatDate(deadline, locale)}
           {open ? "" : ` — ${copy("readOnly")}`}
         </p>
       ) : null}
@@ -211,9 +219,11 @@ async function EntryBody({
               return (
                 <tr key={line.runnerId} className="border-b border-race-line/40">
                   <td className="py-2.5 pr-3">
-                    {line.runner.name}
-                    <span className="ml-2 text-xs text-race-muted">
-                      {starts > 0 ? startsCopy("starts", { count: starts }) : startsCopy("newbie")}
+                    <span className="font-medium">{line.runner.name}</span>
+                    <span className="mt-0.5 block text-xs text-race-muted sm:ml-2 sm:mt-0 sm:inline">
+                      {isNewbie(starts)
+                        ? startsCopy("newbie")
+                        : startsCopy("starts", { count: starts })}
                     </span>
                   </td>
                   <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
@@ -267,7 +277,7 @@ async function EntryBody({
             registrationId={registration.id}
             runners={quick}
             clubName={defaultClubName}
-            copy={{ quickAdd: copy("quickAdd") }}
+            copy={{ quickAdd: copy("quickAdd"), runnerTitle: copy.raw("quickAddTitle") as string }}
           />
         ) : null}
 
@@ -292,6 +302,7 @@ async function EntryBody({
                 add: copy("add"),
                 ambiguous: copy("ambiguous"),
                 taken: copy("taken"),
+                invalid: copy("invalidRunner"),
               }}
             />
           </div>
@@ -324,13 +335,17 @@ async function EntryBody({
               </div>
             </dl>
           </div>
-        ) : (
+        ) : !hasLines ? (
+          <p className="mt-3 text-sm text-race-muted">{copy("addRunnersFirst")}</p>
+        ) : fee > 0 && paid >= fee ? (
           <p className="mt-3 text-sm text-race-muted">{copy("paidInFull")}</p>
-        )}
+        ) : fee === 0 ? (
+          <p className="mt-3 text-sm text-race-muted">{copy("noFeeDue")}</p>
+        ) : null}
         <ul className="mt-4 text-sm text-race-muted">
           {payments.map((payment) => (
             <li key={payment.id}>
-              {dateInputValue(payment.date)} — {payment.amount ?? 0} Kč
+              {payment.date ? formatDate(payment.date, locale) : "—"} — {payment.amount ?? 0} Kč
             </li>
           ))}
         </ul>

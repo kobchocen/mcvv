@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { saveEntryHeader } from "@/lib/entries/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+const SAVED_KEY = "mcvv-entry-header-saved";
 
 export function McvvEntryHeaderForm({
   year,
@@ -38,9 +40,33 @@ export function McvvEntryHeaderForm({
   const [noteValue, setNoteValue] = useState(note);
   const [noMailValue, setNoMailValue] = useState(noMail);
   const dirty = nameValue !== name || noteValue !== note || noMailValue !== noMail;
+  // The page remounts this form after a successful save (key = saved values), so the
+  // transient "Uloženo ✓" flag survives the remount via sessionStorage.
+  const [justSaved, setJustSaved] = useState(false);
+  useEffect(() => {
+    const stamp = Number(window.sessionStorage.getItem(SAVED_KEY) ?? 0);
+    if (Date.now() - stamp > 10_000) {
+      return;
+    }
+    const show = window.setTimeout(() => setJustSaved(true), 0);
+    const hide = window.setTimeout(() => {
+      window.sessionStorage.removeItem(SAVED_KEY);
+      setJustSaved(false);
+    }, 3000);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(hide);
+    };
+  }, []);
+
+  async function submit(formData: FormData) {
+    window.sessionStorage.setItem(SAVED_KEY, String(Date.now()));
+    setJustSaved(false);
+    await saveEntryHeader(formData);
+  }
 
   return (
-    <form action={saveEntryHeader} className="grid max-w-xl gap-4">
+    <form action={submit} className="grid max-w-xl gap-4">
       <input type="hidden" name="year" value={year} />
       <input type="hidden" name="id" value={id} />
       <div className="grid gap-1.5">
@@ -81,13 +107,18 @@ export function McvvEntryHeaderForm({
         {copy.noMail}
       </label>
       {open ? (
-        <Button
-          type="submit"
-          disabled={!dirty}
-          className="h-10 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover disabled:opacity-50"
-        >
-          {dirty ? copy.save : copy.saved}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            type="submit"
+            disabled={!dirty}
+            className="h-10 w-fit bg-race-accent font-display font-semibold text-white hover:bg-race-accent-hover disabled:opacity-50"
+          >
+            {copy.save}
+          </Button>
+          <span role="status" aria-live="polite" className="text-sm font-medium text-race-accent">
+            {justSaved && !dirty ? `${copy.saved} ✓` : ""}
+          </span>
+        </div>
       ) : null}
     </form>
   );

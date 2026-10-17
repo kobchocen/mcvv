@@ -148,12 +148,19 @@ export type McvvHomepageContent = {
     eyebrow: string;
     title: string;
     organizer: string;
-    items: { name: string; href: string | null; logoSrc: string | null }[];
+    items: {
+      name: string;
+      href: string | null;
+      logoSrc: string | null;
+      /** SVG or DB-served logo: render with a plain <img>, not the image optimizer. */
+      logoPlain?: boolean;
+    }[];
   };
   finalCta: {
     title: string;
     description: string;
     cta: string;
+    guide?: string;
   };
   footer: {
     description: string;

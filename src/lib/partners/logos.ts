@@ -26,6 +26,32 @@ export function partnerLogoSrc(image: string | null | undefined): string | null 
   return null;
 }
 
+export type PartnerLogoRow = {
+  id: number;
+  image: string | null;
+  logoType?: string | null;
+  logoHash?: string | null;
+};
+
+/**
+ * Resolve a partner logo: an uploaded logo stored in the DB wins (served by
+ * /api/partner-logo with sandboxing headers), otherwise the legacy static file in
+ * public/partners. `plain` = render via <img> (SVG is never optimized nor inlined).
+ */
+export function partnerLogo(row: PartnerLogoRow): { src: string; plain: boolean } | null {
+  if (row.logoType && row.logoHash) {
+    return {
+      src: `/api/partner-logo?id=${row.id}&v=${row.logoHash}`,
+      plain: true,
+    };
+  }
+  const src = partnerLogoSrc(row.image);
+  if (!src) {
+    return null;
+  }
+  return { src, plain: src.toLowerCase().endsWith(".svg") };
+}
+
 export function partnerHref(link: string | null | undefined): string | null {
   if (!link) {
     return null;
@@ -42,14 +68,18 @@ export async function loadPartners() {
     const rows = await prisma.sponsor.findMany({
       where: { active: true },
       orderBy: [{ category: "asc" }, { order: "asc" }, { id: "asc" }],
-      select: { name: true, link: true, image: true },
+      select: { id: true, name: true, link: true, image: true, logoType: true, logoHash: true },
     });
     return rows
-      .map((row) => ({
-        name: row.name?.trim() || "Partner",
-        href: partnerHref(row.link),
-        logoSrc: partnerLogoSrc(row.image),
-      }))
+      .map((row) => {
+        const logo = partnerLogo(row);
+        return {
+          name: row.name?.trim() || "Partner",
+          href: partnerHref(row.link),
+          logoSrc: logo?.src ?? null,
+          logoPlain: logo?.plain ?? false,
+        };
+      })
       .filter((row, index, list) => list.findIndex((item) => item.name === row.name) === index);
   } catch (error) {
     console.error("[partners] load failed", error);

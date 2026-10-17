@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { getLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
-import { redirectAfterLogin, safeAdminNext } from "@/lib/auth/login-next";
+import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
 import { clearSession, isStaffRole, setSession } from "@/lib/auth/session";
 import { redirect, type Locale } from "@/i18n/routing";
 
@@ -45,7 +45,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   }
 
   const locale = (await getLocale()) as Locale;
-  const next = safeAdminNext(formData.get("next"));
+  const next = safeNext(formData.get("next"));
   redirectAfterLogin(next, isStaffRole(user.role), locale);
   return {};
 }

@@ -40,7 +40,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
       "tertiaryHref": "/results",
-      "enrolled": "Přihlášeno {count} běžců",
+      "enrolled": "Přihlášených běžců: {count}",
       "stats": [
         {
           "value": "4300",
@@ -242,7 +242,8 @@
     "finalCta": {
       "title": "Připraven na čtyři kopce?",
       "description": "Místa mizí rychleji než síly ve čtvrtém výběhu. Zajisti si startovní číslo na další ročník.",
-      "cta": "Přihlásit se na závod"
+      "cta": "Přihlásit se na závod",
+      "guide": "Jak se přihlásit"
     },
     "footer": {
       "description": "Tradiční lesní kros v Chocni. 4300 metrů, 200 metrů převýšení a charakter, který si zapamatuješ.",
@@ -433,6 +434,7 @@
     "colRecord": "OR"
   },
   "Entries": {
+    "guideLink": "Jak se přihlásit",
     "eyebrow": "Přihláška",
     "title": "Moje přihláška",
     "needAccount": "Pro přihlášku se přihlaste nebo si založte účet.",
@@ -455,6 +457,7 @@
     "category": "Kategorie",
     "fee": "Startovné",
     "remove": "Odebrat",
+    "quickAddTitle": "{name}, ročník {year}",
     "quickAdd": "Rychlá nabídka",
     "newRunner": "Nový běžec",
     "firstName": "Jméno",
@@ -465,6 +468,7 @@
     "female": "Žena",
     "add": "Přidat",
     "ambiguous": "Upřesněte, existuje víc běžců se stejným jménem a rokem.",
+    "invalidRunner": "Běžce se nepodařilo přidat. Zkontrolujte prosím údaje a zkuste to znovu.",
     "taken": "Tento běžec už je letos přihlášený.",
     "payment": "Platba",
     "feeTotal": "Startovné celkem",
@@ -472,6 +476,8 @@
     "due": "K úhradě",
     "account": "Účet",
     "vs": "Variabilní symbol",
+    "addRunnersFirst": "Přihláška zatím nemá žádné běžce. Přidejte je níže v sekci Běžci, pak se zobrazí startovné a platební údaje.",
+    "noFeeDue": "Startovné je 0 Kč, není co hradit.",
     "paidInFull": "Startovné je uhrazené.",
     "past": "Minulé ročníky"
   },
@@ -499,6 +505,8 @@
     "loss": "Ztráta na OR",
     "club": "Klub",
     "category": "Kategorie",
+    "courseRecord": "Traťový rekord",
+    "personalBest": "Osobní rekord",
     "os": "OR",
     "medalAbs": "Absolutně {rank}. místo",
     "medalAge": "Kategorie {rank}. místo",
@@ -538,6 +546,9 @@
     "signedIn": "Jste přihlášeni jako {name}.",
     "name": "Jméno",
     "clubName": "Název klubu (nepovinné)",
+    "passwordAgain": "Heslo znovu",
+    "passwordHint": "Alespoň 8 znaků.",
+    "passwordAgainHint": "Pro kontrolu zadejte stejné heslo ještě jednou.",
     "newPassword": "Zadejte nové heslo",
     "newPasswordAgain": "Zadejte nové heslo znovu",
     "passwordMismatch": "Hesla se neshodují.",
@@ -602,6 +613,8 @@
     "partnersLink": "Odkaz",
     "partnersImage": "Soubor loga",
     "partnersUpload": "Nahrát logo",
+    "partnersUploadHint": "PNG, JPG, WebP nebo SVG, max. 1 MB. Nahrané logo má přednost před souborem výše; SVG se při nahrání vyčistí (skripty, odkazy).",
+    "partnersLogoInvalid": "Logo se nepodařilo nahrát: podporované jsou PNG, JPG, WebP a SVG do 1 MB bez skriptů.",
     "partnersCategory": "Kategorie",
     "partnersOrder": "Pořadí",
     "partnersDescription": "Popis",
@@ -686,28 +699,35 @@
     "womenYear": "Rok Ž",
     "chartCaption": "Účast muži / ženy",
     "empty": "Zatím tu nic není.",
+    "navLabel": "Navigace statistik",
     "back": "Zpět na úvod",
     "rekordy": {
+      "nav": "Rekordy",
       "title": "Traťové rekordy a jejich vývoj",
       "intro": ""
     },
     "vitezove": {
+      "nav": "Vítězové",
       "title": "Absolutní vítězové",
       "intro": "Nejlepší čas mužů a žen v každém ročníku."
     },
     "casy": {
+      "nav": "Nejlepší časy",
       "title": "Nejlepší časy",
       "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
     },
     "vek": {
+      "nav": "Dle věku",
       "title": "Rekordy dle věku",
       "intro": "Nejlepší čas daného věku (rok závodu − rok narození) u mužů a žen."
     },
     "veterani": {
+      "nav": "Veteráni",
       "title": "Veteráni MCVV",
       "intro": "Klub veteránů: běžci s více starty, než je polovina počtu ročníků s výsledky."
     },
     "ucast": {
+      "nav": "Účast",
       "title": "Celková účast",
       "intro": "Počet účastníků, nováčků a osobních rekordů v jednotlivých letech."
     }
@@ -719,5 +739,115 @@
     "label": "Motiv",
     "light": "Světlý",
     "dark": "Tmavý"
+  },
+  "Guide": {
+    "eyebrow": "Videonávod",
+    "title": "Jak se přihlásit na MCVV",
+    "description": "Videonávod a návod krok za krokem: založení účtu, přihláška, rychlá nabídka běžců z minulých let a platba startovného.",
+    "lead": "Přihlašování na mcvv.org krok za krokem – nejdřív krátké video, pak podrobný návod se snímky obrazovky.",
+    "videoLabel": "Videonávod (1:38)",
+    "stepsTitle": "Návod krok za krokem",
+    "prev": "Zpět",
+    "next": "Další krok",
+    "done": "Hotovo",
+    "counter": "Krok {n} z {total}",
+    "stepLabel": "Krok",
+    "ctaTitle": "Máte vše připraveno?",
+    "cta": "Přejít na přihlášku",
+    "faqTitle": "Časté otázky",
+    "link": "Jak se přihlásit",
+    "steps": [
+      {
+        "image": "01-domu.jpg",
+        "title": "Otevřete mcvv.org",
+        "text": "Vpravo nahoře klikněte na <b>Přihlásit se</b>."
+      },
+      {
+        "image": "02-prihlaseni.jpg",
+        "title": "Přihlášení nebo nový účet",
+        "text": "Máte-li už účet na novém webu, zadejte e-mail a heslo. Jinak klikněte na <b>Založit účet</b>.",
+        "tip": "Účty ze starého webu nefungují – je potřeba založit nový."
+      },
+      {
+        "image": "03-registrace.jpg",
+        "title": "Založte účet",
+        "text": "Vyplňte jméno, e-mail a heslo (2×). Název klubu je nepovinný. Nebo zvolte <b>Pokračovat přes Google</b> – pak nepotřebujete heslo ani ověřovací e-mail.",
+        "tip": "Použijte e-mail, na který jste se hlásili v minulých letech – uvidíte své dřívější přihlášky a běžce z nich přidáte jedním klikem."
+      },
+      {
+        "image": "04-odeslano.jpg",
+        "title": "Zkontrolujte e-mail",
+        "text": "Poslali jsme vám odkaz k ověření. Platí 24 hodin."
+      },
+      {
+        "image": "05-email.jpg",
+        "title": "Ověřte e-mail",
+        "text": "V e-mailu „Ověření e-mailu — MCVV“ klikněte na <b>Ověřit e-mail</b>.",
+        "tip": "Nevidíte ho? Podívejte se do spamu."
+      },
+      {
+        "image": "06-overeno.jpg",
+        "title": "Jste přihlášeni",
+        "text": "Po přihlášení se vždy otevře stránka <b>Moje přihláška</b>. Název přihlášky můžete změnit, např. na název klubu nebo rodiny – změnu potvrďte tlačítkem <b>Uložit</b>."
+      },
+      {
+        "image": "07-bezec.jpg",
+        "title": "Přidejte nového běžce",
+        "text": "Vyplňte příjmení, jméno, ročník a pohlaví. Kategorii web nabídne podle ročníku, klub se předvyplní podle názvu přihlášky. Klikněte na <b>Přidat</b> a běžec se objeví v tabulce."
+      },
+      {
+        "image": "08-rychla-nabidka.jpg",
+        "title": "Rychlá nabídka – běžci z minulých let",
+        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy.",
+        "tip": "Přihlašujete klub? Nejdřív přihlášku přejmenujte na název klubu a uložte. Podle názvu přihlášky se běžcům přiřadí klub."
+      },
+      {
+        "image": "09-platba.jpg",
+        "title": "Zaplaťte startovné",
+        "text": "V sekci <b>Platba</b> najdete částku, číslo účtu, variabilní symbol a QR kód pro platbu z mobilní banky.",
+        "tip": "Přihláška platí a v seznamu přihlášených se objeví až po zaplacení."
+      },
+      {
+        "image": "10-uprava.jpg",
+        "title": "Úpravy do uzávěrky",
+        "text": "Poznámku, klub nebo seznam běžců můžete měnit až do uzávěrky. Změny hlavičky potvrďte tlačítkem <b>Uložit</b>."
+      },
+      {
+        "image": "11-login.jpg",
+        "title": "Příští přihlášení",
+        "text": "Příště se jen přihlásíte e-mailem a heslem (nebo přes Google) – web vás rovnou přenese na <b>Moje přihláška</b>."
+      },
+      {
+        "image": "12-zapomenute.jpg",
+        "title": "Zapomenuté heslo",
+        "text": "Na přihlašovací stránce klikněte na <b>Zapomněli jste heslo?</b>, zadejte e-mail a pošleme vám odkaz na nové heslo (platí 1 hodinu)."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Můžu se přihlásit starým účtem z minulého webu?",
+        "a": "Ne. Nový web má nové účty. Založte si účet znovu – nejlépe se stejným e-mailem, jaký jste používali u dřívějších přihlášek. Pak uvidíte své minulé ročníky a běžce z nich přidáte v Rychlé nabídce jedním klikem."
+      },
+      {
+        "q": "Nepřišel mi ověřovací e-mail.",
+        "a": "Zkontrolujte složku spam/hromadné. Odkaz platí 24 hodin. Pokud se pokusíte přihlásit neověřeným účtem, web vám nabídne poslat odkaz znovu."
+      },
+      {
+        "q": "Přihlašuji více lidí (rodinu, klub).",
+        "a": "Stačí jeden účet. Do jedné přihlášky přidáte libovolný počet běžců; startovné se sečte a zaplatíte ho jednou platbou s jedním variabilním symbolem. U klubu nejdřív přejmenujte přihlášku na název klubu."
+      },
+      {
+        "q": "Kdy je přihláška platná?",
+        "a": "Až po zaplacení startovného. Teprve potom se běžci objeví v seznamu přihlášených."
+      },
+      {
+        "q": "Můžu přihlášku změnit?",
+        "a": "Ano, do uzávěrky online přihlášek můžete upravovat údaje, přidávat i odebírat běžce."
+      },
+      {
+        "q": "Přihlašuji se přes Google – musím mít heslo?",
+        "a": "Ne. Pokud byste si chtěli nastavit i heslo, použijte „Zapomněli jste heslo?“."
+      }
+    ]
   }
 }

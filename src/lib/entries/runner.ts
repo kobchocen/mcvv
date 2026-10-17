@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/db/client";
-import { isEligible } from "@/lib/stats/queries";
+import {
+  defaultCategory,
+  eligibleCategoriesFor,
+  pickCategoryByBirthYear,
+} from "@/lib/entries/category";
+import { runnerBirthYear, runnerSex } from "@/lib/stats/queries";
 
 export function sexDigit(sex: "M" | "F"): string {
   return sex === "M" ? "0" : "5";
@@ -59,8 +64,7 @@ export function eligibleCategories<T extends { sex: string; age: number }>(
   raceYear: number,
   categories: T[],
 ): T[] {
-  const fakeId = `${runnerPrefix(birthYear, sex)}001`;
-  return categories.filter((category) => isEligible(fakeId, raceYear, category));
+  return eligibleCategoriesFor(birthYear, sex, raceYear, categories);
 }
 
 export function pickCategory<T extends { sex: string; age: number }>(
@@ -68,13 +72,12 @@ export function pickCategory<T extends { sex: string; age: number }>(
   raceYear: number,
   categories: T[],
 ): T | null {
-  const eligible = categories.filter((category) => isEligible(runnerId, raceYear, category));
-  return defaultCategory(eligible);
+  return pickCategoryByBirthYear(
+    runnerBirthYear(runnerId),
+    runnerSex(runnerId),
+    raceYear,
+    categories,
+  );
 }
 
-export function defaultCategory<T extends { age: number }>(categories: T[]): T | null {
-  if (categories.length === 0) {
-    return null;
-  }
-  return categories.reduce((best, category) => (category.age > best.age ? category : best));
-}
+export { defaultCategory };

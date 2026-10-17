@@ -1,7 +1,7 @@
 import { locales, redirect, type Locale } from "@/i18n/routing";
+import { loginTarget } from "@/lib/auth/safe-next";
 
-const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
-const ADMIN_QUERY = /^[\w.=&-]*$/;
+export { safeAdminNext, safeNext } from "@/lib/auth/safe-next";
 
 export function stripLocalePrefix(pathname: string): string {
   const match = pathname.match(/^\/(cs|en)(?=\/|$|\?)/);
@@ -10,32 +10,6 @@ export function stripLocalePrefix(pathname: string): string {
   }
   const stripped = pathname.slice(match[0].length);
   return stripped.startsWith("/") || stripped.startsWith("?") ? stripped || "/" : `/${stripped}`;
-}
-
-export function safeAdminNext(raw: unknown): string | null {
-  if (typeof raw !== "string" || raw.length === 0 || raw.length > 180) {
-    return null;
-  }
-  let value = raw.trim();
-  try {
-    value = decodeURIComponent(value);
-  } catch {
-    return null;
-  }
-  value = stripLocalePrefix(value);
-  const qIndex = value.indexOf("?");
-  const path = (qIndex >= 0 ? value.slice(0, qIndex) : value).replace(/\/$/, "") || "/";
-  const query = qIndex >= 0 ? value.slice(qIndex + 1) : "";
-  if (path.includes("\\") || path.includes("//") || path.includes("://")) {
-    return null;
-  }
-  if (!ADMIN_PATH.test(path)) {
-    return null;
-  }
-  if (query && !ADMIN_QUERY.test(query)) {
-    return null;
-  }
-  return query ? `${path}?${query}` : path;
 }
 
 export function loginHref(next: string | null) {
@@ -86,9 +60,17 @@ function adminHref(next: string) {
 }
 
 export function redirectAfterLogin(next: string | null, staff: boolean, locale: Locale): never {
-  if (staff && next) {
-    redirect({ href: adminHref(next), locale });
+  const target = loginTarget(next, staff);
+  if (target.kind === "admin") {
+    redirect({ href: adminHref(target.next), locale });
   }
-  redirect({ href: "/", locale });
+  if (target.kind === "user") {
+    const query = Object.fromEntries(new URLSearchParams(target.query));
+    redirect({
+      href: Object.keys(query).length ? { pathname: target.path, query } : target.path,
+      locale,
+    });
+  }
+  redirect({ href: "/prihlasky", locale });
   throw new Error("redirect");
 }

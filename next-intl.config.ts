@@ -8,6 +8,7 @@ export default defineRouting({
     "/": "/",
     "/program": "/program",
     "/prihlasky": "/prihlasky",
+    "/navod": "/navod",
     "/pokyny": "/pokyny",
     "/startovka": "/startovka",
     "/prihlaseni-zavodnici": "/prihlaseni-zavodnici",

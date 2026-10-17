@@ -40,7 +40,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Results",
       "tertiaryHref": "/results",
-      "enrolled": "{count} confirmed runners",
+      "enrolled": "Runners entered: {count}",
       "stats": [
         {
           "value": "4300",
@@ -242,7 +242,8 @@
     "finalCta": {
       "title": "Ready for four climbs?",
       "description": "Start slots disappear faster than your legs on the fourth climb. Secure your bib for the next edition.",
-      "cta": "Register for the race"
+      "cta": "Register for the race",
+      "guide": "How to enter"
     },
     "footer": {
       "description": "A traditional forest cross in Chocen. 4300 meters, 200 meters of elevation gain, and a character you will remember.",
@@ -433,6 +434,7 @@
     "colRecord": "PB"
   },
   "Entries": {
+    "guideLink": "How to enter",
     "eyebrow": "Entry",
     "title": "My entry",
     "needAccount": "Sign in or create an account to enter.",
@@ -455,6 +457,7 @@
     "category": "Category",
     "fee": "Fee",
     "remove": "Remove",
+    "quickAddTitle": "{name}, born {year}",
     "quickAdd": "Quick add",
     "newRunner": "New runner",
     "firstName": "First name",
@@ -465,6 +468,7 @@
     "female": "Female",
     "add": "Add",
     "ambiguous": "Please be more specific — more than one runner matches this name and year.",
+    "invalidRunner": "The runner could not be added. Please check the details and try again.",
     "taken": "This runner is already entered this year.",
     "payment": "Payment",
     "feeTotal": "Entry fee total",
@@ -472,6 +476,8 @@
     "due": "Amount due",
     "account": "Account",
     "vs": "Variable symbol",
+    "addRunnersFirst": "This application has no runners yet. Add them below in the Runners section; the entry fee and payment details will appear afterwards.",
+    "noFeeDue": "The entry fee is CZK 0, nothing to pay.",
     "paidInFull": "The entry fee is paid.",
     "past": "Past editions"
   },
@@ -499,6 +505,8 @@
     "loss": "Gap to PB",
     "club": "Club",
     "category": "Category",
+    "courseRecord": "Course record",
+    "personalBest": "Personal best",
     "os": "PB",
     "medalAbs": "Overall {rank}. place",
     "medalAge": "Category {rank}. place",
@@ -538,6 +546,9 @@
     "signedIn": "You are signed in as {name}.",
     "name": "Name",
     "clubName": "Club name (optional)",
+    "passwordAgain": "Password again",
+    "passwordHint": "At least 8 characters.",
+    "passwordAgainHint": "Enter the same password once more to confirm.",
     "newPassword": "Choose a new password",
     "newPasswordAgain": "Confirm new password",
     "passwordMismatch": "The passwords do not match.",
@@ -602,6 +613,8 @@
     "partnersLink": "Link",
     "partnersImage": "Logo filename",
     "partnersUpload": "Upload logo",
+    "partnersUploadHint": "PNG, JPG, WebP or SVG, max 1 MB. An uploaded logo overrides the filename above; SVG is sanitized on upload (scripts, links).",
+    "partnersLogoInvalid": "The logo could not be uploaded: PNG, JPG, WebP and SVG up to 1 MB without scripts are supported.",
     "partnersCategory": "Category",
     "partnersOrder": "Order",
     "partnersDescription": "Description",
@@ -686,28 +699,35 @@
     "womenYear": "Year W",
     "chartCaption": "Attendance men / women",
     "empty": "Nothing here yet.",
+    "navLabel": "Statistics navigation",
     "back": "Back to home",
     "rekordy": {
+      "nav": "Records",
       "title": "Course records and their evolution",
       "intro": ""
     },
     "vitezove": {
+      "nav": "Winners",
       "title": "Absolute winners",
       "intro": "Best men's and women's time in each edition."
     },
     "casy": {
+      "nav": "Best times",
       "title": "Best times",
       "intro": "TOP 20 men and TOP 20 women across all editions."
     },
     "vek": {
+      "nav": "By age",
       "title": "Records by age",
       "intro": "Best time at a given age (race year − year of birth) for men and women."
     },
     "veterani": {
+      "nav": "Veterans",
       "title": "MCVV veterans",
       "intro": "Veterans' club: runners with more starts than half the number of editions with results."
     },
     "ucast": {
+      "nav": "Attendance",
       "title": "Overall attendance",
       "intro": "Participants, newcomers, and personal records in each year."
     }
@@ -719,5 +739,115 @@
     "label": "Theme",
     "light": "Light",
     "dark": "Dark"
+  },
+  "Guide": {
+    "eyebrow": "Video guide",
+    "title": "How to enter MCVV",
+    "description": "Video guide and step-by-step instructions: creating an account, entering, quick add of runners from previous years and paying the entry fee.",
+    "lead": "Entering on mcvv.org step by step – a short video first, then a detailed guide with screenshots. The website itself is in Czech; button labels are shown in Czech with an English translation.",
+    "videoLabel": "Video guide (1:38, Czech)",
+    "stepsTitle": "Step-by-step guide",
+    "prev": "Back",
+    "next": "Next step",
+    "done": "Done",
+    "counter": "Step {n} of {total}",
+    "stepLabel": "Step",
+    "ctaTitle": "Ready to go?",
+    "cta": "Go to my entry",
+    "faqTitle": "Frequently asked questions",
+    "link": "How to enter",
+    "steps": [
+      {
+        "image": "01-domu.jpg",
+        "title": "Open mcvv.org",
+        "text": "Click <b>Přihlásit se</b> (Sign in) in the top right corner."
+      },
+      {
+        "image": "02-prihlaseni.jpg",
+        "title": "Sign in or create an account",
+        "text": "If you already have an account on the new website, enter your e-mail and password. Otherwise click <b>Založit účet</b> (Create account).",
+        "tip": "Accounts from the old website no longer work – please create a new one."
+      },
+      {
+        "image": "03-registrace.jpg",
+        "title": "Create an account",
+        "text": "Fill in your name, e-mail and password (twice). The club is optional. Or choose <b>Pokračovat přes Google</b> (Continue with Google) – no password or verification e-mail needed.",
+        "tip": "Use the e-mail you registered with in previous years – you will see your earlier entries and can add their runners with one click."
+      },
+      {
+        "image": "04-odeslano.jpg",
+        "title": "Check your e-mail",
+        "text": "We have sent you a verification link. It is valid for 24 hours."
+      },
+      {
+        "image": "05-email.jpg",
+        "title": "Verify your e-mail",
+        "text": "In the e-mail “Ověření e-mailu — MCVV” click <b>Ověřit e-mail</b> (Verify e-mail).",
+        "tip": "Can’t find it? Check your spam folder."
+      },
+      {
+        "image": "06-overeno.jpg",
+        "title": "You are signed in",
+        "text": "After signing in you always land on <b>Moje přihláška</b> (My entry). You can rename the entry, e.g. to your club or family name – confirm with <b>Uložit</b> (Save)."
+      },
+      {
+        "image": "07-bezec.jpg",
+        "title": "Add a new runner",
+        "text": "Fill in surname, first name, year of birth and sex. The category is suggested from the year of birth and the club is prefilled from the entry name. Click <b>Přidat</b> (Add) and the runner appears in the table."
+      },
+      {
+        "image": "08-rychla-nabidka.jpg",
+        "title": "Quick add – runners from previous years",
+        "text": "<b>Rychlá nabídka</b> (Quick add) lists all runners you entered from this e-mail in previous years. Just click them – category and fee are filled in automatically.",
+        "tip": "Entering a club? Rename the entry to the club name and save it first. Runners get their club from the entry name."
+      },
+      {
+        "image": "09-platba.jpg",
+        "title": "Pay the entry fee",
+        "text": "The <b>Platba</b> (Payment) section shows the amount, account number, variable symbol and a QR code for your banking app.",
+        "tip": "The entry becomes valid and appears in the list of registered runners only after payment."
+      },
+      {
+        "image": "10-uprava.jpg",
+        "title": "Edit until the deadline",
+        "text": "You can change the note, club or list of runners until the entry deadline. Confirm header changes with <b>Uložit</b> (Save)."
+      },
+      {
+        "image": "11-login.jpg",
+        "title": "Next time",
+        "text": "Next time just sign in with e-mail and password (or Google) – you are taken straight to <b>Moje přihláška</b> (My entry)."
+      },
+      {
+        "image": "12-zapomenute.jpg",
+        "title": "Forgotten password",
+        "text": "On the sign-in page click <b>Zapomněli jste heslo?</b> (Forgot password?), enter your e-mail and we will send you a link to set a new password (valid for 1 hour)."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Can I use my account from the old website?",
+        "a": "No. The new website has new accounts. Create a new one – ideally with the same e-mail you used for earlier entries, so you can add runners from previous years in Quick add with one click."
+      },
+      {
+        "q": "I did not receive the verification e-mail.",
+        "a": "Check your spam folder. The link is valid for 24 hours. If you try to sign in with an unverified account, the website offers to resend it."
+      },
+      {
+        "q": "I am entering several people (family, club).",
+        "a": "One account is enough. Add any number of runners to one entry; fees are summed and paid in one payment with one variable symbol. For a club, rename the entry to the club name first."
+      },
+      {
+        "q": "When is my entry valid?",
+        "a": "Only after the entry fee has been paid. Only then do the runners appear in the list of registered runners."
+      },
+      {
+        "q": "Can I change my entry?",
+        "a": "Yes, until the online entry deadline you can edit details and add or remove runners."
+      },
+      {
+        "q": "I sign in with Google – do I need a password?",
+        "a": "No. If you want to set a password as well, use “Forgot password?”."
+      }
+    ]
   }
 }

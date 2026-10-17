@@ -31,6 +31,7 @@
       "place": "Choceň · každou první prosincovou neděli",
       "titleLine1": "MALÁ CENA",
       "titleLine2": "VELKÉ VERANDY",
+      "memorial": "Memoriál Jirky Švadleny",
       "claim": "Lesní kros, který tě prověří v každém kopci. Krátká, intenzivní a nemilosrdná trať plná výběhů a prudkých seběhů.",
       "primaryCta": "Přihlášky",
       "primaryHref": "/prihlaseni-zavodnici",
@@ -366,7 +367,7 @@
       "start": {
         "title": "Start",
         "summary": "Interval 15 s od 10:15",
-        "body": "Startovní interval {seconds} s od 10:15. Jedna vlna, bez samostatného dětského startu. Jedna trať pro všechny kategorie."
+        "body": "Startovní interval {seconds} s od 10:15. Intervalový start ve dvojicích, bez samostatného dětského startu. Jedna trať pro všechny kategorie."
       },
       "timetable": {
         "title": "Časový harmonogram",

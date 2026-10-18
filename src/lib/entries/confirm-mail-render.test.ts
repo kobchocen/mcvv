@@ -35,5 +35,7 @@ test("potvrzení má brandovaný layout, závodníky, součty a odkazy", () => {
   assert.doesNotMatch(html, /QR|platí až po zaplacení/i);
   assert.match(text, /Petr Novák · K\.O\.B\. Choceň · H10 · 150 Kč/);
   assert.match(text, /Startovné celkem: 400 Kč\nZaplaceno: 400 Kč\nZbývá zaplatit: 0 Kč/);
-  assert.match(text, /6\. 12\. 2026, Velká Veranda, Choceň, start v 10:15/);
+  assert.match(text, /6\. 12\. 2026, Velká Veranda, Choceň, intervalový start od 10:15/);
+  assert.match(html, /Intervalový start od 10:15/);
+  assert.doesNotMatch(html + text, /[Ss]tart v 10:15/);
 });

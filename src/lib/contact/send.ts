@@ -51,9 +51,16 @@ export async function sendContactMessage(
       host: env.SMTP_HOST,
       port,
       secure: port === 465,
-      auth: env.SMTP_USER && env.SMTP_PASS ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined,
+      auth:
+        env.SMTP_USER && env.SMTP_PASS ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined,
     });
-    await transporter.sendMail({ from: env.SMTP_FROM ?? env.SMTP_USER ?? to, to, replyTo: payload.email, subject, text });
+    await transporter.sendMail({
+      from: env.SMTP_FROM ?? env.SMTP_USER ?? to,
+      to,
+      replyTo: payload.email,
+      subject,
+      text,
+    });
     return { delivered: true };
   }
 

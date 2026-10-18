@@ -21,6 +21,9 @@ test("kontaktní zpráva jde přes Resend na mcvv@mcvv.org s reply-to odesílate
 test("selhání Resendu se propaguje jako chyba (formulář ukáže chybu)", async () => {
   const { sendContactMessage } = await import("./send");
   await assert.rejects(
-    sendContactMessage({ name: "X Y", email: "a@b.cz", message: "0123456789" }, { resend: async () => false }),
+    sendContactMessage(
+      { name: "X Y", email: "a@b.cz", message: "0123456789" },
+      { resend: async () => false },
+    ),
   );
 });

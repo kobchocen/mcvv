@@ -1,36 +1,73 @@
 "use server";
 
+import { headers } from "next/headers";
+
+import { getSession } from "@/lib/auth/session";
+import {
+  contactGlobal,
+  contactPerEmail,
+  contactPerIp,
+  validateContactInput,
+  verifyFormToken,
+} from "@/lib/contact/guard";
 import { sendContactMessage } from "@/lib/contact/send";
+import { env } from "@/lib/env";
 
 export type ContactFormState = {
   status: "idle" | "ok" | "error";
   message?: string;
 };
 
-const schema = {
-  name: (value: string) => value.trim().length >= 2 && value.trim().length <= 80,
-  email: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
-  message: (value: string) => value.trim().length >= 10 && value.trim().length <= 4000,
-};
+async function clientIp(): Promise<string> {
+  const list = await headers();
+  const forwarded = list.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded || list.get("x-real-ip") || "unknown";
+}
 
 export async function submitContact(
   _prev: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  // Detekovaní boti dostanou falešný úspěch (tichý drop).
+  const botOk: ContactFormState = { status: "ok" };
+
   if (String(formData.get("company") ?? "").trim()) {
-    return { status: "ok" };
+    return botOk;
   }
 
-  const name = String(formData.get("name") ?? "");
-  const email = String(formData.get("email") ?? "");
-  const message = String(formData.get("message") ?? "");
+  const session = await getSession();
+  const secret = env.SESSION_SECRET;
+  if (!session && secret && secret.length >= 32) {
+    const check = verifyFormToken(String(formData.get("ts") ?? ""), secret);
+    if (check === "expired") return { status: "error", message: "expired" };
+    if (check !== "ok") {
+      console.warn(`[contact] dropped (token ${check})`);
+      return botOk;
+    }
+  }
 
-  if (!schema.name(name) || !schema.email(email) || !schema.message(message)) {
+  const input = validateContactInput({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    message: formData.get("message"),
+  });
+  if (!input) {
     return { status: "error", message: "invalid" };
   }
 
+  const ip = await clientIp();
+  const rateKey = session ? `user:${session.id}` : `ip:${ip}`;
+  if (
+    !contactPerIp.take(rateKey) ||
+    !contactPerEmail.take(input.email.toLowerCase()) ||
+    !contactGlobal.take("all")
+  ) {
+    console.warn("[contact] dropped (rate limit)");
+    return botOk;
+  }
+
   try {
-    await sendContactMessage({ name: name.trim(), email: email.trim(), message: message.trim() });
+    await sendContactMessage(input);
     return { status: "ok" };
   } catch (error) {
     console.error("[contact] send failed", error);

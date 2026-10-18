@@ -5,9 +5,9 @@ import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
-import { computeLineFee, paidAmount } from "@/lib/entries/fee";
+import { computeLineFee } from "@/lib/entries/fee";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
-import { sendConfirmationEmail } from "@/lib/entries/confirm-mail";
+import { confirmRegistrationCore } from "@/lib/entries/confirm";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
 
@@ -141,42 +141,11 @@ export async function confirmRegistration(formData: FormData): Promise<void> {
   if (!year || id === null) {
     return;
   }
-  const row = await prisma.registration.findUnique({
-    where: { year_id: { year, id } },
-    include: {
-      lines: {
-        include: {
-          runner: { select: { name: true } },
-          club: { select: { name: true } },
-          category: { select: { name: true } },
-        },
-        orderBy: { runnerId: "asc" },
-      },
-    },
-  });
-  if (!row || (row.status !== ENTRY_STATUS.paid && row.status !== ENTRY_STATUS.overpaid)) {
+  const result = await confirmRegistrationCore(year, id);
+  if (result === "not_confirmable") {
     return;
   }
-  const paidTotal = await paidAmount(year, id);
-  const fee = row.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
-  await prisma.registration.update({
-    where: { year_id: { year, id } },
-    data: { status: ENTRY_STATUS.confirmed },
-  });
-  const sent = await sendConfirmationEmail({
-    year,
-    id,
-    email: row.email,
-    name: row.name,
-    lines: row.lines.map((line) => ({
-      runner: line.runner.name,
-      club: line.club.name,
-      category: line.category.name,
-      fee: line.entryFee ?? 0,
-    })),
-    fee,
-    paid: paidTotal,
-  });
+  const sent = result === "confirmed";
   revalidateRegistrations();
   const locale = await getLocale();
   if (formString(formData, "from") === "list") {

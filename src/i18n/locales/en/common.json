@@ -367,7 +367,7 @@
       "start": {
         "title": "Start",
         "summary": "15 s interval from 10:15",
-        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start. One course for all categories."
+        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start."
       },
       "timetable": {
         "title": "Timetable",

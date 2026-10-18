@@ -8,6 +8,10 @@ migration:
   enabled: true
   repository: ""
   digest: ""
+  # DB_MIGRATE_TIMEOUT_SECONDS for scripts/db-migrate.ts (prisma migrate deploy).
+  timeoutSeconds: 900
+  # Job deadline; must exceed timeoutSeconds (prod MySQL B1ms is slow).
+  activeDeadlineSeconds: 1200
 imagePullSecrets: []
 environment: prod
 databaseSecret: mcvv-database

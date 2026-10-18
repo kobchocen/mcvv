@@ -11,7 +11,7 @@ metadata:
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 0
-  activeDeadlineSeconds: 600
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds | default 1200 | int }}
   template:
     spec:
       restartPolicy: Never
@@ -32,6 +32,8 @@ spec:
           image: {{ printf "%s:%s" $repo .Chart.AppVersion | quote }}
           {{- end }}
           env:
+            - name: DB_MIGRATE_TIMEOUT_SECONDS
+              value: {{ .Values.migration.timeoutSeconds | default 900 | int | quote }}
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:

@@ -1,6 +1,6 @@
 import { escapeHtml } from "@/lib/mail/layout";
 
-import { REASON_LABELS, type MatchReason } from "./match";
+import { REASON_LABELS, type BankTxReason } from "./match";
 
 export type SummaryRow = {
   date: string;
@@ -39,10 +39,11 @@ export function renderDailySummary(input: {
 }) {
   const unmatched = input.rows.filter((r) => r.status === "unmatched");
   const overpaid = input.rows.filter((r) => r.status === "matched" && r.overpaid > 0);
+  const late = input.rows.filter((r) => r.status === "matched" && r.reason === "late");
   const label = (r: SummaryRow) =>
-    r.reason ? (REASON_LABELS[r.reason as MatchReason | "interrupted"] ?? r.reason) : "";
+    r.reason ? (REASON_LABELS[r.reason as BankTxReason] ?? r.reason) : "";
   const line = (r: SummaryRow) =>
-    `${r.date}  ${r.amount} Kč  VS ${r.vs ?? "-"}  ${r.counterName ?? ""}${r.status === "unmatched" ? `  – ${label(r)}` : `  – přihláška ${r.registrationId}, přeplatek ${r.overpaid} Kč`}`;
+    `${r.date}  ${r.amount} Kč  VS ${r.vs ?? "-"}  ${r.counterName ?? ""}${r.status === "unmatched" ? `  – ${label(r)}` : `  – přihláška ${r.registrationId}${r.overpaid > 0 ? `, přeplatek ${r.overpaid} Kč` : ""}`}`;
   const text = [
     `Nové nespárované platby: ${unmatched.length} (celkem otevřených: ${input.openUnmatched})`,
     ...unmatched.map(line),
@@ -50,15 +51,18 @@ export function renderDailySummary(input: {
     `Nové přeplatky k vrácení po závodě: ${overpaid.length}`,
     ...overpaid.map(line),
     "",
+    `Platby po 3. 12. (potvrdit ručně): ${late.length}`,
+    ...late.map(line),
+    "",
     `Vyřešit v administraci: ${input.adminUrl}`,
   ].join("\n");
   const list = (rows: SummaryRow[]) =>
     rows.length
       ? `<ul>${rows.map((r) => `<li>${escapeHtml(line(r))}</li>`).join("")}</ul>`
       : "<p>–</p>";
-  const html = `<p><strong>Nové nespárované platby: ${unmatched.length}</strong> (celkem otevřených: ${input.openUnmatched})</p>${list(unmatched)}<p><strong>Nové přeplatky k vrácení po závodě: ${overpaid.length}</strong></p>${list(overpaid)}<p><a href="${escapeHtml(input.adminUrl)}">Vyřešit v administraci</a></p>`;
+  const html = `<p><strong>Nové nespárované platby: ${unmatched.length}</strong> (celkem otevřených: ${input.openUnmatched})</p>${list(unmatched)}<p><strong>Nové přeplatky k vrácení po závodě: ${overpaid.length}</strong></p>${list(overpaid)}<p><strong>Platby po 3. 12. (potvrdit ručně): ${late.length}</strong></p>${list(late)}<p><a href="${escapeHtml(input.adminUrl)}">Vyřešit v administraci</a></p>`;
   return {
-    subject: `MCVV platby: ${unmatched.length} nespárovaných, ${overpaid.length} přeplatků`,
+    subject: `MCVV platby: ${unmatched.length} nespárovaných, ${overpaid.length} přeplatků${late.length ? `, ${late.length} po 3. 12.` : ""}`,
     text,
     html,
   };

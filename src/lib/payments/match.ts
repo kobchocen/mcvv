@@ -7,6 +7,7 @@ export type MatchReason =
   | "not_found"
   | "cancelled"
   | "empty"
+  /** Jen historické záznamy – částečné platby se dnes párují. */
   | "underpaid";
 
 export type RegistrationSnapshot = { status: number | null; fee: number; paid: number } | null;
@@ -20,6 +21,8 @@ export type MatchDecision =
       registrationId: number;
       amount: number;
       overpaid: number;
+      /** Kolik po této platbě zbývá uhradit (0 = startovné pokryto). */
+      remaining: number;
       /** Přihláška už byla potvrzená → jen zapsat, nic neposílat (možný duplikát). */
       alreadyConfirmed: boolean;
     };
@@ -59,16 +62,17 @@ export function matchTransaction(
   if (!alreadyConfirmed && (reg.status === ENTRY_STATUS.empty || reg.fee <= 0)) {
     return { kind: "unmatched", reason: "empty", year, registrationId: id };
   }
-  const outstanding = Math.max(0, reg.fee - reg.paid);
-  if (!alreadyConfirmed && tx.amount < outstanding) {
-    return { kind: "unmatched", reason: "underpaid", year, registrationId: id };
-  }
+  // Platby se sčítají (velké klubové přihlášky se plní a platí postupně).
+  const total = reg.paid + tx.amount;
+  const excessBefore = Math.max(0, reg.paid - reg.fee);
   return {
     kind: "matched",
     year,
     registrationId: id,
     amount: tx.amount,
-    overpaid: tx.amount - outstanding,
+    // Přeplatek ze součtu plateb; připsat jen nově vzniklou část.
+    overpaid: Math.max(0, total - reg.fee) - excessBefore,
+    remaining: Math.max(0, reg.fee - total),
     alreadyConfirmed,
   };
 }
@@ -78,7 +82,9 @@ export function autoConfirmAllowed(paymentDate: string, year: number): boolean {
   return paymentDate <= `${year}-12-03`;
 }
 
-export const REASON_LABELS: Record<MatchReason | "interrupted", string> = {
+export type BankTxReason = MatchReason | "interrupted" | "partial" | "late" | "already_confirmed";
+
+export const REASON_LABELS: Record<BankTxReason, string> = {
   currency: "jiná měna",
   fraction: "částka s haléři",
   vs_malformed: "chybný VS",
@@ -87,4 +93,7 @@ export const REASON_LABELS: Record<MatchReason | "interrupted", string> = {
   empty: "prázdná přihláška / nulové startovné",
   underpaid: "nižší částka než k úhradě",
   interrupted: "přerušené zpracování – ověřit ručně",
+  partial: "částečná platba",
+  late: "platba po 3. 12. – potvrdit ručně",
+  already_confirmed: "už potvrzená přihláška (možný duplikát)",
 };

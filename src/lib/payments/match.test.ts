@@ -34,6 +34,7 @@ test("exact and overpaid payments match, overpayment is flagged", () => {
     registrationId: 32,
     amount: 500,
     overpaid: 0,
+    remaining: 0,
     alreadyConfirmed: false,
   });
   const over = matchTransaction(tx(600, "202632"), Y, reg(2, 500));
@@ -52,7 +53,6 @@ test("unmatched reasons", () => {
   assert.equal(reason(matchTransaction(tx(500, "202632"), Y, () => null)), "not_found");
   assert.equal(reason(matchTransaction(tx(500, "202632"), Y, reg(0, 500))), "cancelled");
   assert.equal(reason(matchTransaction(tx(500, "202632"), Y, reg(1, 0))), "empty");
-  assert.equal(reason(matchTransaction(tx(400, "202632"), Y, reg(2, 500))), "underpaid");
 });
 
 test("payment on an already confirmed entry is recorded as overpayment without confirming", () => {
@@ -67,4 +67,19 @@ test("auto-confirm only for payments dated up to 3 December of the race year", (
   assert.equal(autoConfirmAllowed("2026-10-13", Y), true);
   assert.equal(autoConfirmAllowed("2026-12-04", Y), false);
   assert.equal(autoConfirmAllowed("2027-01-02", Y), false);
+});
+
+test("partial payments are matched and summed per entry", () => {
+  const first = matchTransaction(tx(200, "202632"), Y, reg(2, 500));
+  assert.equal(first.kind, "matched");
+  assert.equal(first.kind === "matched" && first.remaining, 300);
+  assert.equal(first.kind === "matched" && first.overpaid, 0);
+  const second = matchTransaction(tx(300, "202632"), Y, reg(2, 500, 200));
+  assert.equal(second.kind === "matched" && second.remaining, 0);
+  assert.equal(second.kind === "matched" && second.overpaid, 0);
+  const third = matchTransaction(tx(400, "202632"), Y, reg(2, 500, 200));
+  assert.equal(third.kind === "matched" && third.overpaid, 100);
+  // Už přeplacená přihláška: připsat jen nový přeplatek.
+  const again = matchTransaction(tx(50, "202632"), Y, reg(4, 500, 600));
+  assert.equal(again.kind === "matched" && again.overpaid, 50);
 });

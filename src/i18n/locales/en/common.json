@@ -367,7 +367,7 @@
       "start": {
         "title": "Start",
         "summary": "15 s interval from 10:15",
-        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start. One course for all categories."
+        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start."
       },
       "timetable": {
         "title": "Timetable",
@@ -570,6 +570,8 @@
     "apple": "Continue with Apple"
   },
   "Admin": {
+    "mailStats": "Emails: sent today {today} / {cap}, this month {month}, queued {pending}, failed {failed}.",
+    "mailQuotaExceeded": "Resend quota is exhausted for today.",
     "eyebrow": "Back office",
     "title": "Administration",
     "overviewTitle": "Overview",
@@ -581,6 +583,7 @@
     "navEditions": "Editions",
     "navDictionaries": "Lists",
     "navNewsletter": "Newsletter",
+    "navPayments": "Payments (Fio)",
     "navRegistrations": "Entries",
     "navSettings": "Settings",
     "settingsTitle": "Settings",

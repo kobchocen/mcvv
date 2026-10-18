@@ -446,6 +446,7 @@ model NewsletterRecipient {
 
   @@unique([campaignId, email])
   @@index([campaignId, status])
+  @@index([sentAt])
   @@index([claimToken])
   @@map("mcvv_newsletter_recipient")
 }
@@ -459,4 +460,140 @@ model NewsletterOptOut {
   createdAt      DateTime  @default(now()) @map("created_at")
 
   @@map("mcvv_newsletter_optout")
+}
+
+enum MailKind {
+  auth
+  confirmation
+  alert
+  contact
+  reminder
+  summary
+  other
+}
+
+enum MailQueueStatus {
+  pending
+  sending
+  sent
+  failed
+}
+
+/// Fronta odchozích e-mailů (denní limit Resend). Newsletter má vlastní tabulku příjemců,
+/// ale počítá se do stejného denního limitu.
+model MailQueue {
+  id         Int             @id @default(autoincrement())
+  kind       MailKind
+  /// 0 = potvrzení/auth/alert (smí čerpat rezervu), 1 = ostatní.
+  priority   Int             @default(1) @db.TinyInt
+  toEmail    String          @map("to_email") @db.VarChar(255)
+  replyTo    String?         @map("reply_to") @db.VarChar(255)
+  subject    String          @db.VarChar(300)
+  html       String          @db.MediumText
+  text       String          @db.MediumText
+  /// Volitelný klíč proti dvojímu zařazení (např. "reminder1:2026:32").
+  dedupeKey  String?         @unique @map("dedupe_key") @db.VarChar(120)
+  status     MailQueueStatus @default(pending)
+  attempts   Int             @default(0) @db.SmallInt
+  notBefore  DateTime        @default(now()) @map("not_before")
+  claimToken String?         @map("claim_token") @db.VarChar(36)
+  claimedAt  DateTime?       @map("claimed_at")
+  lastError  String?         @map("last_error") @db.VarChar(500)
+  providerId String?         @map("provider_id") @db.VarChar(64)
+  sentAt     DateTime?       @map("sent_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([status, priority, notBefore])
+  @@index([sentAt])
+  @@index([claimToken])
+  @@map("mcvv_mail_queue")
+}
+
+/// Denní příznaky e-mailové kvóty (den v UTC – tak resetuje Resend).
+model MailDay {
+  day             DateTime  @id @db.Date
+  quotaExceededAt DateTime? @map("quota_exceeded_at")
+  capAlertSentAt  DateTime? @map("cap_alert_sent_at")
+
+  @@map("mcvv_mail_day")
+}
+
+enum BankTxStatus {
+  processing
+  matched
+  unmatched
+  ignored
+  dry_run
+}
+
+/// Příchozí pohyb z Fio API (jen platby s VS začínajícím aktuálním ročníkem).
+model BankTx {
+  id             Int          @id @default(autoincrement())
+  fioId          BigInt       @unique @map("fio_id")
+  date           DateTime     @map("datum") @db.Date
+  amount         Decimal      @map("castka") @db.Decimal(10, 2)
+  currency       String       @map("mena") @db.VarChar(3)
+  vs             String?      @db.VarChar(20)
+  counterAccount String?      @map("protiucet") @db.VarChar(64)
+  counterName    String?      @map("protiucet_nazev") @db.VarChar(255)
+  message        String?      @map("zprava") @db.VarChar(255)
+  raw            Json
+  status         BankTxStatus @default(processing) @map("stav")
+  /// Kód důvodu (např. not_found, cancelled, vs_malformed, underpaid, currency, interrupted).
+  reason         String?      @map("duvod") @db.VarChar(40)
+  year           Int?         @map("rok") @db.SmallInt
+  registrationId Int?         @map("prihlaska_id") @db.SmallInt
+  paymentId      Int?         @map("platba_id")
+  /// Přeplatek v Kč (k vrácení po závodě).
+  overpaid       Int          @default(0) @map("preplatek")
+  refundedAt     DateTime?    @map("vraceno_at")
+  autoConfirmed  Boolean      @default(false) @map("auto_potvrzeno")
+  note           String?      @map("poznamka") @db.VarChar(500)
+  resolvedBy     String?      @map("vyresil") @db.VarChar(64)
+  summarizedAt   DateTime?    @map("v_souhrnu_at")
+  createdAt      DateTime     @default(now()) @map("created")
+  updatedAt      DateTime     @updatedAt @map("updated")
+
+  @@index([status])
+  @@index([year, registrationId])
+  @@map("mcvv_bank_tx")
+}
+
+/// Stav plánovaných jobů (kurzor Fio, poslední požadavek…).
+model JobState {
+  name      String   @id @db.VarChar(64)
+  value     String   @db.VarChar(255)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("mcvv_job_state")
+}
+
+/// Audit běhů plánovaných jobů.
+model JobRun {
+  id         Int       @id @default(autoincrement())
+  job        String    @db.VarChar(32)
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  ok         Boolean?
+  mode       String?   @db.VarChar(16)
+  fetched    Int       @default(0)
+  matched    Int       @default(0)
+  unmatched  Int       @default(0)
+  error      String?   @db.VarChar(500)
+
+  @@index([job, startedAt])
+  @@map("mcvv_job_run")
+}
+
+/// Doplňková data přihlášky (legacy tabulka mcvv_prihlaska se nemění):
+/// poslední změna a odeslané připomínky platby.
+model RegistrationMeta {
+  year        Int       @map("rok") @db.SmallInt
+  id          Int       @map("id") @db.SmallInt
+  updatedAt   DateTime? @map("updated_at")
+  reminder1At DateTime? @map("pripominka1_at")
+  reminder2At DateTime? @map("pripominka2_at")
+
+  @@id([year, id])
+  @@map("mcvv_prihlaska_meta")
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { touchRegistration } from "@/lib/entries/touch";
 import { revalidatePath } from "next/cache";
 
 import { formInt, formString } from "@/lib/admin/parse";
@@ -41,6 +42,7 @@ export async function saveEntryHeader(formData: FormData): Promise<void> {
       promotion: noMail ? "N" : null,
     },
   });
+  await touchRegistration(year, id);
   revalidatePath("/[locale]/prihlasky", "page");
 }
 
@@ -82,6 +84,7 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
       author: session.email,
     },
   });
+  await touchRegistration(year, registrationId);
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
@@ -150,6 +153,7 @@ export async function addNewRunner(
       author: session.email,
     },
   });
+  await touchRegistration(year, registrationId);
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
@@ -178,6 +182,7 @@ export async function updateLineClub(formData: FormData): Promise<void> {
     where: { year_runnerId: { year, runnerId } },
     data: { clubId },
   });
+  await touchRegistration(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
 }
@@ -201,6 +206,7 @@ export async function removeRunner(formData: FormData): Promise<void> {
   await prisma.registrationLine.deleteMany({
     where: { year, runnerId, registrationId },
   });
+  await touchRegistration(year, registrationId);
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");

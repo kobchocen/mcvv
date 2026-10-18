@@ -38,6 +38,7 @@ export default defineRouting({
     "/admin/newsletter": "/admin/newsletter",
     "/admin/newsletter/novy": "/admin/newsletter/novy",
     "/admin/newsletter/[id]": "/admin/newsletter/[id]",
+    "/admin/platby": "/admin/platby",
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
   },

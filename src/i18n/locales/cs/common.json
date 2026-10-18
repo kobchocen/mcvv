@@ -367,7 +367,7 @@
       "start": {
         "title": "Start",
         "summary": "Interval 15 s od 10:15",
-        "body": "Startovní interval {seconds} s od 10:15. Intervalový start ve dvojicích, bez samostatného dětského startu. Jedna trať pro všechny kategorie."
+        "body": "Startovní interval {seconds} s od 10:15. Intervalový start ve dvojicích, bez samostatného dětského startu."
       },
       "timetable": {
         "title": "Časový harmonogram",
@@ -570,6 +570,8 @@
     "apple": "Pokračovat přes Apple"
   },
   "Admin": {
+    "mailStats": "E-maily: dnes odesláno {today} / {cap}, tento měsíc {month}, ve frontě {pending}, chybných {failed}.",
+    "mailQuotaExceeded": "Kvóta Resend je pro dnešek vyčerpaná.",
     "eyebrow": "Správa",
     "title": "Administrace",
     "overviewTitle": "Přehled",
@@ -581,6 +583,7 @@
     "navEditions": "Ročníky",
     "navDictionaries": "Číselníky",
     "navNewsletter": "Newsletter",
+    "navPayments": "Platby (Fio)",
     "navRegistrations": "Přihlášky",
     "navSettings": "Nastavení",
     "settingsTitle": "Nastavení",

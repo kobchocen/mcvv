@@ -12,20 +12,15 @@ import { redirect } from "@/i18n/routing";
 
 import {
   normalizeEmail,
-  processBatch,
   renderNewsletter,
   unsubscribeHeaders,
   unsubscribeUrl,
   type BatchOutcome,
 } from "./core";
 import { newsletterOrigin } from "./origin";
-import { ensureOptOutTokens, loadAudience, prismaNewsletterStore, tokenFor } from "./store";
-import {
-  NEWSLETTER_BATCH_SIZE,
-  newsletterDryRun,
-  newsletterMailConfigured,
-  sendNewsletterBatch,
-} from "./transport";
+import { runNewsletterBatch } from "./runner";
+import { ensureOptOutTokens, loadAudience, tokenFor } from "./store";
+import { newsletterMailConfigured, sendNewsletterBatch } from "./transport";
 import { applyUnsubscribe, isUnsubscribeToken, type UnsubscribeResult } from "./unsubscribe";
 import { prismaUnsubscribeStore } from "./store";
 
@@ -157,36 +152,8 @@ export async function startNewsletter(
 
 export async function sendNewsletterBatchAction(id: number): Promise<BatchOutcome> {
   await requireStaff();
-  const campaign = await prisma.newsletterCampaign.findUnique({ where: { id } });
-  if (!campaign || campaign.status !== "sending") {
-    throw new Error("Kampaň se neodesílá.");
-  }
-  const origin = await newsletterOrigin();
-  const dryRun = newsletterDryRun();
-  const outcome = await processBatch({
-    campaignId: id,
-    batchSize: NEWSLETTER_BATCH_SIZE,
-    store: prismaNewsletterStore,
-    claimToken: randomUUID(),
-    render: (email, token) => ({
-      ...renderNewsletter({
-        subject: campaign.subject,
-        body: campaign.body,
-        unsubscribeUrl: unsubscribeUrl(origin, token),
-        siteUrl: origin,
-      }),
-      to: email,
-      headers: unsubscribeHeaders(origin, token),
-    }),
-    send: (messages, key) => sendNewsletterBatch(messages, key, { dryRun }),
-  });
-  if (outcome.done) {
-    await prisma.newsletterCampaign.updateMany({
-      where: { id, status: "sending" },
-      data: { status: "sent", sentAt: new Date() },
-    });
-    revalidateNewsletter(id);
-  }
+  const outcome = await runNewsletterBatch(id);
+  if (outcome.done) revalidateNewsletter(id);
   return outcome;
 }
 

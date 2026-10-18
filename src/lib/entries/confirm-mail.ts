@@ -12,11 +12,13 @@ export async function sendConfirmationEmail(input: {
   lines: { runner: string; club: string; category: string; fee: number }[];
   fee: number;
   paid: number;
+  /** Origin pro odkazy; bez něj se odvodí z požadavku. */
+  site?: string;
 }): Promise<boolean> {
   if (!input.email || !mailConfigured()) {
     return false;
   }
-  const site = await appOrigin();
+  const site = input.site ?? (await appOrigin());
   const { subject, html, text } = renderEntryConfirmation({ ...input, email: input.email, site });
-  return sendResendEmail({ to: input.email, subject, text, html });
+  return sendResendEmail({ to: input.email, subject, text, html, kind: "confirmation" });
 }

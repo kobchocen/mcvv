@@ -202,74 +202,76 @@ async function EntryBody({
 
       <section>
         <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
-        <table className="mt-4 w-full min-w-[40rem] border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-              <th className="py-2 pr-3">{copy("runnerName")}</th>
-              <th className="py-2 pr-3">{copy("birthCol")}</th>
-              <th className="py-2 pr-3">{copy("club")}</th>
-              <th className="py-2 pr-3">{copy("category")}</th>
-              <th className="py-2 pr-3">{copy("fee")}</th>
-              <th className="py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {registration.lines.map((line) => {
-              const starts = startsById.get(line.runnerId) ?? 0;
-              return (
-                <tr key={line.runnerId} className="border-b border-race-line/40">
-                  <td className="py-2.5 pr-3">
-                    <span className="font-medium">{line.runner.name}</span>
-                    <span className="mt-0.5 block text-xs text-race-muted sm:ml-2 sm:mt-0 sm:inline">
-                      {isNewbie(starts)
-                        ? startsCopy("newbie")
-                        : startsCopy("starts", { count: starts })}
-                    </span>
-                  </td>
-                  <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
-                  <td className="py-2.5 pr-3">
-                    {open ? (
-                      <McvvLineClubSelect
-                        year={year}
-                        registrationId={registration.id}
-                        runnerId={line.runnerId}
-                        clubName={line.club.name}
-                        clubs={clubOptions}
-                      />
-                    ) : (
-                      line.club.name
-                    )}
-                  </td>
-                  <td className="py-2.5 pr-3">{line.category.name}</td>
-                  <td className="py-2.5 pr-3">
-                    {line.entryFee ?? line.category.entryFee}
-                    {feeReasons.get(line.runnerId) ? (
-                      <span className="ml-2 text-xs text-race-muted">
-                        {feeReasons.get(line.runnerId)}
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                <th className="py-2 pr-3">{copy("runnerName")}</th>
+                <th className="py-2 pr-3">{copy("birthCol")}</th>
+                <th className="py-2 pr-3">{copy("club")}</th>
+                <th className="py-2 pr-3">{copy("category")}</th>
+                <th className="py-2 pr-3">{copy("fee")}</th>
+                <th className="py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {registration.lines.map((line) => {
+                const starts = startsById.get(line.runnerId) ?? 0;
+                return (
+                  <tr key={line.runnerId} className="border-b border-race-line/40">
+                    <td className="py-2.5 pr-3">
+                      <span className="font-medium">{line.runner.name}</span>
+                      <span className="mt-0.5 block text-xs text-race-muted sm:ml-2 sm:mt-0 sm:inline">
+                        {isNewbie(starts)
+                          ? startsCopy("newbie")
+                          : startsCopy("starts", { count: starts })}
                       </span>
-                    ) : null}
-                  </td>
-                  <td className="py-2.5">
-                    {open ? (
-                      <form action={removeRunner}>
-                        <input type="hidden" name="year" value={year} />
-                        <input type="hidden" name="registrationId" value={registration.id} />
-                        <input type="hidden" name="runnerId" value={line.runnerId} />
-                        <button
-                          type="submit"
-                          aria-label={copy("remove")}
-                          className="inline-flex size-9 items-center justify-center text-race-muted hover:text-foreground"
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </button>
-                      </form>
-                    ) : null}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
+                    <td className="py-2.5 pr-3">
+                      {open ? (
+                        <McvvLineClubSelect
+                          year={year}
+                          registrationId={registration.id}
+                          runnerId={line.runnerId}
+                          clubName={line.club.name}
+                          clubs={clubOptions}
+                        />
+                      ) : (
+                        line.club.name
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-3">{line.category.name}</td>
+                    <td className="py-2.5 pr-3">
+                      {line.entryFee ?? line.category.entryFee}
+                      {feeReasons.get(line.runnerId) ? (
+                        <span className="ml-2 text-xs text-race-muted">
+                          {feeReasons.get(line.runnerId)}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="py-2.5">
+                      {open ? (
+                        <form action={removeRunner}>
+                          <input type="hidden" name="year" value={year} />
+                          <input type="hidden" name="registrationId" value={registration.id} />
+                          <input type="hidden" name="runnerId" value={line.runnerId} />
+                          <button
+                            type="submit"
+                            aria-label={copy("remove")}
+                            className="inline-flex size-9 items-center justify-center text-race-muted hover:text-foreground"
+                          >
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </button>
+                        </form>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {open && quick.length > 0 ? (
           <McvvQuickAdd

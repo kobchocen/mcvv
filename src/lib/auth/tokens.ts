@@ -62,7 +62,7 @@ export async function issueVerificationEmail(input: {
     paragraphs: [input.intro],
     action: { label: input.action, url },
   });
-  return sendResendEmail({ to: input.email, subject: input.subject, text, html });
+  return sendResendEmail({ to: input.email, subject: input.subject, text, html, kind: "auth" });
 }
 
 export async function issuePasswordResetEmail(input: {
@@ -100,5 +100,5 @@ export async function issuePasswordResetEmail(input: {
     action: { label: input.action, url },
     after: [input.outro],
   });
-  return sendResendEmail({ to: input.email, subject: input.subject, text, html });
+  return sendResendEmail({ to: input.email, subject: input.subject, text, html, kind: "auth" });
 }

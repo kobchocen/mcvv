@@ -14,6 +14,7 @@ import {
   chooseRequest,
   fetchFio,
   FIO_MIN_INTERVAL_MS,
+  healStrongAuth,
   isoDate,
   redact,
   type FioRequest,
@@ -267,7 +268,13 @@ export type PaymentsJobResult =
     };
 
 export async function runPaymentsJob(
-  options: { now?: Date; fetchImpl?: typeof fetch; request?: FioRequest } = {},
+  options: {
+    now?: Date;
+    fetchImpl?: typeof fetch;
+    request?: FioRequest;
+    sleep?: (ms: number) => Promise<void>;
+    selfHealWaitBudgetMs?: number;
+  } = {},
 ): Promise<PaymentsJobResult> {
   const now = options.now ?? new Date();
   const token = env.FIO_API_TOKEN;
@@ -280,7 +287,7 @@ export async function runPaymentsJob(
     if (lastRequest && now.getTime() - Date.parse(lastRequest) < FIO_MIN_INTERVAL_MS) {
       return { status: "skipped", reason: "rate_limit" };
     }
-    const request =
+    let request: FioRequest =
       options.request ??
       chooseRequest({
         mode: fioMode(),
@@ -295,7 +302,45 @@ export async function runPaymentsJob(
     // Před stažením přes /last/ označit běh jako nedokončený → při pádu příště `periods`.
     await setState(STATE.lastRunOk, "0");
     await setState(STATE.lastRequestAt, now.toISOString());
-    const result = await fetchFio(token, request, options.fetchImpl);
+    let result = await fetchFio(token, request, options.fetchImpl);
+    if (!result.ok && result.kind === "strong_auth") {
+      console.warn("[payments] Fio 422 (silná autorizace) – nastavuji set-last-date", result.error);
+      const heal = await healStrongAuth({
+        token,
+        now,
+        fetchImpl: options.fetchImpl,
+        sleep: options.sleep,
+        waitBudgetMs: options.selfHealWaitBudgetMs,
+        onRequest: (at) => setState(STATE.lastRequestAt, at.toISOString()),
+      });
+      if (heal.status === "failed") {
+        result = { ok: false, kind: "error", error: `${result.error}; ${heal.error}` };
+      } else if (heal.status === "cursor_set") {
+        console.warn(`[payments] Fio zarážka nastavena na ${heal.date}, dožene příští běh`);
+        await prisma.jobRun.update({
+          where: { id: run.id },
+          data: {
+            finishedAt: new Date(),
+            ok: false,
+            error: `strong_auth: zarážka nastavena na ${heal.date}`,
+          },
+        });
+        // Bez alertu; lastRunOk zůstává 0 → příští běh `periods`.
+        return {
+          status: "failed",
+          mode: request.mode,
+          dryRun,
+          fetched: 0,
+          matched: 0,
+          unmatched: 0,
+          error: `strong_auth: zarážka nastavena na ${heal.date}`,
+        };
+      } else {
+        console.warn("[payments] Fio samooprava: zarážka nastavena, stahuji periods");
+        request = heal.request;
+        result = heal.result;
+      }
+    }
     if (!result.ok) {
       await prisma.jobRun.update({
         where: { id: run.id },
@@ -303,7 +348,7 @@ export async function runPaymentsJob(
       });
       if (result.kind === "auth")
         await alertPayments("token", `Fio API odmítlo token: ${result.error}`, now);
-      else if (result.kind === "error")
+      else if (result.kind === "error" || result.kind === "strong_auth")
         await alertPayments("fio", `Chyba Fio API: ${result.error}`, now);
       // 409 (limit) jen zaznamenat – další běh to dožene.
       return {

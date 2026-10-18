@@ -584,3 +584,16 @@ model JobRun {
   @@index([job, startedAt])
   @@map("mcvv_job_run")
 }
+
+/// Doplňková data přihlášky (legacy tabulka mcvv_prihlaska se nemění):
+/// poslední změna a odeslané připomínky platby.
+model RegistrationMeta {
+  year        Int       @map("rok") @db.SmallInt
+  id          Int       @map("id") @db.SmallInt
+  updatedAt   DateTime? @map("updated_at")
+  reminder1At DateTime? @map("pripominka1_at")
+  reminder2At DateTime? @map("pripominka2_at")
+
+  @@id([year, id])
+  @@map("mcvv_prihlaska_meta")
+}

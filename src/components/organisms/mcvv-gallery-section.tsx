@@ -1,6 +1,4 @@
-import Image from "next/image";
-
-import { SectionHeader } from "@/components/molecules";
+import { PhotoTile, SectionHeader } from "@/components/molecules";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
@@ -56,10 +54,9 @@ export function McvvGallerySection({ content, photoIds }: McvvGallerySectionProp
         <div className="mt-10 grid grid-cols-3 gap-4 md:grid-cols-5">
           {/* Large photo */}
           <div className="col-span-3 aspect-[3/4] md:aspect-auto md:col-span-2 md:row-span-2 overflow-hidden border border-race-line/60 bg-race-forest relative">
-            <Image
+            <PhotoTile
               src={largeSrc}
               alt={content.alt[0] ?? content.title}
-              fill
               sizes="(max-width: 768px) 100vw, 40vw"
               className="object-cover object-top"
             />
@@ -73,10 +70,9 @@ export function McvvGallerySection({ content, photoIds }: McvvGallerySectionProp
               key={index}
               className="aspect-[3/4] overflow-hidden border border-race-line/60 bg-race-forest relative"
             >
-              <Image
+              <PhotoTile
                 src={src}
                 alt={content.alt[(index + 1) % content.alt.length] ?? content.title}
-                fill
                 sizes="(max-width: 768px) 33vw, 20vw"
                 className="object-cover object-top"
               />

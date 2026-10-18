@@ -6,6 +6,7 @@ import { submitContact, type ContactFormState } from "@/app/[locale]/kontakt/act
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { LIMITS } from "@/lib/contact/limits";
 
 export type ContactFormCopy = {
   name: string;
@@ -16,22 +17,32 @@ export type ContactFormCopy = {
   success: string;
   errorInvalid: string;
   errorSend: string;
+  errorExpired: string;
 };
 
 const initialState: ContactFormState = { status: "idle" };
 
-export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
+export type ContactFormProps = {
+  copy: ContactFormCopy;
+  /** Podepsaný čas vykreslení (kontrola minimální doby vyplnění). */
+  formToken?: string;
+  defaults?: { name?: string; email?: string };
+};
+
+export function McvvContactForm({ copy, formToken, defaults }: ContactFormProps) {
   const [state, action, pending] = useActionState(submitContact, initialState);
 
   return (
     <form action={action} className="grid gap-4">
+      {formToken ? <input type="hidden" name="ts" value={formToken} /> : null}
       <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
         {copy.name}
         <Input
           name="name"
           required
-          minLength={2}
-          maxLength={80}
+          minLength={LIMITS.nameMin}
+          maxLength={LIMITS.nameMax}
+          defaultValue={defaults?.name}
           autoComplete="name"
           className="h-11 border-race-line bg-race-surface text-foreground"
         />
@@ -42,6 +53,8 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
           name="email"
           type="email"
           required
+          maxLength={LIMITS.emailMax}
+          defaultValue={defaults?.email}
           autoComplete="email"
           className="h-11 border-race-line bg-race-surface text-foreground"
         />
@@ -51,8 +64,8 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
         <Textarea
           name="message"
           required
-          minLength={10}
-          maxLength={4000}
+          minLength={LIMITS.messageMin}
+          maxLength={LIMITS.messageMax}
           rows={7}
           className="border-race-line bg-race-surface text-foreground"
         />
@@ -68,7 +81,11 @@ export function McvvContactForm({ copy }: { copy: ContactFormCopy }) {
       ) : null}
       {state.status === "error" ? (
         <p className="text-sm font-medium text-red-400">
-          {state.message === "invalid" ? copy.errorInvalid : copy.errorSend}
+          {state.message === "invalid"
+            ? copy.errorInvalid
+            : state.message === "expired"
+              ? copy.errorExpired
+              : copy.errorSend}
         </p>
       ) : null}
       <Button

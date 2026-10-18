@@ -36,7 +36,7 @@
       "primaryCta": "Entries",
       "primaryHref": "/prihlaseni-zavodnici",
       "closesInDays": "Online entries close in {days, plural, one {# day} other {# days}}",
-      "closesInHours": "Online entries close in {hours} h {minutes} min",
+      "closesInHours": "Online entries close in {hours} h {minutes} min",
       "secondaryCta": "Race notice",
       "secondaryHref": "/program",
       "tertiaryCta": "Results",
@@ -79,7 +79,7 @@
       "cards": [
         {
           "title": "Short, but brutal",
-          "description": "4300 m that force you to go hard from start to finish. No space for a gentle warm-up."
+          "description": "4300 m that force you to go hard from start to finish. No space for a gentle warm-up."
         },
         {
           "title": "Technical terrain",
@@ -97,7 +97,7 @@
         },
         {
           "title": "Start",
-          "description": "Interval start in pairs every 15 s from 10:15."
+          "description": "Interval start in pairs every 15 s from 10:15."
         },
         {
           "title": "Categories",
@@ -113,7 +113,7 @@
       "eyebrow": "02 — Course and profile",
       "title": "Four climbs. Four descents. No excuses.",
       "description": "An elevation profile that never lets go. Every meter of climbing is noticeable.",
-      "axis": ["START", "1 km", "2 km", "3 km", "FINISH · 4.3 km"],
+      "axis": ["START", "1 km", "2 km", "3 km", "FINISH · 4.3 km"],
       "points": ["1", "2", "3", "4"],
       "stats": [
         {
@@ -125,7 +125,7 @@
           "description": "Technical downhill running where confidence matters."
         },
         {
-          "title": "200 m elevation",
+          "title": "200 m elevation",
           "description": "Packed into only 4.3 kilometers."
         },
         {
@@ -163,11 +163,11 @@
       "travel": [
         {
           "title": "By car",
-          "description": "Parking in the bend 1 km past Choceň towards Sruby (road 315), then 300 m on foot. Alternative: Krále Jiřího embankment, follow the green waymarks 500 m to Veranda."
+          "description": "Parking in the bend 1 km past Choceň towards Sruby (road 315), then 300 m on foot. Alternative: Krále Jiřího embankment, follow the green waymarks 500 m to Veranda."
         },
         {
           "title": "By train",
-          "description": "Choceň station. Through the tunnel and park, along the left bank of the Tichá Orlice (Krále Jiřího embankment) to the gamekeeper's lodge, under the railway towards Týniště, green waymark NW, 2 km in total to the race centre."
+          "description": "Choceň station. Through the tunnel and park, along the left bank of the Tichá Orlice (Krále Jiřího embankment) to the gamekeeper's lodge, under the railway towards Týniště, green waymark NW, 2 km in total to the race centre."
         },
         {
           "title": "By bus",
@@ -315,7 +315,7 @@
     },
     "timetable": {
       "registration": "Until 9:45 — on-site registration",
-      "start": "10:15 — start (15 s interval)",
+      "start": "10:15 — start (15 s interval)",
       "ceremony": "12:20 — awards ceremony"
     },
     "sections": {
@@ -341,8 +341,8 @@
       },
       "course": {
         "title": "Course",
-        "summary": "4 300 m · 200 m climb",
-        "body": "Forest roads and paths, 400 m of asphalt. 200 m of climb. Marked with streamers. One course for all categories."
+        "summary": "4 300 m · 200 m climb",
+        "body": "Forest roads and paths, 400 m of asphalt. 200 m of climb. Marked with streamers. One course for all categories."
       },
       "registration": {
         "title": "Registration",
@@ -366,8 +366,8 @@
       },
       "start": {
         "title": "Start",
-        "summary": "15 s interval from 10:15",
-        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start."
+        "summary": "15 s interval from 10:15",
+        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start."
       },
       "timetable": {
         "title": "Timetable",
@@ -403,6 +403,7 @@
     "success": "Message sent. We will get back to you.",
     "errorInvalid": "Please check your name, e-mail, and message.",
     "errorSend": "The message could not be sent. Please try again.",
+    "errorExpired": "The form has expired. Please reload the page and send the message again.",
     "back": "Back to home"
   },
   "Instructions": {

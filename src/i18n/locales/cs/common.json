@@ -18,7 +18,7 @@
         "href": "/"
       },
       "links": [
-        { "label": "O závodě", "href": "#about" },
+        { "label": "O závodě", "href": "#about" },
         { "label": "Trať", "href": "#route" },
         { "label": "Termín", "href": "#date" },
         { "label": "Výsledky", "href": "#results" },
@@ -32,11 +32,11 @@
       "titleLine1": "MALÁ CENA",
       "titleLine2": "VELKÉ VERANDY",
       "memorial": "Memoriál Jirky Švadleny",
-      "claim": "Lesní kros, který tě prověří v každém kopci. Krátká, intenzivní a nemilosrdná trať plná výběhů a prudkých seběhů.",
+      "claim": "Lesní kros, který tě prověří v každém kopci. Krátká, intenzivní a nemilosrdná trať plná výběhů a prudkých seběhů.",
       "primaryCta": "Přihlášky",
       "primaryHref": "/prihlaseni-zavodnici",
       "closesInDays": "Online přihlášky končí za {days, plural, one {# den} few {# dny} other {# dní}}",
-      "closesInHours": "Online přihlášky končí za {hours} h {minutes} min",
+      "closesInHours": "Online přihlášky končí za {hours} h {minutes} min",
       "secondaryCta": "Rozpis",
       "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
@@ -62,11 +62,11 @@
       ]
     },
     "overview": {
-      "eyebrow": "01 — O závodě",
+      "eyebrow": "01 — O závodě",
       "title": "Není to běh. Je to výzva.",
       "body": [
-        "Malá cena Velké Verandy je tradiční lesní kros v srdci choceňských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
-        "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
+        "Malá cena Velké Verandy je tradiční lesní kros v srdci choceňských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
+        "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
       ],
       "actions": [
         { "label": "Přihláška", "href": "/prihlasky" },
@@ -79,15 +79,15 @@
       "cards": [
         {
           "title": "Krátký, ale brutální",
-          "description": "4300 m, které tě donutí jet naplno od startu do cíle. Žádný prostor na rozjezd."
+          "description": "4300 m, které tě donutí jet naplno od startu do cíle. Žádný prostor na rozjezd."
         },
         {
           "title": "Technický terén",
-          "description": "Lesní cesty, úzké pěšiny, kořeny a bahno. Trať, kde rozhoduje technika i odvaha."
+          "description": "Lesní cesty, úzké pěšiny, kořeny a bahno. Trať, kde rozhoduje technika i odvaha."
         },
         {
-          "title": "Atmosféra a tradice",
-          "description": "Mrazivá prosincová neděle, fandící diváci a legendární výběhy. Závod s duší."
+          "title": "Atmosféra a tradice",
+          "description": "Mrazivá prosincová neděle, fandící diváci a legendární výběhy. Závod s duší."
         }
       ],
       "facts": [
@@ -97,40 +97,40 @@
         },
         {
           "title": "Start",
-          "description": "Intervalový ve dvojicích po 15 s od 10:15."
+          "description": "Intervalový ve dvojicích po 15 s od 10:15."
         },
         {
           "title": "Kategorie",
-          "description": "Dospělí, veteráni i žactvo a dorost. Pro každého se najde souboj."
+          "description": "Dospělí, veteráni i žactvo a dorost. Pro každého se najde souboj."
         },
         {
           "title": "Startovné",
-          "description": "Dospělí 100 Kč online / 200 Kč na místě. Žactvo a dorost 50 / 100 Kč."
+          "description": "Dospělí 100 Kč online / 200 Kč na místě. Žactvo a dorost 50 / 100 Kč."
         }
       ]
     },
     "profile": {
-      "eyebrow": "02 — Trať a profil",
+      "eyebrow": "02 — Trať a profil",
       "title": "Čtyři kopce. Čtyři seběhy. Žádné výmluvy.",
       "description": "Výškový profil tratě, který nepustí. Každý metr převýšení je znát.",
-      "axis": ["START", "1 km", "2 km", "3 km", "CÍL · 4,3 km"],
+      "axis": ["START", "1 km", "2 km", "3 km", "CÍL · 4,3 km"],
       "points": ["1", "2", "3", "4"],
       "stats": [
         {
           "title": "4 kopce",
-          "description": "Výrazné výběhy, které prověří nohy i hlavu."
+          "description": "Výrazné výběhy, které prověří nohy i hlavu."
         },
         {
           "title": "4 prudké seběhy",
           "description": "Technické klesání, kde rozhoduje odvaha."
         },
         {
-          "title": "200 m převýšení",
+          "title": "200 m převýšení",
           "description": "Nahuštěné do pouhých 4,3 kilometru."
         },
         {
           "title": "Lesní povrch",
-          "description": "Cesty, pěšiny, kořeny a prosincové bahno."
+          "description": "Cesty, pěšiny, kořeny a prosincové bahno."
         }
       ],
       "mapKicker": "TRAŤ ZÁVODU",
@@ -140,7 +140,7 @@
       "mapExpandLabel": "Zvětšit mapu tratě"
     },
     "schedule": {
-      "eyebrow": "03 — Termín a místo",
+      "eyebrow": "03 — Termín a místo",
       "title": "Neděle 6. prosince",
       "items": [
         { "icon": "calendar", "text": "Každou první prosincovou neděli" },
@@ -163,62 +163,62 @@
       "travel": [
         {
           "title": "Autem",
-          "description": "Parkování v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud 300 m pěšky. Alternativa: nábřeží Krále Jiřího, po zelené značce 500 m k Verandě."
+          "description": "Parkování v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud 300 m pěšky. Alternativa: nábřeží Krále Jiřího, po zelené značce 500 m k Verandě."
         },
         {
           "title": "Vlakem",
-          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 2 km do centra."
+          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 2 km do centra."
         },
         {
           "title": "Autobusem",
-          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku."
+          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku."
         }
       ]
     },
     "results": {
-      "eyebrow": "04 — Výsledky a statistiky",
+      "eyebrow": "04 — Výsledky a statistiky",
       "title": "Generace běžců, jedna trať",
       "allLabel": "Archiv výsledků",
       "yearLabel": "Poslední ročník",
       "linkLabel": "Kompletní výsledky",
       "empty": "Výsledky se doplní po doběhu ročníku.",
       "searchPlaceholder": "Hledat běžce…",
-      "searchEmpty": "Nikdo takový v databázi není.",
+      "searchEmpty": "Nikdo takový v databázi není.",
       "stats": [
         {
           "slug": "rekordy",
           "title": "Traťové rekordy",
-          "description": "Kdy a kdo vylepšil rekord jednotlivých kategorií.",
+          "description": "Kdy a kdo vylepšil rekord jednotlivých kategorií.",
           "linkLabel": "Vývoj rekordů"
         },
         {
           "slug": "vitezove",
           "title": "Vítězové",
-          "description": "Absolutní vítězové mužů a žen v každém ročníku.",
+          "description": "Absolutní vítězové mužů a žen v každém ročníku.",
           "linkLabel": "Absolutní vítězové"
         },
         {
           "slug": "casy",
           "title": "Nejlepší časy",
-          "description": "Nejrychlejší výkony mužů a žen napříč všemi ročníky.",
+          "description": "Nejrychlejší výkony mužů a žen napříč všemi ročníky.",
           "linkLabel": "TOP 20"
         },
         {
           "slug": "vek",
           "title": "Rekordy dle věku",
-          "description": "Nejlepší čas podle věku v roce závodu.",
+          "description": "Nejlepší čas podle věku v roce závodu.",
           "linkLabel": "Podle věku"
         },
         {
           "slug": "veterani",
           "title": "Veteráni MCVV",
-          "description": "Běžci s nejvíce starty v historii závodu.",
+          "description": "Běžci s nejvíce starty v historii závodu.",
           "linkLabel": "Klub veteránů"
         },
         {
           "slug": "ucast",
           "title": "Účast",
-          "description": "Počty účastníků, nováčků a osobních rekordů po letech.",
+          "description": "Počty účastníků, nováčků a osobních rekordů po letech.",
           "linkLabel": "Celková účast"
         }
       ]
@@ -226,17 +226,17 @@
     "gallery": {
       "eyebrow": "05 — Fotogalerie",
       "title": "Atmosféra mrazivé neděle",
-      "description": "Bahno, mlha, emoce v cíli a kopce, které tě dostanou.",
+      "description": "Bahno, mlha, emoce v cíli a kopce, které tě dostanou.",
       "allLabel": "Kompletní fotogalerie",
       "alt": [
-        "Běžkyně v zimním lese stoupá po kamenité stezce.",
+        "Běžkyně v zimním lese stoupá po kamenité stezce.",
         "Topografická mapa lesní tratě.",
-        "Skupina běžců v mlžném zimním lese.",
+        "Skupina běžců v mlžném zimním lese.",
         "Detail temné mapy trailového okruhu."
       ]
     },
     "partners": {
-      "eyebrow": "06 — Partneři a pořadatelé",
+      "eyebrow": "06 — Partneři a pořadatelé",
       "title": "Závod, který drží pohromadě parta nadšenců",
       "organizer": "Pořádá K.O.B. Choceň, z.s."
     },
@@ -247,12 +247,12 @@
       "guide": "Jak se přihlásit"
     },
     "footer": {
-      "description": "Tradiční lesní kros v Chocni. 4300 metrů, 200 metrů převýšení a charakter, který si zapamatuješ.",
+      "description": "Tradiční lesní kros v Chocni. 4300 metrů, 200 metrů převýšení a charakter, který si zapamatuješ.",
       "columns": [
         {
           "title": "Závod",
           "links": [
-            { "label": "O závodě", "href": "#about" },
+            { "label": "O závodě", "href": "#about" },
             { "label": "Rozpis", "href": "/program" },
             { "label": "Přihláška", "href": "/prihlasky" }
           ]
@@ -274,7 +274,7 @@
         }
       ],
       "copyright": "© 2026 Malá cena Velké Verandy · K.O.B. Choceň, z.s.",
-      "made": "Vyrobeno s láskou k lesu."
+      "made": "Vyrobeno s láskou k lesu."
     },
     "backToTop": "Nahoru"
   },
@@ -293,18 +293,18 @@
     "contactLabel": "Napsat pořadateli",
     "fees": {
       "onlineAdult": "Dospělí online",
-      "onlineKids": "Děti a dorost online",
+      "onlineKids": "Děti a dorost online",
       "onsiteAdult": "Dospělí na místě",
-      "onsiteKids": "Děti a dorost na místě",
+      "onsiteKids": "Děti a dorost na místě",
       "refund": "Startovné vracíme při odhlášení do termínu online přihlášek ({date}). Po tomto termínu startovné nevracíme.",
       "refundOpen": "Startovné vracíme při odhlášení do termínu online přihlášek. Po termínu startovné nevracíme.",
-      "freeEntry": "Vítězové hlavní kategorie muži a ženy a členové klubu veteránů MCVV mají startovné zdarma při včasné online přihlášce."
+      "freeEntry": "Vítězové hlavní kategorie muži a ženy a členové klubu veteránů MCVV mají startovné zdarma při včasné online přihlášce."
     },
     "prizes": {
-      "adult": "Muži a ženy",
+      "adult": "Muži a ženy",
       "veterans": "Veteráni",
       "place": "{n}. místo",
-      "material": "Věcné ceny pro nejlepší v žákovských a dorosteneckých kategoriích."
+      "material": "Věcné ceny pro nejlepší v žákovských a dorosteneckých kategoriích."
     },
     "categories": {
       "name": "Kategorie",
@@ -315,13 +315,13 @@
     },
     "timetable": {
       "registration": "Do 9:45 — přihlášky na místě",
-      "start": "10:15 — start (interval 15 s)",
+      "start": "10:15 — start (interval 15 s)",
       "ceremony": "12:20 — vyhlášení výsledků"
     },
     "sections": {
       "intro": {
         "title": "Rozpis",
-        "summary": "Základní informace k ročníku",
+        "summary": "Základní informace k ročníku",
         "body": "Jedna lesní trať, intervalový start."
       },
       "date": {
@@ -332,7 +332,7 @@
       "venue": {
         "title": "Místo",
         "summary": "Velká Veranda, Choceň",
-        "body": "Start i cíl u Velké Verandy. GPS 49°59′45″N, 16°12′10″E."
+        "body": "Start i cíl u Velké Verandy. GPS 49°59′45″N, 16°12′10″E."
       },
       "organizer": {
         "title": "Pořadatel",
@@ -341,13 +341,13 @@
       },
       "course": {
         "title": "Popis tratě",
-        "summary": "4 300 m · převýšení 200 m",
-        "body": "Lesní cesty a pěšiny, 400 m asfaltu. Převýšení 200 m. Značeno fáborky. Jedna trať pro všechny kategorie."
+        "summary": "4 300 m · převýšení 200 m",
+        "body": "Lesní cesty a pěšiny, 400 m asfaltu. Převýšení 200 m. Značeno fáborky. Jedna trať pro všechny kategorie."
       },
       "registration": {
         "title": "Přihlášky",
         "summary": "Online přihláška · na místě do 9:45",
-        "body": "V den závodu lze podat přihlášku na místě do 9:45. Online přihláška platí až po připsání platby."
+        "body": "V den závodu lze podat přihlášku na místě do 9:45. Online přihláška platí až po připsání platby."
       },
       "fees": {
         "title": "Startovné",
@@ -356,33 +356,33 @@
       },
       "categories": {
         "title": "Kategorie",
-        "summary": "Věkové hranice k roku 2026",
+        "summary": "Věkové hranice k roku 2026",
         "body": ""
       },
       "prizes": {
         "title": "Ceny",
-        "summary": "Muži a ženy, veteráni, žáci a dorost",
-        "body": "Finanční ceny v Kč v kategoriích muži a ženy (1.–5. místo) a veteráni (1.–3. místo)."
+        "summary": "Muži a ženy, veteráni, žáci a dorost",
+        "body": "Finanční ceny v Kč v kategoriích muži a ženy (1.–5. místo) a veteráni (1.–3. místo)."
       },
       "start": {
         "title": "Start",
-        "summary": "Interval 15 s od 10:15",
-        "body": "Startovní interval {seconds} s od 10:15. Intervalový start ve dvojicích, bez samostatného dětského startu."
+        "summary": "Interval 15 s od 10:15",
+        "body": "Startovní interval {seconds} s od 10:15. Intervalový start ve dvojicích, bez samostatného dětského startu."
       },
       "timetable": {
         "title": "Časový harmonogram",
         "summary": "9:45 · 10:15 · 12:20",
-        "body": "Přihlášky na místě končí v 9:45. Intervalový start od 10:15. Vyhlášení výsledků ve 12:20."
+        "body": "Přihlášky na místě končí v 9:45. Intervalový start od 10:15. Vyhlášení výsledků ve 12:20."
       },
       "privacy": {
         "title": "Ochrana údajů",
-        "summary": "GDPR a fotografie",
-        "body": "Osobní údaje zpracováváme kvůli organizaci závodu a zveřejnění výsledků. Fotografie a video z akce můžeme použít k prezentaci závodu. Námitku lze poslat pořadateli."
+        "summary": "GDPR a fotografie",
+        "body": "Osobní údaje zpracováváme kvůli organizaci závodu a zveřejnění výsledků. Fotografie a video z akce můžeme použít k prezentaci závodu. Námitku lze poslat pořadateli."
       },
       "notice": {
         "title": "Upozornění",
         "summary": "Vlastní nebezpečí",
-        "body": "Účast je na vlastní nebezpečí. Závod není vhodný pro děti mladší 6 let. Do výsledkové listiny se započítá jen ten, kdo absolvuje celou trať bez pomoci jiné osoby. Prodej a stánky jen se souhlasem pořadatele."
+        "body": "Účast je na vlastní nebezpečí. Závod není vhodný pro děti mladší 6 let. Do výsledkové listiny se započítá jen ten, kdo absolvuje celou trať bez pomoci jiné osoby. Prodej a stánky jen se souhlasem pořadatele."
       },
       "info": {
         "title": "Informace",
@@ -401,8 +401,9 @@
     "submit": "Odeslat",
     "sending": "Odesílám…",
     "success": "Zpráva je odeslaná. Ozveme se.",
-    "errorInvalid": "Zkontrolujte jméno, e-mail a text zprávy.",
+    "errorInvalid": "Zkontrolujte jméno, e-mail a text zprávy.",
     "errorSend": "Zprávu se teď nepodařilo odeslat. Zkuste to znovu.",
+    "errorExpired": "Formulář vypršel. Obnovte prosím stránku a odešlete zprávu znovu.",
     "back": "Zpět na úvod"
   },
   "Instructions": {
@@ -414,7 +415,7 @@
   "StartList": {
     "eyebrow": "34. ročník",
     "title": "Startovní listina",
-    "status": "Startovní čísla a intervalové časy budou po losu a zveřejnění pořadatelem.",
+    "status": "Startovní čísla a intervalové časy budou po losu a zveřejnění pořadatelem.",
     "back": "Zpět na Rozpis"
   },
   "Entrants": {
@@ -422,7 +423,7 @@
     "title": "Přihlášení závodníci",
     "deadline": "Uzávěrka online přihlášek",
     "register": "Přihlásit se",
-    "closed": "Online přihlášky skončily. Na místě se lze přihlásit do 9:45 za dvojnásobné startovné (dospělí {adult} Kč / žáci {kids} Kč).",
+    "closed": "Online přihlášky skončily. Na místě se lze přihlásit do 9:45 za dvojnásobné startovné (dospělí {adult} Kč / žáci {kids} Kč).",
     "empty": "Zatím tu není žádný potvrzený běžec.",
     "newbie": "nováček",
     "starts": "{count, plural, one {# start} few {# starty} other {# startů}}",
@@ -468,27 +469,27 @@
     "male": "Muž",
     "female": "Žena",
     "add": "Přidat",
-    "ambiguous": "Upřesněte, existuje víc běžců se stejným jménem a rokem.",
-    "invalidRunner": "Běžce se nepodařilo přidat. Zkontrolujte prosím údaje a zkuste to znovu.",
+    "ambiguous": "Upřesněte, existuje víc běžců se stejným jménem a rokem.",
+    "invalidRunner": "Běžce se nepodařilo přidat. Zkontrolujte prosím údaje a zkuste to znovu.",
     "taken": "Tento běžec už je letos přihlášený.",
     "payment": "Platba",
     "feeTotal": "Startovné celkem",
     "paid": "Zaplaceno",
-    "due": "K úhradě",
+    "due": "K úhradě",
     "account": "Účet",
     "vs": "Variabilní symbol",
-    "addRunnersFirst": "Přihláška zatím nemá žádné běžce. Přidejte je níže v sekci Běžci, pak se zobrazí startovné a platební údaje.",
-    "noFeeDue": "Startovné je 0 Kč, není co hradit.",
+    "addRunnersFirst": "Přihláška zatím nemá žádné běžce. Přidejte je níže v sekci Běžci, pak se zobrazí startovné a platební údaje.",
+    "noFeeDue": "Startovné je 0 Kč, není co hradit.",
     "paidInFull": "Startovné je uhrazené.",
     "past": "Minulé ročníky"
   },
   "PhotoGallery": {
     "eyebrow": "Fotogalerie",
-    "title": "Fotky z ročníků",
+    "title": "Fotky z ročníků",
     "intro": "Fotografie podle roku závodu. Klikni na ročník nahoře.",
     "count": "{count} fotek · {year}",
-    "photoAlt": "Fotografie z ročníku {year}",
-    "empty": "V galerii zatím nic není.",
+    "photoAlt": "Fotografie z ročníku {year}",
+    "empty": "V galerii zatím nic není.",
     "loadMore": "Načíst další",
     "close": "Zavřít",
     "back": "Zpět na úvod"
@@ -523,20 +524,20 @@
     "forgotTitle": "Zapomenuté heslo",
     "forgotIntro": "Zadejte e-mail, se kterým se přihlašujete. Pošleme vám odkaz pro nastavení nového hesla.",
     "forgotSubmit": "Poslat odkaz",
-    "forgotSent": "Pokud u nás účet s tímto e-mailem existuje, poslali jsme na něj odkaz pro obnovu hesla. Odkaz platí 1 hodinu.",
+    "forgotSent": "Pokud u nás účet s tímto e-mailem existuje, poslali jsme na něj odkaz pro obnovu hesla. Odkaz platí 1 hodinu.",
     "forgotMailMissing": "E-mail teď nelze odeslat. Zkuste to prosím později.",
     "backToLogin": "Zpět na přihlášení",
     "resetSubject": "Obnova hesla — MCVV",
     "resetIntro": "Nové heslo nastavíte tímto odkazem (platnost 1 hodina):",
     "resetAction": "Nastavit nové heslo",
-    "resetOutro": "Pokud se přihlašujete přes Google, můžete si tímto odkazem nastavit i heslo. Pokud jste o obnovu nežádali, e-mail ignorujte.",
+    "resetOutro": "Pokud se přihlašujete přes Google, můžete si tímto odkazem nastavit i heslo. Pokud jste o obnovu nežádali, e-mail ignorujte.",
     "resetTitle": "Nové heslo",
     "resetSubmit": "Uložit nové heslo",
-    "resetInvalid": "Odkaz pro obnovu hesla je neplatný, už byl použit, nebo vypršel. Požádejte o nový.",
+    "resetInvalid": "Odkaz pro obnovu hesla je neplatný, už byl použit, nebo vypršel. Požádejte o nový.",
     "passwordShort": "Heslo musí mít alespoň 8 znaků.",
     "passwordChanged": "Heslo bylo změněno. Nyní se můžete přihlásit.",
-    "verifySuccess": "E-mail byl ověřen. Jste přihlášeni a můžete podat přihlášku.",
-    "verifyInvalid": "Ověřovací odkaz je neplatný, už byl použit, nebo vypršel. Zadejte e-mail a pošleme vám nový.",
+    "verifySuccess": "E-mail byl ověřen. Jste přihlášeni a můžete podat přihlášku.",
+    "verifyInvalid": "Ověřovací odkaz je neplatný, už byl použit, nebo vypršel. Zadejte e-mail a pošleme vám nový.",
     "resendSent": "Pokud účet čeká na ověření, poslali jsme na e-mail nový odkaz.",
     "title": "Přihlášení",
     "email": "E-mail",
@@ -558,7 +559,7 @@
     "registerGeneric": "Účet se nepodařilo založit.",
     "alreadyVerified": "Tento e-mail už má účet.",
     "mailMissing": "Ověřovací e-mail teď nelze odeslat. Účet nevznikl.",
-    "verifySent": "Na e-mail jsme poslali odkaz k ověření. Platí 24 hodin.",
+    "verifySent": "Na e-mail jsme poslali odkaz k ověření. Platí 24 hodin.",
     "verifySubject": "Ověření e-mailu — MCVV",
     "verifyIntro": "Potvrďte e-mail odkazem (platnost 24 hodin):",
     "verifyAction": "Ověřit e-mail",
@@ -575,9 +576,9 @@
     "eyebrow": "Správa",
     "title": "Administrace",
     "overviewTitle": "Přehled",
-    "intro": "Správa partnerů, ročníků, číselníků a přihlášek.",
+    "intro": "Správa partnerů, ročníků, číselníků a přihlášek.",
     "versionLine": "Verze {version} · build {buildNumber} · {revision}",
-    "placeholder": "Přihlášky a newsletter přijdou v další vlně.",
+    "placeholder": "Přihlášky a newsletter přijdou v další vlně.",
     "navOverview": "Přehled",
     "navPartners": "Partneři",
     "navEditions": "Ročníky",
@@ -587,7 +588,7 @@
     "navRegistrations": "Přihlášky",
     "navSettings": "Nastavení",
     "settingsTitle": "Nastavení",
-    "settingsIntro": "E-maily, které mají startovné 0 Kč.",
+    "settingsIntro": "E-maily, které mají startovné 0 Kč.",
     "settingsFreeEmails": "Přihláška zdarma (jeden e-mail na řádek)",
     "statusAll": "Všechny stavy",
     "status0": "Zrušená",
@@ -604,7 +605,7 @@
     "confirmMailFail": "Přihláška je potvrzená, ale e-mail se nepodařilo odeslat.",
     "confirmMailSubject": "Potvrzení přihlášky {year}/{id}",
     "confirmMailIntro": "Dobrý den, {name}, vaše přihláška je potvrzená.",
-    "confirmMailThanks": "Děkujeme a těšíme se na startu.",
+    "confirmMailThanks": "Děkujeme a těšíme se na startu.",
     "save": "Uložit",
     "create": "Vytvořit",
     "edit": "Upravit",
@@ -618,7 +619,7 @@
     "partnersImage": "Soubor loga",
     "partnersUpload": "Nahrát logo",
     "partnersUploadHint": "PNG, JPG, WebP nebo SVG, max. 1 MB. Nahrané logo má přednost před souborem výše; SVG se při nahrání vyčistí (skripty, odkazy).",
-    "partnersLogoInvalid": "Logo se nepodařilo nahrát: podporované jsou PNG, JPG, WebP a SVG do 1 MB bez skriptů.",
+    "partnersLogoInvalid": "Logo se nepodařilo nahrát: podporované jsou PNG, JPG, WebP a SVG do 1 MB bez skriptů.",
     "partnersCategory": "Kategorie",
     "partnersOrder": "Pořadí",
     "partnersDescription": "Popis",
@@ -634,13 +635,13 @@
     "editionsAdultPlace": "Startovné dospělí na místě",
     "editionsPrize": "Cena {place}. místo",
     "editionsVet": "Cena veteráni {place}.",
-    "editionsNewHint": "Startovné a ceny se zkopírují z posledního ročníku. Datum vyplňte.",
+    "editionsNewHint": "Startovné a ceny se zkopírují z posledního ročníku. Datum vyplňte.",
     "dictsTitle": "Číselníky",
     "dictsBack": "Zpět na číselníky",
     "dictsCategories": "Kategorie",
-    "dictsCategoriesHint": "Věk, pohlaví, startovní čísla, startovné a rekord.",
+    "dictsCategoriesHint": "Věk, pohlaví, startovní čísla, startovné a rekord.",
     "dictsClubs": "Kluby",
-    "dictsClubsHint": "Kluby v číselníku podle roku závodu.",
+    "dictsClubsHint": "Kluby v číselníku podle roku závodu.",
     "dictsYear": "Rok",
     "dictsCode": "Kód",
     "dictsName": "Název",
@@ -674,7 +675,7 @@
     "regsDate": "Datum",
     "regsNewPayment": "Nová platba",
     "regsDeletePayment": "Smazat platbu",
-    "regsEmpty": "Žádné přihlášky v tomto roce.",
+    "regsEmpty": "Žádné přihlášky v tomto roce.",
     "regsBack": "Zpět na přihlášky"
   },
   "Stats": {
@@ -707,33 +708,33 @@
     "back": "Zpět na úvod",
     "rekordy": {
       "nav": "Rekordy",
-      "title": "Traťové rekordy a jejich vývoj",
+      "title": "Traťové rekordy a jejich vývoj",
       "intro": ""
     },
     "vitezove": {
       "nav": "Vítězové",
       "title": "Absolutní vítězové",
-      "intro": "Nejlepší čas mužů a žen v každém ročníku."
+      "intro": "Nejlepší čas mužů a žen v každém ročníku."
     },
     "casy": {
       "nav": "Nejlepší časy",
       "title": "Nejlepší časy",
-      "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
+      "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
     },
     "vek": {
       "nav": "Dle věku",
       "title": "Rekordy dle věku",
-      "intro": "Nejlepší čas daného věku (rok závodu − rok narození) u mužů a žen."
+      "intro": "Nejlepší čas daného věku (rok závodu − rok narození) u mužů a žen."
     },
     "veterani": {
       "nav": "Veteráni",
       "title": "Veteráni MCVV",
-      "intro": "Klub veteránů: běžci s více starty, než je polovina počtu ročníků s výsledky."
+      "intro": "Klub veteránů: běžci s více starty, než je polovina počtu ročníků s výsledky."
     },
     "ucast": {
       "nav": "Účast",
       "title": "Celková účast",
-      "intro": "Počet účastníků, nováčků a osobních rekordů v jednotlivých letech."
+      "intro": "Počet účastníků, nováčků a osobních rekordů v jednotlivých letech."
     }
   },
   "LanguageSwitcher": {
@@ -747,7 +748,7 @@
   "Guide": {
     "eyebrow": "Videonávod",
     "title": "Jak se přihlásit na MCVV",
-    "description": "Videonávod a návod krok za krokem: založení účtu, přihláška, rychlá nabídka běžců z minulých let a platba startovného.",
+    "description": "Videonávod a návod krok za krokem: založení účtu, přihláška, rychlá nabídka běžců z minulých let a platba startovného.",
     "lead": "Přihlašování na mcvv.org krok za krokem – nejdřív krátké video, pak podrobný návod se snímky obrazovky.",
     "videoLabel": "Videonávod (1:38)",
     "stepsTitle": "Návod krok za krokem",
@@ -769,24 +770,24 @@
       {
         "image": "02-prihlaseni.jpg",
         "title": "Přihlášení nebo nový účet",
-        "text": "Máte-li už účet na novém webu, zadejte e-mail a heslo. Jinak klikněte na <b>Založit účet</b>.",
+        "text": "Máte-li už účet na novém webu, zadejte e-mail a heslo. Jinak klikněte na <b>Založit účet</b>.",
         "tip": "Účty ze starého webu nefungují – je potřeba založit nový."
       },
       {
         "image": "03-registrace.jpg",
         "title": "Založte účet",
-        "text": "Vyplňte jméno, e-mail a heslo (2×). Název klubu je nepovinný. Nebo zvolte <b>Pokračovat přes Google</b> – pak nepotřebujete heslo ani ověřovací e-mail.",
-        "tip": "Použijte e-mail, na který jste se hlásili v minulých letech – uvidíte své dřívější přihlášky a běžce z nich přidáte jedním klikem."
+        "text": "Vyplňte jméno, e-mail a heslo (2×). Název klubu je nepovinný. Nebo zvolte <b>Pokračovat přes Google</b> – pak nepotřebujete heslo ani ověřovací e-mail.",
+        "tip": "Použijte e-mail, na který jste se hlásili v minulých letech – uvidíte své dřívější přihlášky a běžce z nich přidáte jedním klikem."
       },
       {
         "image": "04-odeslano.jpg",
         "title": "Zkontrolujte e-mail",
-        "text": "Poslali jsme vám odkaz k ověření. Platí 24 hodin."
+        "text": "Poslali jsme vám odkaz k ověření. Platí 24 hodin."
       },
       {
         "image": "05-email.jpg",
         "title": "Ověřte e-mail",
-        "text": "V e-mailu „Ověření e-mailu — MCVV“ klikněte na <b>Ověřit e-mail</b>.",
+        "text": "V e-mailu „Ověření e-mailu — MCVV“ klikněte na <b>Ověřit e-mail</b>.",
         "tip": "Nevidíte ho? Podívejte se do spamu."
       },
       {
@@ -797,19 +798,19 @@
       {
         "image": "07-bezec.jpg",
         "title": "Přidejte nového běžce",
-        "text": "Vyplňte příjmení, jméno, ročník a pohlaví. Kategorii web nabídne podle ročníku, klub se předvyplní podle názvu přihlášky. Klikněte na <b>Přidat</b> a běžec se objeví v tabulce."
+        "text": "Vyplňte příjmení, jméno, ročník a pohlaví. Kategorii web nabídne podle ročníku, klub se předvyplní podle názvu přihlášky. Klikněte na <b>Přidat</b> a běžec se objeví v tabulce."
       },
       {
         "image": "08-rychla-nabidka.jpg",
-        "title": "Rychlá nabídka – běžci z minulých let",
-        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy.",
-        "tip": "Přihlašujete klub? Nejdřív přihlášku přejmenujte na název klubu a uložte. Podle názvu přihlášky se běžcům přiřadí klub."
+        "title": "Rychlá nabídka – běžci z minulých let",
+        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy.",
+        "tip": "Přihlašujete klub? Nejdřív přihlášku přejmenujte na název klubu a uložte. Podle názvu přihlášky se běžcům přiřadí klub."
       },
       {
         "image": "09-platba.jpg",
         "title": "Zaplaťte startovné",
-        "text": "V sekci <b>Platba</b> najdete částku, číslo účtu, variabilní symbol a QR kód pro platbu z mobilní banky.",
-        "tip": "Přihláška platí a v seznamu přihlášených se objeví až po zaplacení."
+        "text": "V sekci <b>Platba</b> najdete částku, číslo účtu, variabilní symbol a QR kód pro platbu z mobilní banky.",
+        "tip": "Přihláška platí a v seznamu přihlášených se objeví až po zaplacení."
       },
       {
         "image": "10-uprava.jpg",
@@ -819,18 +820,18 @@
       {
         "image": "11-login.jpg",
         "title": "Příští přihlášení",
-        "text": "Příště se jen přihlásíte e-mailem a heslem (nebo přes Google) – web vás rovnou přenese na <b>Moje přihláška</b>."
+        "text": "Příště se jen přihlásíte e-mailem a heslem (nebo přes Google) – web vás rovnou přenese na <b>Moje přihláška</b>."
       },
       {
         "image": "12-zapomenute.jpg",
         "title": "Zapomenuté heslo",
-        "text": "Na přihlašovací stránce klikněte na <b>Zapomněli jste heslo?</b>, zadejte e-mail a pošleme vám odkaz na nové heslo (platí 1 hodinu)."
+        "text": "Na přihlašovací stránce klikněte na <b>Zapomněli jste heslo?</b>, zadejte e-mail a pošleme vám odkaz na nové heslo (platí 1 hodinu)."
       }
     ],
     "faq": [
       {
-        "q": "Můžu se přihlásit starým účtem z minulého webu?",
-        "a": "Ne. Nový web má nové účty. Založte si účet znovu – nejlépe se stejným e-mailem, jaký jste používali u dřívějších přihlášek. Pak uvidíte své minulé ročníky a běžce z nich přidáte v Rychlé nabídce jedním klikem."
+        "q": "Můžu se přihlásit starým účtem z minulého webu?",
+        "a": "Ne. Nový web má nové účty. Založte si účet znovu – nejlépe se stejným e-mailem, jaký jste používali u dřívějších přihlášek. Pak uvidíte své minulé ročníky a běžce z nich přidáte v Rychlé nabídce jedním klikem."
       },
       {
         "q": "Nepřišel mi ověřovací e-mail.",
@@ -838,19 +839,19 @@
       },
       {
         "q": "Přihlašuji více lidí (rodinu, klub).",
-        "a": "Stačí jeden účet. Do jedné přihlášky přidáte libovolný počet běžců; startovné se sečte a zaplatíte ho jednou platbou s jedním variabilním symbolem. U klubu nejdřív přejmenujte přihlášku na název klubu."
+        "a": "Stačí jeden účet. Do jedné přihlášky přidáte libovolný počet běžců; startovné se sečte a zaplatíte ho jednou platbou s jedním variabilním symbolem. U klubu nejdřív přejmenujte přihlášku na název klubu."
       },
       {
         "q": "Kdy je přihláška platná?",
-        "a": "Až po zaplacení startovného. Teprve potom se běžci objeví v seznamu přihlášených."
+        "a": "Až po zaplacení startovného. Teprve potom se běžci objeví v seznamu přihlášených."
       },
       {
         "q": "Můžu přihlášku změnit?",
-        "a": "Ano, do uzávěrky online přihlášek můžete upravovat údaje, přidávat i odebírat běžce."
+        "a": "Ano, do uzávěrky online přihlášek můžete upravovat údaje, přidávat i odebírat běžce."
       },
       {
         "q": "Přihlašuji se přes Google – musím mít heslo?",
-        "a": "Ne. Pokud byste si chtěli nastavit i heslo, použijte „Zapomněli jste heslo?“."
+        "a": "Ne. Pokud byste si chtěli nastavit i heslo, použijte „Zapomněli jste heslo?“."
       }
     ]
   }

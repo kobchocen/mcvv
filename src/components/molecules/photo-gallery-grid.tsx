@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
+import { PhotoTile } from "./photo-tile";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export type PhotoGalleryItem = {
@@ -27,7 +27,7 @@ export function PhotoGalleryGrid({ photos, loadMoreLabel, closeLabel }: PhotoGal
   return (
     <>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {shown.map((photo) => (
+        {shown.map((photo, index) => (
           <button
             key={photo.id}
             type="button"
@@ -35,11 +35,11 @@ export function PhotoGalleryGrid({ photos, loadMoreLabel, closeLabel }: PhotoGal
             onClick={() => setActive(photo)}
             className="relative aspect-[3/4] cursor-zoom-in overflow-hidden border border-race-line/60 bg-race-forest text-left"
           >
-            <Image
+            <PhotoTile
               src={`/api/fotka?id=${photo.id}`}
               alt={photo.alt}
-              fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              priority={index < 4}
               className="object-cover"
             />
           </button>

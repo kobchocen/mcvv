@@ -25,7 +25,13 @@ export type FioRequest = { mode: "periods"; from: string; to: string } | { mode:
 
 export type FioResult =
   | { ok: true; transactions: FioTransaction[]; lastId: bigint | null }
-  | { ok: false; kind: "rate_limit" | "auth" | "error"; error: string };
+  | { ok: false; kind: FioErrorKind; error: string };
+
+/**
+ * `strong_auth` = HTTP 422 „Data není možné poskytnout bez silné autorizace“ – serverová
+ * zarážka /last/ je nenastavená nebo starší než 90 dní. Řeší se přes set-last-date.
+ */
+export type FioErrorKind = "rate_limit" | "auth" | "strong_auth" | "error";
 
 type Column = { value: string | number | null } | null | undefined;
 type RawTx = Record<string, Column>;
@@ -45,6 +51,10 @@ export function fioUrl(token: string, request: FioRequest): string {
   return request.mode === "last"
     ? `${FIO_BASE}/last/${t}/transactions.json`
     : `${FIO_BASE}/periods/${t}/${request.from}/${request.to}/transactions.json`;
+}
+
+export function setLastDateUrl(token: string, date: string): string {
+  return `${FIO_BASE}/set-last-date/${encodeURIComponent(token)}/${date}/`;
 }
 
 export function redact(text: string, token: string | undefined): string {
@@ -101,6 +111,9 @@ export async function fetchFio(
     }
     if (!response.ok) {
       const body = redact((await response.text()).slice(0, 200), token);
+      if (response.status === 422 && (request.mode === "last" || /autorizac/i.test(body))) {
+        return { ok: false, kind: "strong_auth", error: `Fio 422: ${body}` };
+      }
       // Fio vrací pro neplatný/expirovaný token i 500 s textem o tokenu.
       const kind = /token/i.test(body) ? "auth" : "error";
       return { ok: false, kind, error: `Fio ${response.status}: ${body}` };
@@ -143,4 +156,79 @@ export function chooseRequest(input: {
     return { mode: "periods", ...window };
   }
   return { mode: "last" };
+}
+
+/** Nastaví serverovou zarážku Fio pro /last/ na daný den (YYYY-MM-DD). */
+export async function setFioLastDate(
+  token: string,
+  date: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true } | { ok: false; kind: FioErrorKind; error: string }> {
+  try {
+    const response = await fetchImpl(setLastDateUrl(token, date), {
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (response.ok) return { ok: true };
+    const body = redact((await response.text()).slice(0, 200), token);
+    const kind =
+      response.status === 409
+        ? "rate_limit"
+        : response.status === 401 || response.status === 403
+          ? "auth"
+          : "error";
+    return { ok: false, kind, error: `Fio set-last-date ${response.status}: ${body}` };
+  } catch (error) {
+    return {
+      ok: false,
+      kind: "error",
+      error: redact(`Fio set-last-date: ${String(error).slice(0, 200)}`, token),
+    };
+  }
+}
+
+export type StrongAuthHealResult =
+  /** Zarážka nastavena a hned staženo `periods` za stejné okno. */
+  | { status: "healed"; request: FioRequest; result: FioResult }
+  /** Zarážka nastavena, na opakování v tomto běhu nezbývá čas (limit 30 s) → příští běh. */
+  | { status: "cursor_set"; date: string }
+  /** set-last-date selhalo → alert jako dřív. */
+  | { status: "failed"; error: string };
+
+const sleepReal = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Samooprava po 422 (silná autorizace) z /last/: počká na limit Fio, nastaví zarážku na
+ * `now - catchUpDays` a – pokud to časový rozpočet běhu dovolí – po dalším intervalu stáhne
+ * `periods` za totéž okno. Mezi dotazy vždy dodrží FIO_MIN_INTERVAL_MS.
+ */
+export async function healStrongAuth(input: {
+  token: string;
+  now: Date;
+  catchUpDays?: number;
+  fetchImpl?: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
+  /** Kolik ms smí běh celkem čekat kvůli limitu Fio (default 75 s, cron má maxDuration 120 s). */
+  waitBudgetMs?: number;
+  /** Volá se těsně před každým dotazem na Fio (pro uložení času posledního dotazu). */
+  onRequest?: (at: Date) => Promise<void> | void;
+}): Promise<StrongAuthHealResult> {
+  const sleep = input.sleep ?? sleepReal;
+  const fetchImpl = input.fetchImpl ?? fetch;
+  const budget = input.waitBudgetMs ?? 75_000;
+  const window = periodsWindow(input.now, input.catchUpDays ?? 7);
+  let waited = 0;
+  if (budget < FIO_MIN_INTERVAL_MS) {
+    return { status: "failed", error: "Fio 422: nedostatek času na set-last-date v tomto běhu" };
+  }
+  await sleep(FIO_MIN_INTERVAL_MS);
+  waited += FIO_MIN_INTERVAL_MS;
+  await input.onRequest?.(new Date(input.now.getTime() + waited));
+  const set = await setFioLastDate(input.token, window.from, fetchImpl);
+  if (!set.ok) return { status: "failed", error: set.error };
+  if (waited + FIO_MIN_INTERVAL_MS > budget) return { status: "cursor_set", date: window.from };
+  await sleep(FIO_MIN_INTERVAL_MS);
+  waited += FIO_MIN_INTERVAL_MS;
+  await input.onRequest?.(new Date(input.now.getTime() + waited));
+  const request: FioRequest = { mode: "periods", ...window };
+  return { status: "healed", request, result: await fetchFio(input.token, request, fetchImpl) };
 }

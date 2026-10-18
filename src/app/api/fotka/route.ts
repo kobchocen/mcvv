@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 
 import { prisma } from "@/lib/db/client";
 
+const CACHE_CONTROL = "public, max-age=31536000, immutable";
+
 export async function GET(request: NextRequest) {
   const idParam = request.nextUrl.searchParams.get("id");
   if (!idParam) {
@@ -23,12 +25,22 @@ export async function GET(request: NextRequest) {
       return new Response("Not found", { status: 404 });
     }
 
+    // Photo blobs never change for a given id: cache for a year, support conditional requests.
+    const etag = `"fotka-${photo.id}-${photo.image.length}"`;
+    if (request.headers.get("if-none-match") === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: { ETag: etag, "Cache-Control": CACHE_CONTROL },
+      });
+    }
+
     const buffer = Buffer.from(photo.image);
     return new Response(buffer as unknown as BodyInit, {
       headers: {
+        ETag: etag,
         "Content-Type": detectImageContentType(buffer),
         "Content-Length": String(buffer.length),
-        "Cache-Control": "public, max-age=86400, immutable",
+        "Cache-Control": CACHE_CONTROL,
         "X-Image-Id": String(photo.id),
         "X-Image-Year": photo.year?.toString() || "",
       },

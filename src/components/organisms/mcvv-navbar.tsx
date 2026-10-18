@@ -174,7 +174,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[min(100vw,390px)] border-l border-race-line bg-race-deep p-0 text-foreground sm:max-w-[390px] dark:text-white [&>button.absolute]:hidden"
+              className="h-dvh w-[min(100vw,390px)] border-l border-race-line bg-race-deep p-0 text-foreground sm:max-w-[390px] dark:text-white [&>button.absolute]:hidden"
             >
               <SheetHeader className="flex-row items-center justify-between border-b border-race-line/70 px-5 py-5">
                 <SheetTitle className="sr-only">{content.nav.menuLabel}</SheetTitle>
@@ -195,7 +195,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                 </SheetClose>
               </SheetHeader>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-5 px-5 pb-5">
+              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-5">
                 <nav className="grid gap-0.5 pt-3" aria-label={content.nav.menuLabel}>
                   {content.nav.links.map((link) => (
                     <MobileLink

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
+import { PhotoTile } from "./photo-tile";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export type RunnerPhotoItem = {
@@ -28,18 +28,18 @@ export function RunnerPhotoGrid({ photos, name, loadMoreLabel, closeLabel }: Run
   return (
     <>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {shown.map((photo) => (
+        {shown.map((photo, index) => (
           <button
             key={photo.id}
             type="button"
             onClick={() => setActive(photo)}
             className="relative aspect-[3/4] cursor-zoom-in overflow-hidden border border-race-line/60 bg-race-forest text-left"
           >
-            <Image
+            <PhotoTile
               src={`/api/fotka?id=${photo.id}`}
               alt={`${name} ${photo.year}`}
-              fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              priority={index < 4}
               className="object-cover"
             />
             <span className="absolute right-1 bottom-1 bg-black/65 px-1.5 py-0.5 text-xs font-semibold text-white">

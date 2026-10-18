@@ -202,9 +202,9 @@ async function EntryBody({
 
       <section>
         <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-            <thead>
+        <div className="mt-4 md:overflow-x-auto">
+          <table className="block w-full border-collapse text-left text-sm md:table md:min-w-[40rem]">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                 <th className="py-2 pr-3">{copy("runnerName")}</th>
                 <th className="py-2 pr-3">{copy("birthCol")}</th>
@@ -214,21 +214,32 @@ async function EntryBody({
                 <th className="py-2" />
               </tr>
             </thead>
-            <tbody>
+            <tbody className="grid gap-3 md:table-row-group">
               {registration.lines.map((line) => {
                 const starts = startsById.get(line.runnerId) ?? 0;
                 return (
-                  <tr key={line.runnerId} className="border-b border-race-line/40">
-                    <td className="py-2.5 pr-3">
-                      <span className="font-medium">{line.runner.name}</span>
+                  <tr
+                    key={line.runnerId}
+                    className="grid grid-cols-[1fr_auto] gap-x-3 rounded-[12px] border border-race-line/60 p-4 md:table-row md:rounded-none md:border-0 md:border-b md:border-race-line/40 md:p-0"
+                  >
+                    <td className="col-start-1 row-start-1 pb-2 md:py-2.5 md:pr-3">
+                      <span className="font-semibold md:font-medium">{line.runner.name}</span>
                       <span className="mt-0.5 block text-xs text-race-muted sm:ml-2 sm:mt-0 sm:inline">
                         {isNewbie(starts)
                           ? startsCopy("newbie")
                           : startsCopy("starts", { count: starts })}
                       </span>
                     </td>
-                    <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
-                    <td className="py-2.5 pr-3">
+                    <td className="col-span-2 flex items-center justify-between gap-3 border-t border-race-line/40 py-2 md:table-cell md:border-0 md:py-2.5 md:pr-3">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-race-dim md:hidden">
+                        {copy("birthCol")}
+                      </span>
+                      {line.runnerId.slice(0, 4)}
+                    </td>
+                    <td className="col-span-2 grid gap-1.5 border-t border-race-line/40 py-2 md:table-cell md:border-0 md:py-2.5 md:pr-3">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-race-dim md:hidden">
+                        {copy("club")}
+                      </span>
                       {open ? (
                         <McvvLineClubSelect
                           year={year}
@@ -241,16 +252,26 @@ async function EntryBody({
                         line.club.name
                       )}
                     </td>
-                    <td className="py-2.5 pr-3">{line.category.name}</td>
-                    <td className="py-2.5 pr-3">
-                      {line.entryFee ?? line.category.entryFee}
-                      {feeReasons.get(line.runnerId) ? (
-                        <span className="ml-2 text-xs text-race-muted">
-                          {feeReasons.get(line.runnerId)}
-                        </span>
-                      ) : null}
+                    <td className="col-span-2 flex items-center justify-between gap-3 border-t border-race-line/40 py-2 md:table-cell md:border-0 md:py-2.5 md:pr-3">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-race-dim md:hidden">
+                        {copy("category")}
+                      </span>
+                      {line.category.name}
                     </td>
-                    <td className="py-2.5">
+                    <td className="col-span-2 flex items-center justify-between gap-3 border-t border-race-line/40 pt-2 md:table-cell md:border-0 md:py-2.5 md:pr-3">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-race-dim md:hidden">
+                        {copy("fee")}
+                      </span>
+                      <span>
+                        {line.entryFee ?? line.category.entryFee}
+                        {feeReasons.get(line.runnerId) ? (
+                          <span className="ml-2 text-xs text-race-muted">
+                            {feeReasons.get(line.runnerId)}
+                          </span>
+                        ) : null}
+                      </span>
+                    </td>
+                    <td className="col-start-2 row-start-1 -mr-2 -mt-2 md:m-0 md:table-cell md:py-2.5">
                       {open ? (
                         <form action={removeRunner}>
                           <input type="hidden" name="year" value={year} />
@@ -259,7 +280,7 @@ async function EntryBody({
                           <button
                             type="submit"
                             aria-label={copy("remove")}
-                            className="inline-flex size-9 items-center justify-center text-race-muted hover:text-foreground"
+                            className="inline-flex size-11 items-center md:size-9 justify-center text-race-muted hover:text-foreground"
                           >
                             <Trash2 className="size-4" aria-hidden="true" />
                           </button>

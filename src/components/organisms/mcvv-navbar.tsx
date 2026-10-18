@@ -180,7 +180,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                 <SheetTitle className="sr-only">{content.nav.menuLabel}</SheetTitle>
                 <RaceBrand
                   {...content.brand}
-                  className="[&_span:first-child]:size-[34px] [&_span:first-child]:text-[17px] [&_span_span]:text-[13px]"
+                  className="min-w-0 [&>span:first-child]:size-[34px] [&>span:first-child]:text-[17px] [&_span_span]:text-[14px]"
                 />
                 <SheetClose asChild>
                   <Button

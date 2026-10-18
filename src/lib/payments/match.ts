@@ -6,6 +6,7 @@ export type MatchReason =
   | "vs_malformed"
   | "not_found"
   | "cancelled"
+  /** Jen historické záznamy – platba na prázdnou přihlášku se dnes páruje jako přeplatek. */
   | "empty"
   /** Jen historické záznamy – částečné platby se dnes párují. */
   | "underpaid";
@@ -59,9 +60,8 @@ export function matchTransaction(
   if (reg.status === ENTRY_STATUS.cancelled)
     return { kind: "unmatched", reason: "cancelled", year, registrationId: id };
   const alreadyConfirmed = reg.status === ENTRY_STATUS.confirmed;
-  if (!alreadyConfirmed && (reg.status === ENTRY_STATUS.empty || reg.fee <= 0)) {
-    return { kind: "unmatched", reason: "empty", year, registrationId: id };
-  }
+  // Prázdná přihláška (zatím bez běžců) platbu přijme – celá částka je přeplatek,
+  // který se po doplnění běžců započte do startovného.
   // Platby se sčítají (velké klubové přihlášky se plní a platí postupně).
   const total = reg.paid + tx.amount;
   const excessBefore = Math.max(0, reg.paid - reg.fee);

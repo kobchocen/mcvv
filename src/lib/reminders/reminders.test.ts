@@ -68,6 +68,10 @@ test("reminder emails show the remaining amount, payment details, QR and the sig
     assert.match(mail.text, /Tým pořadatelů z K\.O\.B\. Choceň/);
     assert.match(mail.html, /api\/platba-qr\?rok=2026&amp;id=32&amp;castka=300/);
     assert.ok(!/návod/i.test(mail.text + mail.html));
+    if (kind === 2) {
+      assert.match(mail.text, /nezaplacené přihlášky budou zrušeny/);
+      assert.ok(!/mohou být zrušeny/.test(mail.text));
+    }
     assert.ok(!mail.html.includes("<A>"));
   }
 });

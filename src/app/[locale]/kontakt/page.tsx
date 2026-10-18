@@ -6,6 +6,9 @@ import { McvvPublicNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
+import { getSession } from "@/lib/auth/session";
+import { issueFormToken } from "@/lib/contact/guard";
+import { env } from "@/lib/env";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -25,6 +28,9 @@ export default async function ContactPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "Contact" });
+  const session = await getSession();
+  const secret = env.SESSION_SECRET;
+  const formToken = secret && secret.length >= 32 ? issueFormToken(secret) : undefined;
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -57,7 +63,10 @@ export default async function ContactPage({ params }: PageProps) {
               success: copy("success"),
               errorInvalid: copy("errorInvalid"),
               errorSend: copy("errorSend"),
+              errorExpired: copy("errorExpired"),
             }}
+            formToken={formToken}
+            defaults={session ? { name: session.name, email: session.email } : undefined}
           />
           <p>
             <Link

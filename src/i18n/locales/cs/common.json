@@ -403,6 +403,7 @@
     "success": "Zpráva je odeslaná. Ozveme se.",
     "errorInvalid": "Zkontrolujte jméno, e-mail a text zprávy.",
     "errorSend": "Zprávu se teď nepodařilo odeslat. Zkuste to znovu.",
+    "errorExpired": "Formulář vypršel. Obnovte prosím stránku a odešlete zprávu znovu.",
     "back": "Zpět na úvod"
   },
   "Instructions": {

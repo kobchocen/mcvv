@@ -403,6 +403,7 @@
     "success": "Message sent. We will get back to you.",
     "errorInvalid": "Please check your name, e-mail, and message.",
     "errorSend": "The message could not be sent. Please try again.",
+    "errorExpired": "The form has expired. Please reload the page and send the message again.",
     "back": "Back to home"
   },
   "Instructions": {

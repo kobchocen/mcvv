@@ -9,6 +9,7 @@ export async function sendResendEmail(input: {
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 }): Promise<boolean> {
   if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
     return false;
@@ -25,6 +26,7 @@ export async function sendResendEmail(input: {
       subject: input.subject,
       html: input.html,
       text: input.text,
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
     }),
   });
   if (!response.ok) {

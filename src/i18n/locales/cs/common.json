@@ -144,7 +144,7 @@
       "title": "Neděle 6. prosince",
       "items": [
         { "icon": "calendar", "text": "Každou první prosincovou neděli" },
-        { "icon": "clock", "text": "Start závodu v 10:15" },
+        { "icon": "clock", "text": "Intervalový start od 10:15" },
         {
           "icon": "pin",
           "text": "Choceň - Velká Veranda - ",
@@ -372,7 +372,7 @@
       "timetable": {
         "title": "Časový harmonogram",
         "summary": "9:45 · 10:15 · 12:20",
-        "body": "Přihlášky na místě končí v 9:45. Start od 10:15. Vyhlášení výsledků ve 12:20."
+        "body": "Přihlášky na místě končí v 9:45. Intervalový start od 10:15. Vyhlášení výsledků ve 12:20."
       },
       "privacy": {
         "title": "Ochrana údajů",

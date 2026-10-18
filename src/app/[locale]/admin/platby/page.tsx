@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { assignBankTx, ignoreBankTx, markRefunded } from "@/lib/payments/actions";
 import { fioMode, paymentsDryRun } from "@/lib/payments/job";
-import { REASON_LABELS, type MatchReason } from "@/lib/payments/match";
+import { REASON_LABELS, type BankTxReason } from "@/lib/payments/match";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -18,8 +18,7 @@ export const dynamic = "force-dynamic";
 const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
 const fmtTime = (d: Date | null | undefined) =>
   d ? d.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" }) : "–";
-const reasonLabel = (r: string | null) =>
-  r ? (REASON_LABELS[r as MatchReason | "interrupted"] ?? r) : "";
+const reasonLabel = (r: string | null) => (r ? (REASON_LABELS[r as BankTxReason] ?? r) : "");
 
 const th = "py-2 pr-4";
 const td = "py-2 pr-4 align-top";
@@ -202,8 +201,8 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
                       ? "vyřízeno bez platby"
                       : tx.autoConfirmed
                         ? "spárováno, potvrzeno"
-                        : tx.reason === "already_confirmed"
-                          ? "spárováno – už potvrzená (možný duplikát)"
+                        : tx.reason
+                          ? `spárováno – ${reasonLabel(tx.reason)}`
                           : "spárováno"}
                     {tx.resolvedBy ? ` (${tx.resolvedBy})` : ""}
                   </td>

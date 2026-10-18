@@ -22,7 +22,7 @@ test("renderDailySummary lists unmatched payments and overpayments", () => {
         amount: 400,
         vs: "202632",
         counterName: "A",
-        reason: "underpaid",
+        reason: "not_found",
         registrationId: 32,
         overpaid: 0,
         status: "unmatched",
@@ -42,7 +42,29 @@ test("renderDailySummary lists unmatched payments and overpayments", () => {
     adminUrl: "https://www.mcvv.org/cs/admin/platby",
   });
   assert.match(mail.subject, /1 nespárovaných, 1 přeplatků/);
-  assert.match(mail.text, /nižší částka než k úhradě/);
+  assert.match(mail.text, /přihláška neexistuje/);
   assert.match(mail.text, /přeplatek 100 Kč/);
   assert.ok(!mail.html.includes("<x>"));
+  assert.match(mail.text, /Platby po 3\. 12\. \(potvrdit ručně\): 0/);
+});
+
+test("late payments appear in the summary", () => {
+  const mail = renderDailySummary({
+    rows: [
+      {
+        date: "2026-12-05",
+        amount: 300,
+        vs: "202640",
+        counterName: "C",
+        reason: "late",
+        registrationId: 40,
+        overpaid: 0,
+        status: "matched",
+      },
+    ],
+    openUnmatched: 0,
+    adminUrl: "https://www.mcvv.org/cs/admin/platby",
+  });
+  assert.match(mail.subject, /1 po 3\. 12\./);
+  assert.match(mail.text, /přihláška 40/);
 });

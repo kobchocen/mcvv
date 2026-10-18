@@ -181,10 +181,17 @@ export async function processTransaction(
       status: "matched",
       paymentId: payment.id,
       overpaid: decision.overpaid,
-      reason: decision.alreadyConfirmed ? "already_confirmed" : null,
+      reason: decision.alreadyConfirmed
+        ? "already_confirmed"
+        : !autoConfirmAllowed(tx.date, year)
+          ? "late"
+          : decision.remaining > 0
+            ? "partial"
+            : null,
     },
   });
   await recalculateRegistrationStatus(year, decision.registrationId);
+  // Auto-potvrzení, jakmile součet plateb pokryje startovné (stav 3/4); jinak zůstává 2.
   if (!decision.alreadyConfirmed && autoConfirmAllowed(tx.date, year)) {
     const result = await confirmRegistrationCore(year, decision.registrationId, { site: origin() });
     if (result !== "not_confirmable") {
@@ -208,7 +215,11 @@ export async function maybeSendDailySummary(now = new Date()): Promise<boolean> 
   const rows = await prisma.bankTx.findMany({
     where: {
       summarizedAt: null,
-      OR: [{ status: "unmatched" }, { status: "matched", overpaid: { gt: 0 } }],
+      OR: [
+        { status: "unmatched" },
+        { status: "matched", overpaid: { gt: 0 } },
+        { status: "matched", reason: "late" },
+      ],
     },
     orderBy: { id: "asc" },
   });

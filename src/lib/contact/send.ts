@@ -33,7 +33,7 @@ export function buildContactMail(payload: ContactPayload) {
 
 export async function sendContactMessage(
   payload: ContactPayload,
-  transport: ContactTransport = { resend: sendResendEmail },
+  transport: ContactTransport = { resend: (m) => sendResendEmail({ ...m, kind: "contact" }) },
 ) {
   const to = env.CONTACT_TO;
   const { subject, text, html } = buildContactMail(payload);

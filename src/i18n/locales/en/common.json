@@ -570,6 +570,8 @@
     "apple": "Continue with Apple"
   },
   "Admin": {
+    "mailStats": "Emails: sent today {today} / {cap}, this month {month}, queued {pending}, failed {failed}.",
+    "mailQuotaExceeded": "Resend quota is exhausted for today.",
     "eyebrow": "Back office",
     "title": "Administration",
     "overviewTitle": "Overview",

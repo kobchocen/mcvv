@@ -116,6 +116,7 @@ export function McvvNewsletterProgress({
           window.location.reload();
           break;
         }
+        if (outcome.paused) break;
         await new Promise((r) => setTimeout(r, outcome.retryAfterMs || pauseMs));
       }
     } catch (e) {

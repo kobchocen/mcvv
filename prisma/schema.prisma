@@ -446,6 +446,7 @@ model NewsletterRecipient {
 
   @@unique([campaignId, email])
   @@index([campaignId, status])
+  @@index([sentAt])
   @@index([claimToken])
   @@map("mcvv_newsletter_recipient")
 }
@@ -459,4 +460,60 @@ model NewsletterOptOut {
   createdAt      DateTime  @default(now()) @map("created_at")
 
   @@map("mcvv_newsletter_optout")
+}
+
+enum MailKind {
+  auth
+  confirmation
+  alert
+  contact
+  reminder
+  summary
+  other
+}
+
+enum MailQueueStatus {
+  pending
+  sending
+  sent
+  failed
+}
+
+/// Fronta odchozích e-mailů (denní limit Resend). Newsletter má vlastní tabulku příjemců,
+/// ale počítá se do stejného denního limitu.
+model MailQueue {
+  id         Int             @id @default(autoincrement())
+  kind       MailKind
+  /// 0 = potvrzení/auth/alert (smí čerpat rezervu), 1 = ostatní.
+  priority   Int             @default(1) @db.TinyInt
+  toEmail    String          @map("to_email") @db.VarChar(255)
+  replyTo    String?         @map("reply_to") @db.VarChar(255)
+  subject    String          @db.VarChar(300)
+  html       String          @db.MediumText
+  text       String          @db.MediumText
+  /// Volitelný klíč proti dvojímu zařazení (např. "reminder1:2026:32").
+  dedupeKey  String?         @unique @map("dedupe_key") @db.VarChar(120)
+  status     MailQueueStatus @default(pending)
+  attempts   Int             @default(0) @db.SmallInt
+  notBefore  DateTime        @default(now()) @map("not_before")
+  claimToken String?         @map("claim_token") @db.VarChar(36)
+  claimedAt  DateTime?       @map("claimed_at")
+  lastError  String?         @map("last_error") @db.VarChar(500)
+  providerId String?         @map("provider_id") @db.VarChar(64)
+  sentAt     DateTime?       @map("sent_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([status, priority, notBefore])
+  @@index([sentAt])
+  @@index([claimToken])
+  @@map("mcvv_mail_queue")
+}
+
+/// Denní příznaky e-mailové kvóty (den v UTC – tak resetuje Resend).
+model MailDay {
+  day             DateTime  @id @db.Date
+  quotaExceededAt DateTime? @map("quota_exceeded_at")
+  capAlertSentAt  DateTime? @map("cap_alert_sent_at")
+
+  @@map("mcvv_mail_day")
 }

@@ -49,7 +49,16 @@ export async function sendNewsletterBatch(
         })),
       ),
     });
-    if (response.status === 429 || response.status >= 500) {
+    if (response.status === 429) {
+      const body = (await response.text()).slice(0, 300);
+      const quota = /quota/i.test(body);
+      return {
+        ok: false,
+        retryable: true,
+        error: quota ? `Resend 429 (kvóta): ${body}` : "Resend 429",
+      };
+    }
+    if (response.status >= 500) {
       return { ok: false, retryable: true, error: `Resend ${response.status}` };
     }
     if (!response.ok) {

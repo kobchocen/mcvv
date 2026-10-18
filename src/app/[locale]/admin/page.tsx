@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { getSession } from "@/lib/auth/session";
+import { mailPolicy } from "@/lib/mail/queue";
+import { mailStats } from "@/lib/mail/queue-store";
 import buildInfo from "@/lib/build-info.json";
 import { Link, type Locale } from "@/i18n/routing";
 
@@ -21,6 +23,7 @@ export default async function AdminPage({ params }: PageProps) {
   setRequestLocale(locale);
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const session = await getSession();
+  const mail = await mailStats().catch(() => null);
 
   const tiles: {
     href:
@@ -56,6 +59,18 @@ export default async function AdminPage({ params }: PageProps) {
             revision: buildInfo.revision,
           })}
         </p>
+        {mail ? (
+          <p className="mt-3 text-sm text-race-muted" data-testid="mail-stats">
+            {copy("mailStats", {
+              today: mail.today,
+              cap: mailPolicy().cap,
+              month: mail.month,
+              pending: mail.pending,
+              failed: mail.failed,
+            })}
+            {mail.quotaExceeded ? ` ${copy("mailQuotaExceeded")}` : ""}
+          </p>
+        ) : null}
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           {tiles.map((tile) => (
             <Link

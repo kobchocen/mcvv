@@ -75,3 +75,37 @@ ${footer} <a href="${site}" style="color:#5d6d63">mcvv.org</a>. ${ignore}
   ].join("\n");
   return { html, text };
 }
+
+export type BrandedEmailInput = {
+  subject: string;
+  site: string;
+  /** Pre-rendered, already escaped HTML blocks placed inside the white card. */
+  htmlBlocks: string[];
+  text: string;
+  footer?: string;
+};
+
+/** Same frame as renderTransactionalEmail, but with free-form content (entry confirmation etc.). */
+export function renderBrandedEmail(input: BrandedEmailInput): { html: string; text: string } {
+  const site = escapeHtml(input.site);
+  const footer =
+    input.footer ?? "Tento e-mail jste dostali, protože jste se přihlásili na závod MCVV na";
+  const html = `<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.subject)}</title></head>
+<body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f6f1"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff">
+<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
+<a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
+<span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
+</td></tr>
+<tr><td style="padding:28px;font-size:16px;line-height:1.55">
+${input.htmlBlocks.join("\n")}
+</td></tr>
+<tr><td style="padding:18px 28px;background:#f7f9f6;color:#5d6d63;font-size:12px;line-height:1.5">
+${escapeHtml(footer)} <a href="${site}" style="color:#5d6d63">mcvv.org</a>.
+</td></tr>
+</table></td></tr></table></body></html>`;
+  const text = `${input.text.trimEnd()}\n\n--\nMCVV · Malá cena Velké Verandy · ${input.site}\n`;
+  return { html, text };
+}

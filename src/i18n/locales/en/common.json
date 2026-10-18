@@ -144,7 +144,7 @@
       "title": "Sunday, December 6",
       "items": [
         { "icon": "calendar", "text": "Every first Sunday in December" },
-        { "icon": "clock", "text": "Race start at 10:15" },
+        { "icon": "clock", "text": "Interval start from 10:15" },
         {
           "icon": "pin",
           "text": "Choceň - Velká Veranda - ",
@@ -372,7 +372,7 @@
       "timetable": {
         "title": "Timetable",
         "summary": "9:45 · 10:15 · 12:20",
-        "body": "On-site registration closes at 9:45. Start from 10:15. Awards at 12:20."
+        "body": "On-site registration closes at 9:45. Interval start from 10:15. Awards at 12:20."
       },
       "privacy": {
         "title": "Privacy",

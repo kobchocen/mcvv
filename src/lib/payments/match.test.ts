@@ -52,7 +52,6 @@ test("unmatched reasons", () => {
   assert.equal(reason(matchTransaction(tx(500.5, "202632"), Y, reg(2, 500))), "fraction");
   assert.equal(reason(matchTransaction(tx(500, "202632"), Y, () => null)), "not_found");
   assert.equal(reason(matchTransaction(tx(500, "202632"), Y, reg(0, 500))), "cancelled");
-  assert.equal(reason(matchTransaction(tx(500, "202632"), Y, reg(1, 0))), "empty");
 });
 
 test("payment on an already confirmed entry is recorded as overpayment without confirming", () => {
@@ -82,4 +81,17 @@ test("partial payments are matched and summed per entry", () => {
   // Už přeplacená přihláška: připsat jen nový přeplatek.
   const again = matchTransaction(tx(50, "202632"), Y, reg(4, 500, 600));
   assert.equal(again.kind === "matched" && again.overpaid, 50);
+});
+
+test("payment on an empty entry is recorded as an overpayment", () => {
+  const d = matchTransaction(tx(500, "202632"), Y, reg(1, 0));
+  assert.equal(d.kind, "matched");
+  assert.equal(d.kind === "matched" && d.overpaid, 500);
+  assert.equal(d.kind === "matched" && d.remaining, 0);
+  assert.equal(d.kind === "matched" && d.alreadyConfirmed, false);
+  // Druhá platba na stále prázdnou přihlášku: přeplatek jen o novou částku.
+  const again = matchTransaction(tx(200, "202632"), Y, reg(1, 0, 500));
+  assert.equal(again.kind === "matched" && again.overpaid, 200);
+  // Zrušená přihláška zůstává v nespárovaných.
+  assert.equal(matchTransaction(tx(500, "202632"), Y, reg(0, 0)).kind, "unmatched");
 });

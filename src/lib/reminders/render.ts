@@ -50,7 +50,7 @@ export function renderReminder(input: ReminderInput) {
   const intro =
     input.kind === 1
       ? `děkujeme za přihlášku č. ${input.year}/${input.id}. Zatím u ní neevidujeme úhradu celého startovného. Přihláška bude potvrzena po připsání platby na účet.`
-      : `uzávěrka přihlášek${deadline ? ` byla ${deadline}` : " již proběhla"} a u přihlášky č. ${input.year}/${input.id} stále neevidujeme úhradu celého startovného. Prosíme o doplacení co nejdříve, nezaplacené přihlášky mohou být zrušeny.`;
+      : `uzávěrka přihlášek${deadline ? ` byla ${deadline}` : " již proběhla"} a u přihlášky č. ${input.year}/${input.id} stále neevidujeme úhradu celého startovného. Prosíme o doplacení co nejdříve, nezaplacené přihlášky budou zrušeny.`;
   const partialNote =
     input.paid > 0
       ? `Děkujeme za dosavadní platby (${kc(input.paid)}). Zbývá doplatit ${kc(remaining)}.`

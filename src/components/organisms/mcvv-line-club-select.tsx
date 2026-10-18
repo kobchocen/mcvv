@@ -25,6 +25,7 @@ export function McvvLineClubSelect({
         clubs={clubs}
         defaultValue={clubName}
         listId={`club-${runnerId}`}
+        className="h-11 min-w-0 md:h-9 md:min-w-[10rem]"
         onBlurSubmit
       />
     </form>

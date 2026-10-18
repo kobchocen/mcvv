@@ -13,7 +13,7 @@ export function RaceBrand({ top, bottom, mark, className }: RaceBrandProps) {
       <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-race-accent-solid font-display text-xl font-bold text-white">
         {mark}
       </span>
-      <span className="grid leading-none">
+      <span className="grid min-w-0 gap-0.5 whitespace-nowrap leading-[1.1]">
         <span className="font-display text-base font-semibold tracking-[0.03em] text-foreground dark:text-white">
           {top}
         </span>

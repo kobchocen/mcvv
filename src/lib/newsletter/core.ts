@@ -284,6 +284,8 @@ export type BatchOutcome = {
   sent: number;
   retryAfterMs: number;
   error?: string;
+  /** Denní rozpočet e-mailů vyčerpán – pokračuje se automaticky (cron) další den. */
+  paused?: "cap" | "quota";
 };
 
 export const STALE_CLAIM_MS = 15 * 60 * 1000;

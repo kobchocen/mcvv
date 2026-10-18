@@ -18,5 +18,5 @@ export async function sendConfirmationEmail(input: {
   }
   const site = await appOrigin();
   const { subject, html, text } = renderEntryConfirmation({ ...input, email: input.email, site });
-  return sendResendEmail({ to: input.email, subject, text, html });
+  return sendResendEmail({ to: input.email, subject, text, html, kind: "confirmation" });
 }

@@ -570,6 +570,8 @@
     "apple": "Pokračovat přes Apple"
   },
   "Admin": {
+    "mailStats": "E-maily: dnes odesláno {today} / {cap}, tento měsíc {month}, ve frontě {pending}, chybných {failed}.",
+    "mailQuotaExceeded": "Kvóta Resend je pro dnešek vyčerpaná.",
     "eyebrow": "Správa",
     "title": "Administrace",
     "overviewTitle": "Přehled",

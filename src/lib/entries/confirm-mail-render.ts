@@ -37,7 +37,6 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
   const start = `${RACE_START_HOUR}:${String(RACE_START_MINUTE).padStart(2, "0")}`;
   const date = raceDateLabel(input.year);
   const editUrl = `${input.site}/prihlasky`;
-  const guideUrl = `${input.site}/navod`;
   const p = (v: string) => `<p style="margin:0 0 16px">${v}</p>`;
   const th =
     'style="text-align:left;padding:6px 8px;border-bottom:2px solid #e2531c;font-size:13px;color:#5d6d63"';
@@ -61,9 +60,7 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px auto;background:#f7f9f6">${totalsRow("Startovné celkem", kc(input.fee))}${totalsRow("Zaplaceno", kc(input.paid))}${totalsRow("Zbývá zaplatit", kc(remaining), true)}</table>`,
     `<h2 style="margin:8px 0 8px;font-size:17px;color:#0f2a1c">Závod</h2>`,
     p(`<strong>${escapeHtml(date)}</strong>, ${escapeHtml(RACE_PLACE)}<br>Start v ${start}`),
-    p(
-      `Přihlášku můžete upravit v sekci ${link("Moje přihlášky", editUrl)}. Praktické informace najdete v ${link("návodu k závodu", guideUrl)}.`,
-    ),
+    p(`Přihlášku můžete upravit v sekci ${link("Moje přihlášky", editUrl)}.`),
     p(`Těšíme se na vás!<br>${escapeHtml(SIGNATURE)}`),
   ];
 
@@ -82,7 +79,6 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     `Závod: ${date}, ${RACE_PLACE}, start v ${start}`,
     "",
     `Úprava přihlášky: ${editUrl}`,
-    `Návod k závodu: ${guideUrl}`,
     "",
     "Těšíme se na vás!",
     SIGNATURE,

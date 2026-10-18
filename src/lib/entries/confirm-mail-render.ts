@@ -59,7 +59,9 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px"><tr><th ${th}>Jméno</th><th ${th}>Klub</th><th ${th}>Kategorie</th><th ${th} align="right">Startovné</th></tr>${rows}</table>`,
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px auto;background:#f7f9f6">${totalsRow("Startovné celkem", kc(input.fee))}${totalsRow("Zaplaceno", kc(input.paid))}${totalsRow("Zbývá zaplatit", kc(remaining), true)}</table>`,
     `<h2 style="margin:8px 0 8px;font-size:17px;color:#0f2a1c">Závod</h2>`,
-    p(`<strong>${escapeHtml(date)}</strong>, ${escapeHtml(RACE_PLACE)}<br>Intervalový start od ${start}`),
+    p(
+      `<strong>${escapeHtml(date)}</strong>, ${escapeHtml(RACE_PLACE)}<br>Intervalový start od ${start}`,
+    ),
     p(`Přihlášku můžete upravit v sekci ${link("Moje přihlášky", editUrl)}.`),
     p(`Těšíme se na vás!<br>${escapeHtml(SIGNATURE)}`),
   ];

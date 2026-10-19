@@ -1,4 +1,4 @@
-import { Bus, Car, CircleParking, Flag, Footprints, MapPin, Train } from "lucide-react";
+import { Bus, Car, CircleParking, Footprints, MapPin, Train } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLocale } from "next-intl";
 
@@ -17,12 +17,13 @@ import {
   type ArrivalPoint,
   type ArrivalPointId,
   type ArrivalRouteId,
+  VERANDA,
 } from "@/lib/arrival/points";
 
 const ROUTE_IDS: ArrivalRouteId[] = ["train", "bus", "p2", "p1"];
 
 const pointIcons: Record<ArrivalPointId, LucideIcon | null> = {
-  veranda: Flag,
+  veranda: null,
   p1: null,
   p2: null,
   train: Train,
@@ -50,24 +51,44 @@ function Marker({ point, label }: { point: ArrivalPoint; label: string }) {
       </span>
     );
   }
+  if (point.id === "veranda") {
+    return (
+      <span
+        className="absolute z-30 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-race-accent-solid font-display text-[9px] font-bold tracking-[0.02em] text-white shadow-[0_2px_6px_rgb(0_0_0/0.45)] sm:size-9 sm:text-[11px] dark:border-white/90"
+        style={style}
+        aria-hidden="true"
+      >
+        {label}
+      </span>
+    );
+  }
   const Icon = pointIcons[point.id];
-  const isFinish = point.id === "veranda";
   return (
     <span
-      className={`absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border px-1.5 py-0.5 font-display text-[10px] font-semibold tracking-[0.08em] whitespace-nowrap uppercase shadow-sm sm:px-2 sm:py-1 sm:text-xs ${
-        isFinish
-          ? "border-white/80 bg-race-accent-solid text-white dark:border-race-deep/80"
-          : "border-race-line bg-race-surface/95 text-foreground dark:text-white"
-      }`}
+      className={`absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border px-1.5 py-0.5 font-display text-[10px] font-semibold tracking-[0.08em] whitespace-nowrap uppercase shadow-sm sm:px-2 sm:py-1 sm:text-xs border-race-line bg-race-surface/95 text-foreground dark:text-white`}
       style={style}
       aria-hidden="true"
     >
-      {Icon ? (
-        <Icon
-          className={`size-3 sm:size-3.5 ${isFinish ? "" : "text-race-accent dark:text-orange-300"}`}
-        />
-      ) : null}
+      {Icon ? <Icon className="size-3 text-race-accent sm:size-3.5 dark:text-orange-300" /> : null}
       {label}
+    </span>
+  );
+}
+
+/** „VERANDA“ nad bodem S/C: spodní hrana ~12 px nad tečkou, s krátkou spojnicí. */
+function VerandaLabel({ text }: { text: string }) {
+  const { left, top } = mapPosition(VERANDA);
+  return (
+    <span
+      className="pointer-events-none absolute z-20 flex -translate-x-1/2 -translate-y-full flex-col items-center"
+      style={{ left: `${left}%`, top: `${top}%` }}
+      aria-hidden="true"
+    >
+      <span className="border border-white/80 bg-race-accent-solid px-1.5 py-0.5 font-display text-[10px] font-semibold tracking-[0.12em] text-white uppercase shadow-sm sm:px-2 sm:py-1 sm:text-xs dark:border-white/70">
+        {text}
+      </span>
+      {/* connector + gap: dot radius (14–18 px) + ~12 px */}
+      <span className="h-[26px] w-0.5 bg-race-accent-solid sm:h-[30px]" />
     </span>
   );
 }
@@ -178,6 +199,7 @@ export function McvvArrivalMap({ content }: McvvArrivalMapProps) {
           >
             {content.townLabel}
           </span>
+          <VerandaLabel text={content.verandaLabel} />
           {ARRIVAL_POINTS.map((point) => (
             <Marker key={point.id} point={point} label={content.points[point.id].label} />
           ))}

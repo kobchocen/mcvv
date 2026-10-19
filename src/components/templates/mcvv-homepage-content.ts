@@ -23,6 +23,8 @@ export type ArrivalContent = {
   title: string;
   /** Popisek města v mapě (vlastní jméno). */
   townLabel: string;
+  /** Popisek nad bodem startu/cíle (vlastní jméno). */
+  verandaLabel: string;
   intro: string;
   mapAlt: string;
   mapOpen: string;

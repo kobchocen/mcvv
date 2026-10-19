@@ -176,6 +176,7 @@
       ],
       "arrival": {
         "title": "Jak se k nám dostat",
+        "townLabel": "Choceň",
         "intro": "Start i cíl je u Velké Verandy v lese u Chocně. Autem zaparkujte na P1 nebo P2, z vlaku i autobusu vede pěší trasa po nábřeží Tiché Orlice a lesem.",
         "mapAlt": "Mapa příjezdu k Velké Verandě s parkovišti P1 a P2, vlakovým a autobusovým nádražím a pěšími trasami",
         "mapOpen": "Otevřít mapu ve větším rozlišení",
@@ -187,7 +188,7 @@
         "drive": "Navigovat autem",
         "points": {
           "veranda": {
-            "label": "S/C",
+            "label": "S/C · VERANDA",
             "name": "Velká Veranda – start a cíl",
             "description": "Prezentace, start i cíl závodu."
           },
@@ -199,7 +200,7 @@
           "p2": {
             "label": "P2",
             "name": "Parkoviště P2 – nábřeží Krále Jiřího",
-            "description": "Dál po nábřeží a zelené značce lesem k Verandě."
+            "description": "Odtud lesními cestami přímo k Verandě."
           },
           "train": {
             "label": "Vlak",

@@ -12,9 +12,14 @@ import {
   mapPosition,
   mapyPointUrl,
   mapyWalkUrl,
+  routeSvgPath,
+  TOWN_LABEL_POSITION,
   type ArrivalPoint,
   type ArrivalPointId,
+  type ArrivalRouteId,
 } from "@/lib/arrival/points";
+
+const ROUTE_IDS: ArrivalRouteId[] = ["train", "bus", "p2", "p1"];
 
 const pointIcons: Record<ArrivalPointId, LucideIcon | null> = {
   veranda: Flag,
@@ -33,19 +38,46 @@ function Marker({ point, label }: { point: ArrivalPoint; label: string }) {
   const isFinish = point.id === "veranda";
   return (
     <span
-      className={`absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border-2 border-white px-1.5 py-0.5 font-display text-[10px] font-bold text-white shadow-md sm:text-xs ${
+      className={`absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border px-1.5 py-0.5 font-display text-[10px] font-semibold tracking-[0.08em] whitespace-nowrap uppercase shadow-sm sm:px-2 sm:py-1 sm:text-xs ${
         isFinish
-          ? "bg-race-accent-solid"
-          : point.id === "p1" || point.id === "p2"
-            ? "bg-blue-700"
-            : "bg-neutral-900"
+          ? "border-white/80 bg-race-accent-solid text-white dark:border-race-deep/80"
+          : "border-race-line bg-race-surface/95 text-foreground dark:text-white"
       }`}
       style={{ left: `${left}%`, top: `${top}%` }}
       aria-hidden="true"
     >
-      {Icon ? <Icon className="size-3 sm:size-3.5" /> : null}
+      {Icon ? (
+        <Icon
+          className={`size-3 sm:size-3.5 ${isFinish ? "" : "text-race-accent dark:text-orange-300"}`}
+        />
+      ) : null}
       {label}
     </span>
+  );
+}
+
+function RouteLines() {
+  const { width, height } = ARRIVAL_MAP;
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="pointer-events-none absolute inset-0 size-full"
+      aria-hidden="true"
+    >
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {ROUTE_IDS.map((id) => (
+          <path
+            key={`c-${id}`}
+            d={routeSvgPath(id)}
+            strokeWidth={9}
+            className="stroke-white dark:stroke-race-deep"
+          />
+        ))}
+        {ROUTE_IDS.map((id) => (
+          <path key={id} d={routeSvgPath(id)} strokeWidth={4.5} className="stroke-race-accent" />
+        ))}
+      </g>
+    </svg>
   );
 }
 
@@ -98,7 +130,7 @@ export function McvvArrivalMap({ content }: McvvArrivalMapProps) {
           href={ARRIVAL_MAP.src}
           target="_blank"
           rel="noreferrer"
-          className="relative block w-full overflow-hidden border border-race-line/60"
+          className="relative block w-full overflow-hidden border border-race-line bg-race-forest"
           style={{ aspectRatio: `${ARRIVAL_MAP.width} / ${ARRIVAL_MAP.height}` }}
           aria-label={content.mapOpen}
         >
@@ -110,8 +142,26 @@ export function McvvArrivalMap({ content }: McvvArrivalMapProps) {
             height={ARRIVAL_MAP.height}
             loading="lazy"
             decoding="async"
-            className="absolute inset-0 size-full"
+            className="absolute inset-0 size-full dark:hidden"
           />
+          {/* eslint-disable-next-line @next/next/no-img-element -- dark variant of the same map */}
+          <img
+            src={ARRIVAL_MAP.srcDark}
+            alt={content.mapAlt}
+            width={ARRIVAL_MAP.width}
+            height={ARRIVAL_MAP.height}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 hidden size-full dark:block"
+          />
+          <RouteLines />
+          <span
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 font-display text-base font-semibold tracking-[0.35em] text-race-muted/80 uppercase [text-shadow:0_0_3px_var(--race-deep),0_0_6px_var(--race-deep)] sm:text-2xl lg:text-4xl"
+            style={{ left: `${TOWN_LABEL_POSITION.left}%`, top: `${TOWN_LABEL_POSITION.top}%` }}
+            aria-hidden="true"
+          >
+            {content.townLabel}
+          </span>
           {ARRIVAL_POINTS.map((point) => (
             <Marker key={point.id} point={point} label={content.points[point.id].label} />
           ))}

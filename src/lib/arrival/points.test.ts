@@ -9,6 +9,7 @@ import {
   mapPosition,
   mapyPointUrl,
   mapyWalkUrl,
+  routeSvgPath,
   VERANDA,
 } from "./points";
 
@@ -55,4 +56,26 @@ test("formatWalkDistance uses non-breaking spaces and locale decimals", () => {
   assert.equal(formatWalkDistance(388, "cs"), "390\u00a0m");
   assert.equal(formatWalkDistance(2071, "cs"), "2,1\u00a0km");
   assert.equal(formatWalkDistance(2071, "en"), "2.1\u00a0km");
+});
+
+test("routes start at their point, end at Veranda and stay inside the map", () => {
+  const ids = ["p1", "p2", "train", "bus"] as const;
+  const veranda = mapPosition(VERANDA);
+  const end = `L${((veranda.left / 100) * 1240).toFixed(1)} ${((veranda.top / 100) * 560).toFixed(1)}`;
+  for (const id of ids) {
+    const d = routeSvgPath(id);
+    const start = mapPosition(ARRIVAL_POINTS.find((p) => p.id === id)!);
+    assert.ok(d.startsWith(`M${((start.left / 100) * 1240).toFixed(1)} `), id);
+    assert.ok(d.endsWith(end), id);
+    for (const [, x, y] of d.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)) {
+      assert.ok(+x >= 0 && +x <= 1240 && +y >= 0 && +y <= 560, `${id} ${x},${y}`);
+    }
+  }
+});
+
+test("P2 walks the short forest way (≈ 800 m), stations join it", () => {
+  const walk = (id: string) => ARRIVAL_POINTS.find((p) => p.id === id)!.walk!;
+  assert.equal(formatWalkDistance(walk("p2").meters, "cs"), "810\u00a0m");
+  assert.ok(walk("p2").meters < 900);
+  assert.ok(walk("train").meters < 2000 && walk("bus").meters < 2000);
 });

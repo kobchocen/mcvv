@@ -21,6 +21,8 @@ export type ArrivalPointCopy = { label: string; name: string; description: strin
 
 export type ArrivalContent = {
   title: string;
+  /** Popisek města v mapě (vlastní jméno). */
+  townLabel: string;
   intro: string;
   mapAlt: string;
   mapOpen: string;

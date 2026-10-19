@@ -176,6 +176,7 @@
       ],
       "arrival": {
         "title": "Getting here",
+        "townLabel": "Choceň",
         "intro": "Start and finish are at Velká Veranda in the woods near Choceň. By car, park at P1 or P2; from the train or bus a footpath leads along the Tichá Orlice and through the forest.",
         "mapAlt": "Map of the way to Velká Veranda with car parks P1 and P2, the train and bus stations and walking routes",
         "mapOpen": "Open the map in higher resolution",
@@ -187,7 +188,7 @@
         "drive": "Drive here",
         "points": {
           "veranda": {
-            "label": "S/C",
+            "label": "S/C · VERANDA",
             "name": "Velká Veranda – start and finish",
             "description": "Registration desk, start and finish."
           },
@@ -199,7 +200,7 @@
           "p2": {
             "label": "P2",
             "name": "Car park P2 – Krále Jiřího embankment",
-            "description": "Continue along the embankment and the green waymarks through the forest."
+            "description": "From here straight to Veranda along forest tracks."
           },
           "train": {
             "label": "Train",

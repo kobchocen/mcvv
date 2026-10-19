@@ -188,8 +188,8 @@ Podklady: `docs/design/mcvv.pen` + generated PNG. Pracovní SVG/PDF profilu v `d
 - `compose.dev.yaml` — MariaDB LTS, `mcvv-dev` / `mcvv-db-dev`, port 3306. Shadow DB `mcvv_shadow` je potřeba pro `prisma migrate dev` (komentář v compose).
 - `Dockerfile` — multi-stage, `pnpm start`. Není standalone output; kopíruje `.next` + `public` + prod deps. **Není ověřené**, že produkční image umí Prisma adapter + `DATABASE_URL`.
 - Probes: `/healthz`, `/readyz` → `{ status: "ok" }`, `Cache-Control: no-store`.
-- `src/app/sitemap.ts` — `https://mcvv.cz` + `/{locale}` a `/{locale}/results`. Chybí `/program` a ročníky. Komentář „static is sufficient“ je zastaralý.
-- `src/app/robots.txt` je **prázdný**.
+- `src/app/sitemap.ts` — `siteUrl()` (`SITE_URL`, výchozí `https://mcvv.org`) + `/{locale}`, `/{locale}/results`, `/{locale}/navod`. Chybí `/program` a ročníky.
+- `src/app/robots.ts` — allow `/` + odkaz na sitemap (`stg`/`staging` disallow).
 
 ---
 
@@ -400,8 +400,8 @@ Seřaď a odsouhlas s vlastníkem. Neimplementuj z tohoto seznamu samo od sebe.
 
 ### F. Produkce
 
-- Domain v sitemap (`mcvv.cz`?).
-- `robots.txt`.
+- ~~Domain v sitemap~~ – hotovo, `https://mcvv.org`.
+- ~~`robots.txt`~~ – hotovo (`src/app/robots.ts`).
 - Dockerfile + env na hostingu.
 - Health/readyz případně kontrola DB.
 

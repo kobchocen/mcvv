@@ -1,10 +1,21 @@
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
+import { securityHeaders } from "./src/lib/security/headers";
+
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders({ dev: process.env.NODE_ENV === "development" }),
+      },
+    ];
+  },
   images: {
     // /api/fotka blobs are immutable per id; keep optimized variants for 30 days.
     minimumCacheTTL: 2592000,

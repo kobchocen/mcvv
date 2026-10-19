@@ -1,4 +1,4 @@
-import { Bus, Car, Flag, Footprints, MapPin, Train } from "lucide-react";
+import { Bus, Car, CircleParking, Flag, Footprints, MapPin, Train } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLocale } from "next-intl";
 
@@ -32,8 +32,24 @@ const pointIcons: Record<ArrivalPointId, LucideIcon | null> = {
 const linkClass =
   "inline-flex min-h-9 items-center gap-1.5 border border-race-line/70 px-2.5 py-1 text-xs font-semibold text-race-accent hover:border-race-accent hover:bg-race-accent/10 dark:text-orange-300";
 
+/** Parking blue (Tailwind blue-700), the usual colour of parking signs. */
+const PARKING_BG = "bg-[#1d4ed8]";
+
 function Marker({ point, label }: { point: ArrivalPoint; label: string }) {
   const { left, top } = mapPosition(point);
+  const style = { left: `${left}%`, top: `${top}%` };
+  if (point.id === "p1" || point.id === "p2") {
+    return (
+      <span
+        className={`absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border-2 border-white ${PARKING_BG} px-1.5 py-0.5 font-display text-xs font-bold tracking-[0.04em] whitespace-nowrap text-white shadow-[0_2px_6px_rgb(0_0_0/0.45)] sm:gap-1.5 sm:px-2 sm:py-1 sm:text-base lg:text-lg`}
+        style={style}
+        aria-hidden="true"
+      >
+        <CircleParking className="size-4 sm:size-5 lg:size-6" strokeWidth={2.5} />
+        {label}
+      </span>
+    );
+  }
   const Icon = pointIcons[point.id];
   const isFinish = point.id === "veranda";
   return (
@@ -43,7 +59,7 @@ function Marker({ point, label }: { point: ArrivalPoint; label: string }) {
           ? "border-white/80 bg-race-accent-solid text-white dark:border-race-deep/80"
           : "border-race-line bg-race-surface/95 text-foreground dark:text-white"
       }`}
-      style={{ left: `${left}%`, top: `${top}%` }}
+      style={style}
       aria-hidden="true"
     >
       {Icon ? (

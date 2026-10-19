@@ -1,5 +1,6 @@
 /**
- * Jak se k nám dostat: body příjezdu/příchodu k Velké Verandě a odkazy do map.
+ * Mapa příjezdu a parkování (modální okno v sekci 03): body příjezdu k Velké Verandě
+ * a pěší trasy vykreslené přes statický podklad.
  *
  * Zdroje souřadnic:
  * - Velká Veranda (start/cíl): GPS 49°59′45″N, 16°12′10″E uvedené na webu.
@@ -9,8 +10,7 @@
  *   nodes 8414416314–8414430221 (střed nástupišť).
  * Pěší trasy: nejkratší cesta po pěšky průchozích cestách OSM (Overpass, highway=path/footway/
  * track/… , 19. 10. 2026) – od P2 lesními cestami pod Hrnmalem; vlak a autobus se na ni napojují
- * u nábřeží Krále Jiřího. Vzdálenosti zaokrouhleny a ověřeny pořadatelem v Mapy.cz (P1 400 m,
- * P2 800 m, vlak 1,8 km); časy při 4,5 km/h, orientační.
+ * u nábřeží Krále Jiřího.
  */
 
 export type ArrivalPointId = "veranda" | "p1" | "p2" | "train" | "bus";
@@ -19,18 +19,16 @@ export type ArrivalPoint = {
   id: ArrivalPointId;
   lat: number;
   lon: number;
-  /** Orientační pěší trasa k Verandě (m, min); u Verandy null. */
-  walk: { meters: number; minutes: number } | null;
 };
 
-export const VERANDA: ArrivalPoint = { id: "veranda", lat: 49.995833, lon: 16.202778, walk: null };
+export const VERANDA: ArrivalPoint = { id: "veranda", lat: 49.995833, lon: 16.202778 };
 
 export const ARRIVAL_POINTS: readonly ArrivalPoint[] = [
   VERANDA,
-  { id: "p1", lat: 49.9934183, lon: 16.2043828, walk: { meters: 400, minutes: 6 } },
-  { id: "p2", lat: 49.9945672, lon: 16.2128564, walk: { meters: 800, minutes: 11 } },
-  { id: "train", lat: 49.994, lon: 16.2247, walk: { meters: 1800, minutes: 25 } },
-  { id: "bus", lat: 49.9982, lon: 16.2229, walk: { meters: 1748, minutes: 24 } },
+  { id: "p1", lat: 49.9934183, lon: 16.2043828 },
+  { id: "p2", lat: 49.9945672, lon: 16.2128564 },
+  { id: "train", lat: 49.994, lon: 16.2247 },
+  { id: "bus", lat: 49.9982, lon: 16.2229 },
 ];
 
 /**
@@ -62,43 +60,6 @@ export function mapPosition(
     left: round(((x - map.originX) / map.width) * 100),
     top: round(((y - map.originY) / map.height) * 100),
   };
-}
-
-const coord = (value: number) => String(Number(value.toFixed(7)));
-const lonLat = (p: Pick<ArrivalPoint, "lat" | "lon">) => `${coord(p.lon)},${coord(p.lat)}`;
-const latLon = (p: Pick<ArrivalPoint, "lat" | "lon">) => `${coord(p.lat)},${coord(p.lon)}`;
-
-/** Mapy.com: zobrazení bodu se špendlíkem (https://developer.mapy.com – Mapy.com URL). */
-export function mapyPointUrl(p: Pick<ArrivalPoint, "lat" | "lon">): string {
-  return `https://mapy.com/fnc/v1/showmap?center=${lonLat(p)}&zoom=17&marker=true`;
-}
-
-/** Mapy.com: pěší trasa (foot_fast) z bodu k Verandě. */
-export function mapyWalkUrl(
-  from: Pick<ArrivalPoint, "lat" | "lon">,
-  to: Pick<ArrivalPoint, "lat" | "lon"> = VERANDA,
-): string {
-  return `https://mapy.com/fnc/v1/route?start=${lonLat(from)}&end=${lonLat(to)}&routeType=foot_fast`;
-}
-
-/** Google Maps: navigace autem k bodu (parkoviště). */
-export function googleDriveUrl(to: Pick<ArrivalPoint, "lat" | "lon">): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${latLon(to)}&travelmode=driving`;
-}
-
-/** Google Maps: pěší trasa z bodu k Verandě. */
-export function googleWalkUrl(
-  from: Pick<ArrivalPoint, "lat" | "lon">,
-  to: Pick<ArrivalPoint, "lat" | "lon"> = VERANDA,
-): string {
-  return `https://www.google.com/maps/dir/?api=1&origin=${latLon(from)}&destination=${latLon(to)}&travelmode=walking`;
-}
-
-/** „2,1 km“ / „390 m“ s nedělitelnou mezerou; desetinná čárka pro cs. */
-export function formatWalkDistance(meters: number, locale: string): string {
-  if (meters < 1000) return `${Math.round(meters / 10) * 10}\u00a0m`;
-  const km = (Math.round(meters / 100) / 10).toLocaleString(locale === "cs" ? "cs-CZ" : "en-GB");
-  return `${km}\u00a0km`;
 }
 
 /** Popisek města v mapě (procenta výřezu). */

@@ -17,25 +17,20 @@ export type TextBlock = {
   description: string;
 };
 
-export type ArrivalPointCopy = { label: string; name: string; description: string };
-
-export type ArrivalContent = {
+export type ArrivalMapContent = {
+  /** Popisek odkazu pod špendlíkem místa konání. */
+  linkLabel: string;
+  /** Název modálního okna (pro čtečky). */
   title: string;
+  mapAlt: string;
+  attribution: string;
+  closeLabel: string;
   /** Popisek města v mapě (vlastní jméno). */
   townLabel: string;
   /** Popisek nad bodem startu/cíle (vlastní jméno). */
   verandaLabel: string;
-  intro: string;
-  mapAlt: string;
-  mapOpen: string;
-  attribution: string;
-  /** "{distance} pěšky, cca {minutes} min" */
-  walk: string;
-  mapy: string;
-  google: string;
-  walkRoute: string;
-  drive: string;
-  points: Record<"veranda" | "p1" | "p2" | "train" | "bus", ArrivalPointCopy>;
+  /** Krátké značky bodů v mapě (S/C, P1, P2, Vlak, Bus). */
+  labels: Record<"veranda" | "p1" | "p2" | "train" | "bus", string>;
 };
 
 export type ScheduleItem = {
@@ -146,7 +141,7 @@ export type McvvHomepageContent = {
     countdownUnits: CountdownUnits;
     raceInProgress: string;
     travel: TextBlock[];
-    arrival?: ArrivalContent;
+    arrivalMap?: ArrivalMapContent;
   };
   results: {
     eyebrow: string;

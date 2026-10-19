@@ -61,7 +61,11 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
   });
   const counts = await recipientCounts(campaign.id);
   const audience = editable
-    ? await loadAudience({ users: campaign.audienceUsers, years: campaign.audienceYears })
+    ? await loadAudience({
+        users: campaign.audienceUsers,
+        years: campaign.audienceYears,
+        excludeCurrentEntrants: campaign.excludeCurrentEntrants,
+      })
     : null;
   const failed =
     counts.failed > 0
@@ -111,6 +115,7 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
                   body: campaign.body,
                   audienceUsers: campaign.audienceUsers,
                   audienceYears: campaign.audienceYears,
+                  excludeCurrentEntrants: campaign.excludeCurrentEntrants,
                 }}
                 audienceHints={await audienceHints()}
               />
@@ -129,7 +134,11 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
                 <p className="mb-3 text-sm">
                   Publikum: <strong>{audience.emails.length}</strong> unikátních adres (registrovaní{" "}
                   {audience.users}, z přihlášek {audience.legacy}, vyřazeno {audience.excluded}, z
-                  toho bez souhlasu s propagací {audience.noPromotion}).
+                  toho bez souhlasu s propagací {audience.noPromotion}
+                  {campaign.excludeCurrentEntrants
+                    ? `, letos přihlášených ${audience.currentEntrants}`
+                    : ", letos přihlášení nevyřazeni"}
+                  ).
                 </p>
               ) : null}
               {campaign.status === "test_sent" && audience && audience.emails.length > 0 ? (

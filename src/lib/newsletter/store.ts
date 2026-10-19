@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
 
 import { prisma } from "@/lib/db/client";
+import { currentRaceYear } from "@/lib/entries/year";
 
 import {
   buildAudience,
+  currentEntrantEmails,
   latestPromotionOptOuts,
   legacyFromYear,
   type Audience,
@@ -13,8 +15,18 @@ import {
 } from "./core";
 import type { UnsubscribeStore } from "./unsubscribe";
 
+/** Emails registered for the current edition (latest Ročník in admin). */
+export async function loadCurrentEntrants(): Promise<{ year: number; emails: Set<string> }> {
+  const { year } = await currentRaceYear();
+  const rows = await prisma.registration.findMany({
+    where: { year },
+    select: { email: true, author: true, status: true, lines: { select: { author: true } } },
+  });
+  return { year, emails: currentEntrantEmails(rows) };
+}
+
 export async function loadAudience(options: AudienceOptions): Promise<Audience> {
-  const [users, legacy, unsubscribed, promotion] = await Promise.all([
+  const [users, legacy, unsubscribed, promotion, entrants] = await Promise.all([
     options.users
       ? prisma.user.findMany({ where: { emailVerified: { not: null } }, select: { email: true } })
       : Promise.resolve([]),
@@ -34,6 +46,7 @@ export async function loadAudience(options: AudienceOptions): Promise<Audience> 
       where: { email: { contains: "@" } },
       select: { email: true, promotion: true, year: true, created: true, id: true },
     }),
+    options.excludeCurrentEntrants ? loadCurrentEntrants() : Promise.resolve(null),
   ]);
   return buildAudience(
     {
@@ -41,6 +54,7 @@ export async function loadAudience(options: AudienceOptions): Promise<Audience> 
       legacyEmails: legacy.map((r) => r.email),
       unsubscribed: unsubscribed.map((u) => u.email),
       noPromotion: latestPromotionOptOuts(promotion),
+      currentEntrants: entrants?.emails ?? [],
     },
     options,
   );

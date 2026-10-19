@@ -16,7 +16,12 @@ export function normalizeEmail(value: string | null | undefined): string | null 
   return email;
 }
 
-export type AudienceOptions = { users: boolean; years: number };
+export type AudienceOptions = {
+  users: boolean;
+  years: number;
+  /** Vyřadit adresy, které už jsou přihlášené na aktuální ročník. */
+  excludeCurrentEntrants?: boolean;
+};
 
 export type AudienceSources = {
   userEmails: (string | null)[];
@@ -24,7 +29,36 @@ export type AudienceSources = {
   unsubscribed: Iterable<string>;
   /** Emails whose latest application said promotion = 'N' (see latestPromotionOptOuts). */
   noPromotion?: Iterable<string>;
+  /** Emails already registered for the current edition (see currentEntrantEmails). */
+  currentEntrants?: Iterable<string>;
 };
+
+export type CurrentEntryRecord = {
+  email: string | null;
+  author: string | null;
+  status: number | null;
+  lines: { author: string | null }[];
+};
+
+/** Legacy `mcvv_prihlaska.stav` 0 = zrušená (see ENTRY_STATUS.cancelled). */
+const CANCELLED_STATUS = 0;
+
+/**
+ * Emails of people already registered for the current edition: the application
+ * contact email plus whoever created the application or its runner lines (logged-in
+ * user email). Cancelled applications and applications without any runner are ignored.
+ */
+export function currentEntrantEmails(records: Iterable<CurrentEntryRecord>): Set<string> {
+  const out = new Set<string>();
+  for (const r of records) {
+    if (r.status === CANCELLED_STATUS || r.lines.length === 0) continue;
+    for (const raw of [r.email, r.author, ...r.lines.map((l) => l.author)]) {
+      const email = normalizeEmail(raw);
+      if (email) out.add(email);
+    }
+  }
+  return out;
+}
 
 export type PromotionRecord = {
   email: string | null;
@@ -68,6 +102,8 @@ export type Audience = {
   excluded: number;
   /** Of `excluded`, how many because of promotion = 'N'. */
   noPromotion: number;
+  /** Of `excluded`, how many because they are already registered for the current edition. */
+  currentEntrants: number;
 };
 
 /** Deduplicated, validated, opt-outs excluded. Counts are per source after dedupe. */
@@ -86,7 +122,16 @@ export function buildAudience(sources: AudienceSources, options: AudienceOptions
       blockedPromo.add(normalized);
     }
   }
-  const blocked = (e: string) => unsubscribed.has(e) || blockedPromo.has(e);
+  const entrants = new Set<string>();
+  if (options.excludeCurrentEntrants) {
+    for (const email of sources.currentEntrants ?? []) {
+      const normalized = normalizeEmail(email);
+      if (normalized) {
+        entrants.add(normalized);
+      }
+    }
+  }
+  const blocked = (e: string) => unsubscribed.has(e) || blockedPromo.has(e) || entrants.has(e);
   const users = new Set<string>();
   const legacy = new Set<string>();
   if (options.users) {
@@ -104,11 +149,15 @@ export function buildAudience(sources: AudienceSources, options: AudienceOptions
   const all = new Set([...users, ...legacy]);
   let excluded = 0;
   let noPromotion = 0;
+  let currentEntrants = 0;
   const emails: string[] = [];
   for (const email of all) {
     if (blocked(email)) {
       excluded += 1;
-      if (!unsubscribed.has(email)) noPromotion += 1;
+      // Each excluded address is attributed to one reason: unsubscribe > promotion > entrant.
+      if (unsubscribed.has(email)) continue;
+      if (blockedPromo.has(email)) noPromotion += 1;
+      else currentEntrants += 1;
     } else {
       emails.push(email);
     }
@@ -120,6 +169,7 @@ export function buildAudience(sources: AudienceSources, options: AudienceOptions
     legacy: [...legacy].filter((e) => !blocked(e)).length,
     excluded,
     noPromotion,
+    currentEntrants,
   };
 }
 

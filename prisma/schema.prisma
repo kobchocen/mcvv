@@ -407,20 +407,22 @@ enum NewsletterRecipientStatus {
 
 /// Newsletterová kampaň (obsah v Markdownu, odeslání po dávkách).
 model NewsletterCampaign {
-  id            Int              @id @default(autoincrement())
-  subject       String           @db.VarChar(200)
-  body          String           @db.Text
-  status        NewsletterStatus @default(draft)
+  id                     Int              @id @default(autoincrement())
+  subject                String           @db.VarChar(200)
+  body                   String           @db.Text
+  status                 NewsletterStatus @default(draft)
   /// Zahrnout ověřené registrované uživatele (mcvv_user).
-  audienceUsers Boolean          @default(true) @map("audience_users")
+  audienceUsers          Boolean          @default(true) @map("audience_users")
   /// Zahrnout e-maily z přihlášek za posledních N let (0 = ne).
-  audienceYears Int              @default(0) @map("audience_years") @db.SmallInt
-  createdById   Int?             @map("created_by_id")
-  testSentAt    DateTime?        @map("test_sent_at")
-  startedAt     DateTime?        @map("started_at")
-  sentAt        DateTime?        @map("sent_at")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
+  audienceYears          Int              @default(0) @map("audience_years") @db.SmallInt
+  /// Vyřadit adresy přihlášené na aktuální ročník (kontaktní e-mail přihlášky i autor řádků).
+  excludeCurrentEntrants Boolean          @default(true) @map("exclude_current_entrants")
+  createdById            Int?             @map("created_by_id")
+  testSentAt             DateTime?        @map("test_sent_at")
+  startedAt              DateTime?        @map("started_at")
+  sentAt                 DateTime?        @map("sent_at")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
 
   createdBy  User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
   recipients NewsletterRecipient[]

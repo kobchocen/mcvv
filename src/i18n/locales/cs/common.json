@@ -492,6 +492,8 @@
     "empty": "V galerii zatím nic není.",
     "loadMore": "Načíst další",
     "close": "Zavřít",
+    "previousPhoto": "Předchozí fotka",
+    "nextPhoto": "Další fotka",
     "back": "Zpět na úvod"
   },
   "Runner": {
@@ -516,6 +518,8 @@
     "photoAlt": "Fotka — {name}",
     "loadMore": "Načíst další",
     "close": "Zavřít",
+    "previousPhoto": "Předchozí fotka",
+    "nextPhoto": "Další fotka",
     "empty": "Pro tohoto běžce zatím nejsou výsledky.",
     "registeredFirstStart": "Přihlášen na ročník {year} – první start",
     "back": "Archiv výsledků"

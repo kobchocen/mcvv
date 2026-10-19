@@ -492,6 +492,8 @@
     "empty": "The gallery is empty.",
     "loadMore": "Load more",
     "close": "Close",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
     "back": "Back to home"
   },
   "Runner": {
@@ -516,6 +518,8 @@
     "photoAlt": "Photo — {name}",
     "loadMore": "Load more",
     "close": "Close",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
     "empty": "No results for this runner yet.",
     "registeredFirstStart": "Registered for {year} – first start",
     "back": "Results archive"

@@ -101,6 +101,8 @@ export default async function PhotoGalleryPage({ params, searchParams }: PagePro
                 photos={gallery}
                 loadMoreLabel={copy("loadMore")}
                 closeLabel={copy("close")}
+                previousLabel={copy("previousPhoto")}
+                nextLabel={copy("nextPhoto")}
               />
             </>
           )}

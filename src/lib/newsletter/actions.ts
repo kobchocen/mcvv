@@ -42,6 +42,7 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
   const body = String(formData.get("body") ?? "");
   const audienceUsers = formChecked(formData, "audienceUsers");
   const audienceYears = clampYears(formInt(formData, "audienceYears"));
+  const excludeCurrentEntrants = formChecked(formData, "excludeCurrentEntrants");
   const locale = await getLocale();
   if (!subject || !body.trim()) {
     throw new Error("Předmět i text jsou povinné.");
@@ -55,11 +56,26 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
     // Any edit invalidates the previous test send.
     await prisma.newsletterCampaign.update({
       where: { id },
-      data: { subject, body, audienceUsers, audienceYears, status: "draft", testSentAt: null },
+      data: {
+        subject,
+        body,
+        audienceUsers,
+        audienceYears,
+        excludeCurrentEntrants,
+        status: "draft",
+        testSentAt: null,
+      },
     });
   } else {
     const created = await prisma.newsletterCampaign.create({
-      data: { subject, body, audienceUsers, audienceYears, createdById: session.id },
+      data: {
+        subject,
+        body,
+        audienceUsers,
+        audienceYears,
+        excludeCurrentEntrants,
+        createdById: session.id,
+      },
     });
     campaignId = created.id;
   }
@@ -125,6 +141,7 @@ export async function startNewsletter(
   const audience = await loadAudience({
     users: campaign.audienceUsers,
     years: campaign.audienceYears,
+    excludeCurrentEntrants: campaign.excludeCurrentEntrants,
   });
   if (audience.emails.length === 0) return { ok: false, message: "Publikum je prázdné." };
   if (confirm !== audience.emails.length) {

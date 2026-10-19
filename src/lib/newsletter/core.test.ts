@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   buildAudience,
+  currentEntrantEmails,
   latestPromotionOptOuts,
   legacyFromYear,
   normalizeEmail,
@@ -269,4 +270,36 @@ test("stale claims (crash mid-send) are failed, not re-sent", async () => {
   assert.equal(calls, 0);
   assert.equal(rows[0].status, "failed");
   assert.equal(outcome.done, true);
+});
+
+test("currentEntrantEmails: contact + authors, skips cancelled and empty applications", () => {
+  const out = currentEntrantEmails([
+    { email: "Kontakt@x.cz", author: "autor@x.cz", status: 2, lines: [{ author: "radek@x.cz" }] },
+    { email: "zruseno@x.cz", author: null, status: 0, lines: [{ author: null }] },
+    { email: "prazdna@x.cz", author: null, status: 1, lines: [] },
+    { email: "spatny", author: "", status: null, lines: [{ author: "kontakt@x.cz" }] },
+  ]);
+  assert.deepEqual([...out].sort(), ["autor@x.cz", "kontakt@x.cz", "radek@x.cz"]);
+});
+
+test("buildAudience excludes current entrants only when the option is on", () => {
+  const sources = {
+    userEmails: ["u@x.cz", "letos@x.cz"],
+    legacyEmails: ["l@x.cz", "LETOS@x.cz", "o@x.cz", "n@x.cz"],
+    unsubscribed: ["o@x.cz"],
+    noPromotion: ["n@x.cz"],
+    currentEntrants: ["letos@x.cz", "o@x.cz", "n@x.cz"],
+  };
+  const on = buildAudience(sources, { users: true, years: 10, excludeCurrentEntrants: true });
+  assert.deepEqual(on.emails, ["l@x.cz", "u@x.cz"]);
+  assert.equal(on.excluded, 3);
+  assert.equal(on.noPromotion, 1);
+  assert.equal(on.currentEntrants, 1);
+  assert.equal(on.users, 1);
+  assert.equal(on.legacy, 1);
+
+  const off = buildAudience(sources, { users: true, years: 10, excludeCurrentEntrants: false });
+  assert.deepEqual(off.emails, ["l@x.cz", "letos@x.cz", "u@x.cz"]);
+  assert.equal(off.currentEntrants, 0);
+  assert.equal(off.excluded, 2);
 });

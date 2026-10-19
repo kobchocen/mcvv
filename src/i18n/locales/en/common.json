@@ -517,6 +517,7 @@
     "loadMore": "Load more",
     "close": "Close",
     "empty": "No results for this runner yet.",
+    "registeredFirstStart": "Registered for {year} – first start",
     "back": "Results archive"
   },
   "Auth": {

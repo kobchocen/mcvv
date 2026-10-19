@@ -16,6 +16,8 @@ import {
 import { Link } from "@/i18n/routing";
 import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
+import { currentRaceYear } from "@/lib/entries/year";
+import { isRunnerProfileMissing, summarizeRunnerResults } from "@/lib/runner/profile";
 import { runnerSex } from "@/lib/stats/queries";
 import { formatRaceTime } from "@/lib/utils";
 import type { McvvHomepageContent } from "@/components/templates";
@@ -47,7 +49,7 @@ export default async function RunnerPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
 
-  const [runner, results, photoLinks, peerTimes, portrait] = await Promise.all([
+  const [runner, results, photoLinks, peerTimes, portrait, raceYear] = await Promise.all([
     prisma.runner.findUnique({ where: { id }, select: { name: true } }),
     prisma.result.findMany({
       where: { runnerId: id },
@@ -77,11 +79,25 @@ export default async function RunnerPage({ params }: PageProps) {
       where: { runnerId: id, image: { not: null } },
       select: { id: true },
     }),
+    currentRaceYear(),
   ]);
 
-  if (results.length === 0) {
+  // 404 only when the runner does not exist at all. A runner without results
+  // (e.g. first-timer registered for the current year) gets a slim profile (#81).
+  if (isRunnerProfileMissing(runner)) {
     notFound();
   }
+
+  const stats = summarizeRunnerResults(results);
+  const registration = stats
+    ? null
+    : await prisma.registrationLine.findUnique({
+        where: { year_runnerId: { year: raceYear.year, runnerId: id } },
+        select: {
+          club: { select: { name: true } },
+          category: { select: { name: true } },
+        },
+      });
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "Runner" });
@@ -93,11 +109,11 @@ export default async function RunnerPage({ params }: PageProps) {
     )?.runnerName;
   const name = displayRunnerName(formerName ?? results[0]?.runnerName, runner?.name) || id;
   const birthYear = id.slice(0, 4);
-  const times = results.map((row) => row.time);
-  const record = Math.min(...times);
-  const average = Math.round(times.reduce((sum, time) => sum + time, 0) / times.length);
-  const last = results[0];
-  const lastClub = last.club?.name || last.clubName || "";
+  const record = stats?.record ?? 0;
+  const average = stats?.average ?? 0;
+  const last = results.at(0);
+  const lastClub = last ? last.club?.name || last.clubName || "" : registration?.club.name || "";
+  const registeredCategory = registration?.category.name || "";
   const photos = [
     ...new Map(
       photoLinks.map((row) => [
@@ -117,12 +133,15 @@ export default async function RunnerPage({ params }: PageProps) {
   const bars = results.map((row) => perfBarSegments(row.time, record, average, sexRecord));
   const barMax = bars.reduce((max, bar) => Math.max(max, bar.blue + bar.green + bar.red), 0);
 
-  const summary = [
-    { value: String(results.length), label: copy("starts") },
-    { value: formatRaceTime(record), label: copy("record") },
-    { value: formatRaceTime(average), label: copy("average") },
-    { value: String(last.year), label: copy("lastStart") },
-  ];
+  const summary =
+    stats && last
+      ? [
+          { value: String(stats.starts), label: copy("starts") },
+          { value: formatRaceTime(record), label: copy("record") },
+          { value: formatRaceTime(average), label: copy("average") },
+          { value: String(last.year), label: copy("lastStart") },
+        ]
+      : [];
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -156,109 +175,128 @@ export default async function RunnerPage({ params }: PageProps) {
                   {lastClub}
                 </h2>
               ) : null}
-              <dl className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${lastClub ? "mt-4" : ""}`}>
-                {summary.map((item) => (
-                  <div key={item.label}>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-race-dim">
-                      {item.label}
-                    </dt>
-                    <dd className="mt-1 font-display text-3xl font-bold text-foreground dark:text-white">
-                      {item.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              {summary.length > 0 ? (
+                <dl
+                  className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${lastClub ? "mt-4" : ""}`}
+                >
+                  {summary.map((item) => (
+                    <div key={item.label}>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-race-dim">
+                        {item.label}
+                      </dt>
+                      <dd className="mt-1 font-display text-3xl font-bold text-foreground dark:text-white">
+                        {item.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <div className={lastClub ? "mt-4" : ""}>
+                  {registeredCategory ? (
+                    <p className="text-sm text-race-muted">
+                      {copy("category")}: {registeredCategory}
+                    </p>
+                  ) : null}
+                  <p className="mt-2 font-display text-lg font-semibold text-race-accent">
+                    {registration
+                      ? copy("registeredFirstStart", { year: raceYear.year })
+                      : copy("empty")}
+                  </p>
+                </div>
+              )}
             </article>
           </div>
 
-          <div className="mt-10 overflow-x-auto">
-            <table className="w-full border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                  <th className="py-2 pr-4">{copy("year")}</th>
-                  <th className="py-2 pr-4">{copy("time")}</th>
-                  <th className="hidden py-2 pr-4 md:table-cell">{copy("graph")}</th>
-                  <th className="py-2 pr-4">{copy("loss")}</th>
-                  <th className="py-2 pr-4">{copy("club")}</th>
-                  <th className="py-2">{copy("category")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((row, index) => {
-                  const bar = bars[index];
-                  const inYear = peerTimes.filter((peer) => peer.year === row.year);
-                  const absRank = asPodiumRank(
-                    podiumRank(
-                      inYear.filter((peer) => runnerSex(peer.runnerId) === sex),
-                      id,
-                    ),
-                  );
-                  const ageRank =
-                    row.category.age > 0
-                      ? asPodiumRank(
-                          podiumRank(
-                            inYear.filter((peer) => peer.categoryId === row.categoryId),
-                            id,
-                          ),
-                        )
-                      : undefined;
-                  const isCourseRecord = row.time <= sexRecord;
-                  const graph = isCourseRecord ? (
-                    <RecordBadge kind="course" label={copy("courseRecord")} />
-                  ) : (
-                    <RunnerPerfBar
-                      blue={bar.blue}
-                      green={bar.green}
-                      red={bar.red}
-                      max={barMax}
-                      title={copy("graphTitle", {
-                        course: formatRaceTime(Math.max(0, row.time - sexRecord)),
-                        pb: formatRaceTime(Math.max(0, row.time - record)),
-                        avg: formatRaceTime(Math.max(0, row.time - average)),
-                      })}
-                    />
-                  );
-                  return (
-                    <tr
-                      key={`${row.year}-${row.runnerId}`}
-                      className="border-b border-race-line/40"
-                    >
-                      <td className="py-2.5 pr-4">
-                        <Link
-                          href={`/results/${row.year}#${id}` as never}
-                          className="font-medium text-race-accent hover:underline"
-                        >
-                          {row.year}
-                        </Link>
-                        <RunnerPodiumBadges
-                          absoluteRank={absRank}
-                          categoryRank={ageRank}
-                          absoluteLabel={copy("medalAbs", { rank: absRank ?? 0 })}
-                          categoryLabel={copy("medalAge", { rank: ageRank ?? 0 })}
-                        />
-                      </td>
-                      <td className="py-2.5 pr-4 font-display font-semibold text-race-accent">
-                        {formatRaceTime(row.time)}
-                        <div className="mt-1 md:hidden">{graph}</div>
-                      </td>
-                      <td className="hidden py-2.5 pr-4 align-middle md:table-cell">{graph}</td>
-                      <td className="py-2.5 pr-4 text-race-muted">
-                        {row.time <= record ? (
-                          <RecordBadge kind="personal" label={copy("personalBest")} />
-                        ) : (
-                          formatLoss(row.time, record, copy("os"))
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-4 text-race-muted">
-                        {row.club?.name || row.clubName || "—"}
-                      </td>
-                      <td className="py-2.5 text-race-muted">{row.category.name}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {results.length > 0 ? (
+            <div className="mt-10 overflow-x-auto">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                    <th className="py-2 pr-4">{copy("year")}</th>
+                    <th className="py-2 pr-4">{copy("time")}</th>
+                    <th className="hidden py-2 pr-4 md:table-cell">{copy("graph")}</th>
+                    <th className="py-2 pr-4">{copy("loss")}</th>
+                    <th className="py-2 pr-4">{copy("club")}</th>
+                    <th className="py-2">{copy("category")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((row, index) => {
+                    const bar = bars[index];
+                    const inYear = peerTimes.filter((peer) => peer.year === row.year);
+                    const absRank = asPodiumRank(
+                      podiumRank(
+                        inYear.filter((peer) => runnerSex(peer.runnerId) === sex),
+                        id,
+                      ),
+                    );
+                    const ageRank =
+                      row.category.age > 0
+                        ? asPodiumRank(
+                            podiumRank(
+                              inYear.filter((peer) => peer.categoryId === row.categoryId),
+                              id,
+                            ),
+                          )
+                        : undefined;
+                    const isCourseRecord = row.time <= sexRecord;
+                    const graph = isCourseRecord ? (
+                      <RecordBadge kind="course" label={copy("courseRecord")} />
+                    ) : (
+                      <RunnerPerfBar
+                        blue={bar.blue}
+                        green={bar.green}
+                        red={bar.red}
+                        max={barMax}
+                        title={copy("graphTitle", {
+                          course: formatRaceTime(Math.max(0, row.time - sexRecord)),
+                          pb: formatRaceTime(Math.max(0, row.time - record)),
+                          avg: formatRaceTime(Math.max(0, row.time - average)),
+                        })}
+                      />
+                    );
+                    return (
+                      <tr
+                        key={`${row.year}-${row.runnerId}`}
+                        className="border-b border-race-line/40"
+                      >
+                        <td className="py-2.5 pr-4">
+                          <Link
+                            href={`/results/${row.year}#${id}` as never}
+                            className="font-medium text-race-accent hover:underline"
+                          >
+                            {row.year}
+                          </Link>
+                          <RunnerPodiumBadges
+                            absoluteRank={absRank}
+                            categoryRank={ageRank}
+                            absoluteLabel={copy("medalAbs", { rank: absRank ?? 0 })}
+                            categoryLabel={copy("medalAge", { rank: ageRank ?? 0 })}
+                          />
+                        </td>
+                        <td className="py-2.5 pr-4 font-display font-semibold text-race-accent">
+                          {formatRaceTime(row.time)}
+                          <div className="mt-1 md:hidden">{graph}</div>
+                        </td>
+                        <td className="hidden py-2.5 pr-4 align-middle md:table-cell">{graph}</td>
+                        <td className="py-2.5 pr-4 text-race-muted">
+                          {row.time <= record ? (
+                            <RecordBadge kind="personal" label={copy("personalBest")} />
+                          ) : (
+                            formatLoss(row.time, record, copy("os"))
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-4 text-race-muted">
+                          {row.club?.name || row.clubName || "—"}
+                        </td>
+                        <td className="py-2.5 text-race-muted">{row.category.name}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
 
           {photos.length > 0 ? (
             <div className="mt-12">

@@ -41,7 +41,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Results",
       "tertiaryHref": "/results",
-      "enrolled": "Runners entered: {count}",
+      "enrolledAria": "{cta} – {count, plural, one {# runner entered} other {# runners entered}}",
       "stats": [
         {
           "value": "4300",

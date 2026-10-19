@@ -109,7 +109,8 @@ export type McvvHomepageContent = {
     secondaryHref: string;
     tertiaryCta: string;
     tertiaryHref: string;
-    enrolled: string;
+    /** ICU: aria-label tlačítka Přihlášky s počtem přihlášených ({cta}, {count}). */
+    enrolledAria: string;
     stats: StatItem[];
   };
   overview: {

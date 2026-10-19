@@ -41,7 +41,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
       "tertiaryHref": "/results",
-      "enrolled": "Přihlášených běžců: {count}",
+      "enrolledAria": "{cta} – {count, plural, one {přihlášen # běžec} few {přihlášeni # běžci} other {přihlášeno # běžců}}",
       "stats": [
         {
           "value": "4300",

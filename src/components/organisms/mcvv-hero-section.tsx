@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { ArrowRight, Trees } from "lucide-react";
+import { Trees } from "lucide-react";
 
 import { RaceStatCard } from "@/components/molecules";
 import { McvvDeadlineCountdown } from "@/components/organisms/mcvv-deadline-countdown";
+import { McvvEntriesCtaContent } from "@/components/organisms/mcvv-entries-cta";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
@@ -10,7 +11,10 @@ import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-c
 export type McvvHeroSectionProps = {
   content: Pick<McvvHomepageContent, "hero" | "schedule">;
   deadlineMs?: number | null;
-  enrolledLabel?: string;
+  /** Počet platně přihlášených běžců; 0 / chybí = šipka místo odznaku. */
+  enrolledCount?: number;
+  /** Přístupný popisek tlačítka Přihlášky s počtem (správné tvary plurálu). */
+  enrolledAriaLabel?: string;
 };
 
 const HERO_VARIANT = "kopec" as "mlha" | "kopec";
@@ -23,7 +27,8 @@ const heroImages = {
 export function McvvHeroSection({
   content,
   deadlineMs = null,
-  enrolledLabel,
+  enrolledCount = 0,
+  enrolledAriaLabel,
 }: McvvHeroSectionProps) {
   const showCountdown = deadlineMs != null;
   return (
@@ -71,9 +76,11 @@ export function McvvHeroSection({
                 size="lg"
                 className="h-12 bg-race-accent-solid px-6 font-display text-base font-semibold text-white hover:bg-race-accent-solid-hover"
               >
-                <Link href="/prihlaseni-zavodnici">
-                  {content.hero.primaryCta}
-                  <ArrowRight className="size-4" aria-hidden="true" />
+                <Link
+                  href="/prihlaseni-zavodnici"
+                  aria-label={enrolledCount > 0 ? enrolledAriaLabel : undefined}
+                >
+                  <McvvEntriesCtaContent label={content.hero.primaryCta} count={enrolledCount} />
                 </Link>
               </Button>
               <Button
@@ -88,11 +95,6 @@ export function McvvHeroSection({
               </Button>
             </div>
             {showCountdown && deadlineMs ? <McvvDeadlineCountdown targetMs={deadlineMs} /> : null}
-            {enrolledLabel ? (
-              <p className="mt-2 text-sm font-medium text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)]">
-                {enrolledLabel}
-              </p>
-            ) : null}
           </div>
         </div>
 

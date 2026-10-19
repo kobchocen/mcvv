@@ -122,7 +122,9 @@ export default async function Home({ params }: PageProps) {
     backToTop: t("backToTop"),
   };
 
-  return <McvvHomepageTemplate content={content} galleryPhotoIds={galleryPhotoIds} />;
+  return (
+    <McvvHomepageTemplate content={content} galleryPhotoIds={galleryPhotoIds} locale={locale} />
+  );
 }
 
 export function generateStaticParams() {

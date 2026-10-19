@@ -12,6 +12,8 @@ import {
   McvvScheduleSection,
 } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
+import { getTranslations } from "next-intl/server";
+
 import { getSession, isStaffRole } from "@/lib/auth/session";
 import { countValidRunners } from "@/lib/entries/status";
 import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
@@ -19,16 +21,19 @@ import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
 export type McvvHomepageTemplateProps = {
   content: McvvHomepageContent;
   galleryPhotoIds?: number[];
+  locale: string;
 };
 
 export async function McvvHomepageTemplate({
   content,
   galleryPhotoIds,
+  locale,
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
   const { year, deadline, open } = await currentRaceYear();
   const enrolledCount = await countValidRunners(year);
   const deadlineEnd = registrationDeadlineEnd(deadline);
+  const t = await getTranslations({ locale, namespace: "Home.hero" });
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <McvvNavbar
@@ -43,12 +48,10 @@ export async function McvvHomepageTemplate({
       <McvvHeroSection
         content={content}
         deadlineMs={open ? (deadlineEnd?.getTime() ?? null) : null}
-        enrolledLabel={
+        enrolledCount={enrolledCount}
+        enrolledAriaLabel={
           enrolledCount > 0
-            ? (content.hero.enrolled ?? "Přihlášeno {count} běžců").replaceAll(
-                "{count}",
-                String(enrolledCount),
-              )
+            ? t("enrolledAria", { cta: content.hero.primaryCta, count: enrolledCount })
             : undefined
         }
       />

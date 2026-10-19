@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { PhotoTile } from "./photo-tile";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { PhotoLightbox } from "./photo-lightbox";
 
 export type RunnerPhotoItem = {
   id: number;
@@ -16,13 +16,22 @@ export type RunnerPhotoGridProps = {
   name: string;
   loadMoreLabel: string;
   closeLabel: string;
+  previousLabel: string;
+  nextLabel: string;
 };
 
 const PAGE_SIZE = 12;
 
-export function RunnerPhotoGrid({ photos, name, loadMoreLabel, closeLabel }: RunnerPhotoGridProps) {
+export function RunnerPhotoGrid({
+  photos,
+  name,
+  loadMoreLabel,
+  closeLabel,
+  previousLabel,
+  nextLabel,
+}: RunnerPhotoGridProps) {
   const [visible, setVisible] = useState(PAGE_SIZE);
-  const [active, setActive] = useState<RunnerPhotoItem | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const shown = photos.slice(0, visible);
 
   return (
@@ -32,7 +41,7 @@ export function RunnerPhotoGrid({ photos, name, loadMoreLabel, closeLabel }: Run
           <button
             key={photo.id}
             type="button"
-            onClick={() => setActive(photo)}
+            onClick={() => setActiveIndex(index)}
             className="relative aspect-[3/4] cursor-zoom-in overflow-hidden border border-race-line/60 bg-race-forest text-left"
           >
             <PhotoTile
@@ -58,28 +67,22 @@ export function RunnerPhotoGrid({ photos, name, loadMoreLabel, closeLabel }: Run
         </button>
       ) : null}
 
-      <Dialog open={active !== null} onOpenChange={(open) => !open && setActive(null)}>
-        <DialogContent
-          aria-modal="true"
-          className="max-h-[92vh] overflow-auto border-race-line bg-race-deep p-3 sm:max-w-5xl"
-        >
-          <DialogTitle className="pr-8 font-display text-xl text-foreground dark:text-white">
-            {active ? `${active.year}${active.caption ? ` — ${active.caption}` : ""}` : name}
-          </DialogTitle>
-          {active ? (
-            <div className="relative">
-              {/* Native img so the modal can show the photo at natural size. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/fotka?id=${active.id}`}
-                alt={`${name} ${active.year}`}
-                className="mx-auto max-h-[75vh] w-auto max-w-full"
-              />
-              <p className="sr-only">{closeLabel}</p>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <PhotoLightbox
+        photos={photos.map((photo) => ({
+          id: photo.id,
+          alt: `${name} ${photo.year}`,
+          title: `${photo.year}${photo.caption ? ` — ${photo.caption}` : ""}`,
+        }))}
+        activeIndex={activeIndex}
+        onActiveIndexChange={(index) => {
+          // Keep the grid in sync when arrows move past the loaded page.
+          if (index !== null && index >= visible) setVisible(index + 1);
+          setActiveIndex(index);
+        }}
+        closeLabel={closeLabel}
+        previousLabel={previousLabel}
+        nextLabel={nextLabel}
+      />
     </>
   );
 }

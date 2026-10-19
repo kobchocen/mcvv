@@ -2,6 +2,7 @@ export * from "./record-badge";
 export * from "./stats-nav";
 export * from "./back-to-top";
 export * from "./photo-gallery-grid";
+export * from "./photo-lightbox";
 export * from "./race-countdown";
 export * from "./highlight-hashed-row";
 export * from "./runner-name-link";

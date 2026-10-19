@@ -308,6 +308,8 @@ export default async function RunnerPage({ params }: PageProps) {
                 name={name}
                 loadMoreLabel={copy("loadMore")}
                 closeLabel={copy("close")}
+                previousLabel={copy("previousPhoto")}
+                nextLabel={copy("nextPhoto")}
               />
             </div>
           ) : null}

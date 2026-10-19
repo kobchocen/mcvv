@@ -1,4 +1,3 @@
-export * from "./mcvv-arrival-map";
 export * from "./mcvv-course-map";
 export * from "./mcvv-course-map-card";
 export * from "./mcvv-final-cta-section";

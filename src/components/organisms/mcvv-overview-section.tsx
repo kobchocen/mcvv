@@ -80,12 +80,7 @@ export function McvvOverviewSection({ content }: McvvOverviewSectionProps) {
                 <Link
                   href={
                     action.href as
-                      | "/prihlasky"
-                      | "/program"
-                      | "/pokyny"
-                      | "/startovka"
-                      | "/results"
-                      | "/kontakt"
+                      "/prihlasky" | "/program" | "/pokyny" | "/startovka" | "/results" | "/kontakt"
                   }
                 >
                   {action.label}

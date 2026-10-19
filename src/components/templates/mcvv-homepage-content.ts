@@ -17,6 +17,22 @@ export type TextBlock = {
   description: string;
 };
 
+export type ArrivalMapContent = {
+  /** Popisek odkazu pod špendlíkem místa konání. */
+  linkLabel: string;
+  /** Název modálního okna (pro čtečky). */
+  title: string;
+  mapAlt: string;
+  attribution: string;
+  closeLabel: string;
+  /** Popisek města v mapě (vlastní jméno). */
+  townLabel: string;
+  /** Popisek nad bodem startu/cíle (vlastní jméno). */
+  verandaLabel: string;
+  /** Krátké značky bodů v mapě (S/C, P1, P2, Vlak, Bus). */
+  labels: Record<"veranda" | "p1" | "p2" | "train" | "bus", string>;
+};
+
 export type ScheduleItem = {
   text: string;
   icon: "calendar" | "clock" | "pin";
@@ -34,6 +50,8 @@ export type CountdownUnits = {
 export type ResultItem = {
   year: string;
   label: string;
+  /** Small overline above the year, e.g. "Výsledky" on the latest-edition card. */
+  overline?: string;
   winners: RaceWinner[];
   linkLabel: string;
   href?: string;
@@ -93,7 +111,8 @@ export type McvvHomepageContent = {
     secondaryHref: string;
     tertiaryCta: string;
     tertiaryHref: string;
-    enrolled: string;
+    /** ICU: aria-label tlačítka Přihlášky s počtem přihlášených ({cta}, {count}). */
+    enrolledAria: string;
     stats: StatItem[];
   };
   overview: {
@@ -125,9 +144,12 @@ export type McvvHomepageContent = {
     countdownUnits: CountdownUnits;
     raceInProgress: string;
     travel: TextBlock[];
+    arrivalMap?: ArrivalMapContent;
   };
   results: {
     eyebrow: string;
+    /** Overline on the first (latest-edition) card. */
+    overline?: string;
     title: string;
     allLabel: string;
     yearLabel: string;

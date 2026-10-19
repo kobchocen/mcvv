@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { displayRunnerName } from "./runner-name";
+import { displayRunnerName, runnerNameFor } from "./runner-name";
 
 test("same name stays unchanged", () => {
   assert.equal(displayRunnerName("Vetchá Adéla", "Vetchá Adéla"), "Vetchá Adéla");
@@ -21,4 +21,30 @@ test("missing values fall back", () => {
   assert.equal(displayRunnerName(null, "Vetchá Adéla"), "Vetchá Adéla");
   assert.equal(displayRunnerName("Stránská Adéla", null), "Stránská Adéla");
   assert.equal(displayRunnerName(null, undefined), null);
+});
+
+test("results context keeps the name the runner had in that year", () => {
+  assert.equal(
+    runnerNameFor("results", "Dočkalová Martina", "Zvěřinová Martina"),
+    "Dočkalová Martina",
+  );
+  assert.equal(runnerNameFor("results", " Dočkalová  Martina", null), "Dočkalová Martina");
+  assert.equal(runnerNameFor("results", null, "Zvěřinová Martina"), "Zvěřinová Martina");
+  assert.equal(runnerNameFor("results", "", ""), null);
+});
+
+test("stats context shows only the current name", () => {
+  assert.equal(
+    runnerNameFor("stats", "Dočkalová Martina", "Zvěřinová Martina"),
+    "Zvěřinová Martina",
+  );
+  assert.equal(runnerNameFor("stats", "Dočkalová Martina", null), "Dočkalová Martina");
+  assert.equal(runnerNameFor("stats", null, undefined), null);
+});
+
+test("profile context shows current with former name", () => {
+  assert.equal(
+    runnerNameFor("profile", "Dočkalová Martina", "Zvěřinová Martina"),
+    "Zvěřinová (Dočkalová) Martina",
+  );
 });

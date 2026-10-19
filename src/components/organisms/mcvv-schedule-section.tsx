@@ -1,8 +1,10 @@
 import { Bus, CalendarDays, Car, Clock, MapPin, Train } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Fragment } from "react";
 
 import { RaceCountdown, RaceInfoCard, SectionHeader } from "@/components/molecules";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
+import { McvvArrivalMapDialog } from "./mcvv-arrival-map";
 
 const itemIcons: Record<McvvHomepageContent["schedule"]["items"][number]["icon"], LucideIcon> = {
   calendar: CalendarDays,
@@ -25,7 +27,7 @@ export function McvvScheduleSection({ content }: McvvScheduleSectionProps) {
           <div className="mt-6 grid gap-3">
             {content.items.map((item) => {
               const Icon = itemIcons[item.icon];
-              return (
+              const row = (
                 <p
                   key={item.text}
                   className="flex items-center gap-3 text-base font-medium text-race-muted"
@@ -48,6 +50,13 @@ export function McvvScheduleSection({ content }: McvvScheduleSectionProps) {
                     ) : null}
                   </span>
                 </p>
+              );
+              if (item.icon !== "pin" || !content.arrivalMap) return row;
+              return (
+                <Fragment key={item.text}>
+                  {row}
+                  <McvvArrivalMapDialog content={content.arrivalMap} />
+                </Fragment>
               );
             })}
           </div>

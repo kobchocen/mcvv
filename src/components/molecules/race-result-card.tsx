@@ -14,6 +14,7 @@ export type RaceWinner = {
 export type RaceResultCardProps = {
   year: string;
   label: string;
+  overline?: string;
   winners: RaceWinner[];
   linkLabel: string;
   href?: string;
@@ -24,6 +25,7 @@ export type RaceResultCardProps = {
 export function RaceResultCard({
   year,
   label,
+  overline,
   winners,
   linkLabel,
   href,
@@ -35,6 +37,11 @@ export function RaceResultCard({
     <>
       <div className="flex items-start justify-between gap-4">
         <div>
+          {overline ? (
+            <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.14em] text-race-accent">
+              {overline}
+            </p>
+          ) : null}
           <p className="font-display text-4xl font-bold leading-none text-foreground dark:text-white">
             {year}
           </p>

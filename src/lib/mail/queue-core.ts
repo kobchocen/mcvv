@@ -7,13 +7,7 @@
  */
 
 export type MailKind =
-  | "auth"
-  | "confirmation"
-  | "alert"
-  | "contact"
-  | "reminder"
-  | "summary"
-  | "other";
+  "auth" | "confirmation" | "alert" | "contact" | "reminder" | "summary" | "other";
 
 export const KIND_PRIORITY: Record<MailKind, 0 | 1> = {
   auth: 0,

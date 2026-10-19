@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
-import { displayRunnerName } from "@/lib/format/runner-name";
+import { runnerNameFor } from "@/lib/format/runner-name";
 import { formatRaceDay } from "@/lib/format/date";
 import { loadPartners } from "@/lib/partners/logos";
 import { pickGalleryPhotoIds } from "@/lib/photos/gallery";
@@ -69,7 +69,7 @@ export default async function Home({ params }: PageProps) {
     if (topMen) {
       winners.push({
         category: isCs ? "Muži" : "Men",
-        name: displayRunnerName(topMen.runnerName, topMen.runner?.name) || "—",
+        name: runnerNameFor("results", topMen.runnerName, topMen.runner?.name) || "—",
         time: formatRaceTime(topMen.time),
         runnerId: topMen.runnerId,
       });
@@ -77,7 +77,7 @@ export default async function Home({ params }: PageProps) {
     if (topWomen) {
       winners.push({
         category: isCs ? "Ženy" : "Women",
-        name: displayRunnerName(topWomen.runnerName, topWomen.runner?.name) || "—",
+        name: runnerNameFor("results", topWomen.runnerName, topWomen.runner?.name) || "—",
         time: formatRaceTime(topWomen.time),
         runnerId: topWomen.runnerId,
       });
@@ -86,6 +86,7 @@ export default async function Home({ params }: PageProps) {
     dynamicYears = [
       {
         year: String(latestYear),
+        overline: rawResults.overline,
         label: rawResults.yearLabel,
         winners,
         linkLabel: rawResults.linkLabel,
@@ -122,7 +123,9 @@ export default async function Home({ params }: PageProps) {
     backToTop: t("backToTop"),
   };
 
-  return <McvvHomepageTemplate content={content} galleryPhotoIds={galleryPhotoIds} />;
+  return (
+    <McvvHomepageTemplate content={content} galleryPhotoIds={galleryPhotoIds} locale={locale} />
+  );
 }
 
 export function generateStaticParams() {

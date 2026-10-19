@@ -21,7 +21,7 @@
         { "label": "O závodě", "href": "#about" },
         { "label": "Trať", "href": "#route" },
         { "label": "Termín", "href": "#date" },
-        { "label": "Výsledky", "href": "#results" },
+        { "label": "Statistiky", "href": "#results" },
         { "label": "Fotky", "href": "#gallery" },
         { "label": "Partneři", "href": "#partners" }
       ]
@@ -41,7 +41,7 @@
       "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
       "tertiaryHref": "/results",
-      "enrolled": "Přihlášených běžců: {count}",
+      "enrolledAria": "{cta} – {count, plural, one {přihlášen # běžec} few {přihlášeni # běžci} other {přihlášeno # běžců}}",
       "stats": [
         {
           "value": "4300",
@@ -65,7 +65,7 @@
       "eyebrow": "01 — O závodě",
       "title": "Není to běh. Je to výzva.",
       "body": [
-        "Malá cena Velké Verandy je tradiční lesní kros v srdci choceňských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
+        "Malá cena Velké Verandy je tradiční lesní kros v srdci choceňských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
         "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
       ],
       "actions": [
@@ -163,20 +163,31 @@
       "travel": [
         {
           "title": "Autem",
-          "description": "Parkování v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud 300 m pěšky. Alternativa: nábřeží Krále Jiřího, po zelené značce 500 m k Verandě."
+          "description": "Parkování P1 v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud 400 m pěšky. Alternativa P2: nábřeží Krále Jiřího, po zelené značce 800 m k Verandě."
         },
         {
           "title": "Vlakem",
-          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 2 km do centra."
+          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 1,8 km."
         },
         {
           "title": "Autobusem",
-          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku."
+          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku, celkem 1,8 km."
         }
-      ]
+      ],
+      "arrivalMap": {
+        "linkLabel": "Mapa příjezdu a parkování",
+        "title": "Mapa příjezdu a parkování",
+        "mapAlt": "Mapa příjezdu k Velké Verandě s parkovišti P1 a P2, vlakovým a autobusovým nádražím a pěšími trasami",
+        "attribution": "Mapa © přispěvatelé OpenStreetMap, trasy orientační.",
+        "closeLabel": "Zavřít mapu",
+        "townLabel": "Choceň",
+        "verandaLabel": "Veranda",
+        "labels": { "veranda": "S/C", "p1": "P1", "p2": "P2", "train": "Vlak", "bus": "Bus" }
+      }
     },
     "results": {
-      "eyebrow": "04 — Výsledky a statistiky",
+      "eyebrow": "04 — Statistiky",
+      "overline": "Výsledky",
       "title": "Generace běžců, jedna trať",
       "allLabel": "Archiv výsledků",
       "yearLabel": "Poslední ročník",
@@ -247,7 +258,7 @@
       "guide": "Jak se přihlásit"
     },
     "footer": {
-      "description": "Tradiční lesní kros v Chocni. 4300 metrů, 200 metrů převýšení a charakter, který si zapamatuješ.",
+      "description": "Tradiční lesní kros v Chocni. 4300 metrů, 200 metrů převýšení a charakter, který si zapamatuješ.",
       "columns": [
         {
           "title": "Závod",
@@ -258,7 +269,7 @@
           ]
         },
         {
-          "title": "Výsledky",
+          "title": "Statistiky",
           "links": [
             { "label": "Poslední ročník", "href": "/results/{year}" },
             { "label": "Archiv výsledků", "href": "/results" },
@@ -529,11 +540,11 @@
     "forgotTitle": "Zapomenuté heslo",
     "forgotIntro": "Zadejte e-mail, se kterým se přihlašujete. Pošleme vám odkaz pro nastavení nového hesla.",
     "forgotSubmit": "Poslat odkaz",
-    "forgotSent": "Pokud u nás účet s tímto e-mailem existuje, poslali jsme na něj odkaz pro obnovu hesla. Odkaz platí 1 hodinu.",
+    "forgotSent": "Pokud u nás účet s tímto e-mailem existuje, poslali jsme na něj odkaz pro obnovu hesla. Odkaz platí 1 hodinu.",
     "forgotMailMissing": "E-mail teď nelze odeslat. Zkuste to prosím později.",
     "backToLogin": "Zpět na přihlášení",
     "resetSubject": "Obnova hesla — MCVV",
-    "resetIntro": "Nové heslo nastavíte tímto odkazem (platnost 1 hodina):",
+    "resetIntro": "Nové heslo nastavíte tímto odkazem (platnost 1 hodina):",
     "resetAction": "Nastavit nové heslo",
     "resetOutro": "Pokud se přihlašujete přes Google, můžete si tímto odkazem nastavit i heslo. Pokud jste o obnovu nežádali, e-mail ignorujte.",
     "resetTitle": "Nové heslo",
@@ -564,9 +575,9 @@
     "registerGeneric": "Účet se nepodařilo založit.",
     "alreadyVerified": "Tento e-mail už má účet.",
     "mailMissing": "Ověřovací e-mail teď nelze odeslat. Účet nevznikl.",
-    "verifySent": "Na e-mail jsme poslali odkaz k ověření. Platí 24 hodin.",
+    "verifySent": "Na e-mail jsme poslali odkaz k ověření. Platí 24 hodin.",
     "verifySubject": "Ověření e-mailu — MCVV",
-    "verifyIntro": "Potvrďte e-mail odkazem (platnost 24 hodin):",
+    "verifyIntro": "Potvrďte e-mail odkazem (platnost 24 hodin):",
     "verifyAction": "Ověřit e-mail",
     "verifyTitle": "Ověření e-mailu",
     "verifyError": "Odkaz je neplatný nebo vypršel.",
@@ -724,7 +735,7 @@
     "casy": {
       "nav": "Nejlepší časy",
       "title": "Nejlepší časy",
-      "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
+      "intro": "TOP 20 mužů a TOP 20 žen napříč všemi ročníky."
     },
     "vek": {
       "nav": "Dle věku",
@@ -787,7 +798,7 @@
       {
         "image": "04-odeslano.jpg",
         "title": "Zkontrolujte e-mail",
-        "text": "Poslali jsme vám odkaz k ověření. Platí 24 hodin."
+        "text": "Poslali jsme vám odkaz k ověření. Platí 24 hodin."
       },
       {
         "image": "05-email.jpg",
@@ -830,7 +841,7 @@
       {
         "image": "12-zapomenute.jpg",
         "title": "Zapomenuté heslo",
-        "text": "Na přihlašovací stránce klikněte na <b>Zapomněli jste heslo?</b>, zadejte e-mail a pošleme vám odkaz na nové heslo (platí 1 hodinu)."
+        "text": "Na přihlašovací stránce klikněte na <b>Zapomněli jste heslo?</b>, zadejte e-mail a pošleme vám odkaz na nové heslo (platí 1 hodinu)."
       }
     ],
     "faq": [
@@ -840,7 +851,7 @@
       },
       {
         "q": "Nepřišel mi ověřovací e-mail.",
-        "a": "Zkontrolujte složku spam/hromadné. Odkaz platí 24 hodin. Pokud se pokusíte přihlásit neověřeným účtem, web vám nabídne poslat odkaz znovu."
+        "a": "Zkontrolujte složku spam/hromadné. Odkaz platí 24 hodin. Pokud se pokusíte přihlásit neověřeným účtem, web vám nabídne poslat odkaz znovu."
       },
       {
         "q": "Přihlašuji více lidí (rodinu, klub).",

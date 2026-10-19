@@ -36,14 +36,24 @@ test("section 03 keeps its original copy (no arrival cards)", () => {
   }
 });
 
-test("section 03 travel distances (P1 ≈ 400 m, train and bus 1,8 km) with nbsp", () => {
+test("section 03 travel distances (P1 400 m, P2 800 m, train and bus 1,8 km) with nbsp", () => {
   const [car, train, bus] = cs.Home.schedule.travel.map((t) => t.description);
   assert.match(car, /^Parkování P1 /);
-  assert.match(car, /odtud cca\u00a0400\u00a0m pěšky\./);
+  assert.match(car, /odtud 400\u00a0m pěšky\./);
+  assert.ok(!car.includes("cca"));
+  assert.match(
+    car,
+    /Alternativa P2: nábřeží Krále Jiřího, po zelené značce 800\u00a0m k\u00a0Verandě\.$/,
+  );
   assert.match(train, /celkem 1,8\u00a0km\.$/);
   assert.match(bus, /dál jako z\u00a0vlaku, celkem 1,8\u00a0km\.$/);
   const [carEn, trainEn, busEn] = en.Home.schedule.travel.map((t) => t.description);
-  assert.match(carEn, /then approx\. 400\u00a0m on foot\./);
+  assert.match(carEn, /then 400\u00a0m on foot\./);
+  assert.ok(!carEn.includes("approx"));
+  assert.match(
+    carEn,
+    /Alternative P2: Krále Jiřího embankment, green waymark 800\u00a0m to Veranda\.$/,
+  );
   assert.match(trainEn, /1\.8\u00a0km in total\.$/);
   assert.match(busEn, /same as from the train, 1\.8\u00a0km in total\.$/);
 });

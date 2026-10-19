@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
-import { displayRunnerName } from "@/lib/format/runner-name";
+import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { HighlightHashedRow, RunnerNameLink } from "@/components/molecules";
@@ -58,7 +58,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
 
   const results: ResultRow[] = rawResults.map(({ runner, ...r }) => ({
     ...r,
-    runnerName: displayRunnerName(r.runnerName, runner?.name),
+    runnerName: runnerNameFor("results", r.runnerName, runner?.name),
     _clubName: r.club?.name || r.clubName || "—",
     _birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
   })) as ResultRow[];
@@ -139,7 +139,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
                     </p>
                   )}
                   <p className="mt-1 text-sm text-race-muted">
-                    Počasí: {editionInfo.weather || "—"}, {editionInfo.temp ?? "—"} °C
+                    Počasí: {editionInfo.weather || "—"}, {editionInfo.temp ?? "—"} °C
                   </p>
                 </>
               )}

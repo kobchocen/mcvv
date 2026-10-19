@@ -50,6 +50,8 @@ export type CountdownUnits = {
 export type ResultItem = {
   year: string;
   label: string;
+  /** Small overline above the year, e.g. "Výsledky" on the latest-edition card. */
+  overline?: string;
   winners: RaceWinner[];
   linkLabel: string;
   href?: string;
@@ -146,6 +148,8 @@ export type McvvHomepageContent = {
   };
   results: {
     eyebrow: string;
+    /** Overline on the first (latest-edition) card. */
+    overline?: string;
     title: string;
     allLabel: string;
     yearLabel: string;

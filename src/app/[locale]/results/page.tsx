@@ -4,7 +4,7 @@ import NextLink from "next/link";
 import { RunnerNameLink } from "@/components/molecules";
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
-import { displayRunnerName } from "@/lib/format/runner-name";
+import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
@@ -98,7 +98,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
 
   const fullResults: ResultRow[] = fullResultsRaw.map(({ runner, ...r }) => ({
     ...r,
-    runnerName: displayRunnerName(r.runnerName, runner?.name),
+    runnerName: runnerNameFor("results", r.runnerName, runner?.name),
     _splits: [],
   })) as ResultRow[];
 
@@ -299,7 +299,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                   )}
                   {editionInfo && (
                     <div className="text-xs text-race-muted">
-                      Počasí: {editionInfo.weather || "—"}, {editionInfo.temp ?? "—"} °C
+                      Počasí: {editionInfo.weather || "—"}, {editionInfo.temp ?? "—"} °C
                     </div>
                   )}
 
@@ -566,5 +566,5 @@ function withDisplayName<T extends { runnerName: string | null; runner: { name: 
 ): (Omit<T, "runner"> & { runnerName: string | null }) | null {
   if (!row) return null;
   const { runner, ...rest } = row;
-  return { ...rest, runnerName: displayRunnerName(row.runnerName, runner?.name) };
+  return { ...rest, runnerName: runnerNameFor("results", row.runnerName, runner?.name) };
 }

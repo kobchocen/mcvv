@@ -163,15 +163,15 @@
       "travel": [
         {
           "title": "Autem",
-          "description": "Parkování v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud 300 m pěšky. Alternativa: nábřeží Krále Jiřího, po zelené značce 500 m k Verandě."
+          "description": "Parkování P1 v zatáčce 1 km za Chocní směrem na Sruby (silnice 315), odtud cca 400 m pěšky. Alternativa: nábřeží Krále Jiřího, po zelené značce 500 m k Verandě."
         },
         {
           "title": "Vlakem",
-          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 2 km do centra."
+          "description": "Žst. Choceň. Tunelem, parkem, po levém břehu Tiché Orlice (nábřeží Krále Jiřího) k hájence, tunelem pod tratí na Týniště, zelená značka SZ, celkem 1,8 km."
         },
         {
           "title": "Autobusem",
-          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku."
+          "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku, celkem 1,8 km."
         }
       ],
       "arrivalMap": {

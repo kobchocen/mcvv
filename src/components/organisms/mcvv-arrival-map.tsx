@@ -177,10 +177,12 @@ export function McvvArrivalMapDialog({ content, className }: McvvArrivalMapDialo
       <DialogTrigger asChild>
         <button
           type="button"
-          className={`inline-flex min-h-9 cursor-pointer items-center gap-2 text-left text-base font-medium text-race-accent underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none ${className ?? ""}`}
+          className={`group flex cursor-pointer items-center gap-3 text-left text-base font-medium text-race-accent focus-visible:outline-none ${className ?? ""}`}
         >
-          <MapIcon className="size-4 shrink-0" aria-hidden="true" />
-          {content.linkLabel}
+          <MapIcon className="size-5 shrink-0 text-race-accent" aria-hidden="true" />
+          <span className="underline-offset-2 group-hover:underline group-focus-visible:underline">
+            {content.linkLabel}
+          </span>
         </button>
       </DialogTrigger>
       <DialogContent

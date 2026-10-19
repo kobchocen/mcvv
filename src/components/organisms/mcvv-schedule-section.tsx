@@ -1,5 +1,6 @@
 import { Bus, CalendarDays, Car, Clock, MapPin, Train } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Fragment } from "react";
 
 import { RaceCountdown, RaceInfoCard, SectionHeader } from "@/components/molecules";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
@@ -52,10 +53,10 @@ export function McvvScheduleSection({ content }: McvvScheduleSectionProps) {
               );
               if (item.icon !== "pin" || !content.arrivalMap) return row;
               return (
-                <div key={item.text}>
+                <Fragment key={item.text}>
                   {row}
-                  <McvvArrivalMapDialog content={content.arrivalMap} className="mt-1 ml-8" />
-                </div>
+                  <McvvArrivalMapDialog content={content.arrivalMap} />
+                </Fragment>
               );
             })}
           </div>

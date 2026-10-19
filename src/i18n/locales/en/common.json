@@ -173,7 +173,46 @@
           "title": "By bus",
           "description": "ČSAD station by the cinema. SW across the bridge to the left bank, then the same as from the train."
         }
-      ]
+      ],
+      "arrival": {
+        "title": "Getting here",
+        "intro": "Start and finish are at Velká Veranda in the woods near Choceň. By car, park at P1 or P2; from the train or bus a footpath leads along the Tichá Orlice and through the forest.",
+        "mapAlt": "Map of the way to Velká Veranda with car parks P1 and P2, the train and bus stations and walking routes",
+        "mapOpen": "Open the map in higher resolution",
+        "attribution": "Map © OpenStreetMap contributors, routes are indicative.",
+        "walk": "{distance} on foot, approx. {minutes} min",
+        "mapy": "Mapy.com",
+        "google": "Google Maps",
+        "walkRoute": "Walking route",
+        "drive": "Drive here",
+        "points": {
+          "veranda": {
+            "label": "S/C",
+            "name": "Velká Veranda – start and finish",
+            "description": "Registration desk, start and finish."
+          },
+          "p1": {
+            "label": "P1",
+            "name": "Car park P1 – bend towards Sruby",
+            "description": "Closest to Veranda, a short walk through the forest."
+          },
+          "p2": {
+            "label": "P2",
+            "name": "Car park P2 – Krále Jiřího embankment",
+            "description": "Continue along the embankment and the green waymarks through the forest."
+          },
+          "train": {
+            "label": "Train",
+            "name": "Choceň railway station",
+            "description": "Through the tunnel and park to the Krále Jiřího embankment, under the railway towards Týniště, then the green waymarks."
+          },
+          "bus": {
+            "label": "Bus",
+            "name": "Bus station (ČSAD by the cinema)",
+            "description": "Across the bridge to the left bank of the Tichá Orlice, then as from the train."
+          }
+        }
+      }
     },
     "results": {
       "eyebrow": "04 — Results and statistics",

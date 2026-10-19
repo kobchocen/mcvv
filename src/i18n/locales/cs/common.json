@@ -173,7 +173,46 @@
           "title": "Autobusem",
           "description": "Nádraží ČSAD u kina. JZ přes most na levý břeh, dál jako z vlaku."
         }
-      ]
+      ],
+      "arrival": {
+        "title": "Jak se k nám dostat",
+        "intro": "Start i cíl je u Velké Verandy v lese u Chocně. Autem zaparkujte na P1 nebo P2, z vlaku i autobusu vede pěší trasa po nábřeží Tiché Orlice a lesem.",
+        "mapAlt": "Mapa příjezdu k Velké Verandě s parkovišti P1 a P2, vlakovým a autobusovým nádražím a pěšími trasami",
+        "mapOpen": "Otevřít mapu ve větším rozlišení",
+        "attribution": "Mapa © přispěvatelé OpenStreetMap, trasy orientační.",
+        "walk": "{distance} pěšky, cca {minutes} min",
+        "mapy": "Mapy.com",
+        "google": "Google Maps",
+        "walkRoute": "Pěší trasa",
+        "drive": "Navigovat autem",
+        "points": {
+          "veranda": {
+            "label": "S/C",
+            "name": "Velká Veranda – start a cíl",
+            "description": "Prezentace, start i cíl závodu."
+          },
+          "p1": {
+            "label": "P1",
+            "name": "Parkoviště P1 – zatáčka směr Sruby",
+            "description": "Nejblíž k Verandě, odtud kousek pěšky lesem."
+          },
+          "p2": {
+            "label": "P2",
+            "name": "Parkoviště P2 – nábřeží Krále Jiřího",
+            "description": "Dál po nábřeží a zelené značce lesem k Verandě."
+          },
+          "train": {
+            "label": "Vlak",
+            "name": "Vlakové nádraží Choceň",
+            "description": "Tunelem a parkem na nábřeží Krále Jiřího, pod tratí na Týniště a po zelené značce."
+          },
+          "bus": {
+            "label": "Bus",
+            "name": "Autobusové nádraží (ČSAD u kina)",
+            "description": "Přes most na levý břeh Tiché Orlice, dál stejně jako od vlaku."
+          }
+        }
+      }
     },
     "results": {
       "eyebrow": "04 — Výsledky a statistiky",

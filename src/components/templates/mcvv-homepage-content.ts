@@ -17,6 +17,23 @@ export type TextBlock = {
   description: string;
 };
 
+export type ArrivalPointCopy = { label: string; name: string; description: string };
+
+export type ArrivalContent = {
+  title: string;
+  intro: string;
+  mapAlt: string;
+  mapOpen: string;
+  attribution: string;
+  /** "{distance} pěšky, cca {minutes} min" */
+  walk: string;
+  mapy: string;
+  google: string;
+  walkRoute: string;
+  drive: string;
+  points: Record<"veranda" | "p1" | "p2" | "train" | "bus", ArrivalPointCopy>;
+};
+
 export type ScheduleItem = {
   text: string;
   icon: "calendar" | "clock" | "pin";
@@ -125,6 +142,7 @@ export type McvvHomepageContent = {
     countdownUnits: CountdownUnits;
     raceInProgress: string;
     travel: TextBlock[];
+    arrival?: ArrivalContent;
   };
   results: {
     eyebrow: string;

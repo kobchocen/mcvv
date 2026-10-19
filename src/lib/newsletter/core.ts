@@ -261,8 +261,7 @@ export type RecipientCounts = {
 export type OutgoingMessage = RenderedEmail & { to: string; headers: Record<string, string> };
 
 export type BatchSendResult =
-  | { ok: true; providerIds: (string | null)[] }
-  | { ok: false; retryable: boolean; error: string };
+  { ok: true; providerIds: (string | null)[] } | { ok: false; retryable: boolean; error: string };
 
 export interface NewsletterStore {
   /** Atomically move up to `limit` pending rows to `sending` under `claimToken`. */

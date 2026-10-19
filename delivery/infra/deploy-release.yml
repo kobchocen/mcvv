@@ -29,7 +29,7 @@ jobs:
       RELEASE_TAG: ${{ inputs.release_tag }}
       DEPLOY_ENV: ${{ inputs.environment }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Validate deployment request
@@ -45,7 +45,7 @@ jobs:
           esac
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
       - name: Checkout the current application release branch
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kobchocen/mcvv
           ref: refs/heads/${{ steps.source.outputs.branch }}
@@ -63,7 +63,7 @@ jobs:
           node scripts/application.mjs
           node scripts/config.mjs
           python3 scripts/release-source.py --tag "$RELEASE_TAG" --environment "$DEPLOY_ENV"
-      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -74,7 +74,7 @@ jobs:
           WEB_IMAGE: ${{ steps.release.outputs.web }}
           MIGRATION_IMAGE: ${{ steps.release.outputs.migration }}
         run: python3 scripts/platform.py deploy --environment "$TARGET" --web-image "$WEB_IMAGE" --migration-image "$MIGRATION_IMAGE"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deployed-${{ inputs.release_tag }}-${{ github.run_id }}
           path: .local/release/

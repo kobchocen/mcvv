@@ -35,7 +35,13 @@ export default async function AdminNewsletterNewPage({ params }: PageProps) {
           Nová kampaň — Newsletter
         </h1>
         <McvvAdminNewsletterForm
-          values={{ subject: "", body: TEMPLATE, audienceUsers: true, audienceYears: 10 }}
+          values={{
+            subject: "",
+            body: TEMPLATE,
+            audienceUsers: true,
+            audienceYears: 10,
+            excludeCurrentEntrants: true,
+          }}
           audienceHints={await audienceHints()}
         />
       </div>

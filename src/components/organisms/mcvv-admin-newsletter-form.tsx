@@ -9,6 +9,7 @@ export type NewsletterFormValues = {
   body: string;
   audienceUsers: boolean;
   audienceYears: number;
+  excludeCurrentEntrants: boolean;
 };
 
 export const NEWSLETTER_YEAR_OPTIONS = [0, 1, 2, 3, 5, 10, 20];
@@ -18,7 +19,11 @@ export function McvvAdminNewsletterForm({
   audienceHints,
 }: {
   values: NewsletterFormValues;
-  audienceHints: { users: number; years: Record<number, number> };
+  audienceHints: {
+    users: number;
+    years: Record<number, number>;
+    currentEntrants: { year: number; count: number };
+  };
 }) {
   return (
     <form action={saveNewsletter} className="grid max-w-3xl gap-4">
@@ -62,6 +67,17 @@ export function McvvAdminNewsletterForm({
               </option>
             ))}
           </select>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="excludeCurrentEntrants"
+            defaultChecked={values.excludeCurrentEntrants}
+            className="mt-0.5 size-4 shrink-0"
+          />
+          <span>
+            {`Vyloučit letos přihlášené (ročník ${audienceHints.currentEntrants.year}: ${audienceHints.currentEntrants.count} adres z nezrušených přihlášek s\u00a0alespoň jedním běžcem)`}
+          </span>
         </label>
         <p className="text-xs text-race-muted">
           Počty jsou unikátní platné adresy bez odhlášených. Celkové publikum (po sloučení) je vidět

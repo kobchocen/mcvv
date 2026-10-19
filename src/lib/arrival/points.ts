@@ -9,7 +9,8 @@
  *   nodes 8414416314–8414430221 (střed nástupišť).
  * Pěší trasy: nejkratší cesta po pěšky průchozích cestách OSM (Overpass, highway=path/footway/
  * track/… , 19. 10. 2026) – od P2 lesními cestami pod Hrnmalem; vlak a autobus se na ni napojují
- * u nábřeží Krále Jiřího. Časy při 4,5 km/h, zaokrouhleno nahoru; orientační.
+ * u nábřeží Krále Jiřího. Vzdálenosti zaokrouhleny a ověřeny pořadatelem v Mapy.cz (P1 400 m,
+ * P2 800 m, vlak 1,8 km); časy při 4,5 km/h, orientační.
  */
 
 export type ArrivalPointId = "veranda" | "p1" | "p2" | "train" | "bus";
@@ -26,9 +27,9 @@ export const VERANDA: ArrivalPoint = { id: "veranda", lat: 49.995833, lon: 16.20
 
 export const ARRIVAL_POINTS: readonly ArrivalPoint[] = [
   VERANDA,
-  { id: "p1", lat: 49.9934183, lon: 16.2043828, walk: { meters: 405, minutes: 6 } },
-  { id: "p2", lat: 49.9945672, lon: 16.2128564, walk: { meters: 812, minutes: 11 } },
-  { id: "train", lat: 49.994, lon: 16.2247, walk: { meters: 1831, minutes: 25 } },
+  { id: "p1", lat: 49.9934183, lon: 16.2043828, walk: { meters: 400, minutes: 6 } },
+  { id: "p2", lat: 49.9945672, lon: 16.2128564, walk: { meters: 800, minutes: 11 } },
+  { id: "train", lat: 49.994, lon: 16.2247, walk: { meters: 1800, minutes: 25 } },
   { id: "bus", lat: 49.9982, lon: 16.2229, walk: { meters: 1748, minutes: 24 } },
 ];
 

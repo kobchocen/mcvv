@@ -75,7 +75,10 @@ test("routes start at their point, end at Veranda and stay inside the map", () =
 
 test("P2 walks the short forest way (≈ 800 m), stations join it", () => {
   const walk = (id: string) => ARRIVAL_POINTS.find((p) => p.id === id)!.walk!;
-  assert.equal(formatWalkDistance(walk("p2").meters, "cs"), "810\u00a0m");
+  assert.equal(formatWalkDistance(walk("p1").meters, "cs"), "400\u00a0m");
+  assert.equal(formatWalkDistance(walk("p2").meters, "cs"), "800\u00a0m");
+  assert.equal(formatWalkDistance(walk("train").meters, "cs"), "1,8\u00a0km");
+  assert.equal(formatWalkDistance(walk("bus").meters, "cs"), "1,7\u00a0km");
   assert.ok(walk("p2").meters < 900);
   assert.ok(walk("train").meters < 2000 && walk("bus").meters < 2000);
 });

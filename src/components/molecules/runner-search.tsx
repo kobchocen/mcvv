@@ -131,7 +131,9 @@ export function RunnerSearch({ placeholder, emptyLabel }: RunnerSearchProps) {
                   }`}
                 >
                   <span className="font-semibold text-foreground">{item.name}</span>
-                  <span className="text-xs text-race-dim">* {item.born}</span>
+                  <span className="shrink-0 whitespace-nowrap text-xs text-race-dim">
+                    * {item.born}
+                  </span>
                 </button>
               </li>
             ))

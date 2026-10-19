@@ -21,7 +21,7 @@
         { "label": "About", "href": "#about" },
         { "label": "Course", "href": "#route" },
         { "label": "Date", "href": "#date" },
-        { "label": "Results", "href": "#results" },
+        { "label": "Statistics", "href": "#results" },
         { "label": "Photos", "href": "#gallery" },
         { "label": "Partners", "href": "#partners" }
       ]
@@ -65,7 +65,7 @@
       "eyebrow": "01 — About",
       "title": "It is not a run. It is a challenge.",
       "body": [
-        "Mala cena Velke Verandy is a traditional forest cross in the heart of the Chocen woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
+        "Mala cena Velke Verandy is a traditional forest cross in the heart of the Chocen woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
         "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
       ],
       "actions": [
@@ -163,7 +163,7 @@
       "travel": [
         {
           "title": "By car",
-          "description": "Parking P1 in the bend 1 km past Choceň towards Sruby (road 315), then approx. 400 m on foot. Alternative: Krále Jiřího embankment, follow the green waymarks 500 m to Veranda."
+          "description": "Parking P1 in the bend 1 km past Choceň towards Sruby (road 315), then 400 m on foot. Alternative P2: Krále Jiřího embankment, green waymark 800 m to Veranda."
         },
         {
           "title": "By train",
@@ -186,7 +186,8 @@
       }
     },
     "results": {
-      "eyebrow": "04 — Results and statistics",
+      "eyebrow": "04 — Statistics",
+      "overline": "Results",
       "title": "Generations of runners, one course",
       "allLabel": "Results archive",
       "yearLabel": "Latest edition",
@@ -257,7 +258,7 @@
       "guide": "How to enter"
     },
     "footer": {
-      "description": "A traditional forest cross in Chocen. 4300 meters, 200 meters of elevation gain, and a character you will remember.",
+      "description": "A traditional forest cross in Chocen. 4300 meters, 200 meters of elevation gain, and a character you will remember.",
       "columns": [
         {
           "title": "Race",
@@ -268,7 +269,7 @@
           ]
         },
         {
-          "title": "Results",
+          "title": "Statistics",
           "links": [
             { "label": "Latest edition", "href": "/results/{year}" },
             { "label": "Results archive", "href": "/results" },
@@ -539,11 +540,11 @@
     "forgotTitle": "Forgotten password",
     "forgotIntro": "Enter the e-mail you sign in with. We will send you a link to set a new password.",
     "forgotSubmit": "Send link",
-    "forgotSent": "If an account with this e-mail exists, we have sent a password reset link to it. The link is valid for 1 hour.",
+    "forgotSent": "If an account with this e-mail exists, we have sent a password reset link to it. The link is valid for 1 hour.",
     "forgotMailMissing": "E-mail cannot be sent right now. Please try again later.",
     "backToLogin": "Back to sign in",
     "resetSubject": "Password reset — MCVV",
-    "resetIntro": "Set a new password using this link (valid for 1 hour):",
+    "resetIntro": "Set a new password using this link (valid for 1 hour):",
     "resetAction": "Set new password",
     "resetOutro": "If you sign in with Google, you can use this link to set a password as well. If you did not request a reset, ignore this e-mail.",
     "resetTitle": "New password",
@@ -574,9 +575,9 @@
     "registerGeneric": "The account could not be created.",
     "alreadyVerified": "This email already has an account.",
     "mailMissing": "The verification email cannot be sent right now. No account was created.",
-    "verifySent": "We sent a verification link to your email. It is valid for 24 hours.",
+    "verifySent": "We sent a verification link to your email. It is valid for 24 hours.",
     "verifySubject": "Verify your email — MCVV",
-    "verifyIntro": "Confirm your email with this link (valid 24 hours):",
+    "verifyIntro": "Confirm your email with this link (valid 24 hours):",
     "verifyAction": "Verify email",
     "verifyTitle": "Email verification",
     "verifyError": "The link is invalid or has expired.",
@@ -734,7 +735,7 @@
     "casy": {
       "nav": "Best times",
       "title": "Best times",
-      "intro": "TOP 20 men and TOP 20 women across all editions."
+      "intro": "TOP 20 men and TOP 20 women across all editions."
     },
     "vek": {
       "nav": "By age",
@@ -797,7 +798,7 @@
       {
         "image": "04-odeslano.jpg",
         "title": "Check your e-mail",
-        "text": "We have sent you a verification link. It is valid for 24 hours."
+        "text": "We have sent you a verification link. It is valid for 24 hours."
       },
       {
         "image": "05-email.jpg",
@@ -840,7 +841,7 @@
       {
         "image": "12-zapomenute.jpg",
         "title": "Forgotten password",
-        "text": "On the sign-in page click <b>Zapomněli jste heslo?</b> (Forgot password?), enter your e-mail and we will send you a link to set a new password (valid for 1 hour)."
+        "text": "On the sign-in page click <b>Zapomněli jste heslo?</b> (Forgot password?), enter your e-mail and we will send you a link to set a new password (valid for 1 hour)."
       }
     ],
     "faq": [
@@ -850,7 +851,7 @@
       },
       {
         "q": "I did not receive the verification e-mail.",
-        "a": "Check your spam folder. The link is valid for 24 hours. If you try to sign in with an unverified account, the website offers to resend it."
+        "a": "Check your spam folder. The link is valid for 24 hours. If you try to sign in with an unverified account, the website offers to resend it."
       },
       {
         "q": "I am entering several people (family, club).",

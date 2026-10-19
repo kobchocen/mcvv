@@ -517,6 +517,7 @@
     "loadMore": "Načíst další",
     "close": "Zavřít",
     "empty": "Pro tohoto běžce zatím nejsou výsledky.",
+    "registeredFirstStart": "Přihlášen na ročník {year} – první start",
     "back": "Archiv výsledků"
   },
   "Auth": {

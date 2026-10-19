@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { RaceCountdown, RaceInfoCard, SectionHeader } from "@/components/molecules";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
+import { McvvArrivalMap } from "./mcvv-arrival-map";
 
 const itemIcons: Record<McvvHomepageContent["schedule"]["items"][number]["icon"], LucideIcon> = {
   calendar: CalendarDays,
@@ -70,6 +71,7 @@ export function McvvScheduleSection({ content }: McvvScheduleSectionProps) {
           ))}
         </div>
       </div>
+      {content.arrival ? <McvvArrivalMap content={content.arrival} /> : null}
     </section>
   );
 }

@@ -29,6 +29,9 @@ export function McvvNewRunnerForm({
     lastName: string;
     birthYear: string;
     sex: string;
+    sexPlaceholder: string;
+    sexRequired: string;
+    categoryPlaceholder: string;
     male: string;
     female: string;
     category: string;
@@ -43,7 +46,8 @@ export function McvvNewRunnerForm({
   // does not wipe the user's input on a validation/server error. Clear only on success.
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [sex, setSex] = useState<"M" | "F">("M");
+  // No default: the runner id encodes the sex, so the user must choose explicitly (#103).
+  const [sex, setSex] = useState<"" | "M" | "F">("");
   const [birthYear, setBirthYear] = useState("");
   const [categoryChoice, setCategoryChoice] = useState("");
   const [state, action] = useActionState(
@@ -53,6 +57,7 @@ export function McvvNewRunnerForm({
         setFirstName("");
         setLastName("");
         setBirthYear("");
+        setSex("");
         setCategoryChoice("");
       }
       return result;
@@ -71,7 +76,7 @@ export function McvvNewRunnerForm({
     }
   }
   const eligible = useMemo(
-    () => (Number.isFinite(born) ? eligibleCategoriesFor(born, sex, year, categories) : []),
+    () => (sex && Number.isFinite(born) ? eligibleCategoriesFor(born, sex, year, categories) : []),
     [born, categories, sex, year],
   );
   const defaultCategoryId = useMemo(() => {
@@ -80,6 +85,9 @@ export function McvvNewRunnerForm({
   const categoryId = eligible.some((category) => category.id === categoryChoice)
     ? categoryChoice
     : defaultCategoryId;
+
+  // Without a sex the browser's required-field validation explains what is missing.
+  const canSubmit = sex === "" || eligible.length > 0;
 
   return (
     <form action={action} className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -124,10 +132,17 @@ export function McvvNewRunnerForm({
         <select
           id="sex"
           name="sex"
+          required
           value={sex}
-          onChange={(event) => setSex(event.target.value === "F" ? "F" : "M")}
-          className="h-10 border border-race-line bg-race-surface px-3"
+          aria-invalid={state.error === "sex" ? true : undefined}
+          onChange={(event) =>
+            setSex(event.target.value === "F" ? "F" : event.target.value === "M" ? "M" : "")
+          }
+          className={`h-10 border border-race-line bg-race-surface px-3 ${sex ? "" : "text-race-muted"}`}
         >
+          <option value="" disabled>
+            {copy.sexPlaceholder}
+          </option>
           <option value="M">{copy.male}</option>
           <option value="F">{copy.female}</option>
         </select>
@@ -142,6 +157,11 @@ export function McvvNewRunnerForm({
           onChange={(event) => setCategoryChoice(event.target.value)}
           className="h-10 border border-race-line bg-race-surface px-3"
         >
+          {eligible.length === 0 ? (
+            <option value="" disabled>
+              {copy.categoryPlaceholder}
+            </option>
+          ) : null}
           {eligible.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -161,6 +181,9 @@ export function McvvNewRunnerForm({
           className="h-10"
         />
       </div>
+      {state.error === "sex" ? (
+        <p className="sm:col-span-2 text-sm text-destructive">{copy.sexRequired}</p>
+      ) : null}
       {state.error === "ambiguous" ? (
         <p className="sm:col-span-2 text-sm text-destructive">{copy.ambiguous}</p>
       ) : null}
@@ -172,7 +195,7 @@ export function McvvNewRunnerForm({
       ) : null}
       <Button
         type="submit"
-        disabled={eligible.length === 0}
+        disabled={!canSubmit}
         className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
       >
         {copy.add}

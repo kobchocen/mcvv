@@ -1,3 +1,4 @@
+import type * as React from "react";
 import Image from "next/image";
 import { Trees } from "lucide-react";
 
@@ -43,18 +44,22 @@ const primaryClass =
 const secondaryClass =
   "h-12 border-white/15 bg-white/10 px-6 font-display text-base font-semibold text-white hover:bg-white/15 hover:text-white";
 
-function HeroCtaLink({ cta }: { cta: McvvHeroCta }) {
+/** Rendered through `<Button asChild>`: Slot props (className, …) must reach the anchor. */
+function HeroCtaLink({
+  cta,
+  ...props
+}: { cta: McvvHeroCta } & Omit<React.ComponentProps<"a">, "href">) {
   const body = <McvvEntriesCtaContent label={cta.label} count={cta.count} />;
   const ariaLabel = (cta.count ?? 0) > 0 || cta.external ? cta.ariaLabel : undefined;
   if (cta.external) {
     return (
-      <a href={cta.href} target="_blank" rel="noopener" aria-label={ariaLabel}>
+      <a {...props} href={cta.href} target="_blank" rel="noopener" aria-label={ariaLabel}>
         {body}
       </a>
     );
   }
   return (
-    <Link href={cta.href as "/program"} aria-label={ariaLabel}>
+    <Link {...props} href={cta.href as "/program"} aria-label={ariaLabel}>
       {body}
     </Link>
   );

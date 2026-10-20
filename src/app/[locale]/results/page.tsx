@@ -3,6 +3,11 @@ import NextLink from "next/link";
 
 import { RunnerNameLink } from "@/components/molecules";
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
+import {
+  McvvResultsGroup,
+  type McvvResultsTableLabels,
+} from "@/components/organisms/mcvv-results-table";
+import { pickSplits, yearHasSplits } from "@/lib/results/table";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
@@ -38,7 +43,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   const sp = await searchParams;
   const selectedYearParam = sp?.year ? parseInt(sp.year, 10) : null;
   const view = sp?.view === "absolute" ? "absolute" : "categories";
-  const showSplits = sp?.splits === "true";
+  const splitsRequested = sp?.splits === "true";
 
   const isCs = locale === "cs";
 
@@ -126,6 +131,8 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     where: { year: defaultYear },
     select: { bib: true, split: true, time: true },
   });
+  const hasSplits = yearHasSplits(splitsRaw.length);
+  const showSplits = splitsRequested && hasSplits;
   const splitsByBib = new Map<number, Array<{ split: string; time: number }>>();
   splitsRaw.forEach((s) => {
     if (s.split === "9") return;
@@ -207,6 +214,32 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   });
 
   const home = await getTranslations({ locale, namespace: "Home" });
+  const t = await getTranslations({ locale, namespace: "ResultsArchive" });
+  const labels: McvvResultsTableLabels = {
+    name: t("colName"),
+    birth: t("colBirth"),
+    birthShort: t("colBirthShort"),
+    club: t("colClub"),
+    category: t("colCategory"),
+    split1: t("colSplit1"),
+    split2: t("colSplit2"),
+    split1Short: t("split1Short"),
+    split2Short: t("split2Short"),
+    time: t("colTime"),
+    empty: t("empty"),
+  };
+  const toRow = (r: ResultRow, rank: number | undefined, withCategory: boolean) => ({
+    key: r.runnerId,
+    runnerId: r.runnerId,
+    runnerName: r.runnerName,
+    rank,
+    birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
+    club: r.club?.name || r.clubName || "—",
+    category: withCategory ? `${r.category?.name || r.categoryId} (${r._catRank}.)` : undefined,
+    ...pickSplits(r._splits || []),
+    time: r.time,
+  });
+  const dateLocale = isCs ? "cs-CZ" : "en-GB";
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
   const footer = withFooterYear(
@@ -223,29 +256,23 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
           <div className="mb-10">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold uppercase tracking-[2px] text-race-accent">
-                {isCs ? "05 — Výsledky a historie" : "05 — Results and history"}
+                {t("eyebrow")}
               </p>
               <NextLink
                 href={`/${locale}/`}
                 className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-race-accent border border-race-accent/60 rounded hover:bg-race-accent/10 transition"
               >
-                ← {isCs ? "Domů" : "Home"}
+                ← {t("home")}
               </NextLink>
             </div>
-            <h1 className="mt-3 font-display text-5xl font-bold tracking-tight">
-              {isCs ? "Archiv výsledků" : "Results Archive"}
-            </h1>
-            <p className="mt-2 max-w-2xl text-race-muted">
-              {isCs
-                ? "Vyberte ročník a prohlédněte si kompletní výsledkovou listinu."
-                : "Select a year to view the complete results list."}
-            </p>
+            <h1 className="mt-3 font-display text-5xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="mt-2 max-w-2xl text-race-muted">{t("intro")}</p>
           </div>
 
           {/* Year selector */}
           <div className="mb-8">
             <h2 className="mb-3 text-sm font-semibold uppercase text-race-dim">
-              {isCs ? "Vyberte ročník" : "Select year"}
+              {t("selectYear")}
             </h2>
             <div className="flex flex-wrap gap-2">
               {years.map((y) => {
@@ -273,24 +300,22 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-display text-4xl font-bold">{defaultYear}</div>
-                  <div className="text-xs uppercase text-race-accent">
-                    {isCs ? "Ročník" : "Edition"}
-                  </div>
+                  <div className="text-xs uppercase text-race-accent">{t("edition")}</div>
                 </div>
                 <div className="bg-race-accent/15 px-4 py-1 text-sm font-semibold text-race-accent dark:text-orange-300">
-                  {total} {isCs ? "účastníků" : "participants"}
+                  {t("participants", { count: total })}
                 </div>
               </div>
 
               <div className="mt-3 grid gap-4 md:grid-cols-2 items-start">
-                {/* Left: INFORMACE (date + weather) + absolutní vítězové */}
+                {/* Left: info (date + weather) + overall winners */}
                 <div>
                   <div className="text-xs font-semibold uppercase text-race-dim mb-1">
-                    INFORMACE
+                    {t("info")}
                   </div>
                   {editionInfo?.date && (
                     <div className="text-xs text-race-muted">
-                      {new Date(editionInfo.date).toLocaleDateString("cs-CZ", {
+                      {new Date(editionInfo.date).toLocaleDateString(dateLocale, {
                         day: "numeric",
                         month: "numeric",
                         year: "numeric",
@@ -299,18 +324,23 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                   )}
                   {editionInfo && (
                     <div className="text-xs text-race-muted">
-                      Počasí: {editionInfo.weather || "—"}, {editionInfo.temp ?? "—"} °C
+                      {t("weather", {
+                        weather: editionInfo.weather || "—",
+                        temp: editionInfo.temp ?? "—",
+                      })}
                     </div>
                   )}
 
                   <div className="text-xs font-semibold uppercase text-race-dim mb-1 mt-2">
-                    ABSOLUTNÍ VÍTĚZOVÉ
+                    {t("overallWinners")}
                   </div>
                   <div className="mt-1 grid gap-3">
                     {topMale && (
                       <div className="flex items-end justify-between gap-4 border-t border-race-line/45 pt-2">
                         <div>
-                          <p className="text-xs font-semibold uppercase text-race-dim">MUŽI</p>
+                          <p className="text-xs font-semibold uppercase text-race-dim">
+                            {t("men")}
+                          </p>
                           <p className="mt-0.5 text-base font-semibold text-foreground">
                             <RunnerNameLink id={topMale.runnerId} name={topMale.runnerName} />
                           </p>
@@ -323,7 +353,9 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                     {topFemale && (
                       <div className="flex items-end justify-between gap-4 border-t border-race-line/45 pt-2">
                         <div>
-                          <p className="text-xs font-semibold uppercase text-race-dim">ŽENY</p>
+                          <p className="text-xs font-semibold uppercase text-race-dim">
+                            {t("women")}
+                          </p>
                           <p className="mt-0.5 text-base font-semibold text-foreground">
                             <RunnerNameLink id={topFemale.runnerId} name={topFemale.runnerName} />
                           </p>
@@ -339,7 +371,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                 {/* Right: Category winners – moved up for compactness */}
                 <div>
                   <div className="text-xs font-semibold uppercase text-race-dim mb-1">
-                    Vítězové kategorií
+                    {t("categoryWinners")}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {catWinners.map((w) => (
@@ -363,13 +395,13 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-display text-2xl font-semibold">
-                {isCs ? `Výsledková listina ${defaultYear}` : `Full results ${defaultYear}`}
+                {t("fullResults", { year: defaultYear })}
               </h3>
               <NextLink
                 href={`/${locale}/results/${defaultYear}`}
                 className="text-sm font-semibold text-race-accent hover:underline"
               >
-                {isCs ? "Otevřít samostatnou stránku →" : "Open dedicated page →"}
+                {t("dedicatedPage")} →
               </NextLink>
             </div>
 
@@ -379,165 +411,50 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                 href={`/${locale}/results?year=${defaultYear}${view === "categories" ? "&view=absolute" : ""}${showSplits ? "&splits=true" : ""}`}
                 className="rounded px-3 py-1 text-sm font-semibold transition border border-race-line/50 hover:bg-race-forest"
               >
-                {view === "categories" ? "Přepnout na absolutní" : "Přepnout na kategorie"}
+                {view === "categories" ? t("toOverall") : t("toCategories")}
               </NextLink>
-              <NextLink
-                href={`/${locale}/results?year=${defaultYear}${view !== "categories" ? "&view=" + view : ""}${showSplits ? "" : "&splits=true"}`}
-                className="rounded px-3 py-1 text-sm font-semibold transition border border-race-line/50 hover:bg-race-forest"
-              >
-                {showSplits ? "Skrýt mezičasy" : "Zobrazit mezičasy"}
-              </NextLink>
+              {hasSplits ? (
+                <NextLink
+                  href={`/${locale}/results?year=${defaultYear}${view !== "categories" ? "&view=" + view : ""}${showSplits ? "" : "&splits=true"}`}
+                  className="rounded px-3 py-1 text-sm font-semibold transition border border-race-line/50 hover:bg-race-forest"
+                >
+                  {showSplits ? t("hideSplits") : t("showSplits")}
+                </NextLink>
+              ) : null}
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-race-line/50 bg-race-surface">
+            <div className="overflow-hidden rounded-lg border border-race-line/50 bg-race-surface">
               {view === "absolute" ? (
                 // Absolute by sex - use precomputed to avoid disappearing results
-                <>
-                  {[
-                    { label: isCs ? "Muži" : "Men", items: absMen },
-                    { label: isCs ? "Ženy" : "Women", items: absWomen },
-                  ].map(({ label, items }) => {
-                    const safeItems = items || [];
-                    return (
-                      <div key={label} className="mb-4 last:mb-0">
-                        <div className="mt-4 first:mt-0 bg-race-accent/10 px-4 py-1.5 text-base font-display font-bold text-race-accent tracking-tight border-l-4 border-race-accent">
-                          {label} ({safeItems.length})
-                        </div>
-                        <table className="w-full text-left text-sm">
-                          <thead>
-                            <tr className="border-b border-race-line/40 bg-race-forest/50 text-xs font-semibold uppercase tracking-wider text-race-dim">
-                              <th className="px-4 py-2">#</th>
-                              <th className="px-4 py-2">{isCs ? "Jméno" : "Name"}</th>
-                              <th className="px-4 py-2">Roč. nar.</th>
-                              <th className="px-4 py-2">{isCs ? "Klub" : "Club"}</th>
-                              <th className="px-4 py-2">Kat.</th>
-                              {showSplits && (
-                                <>
-                                  <th className="px-4 py-2 text-xs">Mezičas 1</th>
-                                  <th className="px-4 py-2 text-xs">Mezičas 2</th>
-                                </>
-                              )}
-                              <th className="px-4 py-2 text-right">{isCs ? "Čas" : "Time"}</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-race-line/30">
-                            {safeItems.length === 0 ? (
-                              <tr>
-                                <td
-                                  colSpan={showSplits ? 8 : 6}
-                                  className="px-4 py-2 text-xs text-race-muted"
-                                >
-                                  Žádné výsledky.
-                                </td>
-                              </tr>
-                            ) : (
-                              safeItems.map((r) => {
-                                const timeStr = formatRaceTime(r.time);
-                                const m1 = (r._splits || []).find((s) => s.split === "1");
-                                const m2 = (r._splits || []).find((s) => s.split === "3");
-                                const katWithRank = `${r.category?.name || r.categoryId} (${r._catRank}.)`;
-                                const birth = r.runnerId ? r.runnerId.substring(0, 4) : "—";
-                                const clubN = r.club?.name || r.clubName || "—";
-                                return (
-                                  <tr key={r.runnerId} className="hover:bg-race-forest/30">
-                                    <td className="px-4 py-2 font-mono text-xs text-race-dim">
-                                      {r._absRank}
-                                    </td>
-                                    <td className="px-4 py-2 font-semibold">
-                                      <RunnerNameLink id={r.runnerId} name={r.runnerName} />
-                                    </td>
-                                    <td className="px-4 py-2 text-xs text-race-muted">{birth}</td>
-                                    <td className="px-4 py-2 text-race-muted">{clubN}</td>
-                                    <td className="px-4 py-2 text-race-muted text-xs">
-                                      {katWithRank}
-                                    </td>
-                                    {showSplits && (
-                                      <>
-                                        <td className="px-4 py-2 text-xs text-race-muted">
-                                          {m1 ? formatRaceTime(m1.time) : "—"}
-                                        </td>
-                                        <td className="px-4 py-2 text-xs text-race-muted">
-                                          {m2 ? formatRaceTime(m2.time) : "—"}
-                                        </td>
-                                      </>
-                                    )}
-                                    <td className="px-4 py-2 text-right font-display text-base font-semibold text-race-accent">
-                                      {timeStr}
-                                    </td>
-                                  </tr>
-                                );
-                              })
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    );
-                  })}
-                </>
+                [
+                  { label: t("menGroup"), items: absMen },
+                  { label: t("womenGroup"), items: absWomen },
+                ].map(({ label, items }) => (
+                  <McvvResultsGroup
+                    key={label}
+                    title={`${label} (${items.length})`}
+                    rows={items.map((r) => toRow(r, r._absRank, true))}
+                    labels={labels}
+                    showCategory
+                    showSplits={showSplits}
+                  />
+                ))
               ) : // By categories
               orderedCategories.length === 0 ? (
-                <div className="p-4 text-sm text-race-muted">Žádné výsledky.</div>
+                <div className="p-4 text-sm text-race-muted">{t("empty")}</div>
               ) : (
                 orderedCategories.map((cat) => {
                   const group = catGroupsArch[cat.id] || [];
                   if (group.length === 0) return null;
                   return (
-                    <div id={`cat-${cat.id}`} key={cat.id} className="mb-4 last:mb-0">
-                      <div className="mt-4 first:mt-0 bg-race-accent/10 px-4 py-1.5 text-base font-display font-bold text-race-accent tracking-tight border-l-4 border-race-accent">
-                        {cat.name} ({group.length})
-                      </div>
-                      <table className="w-full text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-race-line/40 bg-race-forest/50 text-xs font-semibold uppercase tracking-wider text-race-dim">
-                            <th className="px-4 py-2">#</th>
-                            <th className="px-4 py-2">{isCs ? "Jméno" : "Name"}</th>
-                            <th className="px-4 py-2">Roč. nar.</th>
-                            <th className="px-4 py-2">{isCs ? "Klub" : "Club"}</th>
-                            {showSplits && (
-                              <>
-                                <th className="px-4 py-2 text-xs">Mezičas 1</th>
-                                <th className="px-4 py-2 text-xs">Mezičas 2</th>
-                              </>
-                            )}
-                            <th className="px-4 py-2 text-right">{isCs ? "Čas" : "Time"}</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-race-line/30">
-                          {group.map((r) => {
-                            const timeStr = formatRaceTime(r.time);
-                            const m1 = (r._splits || []).find((s) => s.split === "1");
-                            const m2 = (r._splits || []).find((s) => s.split === "3");
-                            const birth = r.runnerId ? r.runnerId.substring(0, 4) : "—";
-                            const clubN = r.club?.name || r.clubName || "—";
-                            return (
-                              <tr key={r.runnerId} className="hover:bg-race-forest/30">
-                                <td className="px-4 py-2 font-mono text-xs text-race-dim">
-                                  {r._catRank}
-                                </td>
-                                <td className="px-4 py-2 font-semibold">
-                                  <RunnerNameLink id={r.runnerId} name={r.runnerName} />
-                                </td>
-                                <td className="px-4 py-2 text-xs text-race-muted">{birth}</td>
-                                <td className="px-4 py-2 text-race-muted">{clubN}</td>
-                                {showSplits && (
-                                  <>
-                                    <td className="px-4 py-2 text-xs text-race-muted">
-                                      {m1 ? formatRaceTime(m1.time) : "—"}
-                                    </td>
-                                    <td className="px-4 py-2 text-xs text-race-muted">
-                                      {m2 ? formatRaceTime(m2.time) : "—"}
-                                    </td>
-                                  </>
-                                )}
-                                <td className="px-4 py-2 text-right font-display text-base font-semibold text-race-accent">
-                                  {timeStr}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                    <McvvResultsGroup
+                      id={`cat-${cat.id}`}
+                      key={cat.id}
+                      title={`${cat.name} (${group.length})`}
+                      rows={group.map((r) => toRow(r, r._catRank, false))}
+                      labels={labels}
+                      showSplits={showSplits}
+                    />
                   );
                 })
               )}
@@ -548,7 +465,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
           <a
             href="#"
             className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-race-accent-solid text-white shadow-lg transition hover:bg-race-accent-solid-hover"
-            aria-label="Nahoru"
+            aria-label={t("backToTop")}
           >
             ↑
           </a>

@@ -8,6 +8,12 @@ import { getSiteSettings, ONLINE_RESULTS_URL_MAX, STATS_MOMENT_MAX } from "@/lib
 import { type Locale } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { getMessageSettings, resolveOrganizerEmail } from "@/lib/settings/messages";
+import {
+  DEFAULT_RECEIPT_ISSUER,
+  getStoredReceiptIssuer,
+  RECEIPT_ADDRESS_MAX,
+  RECEIPT_TEXT_MAX,
+} from "@/lib/settings/receipt";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
@@ -33,10 +39,11 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   setRequestLocale(locale);
   await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const [emails, site, messages] = await Promise.all([
+  const [emails, site, messages, receipt] = await Promise.all([
     getFreeEntryEmailsText(),
     getSiteSettings(),
     getMessageSettings(),
+    getStoredReceiptIssuer(),
   ]);
   const organizerFallback = resolveOrganizerEmail(null, env.CONTACT_TO);
 
@@ -174,6 +181,53 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
                 </span>
               </label>
             ))}
+          </fieldset>
+
+          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
+            <legend className="px-1 font-display text-lg font-semibold">
+              {copy("settingsReceipt")}
+            </legend>
+            <p className="text-sm text-race-muted">{copy("settingsReceiptIntro")}</p>
+            {(
+              [
+                [
+                  "receiptIssuerName",
+                  "settingsReceiptName",
+                  receipt.name,
+                  DEFAULT_RECEIPT_ISSUER.name,
+                ],
+                ["receiptIssuerIco", "settingsReceiptIco", receipt.ico, DEFAULT_RECEIPT_ISSUER.ico],
+                [
+                  "receiptVatNote",
+                  "settingsReceiptVat",
+                  receipt.vatNote,
+                  DEFAULT_RECEIPT_ISSUER.vatNote,
+                ],
+              ] as const
+            ).map(([name, label, value, placeholder]) => (
+              <div key={name} className="grid gap-1.5">
+                <Label htmlFor={name}>{copy(label)}</Label>
+                <Input
+                  id={name}
+                  name={name}
+                  maxLength={RECEIPT_TEXT_MAX}
+                  placeholder={placeholder}
+                  defaultValue={value}
+                  className="h-10 bg-race-surface"
+                />
+              </div>
+            ))}
+            <div className="grid gap-1.5">
+              <Label htmlFor="receiptIssuerAddress">{copy("settingsReceiptAddress")}</Label>
+              <Textarea
+                id="receiptIssuerAddress"
+                name="receiptIssuerAddress"
+                maxLength={RECEIPT_ADDRESS_MAX}
+                placeholder={DEFAULT_RECEIPT_ISSUER.address}
+                defaultValue={receipt.address}
+                className="min-h-20 bg-race-surface"
+              />
+            </div>
           </fieldset>
 
           <fieldset className="grid gap-3 border border-race-line/60 bg-race-surface/40 p-4">

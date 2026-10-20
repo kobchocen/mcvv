@@ -14,13 +14,18 @@ import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { McvvAdminHomeLink } from "@/components/organisms";
+import {
+  McvvAdminSexChange,
+  type McvvAdminSexChangeCopy,
+} from "@/components/organisms/mcvv-admin-sex-change";
+import { runnerSexOf } from "@/lib/admin/runner-sex-core";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
-  searchParams: Promise<{ mail?: string }>;
+  searchParams: Promise<{ mail?: string; sex?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -31,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AdminRegistrationDetailPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale, rok, id: rawId } = await params;
-  const { mail } = await searchParams;
+  const { mail, sex: sexChanged } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const year = Number.parseInt(rok, 10);
@@ -67,6 +72,45 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   const relatedPayments = payments.filter(
     (payment) => paymentRegistrationId(payment.registrationId) === id,
   );
+  const sexChange = /^(\d{8})-(\d{8})$/.exec(sexChanged ?? "");
+  const sexCopy: McvvAdminSexChangeCopy = {
+    trigger: copy("sexChangeTrigger"),
+    title: copy("sexChangeTitle"),
+    description: copy("sexChangeDescription"),
+    loading: copy("sexChangeLoading"),
+    ids: copy("sexChangeIds"),
+    sex: copy("sexChangeSex"),
+    male: copy("sexMale"),
+    female: copy("sexFemale"),
+    categories: copy("sexChangeCategories"),
+    line: copy.raw("sexChangeLine") as string,
+    lines: copy.raw("sexChangeLines") as string,
+    start: copy.raw("sexChangeStart") as string,
+    noCategory: copy("sexChangeNoCategory"),
+    fee: copy("sexChangeFee"),
+    feeUnchanged: copy("sexChangeFeeUnchanged"),
+    references: copy.raw("sexChangeReferences") as string,
+    locked: copy("sexChangeLocked"),
+    cancel: copy("sexChangeCancel"),
+    confirm: copy.raw("sexChangeConfirm") as string,
+    errors: {
+      not_found: copy("sexChangeErrorNotFound"),
+      invalid_id: copy("sexChangeErrorInvalid"),
+      collision: copy("sexChangeErrorCollision"),
+      has_results: copy("sexChangeLocked"),
+      failed: copy("sexChangeErrorFailed"),
+    },
+  };
+  // Sex change is for newcomers only (no row in mcvv_time).
+  const runnersWithResults = new Set(
+    (
+      await prisma.result.findMany({
+        where: { runnerId: { in: registration.lines.map((line) => line.runnerId) } },
+        select: { runnerId: true },
+        distinct: ["runnerId"],
+      })
+    ).map((row) => row.runnerId),
+  );
   const fee = registration.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
   const paid = relatedPayments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
 
@@ -95,6 +139,11 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                         ? copy("status5")
                         : "—"}
           </p>
+          {sexChange ? (
+            <p role="status" className="mt-3 text-sm font-medium text-race-accent">
+              {copy("sexChangeDone", { oldId: sexChange[1], newId: sexChange[2] })}
+            </p>
+          ) : null}
           {mail === "0" ? (
             <p className="mt-3 text-sm text-red-600 dark:text-red-400">{copy("confirmMailFail")}</p>
           ) : null}
@@ -176,6 +225,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                   <th className="py-2 pr-3">{copy("regsCategory")}</th>
                   <th className="py-2 pr-3">{copy("regsFee")}</th>
                   <th className="py-2 pr-3">{copy("regsBib")}</th>
+                  <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,6 +237,19 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                     <td className="py-2.5 pr-3">{line.category.name}</td>
                     <td className="py-2.5 pr-3">{line.entryFee ?? ""}</td>
                     <td className="py-2.5 pr-3">{line.bib ?? ""}</td>
+                    <td className="py-2.5 pr-3">
+                      <span className="mr-2">
+                        {runnerSexOf(line.runnerId) === "F" ? copy("sexFemale") : copy("sexMale")}
+                      </span>
+                      <McvvAdminSexChange
+                        runnerId={line.runnerId}
+                        runnerName={line.runner.name}
+                        year={year}
+                        registrationId={id}
+                        hasResults={runnersWithResults.has(line.runnerId)}
+                        copy={sexCopy}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

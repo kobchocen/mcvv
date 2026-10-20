@@ -21,6 +21,10 @@ export type McvvOverviewSectionProps = {
   content: McvvHomepageContent["overview"];
 };
 
+/** Section 01 buttons (all fixed; each href is unique, see overview-actions test). */
+export type OverviewActionHref =
+  "/program" | "/prihlaseni-zavodnici" | "/pokyny" | "/startovka" | "/vysledky" | "/kontakt";
+
 export function McvvOverviewSection({ content }: McvvOverviewSectionProps) {
   return (
     <section id="about" className="bg-race-forest px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
@@ -77,14 +81,7 @@ export function McvvOverviewSection({ content }: McvvOverviewSectionProps) {
                     : "h-10 border-race-line bg-race-surface px-4 font-display text-sm font-semibold text-foreground hover:bg-race-accent-solid hover:text-white"
                 }
               >
-                <Link
-                  href={
-                    action.href as
-                      "/prihlasky" | "/program" | "/pokyny" | "/startovka" | "/results" | "/kontakt"
-                  }
-                >
-                  {action.label}
-                </Link>
+                <Link href={action.href as OverviewActionHref}>{action.label}</Link>
               </Button>
             );
           })}

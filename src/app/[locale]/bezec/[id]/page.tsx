@@ -157,7 +157,7 @@ export default async function RunnerPage({ params }: PageProps) {
           <div className="flex items-center gap-3">
             <span className="h-0.5 w-7 bg-race-accent" />
             <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-race-accent">
-              {copy("eyebrow")}
+              {copy("eyebrow", { sex })}
             </p>
           </div>
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
@@ -199,8 +199,8 @@ export default async function RunnerPage({ params }: PageProps) {
                   ) : null}
                   <p className="mt-2 font-display text-lg font-semibold text-race-accent">
                     {registration
-                      ? copy("registeredFirstStart", { year: raceYear.year })
-                      : copy("empty")}
+                      ? copy("registeredFirstStart", { year: raceYear.year, sex })
+                      : copy("empty", { sex })}
                   </p>
                 </div>
               )}

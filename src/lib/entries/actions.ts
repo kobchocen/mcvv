@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth/session";
 import { resolveClubId } from "@/lib/entries/club";
 import { computeLineFee } from "@/lib/entries/fee";
 import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/runner";
+import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
@@ -91,33 +92,24 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]", "page");
 }
 
-export type AddRunnerState = { error?: "ambiguous" | "taken" | "invalid"; ok?: boolean };
+export type AddRunnerState = {
+  error?: "ambiguous" | "taken" | "invalid" | "sex";
+  ok?: boolean;
+};
 
 export async function addNewRunner(
   _prev: AddRunnerState,
   formData: FormData,
 ): Promise<AddRunnerState> {
   const session = await getSession();
-  const year = formInt(formData, "year");
-  const registrationId = formInt(formData, "registrationId");
-  const birthYear = formInt(formData, "birthYear");
-  const firstName = formString(formData, "firstName");
-  const lastName = formString(formData, "lastName");
-  const sexRaw = formString(formData, "sex");
-  const categoryId = formString(formData, "categoryId");
-  const sex = sexRaw === "F" ? "F" : sexRaw === "M" ? "M" : null;
-  if (
-    !session ||
-    year === null ||
-    registrationId === null ||
-    !birthYear ||
-    !firstName ||
-    !lastName ||
-    !sex ||
-    !categoryId
-  ) {
+  if (!session) {
     return { error: "invalid" };
   }
+  const parsed = parseNewRunner(formDataRecord(formData));
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+  const { year, registrationId, birthYear, firstName, lastName, sex, categoryId } = parsed.data;
   const { open } = await currentRaceYear();
   if (!open) {
     return { error: "invalid" };

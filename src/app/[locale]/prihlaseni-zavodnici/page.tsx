@@ -8,7 +8,7 @@ import { isNewbie } from "@/lib/entries/newbie";
 import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
 import { validRegistrationIds } from "@/lib/entries/status";
 import { RunnerNameLink } from "@/components/molecules";
-import { currentRaceYear } from "@/lib/entries/year";
+import { currentRaceYear, editionNumber } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { Link } from "@/i18n/routing";
@@ -36,7 +36,8 @@ export default async function EntrantsPage({ params }: PageProps) {
   const copy = await getTranslations({ locale, namespace: "Entrants" });
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
-  const { year, deadline, open } = await currentRaceYear();
+  const raceYear = await currentRaceYear();
+  const { year, deadline, open } = raceYear;
   const edition = await prisma.edition.findFirst({
     orderBy: { id: "desc" },
     select: { startAdultPlace: true, startKidsPlace: true },
@@ -101,7 +102,7 @@ export default async function EntrantsPage({ params }: PageProps) {
           <div className="flex items-center gap-3">
             <span className="h-0.5 w-7 bg-race-accent" />
             <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-race-accent">
-              {copy("eyebrow")}
+              {copy("eyebrow", { n: editionNumber(raceYear) })}
             </p>
           </div>
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">

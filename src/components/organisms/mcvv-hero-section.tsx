@@ -1,20 +1,35 @@
+import type * as React from "react";
 import Image from "next/image";
 import { Trees } from "lucide-react";
 
 import { RaceStatCard } from "@/components/molecules";
 import { McvvDeadlineCountdown } from "@/components/organisms/mcvv-deadline-countdown";
 import { McvvEntriesCtaContent } from "@/components/organisms/mcvv-entries-cta";
+import { McvvRefreshAt } from "@/components/organisms/mcvv-refresh-at";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
+/** One hero call-to-action, already labelled for the current race phase. */
+export type McvvHeroCta = {
+  label: string;
+  href: string;
+  /** External link (online results) – opens in a new tab. */
+  external?: boolean;
+  /** Count shown as a badge (entries, start list, results); 0 / missing = arrow. */
+  count?: number;
+  /** Accessible label including the count. */
+  ariaLabel?: string;
+};
+
 export type McvvHeroSectionProps = {
   content: Pick<McvvHomepageContent, "hero" | "schedule">;
+  /** Countdown to the registration deadline (phase A only). */
   deadlineMs?: number | null;
-  /** Počet platně přihlášených běžců; 0 / chybí = šipka místo odznaku. */
-  enrolledCount?: number;
-  /** Přístupný popisek tlačítka Přihlášky s počtem (správné tvary plurálu). */
-  enrolledAriaLabel?: string;
+  primary: McvvHeroCta;
+  secondary?: McvvHeroCta | null;
+  /** Refresh the page when the race starts so the hero switches to phase C. */
+  refreshAtMs?: number | null;
 };
 
 const HERO_VARIANT = "kopec" as "mlha" | "kopec";
@@ -24,11 +39,38 @@ const heroImages = {
   kopec: "/images/hero-trat-kopec.jpg",
 } as const;
 
+const primaryClass =
+  "h-12 bg-race-accent-solid px-6 font-display text-base font-semibold text-white hover:bg-race-accent-solid-hover";
+const secondaryClass =
+  "h-12 border-white/15 bg-white/10 px-6 font-display text-base font-semibold text-white hover:bg-white/15 hover:text-white";
+
+/** Rendered through `<Button asChild>`: Slot props (className, …) must reach the anchor. */
+function HeroCtaLink({
+  cta,
+  ...props
+}: { cta: McvvHeroCta } & Omit<React.ComponentProps<"a">, "href">) {
+  const body = <McvvEntriesCtaContent label={cta.label} count={cta.count} />;
+  const ariaLabel = (cta.count ?? 0) > 0 || cta.external ? cta.ariaLabel : undefined;
+  if (cta.external) {
+    return (
+      <a {...props} href={cta.href} target="_blank" rel="noopener" aria-label={ariaLabel}>
+        {body}
+      </a>
+    );
+  }
+  return (
+    <Link {...props} href={cta.href as "/program"} aria-label={ariaLabel}>
+      {body}
+    </Link>
+  );
+}
+
 export function McvvHeroSection({
   content,
   deadlineMs = null,
-  enrolledCount = 0,
-  enrolledAriaLabel,
+  primary,
+  secondary = null,
+  refreshAtMs = null,
 }: McvvHeroSectionProps) {
   const showCountdown = deadlineMs != null;
   return (
@@ -70,31 +112,18 @@ export function McvvHeroSection({
               {content.hero.claim}
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="h-12 bg-race-accent-solid px-6 font-display text-base font-semibold text-white hover:bg-race-accent-solid-hover"
-              >
-                <Link
-                  href="/prihlaseni-zavodnici"
-                  aria-label={enrolledCount > 0 ? enrolledAriaLabel : undefined}
-                >
-                  <McvvEntriesCtaContent label={content.hero.primaryCta} count={enrolledCount} />
-                </Link>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row" data-slot="hero-ctas">
+              <Button asChild size="lg" className={primaryClass}>
+                <HeroCtaLink cta={primary} />
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-12 border-white/15 bg-white/10 px-6 font-display text-base font-semibold text-white hover:bg-white/15 hover:text-white"
-              >
-                <Link href={content.hero.secondaryHref as "/program"}>
-                  {content.hero.secondaryCta}
-                </Link>
-              </Button>
+              {secondary ? (
+                <Button asChild size="lg" variant="outline" className={secondaryClass}>
+                  <Link href={secondary.href as "/program"}>{secondary.label}</Link>
+                </Button>
+              ) : null}
             </div>
             {showCountdown && deadlineMs ? <McvvDeadlineCountdown targetMs={deadlineMs} /> : null}
+            {refreshAtMs ? <McvvRefreshAt targetMs={refreshAtMs} /> : null}
           </div>
         </div>
 

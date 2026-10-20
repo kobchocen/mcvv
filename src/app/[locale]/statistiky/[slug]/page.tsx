@@ -19,6 +19,7 @@ import {
   STAT_SLUGS,
   type StatSlug,
 } from "@/lib/stats/queries";
+import { STATS_OVERVIEW_SLUG } from "@/components/molecules";
 import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -222,7 +223,10 @@ export default async function StatsSlugPage({ params }: PageProps) {
       statsNav={{
         current: slug,
         ariaLabel: stats("navLabel"),
-        items: STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
+        items: [
+          { slug: STATS_OVERVIEW_SLUG, label: stats("overview.nav") },
+          ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
+        ],
       }}
     />
   );

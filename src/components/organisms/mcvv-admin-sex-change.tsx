@@ -5,6 +5,7 @@ import { useActionState, useState, useTransition } from "react";
 import {
   changeRunnerSex,
   previewRunnerSexChange,
+  type SexChangeErrorCode,
   type SexChangePreviewResult,
   type SexChangeState,
 } from "@/lib/admin/runner-sex-actions";
@@ -37,26 +38,30 @@ export type McvvAdminSexChangeCopy = {
   fee: string;
   feeUnchanged: string;
   references: string;
-  results: string;
-  recategorize: string;
-  recategorizeHint: string;
+  locked: string;
   cancel: string;
   confirm: string;
-  errors: Record<"not_found" | "invalid_id" | "collision" | "failed", string>;
+  errors: Record<SexChangeErrorCode, string>;
 };
 
-/** "Změnit pohlaví" in the admin registration detail: preview + confirmation dialog. */
+/**
+ * "Změnit pohlaví" in the admin registration detail: preview + confirmation dialog.
+ * Newcomers only – a runner with historical results gets a disabled button with the reason
+ * (the server action rejects it as well).
+ */
 export function McvvAdminSexChange({
   runnerId,
   runnerName,
   year,
   registrationId,
+  hasResults,
   copy,
 }: {
   runnerId: string;
   runnerName: string;
   year: number;
   registrationId: number;
+  hasResults: boolean;
   copy: McvvAdminSexChangeCopy;
 }) {
   const [open, setOpen] = useState(false);
@@ -77,6 +82,26 @@ export function McvvAdminSexChange({
   const pastLines = plan?.lines.filter((line) => !currentLines.includes(line)) ?? [];
   const sexLabel = (sex: "M" | "F") => (sex === "M" ? copy.male : copy.female);
   const error = state.error ?? (preview && !preview.ok ? preview.error : undefined);
+
+  if (hasResults) {
+    const hintId = `sex-locked-${runnerId}`;
+    return (
+      <span className="inline-flex flex-col">
+        <button
+          type="button"
+          disabled
+          title={copy.locked}
+          aria-describedby={hintId}
+          className="cursor-not-allowed whitespace-nowrap text-left text-sm text-race-muted"
+        >
+          {copy.trigger}
+        </button>
+        <span id={hintId} className="text-xs text-race-muted">
+          {copy.locked}
+        </span>
+      </span>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,32 +180,10 @@ export function McvvAdminSexChange({
 
             <p className="text-race-muted">
               {copy.references
-                .replace("{results}", String(plan.results.length))
                 .replace("{photos}", String(plan.photos))
                 .replace("{lines}", String(plan.lines.length))
                 .replace("{starts}", String(plan.starts.length))}
             </p>
-
-            {plan.results.length > 0 ? (
-              <label className="flex items-start gap-3">
-                <input type="checkbox" name="recategorizeResults" className="mt-0.5 size-4" />
-                <span>
-                  <span className="font-medium">
-                    {copy.recategorize.replace("{count}", String(plan.results.length))}
-                  </span>
-                  <span className="mt-0.5 block text-race-muted">
-                    {copy.results}{" "}
-                    {groupTransitions(plan.results)
-                      .map(
-                        (group) =>
-                          `${yearSpan(group)} ${group.from} → ${group.to ?? copy.noCategory}`,
-                      )
-                      .join(", ")}
-                    . {copy.recategorizeHint}
-                  </span>
-                </span>
-              </label>
-            ) : null}
 
             {state.error ? (
               <p role="alert" className="text-red-600 dark:text-red-400">

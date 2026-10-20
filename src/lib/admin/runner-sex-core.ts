@@ -139,7 +139,6 @@ export type SexChangePlan = {
   newSex: Sex;
   lines: LinePlan[];
   starts: CategoryChange[];
-  results: CategoryChange[];
   photos: number;
   webImages: number;
 };
@@ -149,7 +148,6 @@ export function buildSexChangePlan(input: {
   takenIds: Iterable<string>;
   lines: LineInput[];
   starts: { year: number; categoryId: string }[];
-  results: { year: number; categoryId: string }[];
   photos: number;
   webImages: number;
   categories: CategoryRow[];
@@ -173,9 +171,6 @@ export function buildSexChangePlan(input: {
       .map((line) => planLine(line, newSex, birthYear, categories, currentYear))
       .sort((a, b) => b.year - a.year),
     starts: input.starts
-      .map((row) => planCategory(row, newSex, birthYear, categories))
-      .sort((a, b) => b.year - a.year),
-    results: input.results
       .map((row) => planCategory(row, newSex, birthYear, categories))
       .sort((a, b) => b.year - a.year),
     photos: input.photos,

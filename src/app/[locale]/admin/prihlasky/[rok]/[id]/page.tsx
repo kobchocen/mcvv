@@ -90,18 +90,27 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     fee: copy("sexChangeFee"),
     feeUnchanged: copy("sexChangeFeeUnchanged"),
     references: copy.raw("sexChangeReferences") as string,
-    results: copy("sexChangeResults"),
-    recategorize: copy.raw("sexChangeRecategorize") as string,
-    recategorizeHint: copy("sexChangeRecategorizeHint"),
+    locked: copy("sexChangeLocked"),
     cancel: copy("sexChangeCancel"),
     confirm: copy.raw("sexChangeConfirm") as string,
     errors: {
       not_found: copy("sexChangeErrorNotFound"),
       invalid_id: copy("sexChangeErrorInvalid"),
       collision: copy("sexChangeErrorCollision"),
+      has_results: copy("sexChangeLocked"),
       failed: copy("sexChangeErrorFailed"),
     },
   };
+  // Sex change is for newcomers only (no row in mcvv_time).
+  const runnersWithResults = new Set(
+    (
+      await prisma.result.findMany({
+        where: { runnerId: { in: registration.lines.map((line) => line.runnerId) } },
+        select: { runnerId: true },
+        distinct: ["runnerId"],
+      })
+    ).map((row) => row.runnerId),
+  );
   const fee = registration.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
   const paid = relatedPayments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
 
@@ -237,6 +246,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                         runnerName={line.runner.name}
                         year={year}
                         registrationId={id}
+                        hasResults={runnersWithResults.has(line.runnerId)}
                         copy={sexCopy}
                       />
                     </td>

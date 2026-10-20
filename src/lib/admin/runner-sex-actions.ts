@@ -14,7 +14,8 @@ import { PHOTOS_CACHE_TAG } from "@/lib/photos/queries";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 import { redirect } from "@/i18n/routing";
 
-export type SexChangeErrorCode = "not_found" | "invalid_id" | "collision" | "failed";
+export type SexChangeErrorCode =
+  "not_found" | "invalid_id" | "collision" | "has_results" | "failed";
 
 export type SexChangePreviewResult =
   { ok: true; plan: SexChangePlan } | { ok: false; error: SexChangeErrorCode };
@@ -51,12 +52,11 @@ export async function changeRunnerSex(
   const runnerId = formString(formData, "runnerId");
   const backYear = formInt(formData, "year");
   const backId = formInt(formData, "registrationId");
-  const recategorizeResults = formString(formData, "recategorizeResults") === "on";
   const { year: currentYear } = await currentRaceYear();
 
   let outcome;
   try {
-    outcome = await applySexChange(prisma, { runnerId, currentYear, recategorizeResults });
+    outcome = await applySexChange(prisma, { runnerId, currentYear });
   } catch (error) {
     const code = errorCode(error);
     console.error(
@@ -88,7 +88,6 @@ export async function changeRunnerSex(
       newId: outcome.newId,
       newSex: outcome.newSex,
       counts: outcome.counts,
-      recategorizeResults,
       lines: outcome.lines.map((line) => ({
         year: line.year,
         registrationId: line.registrationId,
@@ -102,7 +101,6 @@ export async function changeRunnerSex(
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]/bezec/[id]", "page");
-  revalidatePath("/[locale]/results/[year]", "page");
   revalidatePath("/[locale]", "page");
   revalidateTag(STATS_CACHE_TAG, "max");
   revalidateTag(PHOTOS_CACHE_TAG, "max");

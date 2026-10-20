@@ -6,7 +6,9 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import {
   applySexChange,
   previewSexChange,
+  RUNNER_HISTORY_MODELS,
   RUNNER_REFERENCE_MODELS,
+  RUNNER_REKEYED_MODELS,
   SexChangeError,
 } from "./runner-rekey";
 import {
@@ -241,8 +243,9 @@ function fakeDb() {
     ),
     result: table(
       [
-        { year: 2024, runnerId: "19830002", categoryId: "B", time: 1500, clubId: "001" },
-        { year: 2025, runnerId: "19830002", categoryId: "B", time: 1490, clubId: "001" },
+        // 19830001 has history → sex change not allowed; 19830002 is a newcomer.
+        { year: 2024, runnerId: "19830001", categoryId: "B", time: 1500, clubId: "001" },
+        { year: 2025, runnerId: "19830001", categoryId: "B", time: 1490, clubId: "001" },
         // orphan reference: id 19835002 is used in results but missing in cis_bezec
         { year: 2010, runnerId: "19835002", categoryId: "F", time: 1600, clubId: "001" },
       ],
@@ -313,23 +316,21 @@ describe("applySexChange (re-keying in one transaction)", () => {
         [2025, "B", "G"],
       ],
     );
-    assert.equal(plan.results.length, 2);
     assert.equal(plan.photos, 2);
     assert.equal(fake.runner.rows.length, 3, "nothing written");
   });
 
-  it("re-points every reference, recalculates categories and drops the old id", async () => {
+  it("newcomer: re-points every reference, recalculates categories and drops the old id", async () => {
     const fake = fakeDb();
+    const resultsBefore = JSON.stringify(fake.result.rows);
     const outcome = await applySexChange(asClient(fake), {
       runnerId: "19830002",
       currentYear: 2026,
-      recategorizeResults: false,
     });
     assert.equal(outcome.newId, "19835003");
     assert.deepEqual(outcome.counts, {
       registrationLines: 2,
       startEntries: 1,
-      results: 2,
       runnerPhotos: 2,
       webImages: 1,
     });
@@ -337,13 +338,7 @@ describe("applySexChange (re-keying in one transaction)", () => {
     assert.ok(ids.includes("19835003"));
     assert.ok(!ids.includes("19830002"));
     assert.equal(fake.runner.rows.find((r) => r.id === "19835003")?.name, "Nováková Jana");
-    for (const model of [
-      "registrationLine",
-      "startEntry",
-      "result",
-      "runnerPhoto",
-      "webImage",
-    ] as const) {
+    for (const model of ["registrationLine", "startEntry", "runnerPhoto", "webImage"] as const) {
       assert.ok(
         !fake[model].rows.some((r) => r.runnerId === "19830002"),
         `${model} still references the old id`,
@@ -356,26 +351,58 @@ describe("applySexChange (re-keying in one transaction)", () => {
       [2026, 4, "G"],
     ]);
     assert.equal(fake.startEntry.rows[0].categoryId, "G");
-    // Historical results keep their recorded category unless asked to recalculate.
-    assert.deepEqual(
-      fake.result.rows.filter((r) => r.runnerId === "19835003").map((r) => r.categoryId),
-      ["B", "B"],
-    );
+    // mcvv_time is never written.
+    assert.equal(JSON.stringify(fake.result.rows), resultsBefore);
+    assert.equal(fake.result.rows.filter((r) => r.runnerId === "19835003").length, 0);
     // Other runners untouched (shared photo 2 still tagged with 19830001).
     assert.ok(fake.runnerPhoto.rows.some((r) => r.photoId === 2 && r.runnerId === "19830001"));
     assert.ok(fake.registrationLine.rows.some((r) => r.runnerId === "19830001"));
   });
 
-  it("can recalculate categories of historical results too", async () => {
+  it("rejects a runner with historical results and changes nothing", async () => {
     const fake = fakeDb();
-    await applySexChange(asClient(fake), {
-      runnerId: "19830002",
-      currentYear: 2026,
-      recategorizeResults: true,
-    });
-    assert.deepEqual(
-      fake.result.rows.filter((r) => r.runnerId === "19835003").map((r) => r.categoryId),
-      ["G", "G"],
+    const before = JSON.stringify(
+      Object.fromEntries(Object.entries(fake).map(([k, t]) => [k, (t as { rows?: unknown }).rows])),
+    );
+    const isHasResults = (error: unknown) =>
+      error instanceof SexChangeError && error.code === "has_results";
+    await assert.rejects(
+      applySexChange(asClient(fake), { runnerId: "19830001", currentYear: 2026 }),
+      isHasResults,
+    );
+    await assert.rejects(previewSexChange(asClient(fake), "19830001", 2026), isHasResults);
+    assert.equal(
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(fake).map(([k, t]) => [k, (t as { rows?: unknown }).rows]),
+        ),
+      ),
+      before,
+    );
+  });
+
+  it("re-checks inside the transaction: a result written meanwhile rolls everything back", async () => {
+    const fake = fakeDb();
+    const before = JSON.stringify(fake.runner.rows) + JSON.stringify(fake.registrationLine.rows);
+    // Simulate a concurrent import: a result for the old id appears after the re-key started.
+    const original = fake.webImage.updateMany;
+    fake.webImage.updateMany = async (args) => {
+      fake.result.rows.push({
+        year: 2026,
+        runnerId: "19830002",
+        categoryId: "B",
+        time: 1,
+        clubId: "001",
+      });
+      return original(args);
+    };
+    await assert.rejects(
+      applySexChange(asClient(fake), { runnerId: "19830002", currentYear: 2026 }),
+      (error: unknown) => error instanceof SexChangeError && error.code === "has_results",
+    );
+    assert.equal(
+      JSON.stringify(fake.runner.rows) + JSON.stringify(fake.registrationLine.rows),
+      before,
     );
   });
 
@@ -384,7 +411,6 @@ describe("applySexChange (re-keying in one transaction)", () => {
     const outcome = await applySexChange(asClient(fake), {
       runnerId: "19835001",
       currentYear: 2026,
-      recategorizeResults: false,
     });
     // 19830001 and 19830002 exist → 19830003
     assert.equal(outcome.newId, "19830003");
@@ -399,7 +425,6 @@ describe("applySexChange (re-keying in one transaction)", () => {
       applySexChange(asClient(fake), {
         runnerId: "19830002",
         currentYear: 2026,
-        recategorizeResults: false,
       }),
       /boom/,
     );
@@ -412,7 +437,6 @@ describe("applySexChange (re-keying in one transaction)", () => {
       applySexChange(asClient(fake), {
         runnerId: "19839999",
         currentYear: 2026,
-        recategorizeResults: false,
       }),
       (error: unknown) => error instanceof SexChangeError && error.code === "not_found",
     );
@@ -424,7 +448,12 @@ describe("applySexChange (re-keying in one transaction)", () => {
 });
 
 describe("schema coverage", () => {
-  it("re-keys every model that references the runner (cis_bezec)", () => {
+  it("never re-keys results (history), only guards them", () => {
+    assert.ok(!(RUNNER_REKEYED_MODELS as readonly string[]).includes("Result"));
+    assert.deepEqual([...RUNNER_HISTORY_MODELS], ["Result"]);
+  });
+
+  it("re-keys or guards every model that references the runner (cis_bezec)", () => {
     const referencing = Prisma.dmmf.datamodel.models
       .filter(
         (model) =>

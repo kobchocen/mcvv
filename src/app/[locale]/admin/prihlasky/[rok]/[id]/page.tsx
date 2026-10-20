@@ -13,6 +13,7 @@ import {
 } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
 import { registrationFee } from "@/lib/entries/fee-total";
+import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
@@ -226,11 +227,15 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               type="email"
               defaultValue={registration.email ?? ""}
             />
-            <AdminField
-              name="promotion"
-              label={copy("regsPromotion")}
-              defaultValue={registration.promotion ?? ""}
-            />
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="noNewsletter"
+                value="N"
+                defaultChecked={isPromotionOptOut(registration.promotion)}
+              />
+              {copy("regsNoNewsletter")}
+            </label>
             <Button
               type="submit"
               className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"

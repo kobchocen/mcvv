@@ -7,6 +7,7 @@ import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { confirmRegistration } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -195,7 +196,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       <td className={cn("py-2.5 pr-3", statusClass(row.status))}>
                         {copy(statusKey(row.status))}
                       </td>
-                      <td className="py-2.5 pr-3">{row.promotion ?? ""}</td>
+                      <td className="py-2.5 pr-3">
+                        {isPromotionOptOut(row.promotion) ? (
+                          <span
+                            title={copy("regsNoNewsletter")}
+                            className="rounded-full border border-race-line px-2 py-0.5 text-xs text-race-muted"
+                          >
+                            {copy("regsNewsletterOff")}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="py-2.5 pr-3">
                         {summary ? (
                           <Link

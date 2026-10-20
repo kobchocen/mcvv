@@ -8,6 +8,7 @@ import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/ad
 import { computeLineFee } from "@/lib/entries/fee";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
+import { promotionValue } from "@/lib/entries/promotion";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
 
@@ -48,7 +49,7 @@ export async function saveRegistrationHeader(formData: FormData): Promise<void> 
       email,
       name: formString(formData, "name") || null,
       // Poznámka se už needituje (nahradily ji zprávy #108); sloupec zůstává jen ke čtení.
-      promotion: formString(formData, "promotion") || null,
+      promotion: promotionValue(formString(formData, "noNewsletter") === "N"),
     },
   });
   if (email) {

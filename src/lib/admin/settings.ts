@@ -1,13 +1,38 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getLocale } from "next-intl/server";
 
 import { requireAdmin } from "@/lib/admin/staff";
 import { saveFreeEntryEmails } from "@/lib/entries/settings";
+import { normalizeMoment, parseHttpUrl, saveSiteSettings } from "@/lib/settings/site";
+import { redirect } from "@/i18n/routing";
+
+/** Public pages that render site settings (hero phase, start list, instructions, stats). */
+function revalidateSettingPages() {
+  revalidatePath("/[locale]/admin/nastaveni", "page");
+  revalidatePath("/[locale]", "page");
+  revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]/pokyny", "page");
+  revalidatePath("/[locale]/statistiky", "page");
+  revalidatePath("/[locale]/vysledky", "page");
+}
 
 export async function saveSettings(formData: FormData): Promise<void> {
   await requireAdmin();
+  const locale = await getLocale();
+  const url = parseHttpUrl(String(formData.get("onlineResultsUrl") ?? ""));
+  if (!url.ok) {
+    redirect({ href: { pathname: "/admin/nastaveni", query: { error: "url" } }, locale });
+  }
+  const onlineResultsUrl = url.ok ? url.value : null;
   const emails = String(formData.get("emails") ?? "");
   await saveFreeEntryEmails(emails);
-  revalidatePath("/[locale]/admin/nastaveni", "page");
+  await saveSiteSettings({
+    startlistPublished: formData.get("startlistPublished") === "on",
+    onlineResultsUrl,
+    statsMoment: normalizeMoment(String(formData.get("statsMoment") ?? "")),
+  });
+  revalidateSettingPages();
+  redirect({ href: { pathname: "/admin/nastaveni", query: { saved: "1" } }, locale });
 }

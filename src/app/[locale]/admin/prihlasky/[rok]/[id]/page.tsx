@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { FileDown } from "lucide-react";
+
 import {
   cancelRegistration,
   confirmRegistration,
@@ -10,6 +12,8 @@ import {
   saveRegistrationHeader,
 } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { registrationFee } from "@/lib/entries/fee-total";
+import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
@@ -59,7 +63,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           include: {
             runner: { select: { name: true } },
             club: { select: { name: true } },
-            category: { select: { name: true } },
+            category: { select: { name: true, entryFee: true } },
           },
           orderBy: { runnerId: "asc" },
         },
@@ -126,6 +130,12 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   const internalNote = showInternalNote(registration.note, year, !!thread);
   const fee = registration.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
   const paid = relatedPayments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+  const receiptReady = isReceiptEligible({
+    status: registration.status,
+    lineCount: registration.lines.length,
+    fee: registrationFee(registration.lines),
+    paid,
+  });
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -173,6 +183,18 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                 {copy("cancelEntry")}
               </Button>
             </form>
+          ) : null}
+          {receiptReady ? (
+            <Button
+              asChild
+              variant="outline"
+              className="mt-4 h-10 border-race-line bg-race-surface"
+            >
+              <a href={receiptHref(year, id, locale)} download>
+                <FileDown className="size-4" aria-hidden="true" />
+                {copy("regsReceipt")}
+              </a>
+            </Button>
           ) : null}
           {registration.status === ENTRY_STATUS.paid ||
           registration.status === ENTRY_STATUS.overpaid ? (

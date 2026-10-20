@@ -40,6 +40,9 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "Auth" });
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
+  const google = googleEnabled();
+  const apple = appleEnabled();
+  const oauth = google || apple;
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -75,6 +78,27 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
           </div>
         ) : null}
         <div className="mt-8">
+          {oauth ? (
+            <>
+              <McvvOauthButtons
+                locale={locale}
+                next={next}
+                google={google}
+                apple={apple}
+                prominent
+                copy={{
+                  google: copy("google"),
+                  apple: copy("apple"),
+                  googleHint: copy("googleHint"),
+                }}
+              />
+              <div className="my-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-race-dim">
+                <span className="h-px flex-1 bg-race-line" />
+                {copy("orEmail")}
+                <span className="h-px flex-1 bg-race-line" />
+              </div>
+            </>
+          ) : null}
           <McvvLoginForm
             copy={{
               email: copy("email"),
@@ -87,23 +111,29 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
             }}
             next={next}
           />
-          <McvvOauthButtons
-            locale={locale}
-            next={next}
-            google={googleEnabled()}
-            apple={appleEnabled()}
-            copy={{ google: copy("google"), apple: copy("apple") }}
-          />
           <p className="mt-4 text-sm text-race-muted">
             <Link href="/zapomenute-heslo" className="font-medium text-race-accent hover:underline">
               {copy("forgotLink")}
             </Link>
           </p>
-          <p className="mt-6 text-sm text-race-muted">
-            <Link href="/registrace" className="font-medium text-race-accent hover:underline">
-              {copy("registerTitle")}
+          <section
+            aria-labelledby="first-time"
+            className="mt-6 rounded-md border border-race-accent/40 bg-race-accent/10 p-4"
+          >
+            <h2
+              id="first-time"
+              className="font-display text-base font-semibold text-foreground dark:text-white"
+            >
+              {copy("firstTimeTitle")}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-race-muted">{copy("firstTimeText")}</p>
+            <Link
+              href="/registrace"
+              className="mt-3 inline-flex h-10 items-center rounded-md border border-race-accent/60 px-4 font-display text-sm font-semibold text-race-accent transition hover:bg-race-accent/10"
+            >
+              {copy("firstTimeAction")} →
             </Link>
-          </p>
+          </section>
         </div>
       </div>
     </main>

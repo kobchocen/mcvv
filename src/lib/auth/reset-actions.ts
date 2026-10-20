@@ -11,7 +11,13 @@ import {
   checkNewPassword,
   isResetTokenUsable,
 } from "@/lib/auth/password-reset";
-import { hashToken, isTokenShape, issuePasswordResetEmail } from "@/lib/auth/tokens";
+import { forgotAnswer, normalizeForgotEmail, processForgotRequest } from "@/lib/auth/forgot-core";
+import {
+  hashToken,
+  isTokenShape,
+  issuePasswordResetEmail,
+  issueSignupInviteEmail,
+} from "@/lib/auth/tokens";
 import { mailConfigured } from "@/lib/mail/resend";
 import { redirect } from "@/i18n/routing";
 
@@ -32,41 +38,40 @@ export async function requestPasswordReset(
   _prev: ForgotState,
   formData: FormData,
 ): Promise<ForgotState> {
-  const email = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase()
-    .slice(0, 255);
   if (!mailConfigured()) {
     return { error: "mail" };
   }
-  // Same answer for every input – no account enumeration.
-  if (!email || !email.includes("@")) {
-    return { sent: true };
-  }
-  const ipAllowed = perIp.take(await clientIp());
-  const emailAllowed = perEmail.take(email);
-  if (!ipAllowed || !emailAllowed) {
-    return { sent: true };
-  }
-  try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (user) {
-      const locale = await getLocale();
-      const copy = await getTranslations({ locale, namespace: "Auth" });
-      await issuePasswordResetEmail({
-        userId: user.id,
-        email: user.email,
+  const email = normalizeForgotEmail(formData.get("email"));
+  const locale = await getLocale();
+  const copy = await getTranslations({ locale, namespace: "Auth" });
+  const outcome = await processForgotRequest(email, await clientIp(), {
+    perIp,
+    perEmail,
+    findAccount: (address) =>
+      prisma.user.findUnique({ where: { email: address }, select: { id: true, email: true } }),
+    sendReset: (account) =>
+      issuePasswordResetEmail({
+        userId: account.id,
+        email: account.email,
         locale,
         subject: copy("resetSubject"),
         intro: copy("resetIntro"),
         action: copy("resetAction"),
         outro: copy("resetOutro"),
-      });
-    }
-  } catch (error) {
-    console.error("password reset request failed", error instanceof Error ? error.message : "");
-  }
-  return { sent: true };
+      }),
+    sendSignupInvite: (address) =>
+      issueSignupInviteEmail({
+        email: address,
+        locale,
+        subject: copy("signupInviteSubject"),
+        intro: copy("signupInviteIntro"),
+        action: copy("signupInviteAction"),
+        outro: copy("signupInviteOutro"),
+      }),
+    log: (message) => console.error("password reset request failed", message),
+  });
+  // Same answer for every input and outcome – no account enumeration.
+  return forgotAnswer(outcome);
 }
 
 export async function resetPassword(_prev: ResetState, formData: FormData): Promise<ResetState> {

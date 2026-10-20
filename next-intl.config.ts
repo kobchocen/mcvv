@@ -26,6 +26,7 @@ export default defineRouting({
     "/overeni": "/overeni",
     "/zapomenute-heslo": "/zapomenute-heslo",
     "/obnova-hesla": "/obnova-hesla",
+    "/zalozeni-uctu": "/zalozeni-uctu",
     "/admin": "/admin",
     "/admin/nastaveni": "/admin/nastaveni",
     "/admin/partneri": "/admin/partneri",

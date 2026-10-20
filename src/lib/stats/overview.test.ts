@@ -158,6 +158,31 @@ describe("computeStatsOverview", () => {
     assert.equal(o.photos.total, 1234);
   });
 
+  it("every runner shown has an id to link to /bezec/[id] (clubs are not runners)", () => {
+    const missing: string[] = [];
+    let named = 0;
+    const walk = (value: unknown, path: string) => {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => walk(item, `${path}[${index}]`));
+        return;
+      }
+      if (!value || typeof value !== "object") return;
+      const record = value as Record<string, unknown>;
+      if (typeof record.name === "string" && !path.startsWith("clubs")) {
+        named += 1;
+        if (typeof record.runnerId !== "string" || !/^\d{8}$/.test(record.runnerId)) {
+          missing.push(path);
+        }
+      }
+      for (const [key, child] of Object.entries(record)) {
+        walk(child, path ? `${path}.${key}` : key);
+      }
+    };
+    walk(o, "");
+    assert.ok(named > 10, `expected runner names in the overview, got ${named}`);
+    assert.deepEqual(missing, []);
+  });
+
   it("handles no data", () => {
     const empty = computeStatsOverview([]);
     assert.equal(empty.editions, 0);

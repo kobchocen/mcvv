@@ -58,7 +58,8 @@ function RunnerLink({ id, name, className }: { id: string; name: string; classNa
     <Link
       href={{ pathname: "/bezec/[id]", params: { id } }}
       className={cn(
-        "font-semibold text-foreground underline-offset-2 transition hover:text-race-accent hover:underline dark:text-white",
+        // Same look as RunnerNameLink on the detail stats pages.
+        "font-semibold text-race-accent underline-offset-2 hover:underline",
         className,
       )}
     >

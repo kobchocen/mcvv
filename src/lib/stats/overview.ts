@@ -33,7 +33,7 @@ export type WinsLeader = {
   runners: { runnerId: string; name: string; firstYear: number; lastYear: number }[];
 };
 
-export type RankedRow = { rank: number; runnerId?: string; name: string; value: number };
+export type RankedRow = { rank: number; runnerId: string; name: string; value: number };
 
 export type StatsOverview = {
   firstYear: number;

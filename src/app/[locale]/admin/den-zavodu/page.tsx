@@ -7,7 +7,7 @@ import { isStaffRole } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
 import { findEncodingIssues, firstClubRows, startWarnings } from "@/lib/raceday/obd-export";
 import { cancelledStartRunnerIds, loadObdExportData } from "@/lib/raceday/obd-export-data";
-import { type Locale } from "@/i18n/routing";
+import { Link, type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -167,6 +167,22 @@ export default async function RaceDayPage({ params }: PageProps) {
             )}
           </div>
           <p className="text-xs leading-5 text-race-muted">{copy("formatNote")}</p>
+        </section>
+
+        <section
+          className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
+          data-testid="obd-imports"
+        >
+          <h2 className="font-display text-xl font-semibold">{copy("importsTitle")}</h2>
+          <p className="text-sm leading-6 text-race-muted">{copy("importsIntro")}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link className={buttonClass} href="/admin/den-zavodu/prezentace">
+              {copy("importPresentation")}
+            </Link>
+            <Link className={buttonClass} href="/admin/den-zavodu/vysledky">
+              {copy("importResults")}
+            </Link>
+          </div>
         </section>
 
         <section className="mt-10">

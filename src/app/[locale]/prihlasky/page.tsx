@@ -20,6 +20,7 @@ import {
 import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
+import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
 import { countPastStarts } from "@/lib/entries/starts";
@@ -159,12 +160,8 @@ async function EntryBody({
       );
     }
   }
-  const fee =
-    registration?.lines.reduce(
-      (sum, line) => sum + (line.entryFee ?? line.category.entryFee ?? 0),
-      0,
-    ) ?? 0;
-  const paid = payments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+  const fee = registration ? registrationFee(registration.lines) : 0;
+  const paid = sumPayments(payments);
   const due = fee - paid;
   const hasLines = (registration?.lines.length ?? 0) > 0;
   const qr =

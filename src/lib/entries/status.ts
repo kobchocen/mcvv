@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { paidAmount } from "@/lib/entries/fee";
+import { registrationFee } from "@/lib/entries/fee-total";
 import { isEntryValid } from "@/lib/entries/valid";
 
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
@@ -46,6 +47,9 @@ export async function recalculateRegistrationStatus(year: number, id: number): P
   if (!registration) {
     return;
   }
+  // Uložený stav záměrně počítá jen s uloženým `entryFee` (null = 0 Kč), aby se stav
+  // existujících přihlášek nezměnil. Zobrazení a doklad používají `registrationFee`
+  // (fallback na startovné kategorie); řádky bez `entryFee` v praxi nevznikají.
   const fee = registration.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
   const paid = await paidAmount(year, id);
   const status = nextStatus(registration.status, registration.lines.length, fee, paid);
@@ -81,10 +85,7 @@ export async function validRegistrationIds(year: number): Promise<Set<number>> {
   }
   const valid = new Set<number>();
   for (const registration of registrations) {
-    const fee = registration.lines.reduce(
-      (sum, line) => sum + (line.entryFee ?? line.category.entryFee ?? 0),
-      0,
-    );
+    const fee = registrationFee(registration.lines);
     if (
       isEntryValid({
         status: registration.status,

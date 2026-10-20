@@ -20,6 +20,7 @@ import { countValidRunners } from "@/lib/entries/status";
 import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
+import { getOfeedSettings, resolveOnlineResultsUrl } from "@/lib/ofeed/settings";
 import { getUnreadCount } from "@/lib/messages/store";
 import type { McvvHeroCta } from "@/components/organisms/mcvv-hero-section";
 
@@ -36,8 +37,9 @@ export async function McvvHomepageTemplate({
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
   const { year, deadline, open, raceDate } = await currentRaceYear();
-  const [settings, resultsCount, startlistCount, entriesCount] = await Promise.all([
+  const [settings, ofeed, resultsCount, startlistCount, entriesCount] = await Promise.all([
     getSiteSettings(),
+    getOfeedSettings().catch(() => null),
     prisma.result.count({ where: { year } }),
     prisma.startEntry.count({ where: { year } }),
     countValidRunners(year),
@@ -55,7 +57,8 @@ export async function McvvHomepageTemplate({
     entriesCount,
     startlistCount,
     resultsCount,
-    onlineResultsUrl: settings.onlineResultsUrl,
+    // ručně zadaná URL má přednost, jinak veřejná stránka akce v OFeed (#127)
+    onlineResultsUrl: resolveOnlineResultsUrl(settings.onlineResultsUrl, ofeed?.eventId ?? null),
   });
   const deadlineEnd = registrationDeadlineEnd(deadline);
   const t = await getTranslations({ locale, namespace: "Home.hero" });

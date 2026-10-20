@@ -31,11 +31,16 @@ export function buildContactMail(payload: ContactPayload) {
   return { subject, text, html };
 }
 
+/**
+ * Odešle zprávu z kontaktního formuláře (nepřihlášený návštěvník) na pořadatelský e-mail.
+ * `recipient` dodává volající z getOrganizerEmail() (nastavení → CONTACT_TO → mcvv@mcvv.org).
+ */
 export async function sendContactMessage(
   payload: ContactPayload,
   transport: ContactTransport = { resend: (m) => sendResendEmail({ ...m, kind: "contact" }) },
+  recipient?: string,
 ) {
-  const to = env.CONTACT_TO;
+  const to = recipient ?? env.CONTACT_TO;
   const { subject, text, html } = buildContactMail(payload);
 
   if (env.RESEND_API_KEY && env.MAIL_FROM) {

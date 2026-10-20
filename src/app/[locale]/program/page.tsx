@@ -9,6 +9,12 @@ import {
 } from "@/components/templates";
 import { formatRaceDate } from "@/lib/format/date";
 import { prisma } from "@/lib/db/client";
+import { currentRaceYear, editionNumber } from "@/lib/entries/year";
+import {
+  categoryBirthYearBound,
+  FALLBACK_ROZPIS_EDITION_ID,
+  hasRozpisData,
+} from "@/lib/race/program";
 import { formatCzk } from "@/lib/utils";
 import { type Locale } from "@/i18n/routing";
 
@@ -16,16 +22,19 @@ type ProgramPageProps = Readonly<{
   params: Promise<{ locale: string }>;
 }>;
 
-const ROZPIS_EDITION_ID = 34;
-const ROZPIS_YEAR = 2026;
 const MAP_HREF =
   "https://www.openstreetmap.org/?mlat=49.99583&mlon=16.20278#map=16/49.99583/16.20278";
 
-function formatBirthYear(age: number, copy: McvvProgramContent["categories"]): string {
-  if (age === 0) {
+function formatBirthYear(
+  age: number,
+  rozpisYear: number,
+  copy: McvvProgramContent["categories"],
+): string {
+  const bound = categoryBirthYearBound(age, rozpisYear);
+  if (bound === null) {
     return copy.open;
   }
-  const year = String(ROZPIS_YEAR - age);
+  const year = String(bound);
   if (age <= 20) {
     return copy.younger.replace("{year}", year);
   }
@@ -61,16 +70,26 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
 
   let edition: Awaited<ReturnType<typeof prisma.edition.findUnique>> = null;
   let categoryRows: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  const raceYear = await currentRaceYear();
 
   try {
+    // The Rozpis follows the current edition; an edition without fees / prizes yet falls
+    // back to the last known Rozpis (34. ročník) so the page never renders empty.
     [edition, categoryRows] = await Promise.all([
-      prisma.edition.findUnique({ where: { id: ROZPIS_EDITION_ID } }),
+      raceYear.editionId
+        ? prisma.edition.findUnique({ where: { id: raceYear.editionId } })
+        : Promise.resolve(null),
       prisma.category.findMany({ orderBy: { sort: "asc" } }),
     ]);
+    if (!hasRozpisData(edition)) {
+      edition = await prisma.edition.findUnique({ where: { id: FALLBACK_ROZPIS_EDITION_ID } });
+    }
   } catch {
     edition = null;
     categoryRows = [];
   }
+  const editionId = edition?.id ?? editionNumber(raceYear);
+  const rozpisYear = edition?.date ? edition.date.getUTCFullYear() : raceYear.year;
 
   const intervalSeconds = String(edition?.startInterval ?? 15);
   const rawSections = program.raw("sections") as McvvProgramContent["sections"];
@@ -83,6 +102,10 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
       ...rawSections.start,
       body: program("sections.start.body", { seconds: intervalSeconds }),
     },
+    categories: {
+      ...rawSections.categories,
+      summary: program("sections.categories.summary", { year: rozpisYear }),
+    },
   };
 
   const content: McvvProgramContent = {
@@ -90,7 +113,8 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
     nav: home.raw("nav") as McvvHomepageContent["nav"],
     header: {
       ...program.raw("header"),
-      lead: program("header.lead", { n: edition?.id ?? ROZPIS_EDITION_ID }),
+      eyebrow: program("header.eyebrow", { year: rozpisYear }),
+      lead: program("header.lead", { n: editionId }),
     } as McvvProgramContent["header"],
     tocTitle: program("tocTitle"),
     emptyCategories: program("emptyCategories"),
@@ -114,13 +138,13 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   const categories: ProgramCategoryRow[] = categoryRows.map((row) => ({
     id: row.id,
     name: row.name,
-    birthYear: formatBirthYear(row.age, content.categories),
+    birthYear: formatBirthYear(row.age, rozpisYear, content.categories),
   }));
 
   return (
     <McvvProgramTemplate
       content={content}
-      editionId={edition?.id ?? ROZPIS_EDITION_ID}
+      editionId={editionId}
       feeRows={[
         {
           label: content.fees.onlineAdult,

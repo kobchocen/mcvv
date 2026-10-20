@@ -1,3 +1,4 @@
+import { allocateRunnerId } from "@/lib/admin/runner-sex-core";
 import { prisma } from "@/lib/db/client";
 import {
   defaultCategory,
@@ -45,13 +46,12 @@ export async function resolveRunner(input: {
     }
     return { error: "ambiguous" };
   }
-  const prefix = runnerPrefix(input.birthYear, input.sex);
-  const siblings = yearMates.filter((row) => row.id.startsWith(prefix));
-  const seqs = siblings
-    .map((row) => Number.parseInt(row.id.slice(5), 10))
-    .filter((value) => Number.isFinite(value));
-  const next = (seqs.length ? Math.max(...seqs) : 0) + 1;
-  const id = `${prefix}${String(next).padStart(3, "0")}`;
+  // Same allocation as the admin sex change: YYYY + 0/5 + next sequence of that prefix.
+  const id = allocateRunnerId(
+    yearMates.map((row) => row.id),
+    input.birthYear,
+    input.sex,
+  );
   await prisma.runner.create({
     data: { id, name, author: "web" },
   });

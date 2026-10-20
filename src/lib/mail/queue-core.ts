@@ -7,7 +7,15 @@
  */
 
 export type MailKind =
-  "auth" | "confirmation" | "alert" | "contact" | "reminder" | "summary" | "other";
+  | "auth"
+  | "confirmation"
+  | "alert"
+  | "contact"
+  | "reminder"
+  | "summary"
+  | "other"
+  /** Zprávy #108 (upozornění přihlašujícím, denní souhrn) – nízká priorita, nečerpá rezervu. */
+  | "message";
 
 export const KIND_PRIORITY: Record<MailKind, 0 | 1> = {
   auth: 0,
@@ -17,6 +25,7 @@ export const KIND_PRIORITY: Record<MailKind, 0 | 1> = {
   reminder: 1,
   summary: 1,
   other: 1,
+  message: 1,
 };
 
 /** Tvrdý limit Resend Free; alerty smí jít nad `cap`, ale nikdy nad tento limit. */

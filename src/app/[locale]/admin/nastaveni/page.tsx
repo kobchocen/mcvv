@@ -6,6 +6,8 @@ import { saveSettings } from "@/lib/admin/settings";
 import { getFreeEntryEmailsText } from "@/lib/entries/settings";
 import { getSiteSettings, ONLINE_RESULTS_URL_MAX, STATS_MOMENT_MAX } from "@/lib/settings/site";
 import { type Locale } from "@/i18n/routing";
+import { env } from "@/lib/env";
+import { getMessageSettings, resolveOrganizerEmail } from "@/lib/settings/messages";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
@@ -31,7 +33,12 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   setRequestLocale(locale);
   await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const [emails, site] = await Promise.all([getFreeEntryEmailsText(), getSiteSettings()]);
+  const [emails, site, messages] = await Promise.all([
+    getFreeEntryEmailsText(),
+    getSiteSettings(),
+    getMessageSettings(),
+  ]);
+  const organizerFallback = resolveOrganizerEmail(null, env.CONTACT_TO);
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -44,6 +51,10 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
         {error === "url" ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
             {copy("settingsOnlineUrlInvalid")}
+          </p>
+        ) : error === "email" ? (
+          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+            {copy("settingsOrganizerEmailInvalid")}
           </p>
         ) : saved === "1" ? (
           <p role="status" className="mt-4 text-sm text-race-accent">
@@ -106,6 +117,63 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
             <p id="statsMomentHint" className="-mt-2 text-xs text-race-muted">
               {copy("settingsStatsMomentHint")}
             </p>
+          </fieldset>
+
+          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
+            <legend className="px-1 font-display text-lg font-semibold">
+              {copy("settingsMessages")}
+            </legend>
+            <div className="grid gap-1.5">
+              <Label htmlFor="organizerEmail">{copy("settingsOrganizerEmail")}</Label>
+              <Input
+                id="organizerEmail"
+                name="organizerEmail"
+                type="email"
+                maxLength={254}
+                placeholder={organizerFallback}
+                defaultValue={messages.organizerEmail}
+                aria-describedby="organizerEmailHint"
+                className="h-10 bg-race-surface"
+              />
+              <p id="organizerEmailHint" className="text-xs text-race-muted">
+                {copy("settingsOrganizerEmailHint", { fallback: organizerFallback })}
+              </p>
+            </div>
+            {(
+              [
+                [
+                  "messagesEnabled",
+                  messages.enabled,
+                  "settingsMessagesEnabled",
+                  "settingsMessagesEnabledHint",
+                ],
+                [
+                  "messagesNotifyOrganizer",
+                  messages.notifyOrganizer,
+                  "settingsNotifyOrganizer",
+                  "settingsNotifyOrganizerHint",
+                ],
+                [
+                  "messagesNotifyUser",
+                  messages.notifyUser,
+                  "settingsNotifyUser",
+                  "settingsNotifyUserHint",
+                ],
+              ] as const
+            ).map(([name, checked, label, hint]) => (
+              <label key={name} className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name={name}
+                  defaultChecked={checked}
+                  className="mt-0.5 size-4"
+                />
+                <span>
+                  <span className="font-medium">{copy(label)}</span>
+                  <span className="mt-1 block text-race-muted">{copy(hint)}</span>
+                </span>
+              </label>
+            ))}
           </fieldset>
 
           <fieldset className="grid gap-3 border border-race-line/60 bg-race-surface/40 p-4">

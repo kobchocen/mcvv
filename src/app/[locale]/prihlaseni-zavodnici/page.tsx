@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPublicNavbar } from "@/components/organisms";
+import { shortBirthYear } from "@/lib/format/birth-year";
 import { formatDate } from "@/lib/format/date";
 import { isNewbie } from "@/lib/entries/newbie";
 import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
@@ -15,6 +16,24 @@ import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
+
+/**
+ * Desktop (sm+) keeps the original five columns (py-2 / py-2.5, pr-3). On phones Klub and
+ * Starty are hidden (shown as a 2nd line under the name), the birth year shrinks to ’07 and
+ * the OR column stays on the right.
+ */
+const cx = {
+  name: "py-2 pr-3",
+  birth: "w-[1%] whitespace-nowrap py-2 pr-3 sm:w-auto sm:whitespace-normal",
+  desktop: "hidden py-2 pr-3 sm:table-cell",
+  record: "w-[1%] whitespace-nowrap py-2 text-right sm:w-auto sm:whitespace-normal sm:text-left",
+  nameCell:
+    "py-2.5 pr-3 leading-tight [overflow-wrap:anywhere] sm:leading-[inherit] sm:[overflow-wrap:normal]",
+  birthCell: "w-[1%] whitespace-nowrap py-2.5 pr-3 sm:w-auto sm:whitespace-normal",
+  desktopCell: "hidden py-2.5 pr-3 sm:table-cell",
+  recordCell:
+    "w-[1%] whitespace-nowrap py-2.5 text-right sm:w-auto sm:whitespace-normal sm:text-left",
+} as const;
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -138,21 +157,22 @@ export default async function EntrantsPage({ params }: PageProps) {
               <p className="text-sm text-race-muted">{copy("empty")}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[40rem] table-fixed border-collapse text-left text-sm">
+                {/* Below sm the Klub and Starty columns become a 2nd line under the name. */}
+                <table className="w-full border-collapse text-left text-sm sm:min-w-[40rem] sm:table-fixed">
                   <colgroup>
-                    <col className="w-[28%]" />
-                    <col className="w-[12%]" />
-                    <col className="w-[28%]" />
-                    <col className="w-[18%]" />
-                    <col className="w-[14%]" />
+                    <col className="sm:w-[28%]" />
+                    <col className="sm:w-[12%]" />
+                    <col className="sm:w-[28%]" />
+                    <col className="sm:w-[18%]" />
+                    <col className="sm:w-[14%]" />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                      <th className="py-2 pr-3">{copy("colName")}</th>
-                      <th className="py-2 pr-3">{copy("colBirth")}</th>
-                      <th className="py-2 pr-3">{copy("colClub")}</th>
-                      <th className="py-2 pr-3">{copy("colStarts")}</th>
-                      <th className="py-2">{copy("colRecord")}</th>
+                      <th className={cx.name}>{copy("colName")}</th>
+                      <th className={cx.birth}>{copy("colBirth")}</th>
+                      <th className={cx.desktop}>{copy("colClub")}</th>
+                      <th className={cx.desktop}>{copy("colStarts")}</th>
+                      <th className={cx.record}>{copy("colRecord")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -168,17 +188,30 @@ export default async function EntrantsPage({ params }: PageProps) {
                         </tr>
                         {group.runners.map((runner) => (
                           <tr key={runner.id} className="border-b border-race-line/40">
-                            <td className="py-2.5 pr-3 font-medium">
+                            <td className={`${cx.nameCell} font-medium`}>
                               <RunnerNameLink id={runner.id} name={runner.name} />
+                              <span className="mt-0.5 block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
+                                {runner.club.trim() ? `${runner.club} · ` : null}
+                                {runner.newbie ? (
+                                  <span className="rounded-full bg-race-accent/15 px-1.5 py-px text-[0.6875rem] font-semibold text-race-accent">
+                                    {copy("newbie")}
+                                  </span>
+                                ) : (
+                                  copy("starts", { count: runner.starts })
+                                )}
+                              </span>
                             </td>
-                            <td className="py-2.5 pr-3 text-race-muted">{runner.birth}</td>
-                            <td className="py-2.5 pr-3 text-race-muted">{runner.club}</td>
-                            <td className="py-2.5 pr-3 text-race-muted">
+                            <td className={`${cx.birthCell} text-race-muted`}>
+                              <span className="hidden sm:inline">{runner.birth}</span>
+                              <span className="sm:hidden">{shortBirthYear(runner.birth)}</span>
+                            </td>
+                            <td className={`${cx.desktopCell} text-race-muted`}>{runner.club}</td>
+                            <td className={`${cx.desktopCell} text-race-muted`}>
                               {runner.newbie
                                 ? copy("newbie")
                                 : copy("starts", { count: runner.starts })}
                             </td>
-                            <td className="py-2.5 tabular-nums text-race-muted">
+                            <td className={`${cx.recordCell} tabular-nums text-race-muted`}>
                               {runner.record != null ? formatRaceTime(runner.record) : ""}
                             </td>
                           </tr>

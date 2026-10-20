@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 
+import { createSignupToken } from "@/lib/auth/signup-token";
 import { prisma } from "@/lib/db/client";
+import { env } from "@/lib/env";
 import { renderTransactionalEmail } from "@/lib/mail/layout";
 import { mailConfigured, sendResendEmail } from "@/lib/mail/resend";
 
@@ -98,6 +100,46 @@ export async function issuePasswordResetEmail(input: {
     site: origin,
     paragraphs: [input.intro],
     action: { label: input.action, url },
+    after: [input.outro],
+  });
+  return sendResendEmail({ to: input.email, subject: input.subject, text, html, kind: "auth" });
+}
+
+/** Signing key for one-time sign-up links; same requirement as sessions (≥ 32 chars). */
+export function signupSecret(): string | undefined {
+  const secret = env.SESSION_SECRET;
+  return secret && secret.length >= 32 ? secret : undefined;
+}
+
+export function signupInviteUrl(origin: string, locale: string, token: string): string {
+  return `${origin}/${locale === "en" ? "en" : "cs"}/zalozeni-uctu?token=${token}`;
+}
+
+/**
+ * "You have no account yet" e-mail for forgot-password on an unknown address. Sent through the
+ * mail queue with the same priority as the password-reset e-mail (kind "auth").
+ */
+export async function issueSignupInviteEmail(input: {
+  email: string;
+  locale: string;
+  subject: string;
+  intro: string;
+  action: string;
+  outro: string;
+}): Promise<boolean> {
+  const secret = signupSecret();
+  if (!mailConfigured() || !secret) {
+    return false;
+  }
+  const token = createSignupToken(input.email, secret);
+  const origin = env.AUTH_ORIGIN?.replace(/\/$/, "") || (await appOrigin());
+  const locale = input.locale === "en" ? "en" : "cs";
+  const { html, text } = renderTransactionalEmail({
+    subject: input.subject,
+    locale,
+    site: origin,
+    paragraphs: [input.intro],
+    action: { label: input.action, url: signupInviteUrl(origin, locale, token) },
     after: [input.outro],
   });
   return sendResendEmail({ to: input.email, subject: input.subject, text, html, kind: "auth" });

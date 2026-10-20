@@ -5,7 +5,7 @@ import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
-import { Link, type Locale } from "@/i18n/routing";
+import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format/date";
 import { listUserThreads } from "@/lib/messages/store";
@@ -27,8 +27,12 @@ export default async function MessagesPage({ params }: PageProps) {
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "Messages" });
   const session = await getSession();
-  const settings = session ? await getMessageSettings() : null;
-  const threads = session && settings?.enabled ? await listUserThreads(session) : [];
+  if (!session) {
+    redirect({ href: { pathname: "/prihlaseni", query: { next: "/zpravy" } }, locale });
+    return null;
+  }
+  const settings = await getMessageSettings();
+  const threads = settings?.enabled ? await listUserThreads(session) : [];
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -50,19 +54,7 @@ export default async function MessagesPage({ params }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {t("title")}
           </h1>
-          {!session ? (
-            <div className="mt-8 grid max-w-md gap-4">
-              <p className="text-base leading-7 text-race-muted">{t("needLogin")}</p>
-              <Button
-                asChild
-                className="h-11 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
-              >
-                <Link href={{ pathname: "/prihlaseni", query: { next: "/zpravy" } }}>
-                  {t("login")}
-                </Link>
-              </Button>
-            </div>
-          ) : !settings?.enabled ? (
+          {!settings?.enabled ? (
             <p className="mt-8 text-base leading-7 text-race-muted">
               {t("disabled")}{" "}
               <Link href="/kontakt" className="font-medium text-race-accent hover:underline">

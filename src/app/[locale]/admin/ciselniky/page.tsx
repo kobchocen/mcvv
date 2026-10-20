@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -19,6 +20,7 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
 
   const cards = [

@@ -33,6 +33,7 @@ import { showInternalNote } from "@/lib/messages/core";
 import { loadRegistrationThread } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { Link } from "@/i18n/routing";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
@@ -50,6 +51,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   const { mail, sex: sexChanged } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const year = Number.parseInt(rok, 10);
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(year) || !Number.isFinite(id)) {

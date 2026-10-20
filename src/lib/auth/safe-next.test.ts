@@ -70,3 +70,26 @@ describe("zprávy", () => {
     });
   });
 });
+
+describe("loginTarget – Časomíra (raceday access)", () => {
+  it("lands on the race-day section by default", () => {
+    assert.deepEqual(loginTarget(null, "raceday"), { kind: "admin", next: "/admin/den-zavodu" });
+  });
+  it("honours only race-day admin paths", () => {
+    assert.deepEqual(loginTarget("/admin/den-zavodu", "raceday"), {
+      kind: "admin",
+      next: "/admin/den-zavodu",
+    });
+    assert.deepEqual(loginTarget("/admin/prihlasky", "raceday"), {
+      kind: "admin",
+      next: "/admin/den-zavodu",
+    });
+  });
+  it("full access and none behave like the boolean variant", () => {
+    assert.deepEqual(loginTarget("/admin/platby", "full"), {
+      kind: "admin",
+      next: "/admin/platby",
+    });
+    assert.deepEqual(loginTarget("/admin/den-zavodu", "none"), { kind: "default" });
+  });
+});

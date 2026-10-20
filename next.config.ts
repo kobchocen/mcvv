@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     "/api/prihlasky/[rok]/[id]/doklad": ["./src/assets/fonts/*.ttf"],
   },
   poweredByHeader: false,
+  experimental: {
+    // forbidden() → HTTP 403 pro omezené role (Časomíra) mimo povolenou sekci administrace.
+    authInterrupts: true,
+  },
   async headers() {
     return [
       {

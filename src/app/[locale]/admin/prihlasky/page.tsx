@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { registrationThreadSummaries, summaryKey } from "@/lib/messages/store";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -60,6 +61,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const { rok, stav, zrusene } = await searchParams;
 

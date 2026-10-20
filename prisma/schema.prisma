@@ -329,6 +329,10 @@ enum UserRole {
   registrar
   organizer
   admin
+  /// „Časomíra“ (externí dodavatel OBD): jen sekce „Den závodu“ v administraci.
+  timing
+  /// Obsluha mezičasových kontrol: jen stránka mezičasů (#121).
+  splitmaker
 }
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.
@@ -347,8 +351,31 @@ model User {
   newsletters    NewsletterCampaign[]
   messageThreads MessageThread[]
   messages       Message[]
+  auditEntries   AuditLog[]
 
   @@map("mcvv_user")
+}
+
+/// Auditní záznam akcí v administraci (#107): změny rolí, exporty a importy dne závodu.
+/// Jméno a e-mail aktéra se ukládají i jako text, aby záznam přežil smazání účtu.
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at")
+  actorUserId Int?     @map("actor_user_id")
+  actorEmail  String   @map("actor_email") @db.VarChar(255)
+  actorRole   String   @map("actor_role") @db.VarChar(20)
+  /// Např. "user.role_change", "raceday.obd_export".
+  action      String   @db.VarChar(64)
+  /// Cíl akce (např. "user:12", "year:2026").
+  target      String?  @db.VarChar(128)
+  /// Strukturované detaily (z čeho na co, počty řádků…). Bez osobních údajů navíc.
+  detail      Json?
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("mcvv_audit_log")
 }
 
 enum EmailTokenPurpose {

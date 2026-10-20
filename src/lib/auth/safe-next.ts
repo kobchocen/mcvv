@@ -19,6 +19,7 @@ export const USER_NEXT_PATHS = [
   "/prihlaseni-zavodnici",
   "/kontakt",
   "/results",
+  "/vysledky",
   "/fotogalerie",
   "/statistiky",
 ] as const;

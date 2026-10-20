@@ -3,28 +3,9 @@ import { isEligibleByBirthYear } from "@/lib/entries/category";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { formatRaceTime } from "@/lib/utils";
 
-export const STAT_SLUGS = ["rekordy", "vitezove", "casy", "vek", "veterani", "ucast"] as const;
-export type StatSlug = (typeof STAT_SLUGS)[number];
+import { personalRecordsByYear, runnerBirthYear, runnerSex, type RawResult } from "./core";
 
-export function isStatSlug(value: string): value is StatSlug {
-  return (STAT_SLUGS as readonly string[]).includes(value);
-}
-
-export type RawResult = {
-  year: number;
-  time: number;
-  runnerId: string;
-  runnerName: string | null;
-  clubName: string | null;
-};
-
-export function runnerSex(id: string): "M" | "F" {
-  return id.charAt(4) < "5" ? "M" : "F";
-}
-
-export function runnerBirthYear(id: string): number {
-  return Number(id.slice(0, 4));
-}
+export * from "./core";
 
 export function isEligible(
   runnerId: string,
@@ -34,7 +15,7 @@ export function isEligible(
   return isEligibleByBirthYear(runnerBirthYear(runnerId), runnerSex(runnerId), raceYear, category);
 }
 
-async function loadAllResults(): Promise<RawResult[]> {
+export async function loadAllResults(): Promise<RawResult[]> {
   const rows = await prisma.result.findMany({
     select: {
       year: true,
@@ -284,24 +265,17 @@ export async function getAttendance(): Promise<AttendanceRow[]> {
   const results = await loadAllResults();
   const years = [...new Set(results.map((row) => row.year))].sort((a, b) => a - b);
   const firstYear = new Map<string, number>();
-  const bestSoFar = new Map<string, number>();
   for (const row of results) {
     const first = firstYear.get(row.runnerId);
     if (first === undefined || row.year < first) {
       firstYear.set(row.runnerId, row.year);
     }
   }
+  const prs = personalRecordsByYear(results);
 
   return years.map((year) => {
     const inYear = results.filter((row) => row.year === year);
-    let personalRecords = 0;
-    for (const row of inYear) {
-      const previous = bestSoFar.get(row.runnerId);
-      if (previous === undefined || row.time < previous) {
-        personalRecords += 1;
-        bestSoFar.set(row.runnerId, row.time);
-      }
-    }
+    const personalRecords = prs.get(year)?.length ?? 0;
     const times = inYear.map((row) => row.time);
     const men = inYear.filter((row) => runnerSex(row.runnerId) === "M").length;
     const women = inYear.filter((row) => runnerSex(row.runnerId) === "F").length;

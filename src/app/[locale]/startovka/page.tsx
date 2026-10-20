@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPlaceholderPage, type McvvHomepageContent } from "@/components/templates";
+import { currentRaceYear, editionNumber } from "@/lib/entries/year";
 import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -22,15 +23,17 @@ export default async function StartListPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "StartList" });
+  const edition = await currentRaceYear();
 
   return (
     <McvvPlaceholderPage
       brand={home.raw("brand") as McvvHomepageContent["brand"]}
       nav={home.raw("nav") as McvvHomepageContent["nav"]}
-      eyebrow={copy("eyebrow")}
+      eyebrow={copy("eyebrow", { n: editionNumber(edition) })}
       title={copy("title")}
       status={copy("status")}
-      backLabel={copy("back")}
     />
   );
 }
+
+export const dynamic = "force-dynamic";

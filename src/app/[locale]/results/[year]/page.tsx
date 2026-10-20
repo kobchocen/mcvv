@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
+import { shortBirthYear } from "@/lib/format/birth-year";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
@@ -28,6 +29,19 @@ type ResultRow = ResultWithRels & {
   _birthYear: string;
   _catRank?: number;
 };
+
+/**
+ * Category table cells. Desktop (sm+, ≥ 640px) keeps px-4 py-2; on phones the KLUB column
+ * is hidden (club becomes a 2nd line under the name), cells get 6px padding (10px at the
+ * outer edges) and #, birth year and time shrink to their content (width 1%, nowrap).
+ */
+const cx = {
+  rank: "w-[1%] whitespace-nowrap py-1.5 pl-2.5 pr-1.5 sm:w-auto sm:whitespace-normal sm:px-4 sm:py-2",
+  name: "px-1.5 py-1.5 leading-tight [overflow-wrap:anywhere] sm:px-4 sm:py-2 sm:leading-normal sm:[overflow-wrap:normal]",
+  birth: "w-[1%] whitespace-nowrap px-1.5 py-1.5 sm:w-auto sm:whitespace-normal sm:px-4 sm:py-2",
+  club: "hidden px-4 py-2 sm:table-cell",
+  time: "w-[1%] whitespace-nowrap py-1.5 pl-1.5 pr-2.5 sm:w-auto sm:whitespace-normal sm:px-4 sm:py-2",
+} as const;
 
 export default async function ResultsYearPage({ params }: PageProps) {
   const { locale: requestedLocale, year: yearParam } = await params;
@@ -194,11 +208,14 @@ export default async function ResultsYearPage({ params }: PageProps) {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-race-line/40 bg-race-forest/50 text-xs font-semibold uppercase tracking-wider text-race-dim">
-                        <th className="px-4 py-2">#</th>
-                        <th className="px-4 py-2">{isCs ? "Jméno" : "Name"}</th>
-                        <th className="px-4 py-2">Roč. nar.</th>
-                        <th className="px-4 py-2">{isCs ? "Klub" : "Club"}</th>
-                        <th className="px-4 py-2 text-right">{isCs ? "Čas" : "Time"}</th>
+                        <th className={cx.rank}>#</th>
+                        <th className={cx.name}>{isCs ? "Jméno" : "Name"}</th>
+                        <th className={cx.birth}>
+                          <span className="hidden sm:inline">Roč. nar.</span>
+                          <span className="sm:hidden">Roč.</span>
+                        </th>
+                        <th className={cx.club}>{isCs ? "Klub" : "Club"}</th>
+                        <th className={`${cx.time} text-right`}>{isCs ? "Čas" : "Time"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-race-line/30">
@@ -210,15 +227,23 @@ export default async function ResultsYearPage({ params }: PageProps) {
                             key={`${r.year}-${r.runnerId}`}
                             className="scroll-mt-28 hover:bg-race-forest/30 target:bg-race-accent/10"
                           >
-                            <td className="px-4 py-2 font-mono text-xs text-race-dim">
+                            <td className={`${cx.rank} font-mono text-xs text-race-dim`}>
                               {r._catRank}
                             </td>
-                            <td className="px-4 py-2 font-semibold">
+                            <td className={`${cx.name} font-semibold`}>
                               <RunnerNameLink id={r.runnerId} name={r.runnerName} />
+                              <span className="mt-px block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
+                                {r._clubName}
+                              </span>
                             </td>
-                            <td className="px-4 py-2 text-xs text-race-muted">{r._birthYear}</td>
-                            <td className="px-4 py-2 text-race-muted">{r._clubName}</td>
-                            <td className="px-4 py-2 text-right font-display text-base font-semibold text-race-accent">
+                            <td className={`${cx.birth} text-xs text-race-muted`}>
+                              <span className="hidden sm:inline">{r._birthYear}</span>
+                              <span className="sm:hidden">{shortBirthYear(r._birthYear)}</span>
+                            </td>
+                            <td className={`${cx.club} text-race-muted`}>{r._clubName}</td>
+                            <td
+                              className={`${cx.time} text-right font-display text-base font-semibold text-race-accent`}
+                            >
                               {timeStr}
                             </td>
                           </tr>

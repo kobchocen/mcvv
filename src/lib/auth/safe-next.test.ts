@@ -10,6 +10,7 @@ describe("safeNext", () => {
     assert.equal(safeNext("/en/navod"), "/navod");
     assert.equal(safeNext("%2Fcs%2Fprihlasky"), "/prihlasky");
     assert.equal(safeNext("/prihlasky/"), "/prihlasky");
+    assert.equal(safeNext("/cs/vysledky"), "/vysledky");
   });
   it("accepts admin paths with simple query", () => {
     assert.equal(safeNext("/admin/prihlasky?rok=2026"), "/admin/prihlasky?rok=2026");

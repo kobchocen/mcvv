@@ -8,7 +8,8 @@ export type McvvPlaceholderPageProps = {
   eyebrow: string;
   title: string;
   status: string;
-  backLabel: string;
+  /** Optional link under the status (e.g. results archive); none by default. */
+  link?: { label: string; href: "/results" | "/program" } | null;
 };
 
 export function McvvPlaceholderPage({
@@ -17,7 +18,7 @@ export function McvvPlaceholderPage({
   eyebrow,
   title,
   status,
-  backLabel,
+  link = null,
 }: McvvPlaceholderPageProps) {
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -34,14 +35,16 @@ export function McvvPlaceholderPage({
             {title}
           </h1>
           <p className="text-lg font-semibold text-race-accent">{status}</p>
-          <p>
-            <Link
-              href="/program"
-              className="font-medium text-race-accent underline-offset-2 hover:underline"
-            >
-              {backLabel}
-            </Link>
-          </p>
+          {link ? (
+            <p>
+              <Link
+                href={link.href}
+                className="font-medium text-race-accent underline-offset-2 hover:underline"
+              >
+                {link.label}
+              </Link>
+            </p>
+          ) : null}
         </div>
       </section>
     </main>

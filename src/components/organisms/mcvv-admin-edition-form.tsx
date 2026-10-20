@@ -1,4 +1,5 @@
 import type { Edition } from "@prisma/client";
+import type { ReactNode } from "react";
 
 import { saveEdition } from "@/lib/admin/editions";
 import { dateInputValue } from "@/lib/admin/parse";
@@ -8,12 +9,14 @@ import { Button } from "@/components/ui/button";
 export function McvvAdminEditionForm({
   edition,
   copy,
+  children,
 }: {
+  /** Další sekce formuláře (model startu ročníku). */
+  children?: ReactNode;
   edition?: Partial<Edition> & { id?: number };
   copy: {
     date: string;
     reg: string;
-    interval: string;
     weather: string;
     temp: string;
     kidsMail: string;
@@ -77,12 +80,6 @@ export function McvvAdminEditionForm({
           type="number"
           defaultValue={edition?.startAdultPlace ?? ""}
         />
-        <AdminField
-          name="startInterval"
-          label={copy.interval}
-          type="number"
-          defaultValue={edition?.startInterval ?? ""}
-        />
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <AdminField
@@ -134,6 +131,7 @@ export function McvvAdminEditionForm({
           defaultValue={edition?.finVet3 ?? ""}
         />
       </div>
+      {children}
       <Button
         type="submit"
         className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"

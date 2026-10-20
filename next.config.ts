@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   // PDF doklad čte přibalené fonty z disku (src/lib/receipts/fonts.ts).
   outputFileTracingIncludes: {
     "/api/prihlasky/[rok]/[id]/doklad": ["./src/assets/fonts/*.ttf"],
+    "/api/admin/startovka/pdf": ["./src/assets/fonts/*.ttf"],
   },
   poweredByHeader: false,
   async headers() {

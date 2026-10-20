@@ -33,6 +33,7 @@ export default async function AdminPage({ params }: PageProps) {
       | "/admin/rocniky"
       | "/admin/ciselniky"
       | "/admin/prihlasky"
+      | "/admin/startovka"
       | "/admin/newsletter"
       | "/admin/platby"
       | "/admin/zpravy"
@@ -51,6 +52,7 @@ export default async function AdminPage({ params }: PageProps) {
     { href: "/admin/rocniky", title: copy("navEditions") },
     { href: "/admin/ciselniky", title: copy("navDictionaries") },
     { href: "/admin/prihlasky", title: copy("navRegistrations") },
+    { href: "/admin/startovka", title: copy("navStartList") },
     { href: "/admin/newsletter", title: copy("navNewsletter") },
     { href: "/admin/platby", title: copy("navPayments") },
   ];

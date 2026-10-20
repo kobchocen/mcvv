@@ -42,14 +42,21 @@
       "tertiaryCta": "Výsledky",
       "tertiaryHref": "/results",
       "enrolledAria": "{cta} – {count, plural, one {přihlášen # běžec} few {přihlášeni # běžci} other {přihlášeno # běžců}}",
+      "startlistCta": "Startovka",
+      "startlistAria": "{cta} – {count, plural, one {# startující} few {# startující} other {# startujících}}",
+      "instructionsCta": "Pokyny",
+      "resultsCta": "Výsledky",
+      "resultsAria": "{cta} – {count, plural, one {# výsledek} few {# výsledky} other {# výsledků}}",
+      "onlineResultsCta": "Online výsledky",
+      "onlineResultsAria": "{cta} (otevře se v novém okně)",
       "stats": [
         {
           "value": "4300",
-          "label": "m délka tratě"
+          "label": "metrů délka tratě"
         },
         {
           "value": "200",
-          "label": "m převýšení"
+          "label": "metrů převýšení"
         },
         {
           "value": "4",
@@ -69,11 +76,11 @@
         "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
       ],
       "actions": [
-        { "label": "Přihláška", "href": "/prihlasky" },
         { "label": "Rozpis", "href": "/program" },
+        { "label": "Přihlášky", "href": "/prihlaseni-zavodnici" },
         { "label": "Pokyny", "href": "/pokyny" },
         { "label": "Startovka", "href": "/startovka" },
-        { "label": "Výsledky", "href": "/results" },
+        { "label": "Výsledky", "href": "/vysledky" },
         { "label": "Máš dotaz? Ozvi se pořadateli.", "href": "/kontakt" }
       ],
       "cards": [
@@ -291,7 +298,7 @@
   },
   "Program": {
     "header": {
-      "eyebrow": "K.O.B. Choceň · 2026",
+      "eyebrow": "K.O.B. Choceň · {year}",
       "title": "Rozpis",
       "lead": "{n}. ročník Malé ceny Velké Verandy"
     },
@@ -367,7 +374,7 @@
       },
       "categories": {
         "title": "Kategorie",
-        "summary": "Věkové hranice k roku 2026",
+        "summary": "Věkové hranice k roku {year}",
         "body": ""
       },
       "prizes": {
@@ -418,19 +425,23 @@
     "back": "Zpět na úvod"
   },
   "Instructions": {
-    "eyebrow": "34. ročník",
+    "eyebrow": "{n}. ročník",
     "title": "Pokyny",
-    "status": "Pokyny se připravují",
-    "back": "Zpět na Rozpis"
+    "status": "Pokyny se připravují"
+  },
+  "ResultsCurrent": {
+    "eyebrow": "{n}. ročník",
+    "title": "Výsledky",
+    "status": "Výsledky budou zveřejněny po závodě.",
+    "archive": "Archiv výsledků"
   },
   "StartList": {
-    "eyebrow": "34. ročník",
+    "eyebrow": "{n}. ročník",
     "title": "Startovní listina",
-    "status": "Startovní čísla a intervalové časy budou po losu a zveřejnění pořadatelem.",
-    "back": "Zpět na Rozpis"
+    "status": "Startovní čísla a intervalové časy budou po losu a zveřejnění pořadatelem."
   },
   "Entrants": {
-    "eyebrow": "34. ročník",
+    "eyebrow": "{n}. ročník",
     "title": "Přihlášení závodníci",
     "deadline": "Uzávěrka online přihlášek",
     "register": "Přihlásit se",
@@ -477,6 +488,9 @@
     "lastName": "Příjmení",
     "birthYear": "Ročník",
     "sex": "Pohlaví",
+    "sexPlaceholder": "Vyberte…",
+    "sexRequired": "Vyberte pohlaví běžce.",
+    "categoryPlaceholder": "Nejprve vyplňte ročník a pohlaví",
     "male": "Muž",
     "female": "Žena",
     "add": "Přidat",
@@ -508,7 +522,7 @@
     "back": "Zpět na úvod"
   },
   "Runner": {
-    "eyebrow": "Běžec",
+    "eyebrow": "{sex, select, F {Běžkyně} other {Běžec}}",
     "starts": "Účasti",
     "record": "Osobní rekord",
     "average": "Průměrný čas",
@@ -531,8 +545,8 @@
     "close": "Zavřít",
     "previousPhoto": "Předchozí fotka",
     "nextPhoto": "Další fotka",
-    "empty": "Pro tohoto běžce zatím nejsou výsledky.",
-    "registeredFirstStart": "Přihlášen na ročník {year} – první start",
+    "empty": "Pro {sex, select, F {tuto běžkyni} other {tohoto běžce}} zatím nejsou výsledky.",
+    "registeredFirstStart": "{sex, select, F {Přihlášena} other {Přihlášen}} na ročník {year} – první start",
     "back": "Archiv výsledků"
   },
   "Auth": {
@@ -604,8 +618,19 @@
     "navRegistrations": "Přihlášky",
     "navSettings": "Nastavení",
     "settingsTitle": "Nastavení",
-    "settingsIntro": "E-maily, které mají startovné 0 Kč.",
+    "settingsIntro": "Startovka, online výsledky, statistiky a přihlášky zdarma.",
     "settingsFreeEmails": "Přihláška zdarma (jeden e-mail na řádek)",
+    "settingsSaved": "Uloženo.",
+    "settingsRaceDay": "Startovka a výsledky",
+    "settingsStartlistPublished": "Zveřejnit startovku",
+    "settingsStartlistPublishedHint": "Na úvodní stránce se místo Přihlášek ukáže Startovka a Pokyny (do startu závodu).",
+    "settingsOnlineUrl": "URL online výsledků",
+    "settingsOnlineUrlHint": "Od startu závodu (10:15) do zveřejnění výsledků vede tlačítko na úvodní stránce sem. Prázdné = odkaz na stránku Výsledky.",
+    "settingsOnlineUrlInvalid": "URL online výsledků musí začínat http:// nebo https://. Nic nebylo uloženo.",
+    "settingsStats": "Statistiky",
+    "settingsStatsMoment": "Moment ročníku",
+    "settingsStatsMomentHint": "Zobrazí se na stránce Statistiky. První řádek je nadpis, další řádky text. Prázdné = karta se nezobrazí.",
+    "settingsEntries": "Přihlášky",
     "statusAll": "Všechny stavy",
     "status0": "Zrušená",
     "status1": "Nová",
@@ -686,6 +711,31 @@
     "regsClub": "Klub",
     "regsCategory": "Kategorie",
     "regsBib": "Číslo",
+    "sexMale": "muž",
+    "sexFemale": "žena",
+    "sexChangeTrigger": "Změnit pohlaví",
+    "sexChangeTitle": "Změnit pohlaví",
+    "sexChangeDescription": "Pohlaví je součástí ID běžce, proto běžec dostane nové ID. Všechny přihlášky, startovka, výsledky i fotky se v jedné transakci převedou na nové ID.",
+    "sexChangeLoading": "Načítám náhled…",
+    "sexChangeIds": "ID běžce",
+    "sexChangeSex": "Pohlaví",
+    "sexChangeCategories": "Kategorie",
+    "sexChangeLine": "Přihláška {year}/{id}",
+    "sexChangeStart": "Startovka {year}",
+    "sexChangeNoCategory": "beze změny (žádná vhodná kategorie)",
+    "sexChangeFee": "startovné",
+    "sexChangeFeeUnchanged": "beze změny",
+    "sexChangeReferences": "Převede se: přihlášky {lines}, startovka {starts}, výsledky {results}, fotky {photos}.",
+    "sexChangeResults": "Historické výsledky:",
+    "sexChangeRecategorize": "Přepočítat kategorii i u historických výsledků ({count})",
+    "sexChangeRecategorizeHint": "Bez zaškrtnutí zůstanou výsledky v původní kategorii (archiv).",
+    "sexChangeCancel": "Zrušit",
+    "sexChangeConfirm": "Změnit na {id}",
+    "sexChangeDone": "Pohlaví změněno: {oldId} → {newId}.",
+    "sexChangeErrorNotFound": "Běžec nebyl nalezen (možná už byl změněn). Obnovte stránku.",
+    "sexChangeErrorInvalid": "Neplatné ID běžce.",
+    "sexChangeErrorCollision": "Nové ID mezitím někdo obsadil. Zkuste to prosím znovu.",
+    "sexChangeErrorFailed": "Změna se nepovedla, nic nebylo změněno.",
     "regsPayments": "Platby",
     "regsAmount": "Částka",
     "regsDate": "Datum",
@@ -695,8 +745,60 @@
     "regsBack": "Zpět na přihlášky"
   },
   "Stats": {
-    "comingSoonTitle": "Statistiky",
-    "comingSoonBody": "Připravujeme. Statistiky závodu brzy doplníme.",
+    "overview": {
+      "nav": "Přehled",
+      "metaTitle": "Statistiky",
+      "eyebrow": "Statistiky · {from}–{to}",
+      "title": "{n, plural, one {# ročník} few {# ročníky} other {# ročníků}} v číslech",
+      "lead": "Rekordy, vítězové a momenty, které stojí za zapamatování. Data ze všech výsledkových listin od roku {from}.",
+      "counterEditions": "ročníků",
+      "counterEditionsSub": "od roku {from}",
+      "counterStarts": "startů",
+      "counterStartsSub": "dokončených závodů",
+      "counterRunners": "běžců",
+      "counterRunnersSub": "různých lidí v cíli",
+      "counterKm": "naběháno",
+      "counterKmSub": "{starts} × {km} km",
+      "top": "Top momenty",
+      "records": "Traťové rekordy",
+      "recordsSameYear": "Oba rekordy padly v jednom ročníku.",
+      "wins": "Nejvíc vítězství",
+      "winsCount": "{count}×",
+      "photos": "Nejvíc fotek",
+      "photosTotal": "Z {total} fotek v galerii.",
+      "closest": "Nejtěsnější dojezd",
+      "margin": "Největší náskok",
+      "vs": "vs.",
+      "gapSeconds": "{seconds} s",
+      "gapMinutes": "{time} min",
+      "prs": "Nejvíc osobních rekordů v ročníku",
+      "prsUnit": "{count, plural, one {osobní rekord} few {osobní rekordy} other {osobních rekordů}} · {year}",
+      "prsBest": "– největší zlepšení o {gap} ({previous} → {time})",
+      "ages": "Nejstarší a nejmladší v cíli",
+      "oldest": "Nejstarší · {year}",
+      "youngest": "Nejmladší · {year}",
+      "ageUnit": "{age, plural, one {rok} few {roky} other {let}}",
+      "agesNote": "Věk = rok závodu − rok narození. Věk pod 6 let vynecháváme (nejspíš chybně zapsaný ročník).",
+      "recordEdition": "Rekordní ročník · {year}",
+      "recordEditionUnit": "{count, plural, one {účastník} few {účastníci} other {účastníků}} · {newcomers, plural, one {# nováček} few {# nováčci} other {# nováčků}} · {prs, plural, one {# osobní rekord} few {# osobní rekordy} other {# osobních rekordů}}",
+      "women": "Ženy na trati",
+      "womenUnit": "všech startů",
+      "womenPeak": "max. {year}: {share}",
+      "clubs": "Nejvěrnější klub",
+      "clubsNote": "Startů za klub. Orientačně – názvy klubů zatím nejsou sjednocené.",
+      "together": "Společně na trati",
+      "togetherUnit": "hodin běhu",
+      "togetherNote": "≈ {days} dní nepřetržitého běhu · {climb} km převýšení ({starts} × {metres} m)",
+      "moment": "Moment ročníku",
+      "moreRecords": "Vývoj rekordů",
+      "moreWins": "Absolutní vítězové",
+      "morePhotos": "Fotogalerie",
+      "moreWinners": "Vítězové ročníků",
+      "moreAttendance": "Celková účast",
+      "moreAges": "Rekordy dle věku",
+      "moreTimes": "Nejlepší časy",
+      "footnote": "Naběhané kilometry = starty × {km} km (všechny kategorie běží stejnou trať), převýšení = starty × {metres} m. Jména podle aktuálního záznamu běžce."
+    },
     "eyebrow": "Statistiky",
     "colName": "Běžec",
     "colTime": "Čas",

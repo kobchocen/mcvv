@@ -47,5 +47,8 @@ export default defineRouting({
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
+    // den závodu: živé mezičasy a OFeed (#120–#122)
+    "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
+    "/mezicasy": "/mezicasy",
   },
 });

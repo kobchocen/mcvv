@@ -9,6 +9,7 @@ import type { McvvHomepageContent } from "@/components/templates";
 import { getSession } from "@/lib/auth/session";
 import { issueFormToken } from "@/lib/contact/guard";
 import { env } from "@/lib/env";
+import { getMessageSettings } from "@/lib/settings/messages";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -31,6 +32,7 @@ export default async function ContactPage({ params }: PageProps) {
   const session = await getSession();
   const secret = env.SESSION_SECRET;
   const formToken = secret && secret.length >= 32 ? issueFormToken(secret) : undefined;
+  const threadMode = session ? (await getMessageSettings()).enabled : false;
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -52,7 +54,9 @@ export default async function ContactPage({ params }: PageProps) {
           <h1 className="font-display text-5xl font-bold text-foreground dark:text-white sm:text-6xl">
             {copy("title")}
           </h1>
-          <p className="text-base leading-7 text-race-muted">{copy("intro")}</p>
+          <p className="text-base leading-7 text-race-muted">
+            {threadMode ? copy("loggedInIntro") : copy("intro")}
+          </p>
           <McvvContactForm
             copy={{
               name: copy("name"),
@@ -64,7 +68,9 @@ export default async function ContactPage({ params }: PageProps) {
               errorInvalid: copy("errorInvalid"),
               errorSend: copy("errorSend"),
               errorExpired: copy("errorExpired"),
+              errorRate: copy("errorRate"),
             }}
+            threadMode={threadMode}
             formToken={formToken}
             defaults={session ? { name: session.name, email: session.email } : undefined}
           />

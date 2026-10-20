@@ -8,6 +8,16 @@ import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-fo
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
+import { userThreadCopy } from "@/components/organisms/mcvv-message-copy";
+import { McvvMessageBubble, McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
+import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
+import { countUnreadMessages } from "@/lib/messages/core";
+import {
+  loadRegistrationThread,
+  registrationThreadSummaries,
+  summaryKey,
+} from "@/lib/messages/store";
+import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
 import { loadMyEntry } from "@/lib/entries/load";
@@ -160,6 +170,19 @@ async function EntryBody({
   const qr =
     registration && hasLines && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
   const vs = registration ? variableSymbol(year, registration.id) : "";
+  const messagesEnabled = (await getMessageSettings()).enabled;
+  const msg = await getTranslations({ locale, namespace: "Messages" });
+  const thread =
+    messagesEnabled && registration ? await loadRegistrationThread(year, registration.id) : null;
+  const threadUnread = thread
+    ? countUnreadMessages(thread.messages, thread.lastReadByUser, "user")
+    : 0;
+  const pastSummaries = messagesEnabled
+    ? await registrationThreadSummaries(
+        past.map((row) => ({ year: row.year, id: row.id })),
+        "user",
+      )
+    : new Map();
 
   if (!registration) {
     return (
@@ -179,26 +202,78 @@ async function EntryBody({
         </p>
       ) : null}
 
+      {messagesEnabled ? (
+        <p className="-mt-6 flex flex-wrap items-center gap-2 text-sm">
+          <a
+            href="#zpravy"
+            className="inline-flex items-center gap-2 font-medium text-race-accent hover:underline"
+          >
+            <McvvMessageBubble
+              count={thread?.messages.length ?? 0}
+              unread={threadUnread}
+              label={msg("sectionTitle")}
+            />
+            {msg("sectionTitle")}
+          </a>
+          <span className="text-race-muted">
+            {thread && thread.messages.length > 0
+              ? copy("messagesCount", { count: thread.messages.length })
+              : copy("messagesNone")}
+            {threadUnread > 0 ? ` · ${copy("messagesUnread", { count: threadUnread })}` : ""}
+          </span>
+        </p>
+      ) : null}
+
       <section>
         <McvvEntryHeaderForm
-          key={`${registration.name ?? ""}:${registration.note ?? ""}:${registration.promotion ?? ""}`}
+          key={`${registration.name ?? ""}:${registration.promotion ?? ""}`}
           year={year}
           id={registration.id}
           name={registration.name ?? ""}
-          note={registration.note ?? ""}
           noMail={registration.promotion === "N"}
           email={email}
           open={open}
           copy={{
             name: copy("name"),
             email: copy("email"),
-            note: copy("note"),
             noMail: copy("noMail"),
             save: copy("save"),
             saved: copy("saved"),
           }}
         />
       </section>
+
+      {messagesEnabled ? (
+        <section id="zpravy" className="scroll-mt-28">
+          <h2 className="font-display text-2xl font-semibold">{msg("sectionTitle")}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-race-muted">{msg("sectionIntro")}</p>
+          <div className="mt-4">
+            <McvvMessageThread
+              viewer="user"
+              messages={(thread?.messages ?? []).map((message) => ({
+                id: message.id,
+                side: message.side,
+                body: message.body,
+                createdAt: message.createdAt,
+                authorName: message.author?.name ?? "",
+              }))}
+              lastRead={thread?.lastReadByUser ?? null}
+              status={thread?.status ?? null}
+              threadId={thread?.id ?? null}
+              createFields={{ year, registrationId: registration.id }}
+              locale={locale}
+              copy={await userThreadCopy(locale)}
+              replyAction={postUserMessage}
+              markReadAction={markReadByUser}
+            />
+          </div>
+          <p className="mt-3 text-sm">
+            <Link href="/zpravy" className="font-medium text-race-accent hover:underline">
+              {msg("backToList")}
+            </Link>
+          </p>
+        </section>
+      ) : null}
 
       <section>
         <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
@@ -381,11 +456,28 @@ async function EntryBody({
         <section>
           <h2 className="font-display text-2xl font-semibold">{copy("past")}</h2>
           <ul className="mt-3 text-sm text-race-muted">
-            {past.map((row) => (
-              <li key={`${row.year}-${row.id}`}>
-                {row.year} · {row.name} · {row.lines.length}
-              </li>
-            ))}
+            {past.map((row) => {
+              const summary = pastSummaries.get(summaryKey(row.year, row.id));
+              return (
+                <li key={`${row.year}-${row.id}`} className="flex flex-wrap items-center gap-2">
+                  <span>
+                    {row.year} · {row.name} · {row.lines.length}
+                  </span>
+                  {summary ? (
+                    <Link
+                      href={{ pathname: "/zpravy/[id]", params: { id: String(summary.threadId) } }}
+                      aria-label={msg("sectionTitle")}
+                    >
+                      <McvvMessageBubble
+                        count={summary.count}
+                        unread={summary.unread}
+                        label={msg("sectionTitle")}
+                      />
+                    </Link>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}

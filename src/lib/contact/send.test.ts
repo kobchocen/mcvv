@@ -27,3 +27,14 @@ test("selhání Resendu se propaguje jako chyba (formulář ukáže chybu)", asy
     ),
   );
 });
+
+test("adresát z nastavení (getOrganizerEmail) má přednost před CONTACT_TO", async () => {
+  const { sendContactMessage } = await import("./send");
+  const calls: Array<Record<string, string | undefined>> = [];
+  await sendContactMessage(
+    { name: "X Y", email: "a@b.cz", message: "0123456789" },
+    { resend: async (input) => (calls.push(input), true) },
+    "poradatel@example.cz",
+  );
+  assert.equal(calls[0].to, "poradatel@example.cz");
+});

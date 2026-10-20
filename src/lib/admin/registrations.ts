@@ -47,7 +47,7 @@ export async function saveRegistrationHeader(formData: FormData): Promise<void> 
     data: {
       email,
       name: formString(formData, "name") || null,
-      note: formString(formData, "note") || null,
+      // Poznámka se už needituje (nahradily ji zprávy #108); sloupec zůstává jen ke čtení.
       promotion: formString(formData, "promotion") || null,
     },
   });

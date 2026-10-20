@@ -10,6 +10,8 @@ import { ENTRY_STATUS } from "@/lib/entries/status";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
+import { registrationThreadSummaries, summaryKey } from "@/lib/messages/store";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -89,6 +91,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     }),
   ]);
 
+  const threadSummaries = await registrationThreadSummaries(
+    registrations.map((row) => ({ year: row.year, id: row.id })),
+    "staff",
+  );
+
   const paidById = new Map<number, number>();
   for (const payment of payments) {
     const id = paymentRegistrationId(payment.registrationId);
@@ -165,6 +172,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   <th className="py-2 pr-3">{copy("regsDiff")}</th>
                   <th className="py-2 pr-3">{copy("regsStatus")}</th>
                   <th className="py-2 pr-3">{copy("regsPromotion")}</th>
+                  <th className="py-2 pr-3">{copy("regsMessages")}</th>
                   <th className="py-2" />
                 </tr>
               </thead>
@@ -173,6 +181,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   const fee = row.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
                   const paid = paidById.get(row.id) ?? 0;
                   const diff = paid - fee;
+                  const summary = threadSummaries.get(summaryKey(row.year, row.id));
                   return (
                     <tr key={`${row.year}-${row.id}`} className="border-b border-race-line/40">
                       <td className="py-2.5 pr-3 font-medium">{row.id}</td>
@@ -187,6 +196,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         {copy(statusKey(row.status))}
                       </td>
                       <td className="py-2.5 pr-3">{row.promotion ?? ""}</td>
+                      <td className="py-2.5 pr-3">
+                        {summary ? (
+                          <Link
+                            href={{
+                              pathname: "/admin/prihlasky/[rok]/[id]",
+                              params: { rok: String(row.year), id: String(row.id) },
+                            }}
+                          >
+                            <McvvMessageBubble
+                              count={summary.count}
+                              unread={summary.open ? summary.unread : 0}
+                              label={
+                                summary.open && summary.unread > 0
+                                  ? `${copy("msgUnread")}: ${summary.unread}`
+                                  : copy("msgCount", { count: summary.count })
+                              }
+                            />
+                          </Link>
+                        ) : null}
+                      </td>
                       <td className="py-2.5">
                         <div className="flex flex-wrap items-center gap-3">
                           {row.status === ENTRY_STATUS.paid ||

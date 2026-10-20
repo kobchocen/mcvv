@@ -8,6 +8,8 @@
  */
 export const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
 const SAFE_QUERY = /^[\w.=&-]*$/;
+/** Detail konverzace (odkaz z e-mailového upozornění). */
+export const THREAD_PATH = /^\/zpravy\/(\d{1,9})$/;
 
 export const USER_NEXT_PATHS = [
   "/",
@@ -22,6 +24,7 @@ export const USER_NEXT_PATHS = [
   "/vysledky",
   "/fotogalerie",
   "/statistiky",
+  "/zpravy",
 ] as const;
 export type UserNextPath = (typeof USER_NEXT_PATHS)[number];
 
@@ -80,7 +83,9 @@ export function safeNext(raw: unknown): string | null {
     return null;
   }
   const allowed =
-    ADMIN_PATH.test(parsed.path) || (USER_NEXT_PATHS as readonly string[]).includes(parsed.path);
+    ADMIN_PATH.test(parsed.path) ||
+    THREAD_PATH.test(parsed.path) ||
+    (USER_NEXT_PATHS as readonly string[]).includes(parsed.path);
   if (!allowed) {
     return null;
   }
@@ -95,6 +100,7 @@ export function isAdminNext(next: string): boolean {
 export type LoginTarget =
   | { kind: "admin"; next: string }
   | { kind: "user"; path: UserNextPath; query: string }
+  | { kind: "thread"; id: string }
   | { kind: "default" };
 
 /** Decides where to go after a successful login. Default is the application page. */
@@ -106,6 +112,10 @@ export function loginTarget(next: string | null, staff: boolean): LoginTarget {
       }
     } else {
       const [path = "", query = ""] = next.split("?");
+      const thread = THREAD_PATH.exec(path);
+      if (thread) {
+        return { kind: "thread", id: thread[1]! };
+      }
       if ((USER_NEXT_PATHS as readonly string[]).includes(path) && path !== "/") {
         return { kind: "user", path: path as UserNextPath, query };
       }

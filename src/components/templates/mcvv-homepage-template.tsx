@@ -20,6 +20,7 @@ import { countValidRunners } from "@/lib/entries/status";
 import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
+import { getUnreadCount } from "@/lib/messages/store";
 import type { McvvHeroCta } from "@/components/organisms/mcvv-hero-section";
 
 export type McvvHomepageTemplateProps = {
@@ -101,7 +102,12 @@ export async function McvvHomepageTemplate({
         variant="solid"
         account={
           session
-            ? { name: session.name, email: session.email, staff: isStaffRole(session.role) }
+            ? {
+                name: session.name,
+                email: session.email,
+                staff: isStaffRole(session.role),
+                messages: await getUnreadCount(),
+              }
             : null
         }
       />

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LIMITS } from "@/lib/contact/limits";
+import { MESSAGE_MAX_LENGTH } from "@/lib/messages/core";
 
 export type ContactFormCopy = {
   name: string;
@@ -18,6 +19,7 @@ export type ContactFormCopy = {
   errorInvalid: string;
   errorSend: string;
   errorExpired: string;
+  errorRate?: string;
 };
 
 const initialState: ContactFormState = { status: "idle" };
@@ -27,45 +29,51 @@ export type ContactFormProps = {
   /** Podepsaný čas vykreslení (kontrola minimální doby vyplnění). */
   formToken?: string;
   defaults?: { name?: string; email?: string };
+  /** Přihlášený uživatel se zapnutými zprávami: jen text, uloží se do Zpráv. */
+  threadMode?: boolean;
 };
 
-export function McvvContactForm({ copy, formToken, defaults }: ContactFormProps) {
+export function McvvContactForm({ copy, formToken, defaults, threadMode }: ContactFormProps) {
   const [state, action, pending] = useActionState(submitContact, initialState);
 
   return (
     <form action={action} className="grid gap-4">
       {formToken ? <input type="hidden" name="ts" value={formToken} /> : null}
-      <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
-        {copy.name}
-        <Input
-          name="name"
-          required
-          minLength={LIMITS.nameMin}
-          maxLength={LIMITS.nameMax}
-          defaultValue={defaults?.name}
-          autoComplete="name"
-          className="h-11 border-race-line bg-race-surface text-foreground"
-        />
-      </label>
-      <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
-        {copy.email}
-        <Input
-          name="email"
-          type="email"
-          required
-          maxLength={LIMITS.emailMax}
-          defaultValue={defaults?.email}
-          autoComplete="email"
-          className="h-11 border-race-line bg-race-surface text-foreground"
-        />
-      </label>
+      {threadMode ? null : (
+        <>
+          <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
+            {copy.name}
+            <Input
+              name="name"
+              required
+              minLength={LIMITS.nameMin}
+              maxLength={LIMITS.nameMax}
+              defaultValue={defaults?.name}
+              autoComplete="name"
+              className="h-11 border-race-line bg-race-surface text-foreground"
+            />
+          </label>
+          <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
+            {copy.email}
+            <Input
+              name="email"
+              type="email"
+              required
+              maxLength={LIMITS.emailMax}
+              defaultValue={defaults?.email}
+              autoComplete="email"
+              className="h-11 border-race-line bg-race-surface text-foreground"
+            />
+          </label>
+        </>
+      )}
       <label className="grid gap-1.5 text-sm font-medium text-foreground dark:text-white">
         {copy.message}
         <Textarea
           name="message"
           required
           minLength={LIMITS.messageMin}
-          maxLength={LIMITS.messageMax}
+          maxLength={threadMode ? MESSAGE_MAX_LENGTH : LIMITS.messageMax}
           rows={7}
           className="border-race-line bg-race-surface text-foreground"
         />
@@ -85,7 +93,9 @@ export function McvvContactForm({ copy, formToken, defaults }: ContactFormProps)
             ? copy.errorInvalid
             : state.message === "expired"
               ? copy.errorExpired
-              : copy.errorSend}
+              : state.message === "rate" && copy.errorRate
+                ? copy.errorRate
+                : copy.errorSend}
         </p>
       ) : null}
       <Button

@@ -3,6 +3,8 @@
  * Database and mail access are injected so the logic is unit-testable.
  */
 
+import { isPromotionOptOut } from "../entries/promotion";
+
 const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i;
 
 export function normalizeEmail(value: string | null | undefined): string | null {
@@ -90,7 +92,7 @@ export function latestPromotionOptOuts(records: Iterable<PromotionRecord>): Set<
   }
   const out = new Set<string>();
   for (const [email, r] of latest) {
-    if ((r.promotion ?? "").trim().toUpperCase() === "N") out.add(email);
+    if (isPromotionOptOut(r.promotion)) out.add(email);
   }
   return out;
 }

@@ -11,6 +11,7 @@ import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/r
 import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { entryWritable } from "@/lib/entries/guard";
+import { promotionValue } from "@/lib/entries/promotion";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 
@@ -39,7 +40,7 @@ export async function saveEntryHeader(formData: FormData): Promise<void> {
     where: { year_id: { year, id } },
     data: {
       name: formString(formData, "name").slice(0, 128) || session.name,
-      promotion: noMail ? "N" : null,
+      promotion: promotionValue(noMail),
     },
   });
   await touchRegistration(year, id);

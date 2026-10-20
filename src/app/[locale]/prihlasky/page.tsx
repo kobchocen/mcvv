@@ -23,6 +23,7 @@ import { computeLineFee } from "@/lib/entries/fee";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
+import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { formatDate } from "@/lib/format/date";
@@ -236,7 +237,7 @@ async function EntryBody({
           year={year}
           id={registration.id}
           name={registration.name ?? ""}
-          noMail={registration.promotion === "N"}
+          noMail={isPromotionOptOut(registration.promotion)}
           email={email}
           open={open}
           copy={{

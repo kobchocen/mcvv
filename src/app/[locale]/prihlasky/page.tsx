@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { PlayCircle, Trash2 } from "lucide-react";
+import { FileDown, PlayCircle, Trash2 } from "lucide-react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
@@ -20,12 +20,14 @@ import {
 import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
+import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
 import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { formatDate } from "@/lib/format/date";
 import { getSession } from "@/lib/auth/session";
+import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
@@ -159,13 +161,17 @@ async function EntryBody({
       );
     }
   }
-  const fee =
-    registration?.lines.reduce(
-      (sum, line) => sum + (line.entryFee ?? line.category.entryFee ?? 0),
-      0,
-    ) ?? 0;
-  const paid = payments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+  const fee = registration ? registrationFee(registration.lines) : 0;
+  const paid = sumPayments(payments);
   const due = fee - paid;
+  const receiptReady =
+    !!registration &&
+    isReceiptEligible({
+      status: registration.status,
+      lineCount: registration.lines.length,
+      fee,
+      paid,
+    });
   const hasLines = (registration?.lines.length ?? 0) > 0;
   const qr =
     registration && hasLines && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
@@ -439,7 +445,21 @@ async function EntryBody({
         ) : !hasLines ? (
           <p className="mt-3 text-sm text-race-muted">{copy("addRunnersFirst")}</p>
         ) : fee > 0 && paid >= fee ? (
-          <p className="mt-3 text-sm text-race-muted">{copy("paidInFull")}</p>
+          <div className="mt-3 grid gap-3">
+            <p className="text-sm text-race-muted">{copy("paidInFull")}</p>
+            {receiptReady ? (
+              <Button
+                asChild
+                variant="outline"
+                className="h-10 w-fit border-race-line bg-race-surface"
+              >
+                <a href={receiptHref(year, registration.id, locale)} download>
+                  <FileDown className="size-4" aria-hidden="true" />
+                  {copy("receiptDownload")}
+                </a>
+              </Button>
+            ) : null}
+          </div>
         ) : fee === 0 ? (
           <p className="mt-3 text-sm text-race-muted">{copy("noFeeDue")}</p>
         ) : null}

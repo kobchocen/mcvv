@@ -32,6 +32,14 @@ test("potvrzení má brandovaný layout, závodníky, součty a odkazy", () => {
   assert.doesNotMatch(html, /navod|Návod|návod/);
   assert.doesNotMatch(text, /navod|Návod|návod/);
   assert.match(html, /Tým pořadatelů z K\.O\.B\. Choceň/);
+  assert.match(
+    html,
+    /Doklad o zaplacení startovného \(PDF\) si stáhnete v sekci <a href="https:\/\/mcvv\.org\/prihlasky"/,
+  );
+  assert.match(
+    text,
+    /Doklad o zaplacení startovného \(PDF\) si stáhnete v sekci https:\/\/mcvv\.org\/prihlasky/,
+  );
   assert.doesNotMatch(html, /QR|platí až po zaplacení/i);
   assert.match(text, /Petr Novák · K\.O\.B\. Choceň · H10 · 150 Kč/);
   assert.match(text, /Startovné celkem: 400 Kč\nZaplaceno: 400 Kč\nZbývá zaplatit: 0 Kč/);

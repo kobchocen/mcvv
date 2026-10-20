@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin/staff";
 import { saveFreeEntryEmails } from "@/lib/entries/settings";
 import { normalizeMoment, parseHttpUrl, saveSiteSettings } from "@/lib/settings/site";
 import { parseEmail, saveMessageSettings } from "@/lib/settings/messages";
+import { saveReceiptIssuer } from "@/lib/settings/receipt";
 import { redirect } from "@/i18n/routing";
 
 /** Public pages that render site settings (hero phase, start list, instructions, stats). */
@@ -47,6 +48,12 @@ export async function saveSettings(formData: FormData): Promise<void> {
     notifyOrganizer: formData.get("messagesNotifyOrganizer") === "on",
     notifyUser: formData.get("messagesNotifyUser") === "on",
     organizerEmail: organizerEmail ?? "",
+  });
+  await saveReceiptIssuer({
+    name: String(formData.get("receiptIssuerName") ?? ""),
+    address: String(formData.get("receiptIssuerAddress") ?? ""),
+    ico: String(formData.get("receiptIssuerIco") ?? ""),
+    vatNote: String(formData.get("receiptVatNote") ?? ""),
   });
   revalidateSettingPages();
   redirect({ href: { pathname: "/admin/nastaveni", query: { saved: "1" } }, locale });

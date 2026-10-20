@@ -25,7 +25,7 @@ export function StatsNav({
       className={cn(
         "-mx-4 mt-8 sm:mx-0",
         sticky &&
-          "sticky top-[73px] z-40 border-b border-race-line/60 bg-race-deep/90 pt-3 backdrop-blur supports-[backdrop-filter]:bg-race-deep/75 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
+          "sticky top-[83px] z-40 border-b border-race-line/60 bg-race-deep/90 pt-3 backdrop-blur supports-[backdrop-filter]:bg-race-deep/75 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
       )}
     >
       <ul

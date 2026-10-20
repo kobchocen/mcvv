@@ -70,6 +70,10 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       );
       return;
     }
+    if (pathname === "/zpravy/[id]" || pathname === "/admin/zpravy/[id]") {
+      router.replace({ pathname, params: { id: String(params.id ?? "") } }, { locale: nextLocale });
+      return;
+    }
     if (pathname === "/admin/prihlasky/[rok]/[id]") {
       router.replace(
         {

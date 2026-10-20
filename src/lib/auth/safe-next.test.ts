@@ -54,3 +54,19 @@ describe("loginTarget", () => {
     assert.deepEqual(loginTarget("/admin", false), { kind: "default" });
   });
 });
+
+describe("zprávy", () => {
+  it("accepts /zpravy and a thread detail, rejects other subpaths", () => {
+    assert.equal(safeNext("/cs/zpravy"), "/zpravy");
+    assert.equal(safeNext("/zpravy/12"), "/zpravy/12");
+    assert.equal(safeNext("/zpravy/abc"), null);
+    assert.equal(safeNext("/zpravy/12/x"), null);
+  });
+  it("thread detail is a user target", () => {
+    assert.deepEqual(loginTarget("/zpravy/12", false), { kind: "thread", id: "12" });
+    assert.deepEqual(loginTarget("/admin/zpravy/3", true), {
+      kind: "admin",
+      next: "/admin/zpravy/3",
+    });
+  });
+});

@@ -39,7 +39,6 @@ export async function saveEntryHeader(formData: FormData): Promise<void> {
     where: { year_id: { year, id } },
     data: {
       name: formString(formData, "name").slice(0, 128) || session.name,
-      note: formString(formData, "note") || null,
       promotion: noMail ? "N" : null,
     },
   });

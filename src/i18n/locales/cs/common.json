@@ -729,6 +729,7 @@
     "navNewsletter": "Newsletter",
     "navPayments": "Platby (Fio)",
     "navRegistrations": "Přihlášky",
+    "navPrintBibs": "Tisk startovních čísel",
     "navSettings": "Nastavení",
     "settingsTitle": "Nastavení",
     "settingsIntro": "Startovka, online výsledky, statistiky a přihlášky zdarma.",
@@ -945,6 +946,7 @@
     "empty": "Zatím tu nic není.",
     "navLabel": "Navigace statistik",
     "back": "Zpět na úvod",
+    "printPdf": "Stáhnout PDF pro tisk",
     "rekordy": {
       "nav": "Rekordy",
       "title": "Traťové rekordy a jejich vývoj",

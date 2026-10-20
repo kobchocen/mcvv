@@ -34,6 +34,8 @@ export type McvvStatsPageProps = {
   empty: string;
   back: string;
   statsNav?: { items: StatsNavItem[]; current: string; ariaLabel: string };
+  /** Odkaz na tiskové PDF – jen pro pořadatele/administrátory. */
+  print?: { href: string; label: string };
 };
 
 export function McvvStatsPage({
@@ -50,6 +52,7 @@ export function McvvStatsPage({
   empty,
   back,
   statsNav,
+  print,
 }: McvvStatsPageProps) {
   const maxBar = chart?.reduce((max, bar) => Math.max(max, bar.men + bar.women), 0) ?? 0;
 
@@ -69,6 +72,18 @@ export function McvvStatsPage({
           </h1>
           {intro ? (
             <p className="mt-4 max-w-2xl text-base leading-7 text-race-muted">{intro}</p>
+          ) : null}
+          {print ? (
+            <p className="mt-4">
+              <a
+                href={print.href}
+                download
+                data-testid="stats-print-pdf"
+                className="inline-flex items-center gap-2 border border-race-accent/60 px-3 py-1.5 text-sm font-semibold text-race-accent transition-colors hover:bg-race-accent hover:text-white"
+              >
+                {print.label}
+              </a>
+            </p>
           ) : null}
           {statsNav ? <StatsNav {...statsNav} /> : null}
 

@@ -23,7 +23,47 @@ export type McvvNavbarAccount = {
   name: string;
   email: string;
   staff?: boolean;
+  /** Odznak zpráv (null = funkce vypnutá / bez dat). */
+  messages?: { count: number; href: "/zpravy" | "/admin/zpravy" } | null;
 };
+
+function MessagesName({
+  account,
+  locale,
+  label,
+  unreadLabel,
+  className,
+}: {
+  account: McvvNavbarAccount;
+  locale: string;
+  label: string;
+  unreadLabel: string;
+  className?: string;
+}) {
+  const count = account.messages?.count ?? 0;
+  if (!account.messages) {
+    return (
+      <span className={className} title={account.email}>
+        {account.name}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={getLocalizedHref(account.messages.href, locale)}
+      className={cn("inline-flex min-w-0 items-center gap-1.5 hover:text-race-accent", className)}
+      title={`${account.email} · ${label}`}
+      aria-label={count > 0 ? `${account.name} – ${unreadLabel}` : `${account.name} – ${label}`}
+    >
+      <span className="truncate">{account.name}</span>
+      {count > 0 ? (
+        <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-race-accent-solid px-1.5 text-[11px] font-bold leading-none text-white">
+          {count > 99 ? "99+" : count}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
 
 export type McvvNavbarProps = {
   content: Pick<McvvHomepageContent, "brand" | "nav">;
@@ -114,12 +154,16 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
           <ThemeToggle />
           {account ? (
             <>
-              <span
-                className="max-w-[10rem] truncate text-sm font-medium text-foreground dark:text-white"
-                title={account.email}
-              >
-                {account.name}
-              </span>
+              <MessagesName
+                account={account}
+                locale={locale}
+                label={content.nav.messages}
+                unreadLabel={content.nav.unreadMessages.replace(
+                  "{count}",
+                  String(account.messages?.count ?? 0),
+                )}
+                className="max-w-[12rem] truncate text-sm font-medium text-foreground dark:text-white"
+              />
               <Button
                 asChild
                 className="h-10 rounded-[10px] bg-race-accent-solid px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover"
@@ -166,10 +210,20 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={content.nav.menuLabel}
-                className="size-[38px] rounded-[10px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white"
+                aria-label={
+                  (account?.messages?.count ?? 0) > 0
+                    ? `${content.nav.menuLabel} – ${content.nav.unreadMessages.replace("{count}", String(account?.messages?.count ?? 0))}`
+                    : content.nav.menuLabel
+                }
+                className="relative size-[38px] rounded-[10px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white"
               >
                 <Menu className="size-[18px]" aria-hidden="true" />
+                {(account?.messages?.count ?? 0) > 0 ? (
+                  <span
+                    className="absolute right-1 top-1 size-2.5 rounded-full bg-race-accent-solid ring-2 ring-race-forest"
+                    aria-hidden="true"
+                  />
+                ) : null}
               </Button>
             </SheetTrigger>
             <SheetContent
@@ -214,12 +268,16 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                   </div>
                   {account ? (
                     <>
-                      <p
-                        className="truncate text-sm font-medium text-foreground dark:text-white"
-                        title={account.email}
-                      >
-                        {account.name}
-                      </p>
+                      <MessagesName
+                        account={account}
+                        locale={locale}
+                        label={content.nav.messages}
+                        unreadLabel={content.nav.unreadMessages.replace(
+                          "{count}",
+                          String(account.messages?.count ?? 0),
+                        )}
+                        className="min-h-11 text-sm font-medium text-foreground dark:text-white"
+                      />
                       <SheetClose asChild>
                         <Button
                           asChild

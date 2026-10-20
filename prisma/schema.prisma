@@ -343,8 +343,10 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  emailTokens EmailVerificationToken[]
-  newsletters NewsletterCampaign[]
+  emailTokens    EmailVerificationToken[]
+  newsletters    NewsletterCampaign[]
+  messageThreads MessageThread[]
+  messages       Message[]
 
   @@map("mcvv_user")
 }
@@ -472,6 +474,7 @@ enum MailKind {
   reminder
   summary
   other
+  message
 }
 
 enum MailQueueStatus {
@@ -598,4 +601,67 @@ model RegistrationMeta {
 
   @@id([year, id])
   @@map("mcvv_prihlaska_meta")
+}
+
+// ============================================
+// Zprávy mezi přihlašujícím a pořadatelem (#108)
+// ============================================
+
+enum MessageThreadStatus {
+  open
+  resolved
+}
+
+enum MessageSide {
+  user
+  staff
+}
+
+/// Vlákno zpráv: buď k přihlášce (rok + prihlaska_id), nebo obecné k účtu (user_id, bez přihlášky).
+/// Přístup přihlašujícího k vláknu přihlášky = e-mail přihlášky se shoduje s e-mailem účtu.
+model MessageThread {
+  id                 Int                 @id @default(autoincrement())
+  /// Účet, který vlákno založil / komu patří (u obecných vláken povinné).
+  userId             Int?                @map("user_id")
+  year               Int?                @map("rok") @db.SmallInt
+  registrationId     Int?                @map("prihlaska_id") @db.SmallInt
+  subject            String?             @db.VarChar(200)
+  status             MessageThreadStatus @default(open)
+  lastMessageAt      DateTime            @default(now()) @map("last_message_at")
+  lastUserMessageAt  DateTime?           @map("last_user_message_at")
+  lastStaffMessageAt DateTime?           @map("last_staff_message_at")
+  /// Přečteno přihlašujícím (jen tlačítko „Potvrdit přečtení“ nebo odpověď).
+  lastReadByUser     DateTime?           @map("last_read_by_user")
+  /// Přečteno pořadateli (sdílený stav všech pořadatelů).
+  lastReadByStaff    DateTime?           @map("last_read_by_staff")
+  /// Kdy šlo přihlašujícímu upozornění (1× za cyklus čtení).
+  userNotifiedAt     DateTime?           @map("user_notified_at")
+  /// Kdy bylo vlákno naposledy v denním souhrnu pro pořadatele.
+  staffNotifiedAt    DateTime?           @map("staff_notified_at")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  @@unique([year, registrationId])
+  @@index([userId])
+  @@index([status, lastUserMessageAt])
+  @@map("mcvv_message_thread")
+}
+
+model Message {
+  id           Int         @id @default(autoincrement())
+  threadId     Int         @map("thread_id")
+  authorUserId Int?        @map("author_user_id")
+  side         MessageSide
+  body         String      @db.Text
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User?         @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
+
+  @@index([threadId, createdAt])
+  @@index([authorUserId, createdAt])
+  @@map("mcvv_message")
 }

@@ -6,7 +6,6 @@ import { saveEntryHeader } from "@/lib/entries/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 const SAVED_KEY = "mcvv-entry-header-saved";
 
@@ -14,7 +13,6 @@ export function McvvEntryHeaderForm({
   year,
   id,
   name,
-  note,
   noMail,
   email,
   open,
@@ -23,23 +21,20 @@ export function McvvEntryHeaderForm({
   year: number;
   id: number;
   name: string;
-  note: string;
   noMail: boolean;
   email: string;
   open: boolean;
   copy: {
     name: string;
     email: string;
-    note: string;
     noMail: string;
     save: string;
     saved: string;
   };
 }) {
   const [nameValue, setNameValue] = useState(name);
-  const [noteValue, setNoteValue] = useState(note);
   const [noMailValue, setNoMailValue] = useState(noMail);
-  const dirty = nameValue !== name || noteValue !== note || noMailValue !== noMail;
+  const dirty = nameValue !== name || noMailValue !== noMail;
   // The page remounts this form after a successful save (key = saved values), so the
   // transient "Uloženo ✓" flag survives the remount via sessionStorage.
   const [justSaved, setJustSaved] = useState(false);
@@ -83,17 +78,6 @@ export function McvvEntryHeaderForm({
       <div className="grid gap-1.5">
         <Label>{copy.email}</Label>
         <Input value={email} disabled className="h-10 bg-race-surface" />
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="note">{copy.note}</Label>
-        <Textarea
-          id="note"
-          name="note"
-          value={noteValue}
-          onChange={(event) => setNoteValue(event.target.value)}
-          disabled={!open}
-          className="min-h-24 bg-race-surface"
-        />
       </div>
       <label className="flex items-center gap-2 text-sm">
         <input

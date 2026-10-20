@@ -14,6 +14,7 @@ export type ConfirmationInput = {
 
 export const RACE_PLACE = "Velká Veranda, Choceň";
 export const SIGNATURE = "Tým pořadatelů z K.O.B. Choceň";
+export const RECEIPT_NOTE = "Doklad o zaplacení startovného (PDF) si stáhnete v sekci";
 
 const kc = (value: number) => `${value.toLocaleString("cs-CZ").replace(/\u00a0/g, " ")} Kč`;
 
@@ -63,6 +64,7 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
       `<strong>${escapeHtml(date)}</strong>, ${escapeHtml(RACE_PLACE)}<br>Intervalový start od ${start}`,
     ),
     p(`Přihlášku můžete upravit v sekci ${link("Moje přihlášky", editUrl)}.`),
+    p(`${RECEIPT_NOTE} ${link("Moje přihlášky", editUrl)}.`),
     p(`Těšíme se na vás!<br>${escapeHtml(SIGNATURE)}`),
   ];
 
@@ -81,6 +83,7 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     `Závod: ${date}, ${RACE_PLACE}, intervalový start od ${start}`,
     "",
     `Úprava přihlášky: ${editUrl}`,
+    `${RECEIPT_NOTE} ${editUrl}`,
     "",
     "Těšíme se na vás!",
     SIGNATURE,

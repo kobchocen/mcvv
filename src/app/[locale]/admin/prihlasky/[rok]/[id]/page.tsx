@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { FileDown } from "lucide-react";
+
 import {
   cancelRegistration,
   confirmRegistration,
@@ -10,6 +12,8 @@ import {
   saveRegistrationHeader,
 } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { registrationFee } from "@/lib/entries/fee-total";
+import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
@@ -21,7 +25,13 @@ import {
 import { runnerSexOf } from "@/lib/admin/runner-sex-core";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { staffThreadCopy } from "@/components/organisms/mcvv-message-copy";
+import { McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
+import { markReadByStaff, postStaffMessage, setThreadStatus } from "@/lib/messages/actions";
+import { showInternalNote } from "@/lib/messages/core";
+import { loadRegistrationThread } from "@/lib/messages/store";
+import { getMessageSettings } from "@/lib/settings/messages";
+import { Link } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
@@ -53,7 +63,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           include: {
             runner: { select: { name: true } },
             club: { select: { name: true } },
-            category: { select: { name: true } },
+            category: { select: { name: true, entryFee: true } },
           },
           orderBy: { runnerId: "asc" },
         },
@@ -111,8 +121,21 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       })
     ).map((row) => row.runnerId),
   );
+  const [thread, messageSettings] = await Promise.all([
+    loadRegistrationThread(year, id),
+    getMessageSettings(),
+  ]);
+  // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
+  // jen ke čtení jako interní poznámka.
+  const internalNote = showInternalNote(registration.note, year, !!thread);
   const fee = registration.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
   const paid = relatedPayments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+  const receiptReady = isReceiptEligible({
+    status: registration.status,
+    lineCount: registration.lines.length,
+    fee: registrationFee(registration.lines),
+    paid,
+  });
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -161,6 +184,18 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               </Button>
             </form>
           ) : null}
+          {receiptReady ? (
+            <Button
+              asChild
+              variant="outline"
+              className="mt-4 h-10 border-race-line bg-race-surface"
+            >
+              <a href={receiptHref(year, id, locale)} download>
+                <FileDown className="size-4" aria-hidden="true" />
+                {copy("regsReceipt")}
+              </a>
+            </Button>
+          ) : null}
           {registration.status === ENTRY_STATUS.paid ||
           registration.status === ENTRY_STATUS.overpaid ? (
             <form action={confirmRegistration} className="mt-4">
@@ -196,14 +231,6 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               label={copy("regsPromotion")}
               defaultValue={registration.promotion ?? ""}
             />
-            <AdminField name="note" label={copy("regsNote")}>
-              <Textarea
-                id="note"
-                name="note"
-                defaultValue={registration.note ?? ""}
-                className="min-h-24 bg-race-surface"
-              />
-            </AdminField>
             <Button
               type="submit"
               className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
@@ -211,6 +238,53 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               {copy("save")}
             </Button>
           </form>
+        </section>
+
+        <section id="zpravy" className="scroll-mt-28">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">{copy("msgThread")}</h2>
+            {thread ? (
+              <Link
+                href={{ pathname: "/admin/zpravy/[id]", params: { id: String(thread.id) } }}
+                className="text-sm font-medium text-race-accent hover:underline"
+              >
+                {copy("msgTitle")}
+              </Link>
+            ) : null}
+          </div>
+          {!messageSettings.enabled ? (
+            <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">{copy("msgDisabled")}</p>
+          ) : null}
+          {!thread ? <p className="mt-2 text-sm text-race-muted">{copy("msgStartHint")}</p> : null}
+          <div className="mt-4 max-w-3xl">
+            <McvvMessageThread
+              viewer="staff"
+              messages={(thread?.messages ?? []).map((message) => ({
+                id: message.id,
+                side: message.side,
+                body: message.body,
+                createdAt: message.createdAt,
+                authorName: message.author?.name ?? "",
+              }))}
+              lastRead={thread?.lastReadByStaff ?? null}
+              status={thread?.status ?? null}
+              threadId={thread?.id ?? null}
+              createFields={{ year, registrationId: id }}
+              locale={locale}
+              copy={await staffThreadCopy(locale)}
+              replyAction={postStaffMessage}
+              markReadAction={markReadByStaff}
+              statusAction={setThreadStatus}
+              showAuthorNames
+            />
+          </div>
+          {internalNote ? (
+            <div className="mt-6 max-w-3xl rounded-[12px] border border-dashed border-race-line p-4">
+              <p className="text-sm font-semibold">{copy("msgInternalNote")}</p>
+              <p className="mt-1 text-xs text-race-muted">{copy("msgInternalNoteHint")}</p>
+              <p className="mt-2 whitespace-pre-wrap break-words text-sm">{internalNote}</p>
+            </div>
+          ) : null}
         </section>
 
         <section>

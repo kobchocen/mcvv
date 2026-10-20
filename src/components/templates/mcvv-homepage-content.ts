@@ -95,6 +95,8 @@ export type McvvHomepageContent = {
     admin: string;
     logout: string;
     loggingOut: string;
+    messages: string;
+    unreadMessages: string;
     menuLabel: string;
     closeLabel: string;
   };

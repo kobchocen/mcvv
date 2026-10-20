@@ -48,3 +48,15 @@ export function formatRaceDay(value: Date, locale: string): string {
   }).format(value);
   return capitalize(locale === "en" ? text : text.replace(/,/g, ""));
 }
+
+/** Date and time: cs "2. 12. 2026 14:05", en "2 Dec 2026, 14:05". */
+export function formatDateTime(value: Date, locale: string): string {
+  return new Intl.DateTimeFormat(tag(locale), {
+    day: "numeric",
+    month: locale === "en" ? "short" : "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TIME_ZONE,
+  }).format(value);
+}

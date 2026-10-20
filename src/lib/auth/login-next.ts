@@ -46,6 +46,11 @@ function adminHref(next: string) {
       ? { pathname: "/admin/ciselniky/kluby" as const, query }
       : ("/admin/ciselniky/kluby" as const);
   }
+  if (path === "/admin/zpravy") return "/admin/zpravy" as const;
+  const thread = path.match(/^\/admin\/zpravy\/(\d+)$/);
+  if (thread) {
+    return { pathname: "/admin/zpravy/[id]" as const, params: { id: thread[1] } };
+  }
   if (path === "/admin/prihlasky") {
     return query ? { pathname: "/admin/prihlasky" as const, query } : ("/admin/prihlasky" as const);
   }
@@ -63,6 +68,9 @@ export function redirectAfterLogin(next: string | null, staff: boolean, locale: 
   const target = loginTarget(next, staff);
   if (target.kind === "admin") {
     redirect({ href: adminHref(target.next), locale });
+  }
+  if (target.kind === "thread") {
+    redirect({ href: { pathname: "/zpravy/[id]", params: { id: target.id } }, locale });
   }
   if (target.kind === "user") {
     const query = Object.fromEntries(new URLSearchParams(target.query));

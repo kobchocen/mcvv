@@ -9,7 +9,14 @@ import {
   RUNNER_REFERENCE_MODELS,
   SexChangeError,
 } from "./runner-rekey";
-import { allocateRunnerId, planLine, sexDigits, type CategoryRow } from "./runner-sex-core";
+import {
+  allocateRunnerId,
+  planLine,
+  sexDigits,
+  type CategoryRow,
+  groupTransitions,
+  yearSpan,
+} from "./runner-sex-core";
 
 // Real categories (cis_mcvv_kateg, DEV).
 const CATEGORIES: CategoryRow[] = [
@@ -436,5 +443,40 @@ describe("schema coverage", () => {
       .map(([, name]) => name)
       .sort();
     assert.deepEqual(models, [...RUNNER_REFERENCE_MODELS].sort());
+  });
+});
+
+describe("groupTransitions", () => {
+  const change = (year: number, from: string, to: string | null) => ({
+    year,
+    oldCategory: { id: from, name: from },
+    newCategory: to ? { id: to, name: to } : null,
+  });
+
+  it("merges consecutive years with the same change, newest first", () => {
+    const groups = groupTransitions([
+      change(2014, "žáci", "žákyně"),
+      change(2016, "dorostenci", "dorostenky"),
+      change(2015, "žáci", "žákyně"),
+      change(2017, "dorostenci", "dorostenky"),
+      change(2020, "muži", "ženy"),
+    ]);
+    assert.deepEqual(
+      groups.map((group) => [yearSpan(group), group.count, group.from, group.to]),
+      [
+        ["2020", 1, "muži", "ženy"],
+        ["2016\u20132017", 2, "dorostenci", "dorostenky"],
+        ["2014\u20132015", 2, "žáci", "žákyně"],
+      ],
+    );
+  });
+
+  it("does not bridge a gap in years or a missing target category", () => {
+    const groups = groupTransitions([
+      change(2010, "muži", "ženy"),
+      change(2012, "muži", "ženy"),
+      change(2011, "muži", null),
+    ]);
+    assert.equal(groups.length, 3);
   });
 });

@@ -182,3 +182,39 @@ export function buildSexChangePlan(input: {
     webImages: input.webImages,
   };
 }
+
+export type TransitionGroup = {
+  fromYear: number;
+  toYear: number;
+  count: number;
+  from: string;
+  to: string | null;
+};
+
+/**
+ * Collapses per-year category changes into runs of consecutive years with the same
+ * old → new category names (newest first), so the confirmation dialog stays short.
+ */
+export function groupTransitions(changes: CategoryChange[]): TransitionGroup[] {
+  const sorted = [...changes].sort((a, b) => b.year - a.year);
+  const groups: TransitionGroup[] = [];
+  for (const change of sorted) {
+    const from = change.oldCategory.name;
+    const to = change.newCategory?.name ?? null;
+    const last = groups.at(-1);
+    if (last && last.from === from && last.to === to && last.fromYear === change.year + 1) {
+      last.fromYear = change.year;
+      last.count += 1;
+    } else {
+      groups.push({ fromYear: change.year, toYear: change.year, count: 1, from, to });
+    }
+  }
+  return groups;
+}
+
+/** "2006–2015" or "2019" (en dash). */
+export function yearSpan(group: Pick<TransitionGroup, "fromYear" | "toYear">): string {
+  return group.fromYear === group.toYear
+    ? String(group.fromYear)
+    : `${group.fromYear}\u2013${group.toYear}`;
+}

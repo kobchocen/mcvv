@@ -84,6 +84,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     female: copy("sexFemale"),
     categories: copy("sexChangeCategories"),
     line: copy.raw("sexChangeLine") as string,
+    lines: copy.raw("sexChangeLines") as string,
     start: copy.raw("sexChangeStart") as string,
     noCategory: copy("sexChangeNoCategory"),
     fee: copy("sexChangeFee"),

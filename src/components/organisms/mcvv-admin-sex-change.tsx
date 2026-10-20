@@ -8,6 +8,7 @@ import {
   type SexChangePreviewResult,
   type SexChangeState,
 } from "@/lib/admin/runner-sex-actions";
+import { groupTransitions, yearSpan } from "@/lib/admin/runner-sex-core";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +31,7 @@ export type McvvAdminSexChangeCopy = {
   female: string;
   categories: string;
   line: string;
+  lines: string;
   start: string;
   noCategory: string;
   fee: string;
@@ -71,6 +73,8 @@ export function McvvAdminSexChange({
   };
 
   const plan = preview?.ok ? preview.plan : null;
+  const currentLines = plan?.lines.filter((line) => line.year === year || line.feeChanged) ?? [];
+  const pastLines = plan?.lines.filter((line) => !currentLines.includes(line)) ?? [];
   const sexLabel = (sex: "M" | "F") => (sex === "M" ? copy.male : copy.female);
   const error = state.error ?? (preview && !preview.ok ? preview.error : undefined);
 
@@ -116,33 +120,33 @@ export function McvvAdminSexChange({
               <div>
                 <p className="font-semibold">{copy.categories}</p>
                 <ul className="mt-1.5 grid gap-1">
-                  {plan.lines.map((line) => (
+                  {currentLines.map((line) => (
                     <li key={`l-${line.year}-${line.registrationId}`}>
                       {copy.line
                         .replace("{year}", String(line.year))
                         .replace("{id}", String(line.registrationId))}
                       : {line.oldCategory.name} →{" "}
                       <strong>{line.newCategory?.name ?? copy.noCategory}</strong>
-                      {line.year === year || line.feeChanged ? (
-                        <span
-                          className={
-                            line.feeChanged
-                              ? "ml-1 font-semibold text-race-accent"
-                              : "ml-1 text-race-muted"
-                          }
-                        >
-                          · {copy.fee}{" "}
-                          {line.feeChanged
-                            ? `${line.oldFee} → ${line.newFee} Kč`
-                            : copy.feeUnchanged}
-                        </span>
-                      ) : null}
+                      <span
+                        className={
+                          line.feeChanged
+                            ? "ml-1 font-semibold text-race-accent"
+                            : "ml-1 text-race-muted"
+                        }
+                      >
+                        · {copy.fee}{" "}
+                        {line.feeChanged ? `${line.oldFee} → ${line.newFee} Kč` : copy.feeUnchanged}
+                      </span>
                     </li>
                   ))}
-                  {plan.starts.map((start) => (
-                    <li key={`s-${start.year}`}>
-                      {copy.start.replace("{year}", String(start.year))}: {start.oldCategory.name} →{" "}
-                      <strong>{start.newCategory?.name ?? copy.noCategory}</strong>
+                  {[
+                    ...groupTransitions(pastLines).map((group) => ({ group, label: copy.lines })),
+                    ...groupTransitions(plan.starts).map((group) => ({ group, label: copy.start })),
+                  ].map(({ group, label }) => (
+                    <li key={`${label}-${group.toYear}`}>
+                      {label.replace("{years}", yearSpan(group))}
+                      {group.count > 1 ? ` (${group.count}×)` : ""}: {group.from} →{" "}
+                      <strong>{group.to ?? copy.noCategory}</strong>
                     </li>
                   ))}
                 </ul>
@@ -166,10 +170,10 @@ export function McvvAdminSexChange({
                   </span>
                   <span className="mt-0.5 block text-race-muted">
                     {copy.results}{" "}
-                    {plan.results
+                    {groupTransitions(plan.results)
                       .map(
-                        (row) =>
-                          `${row.year} ${row.oldCategory.name} → ${row.newCategory?.name ?? copy.noCategory}`,
+                        (group) =>
+                          `${yearSpan(group)} ${group.from} → ${group.to ?? copy.noCategory}`,
                       )
                       .join(", ")}
                     . {copy.recategorizeHint}

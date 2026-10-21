@@ -27,6 +27,8 @@ jobs:
           node-version-file: .nvmrc
       - name: Enable the pinned package manager
         run: npm install --global corepack@0.34.0 && corepack enable
+      - name: Install xmllint for the IOF XML schema test
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libxml2-utils
       - name: Install dependencies and generate Prisma Client
         run: pnpm install --frozen-lockfile
       - run: pnpm verify

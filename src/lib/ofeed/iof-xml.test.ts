@@ -132,10 +132,13 @@ function hasXmllint(): boolean {
   return spawnSync("xmllint", ["--version"]).status === 0;
 }
 
+// V CI (proměnná CI) se test nesmí tiše přeskočit: workflow xmllint instaluje
+// (libxml2-utils), a kdyby chyběl, test selže. Lokálně se bez xmllint přeskočí.
 test(
   "ResultList validates against the IOF XML 3.0 XSD",
-  { skip: !hasXmllint() && "xmllint not installed" },
+  { skip: !process.env.CI && !hasXmllint() && "xmllint not installed" },
   () => {
+    assert.ok(hasXmllint(), "xmllint is required in CI (apt-get install libxml2-utils)");
     const dir = mkdtempSync(join(tmpdir(), "mcvv-iof-"));
     try {
       const file = join(dir, "results.xml");

@@ -7,6 +7,7 @@ import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { confirmRegistration } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
 import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       ? {}
       : { OR: [{ status: { not: 0 } }, { status: null }] };
 
-  const [registrations, payments] = await Promise.all([
+  const [registrations, payments, autoConfirmed] = await Promise.all([
     prisma.registration.findMany({
       where: { year: selectedYear, ...statusWhere },
       include: { lines: { select: { entryFee: true } } },
@@ -92,6 +93,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       where: { year: selectedYear },
       select: { registrationId: true, amount: true },
     }),
+    freeAutoConfirmedIds(selectedYear),
   ]);
 
   const threadSummaries = await registrationThreadSummaries(
@@ -197,6 +199,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       <td className="py-2.5 pr-3">{diff}</td>
                       <td className={cn("py-2.5 pr-3", statusClass(row.status))}>
                         {copy(statusKey(row.status))}
+                        {showFreeAutoBadge({
+                          status: row.status,
+                          fee,
+                          autoConfirmed: autoConfirmed.has(row.id),
+                        }) ? (
+                          <span className="mt-1 block w-fit whitespace-nowrap rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                            {copy("freeAutoConfirmed")}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="py-2.5 pr-3">
                         {isPromotionOptOut(row.promotion) ? (

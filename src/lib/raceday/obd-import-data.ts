@@ -1,5 +1,7 @@
 import type { SessionUser } from "@/lib/auth/session";
 import { writeAudit } from "@/lib/audit/log";
+import { recalculateCategoryRecords } from "@/lib/stats/records";
+import type { RecordChange } from "@/lib/stats/records-core";
 import { prisma } from "@/lib/db/client";
 
 import {
@@ -158,15 +160,18 @@ export async function applyPresentationPlan(
   );
 }
 
-/** Přepíše výsledky ročníku (mcvv_time) v jedné transakci. */
+/**
+ * Přepíše výsledky ročníku (mcvv_time) v jedné transakci a v téže transakci přepočítá
+ * rekordy kategorií (#129). Vrací změněné rekordy.
+ */
 export async function applyResultsPlan(
   plan: ResultsPlan,
   actor: SessionUser,
   file: { name: string; sha256: string; rows: number },
-): Promise<void> {
+): Promise<RecordChange[]> {
   const now = new Date();
   const author = authorOf(actor);
-  await prisma.$transaction(
+  return prisma.$transaction(
     async (tx) => {
       if (plan.copiedClubs.length > 0) {
         await tx.club.createMany({
@@ -183,6 +188,7 @@ export async function applyResultsPlan(
         await tx.result.deleteMany({ where: { year: plan.year } });
         if (plan.rows.length > 0) await tx.result.createMany({ data: plan.rows });
       }
+      const records = await recalculateCategoryRecords(tx);
       await writeAudit(
         {
           actor,
@@ -195,10 +201,12 @@ export async function applyResultsPlan(
             unchanged: plan.unchanged,
             copiedClubs: plan.copiedClubs.map((club) => club.id),
             perCategory: Object.fromEntries(plan.perCategory.map((c) => [c.categoryId, c.count])),
+            records,
           },
         },
         tx,
       );
+      return records;
     },
     { timeout: 60_000 },
   );

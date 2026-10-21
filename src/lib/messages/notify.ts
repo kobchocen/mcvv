@@ -12,7 +12,18 @@ import {
   USER_NOTIFY_QUIET_MS,
   userNotifyDedupeKey,
 } from "./core";
-import { excerpt, renderOrganizerDigest, renderUserNotification } from "./mail-render";
+import {
+  CHANGES_MAX_REGISTRATIONS,
+  loadDueEntryChanges,
+  saveChangesCursor,
+} from "@/lib/entries/changes";
+
+import {
+  excerpt,
+  renderOrganizerDigest,
+  renderUserNotification,
+  type DigestItem,
+} from "./mail-render";
 
 function site(): string {
   return (env.AUTH_ORIGIN ?? "https://www.mcvv.org").replace(/\/$/, "");
@@ -96,25 +107,25 @@ export async function cancelPendingUserNotification(threadId: number): Promise<v
   });
 }
 
-export type DigestResult = { skipped?: string; threads: number; queued: boolean };
+export type DigestResult = {
+  skipped?: string;
+  threads: number;
+  /** Přihlášky se změnami v souhrnu (#130). */
+  registrations?: number;
+  queued: boolean;
+};
 
-/**
- * Souhrn pro pořadatele max. 1× denně (klíč podle pražského dne). Volá cron e-mailové fronty.
- */
-export async function runMessageDigest(now = new Date()): Promise<DigestResult> {
-  const settings = await getMessageSettings();
-  if (!settings.enabled || !settings.notifyOrganizer) {
-    return { skipped: "disabled", threads: 0, queued: false };
-  }
-  const dedupeKey = digestDedupeKey(now, env.TIME_ZONE);
-  const already = await prisma.mailQueue.findUnique({ where: { dedupeKey }, select: { id: true } });
-  if (already) return { skipped: "already-today", threads: 0, queued: false };
+type DigestThreadRow = Awaited<ReturnType<typeof loadDigestThreads>>[number];
+
+async function loadDigestThreads(now: Date) {
   const candidates = await prisma.messageThread.findMany({
     where: { status: "open", lastUserMessageAt: { not: null } },
     include: { messages: { select: { side: true, createdAt: true, body: true } } },
   });
-  const due = digestThreads(candidates, now);
-  if (due.length === 0) return { threads: 0, queued: false };
+  return digestThreads(candidates, now);
+}
+
+async function messageItems(due: DigestThreadRow[]): Promise<DigestItem[]> {
   const regKeys = due
     .filter((thread) => thread.year !== null && thread.registrationId !== null)
     .map((thread) => ({ year: thread.year!, id: thread.registrationId! }));
@@ -126,7 +137,7 @@ export async function runMessageDigest(now = new Date()): Promise<DigestResult> 
         })
       : [];
   const names = new Map(regs.map((reg) => [`${reg.year}/${reg.id}`, reg.name]));
-  const items = due.map((thread) => {
+  return due.map((thread) => {
     const name =
       thread.year !== null && thread.registrationId !== null
         ? names.get(`${thread.year}/${thread.registrationId}`)
@@ -139,10 +150,43 @@ export async function runMessageDigest(now = new Date()): Promise<DigestResult> 
       unread: countUnreadMessages(thread.messages, thread.lastReadByStaff, "staff"),
     };
   });
+}
+
+/**
+ * Denní souhrn pořadateli max. 1× denně (klíč podle pražského dne). Volá cron e-mailové fronty.
+ * Sekce: nepřečtené zprávy (`messages.notify_organizer`) a změny přihlášek
+ * (`entries.notify_changes`, #130). Odejde, jakmile má aspoň jedna zapnutá sekce obsah.
+ */
+export async function runOrganizerDigest(now = new Date()): Promise<DigestResult> {
+  const settings = await getMessageSettings();
+  const withMessages = settings.enabled && settings.notifyOrganizer;
+  const withChanges = settings.notifyChanges;
+  if (!withMessages && !withChanges) {
+    return { skipped: "disabled", threads: 0, queued: false };
+  }
+  const dedupeKey = digestDedupeKey(now, env.TIME_ZONE);
+  const already = await prisma.mailQueue.findUnique({ where: { dedupeKey }, select: { id: true } });
+  if (already) return { skipped: "already-today", threads: 0, queued: false };
+
+  const due = withMessages ? await loadDigestThreads(now) : [];
+  const changes = withChanges
+    ? await loadDueEntryChanges(now)
+    : { groups: [], lastId: 0, count: 0 };
+  if (due.length === 0 && changes.groups.length === 0) {
+    return { threads: 0, registrations: 0, queued: false };
+  }
+  const shown = changes.groups.slice(0, CHANGES_MAX_REGISTRATIONS);
   const mail = renderOrganizerDigest({
     site: site(),
     adminUrl: `${site()}/cs/admin/zpravy`,
-    items,
+    items: await messageItems(due),
+    changes: shown.map((group) => ({
+      label: `přihláška ${group.year}/${group.registrationId}${group.name ? ` – ${group.name}` : ""}${group.email ? ` (${group.email})` : ""}`,
+      url: `${site()}/cs/admin/prihlasky/${group.year}/${group.registrationId}`,
+      lines: group.lines.map((line) => `${formatChangeTime(line.at)} ${line.text}`),
+    })),
+    changesMore: changes.groups.length - shown.length,
+    registrationsUrl: `${site()}/cs/admin/prihlasky`,
   });
   const { created } = await enqueueMail({
     ...mail,
@@ -151,10 +195,25 @@ export async function runMessageDigest(now = new Date()): Promise<DigestResult> 
     dedupeKey,
   });
   if (created) {
-    await prisma.messageThread.updateMany({
-      where: { id: { in: due.map((thread) => thread.id) } },
-      data: { staffNotifiedAt: now },
-    });
+    if (due.length > 0) {
+      await prisma.messageThread.updateMany({
+        where: { id: { in: due.map((thread) => thread.id) } },
+        data: { staffNotifiedAt: now },
+      });
+    }
+    if (changes.count > 0) {
+      await saveChangesCursor(changes.lastId);
+    }
   }
-  return { threads: due.length, queued: created };
+  return { threads: due.length, registrations: changes.groups.length, queued: created };
+}
+
+function formatChangeTime(at: Date): string {
+  return new Intl.DateTimeFormat("cs-CZ", {
+    timeZone: env.TIME_ZONE,
+    day: "numeric",
+    month: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(at);
 }

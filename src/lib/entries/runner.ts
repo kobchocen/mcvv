@@ -15,7 +15,8 @@ export function runnerPrefix(birthYear: number, sex: "M" | "F"): string {
   return `${birthYear}${sexDigit(sex)}`;
 }
 
-export type ResolveRunnerResult = { id: string } | { error: "ambiguous" };
+export type ResolveRunnerResult =
+  { id: string; name: string; created: boolean } | { error: "ambiguous" };
 
 function normalizeRunnerName(firstName: string, lastName: string): string {
   return `${lastName.trim()} ${firstName.trim()}`.replace(/\s+/g, " ").slice(0, 50);
@@ -37,12 +38,12 @@ export async function resolveRunner(input: {
   const wanted = name.toLowerCase();
   const matches = yearMates.filter((row) => row.name.trim().toLowerCase() === wanted);
   if (matches.length === 1) {
-    return { id: matches[0].id };
+    return { id: matches[0].id, name: matches[0].name, created: false };
   }
   if (matches.length > 1) {
     const sexMatches = matches.filter((row) => row.id.charAt(4) === sex);
     if (sexMatches.length === 1) {
-      return { id: sexMatches[0].id };
+      return { id: sexMatches[0].id, name: sexMatches[0].name, created: false };
     }
     return { error: "ambiguous" };
   }
@@ -55,7 +56,7 @@ export async function resolveRunner(input: {
   await prisma.runner.create({
     data: { id, name, author: "web" },
   });
-  return { id };
+  return { id, name, created: true };
 }
 
 export function eligibleCategories<T extends { sex: string; age: number }>(

@@ -51,6 +51,8 @@ export default defineRouting({
     "/admin/den-zavodu": "/admin/den-zavodu",
     "/admin/den-zavodu/prezentace": "/admin/den-zavodu/prezentace",
     "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",
+    // po závodě: tombola (#128)
+    "/admin/po-zavode": "/admin/po-zavode",
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
     // den závodu: živé mezičasy a OFeed (#120–#122)

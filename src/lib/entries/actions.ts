@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 
 import { formInt, formString } from "@/lib/admin/parse";
 import { getSession } from "@/lib/auth/session";
-import { resolveClubId } from "@/lib/entries/club";
+import { resolveClub } from "@/lib/entries/club";
+import { recordEntryChange } from "@/lib/entries/changes";
 import { computeLineFee } from "@/lib/entries/fee";
 import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/runner";
 import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
@@ -18,6 +19,40 @@ import { prisma } from "@/lib/db/client";
 async function ownRegistration(year: number, id: number, email: string) {
   return prisma.registration.findFirst({
     where: { year, id, email: { equals: email } },
+  });
+}
+
+type ChangeActor = Parameters<typeof recordEntryChange>[0];
+type OwnRegistration = { year: number; id: number; name: string | null };
+type ResolvedClub = Awaited<ReturnType<typeof resolveClub>>;
+
+async function recordClubCreated(actor: ChangeActor, reg: OwnRegistration, club: ResolvedClub) {
+  await recordEntryChange(actor, "entry.club_created", {
+    year: reg.year,
+    registrationId: reg.id,
+    registrationName: reg.name,
+    clubId: club.id,
+    clubName: club.name,
+  });
+}
+
+/** Souhrn změn (#130): případný nový klub a přihlášený závodník. */
+async function recordRunnerAdded(
+  actor: ChangeActor,
+  reg: OwnRegistration,
+  club: ResolvedClub,
+  runner: { runnerId: string; runnerName: string | null; category: string; fee: number },
+) {
+  if (club.created) {
+    await recordClubCreated(actor, reg, club);
+  }
+  await recordEntryChange(actor, "entry.runner_added", {
+    year: reg.year,
+    registrationId: reg.id,
+    registrationName: reg.name,
+    ...runner,
+    clubId: club.id,
+    clubName: club.name || null,
   });
 }
 
@@ -36,13 +71,20 @@ export async function saveEntryHeader(formData: FormData): Promise<void> {
     return;
   }
   const noMail = formString(formData, "noMail") === "N";
+  const name = formString(formData, "name").slice(0, 128) || session.name;
   await prisma.registration.update({
     where: { year_id: { year, id } },
-    data: {
-      name: formString(formData, "name").slice(0, 128) || session.name,
-      promotion: promotionValue(noMail),
-    },
+    data: { name, promotion: promotionValue(noMail) },
   });
+  if ((row.name ?? "") !== name) {
+    await recordEntryChange(session, "entry.header_changed", {
+      year,
+      registrationId: id,
+      registrationName: name,
+      from: row.name,
+      to: name,
+    });
+  }
   await touchRegistration(year, id);
   revalidatePath("/[locale]/prihlasky", "page");
 }
@@ -71,18 +113,28 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   if (!category) {
     return;
   }
-  const clubId = await resolveClubId(formString(formData, "clubName"), year);
+  const club = await resolveClub(formString(formData, "clubName"), year);
   const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
     data: {
       year,
       runnerId,
-      clubId,
+      clubId: club.id,
       categoryId: category.id,
       registrationId,
       entryFee: fee,
       author: session.email,
     },
+  });
+  const runner = await prisma.runner.findUnique({
+    where: { id: runnerId },
+    select: { name: true },
+  });
+  await recordRunnerAdded(session, registration, club, {
+    runnerId,
+    runnerName: runner?.name ?? null,
+    category: category.name,
+    fee,
   });
   await touchRegistration(year, registrationId);
   await recalculateRegistrationStatus(year, registrationId);
@@ -130,18 +182,33 @@ export async function addNewRunner(
   if (taken) {
     return { error: "taken" };
   }
-  const clubId = await resolveClubId(formString(formData, "clubName"), year);
+  const club = await resolveClub(formString(formData, "clubName"), year);
   const { fee } = await computeLineFee(session.email, resolved.id, category.entryFee);
   await prisma.registrationLine.create({
     data: {
       year,
       runnerId: resolved.id,
-      clubId,
+      clubId: club.id,
       categoryId: category.id,
       registrationId,
       entryFee: fee,
       author: session.email,
     },
+  });
+  if (resolved.created) {
+    await recordEntryChange(session, "entry.runner_created", {
+      year,
+      registrationId,
+      registrationName: registration.name,
+      runnerId: resolved.id,
+      runnerName: resolved.name,
+    });
+  }
+  await recordRunnerAdded(session, registration, club, {
+    runnerId: resolved.id,
+    runnerName: resolved.name,
+    category: category.name,
+    fee,
   });
   await touchRegistration(year, registrationId);
   await recalculateRegistrationStatus(year, registrationId);
@@ -166,14 +233,32 @@ export async function updateLineClub(formData: FormData): Promise<void> {
   if (!registration) {
     return;
   }
-  const clubId = await resolveClubId(formString(formData, "clubName"), year);
+  const before = await prisma.registrationLine.findFirst({
+    where: { year, runnerId, registrationId },
+    select: { clubId: true, club: { select: { name: true } }, runner: { select: { name: true } } },
+  });
+  const club = await resolveClub(formString(formData, "clubName"), year);
   // Jen řádek vlastní přihlášky (dřív šlo přímým POSTem změnit klub běžce v cizí přihlášce).
   const updated = await prisma.registrationLine.updateMany({
     where: { year, runnerId, registrationId },
-    data: { clubId },
+    data: { clubId: club.id },
   });
   if (updated.count === 0) {
     return;
+  }
+  if (club.created) {
+    await recordClubCreated(session, registration, club);
+  }
+  if (before && before.clubId !== club.id) {
+    await recordEntryChange(session, "entry.line_club_changed", {
+      year,
+      registrationId,
+      registrationName: registration.name,
+      runnerId,
+      runnerName: before.runner.name,
+      from: before.club.name,
+      to: club.name,
+    });
   }
   await touchRegistration(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");
@@ -195,9 +280,23 @@ export async function removeRunner(formData: FormData): Promise<void> {
   if (!registration) {
     return;
   }
-  await prisma.registrationLine.deleteMany({
+  const line = await prisma.registrationLine.findFirst({
+    where: { year, runnerId, registrationId },
+    select: { runner: { select: { name: true } }, category: { select: { name: true } } },
+  });
+  const removed = await prisma.registrationLine.deleteMany({
     where: { year, runnerId, registrationId },
   });
+  if (removed.count > 0) {
+    await recordEntryChange(session, "entry.runner_removed", {
+      year,
+      registrationId,
+      registrationName: registration.name,
+      runnerId,
+      runnerName: line?.runner.name ?? null,
+      category: line?.category.name ?? null,
+    });
+  }
   await touchRegistration(year, registrationId);
   await recalculateRegistrationStatus(year, registrationId);
   revalidatePath("/[locale]/prihlasky", "page");

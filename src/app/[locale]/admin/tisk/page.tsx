@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,12 @@ import { formatClock } from "@/lib/race/start-time";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
-export const metadata: Metadata = { title: "Tisk startovních čísel" };
+export const metadata: Metadata = { title: "Tisk čísel a sestav" };
 export const dynamic = "force-dynamic";
 
 const ACTION = "/api/admin/tisk/cisla";
+const REPORTS = "/api/admin/tisk/prezentace";
+const START_LIST = "/api/admin/startovka/pdf";
 const input = "h-9 rounded border border-race-line bg-transparent px-2 text-sm";
 const label = "flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-race-dim";
 const card = "border border-race-line/55 bg-race-surface p-5";
@@ -39,6 +41,8 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   await requireStaff();
+  const t = await getTranslations({ locale: locale as Locale, namespace: "PrintReports" });
+  const lang = locale === "en" ? "en" : "cs";
   const [startList, partners] = await Promise.all([
     loadPrintStartList(),
     prisma.sponsor.findMany({
@@ -164,6 +168,51 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
             </label>
             <Button type="submit">Stáhnout PDF</Button>
           </form>
+        </section>
+
+        <section className={`mt-10 ${card}`} data-testid="presentation-reports">
+          <h2 className="font-display text-xl font-semibold">{t("heading")}</h2>
+          <p className="mt-1 max-w-3xl text-sm text-race-muted">{t("intro", { year })}</p>
+          <div className="mt-5 grid gap-6 md:grid-cols-3">
+            <form action={REPORTS} method="get" className="flex flex-col gap-3">
+              <input type="hidden" name="sestava" value="prihlasky" />
+              <input type="hidden" name="lang" value={lang} />
+              <h3 className="font-semibold">{t("presentation")}</h3>
+              <p className="text-sm text-race-muted">{t("presentationHint")}</p>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="stranky" value="1" />
+                {t("pagePerRegistration")}
+              </label>
+              <Button type="submit" className="self-start">
+                {t("download")}
+              </Button>
+            </form>
+            <form action={REPORTS} method="get" className="flex flex-col gap-3">
+              <input type="hidden" name="sestava" value="abeceda" />
+              <input type="hidden" name="lang" value={lang} />
+              <h3 className="font-semibold">{t("alphabet")}</h3>
+              <p className="text-sm text-race-muted">{t("alphabetHint")}</p>
+              <Button type="submit" className="mt-auto self-start">
+                {t("download")}
+              </Button>
+            </form>
+            <form action={START_LIST} method="get" className="flex flex-col gap-3">
+              <input type="hidden" name="rok" value={year} />
+              <input type="hidden" name="lang" value={lang} />
+              <h3 className="font-semibold">{t("startList")}</h3>
+              <p className="text-sm text-race-muted">{t("startListHint")}</p>
+              <label className={label}>
+                {t("order")}
+                <select name="razeni" defaultValue="cas" className={`${input} w-56`}>
+                  <option value="cas">{t("orderTime")}</option>
+                  <option value="cislo">{t("orderBib")}</option>
+                </select>
+              </label>
+              <Button type="submit" className="self-start">
+                {t("download")}
+              </Button>
+            </form>
+          </div>
         </section>
       </div>
     </main>

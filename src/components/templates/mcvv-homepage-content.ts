@@ -154,6 +154,8 @@ export type McvvHomepageContent = {
     overline?: string;
     title: string;
     allLabel: string;
+    /** Tlačítko na přehled statistik (/statistiky). */
+    statsLabel: string;
     yearLabel: string;
     linkLabel: string;
     empty: string;

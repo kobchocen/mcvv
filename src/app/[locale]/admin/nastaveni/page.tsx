@@ -173,6 +173,12 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
                   "settingsNotifyUser",
                   "settingsNotifyUserHint",
                 ],
+                [
+                  "entriesNotifyChanges",
+                  messages.notifyChanges,
+                  "settingsNotifyChanges",
+                  "settingsNotifyChangesHint",
+                ],
               ] as const
             ).map(([name, checked, label, hint]) => (
               <label key={name} className="flex items-start gap-3 text-sm">

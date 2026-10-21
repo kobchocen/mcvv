@@ -8,6 +8,7 @@ import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/ad
 import { computeLineFee } from "@/lib/entries/fee";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
+import { canCancelRegistration } from "@/lib/entries/empty-registrations";
 import { promotionValue } from "@/lib/entries/promotion";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
@@ -124,8 +125,12 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
   if (!year || id === null) {
     return;
   }
-  const row = await prisma.registration.findUnique({ where: { year_id: { year, id } } });
-  if (!row || (row.status !== ENTRY_STATUS.empty && row.status !== ENTRY_STATUS.unpaid)) {
+  const row = await prisma.registration.findUnique({
+    where: { year_id: { year, id } },
+    select: { status: true, _count: { select: { lines: true } } },
+  });
+  // Prázdnou přihlášku nerušit – nic neblokuje a přihlašujícího by „zasekla“.
+  if (!row || !canCancelRegistration({ status: row.status, lineCount: row._count.lines })) {
     return;
   }
   await prisma.registration.update({

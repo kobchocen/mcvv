@@ -11,6 +11,7 @@ import {
   savePayment,
   saveRegistrationHeader,
 } from "@/lib/admin/registrations";
+import { canCancelRegistration } from "@/lib/entries/empty-registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
 import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
 import { registrationFee } from "@/lib/entries/fee-total";
@@ -184,8 +185,10 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           {mail === "0" ? (
             <p className="mt-3 text-sm text-red-600 dark:text-red-400">{copy("confirmMailFail")}</p>
           ) : null}
-          {registration.status === ENTRY_STATUS.empty ||
-          registration.status === ENTRY_STATUS.unpaid ? (
+          {canCancelRegistration({
+            status: registration.status,
+            lineCount: registration.lines.length,
+          }) ? (
             <form action={cancelRegistration} className="mt-4">
               <input type="hidden" name="year" value={year} />
               <input type="hidden" name="id" value={id} />

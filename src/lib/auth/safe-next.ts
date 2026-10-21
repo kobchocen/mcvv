@@ -6,7 +6,7 @@
  * - an allowlist of public pages (e.g. `/prihlasky`, `/navod`).
  * The locale prefix (`/cs`, `/en`) is stripped; the result is a locale-less path.
  */
-import { adminPathAllowed, RACE_DAY_PATH, type AdminAccess } from "./roles";
+import { adminPathAllowed, RACE_DAY_PATH, type AdminAccess, type UserRole } from "./roles";
 
 export const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
 const SAFE_QUERY = /^[\w.=&-]*$/;
@@ -107,11 +107,19 @@ export type LoginTarget =
   | { kind: "default" };
 
 /**
- * Decides where to go after a successful login. Default is the application page;
- * a race-day-only account (Časomíra) lands on the race-day section.
- * `access` accepts the legacy boolean (`true` = full staff).
+ * Decides where to go after a successful login when no usable `next` was given:
+ * - full staff (organizer, admin) → administration,
+ * - race-day-only account (Časomíra) → race-day section,
+ * - split-time operator (splitmaker) → split entry page,
+ * - everybody else → the application page (`/prihlasky`).
+ * `access` accepts the legacy boolean (`true` = full staff); `role` is needed only to
+ * tell the splitmaker apart (it has no admin access).
  */
-export function loginTarget(next: string | null, access: boolean | AdminAccess): LoginTarget {
+export function loginTarget(
+  next: string | null,
+  access: boolean | AdminAccess,
+  role?: UserRole,
+): LoginTarget {
   const level: AdminAccess = access === true ? "full" : access === false ? "none" : access;
   if (next) {
     if (isAdminNext(next)) {
@@ -131,6 +139,12 @@ export function loginTarget(next: string | null, access: boolean | AdminAccess):
   }
   if (level === "raceday") {
     return { kind: "admin", next: RACE_DAY_PATH };
+  }
+  if (level === "full") {
+    return { kind: "admin", next: "/admin" };
+  }
+  if (role === "splitmaker") {
+    return { kind: "user", path: "/mezicasy", query: "" };
   }
   return { kind: "default" };
 }

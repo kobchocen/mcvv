@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/admin/staff";
 import { formDate, formInt, formString } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
+import { ensureOrganizerRegistration } from "@/lib/entries/organizer-registration";
 import { loadBibRanges } from "@/lib/race/startlist-load";
 import { encodeStartIssues, validateStartSettings, type BibRange } from "@/lib/race/start-settings";
 import { DEFAULT_START_MODEL, parseClock } from "@/lib/race/start-time";
@@ -67,7 +68,7 @@ async function copyRangesForNewYear(year: number): Promise<void> {
 }
 
 export async function saveEdition(formData: FormData): Promise<void> {
-  await requireStaff();
+  const actor = await requireStaff();
   const locale = await getLocale();
   const id = formInt(formData, "id");
   const date = formDate(formData, "date");
@@ -136,6 +137,8 @@ export async function saveEdition(formData: FormData): Promise<void> {
   } else {
     await copyRangesForNewYear(year);
   }
+  // Přihláška pořadatelů (č. 1) vzniká s ročníkem, ne náhodou při první návštěvě /prihlasky.
+  await ensureOrganizerRegistration(year, actor.email);
 
   revalidateEditions();
   redirect({ href: "/admin/rocniky", locale });

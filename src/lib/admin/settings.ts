@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server";
 
 import { requireAdmin } from "@/lib/admin/staff";
 import { saveFreeEntryEmails } from "@/lib/entries/settings";
+import { saveOrganizerRegistrationEmail } from "@/lib/entries/organizer-registration";
 import { normalizeMoment, parseHttpUrl, saveSiteSettings } from "@/lib/settings/site";
 import { parseEmail, saveMessageSettings } from "@/lib/settings/messages";
 import { saveReceiptIssuer } from "@/lib/settings/receipt";
@@ -36,8 +37,17 @@ export async function saveSettings(formData: FormData): Promise<void> {
   if (organizerEmail === null) {
     redirect({ href: { pathname: "/admin/nastaveni", query: { error: "email" } }, locale });
   }
+  const organizerRegRaw = String(formData.get("organizerRegistrationEmail") ?? "").trim();
+  const organizerRegEmail = organizerRegRaw ? parseEmail(organizerRegRaw) : "";
+  if (organizerRegEmail === null) {
+    redirect({
+      href: { pathname: "/admin/nastaveni", query: { error: "organizerRegistrationEmail" } },
+      locale,
+    });
+  }
   const emails = String(formData.get("emails") ?? "");
   await saveFreeEntryEmails(emails);
+  await saveOrganizerRegistrationEmail(organizerRegEmail ?? "");
   await saveSiteSettings({
     startlistPublished: formData.get("startlistPublished") === "on",
     onlineResultsUrl,

@@ -20,7 +20,8 @@ export function McvvNewRunnerForm({
   copy,
 }: {
   year: number;
-  registrationId: number;
+  /** null = přihláška ještě neexistuje, založí se s prvním běžcem. */
+  registrationId: number | null;
   categories: CategoryOption[];
   clubs: ClubOption[];
   defaultClubName: string;
@@ -92,7 +93,7 @@ export function McvvNewRunnerForm({
   return (
     <form action={action} className="mt-6 grid gap-3 sm:grid-cols-2">
       <input type="hidden" name="year" value={year} />
-      <input type="hidden" name="registrationId" value={registrationId} />
+      <input type="hidden" name="registrationId" value={registrationId ?? 0} />
       <div className="grid gap-1.5">
         <Label htmlFor="lastName">{copy.lastName}</Label>
         <Input

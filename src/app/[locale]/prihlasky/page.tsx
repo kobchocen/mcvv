@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FileDown, PlayCircle, Trash2 } from "lucide-react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
+import { McvvAccountPromotionForm } from "@/components/organisms/mcvv-account-promotion-form";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
@@ -16,6 +17,7 @@ import {
   loadRegistrationThread,
   registrationThreadSummaries,
   summaryKey,
+  userUnreadCount,
 } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
@@ -23,11 +25,11 @@ import { computeLineFee } from "@/lib/entries/fee";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
-import { isPromotionOptOut } from "@/lib/entries/promotion";
+import { loadAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { formatDate } from "@/lib/format/date";
-import { getSession } from "@/lib/auth/session";
+import { getSession, type SessionUser } from "@/lib/auth/session";
 import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
@@ -88,7 +90,7 @@ export default async function EntriesPage({ params, searchParams }: PageProps) {
             </p>
           ) : null}
           {session ? (
-            <EntryBody email={session.email} name={session.name} locale={locale} copy={copy} />
+            <EntryBody session={session} locale={locale} copy={copy} />
           ) : (
             <div className="mt-8 grid max-w-md gap-4">
               <p className="text-base leading-7 text-race-muted">{copy("needAccount")}</p>
@@ -110,21 +112,31 @@ export default async function EntriesPage({ params, searchParams }: PageProps) {
 }
 
 async function EntryBody({
-  email,
-  name,
+  session,
   locale,
   copy,
 }: {
-  email: string;
-  name: string;
+  session: SessionUser;
   locale: Locale;
   copy: Awaited<ReturnType<typeof getTranslations>>;
 }) {
-  const { year, open, deadline, registration, past, quick, payments } = await loadMyEntry(
-    email,
-    name,
-  );
+  const email = session.email;
+  const { year, open, deadline, registration, cancelled, past, quick, payments } =
+    await loadMyEntry(email);
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
+  // Souhlas se zasíláním informací patří účtu (dřív jen přihlášce).
+  const noMail = await loadAccountPromotionOptOut(email);
+  const promotionForm = (
+    <section>
+      <h2 className="font-display text-2xl font-semibold">{copy("accountSettings")}</h2>
+      <div className="mt-3">
+        <McvvAccountPromotionForm
+          noMail={noMail}
+          copy={{ noMail: copy("noMail"), save: copy("save"), saved: copy("saved") }}
+        />
+      </div>
+    </section>
+  );
   const yearClubs = await prisma.club.findMany({
     where: { year },
     orderBy: { name: "asc" },
@@ -138,7 +150,10 @@ async function EntryBody({
       }
     }
   }
-  const defaultClubName = (registration?.name ?? "").trim();
+  const account = registration
+    ? null
+    : await prisma.user.findUnique({ where: { email }, select: { clubName: true } });
+  const defaultClubName = (registration?.name ?? account?.clubName ?? "").trim();
   const lineRunnerIds = registration ? registration.lines.map((line) => line.runnerId) : [];
   const startsById = await countPastStarts(lineRunnerIds, year);
   const startsCopy = await getTranslations({ locale, namespace: "Entrants" });
@@ -191,12 +206,102 @@ async function EntryBody({
       )
     : new Map();
 
-  if (!registration) {
-    return (
-      <p className="mt-8 text-base leading-7 text-race-muted">
-        {copy("closedRead")}
-        {deadline ? ` (${formatDate(deadline, locale)})` : ""}
+  const pastSection =
+    past.length > 0 ? (
+      <PastRegistrations past={past} summaries={pastSummaries} title={copy("past")} msg={msg} />
+    ) : null;
+  const cancelledNotice =
+    cancelled.length > 0 ? (
+      <p role="status" className="text-sm text-race-muted">
+        {cancelled.map((row) => copy("cancelledNotice", { id: row.id })).join(" ")}
       </p>
+    ) : null;
+
+  if (!registration) {
+    // Účet bez přihlášky (např. obsluha mezičasů nebo ještě nepřihlášený běžec):
+    // přihláška vznikne až s prvním přidaným běžcem.
+    const unread = messagesEnabled ? await userUnreadCount(session) : 0;
+    return (
+      <div className="mt-8 space-y-12">
+        {open ? (
+          <div className="grid gap-3">
+            {deadline ? (
+              <p className="text-sm text-race-muted">
+                {copy("deadline")}: {formatDate(deadline, locale)}
+              </p>
+            ) : null}
+            <p className="text-base leading-7 text-foreground dark:text-white">
+              {copy("noRegistration", { year })}
+            </p>
+            {cancelledNotice}
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            <p className="text-base leading-7 text-race-muted">
+              {copy("closedRead")}
+              {deadline ? ` (${formatDate(deadline, locale)})` : ""}
+            </p>
+            {cancelledNotice}
+          </div>
+        )}
+
+        {open ? (
+          <section>
+            <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
+            <p className="mt-2 max-w-2xl text-sm text-race-muted">{copy("noRegistrationHint")}</p>
+            {quick.length > 0 ? (
+              <McvvQuickAdd
+                year={year}
+                registrationId={null}
+                runners={quick}
+                clubName={defaultClubName}
+                copy={{
+                  quickAdd: copy("quickAdd"),
+                  runnerTitle: copy.raw("quickAddTitle") as string,
+                }}
+              />
+            ) : null}
+            <div className="mt-8">
+              <h3 className="font-display text-lg font-semibold">{copy("newRunner")}</h3>
+              <McvvNewRunnerForm
+                year={year}
+                registrationId={null}
+                categories={categories}
+                clubs={clubOptions}
+                defaultClubName={defaultClubName}
+                copy={newRunnerCopy(copy)}
+              />
+            </div>
+          </section>
+        ) : null}
+
+        {messagesEnabled ? (
+          <section id="zpravy" className="scroll-mt-28">
+            <h2 className="font-display text-2xl font-semibold">{msg("sectionTitle")}</h2>
+            <p className="mt-2 max-w-2xl text-sm text-race-muted">{copy("accountMessagesIntro")}</p>
+            <p className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <Link href="/kontakt" className="font-medium text-race-accent hover:underline">
+                {msg("newMessage")}
+              </Link>
+              <Link
+                href="/zpravy"
+                className="inline-flex items-center gap-2 font-medium text-race-accent hover:underline"
+              >
+                {msg("backToList")}
+                {unread > 0 ? (
+                  <span className="text-race-muted">
+                    ({copy("messagesUnread", { count: unread })})
+                  </span>
+                ) : null}
+              </Link>
+            </p>
+          </section>
+        ) : null}
+
+        {promotionForm}
+
+        {pastSection}
+      </div>
     );
   }
 
@@ -208,6 +313,7 @@ async function EntryBody({
           {open ? "" : ` — ${copy("readOnly")}`}
         </p>
       ) : null}
+      {cancelledNotice}
 
       {messagesEnabled ? (
         <p className="-mt-6 flex flex-wrap items-center gap-2 text-sm">
@@ -233,11 +339,11 @@ async function EntryBody({
 
       <section>
         <McvvEntryHeaderForm
-          key={`${registration.name ?? ""}:${registration.promotion ?? ""}`}
+          key={`${registration.name ?? ""}:${noMail ? "N" : ""}`}
           year={year}
           id={registration.id}
           name={registration.name ?? ""}
-          noMail={isPromotionOptOut(registration.promotion)}
+          noMail={noMail}
           email={email}
           open={open}
           copy={{
@@ -249,6 +355,8 @@ async function EntryBody({
           }}
         />
       </section>
+
+      {open ? null : promotionForm}
 
       {messagesEnabled ? (
         <section id="zpravy" className="scroll-mt-28">
@@ -395,23 +503,7 @@ async function EntryBody({
               categories={categories}
               clubs={clubOptions}
               defaultClubName={defaultClubName}
-              copy={{
-                firstName: copy("firstName"),
-                lastName: copy("lastName"),
-                birthYear: copy("birthYear"),
-                sex: copy("sex"),
-                sexPlaceholder: copy("sexPlaceholder"),
-                sexRequired: copy("sexRequired"),
-                categoryPlaceholder: copy("categoryPlaceholder"),
-                male: copy("male"),
-                female: copy("female"),
-                category: copy("category"),
-                club: copy("club"),
-                add: copy("add"),
-                ambiguous: copy("ambiguous"),
-                taken: copy("taken"),
-                invalid: copy("invalidRunner"),
-              }}
+              copy={newRunnerCopy(copy)}
             />
           </div>
         ) : null}
@@ -473,36 +565,72 @@ async function EntryBody({
         </ul>
       </section>
 
-      {past.length > 0 ? (
-        <section>
-          <h2 className="font-display text-2xl font-semibold">{copy("past")}</h2>
-          <ul className="mt-3 text-sm text-race-muted">
-            {past.map((row) => {
-              const summary = pastSummaries.get(summaryKey(row.year, row.id));
-              return (
-                <li key={`${row.year}-${row.id}`} className="flex flex-wrap items-center gap-2">
-                  <span>
-                    {row.year} · {row.name} · {row.lines.length}
-                  </span>
-                  {summary ? (
-                    <Link
-                      href={{ pathname: "/zpravy/[id]", params: { id: String(summary.threadId) } }}
-                      aria-label={msg("sectionTitle")}
-                    >
-                      <McvvMessageBubble
-                        count={summary.count}
-                        unread={summary.unread}
-                        label={msg("sectionTitle")}
-                      />
-                    </Link>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
+      {pastSection}
     </div>
+  );
+}
+
+type EntriesCopy = Awaited<ReturnType<typeof getTranslations>>;
+
+function newRunnerCopy(copy: EntriesCopy) {
+  return {
+    firstName: copy("firstName"),
+    lastName: copy("lastName"),
+    birthYear: copy("birthYear"),
+    sex: copy("sex"),
+    sexPlaceholder: copy("sexPlaceholder"),
+    sexRequired: copy("sexRequired"),
+    categoryPlaceholder: copy("categoryPlaceholder"),
+    male: copy("male"),
+    female: copy("female"),
+    category: copy("category"),
+    club: copy("club"),
+    add: copy("add"),
+    ambiguous: copy("ambiguous"),
+    taken: copy("taken"),
+    invalid: copy("invalidRunner"),
+  };
+}
+
+function PastRegistrations({
+  past,
+  summaries,
+  title,
+  msg,
+}: {
+  past: { year: number; id: number; name: string | null; lines: unknown[] }[];
+  summaries: Awaited<ReturnType<typeof registrationThreadSummaries>>;
+  title: string;
+  msg: EntriesCopy;
+}) {
+  return (
+    <section>
+      <h2 className="font-display text-2xl font-semibold">{title}</h2>
+      <ul className="mt-3 text-sm text-race-muted">
+        {past.map((row) => {
+          const summary = summaries.get(summaryKey(row.year, row.id));
+          return (
+            <li key={`${row.year}-${row.id}`} className="flex flex-wrap items-center gap-2">
+              <span>
+                {row.year} · {row.name} · {row.lines.length}
+              </span>
+              {summary ? (
+                <Link
+                  href={{ pathname: "/zpravy/[id]", params: { id: String(summary.threadId) } }}
+                  aria-label={msg("sectionTitle")}
+                >
+                  <McvvMessageBubble
+                    count={summary.count}
+                    unread={summary.unread}
+                    label={msg("sectionTitle")}
+                  />
+                </Link>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

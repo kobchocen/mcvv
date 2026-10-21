@@ -76,6 +76,7 @@
     "react-hook-form": "7.90.0",
     "react-resizable-panels": "4.14.5",
     "recharts": "3.10.1",
+    "sharp": "0.34.5",
     "sonner": "2.0.8",
     "tailwind-merge": "^3.7.0",
     "vaul": "1.1.2",

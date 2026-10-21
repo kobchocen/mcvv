@@ -3,12 +3,17 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
+import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
+import { startModelCopy } from "@/components/organisms/mcvv-admin-start-model-copy";
 import { prisma } from "@/lib/db/client";
+import { loadStartSettings } from "@/lib/race/startlist-load";
+import { DEFAULT_CHAMPION_BIBS, startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ chyba?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -17,13 +22,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("editionsTitle") };
 }
 
-export default async function AdminNewEditionPage({ params }: PageProps) {
+export default async function AdminNewEditionPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const latest = await prisma.edition.findFirst({ orderBy: { id: "desc" } });
+  const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });
+  const { chyba } = await searchParams;
+  // Nový ročník = následující rok; rozsahy se převezmou z posledního ročníku.
+  const settings = await loadStartSettings(
+    latest ? latest.date.getUTCFullYear() : new Date().getFullYear(),
+  );
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -56,7 +67,6 @@ export default async function AdminNewEditionPage({ params }: PageProps) {
           copy={{
             date: copy("editionsDate"),
             reg: copy("editionsReg"),
-            interval: copy("editionsInterval"),
             weather: copy("editionsWeather"),
             temp: copy("editionsTemp"),
             kidsMail: copy("editionsKidsMail"),
@@ -67,7 +77,18 @@ export default async function AdminNewEditionPage({ params }: PageProps) {
             vet: (place) => copy("editionsVet", { place }),
             save: copy("create"),
           }}
-        />
+        >
+          <McvvAdminStartModelFields
+            model={startModelFromEdition(latest)}
+            champions={{
+              men: latest ? latest.championBibMen : DEFAULT_CHAMPION_BIBS.men,
+              women: latest ? latest.championBibWomen : DEFAULT_CHAMPION_BIBS.women,
+            }}
+            ranges={settings.ranges}
+            categories={settings.categories}
+            copy={startModelCopy(startCopy, chyba, false)}
+          />
+        </McvvAdminEditionForm>
       </div>
     </main>
   );

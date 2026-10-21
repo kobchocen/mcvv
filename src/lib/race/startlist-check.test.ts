@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { BibRange } from "./start-settings";
-import { checkStartList, inOrganizerBlock, reserveSummary, type CheckRow } from "./startlist-check";
+import {
+  checkStartList,
+  inOrganizerBlock,
+  outsideCategory,
+  reserveSummary,
+  type CheckRow,
+} from "./startlist-check";
 import { DEFAULT_START_MODEL } from "./start-time";
 
 const RANGES: BibRange[] = [
@@ -24,11 +30,9 @@ function row(partial: Partial<CheckRow> & { runnerId: string }): CheckRow {
 }
 
 describe("checkStartList", () => {
-  it("finds duplicates, out-of-range, unpaid with bib and missing bibs", () => {
+  it("finds duplicates, unpaid with bib and missing bibs; a bib outside the category is fine", () => {
     const issues = checkStartList(
       DEFAULT_START_MODEL,
-      RANGES,
-      CHAMPS,
       [
         row({ runnerId: "a", bib: 301 }),
         row({ runnerId: "b", bib: 301 }),
@@ -43,14 +47,12 @@ describe("checkStartList", () => {
     );
     assert.deepEqual(
       issues.map((i) => i.code),
-      ["duplicate", "outOfRange", "invalidWithBib", "missingBib"],
+      ["duplicate", "invalidWithBib", "missingBib"],
     );
   });
   it("detects split groups", () => {
     const issues = checkStartList(
       DEFAULT_START_MODEL,
-      RANGES,
-      CHAMPS,
       [
         row({ runnerId: "a", bib: 310 }),
         row({ runnerId: "b", bib: 910, categoryId: "F" }),
@@ -63,6 +65,41 @@ describe("checkStartList", () => {
       ],
     );
     assert.deepEqual(issues, [{ code: "groupSplit", groupId: 2, kind: "consecutive" }]);
+  });
+  it("accepts mixed-category groups; a joint group of 3 may use two neighbouring times", () => {
+    const issues = checkStartList(
+      DEFAULT_START_MODEL,
+      [
+        row({ runnerId: "dad", bib: 310 }),
+        row({ runnerId: "mum", bib: 910, categoryId: "F" }),
+        row({ runnerId: "kid", bib: 311, categoryId: "J" }),
+        row({ runnerId: "x", bib: 320 }),
+        row({ runnerId: "y", bib: 921, categoryId: "F" }),
+        row({ runnerId: "z", bib: 323, categoryId: "J" }),
+        row({ runnerId: "p", bib: 50, categoryId: "J" }),
+        row({ runnerId: "q", bib: 51 }),
+      ],
+      [
+        { id: 1, kind: "joint", memberIds: ["dad", "mum", "kid"] },
+        { id: 2, kind: "joint", memberIds: ["x", "y", "z"] },
+        { id: 3, kind: "consecutive", memberIds: ["p", "q"] },
+      ],
+    );
+    assert.deepEqual(issues, [{ code: "groupSplit", groupId: 2, kind: "joint" }]);
+  });
+});
+
+describe("outsideCategory", () => {
+  it("marks bibs outside the own window, except champions and organizers in their block", () => {
+    const check = (partial: Partial<CheckRow>) =>
+      outsideCategory(DEFAULT_START_MODEL, RANGES, CHAMPS, row({ runnerId: "r", ...partial }));
+    assert.equal(check({ bib: 310 }), false);
+    assert.equal(check({ bib: 50 }), true, "A runner in the J window");
+    assert.equal(check({ bib: 910 }), true, "A runner in the 2nd start");
+    assert.equal(check({ bib: 400 }), false, "champion bib");
+    assert.equal(check({ bib: 3, organizer: true }), false);
+    assert.equal(check({ bib: 3 }), true);
+    assert.equal(check({ bib: null }), false);
   });
 });
 

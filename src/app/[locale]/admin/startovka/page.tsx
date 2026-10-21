@@ -13,7 +13,12 @@ import {
 } from "@/lib/admin/startlist";
 import { getSiteSettings } from "@/lib/settings/site";
 import { formatInterval } from "@/lib/race/start-settings";
-import { checkStartList, reserveSummary, type StartListIssue } from "@/lib/race/startlist-check";
+import {
+  checkStartList,
+  outsideCategory,
+  reserveSummary,
+  type StartListIssue,
+} from "@/lib/race/startlist-check";
 import { generateStartList, type GeneratorWarning } from "@/lib/race/startlist-generator";
 import {
   buildGeneratorInput,
@@ -37,7 +42,7 @@ type SearchParams = {
   ok?: string;
   n?: string;
   chyba?: string;
-  varovani?: string;
+  mimo?: string;
   bezec?: string;
   cislo?: string;
   drzi?: string;
@@ -65,6 +70,8 @@ const card = "border border-race-line/55 bg-race-surface p-4 sm:p-5";
 const cardTitle = "font-display text-lg font-semibold text-foreground dark:text-white";
 const smallInput = "h-9 border border-race-line bg-race-surface px-2 text-sm";
 const linkButton = "font-semibold text-race-accent hover:underline";
+const outsideBadge =
+  "ml-2 rounded-full border border-race-line px-1.5 text-[0.6875rem] font-normal text-race-muted";
 
 export default async function AdminStartListPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
@@ -93,7 +100,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const rangeOf = new Map(ranges.map((r) => [r.categoryId, r]));
   const championBibs = new Set([champions.men, champions.women].filter((b) => b != null));
 
-  const issues = checkStartList(model, ranges, champions, allRows, groups);
+  const issues = checkStartList(model, allRows, groups);
   const reserve = reserveSummary(
     model,
     ranges,
@@ -141,12 +148,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
           bib: issue.bib,
           names: issue.runnerIds.map(nameOf).join(", "),
         });
-      case "outOfRange":
-        return t("issueOutOfRange", {
-          bib: issue.bib,
-          name: nameOf(issue.runnerId),
-          category: issue.categoryId,
-        });
       case "invalidWithBib":
         return t("issueInvalidWithBib", { bib: issue.bib, name: nameOf(issue.runnerId) });
       case "missingBib":
@@ -180,7 +181,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const flash = (() => {
     switch (query.ok) {
       case "bib":
-        return t("okBib");
+        return query.mimo === "1" ? t("okBibOutside") : t("okBib");
       case "swap":
         return t("okSwap");
       case "lock":
@@ -217,10 +218,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return null;
     }
   })();
-  const rangeWarning =
-    query.varovani === "range" && query.bezec && byId.has(query.bezec) && query.cislo
-      ? byId.get(query.bezec)!
-      : null;
   const duplicateRow = query.chyba === "duplicate" && query.bezec ? byId.get(query.bezec) : null;
 
   const yearLinks = [year - 1, year, year + 1];
@@ -322,38 +319,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
             ) : null}
           </div>
         ) : null}
-        {rangeWarning ? (
-          <div
-            role="alert"
-            className="mt-6 flex flex-wrap items-center gap-3 border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm"
-          >
-            <span>
-              {t("warnRange", {
-                bib: query.cislo ?? "",
-                category: `${rangeWarning.categoryId} ${rangeWarning.categoryName}`,
-                range: rangeOf.get(rangeWarning.categoryId)
-                  ? `${rangeOf.get(rangeWarning.categoryId)!.bibFrom}–${rangeOf.get(rangeWarning.categoryId)!.bibTo}`
-                  : "—",
-              })}
-            </span>
-            <form action={setStartBib} className="flex gap-3">
-              <input type="hidden" name="year" value={year} />
-              <input type="hidden" name="runnerId" value={rangeWarning.runnerId} />
-              <input type="hidden" name="bib" value={query.cislo} />
-              <input type="hidden" name="confirm" value="1" />
-              <button type="submit" className={linkButton}>
-                {t("warnRangeConfirm")}
-              </button>
-            </form>
-            <Link
-              href={{ pathname: "/admin/startovka", query: { rok: String(year) } }}
-              className="text-race-muted hover:underline"
-            >
-              {t("warnRangeCancel")}
-            </Link>
-          </div>
-        ) : null}
-
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <section className={card} data-testid="startlist-reserve">
             <h2 className={cardTitle}>{t("reserveHeading")}</h2>
@@ -513,6 +478,9 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                               </td>
                               <td className="px-2 py-1 text-race-muted">
                                 {t(`reason_${line.reason}`)}
+                                {line.outsideCategory ? (
+                                  <span className={outsideBadge}>{t("outsideBadge")}</span>
+                                ) : null}
                               </td>
                             </tr>
                           ))}
@@ -713,6 +681,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                     highlighted={query.bezec === row.runnerId}
                     groupId={groupOf.get(row.runnerId) ?? null}
                     champion={row.bib != null && championBibs.has(row.bib)}
+                    outside={!row.cancelled && outsideCategory(model, ranges, champions, row)}
                     labels={{
                       save: t("save"),
                       lock: t("lock"),
@@ -721,6 +690,12 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                       invalidTitle: t("invalidTitle"),
                       organizer: t("organizerBadge"),
                       champion: t("championBadge"),
+                      outside: t("outsideBadge"),
+                      outsideTitle: t("outsideTitle", {
+                        range: rangeOf.get(row.categoryId)
+                          ? `${rangeOf.get(row.categoryId)!.bibFrom}–${rangeOf.get(row.categoryId)!.bibTo}`
+                          : "—",
+                      }),
                       group: (id) => t("groupLabel", { id }),
                       select: t("colSelect"),
                     }}
@@ -742,6 +717,7 @@ function StartRow({
   highlighted,
   groupId,
   champion,
+  outside,
   labels,
 }: {
   row: AdminStartRow;
@@ -750,6 +726,7 @@ function StartRow({
   highlighted: boolean;
   groupId: number | null;
   champion: boolean;
+  outside: boolean;
   labels: {
     save: string;
     lock: string;
@@ -758,6 +735,8 @@ function StartRow({
     invalidTitle: string;
     organizer: string;
     champion: string;
+    outside: string;
+    outsideTitle: string;
     group: (id: number) => string;
     select: string;
   };
@@ -819,6 +798,11 @@ function StartRow({
         {champion ? (
           <span className="ml-2 rounded-full bg-red-600/15 px-1.5 text-[0.6875rem] font-semibold text-red-700 dark:text-red-300">
             {labels.champion}
+          </span>
+        ) : null}
+        {outside ? (
+          <span className={outsideBadge} title={labels.outsideTitle}>
+            {labels.outside}
           </span>
         ) : null}
         {groupId ? (

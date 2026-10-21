@@ -6,7 +6,7 @@ import { getLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
-import { bibInRange } from "@/lib/race/startlist-check";
+import { outsideCategory } from "@/lib/race/startlist-check";
 import { generateStartList } from "@/lib/race/startlist-generator";
 import {
   buildGeneratorInput,
@@ -14,6 +14,7 @@ import {
   loadAdminStartRows,
   loadStartGroups,
   loadStartSettings,
+  ORGANIZER_REGISTRATION_ID,
 } from "@/lib/race/startlist-load";
 import { redirect } from "@/i18n/routing";
 
@@ -49,8 +50,9 @@ async function setLock(year: number, runnerIds: string[], locked: boolean) {
 }
 
 /**
- * Ruční přidělení / změna / odebrání čísla (#116). Duplicita se neuloží, číslo mimo rozsah
- * kategorie jde uložit jen po potvrzení. Ručně změněné číslo se zamkne (generátor ho nemění).
+ * Ruční přidělení / změna / odebrání čísla (#116). Duplicita se neuloží. Číslo mimo okno
+ * kategorie se uloží bez potvrzení (kategorie není dogma, všichni běží stejnou trať) – admin
+ * dostane jen informaci. Ručně změněné číslo se zamkne (generátor ho nemění).
  */
 export async function setStartBib(formData: FormData): Promise<void> {
   await requireStaff();
@@ -66,7 +68,7 @@ export async function setStartBib(formData: FormData): Promise<void> {
   }
   const line = await prisma.registrationLine.findUnique({
     where: { year_runnerId: { year, runnerId } },
-    select: { bib: true, categoryId: true },
+    select: { bib: true, categoryId: true, registrationId: true },
   });
   if (!line) {
     await back(year);
@@ -85,15 +87,6 @@ export async function setStartBib(formData: FormData): Promise<void> {
         drzi: holder.runnerId,
       });
     }
-    const settings = await loadStartSettings(year);
-    const champion = value === settings.champions.men || value === settings.champions.women;
-    if (
-      !bibInRange(settings.ranges, line!.categoryId, value) &&
-      !champion &&
-      formString(formData, "confirm") !== "1"
-    ) {
-      await back(year, { varovani: "range", bezec: runnerId, cislo: String(value) });
-    }
   }
   await prisma.registrationLine.update({
     where: { year_runnerId: { year, runnerId } },
@@ -101,7 +94,15 @@ export async function setStartBib(formData: FormData): Promise<void> {
   });
   await setLock(year, [runnerId], true);
   revalidateStartList();
-  await back(year, { ok: "bib", bezec: runnerId });
+  const settings = value != null ? await loadStartSettings(year) : null;
+  const outside =
+    settings != null &&
+    outsideCategory(settings.model, settings.ranges, settings.champions, {
+      categoryId: line!.categoryId,
+      bib: value,
+      organizer: line!.registrationId === ORGANIZER_REGISTRATION_ID,
+    });
+  await back(year, { ok: "bib", bezec: runnerId, ...(outside ? { mimo: "1" } : {}) });
 }
 
 /** Prohození dvou čísel (druhé může být volné = přesun). Obě čísla se zamknou. */

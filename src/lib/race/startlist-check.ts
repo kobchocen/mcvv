@@ -19,7 +19,6 @@ export type CheckRow = {
 
 export type StartListIssue =
   | { code: "duplicate"; bib: number; runnerIds: string[] }
-  | { code: "outOfRange"; bib: number; runnerId: string; categoryId: string }
   | { code: "invalidWithBib"; bib: number; runnerId: string }
   | { code: "missingBib"; runnerId: string }
   | { code: "groupSplit"; groupId: number; kind: StartGroupKind };
@@ -27,6 +26,28 @@ export type StartListIssue =
 export function bibInRange(ranges: BibRange[], categoryId: string, bib: number): boolean {
   const range = ranges.find((r) => r.categoryId === categoryId);
   return !!range && bib >= range.bibFrom && bib <= range.bibTo;
+}
+
+/**
+ * Číslo mimo okno vlastní kategorie (kategorie není dogma – všichni běží stejnou trať). Není to
+ * chyba, jen informativní štítek „mimo kategorii“. Čísla obhájců a pořadatel v bloku
+ * pořadatelů se nepočítají.
+ */
+export function outsideCategory(
+  model: StartModel,
+  ranges: BibRange[],
+  champions: ChampionBibs,
+  row: Pick<CheckRow, "categoryId" | "bib" | "organizer">,
+): boolean {
+  if (row.bib == null) {
+    return false;
+  }
+  return !(
+    bibInRange(ranges, row.categoryId, row.bib) ||
+    row.bib === champions.men ||
+    row.bib === champions.women ||
+    (row.organizer && inOrganizerBlock(model, ranges, row.bib))
+  );
 }
 
 /** Číslo leží v bloku pořadatelů (před prvním rozsahem kategorie svého startu). */
@@ -41,8 +62,6 @@ export function inOrganizerBlock(model: StartModel, ranges: BibRange[], bib: num
 
 export function checkStartList(
   model: StartModel,
-  ranges: BibRange[],
-  champions: ChampionBibs,
   rows: CheckRow[],
   groups: { id: number; kind: StartGroupKind; memberIds: string[] }[],
 ): StartListIssue[] {
@@ -59,7 +78,6 @@ export function checkStartList(
       issues.push({ code: "duplicate", bib, runnerIds: ids });
     }
   }
-  const championBibs = new Set([champions.men, champions.women].filter((b) => b != null));
   for (const row of active) {
     if (row.bib == null) {
       if (row.valid) {
@@ -69,18 +87,6 @@ export function checkStartList(
     }
     if (!row.valid) {
       issues.push({ code: "invalidWithBib", bib: row.bib, runnerId: row.runnerId });
-    }
-    const expected =
-      bibInRange(ranges, row.categoryId, row.bib) ||
-      championBibs.has(row.bib) ||
-      (row.organizer && inOrganizerBlock(model, ranges, row.bib));
-    if (!expected) {
-      issues.push({
-        code: "outOfRange",
-        bib: row.bib,
-        runnerId: row.runnerId,
-        categoryId: row.categoryId,
-      });
     }
   }
   const bibById = new Map(active.map((row) => [row.runnerId, row.bib]));
@@ -92,9 +98,11 @@ export function checkStartList(
     if (slots.length < 2) {
       continue;
     }
+    // Společný start: dva paralelní starty → nejvýš dva na jeden čas, další po dvojicích hned
+    // za nimi (3 členové = časy t, t, t+1). Navazující: časy hned po sobě v pořadí skupiny.
     const ok =
       group.kind === "joint"
-        ? new Set(slots).size === 1
+        ? Math.max(...slots) - Math.min(...slots) <= Math.ceil(slots.length / 2) - 1
         : slots.every((slot, i) => i === 0 || slot === slots[i - 1] + 1);
     if (!ok) {
       issues.push({ code: "groupSplit", groupId: group.id, kind: group.kind });

@@ -23,6 +23,7 @@ type Client struct {
 }
 
 type uploadItem struct {
+	Action string `json:"action,omitempty"` // "set" (výchozí) nebo "delete" (řádek zmizel ze souboru)
 	Bib    int    `json:"bib"`
 	Split  string `json:"split"`
 	TimeS  int    `json:"timeS"`
@@ -90,11 +91,24 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 	return string(data), nil
 }
 
+// Change je jedna položka k odeslání: nový/opravený čas (set) nebo zmizelý řádek (delete).
+type Change struct {
+	Punch
+	Delete bool
+}
+
+func (c Change) action() string {
+	if c.Delete {
+		return "delete"
+	}
+	return "set"
+}
+
 // Upload pošle dávku (max 200) a vrátí výsledky po položkách.
-func (c *Client) Upload(ctx context.Context, punches []Punch, seenAt time.Time) ([]ItemResult, error) {
-	items := make([]uploadItem, 0, len(punches))
-	for _, punch := range punches {
-		items = append(items, uploadItem{Bib: punch.Bib, Split: c.Split, TimeS: punch.TimeS, SeenAt: seenAt.UTC().Format(time.RFC3339)})
+func (c *Client) Upload(ctx context.Context, changes []Change, seenAt time.Time) ([]ItemResult, error) {
+	items := make([]uploadItem, 0, len(changes))
+	for _, change := range changes {
+		items = append(items, uploadItem{Action: change.action(), Bib: change.Bib, Split: c.Split, TimeS: change.TimeS, SeenAt: seenAt.UTC().Format(time.RFC3339)})
 	}
 	body, _ := json.Marshal(map[string]any{"items": items, "client": "obd-klient/" + c.Version})
 	data, err := c.do(ctx, http.MethodPost, body)
@@ -105,8 +119,8 @@ func (c *Client) Upload(ctx context.Context, punches []Punch, seenAt time.Time) 
 	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, fmt.Errorf("neplatná odpověď serveru: %w", err)
 	}
-	if len(response.Results) != len(punches) {
-		return nil, fmt.Errorf("server vrátil %d výsledků místo %d", len(response.Results), len(punches))
+	if len(response.Results) != len(changes) {
+		return nil, fmt.Errorf("server vrátil %d výsledků místo %d", len(response.Results), len(changes))
 	}
 	return response.Results, nil
 }

@@ -4,9 +4,13 @@ import { prisma } from "@/lib/db/client";
 
 import {
   checkPunch,
+  decideDeviceDelete,
+  decideDeviceWrite,
   decideWrite,
   deviceEntryKey,
+  nextDeviceEntryKey,
   OWNING_OUTCOMES,
+  SUPERSEDED_OUTCOMES,
   type DeviceItem,
   type Outcome,
   type WebEntry,
@@ -224,47 +228,115 @@ async function withRetry(id: string, run: () => Promise<EntryResult>): Promise<E
 
 export type DeviceToken = { id: number; year: number; author: string };
 
+/** Řádek mcvv_split pro (rok, split, číslo) a zápis z OBD, který ho vlastní (pokud nějaký). */
+async function currentSplit(tx: Tx, year: number, split: string, bib: number) {
+  const row = await tx.split.findUnique({
+    where: { bib_year_split: { bib, year, split } },
+    select: { time: true },
+  });
+  if (!row) return { row: null, owner: null };
+  const owner = await tx.splitEntry.findFirst({
+    where: { year, split, bib, time: row.time, outcome: { in: OWNING_OUTCOMES } },
+    orderBy: { id: "desc" },
+  });
+  return { row, owner };
+}
+
 async function applyDeviceItem(
   tx: Tx,
   item: DeviceItem,
   token: DeviceToken,
   now: Date,
 ): Promise<EntryResult> {
-  const entryKey = deviceEntryKey(token.id, item);
-  const previous = await tx.splitEntry.findUnique({ where: { entryKey } });
-  if (previous) return storedResult(previous);
-  const written = await writeSplit(
-    tx,
-    {
-      year: token.year,
-      split: item.split,
-      bib: item.bib,
-      time: item.timeS,
-      author: token.author,
-      now,
-    },
-    "obd",
+  const base = deviceEntryKey(token.id, item);
+  // Idempotence: poslední zápis se stejným klíčem platí, dokud ho nepřepsala/nesmazala novější verze souboru.
+  const previous = await tx.splitEntry.findMany({
+    where: { OR: [{ entryKey: base }, { entryKey: { startsWith: `${base}#` } }] },
+    orderBy: { id: "desc" },
+  });
+  const latest = previous[0];
+  if (latest && !SUPERSEDED_OUTCOMES.includes(latest.outcome as Outcome)) {
+    return storedResult(latest);
+  }
+  const entryKey = nextDeviceEntryKey(
+    base,
+    previous.map((row) => row.entryKey),
   );
+  const { row: existing, owner } = await currentSplit(tx, token.year, item.split, item.bib);
+  const ownedByObd = owner?.source === "obd";
+  const state = existing ? { time: existing.time, ownedByObd } : null;
+  const unknown = (await knownBib(tx, token.year, item.bib)) ? null : "unknown-bib";
+  const entry = {
+    entryKey,
+    year: token.year,
+    split: item.split,
+    bib: item.bib,
+    time: item.timeS,
+    source: "obd",
+    author: token.author,
+    tokenId: token.id,
+  };
+
+  if (item.action === "delete") {
+    const decision = decideDeviceDelete(state, item.timeS);
+    if (decision === "delete" && owner) {
+      await releaseOwnedSplit(tx, owner);
+      await tx.splitEntry.update({ where: { id: owner.id }, data: { outcome: "deleted" } });
+    }
+    const row = await tx.splitEntry.create({
+      data: {
+        ...entry,
+        action: "delete",
+        replaces: decision === "delete" ? (owner?.entryKey ?? null) : null,
+        outcome: decision === "delete" ? "deleted" : "unchanged",
+        note: decision === "delete" ? null : decision,
+      },
+    });
+    return { ...storedResult(row), existingTime: existing?.time };
+  }
+
+  const decision = decideDeviceWrite(state, item.timeS);
+  let outcome: Outcome;
+  if (decision === "insert") {
+    await tx.split.create({
+      data: {
+        bib: item.bib,
+        year: token.year,
+        split: item.split,
+        time: item.timeS,
+        created: now,
+        author: token.author,
+      },
+    });
+    outcome = "applied";
+  } else if (decision === "replace" && owner) {
+    // Oprava v OBD: přepsat hodnotu, kterou zapsalo OBD (legacy by opravu tiše zahodil).
+    await tx.split.updateMany({
+      where: { bib: item.bib, year: token.year, split: item.split, time: existing!.time },
+      data: { time: item.timeS, created: now, author: token.author },
+    });
+    await tx.splitEntry.update({ where: { id: owner.id }, data: { outcome: "replaced" } });
+    outcome = "applied";
+  } else {
+    outcome = decision === "unchanged" ? "unchanged" : "conflict";
+  }
   const notes = [
-    (await knownBib(tx, token.year, item.bib)) ? null : "unknown-bib",
-    written.existingTime !== undefined ? `existing=${written.existingTime}` : null,
+    unknown,
+    existing && existing.time !== item.timeS ? `existing=${existing.time}` : null,
   ].filter(Boolean);
   const row = await tx.splitEntry.create({
     data: {
-      entryKey,
-      year: token.year,
-      split: item.split,
-      bib: item.bib,
-      time: item.timeS,
-      source: "obd",
-      action: "create",
-      outcome: written.outcome,
+      ...entry,
+      action: decision === "replace" ? "correct" : "create",
+      replaces: decision === "replace" ? (owner?.entryKey ?? null) : null,
+      outcome,
       note: notes.length > 0 ? notes.join(";") : null,
-      author: token.author,
-      tokenId: token.id,
     },
   });
-  return { ...storedResult(row), existingTime: written.existingTime };
+  return {
+    ...storedResult(row),
+    existingTime: existing && existing.time !== item.timeS ? existing.time : undefined,
+  };
 }
 
 /** Dávka z klienta na cílovém PC (OBD). */

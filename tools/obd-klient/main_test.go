@@ -124,10 +124,15 @@ func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
 				outcome = "deleted"
 			}
 		} else {
-			if held, ok := f.held[item.Bib]; ok && held == item.TimeS {
+			held, ok := f.held[item.Bib]
+			switch {
+			case ok && held == item.TimeS:
 				outcome = "unchanged"
+			case ok && !item.Replace:
+				outcome = "conflict" // výchozí: platí první zapsaný čas
+			default:
+				f.held[item.Bib] = item.TimeS
 			}
-			f.held[item.Bib] = item.TimeS
 			f.seen[key]++
 		}
 		results = append(results, map[string]any{"id": key, "outcome": outcome, "bib": item.Bib})
@@ -239,7 +244,43 @@ func TestConfigValidation(t *testing.T) {
 	}
 }
 
-// OBD každých 60 s přepíše celý soubor: oprava času = změněný řádek, smazání = řádek chybí.
+// Výchozí (Q22, 1:1 s legacy): platí první zapsaný čas, oprava ani smazání z OBD nic nezmění.
+func TestDefaultFirstTimeWins(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	runner := newRunner(t, server.URL, file)
+	ctx := context.Background()
+	for n, body := range []string{"41;1686\n42;1700\n43;1710\n", "41;1686\n42;1705\n", "41;1686\n42;1705\n", "41;1686\n42;1705\n"} {
+		_ = os.WriteFile(file, []byte(body), 0o644)
+		stamp := time.Now().Add(time.Duration(n) * time.Minute)
+		_ = os.Chtimes(file, stamp, stamp)
+		if err := runner.Tick(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if fake.held[42] != 1700 || fake.held[43] != 1710 {
+		t.Fatalf("first time must win and nothing may be deleted: %v", fake.held)
+	}
+	deletes, corrections := 0, 0
+	for _, action := range fake.actions {
+		if strings.HasPrefix(action, "delete:") {
+			deletes++
+		}
+		if action == "set:9:42:1705" {
+			corrections++
+		}
+	}
+	if deletes != 0 || corrections != 1 {
+		t.Errorf("deletes=%d corrections sent=%d (want 0 and 1): %v", deletes, corrections, fake.actions)
+	}
+	if runner.state.Acked["9:42:1705"] != "conflict" {
+		t.Errorf("changed time outcome = %q, want conflict", runner.state.Acked["9:42:1705"])
+	}
+}
+
+// Přepínače applyCorrections + deleteMissing: oprava = změněný řádek, smazání = řádek chybí.
 func TestSnapshotCorrectionAndDeletion(t *testing.T) {
 	fake := &fakeServer{seen: map[string]int{}}
 	server := httptest.NewServer(http.HandlerFunc(fake.handler))
@@ -251,6 +292,7 @@ func TestSnapshotCorrectionAndDeletion(t *testing.T) {
 		_ = os.Chtimes(file, stamp, stamp)
 	}
 	runner := newRunner(t, server.URL, file)
+	runner.cfg.ApplyCorrections, runner.cfg.DeleteMissing, runner.client.Replace = true, true, true
 	ctx := context.Background()
 	tick := func() {
 		t.Helper()
@@ -303,6 +345,7 @@ func TestEmptyOrTruncatedFileDeletesNothing(t *testing.T) {
 		content += strconv.Itoa(bib) + ";" + strconv.Itoa(1000+bib) + "\n"
 	}
 	runner := newRunner(t, server.URL, file)
+	runner.cfg.DeleteMissing = true
 	ctx := context.Background()
 	for n, body := range []string{content, "", "", "1;1001\n2;1002\n", "1;1001\n2;1002\n"} {
 		_ = os.WriteFile(file, []byte(body), 0o644)

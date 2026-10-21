@@ -30,14 +30,18 @@ type Config struct {
 	StateFile    string `json:"stateFile"`    // kam ukládat potvrzené řádky, výchozí vedle configu
 	MaxBackoffS  int    `json:"maxBackoffS"`  // strop pro opakování při výpadku, výchozí 60
 	InsecureHTTP bool   `json:"insecureHttp"` // povolit http:// (jen pro lokální test)
-	// DeleteMissing: řádek, který zmizí ze souboru (OBD čas smazalo), smazat i na webu. Výchozí true.
-	DeleteMissing *bool `json:"deleteMissing,omitempty"`
+	// Výchozí 1:1 s legacy (Q22): platí první zapsaný čas, opravy ani smazání z OBD se nepropisují.
+	// ApplyCorrections: změněný čas v OBD přepíše čas, který dřív poslalo OBD. Výchozí false
+	// (změna se na webu ukáže jako konflikt pro admina).
+	ApplyCorrections bool `json:"applyCorrections,omitempty"`
+	// DeleteMissing: řádek, který zmizí ze souboru (OBD čas smazalo), smazat i na webu. Výchozí false.
+	DeleteMissing bool `json:"deleteMissing,omitempty"`
 	// MissingSnapshots: v kolika po sobě jdoucích verzích souboru musí řádek chybět, než se smaže
 	// (ochrana proti rozepsanému souboru). Výchozí 2 (OBD přepisuje soubor každých 60 s).
 	MissingSnapshots int `json:"missingSnapshots,omitempty"`
 }
 
-func (c Config) deleteMissing() bool { return c.DeleteMissing == nil || *c.DeleteMissing }
+func (c Config) deleteMissing() bool { return c.DeleteMissing }
 
 func (c Config) missingSnapshots() int {
 	if c.MissingSnapshots < 1 {
@@ -132,11 +136,11 @@ func main() {
 	if err != nil {
 		fatal("Konfigurace: %v", err)
 	}
-	client := &Client{BaseURL: cfg.URL, Token: cfg.Token, Year: cfg.Year, Split: cfg.Split, Version: version, HTTP: &http.Client{Timeout: 15 * time.Second}}
+	client := &Client{BaseURL: cfg.URL, Token: cfg.Token, Year: cfg.Year, Split: cfg.Split, Version: version, Replace: cfg.ApplyCorrections, HTTP: &http.Client{Timeout: 15 * time.Second}}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	logf("obd-klient %s · %s · rok %d · úsek %s · soubor %s", version, cfg.URL, cfg.Year, cfg.Split, cfg.File)
+	logf("obd-klient %s · %s · rok %d · úsek %s · soubor %s · opravy %s · mazání %s", version, cfg.URL, cfg.Year, cfg.Split, cfg.File, onOff(cfg.ApplyCorrections), onOff(cfg.DeleteMissing))
 	if info, err := client.Ping(ctx); err != nil {
 		logf("Ověření tokenu selhalo: %v", err)
 		if *check {
@@ -191,11 +195,20 @@ func (r *Runner) Loop(ctx context.Context) {
 	}
 }
 
+func onOff(on bool) string {
+	if on {
+		return "zapnuté"
+	}
+	return "vypnuté"
+}
+
 // Tick = jeden průchod. Vrací chybu jen pro věci, které se mají opakovat.
 //
-// OBD každých 60 s přepíše celý soubor (snapshot). Klient proto posílá nové a změněné řádky
-// (oprava času v OBD) a řádky, které ze souboru zmizely (smazání času v OBD) – ty až po
-// `missingSnapshots` (výchozí 2) po sobě jdoucích verzích souboru a jen když soubor nevypadá useknutě.
+// OBD každých 60 s přepíše celý soubor (snapshot). Klient posílá nové řádky a jednou i změněný
+// čas (výchozí: server ho nepřepíše, admin vidí konflikt – 1:1 s legacy). Se zapnutým
+// `applyCorrections` změna přepíše čas z OBD; se zapnutým `deleteMissing` se pošlou i řádky,
+// které ze souboru zmizely – až po `missingSnapshots` (výchozí 2) verzích souboru a jen když
+// soubor nevypadá useknutě.
 func (r *Runner) Tick(ctx context.Context) error {
 	info, err := os.Stat(r.cfg.File)
 	if err != nil {

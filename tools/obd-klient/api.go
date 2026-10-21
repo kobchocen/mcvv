@@ -19,15 +19,17 @@ type Client struct {
 	Year    int
 	Split   string
 	Version string
+	Replace bool // applyCorrections: požádat server o přepsání času z OBD
 	HTTP    *http.Client
 }
 
 type uploadItem struct {
-	Action string `json:"action,omitempty"` // "set" (výchozí) nebo "delete" (řádek zmizel ze souboru)
-	Bib    int    `json:"bib"`
-	Split  string `json:"split"`
-	TimeS  int    `json:"timeS"`
-	SeenAt string `json:"seenAt,omitempty"`
+	Action  string `json:"action,omitempty"`  // "set" (výchozí) nebo "delete" (řádek zmizel ze souboru)
+	Replace bool   `json:"replace,omitempty"` // jen s applyCorrections
+	Bib     int    `json:"bib"`
+	Split   string `json:"split"`
+	TimeS   int    `json:"timeS"`
+	SeenAt  string `json:"seenAt,omitempty"`
 }
 
 type ItemResult struct {
@@ -108,7 +110,7 @@ func (c Change) action() string {
 func (c *Client) Upload(ctx context.Context, changes []Change, seenAt time.Time) ([]ItemResult, error) {
 	items := make([]uploadItem, 0, len(changes))
 	for _, change := range changes {
-		items = append(items, uploadItem{Action: change.action(), Bib: change.Bib, Split: c.Split, TimeS: change.TimeS, SeenAt: seenAt.UTC().Format(time.RFC3339)})
+		items = append(items, uploadItem{Action: change.action(), Replace: c.Replace && !change.Delete, Bib: change.Bib, Split: c.Split, TimeS: change.TimeS, SeenAt: seenAt.UTC().Format(time.RFC3339)})
 	}
 	body, _ := json.Marshal(map[string]any{"items": items, "client": "obd-klient/" + c.Version})
 	data, err := c.do(ctx, http.MethodPost, body)

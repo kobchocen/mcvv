@@ -17,13 +17,15 @@ Formát souboru je 1:1 s legacy `online/index_cHc_0607.php`: `cislo;time_s` (ča
 v sekundách), bez hlavičky, jedna řádka na číslo; když je číslo v souboru vícekrát, platí první
 řádek. Klient navíc snese `,`/tab, BOM, CRLF, hlavičku a čas `m:ss` / `h:mm:ss`.
 
-OBD každých 60 s přepíše celý soubor. Klient čte soubor každých `intervalS` sekund (výchozí 5) a posílá:
+OBD každých 60 s přepíše celý soubor. Klient čte soubor každých `intervalS` sekund (výchozí 5)
+a posílá nové řádky. **Výchozí chování je 1:1 s legacy** (rozhodnutí Pavla, Q22): platí první
+zapsaný čas. Změněný čas se pošle jednou a na webu se ukáže jako konflikt pro admina (nic se
+nepřepíše), zmizelý řádek se nemaže. Za přepínači v `config.json` (výchozí `false`):
 
-- nové řádky a **změněné časy** (oprava v OBD přepíše čas, který dřív poslalo OBD; čas zadaný
-  člověkem na webu se nepřepíše – vznikne konflikt pro admina);
-- **zmizelé řádky** (smazání v OBD) – až když řádek chybí ve `missingSnapshots` (výchozí 2) po sobě
-  jdoucích verzích souboru. Prázdný nebo výrazně kratší soubor nic nemaže (jen varování v okně).
-  Mazání lze vypnout `"deleteMissing": false`.
+- `"applyCorrections": true` – změněný čas v OBD přepíše čas, který dřív poslalo OBD (čas zadaný
+  člověkem na webu se nepřepíše nikdy, vznikne konflikt);
+- `"deleteMissing": true` – řádek, který chybí ve `missingSnapshots` (výchozí 2) po sobě jdoucích
+  verzích souboru, se smaže i na webu. Prázdný nebo výrazně kratší soubor nic nemaže.
 
 Stav (`state.json` vedle configu) zajistí, že se po restartu neposílá všechno znovu; při výpadku sítě
 klient opakuje s backoffem (max. `maxBackoffS`). Opakované odeslání je bezpečné – server je idempotentní.

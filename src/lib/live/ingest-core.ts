@@ -56,12 +56,14 @@ export type WebEntry = z.infer<typeof webEntrySchema>;
 
 /**
  * Položka z klienta OBD: `cislo;time_s` ze `splits.csv` (+ volitelný kód splitu).
- * OBD každých 60 s přepíše celý soubor (snapshot), takže klient posílá i změny a zmizelé řádky:
- * - `set` (výchozí): číslo má v souboru tento čas (nový nebo opravený);
- * - `delete`: řádek s tímto časem ze souboru zmizel (OBD čas smazalo).
+ * Výchozí chování je 1:1 s legacy (Pavel, Q22): platí první zapsaný čas, oprava v OBD vznikne
+ * jako konflikt pro admina a smazání se nepropaguje. Za přepínačem v klientovi:
+ * - `replace: true` (klient `applyCorrections`): jiný čas přepíše hodnotu, kterou zapsalo OBD;
+ * - `action: "delete"` (klient `deleteMissing`): řádek s tímto časem ze souboru zmizel.
  */
 export const deviceItemSchema = z.object({
   action: z.enum(["set", "delete"]).default("set"),
+  replace: z.boolean().default(false),
   bib,
   split: split.default(FINISH_SPLIT),
   timeS: z.number().int().min(0).max(MAX_RACE_SECONDS),
@@ -95,8 +97,7 @@ export type WriteDecision = "insert" | "duplicate" | "unchanged" | "conflict";
 /**
  * - nic tam není → zapsat;
  * - web (splitmaker): první zápis vyhrává, další je duplicita (dvojí zadání téhož běžce);
- * - OBD: stejná hodnota = beze změny, jiná = konflikt. API zařízení ale rozhoduje podle
- *   `decideDeviceWrite` (snapshot souboru OBD: oprava hodnoty z OBD se přepíše).
+ * - OBD: stejná hodnota = beze změny, jiná = konflikt (API zařízení: `decideDeviceWrite`).
  */
 export function decideWrite(
   existing: { time: number } | null,
@@ -111,17 +112,18 @@ export function decideWrite(
 export type DeviceWriteDecision = "insert" | "unchanged" | "replace" | "conflict";
 
 /**
- * Zápis z OBD (snapshot souboru): nic tam není → zapsat; stejný čas → beze změny;
- * jiný čas, který dřív zapsalo OBD → přepsat (oprava v OBD); jiný čas od splitmakera nebo
- * admina → konflikt, rozhodne admin (OBD nikdy nepřepíše ruční zápis).
+ * Zápis z OBD: nic tam není → zapsat; stejný čas → beze změny; jiný čas → konflikt (výchozí,
+ * 1:1 s legacy: platí první zapsaný čas). Jen s `allowReplace` (přepínač `applyCorrections`)
+ * se přepíše čas, který dřív zapsalo OBD; ruční zápis (splitmaker, admin) se nepřepíše nikdy.
  */
 export function decideDeviceWrite(
   existing: { time: number; ownedByObd: boolean } | null,
   incomingTime: number,
+  allowReplace = false,
 ): DeviceWriteDecision {
   if (!existing) return "insert";
   if (existing.time === incomingTime) return "unchanged";
-  return existing.ownedByObd ? "replace" : "conflict";
+  return allowReplace && existing.ownedByObd ? "replace" : "conflict";
 }
 
 export type DeviceDeleteDecision = "delete" | "missing" | "not-owned";

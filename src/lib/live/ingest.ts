@@ -295,7 +295,7 @@ async function applyDeviceItem(
     return { ...storedResult(row), existingTime: existing?.time };
   }
 
-  const decision = decideDeviceWrite(state, item.timeS);
+  const decision = decideDeviceWrite(state, item.timeS, item.replace);
   let outcome: Outcome;
   if (decision === "insert") {
     await tx.split.create({
@@ -310,7 +310,7 @@ async function applyDeviceItem(
     });
     outcome = "applied";
   } else if (decision === "replace" && owner) {
-    // Oprava v OBD: přepsat hodnotu, kterou zapsalo OBD (legacy by opravu tiše zahodil).
+    // Jen s přepínačem applyCorrections: přepsat hodnotu, kterou zapsalo OBD (legacy by ji zahodil).
     await tx.split.updateMany({
       where: { bib: item.bib, year: token.year, split: item.split, time: existing!.time },
       data: { time: item.timeS, created: now, author: token.author },

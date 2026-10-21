@@ -53,26 +53,25 @@ POST /api/race/2026/splits
 Authorization: Bearer mcvv_live_…
 Content-Type: application/json
 
-{"client":"obd-klient/0.2.0","items":[{"bib":41,"split":"9","timeS":1686,"seenAt":"2026-…Z"},
-                                       {"action":"delete","bib":42,"split":"9","timeS":1700}]}
+{"client":"obd-klient/0.2.0","items":[{"bib":41,"split":"9","timeS":1686,"seenAt":"2026-…Z"}]}
 ```
 
 `action`: `set` (výchozí – číslo má v souboru OBD tento čas) nebo `delete` (řádek s tímto časem
-ze souboru zmizel).
+ze souboru zmizel). `replace` (výchozí `false`): smí jiný čas přepsat hodnotu z OBD.
 
 Odpověď `200`: `{"ok":true,"results":[{"id":"dev4:9:41:1686","outcome":"applied","bib":41,"time":1686}],"summary":{"applied":1}}`.
 
 - Idempotence: klíč `dev{tokenId}:{split}:{bib}:{timeS}` (smazání `dev{tokenId}:del:…`). Opakované
   odeslání vrátí původní výsledek. Když se stejná hodnota vrátí po přepsání/smazání, dostane klíč
   pořadové číslo `#2`, `#3`…
-- OBD posílá **snapshot** souboru, takže:
+- Výchozí chování je 1:1 s legacy (Pavel, Q22): **platí první zapsaný čas**.
   - nový čas → `applied`; stejný čas → `unchanged`;
-  - jiný čas u čísla, jehož hodnotu zapsalo OBD → **přepíše se** (`applied`, původní zápis `replaced`) –
-    oprava v OBD se propíše;
-  - jiný čas u čísla, jehož hodnotu zadal člověk (web, admin) → `conflict` (nic se nepřepíše,
-    rozhodne admin „Přijmout/Zamítnout“; přijatá hodnota z OBD pak patří OBD);
-  - `delete` smaže řádek `mcvv_split` jen když ho drží OBD se stejným časem (`deleted`), jinak
-    `unchanged` s poznámkou `missing` / `not-owned`.
+  - jiný čas → `conflict` (nic se nepřepíše; admin může hodnotu „Přijmout/Zamítnout“);
+  - s `replace: true` (přepínač klienta `applyCorrections`, výchozí vypnuto) jiný čas přepíše
+    hodnotu, kterou zapsalo OBD (`applied`, původní zápis `replaced`); ruční zápis (web, admin)
+    se nepřepíše nikdy;
+  - `delete` (přepínač klienta `deleteMissing`, výchozí vypnuto) smaže řádek `mcvv_split` jen když
+    ho drží OBD se stejným časem (`deleted`), jinak `unchanged` s poznámkou `missing` / `not-owned`.
 - `rejected` s důvodem: `before-start`, `too-long` (> 6 h), `future`, `stale` (web); neznámé číslo
   se uloží s poznámkou `unknown-bib`.
 - Chyby: `401` (neplatný / prošlý / zrušený token, `reason`), `403` (`year-mismatch`,
@@ -103,9 +102,11 @@ Všechno 1:1 podle legacy, LuM ani OBD nic nemění.
 1. Cesta a název souboru se nezjišťují od LuM: zadají se v nastavení klienta (`config.json` → `file`,
    parametr `-file`) nebo dotazem při prvním spuštění `obd-klient.exe` (znovu `-setup`).
    Formát souboru je shodný s tím, který importoval legacy web (viz výše).
-2. OBD každých 60 s zapíše celý soubor znovu (kompletní přepis). Oprava času = změněný řádek,
-   smazání = řádek chybí. Klient proto posílá i změny a zmizelé řádky (smazání až po 2 po sobě
-   jdoucích verzích souboru; prázdný nebo výrazně kratší soubor nic nemaže).
+2. OBD každých 60 s zapíše celý soubor znovu (kompletní přepis). **Opravy ani smazání časů z OBD
+   se nepropisují – platí první zapsaný čas jako v legacy** (doplněk Q22). Změněný čas se na webu
+   ukáže jako konflikt pro admina. Přepis a mazání jsou v klientovi za přepínači
+   `applyCorrections` / `deleteMissing` (výchozí vypnuto; mazání až po 2 verzích souboru,
+   prázdný nebo výrazně kratší soubor nic nemaže).
 3. DNF a diskvalifikace v souboru s mezičasy nejsou (status přijde po závodě v `kon_vysl.csv`, #123).
 4. Jiné mezičasy OBD neexportuje; cíl je split `9`. Mezičasy 1,3 a 2,7 km zadávají lidé přes web (#121).
 5. Export do OBD (TXT nebo HTML, sekce v jednom souboru, klub `000`, kódování windows-1250,
@@ -144,5 +145,5 @@ OBD je nepíše). Když je číslo v souboru vícekrát, platí první řádek j
 2. Operátoři se přihlásí, otevřou `/mezicasy`, vyberou stanoviště.
 3. Na cílovém PC (Windows 11) spustit `obd-klient.exe` – při prvním spuštění se zeptá na adresu,
    klíč, ročník a cestu k souboru s mezičasy –, `obd-klient.exe -check`, pak běh. Vyzkoušet i opravu
-   a smazání času v OBD (propíše se do 2 minut).
+   času v OBD (na webu zůstane první čas, admin uvidí konflikt).
 4. Po generálce smazat zkušební nulu, zrušit tokeny, smazat testovací záznamy.

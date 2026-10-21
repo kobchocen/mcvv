@@ -109,6 +109,7 @@ test("device items default to set and accept delete (OBD snapshot)", () => {
     ],
   });
   assert.equal(parsed.items[0]!.action, "set");
+  assert.equal(parsed.items[0]!.replace, false);
   assert.equal(parsed.items[1]!.action, "delete");
   assert.ok(!deviceBatchSchema.safeParse({ items: [{ action: "x", bib: 1, timeS: 1 }] }).success);
   assert.equal(
@@ -117,12 +118,16 @@ test("device items default to set and accept delete (OBD snapshot)", () => {
   );
 });
 
-test("decideDeviceWrite: OBD corrections overwrite only OBD values", () => {
+test("decideDeviceWrite: first time wins by default (legacy), replace only behind the switch", () => {
   assert.equal(decideDeviceWrite(null, 100), "insert");
   assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 100), "unchanged");
   assert.equal(decideDeviceWrite({ time: 100, ownedByObd: false }, 100), "unchanged");
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 101), "replace");
+  // výchozí (Q22): oprava v OBD nic nepřepíše
+  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 101), "conflict");
   assert.equal(decideDeviceWrite({ time: 100, ownedByObd: false }, 101), "conflict");
+  // přepínač applyCorrections: jen hodnota z OBD
+  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 101, true), "replace");
+  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: false }, 101, true), "conflict");
 });
 
 test("decideDeviceDelete: removed row deletes only the unchanged OBD value", () => {

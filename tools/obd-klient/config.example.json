@@ -7,5 +7,6 @@
   "intervalS": 5,
   "maxBackoffS": 60,
   "missingSnapshots": 2,
-  "deleteMissing": true
+  "deleteMissing": false,
+  "applyCorrections": false
 }

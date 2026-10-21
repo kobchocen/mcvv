@@ -260,6 +260,10 @@ function fakeDb() {
       (r) => `${r.photoId}|${r.runnerId}`,
     ),
     webImage: table([{ id: 7, runnerId: "19830002" }], (r) => String(r.id)),
+    startLineMeta: table(
+      [{ year: 2026, runnerId: "19830002", locked: true, groupId: null }],
+      (r) => `${r.year}|${r.runnerId}`,
+    ),
     category: table(CATEGORIES as unknown as Row[], (r) => String(r.id)),
   };
   let failAt: string | null = null;
@@ -333,12 +337,19 @@ describe("applySexChange (re-keying in one transaction)", () => {
       startEntries: 1,
       runnerPhotos: 2,
       webImages: 1,
+      startLines: 1,
     });
     const ids = fake.runner.rows.map((r) => r.id);
     assert.ok(ids.includes("19835003"));
     assert.ok(!ids.includes("19830002"));
     assert.equal(fake.runner.rows.find((r) => r.id === "19835003")?.name, "Nováková Jana");
-    for (const model of ["registrationLine", "startEntry", "runnerPhoto", "webImage"] as const) {
+    for (const model of [
+      "registrationLine",
+      "startEntry",
+      "runnerPhoto",
+      "webImage",
+      "startLineMeta",
+    ] as const) {
       assert.ok(
         !fake[model].rows.some((r) => r.runnerId === "19830002"),
         `${model} still references the old id`,

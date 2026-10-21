@@ -52,6 +52,7 @@ model Runner {
   registrationLines RegistrationLine[]
   startEntries      StartEntry[]
   results           Result[]
+  startLineMetas    StartLineMeta[]
 
   @@map("cis_bezec")
 }
@@ -110,31 +111,37 @@ model WebImageType {
 
 /// Základní info o jednotlivých ročnících závodu
 model Edition {
-  id              Int       @id @default(autoincrement()) @map("id") @db.SmallInt
-  date            DateTime  @map("datum") @db.Date
-  weather         String?   @map("weather") @db.VarChar(64)
-  temp            Int?      @map("temp") @db.SmallInt
-  zhl             Boolean?  @default(true) @map("zhl")
-  isCarEx         Boolean?  @default(false) @map("iscarex")
-  regDeadline     DateTime? @map("prihl_datum") @db.Date
-  regEmail        String?   @default("mcvv@mcvv.org") @map("prihl_mail") @db.VarChar(32)
-  startKidsMail   Int?      @default(20) @map("start_deti_mail") @db.SmallInt
-  startKidsPlace  Int?      @default(50) @map("start_deti_mist") @db.SmallInt
-  startAdultMail  Int?      @default(50) @map("start_dosp_mail") @db.SmallInt
-  startAdultPlace Int?      @default(100) @map("start_dosp_mist") @db.SmallInt
-  startInterval   Int?      @default(15) @map("st_interval") @db.SmallInt
-  infoEmail       String?   @default("mcvv@mcvv.org") @map("infomail") @db.VarChar(32)
-  infoWww         String?   @default("www.mcvv.org") @map("infowww") @db.VarChar(32)
-  infoTel         String?   @default("") @map("infotel") @db.VarChar(16)
+  id               Int       @id @default(autoincrement()) @map("id") @db.SmallInt
+  date             DateTime  @map("datum") @db.Date
+  weather          String?   @map("weather") @db.VarChar(64)
+  temp             Int?      @map("temp") @db.SmallInt
+  zhl              Boolean?  @default(true) @map("zhl")
+  isCarEx          Boolean?  @default(false) @map("iscarex")
+  regDeadline      DateTime? @map("prihl_datum") @db.Date
+  regEmail         String?   @default("mcvv@mcvv.org") @map("prihl_mail") @db.VarChar(32)
+  startKidsMail    Int?      @default(20) @map("start_deti_mail") @db.SmallInt
+  startKidsPlace   Int?      @default(50) @map("start_deti_mist") @db.SmallInt
+  startAdultMail   Int?      @default(50) @map("start_dosp_mail") @db.SmallInt
+  startAdultPlace  Int?      @default(100) @map("start_dosp_mist") @db.SmallInt
+  startInterval    Int?      @default(15) @map("st_interval") @db.SmallInt
+  infoEmail        String?   @default("mcvv@mcvv.org") @map("infomail") @db.VarChar(32)
+  infoWww          String?   @default("www.mcvv.org") @map("infowww") @db.VarChar(32)
+  infoTel          String?   @default("") @map("infotel") @db.VarChar(16)
   // Ceny v cíli
-  finAdult1       Int?      @default(2000) @map("fin_dosp_1") @db.SmallInt
-  finAdult2       Int?      @default(1000) @map("fin_dosp_2") @db.SmallInt
-  finAdult3       Int?      @default(500) @map("fin_dosp_3") @db.SmallInt
-  finAdult4       Int?      @default(200) @map("fin_dosp_4") @db.SmallInt
-  finAdult5       Int?      @default(100) @map("fin_dosp_5") @db.SmallInt
-  finVet1         Int?      @default(300) @map("fin_vet_1") @db.SmallInt
-  finVet2         Int?      @default(200) @map("fin_vet_2") @db.SmallInt
-  finVet3         Int?      @default(100) @map("fin_vet_3") @db.SmallInt
+  finAdult1        Int?      @default(2000) @map("fin_dosp_1") @db.SmallInt
+  finAdult2        Int?      @default(1000) @map("fin_dosp_2") @db.SmallInt
+  finAdult3        Int?      @default(500) @map("fin_dosp_3") @db.SmallInt
+  finAdult4        Int?      @default(200) @map("fin_dosp_4") @db.SmallInt
+  finAdult5        Int?      @default(100) @map("fin_dosp_5") @db.SmallInt
+  finVet1          Int?      @default(300) @map("fin_vet_1") @db.SmallInt
+  finVet2          Int?      @default(200) @map("fin_vet_2") @db.SmallInt
+  finVet3          Int?      @default(100) @map("fin_vet_3") @db.SmallInt
+  // Model startu (#114): nulový čas v sekundách od půlnoci (Europe/Prague), 1. číslo 2. startu,
+  // čísla obhájců (absolutní vítězové minulého ročníku, muži a ženy).
+  startZeroSeconds Int       @default(36900) @map("st_nula_s")
+  secondStartFrom  Int       @default(601) @map("st_druhy_od") @db.SmallInt
+  championBibMen   Int?      @default(400) @map("st_obhajce_m") @db.SmallInt
+  championBibWomen Int?      @default(950) @map("st_obhajce_z") @db.SmallInt
 
   @@map("mcvv_info")
 }
@@ -691,4 +698,56 @@ model Message {
   @@index([threadId, createdAt])
   @@index([authorUserId, createdAt])
   @@map("mcvv_message")
+}
+
+// ============================================
+// Startovka (#114, #115, #116)
+// ============================================
+
+/// Rozsah startovních čísel kategorie pro konkrétní rok (kopíruje se z předchozího ročníku).
+model CategoryBibRange {
+  year       Int    @map("rok") @db.SmallInt
+  categoryId String @map("kateg_id") @db.Char(1)
+  bibFrom    Int    @map("cislo_od") @db.SmallInt
+  bibTo      Int    @map("cislo_do") @db.SmallInt
+
+  @@id([year, categoryId])
+  @@map("mcvv_kateg_rocnik")
+}
+
+enum StartGroupKind {
+  joint
+  consecutive
+}
+
+/// Požadavek na společný (stejný čas) nebo navazující start skupiny běžců.
+model StartGroup {
+  id        Int            @id @default(autoincrement())
+  year      Int            @map("rok") @db.SmallInt
+  kind      StartGroupKind
+  note      String?        @map("poznamka") @db.VarChar(200)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  members StartLineMeta[]
+
+  @@index([year])
+  @@map("mcvv_start_skupina")
+}
+
+/// Doplňková data řádku přihlášky pro startovku (legacy mcvv_prihlaska_radek se nemění):
+/// zamčené (ručně změněné) číslo a příslušnost ke skupině.
+model StartLineMeta {
+  year       Int      @map("rok") @db.SmallInt
+  runnerId   String   @map("bezec_id") @db.Char(8)
+  locked     Boolean  @default(false) @map("zamceno")
+  groupId    Int?     @map("skupina_id")
+  groupOrder Int      @default(0) @map("skupina_poradi") @db.SmallInt
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  runner Runner      @relation(fields: [runnerId], references: [id], onDelete: Cascade)
+  group  StartGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@id([year, runnerId])
+  @@index([groupId])
+  @@map("mcvv_start_radek")
 }

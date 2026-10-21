@@ -4,12 +4,17 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
+import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
+import { startModelCopy } from "@/components/organisms/mcvv-admin-start-model-copy";
 import { prisma } from "@/lib/db/client";
+import { loadStartSettings } from "@/lib/race/startlist-load";
+import { startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ chyba?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -18,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("editionsTitle") };
 }
 
-export default async function AdminEditEditionPage({ params }: PageProps) {
+export default async function AdminEditEditionPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale, id: rawId } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -32,6 +37,9 @@ export default async function AdminEditEditionPage({ params }: PageProps) {
     notFound();
   }
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });
+  const settings = await loadStartSettings(edition.date.getUTCFullYear());
+  const { chyba } = await searchParams;
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -45,7 +53,6 @@ export default async function AdminEditEditionPage({ params }: PageProps) {
           copy={{
             date: copy("editionsDate"),
             reg: copy("editionsReg"),
-            interval: copy("editionsInterval"),
             weather: copy("editionsWeather"),
             temp: copy("editionsTemp"),
             kidsMail: copy("editionsKidsMail"),
@@ -56,7 +63,15 @@ export default async function AdminEditEditionPage({ params }: PageProps) {
             vet: (place) => copy("editionsVet", { place }),
             save: copy("save"),
           }}
-        />
+        >
+          <McvvAdminStartModelFields
+            model={startModelFromEdition(edition)}
+            champions={{ men: edition.championBibMen, women: edition.championBibWomen }}
+            ranges={settings.ranges}
+            categories={settings.categories}
+            copy={startModelCopy(startCopy, chyba, !settings.rangesStored)}
+          />
+        </McvvAdminEditionForm>
       </div>
     </main>
   );

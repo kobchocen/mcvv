@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPartnerForm } from "@/components/organisms/mcvv-admin-partner-form";
 import { type Locale } from "@/i18n/routing";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -21,6 +22,7 @@ export default async function AdminNewPartnerPage({ params, searchParams }: Page
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
 
   return (

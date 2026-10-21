@@ -9,6 +9,7 @@ import { prisma } from "@/lib/db/client";
 import { loadStartSettings } from "@/lib/race/startlist-load";
 import { DEFAULT_CHAMPION_BIBS, startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -25,6 +26,7 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const latest = await prisma.edition.findFirst({ orderBy: { id: "desc" } });
   const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });

@@ -47,6 +47,8 @@ export default defineRouting({
     "/admin/tisk": "/admin/tisk",
     "/admin/zpravy": "/admin/zpravy",
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
+    "/admin/uzivatele": "/admin/uzivatele",
+    "/admin/den-zavodu": "/admin/den-zavodu",
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
   },

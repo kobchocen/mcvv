@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { adminAccess, getSession } from "@/lib/auth/session";
 import { McvvFooter, McvvLoginNextRedirect, McvvPublicNavbar } from "@/components/organisms";
 import { withFooterYear, type McvvHomepageContent } from "@/components/templates";
 import { prisma } from "@/lib/db/client";
@@ -17,7 +17,7 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const session = await getSession();
-  if (!session || !isStaffRole(session.role)) {
+  if (!session || adminAccess(session.role) === "none") {
     return (
       <Suspense fallback={null}>
         <McvvLoginNextRedirect />

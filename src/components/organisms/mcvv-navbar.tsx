@@ -22,7 +22,10 @@ import { cn } from "@/lib/utils";
 export type McvvNavbarAccount = {
   name: string;
   email: string;
+  /** Zobrazit odkaz do administrace (plný staff i omezená role Časomíra). */
   staff?: boolean;
+  /** Cíl odkazu do administrace (výchozí /admin; Časomíra → /admin/den-zavodu). */
+  adminHref?: string;
   /** Odznak zpráv (null = funkce vypnutá / bez dat). */
   messages?: { count: number; href: "/zpravy" | "/admin/zpravy" } | null;
 };
@@ -179,7 +182,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                   aria-label={content.nav.admin}
                   title={content.nav.admin}
                 >
-                  <Link href={getLocalizedHref("/admin", locale)}>
+                  <Link href={getLocalizedHref(account.adminHref ?? "/admin", locale)}>
                     <Settings className="size-[18px]" aria-hidden="true" />
                     <span className="sr-only">{content.nav.admin}</span>
                   </Link>
@@ -300,7 +303,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                               aria-label={content.nav.admin}
                               title={content.nav.admin}
                             >
-                              <Link href={getLocalizedHref("/admin", locale)}>
+                              <Link href={getLocalizedHref(account.adminHref ?? "/admin", locale)}>
                                 <Settings className="size-[18px]" aria-hidden="true" />
                                 <span className="sr-only">{content.nav.admin}</span>
                               </Link>

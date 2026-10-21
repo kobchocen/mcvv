@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">    
+    <head>
+        <title>MCVV - export dat</title>
+        <!-- META TAGS -->
+		<meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+    </head>    
+    <body>
+		<pre>
+		
+#kategorie
+A;muži;14:45
+B;muži nad 40 let;0:00
+F;ženy;0:59
+J;žáci;1:00
+K;žákyně;59:59
+Z;Řádní veteráni;100:00
+
+#oddily
+000;
+010;Oddíl deset
+CHC;K.O.B. Choceň
+LPU;Lokomotiva Pardubice
+ÚOL;Ústí nad Orlicí – Šťastný oddíl
+ZZZ;Łódź & Öhlschläger
+
+#bezci
+19800001;Novák Jan
+19805001;Šťastná Ďáblová Řehořa
+19900002;Žluťoučký Kůň
+20000003;Středník; Jan
+20105004;Őrsi Łucja
+20120005;Čech Ěmil
+20150006;Tab	Uvnitř
+20200007;Poslední Běžec
+20210008;Bez Čísla
+
+#startovka
+19900002;ÚOL;A;2026;005
+19805001;000;F;2026;005
+20000003;010;J;2026;099
+20105004;ZZZ;K;2026;100
+19800001;CHC;A;2026;301
+20200007;10;J;2026;601
+20120005;LPU;B;2026;1000
+</pre>
+</body>
+</html>

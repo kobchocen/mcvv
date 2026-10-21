@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { requireStaff } from "@/lib/admin/staff";
 import { getSession } from "@/lib/auth/session";
 import { mailPolicy } from "@/lib/mail/queue";
 import { mailStats } from "@/lib/mail/queue-store";
 import { staffUnreadCount } from "@/lib/messages/store";
 import buildInfo from "@/lib/build-info.json";
-import { Link, type Locale } from "@/i18n/routing";
+import { Link, redirect, type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -22,8 +23,13 @@ export default async function AdminPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  const current = await getSession();
+  if (current?.role === "timing") {
+    // Časomíra vidí jen „Den závodu“.
+    redirect({ href: "/admin/den-zavodu", locale });
+  }
+  const session = await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const session = await getSession();
   const mail = await mailStats().catch(() => null);
   const unreadThreads = await staffUnreadCount().catch(() => null);
 
@@ -38,7 +44,9 @@ export default async function AdminPage({ params }: PageProps) {
       | "/admin/platby"
       | "/admin/tisk"
       | "/admin/zpravy"
-      | "/admin/nastaveni";
+      | "/admin/nastaveni"
+      | "/admin/den-zavodu"
+      | "/admin/uzivatele";
     title: string;
     detail?: string;
     highlight?: boolean;
@@ -56,9 +64,11 @@ export default async function AdminPage({ params }: PageProps) {
     { href: "/admin/startovka", title: copy("navStartList") },
     { href: "/admin/newsletter", title: copy("navNewsletter") },
     { href: "/admin/platby", title: copy("navPayments") },
+    { href: "/admin/den-zavodu", title: copy("navRaceDay") },
     { href: "/admin/tisk", title: copy("navPrintBibs") },
   ];
-  if (session?.role === "admin") {
+  if (session.role === "admin") {
+    tiles.push({ href: "/admin/uzivatele", title: copy("navUsers") });
     tiles.push({ href: "/admin/nastaveni", title: copy("navSettings") });
   }
 

@@ -11,6 +11,7 @@ import {
   swapStartBibs,
   toggleStartLock,
 } from "@/lib/admin/startlist";
+import { requireStaff } from "@/lib/admin/staff";
 import { getSiteSettings } from "@/lib/settings/site";
 import { formatInterval } from "@/lib/race/start-settings";
 import {
@@ -77,6 +78,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const t = await getTranslations({ locale, namespace: "StartAdmin" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
   const query = await searchParams;

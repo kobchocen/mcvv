@@ -1,4 +1,5 @@
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { adminAccess, getSession } from "@/lib/auth/session";
+import { adminHomeHref } from "@/lib/auth/roles";
 import { getUnreadCount } from "@/lib/messages/store";
 
 import { McvvNavbar, type McvvNavbarProps } from "./mcvv-navbar";
@@ -21,7 +22,8 @@ export async function McvvPublicNavbar({
           ? {
               name: session.name,
               email: session.email,
-              staff: isStaffRole(session.role),
+              staff: adminAccess(session.role) !== "none",
+              adminHref: adminHomeHref(session.role),
               messages,
             }
           : null

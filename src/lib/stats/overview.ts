@@ -15,11 +15,11 @@ export const COURSE_KM = 4.3;
 /** Elevation gain of one lap of the course. */
 export const COURSE_CLIMB_M = 200;
 /**
- * Plausible finisher ages for "Nejstarší a nejmladší v cíli". Runner ids encode the birth
- * year; a few legacy ids give ages below 6 (most likely a placeholder / mistyped birth year
- * of small children running with a parent), so ages outside 6–99 are ignored.
+ * Finisher ages for "Nejstarší a nejmladší v cíli". Runner ids encode the birth year
+ * (age = race year − birth year). There is no minimum age; only invalid values are skipped:
+ * a missing / non-numeric birth year or an age of 0 or less (birth year in or after the race
+ * year). Ages above 99 are ignored as implausible.
  */
-export const MIN_PLAUSIBLE_AGE = 6;
 export const MAX_PLAUSIBLE_AGE = 99;
 
 export type Sex = "M" | "F";
@@ -226,13 +226,13 @@ export function computeStatsOverview(
     }
   }
 
-  // Oldest and youngest finisher (plausible ages only).
+  // Oldest and youngest finisher (valid ages only, no minimum age).
   let oldest: (Performance & { age: number }) | null = null;
   let youngest: (Performance & { age: number }) | null = null;
   for (const row of results) {
     const born = runnerBirthYear(row.runnerId);
     const age = row.year - born;
-    if (!Number.isFinite(born) || age < MIN_PLAUSIBLE_AGE || age > MAX_PLAUSIBLE_AGE) {
+    if (!Number.isFinite(born) || born <= 0 || age <= 0 || age > MAX_PLAUSIBLE_AGE) {
       continue;
     }
     if (!oldest || age > oldest.age || (age === oldest.age && row.time < oldest.time)) {

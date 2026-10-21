@@ -204,6 +204,12 @@ export default async function RunnerPage({ params }: PageProps) {
                   </p>
                 </div>
               )}
+              <Link
+                href="/statistiky"
+                className="mt-4 inline-block text-sm font-semibold text-race-accent hover:underline"
+              >
+                {copy("statsLink")} →
+              </Link>
             </article>
           </div>
 

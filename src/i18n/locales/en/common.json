@@ -23,7 +23,7 @@
         { "label": "About", "href": "#about" },
         { "label": "Course", "href": "#route" },
         { "label": "Date", "href": "#date" },
-        { "label": "Statistics", "href": "#results" },
+        { "label": "Statistics", "href": "/statistiky" },
         { "label": "Photos", "href": "#gallery" },
         { "label": "Partners", "href": "#partners" }
       ]
@@ -199,6 +199,7 @@
       "overline": "Results",
       "title": "Generations of runners, one course",
       "allLabel": "Results archive",
+      "statsLabel": "All statistics",
       "yearLabel": "Latest edition",
       "linkLabel": "Full results",
       "empty": "Results will appear after the next race.",
@@ -280,6 +281,7 @@
         {
           "title": "Statistics",
           "links": [
+            { "label": "Statistics overview", "href": "/statistiky" },
             { "label": "Latest edition", "href": "/results/{year}" },
             { "label": "Results archive", "href": "/results" },
             { "label": "Course records", "href": "/statistiky/rekordy" }
@@ -499,7 +501,6 @@
     "readOnly": "read only",
     "name": "Entry name",
     "email": "Email",
-    "note": "Note",
     "noMail": "I do not want email updates",
     "save": "Save",
     "saved": "Saved",
@@ -556,6 +557,7 @@
     "back": "Back to home"
   },
   "Runner": {
+    "statsLink": "How do you rank in history? Browse the statistics",
     "eyebrow": "Runner",
     "starts": "Starts",
     "record": "Personal best",
@@ -1083,7 +1085,7 @@
       {
         "image": "10-uprava.jpg",
         "title": "Edit until the deadline",
-        "text": "You can change the note, club or list of runners until the entry deadline. Confirm header changes with <b>Uložit</b> (Save)."
+        "text": "You can change the club or list of runners until the entry deadline. Confirm header changes with <b>Uložit</b> (Save)."
       },
       {
         "image": "11-login.jpg",
@@ -1160,6 +1162,7 @@
   "ResultsArchive": {
     "eyebrow": "05 — Results and history",
     "home": "Home",
+    "stats": "Statistics",
     "title": "Results Archive",
     "intro": "Select a year to view the complete results list.",
     "selectYear": "Select year",

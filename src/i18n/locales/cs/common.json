@@ -23,7 +23,7 @@
         { "label": "O závodě", "href": "#about" },
         { "label": "Trať", "href": "#route" },
         { "label": "Termín", "href": "#date" },
-        { "label": "Statistiky", "href": "#results" },
+        { "label": "Statistiky", "href": "/statistiky" },
         { "label": "Fotky", "href": "#gallery" },
         { "label": "Partneři", "href": "#partners" }
       ]
@@ -199,6 +199,7 @@
       "overline": "Výsledky",
       "title": "Generace běžců, jedna trať",
       "allLabel": "Archiv výsledků",
+      "statsLabel": "Všechny statistiky",
       "yearLabel": "Poslední ročník",
       "linkLabel": "Kompletní výsledky",
       "empty": "Výsledky se doplní po doběhu ročníku.",
@@ -280,6 +281,7 @@
         {
           "title": "Statistiky",
           "links": [
+            { "label": "Přehled statistik", "href": "/statistiky" },
             { "label": "Poslední ročník", "href": "/results/{year}" },
             { "label": "Archiv výsledků", "href": "/results" },
             { "label": "Traťové rekordy", "href": "/statistiky/rekordy" }
@@ -499,7 +501,6 @@
     "readOnly": "jen čtení",
     "name": "Název přihlášky",
     "email": "E-mail",
-    "note": "Poznámka",
     "noMail": "Nechci zasílat informace e-mailem",
     "save": "Uložit",
     "saved": "Uloženo",
@@ -556,6 +557,7 @@
     "back": "Zpět na úvod"
   },
   "Runner": {
+    "statsLink": "Jak si stojíš v historii? Prohlédni si statistiky",
     "eyebrow": "{sex, select, F {Běžkyně} other {Běžec}}",
     "starts": "Účasti",
     "record": "Osobní rekord",
@@ -1083,7 +1085,7 @@
       {
         "image": "10-uprava.jpg",
         "title": "Úpravy do uzávěrky",
-        "text": "Poznámku, klub nebo seznam běžců můžete měnit až do uzávěrky. Změny hlavičky potvrďte tlačítkem <b>Uložit</b>."
+        "text": "Klub nebo seznam běžců můžete měnit až do uzávěrky. Změny hlavičky potvrďte tlačítkem <b>Uložit</b>."
       },
       {
         "image": "11-login.jpg",
@@ -1160,6 +1162,7 @@
   "ResultsArchive": {
     "eyebrow": "05 — Výsledky a historie",
     "home": "Domů",
+    "stats": "Statistiky",
     "title": "Archiv výsledků",
     "intro": "Vyberte ročník a prohlédněte si kompletní výsledkovou listinu.",
     "selectYear": "Vyberte ročník",

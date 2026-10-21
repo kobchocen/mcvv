@@ -27,6 +27,12 @@ export function McvvResultsSection({ content }: McvvResultsSectionProps) {
               </div>
               <Button
                 asChild
+                className="bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
+              >
+                <Link href="/statistiky">{content.statsLabel}</Link>
+              </Button>
+              <Button
+                asChild
                 variant="outline"
                 className="border-race-line bg-race-surface font-display font-semibold text-foreground hover:bg-race-accent-solid hover:text-white dark:border-white/15 dark:bg-white/10 dark:text-white"
               >

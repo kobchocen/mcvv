@@ -4,6 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireAdmin } from "@/lib/admin/staff";
 import { saveSettings } from "@/lib/admin/settings";
 import { getFreeEntryEmailsText } from "@/lib/entries/settings";
+import { getOrganizerRegistrationEmailText } from "@/lib/entries/organizer-registration";
+import { DEFAULT_ORGANIZER_REGISTRATION_EMAIL } from "@/lib/entries/organizer-registration-core";
 import { getSiteSettings, ONLINE_RESULTS_URL_MAX, STATS_MOMENT_MAX } from "@/lib/settings/site";
 import { type Locale } from "@/i18n/routing";
 import { env } from "@/lib/env";
@@ -39,11 +41,12 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   setRequestLocale(locale);
   await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const [emails, site, messages, receipt] = await Promise.all([
+  const [emails, site, messages, receipt, organizerRegEmail] = await Promise.all([
     getFreeEntryEmailsText(),
     getSiteSettings(),
     getMessageSettings(),
     getStoredReceiptIssuer(),
+    getOrganizerRegistrationEmailText(),
   ]);
   const organizerFallback = resolveOrganizerEmail(null, env.CONTACT_TO);
 
@@ -58,6 +61,10 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
         {error === "url" ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
             {copy("settingsOnlineUrlInvalid")}
+          </p>
+        ) : error === "organizerRegistrationEmail" ? (
+          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+            {copy("settingsOrganizerRegistrationEmailInvalid")}
           </p>
         ) : error === "email" ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
@@ -247,6 +254,26 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
               defaultValue={emails}
               className="min-h-48 bg-race-surface font-mono text-sm"
             />
+            <div className="mt-3 grid gap-1.5">
+              <Label htmlFor="organizerRegistrationEmail">
+                {copy("settingsOrganizerRegistrationEmail")}
+              </Label>
+              <Input
+                id="organizerRegistrationEmail"
+                name="organizerRegistrationEmail"
+                type="email"
+                maxLength={254}
+                placeholder={DEFAULT_ORGANIZER_REGISTRATION_EMAIL}
+                defaultValue={organizerRegEmail}
+                aria-describedby="organizerRegistrationEmailHint"
+                className="h-10 bg-race-surface"
+              />
+              <p id="organizerRegistrationEmailHint" className="text-xs text-race-muted">
+                {copy("settingsOrganizerRegistrationEmailHint", {
+                  fallback: DEFAULT_ORGANIZER_REGISTRATION_EMAIL,
+                })}
+              </p>
+            </div>
           </fieldset>
           <Button
             type="submit"

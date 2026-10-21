@@ -1496,6 +1496,23 @@
     "doneRecords": "Rekordy kategorií přepočítány: {list}.",
     "doneRecordsUnchanged": "Rekordy kategorií beze změny."
   },
+  "AfterRace": {
+    "title": "Po závodě – tombola",
+    "adminHome": "Administrace",
+    "heading": "Po závodě {year}",
+    "intro": "Nástroje pro pořadatele na místě po doběhu.",
+    "tombola": "Tombola",
+    "tombolaHint": "Náhodná jména z doběhnuvších (výsledky ročníku, před importem průchody cílem). Vylosovaní se neopakují. Los je v adrese stránky, takže obnovení ani tisk výsledek nezmění; když někdo chybí, zvyšte počet – dosavadní jména zůstanou a přibudou další. „Losovat znovu“ zamíchá nově.",
+    "year": "Ročník",
+    "count": "Počet",
+    "apply": "Použít",
+    "redraw": "Losovat znovu",
+    "excludeClubs": "Vynechat kluby (vynecháno: {count})",
+    "noFinishers": "Ročník zatím nemá žádné doběhnuvší (výsledky ani průchody cílem).",
+    "poolInfo": "Losuje se z {eligible} z {total} doběhnuvších ({source}), los {seed}.",
+    "sourceResults": "výsledky",
+    "sourceSplits": "průchody cílem"
+  },
   "StartAdmin": {
     "navStartList": "Startovka",
     "title": "Startovka {year}",
@@ -1631,22 +1648,5 @@
     "issue_rangeOverlap": "Rozsahy kategorií {category} a {other} se překrývají.",
     "issue_championInRange": "Číslo obhájce {other} leží v rozsahu kategorie {category}.",
     "issue_championSame": "Čísla obhájců mužů a žen musí být různá."
-  },
-  "AfterRace": {
-    "title": "Po závodě – tombola",
-    "adminHome": "Administrace",
-    "heading": "Po závodě {year}",
-    "intro": "Nástroje pro pořadatele na místě po doběhu.",
-    "tombola": "Tombola",
-    "tombolaHint": "Náhodná jména z doběhnuvších (výsledky ročníku, před importem průchody cílem). Vylosovaní se neopakují. Los je v adrese stránky, takže obnovení ani tisk výsledek nezmění; když někdo chybí, zvyšte počet – dosavadní jména zůstanou a přibudou další. „Losovat znovu“ zamíchá nově.",
-    "year": "Ročník",
-    "count": "Počet",
-    "apply": "Použít",
-    "redraw": "Losovat znovu",
-    "excludeClubs": "Vynechat kluby (vynecháno: {count})",
-    "noFinishers": "Ročník zatím nemá žádné doběhnuvší (výsledky ani průchody cílem).",
-    "poolInfo": "Losuje se z {eligible} z {total} doběhnuvších ({source}), los {seed}.",
-    "sourceResults": "výsledky",
-    "sourceSplits": "průchody cílem"
   }
 }

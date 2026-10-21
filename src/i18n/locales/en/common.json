@@ -1496,6 +1496,23 @@
     "doneRecords": "Category records recalculated: {list}.",
     "doneRecordsUnchanged": "Category records unchanged."
   },
+  "AfterRace": {
+    "title": "After the race – raffle",
+    "adminHome": "Administration",
+    "heading": "After the race {year}",
+    "intro": "Tools for the organizers on site after the race.",
+    "tombola": "Tombola",
+    "tombolaHint": "Random names of finishers (edition results, before the import finish punches). Nobody is drawn twice. The draw is stored in the page address, so reloading or printing keeps it; if someone is missing, raise the count – the names stay and more are added. “Draw again” reshuffles.",
+    "year": "Edition",
+    "count": "Count",
+    "apply": "Apply",
+    "redraw": "Draw again",
+    "excludeClubs": "Exclude clubs (excluded: {count})",
+    "noFinishers": "No finishers for this edition yet (no results or finish punches).",
+    "poolInfo": "Drawing from {eligible} of {total} finishers ({source}), draw {seed}.",
+    "sourceResults": "results",
+    "sourceSplits": "finish punches"
+  },
   "StartAdmin": {
     "navStartList": "Start list",
     "title": "Start list {year}",
@@ -1631,22 +1648,5 @@
     "issue_rangeOverlap": "The ranges of categories {category} and {other} overlap.",
     "issue_championInRange": "Champion bib {other} lies in the range of category {category}.",
     "issue_championSame": "The men's and women's champion bibs must differ."
-  },
-  "AfterRace": {
-    "title": "After the race – raffle",
-    "adminHome": "Administration",
-    "heading": "After the race {year}",
-    "intro": "Tools for the organizers on site after the race.",
-    "tombola": "Tombola",
-    "tombolaHint": "Random names of finishers (edition results, before the import finish punches). Nobody is drawn twice. The draw is stored in the page address, so reloading or printing keeps it; if someone is missing, raise the count – the names stay and more are added. “Draw again” reshuffles.",
-    "year": "Edition",
-    "count": "Count",
-    "apply": "Apply",
-    "redraw": "Draw again",
-    "excludeClubs": "Exclude clubs (excluded: {count})",
-    "noFinishers": "No finishers for this edition yet (no results or finish punches).",
-    "poolInfo": "Drawing from {eligible} of {total} finishers ({source}), draw {seed}.",
-    "sourceResults": "results",
-    "sourceSplits": "finish punches"
   }
 }

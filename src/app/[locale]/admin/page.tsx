@@ -35,6 +35,7 @@ export default async function AdminPage({ params }: PageProps) {
       | "/admin/prihlasky"
       | "/admin/newsletter"
       | "/admin/platby"
+      | "/admin/tisk"
       | "/admin/zpravy"
       | "/admin/nastaveni";
     title: string;
@@ -53,6 +54,7 @@ export default async function AdminPage({ params }: PageProps) {
     { href: "/admin/prihlasky", title: copy("navRegistrations") },
     { href: "/admin/newsletter", title: copy("navNewsletter") },
     { href: "/admin/platby", title: copy("navPayments") },
+    { href: "/admin/tisk", title: copy("navPrintBibs") },
   ];
   if (session?.role === "admin") {
     tiles.push({ href: "/admin/nastaveni", title: copy("navSettings") });

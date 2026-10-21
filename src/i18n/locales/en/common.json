@@ -729,6 +729,7 @@
     "navNewsletter": "Newsletter",
     "navPayments": "Payments (Fio)",
     "navRegistrations": "Entries",
+    "navPrintBibs": "Print bib numbers",
     "navSettings": "Settings",
     "settingsTitle": "Settings",
     "settingsIntro": "Start list, online results, statistics and free entries.",
@@ -945,6 +946,7 @@
     "empty": "Nothing here yet.",
     "navLabel": "Statistics navigation",
     "back": "Back to home",
+    "printPdf": "Download PDF for print",
     "rekordy": {
       "nav": "Records",
       "title": "Course records and their evolution",

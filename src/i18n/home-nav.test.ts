@@ -5,7 +5,7 @@ import { test } from "node:test";
 type HomeMessages = {
   Home: {
     nav: { links: { label: string; href: string }[] };
-    results: { eyebrow: string; overline?: string };
+    results: { eyebrow: string; overline?: string; statsLabel: string };
     footer: { columns: { title: string; links: { href: string }[] }[] };
   };
 };
@@ -21,10 +21,11 @@ const expected = {
 } as const;
 
 for (const locale of ["cs", "en"] as const) {
-  test(`${locale}: main menu points to the statistics section as "${expected[locale].menu}"`, () => {
+  test(`${locale}: main menu "${expected[locale].menu}" opens the statistics page`, () => {
     const { nav } = load(locale).Home;
-    const item = nav.links.find((link) => link.href === "#results");
-    assert.ok(item, "menu item for #results exists");
+    const item = nav.links.find((link) => link.href === "/statistiky");
+    assert.ok(item, "menu item for /statistiky exists");
+    assert.ok(!nav.links.some((link) => link.href === "#results"));
     assert.equal(item.label, expected[locale].menu);
     assert.ok(!nav.links.some((link) => /^(Výsledky|Results)$/.test(link.label)));
   });
@@ -35,5 +36,10 @@ for (const locale of ["cs", "en"] as const) {
     assert.equal(results.overline, expected[locale].overline);
     const column = footer.columns.find((col) => col.links.some((l) => l.href === "/results"));
     assert.equal(column?.title, expected[locale].menu);
+    assert.ok(
+      column?.links.some((l) => l.href === "/statistiky"),
+      "footer links /statistiky",
+    );
+    assert.ok(results.statsLabel.length > 0, "section 04 has the all-statistics button");
   });
 }

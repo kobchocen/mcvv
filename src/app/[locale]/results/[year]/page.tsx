@@ -177,6 +177,12 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 {isCs ? "Přehled ročníků" : "All years"}
               </NextLink>
               <NextLink
+                href={`/${locale}/statistiky`}
+                className="inline-flex items-center rounded-md border border-race-line/60 px-4 py-2 text-sm font-semibold hover:bg-race-forest"
+              >
+                {t("stats")}
+              </NextLink>
+              <NextLink
                 href={`/${locale}/`}
                 className="inline-flex items-center rounded-md border border-race-line/60 px-4 py-2 text-sm font-semibold hover:bg-race-forest"
               >

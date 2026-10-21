@@ -7,6 +7,7 @@ import {
   adminPathAllowed,
   canAccessRaceDay,
   canAccessSplits,
+  canManageLiveResults,
   isStaffRole,
   requiresVerifiedEmail,
   USER_ROLES,
@@ -14,6 +15,18 @@ import {
 } from "./roles";
 
 describe("role permissions", () => {
+  it("splits client: splitmaker, organizer, admin; live results management: admin only", () => {
+    for (const role of ["splitmaker", "organizer", "admin"] as const) {
+      assert.ok(canAccessSplits(role), role);
+    }
+    for (const role of ["registrar", "timing"] as const) {
+      assert.ok(!canAccessSplits(role), role);
+    }
+    for (const role of USER_ROLES) {
+      assert.equal(canManageLiveResults(role), role === "admin", role);
+    }
+  });
+
   it("timing sees only the race-day section", () => {
     assert.equal(adminAccess("timing"), "raceday");
     assert.ok(canAccessRaceDay("timing"));

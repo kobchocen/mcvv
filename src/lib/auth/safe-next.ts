@@ -27,6 +27,7 @@ export const USER_NEXT_PATHS = [
   "/fotogalerie",
   "/statistiky",
   "/zpravy",
+  "/mezicasy",
 ] as const;
 export type UserNextPath = (typeof USER_NEXT_PATHS)[number];
 

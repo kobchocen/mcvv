@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { requireRaceDay } from "@/lib/admin/staff";
-import { isStaffRole } from "@/lib/auth/roles";
+import { canManageLiveResults, isStaffRole } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
 import { findEncodingIssues, firstClubRows, startWarnings } from "@/lib/raceday/obd-export";
 import { cancelledStartRunnerIds, loadObdExportData } from "@/lib/raceday/obd-export-data";
@@ -184,6 +184,21 @@ export default async function RaceDayPage({ params }: PageProps) {
             </Link>
           </div>
         </section>
+
+        {canManageLiveResults(session.role) ? (
+          <section
+            className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
+            data-testid="live-results-link"
+          >
+            <h2 className="font-display text-xl font-semibold">{copy("liveTitle")}</h2>
+            <p className="text-sm leading-6 text-race-muted">{copy("liveIntro")}</p>
+            <div className="flex flex-wrap gap-3">
+              <Link className={buttonClass} href="/admin/den-zavodu/zive">
+                {copy("liveOpen")}
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         <section className="mt-10">
           <h2 className="font-display text-xl font-semibold">{copy("historyTitle")}</h2>

@@ -1,0 +1,7 @@
+# sestavené binárky se necommitují (stavějí se v CI / lokálně)
+/dist/
+*.exe
+/obd-klient
+# lokální konfigurace s tokenem a stav
+config.json
+state.json

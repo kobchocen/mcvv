@@ -32,6 +32,7 @@ function adminHref(next: string) {
   if (path === "/admin/den-zavodu") return "/admin/den-zavodu" as const;
   if (path === "/admin/den-zavodu/prezentace") return "/admin/den-zavodu/prezentace" as const;
   if (path === "/admin/den-zavodu/vysledky") return "/admin/den-zavodu/vysledky" as const;
+  if (path === "/admin/den-zavodu/zive") return "/admin/den-zavodu/zive" as const;
   if (path === "/admin/partneri") return "/admin/partneri" as const;
   if (path === "/admin/partneri/novy") return "/admin/partneri/novy" as const;
   const partner = path.match(/^\/admin\/partneri\/(\d+)$/);

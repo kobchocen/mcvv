@@ -1,0 +1,9 @@
+{
+  "url": "https://www.mcvv.org",
+  "token": "mcvv_live_SEM_VLOZTE_TOKEN_Z_ADMINU",
+  "year": 2026,
+  "file": "C:\\OBD\\tmp\\splits.csv",
+  "split": "9",
+  "intervalS": 5,
+  "maxBackoffS": 60
+}

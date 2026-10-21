@@ -71,6 +71,17 @@ describe("zprávy", () => {
   });
 });
 
+describe("mezičasy", () => {
+  it("/mezicasy is an allowed user target after login", () => {
+    assert.equal(safeNext("/cs/mezicasy"), "/mezicasy");
+    assert.deepEqual(loginTarget("/mezicasy", false), {
+      kind: "user",
+      path: "/mezicasy",
+      query: "",
+    });
+  });
+});
+
 describe("loginTarget – Časomíra (raceday access)", () => {
   it("lands on the race-day section by default", () => {
     assert.deepEqual(loginTarget(null, "raceday"), { kind: "admin", next: "/admin/den-zavodu" });

@@ -701,6 +701,66 @@ model Message {
 }
 
 // ============================================
+// Den závodu: mezičasy (#120, #121) a OFeed (#122)
+// ============================================
+
+/// Deník všech zápisů mezičasů (web splitmakeři i klient OBD). `mcvv_split` zůstává
+/// 1:1 jako legacy tabulka; tady je idempotence (klíč `entry_key`), audit a konflikty.
+model SplitEntry {
+  id         Int       @id @default(autoincrement())
+  /// Idempotenční klíč: UUID zápisu z webového klienta, nebo `dev{tokenId}:{bib}:{split}:{time}` z API.
+  entryKey   String    @unique @map("entry_key") @db.VarChar(80)
+  year       Int       @map("rok") @db.SmallInt
+  split      String    @map("split") @db.Char(1)
+  bib        Int       @map("cislo") @db.SmallInt
+  /// Čas od individuálního startu v sekundách (jako `mcvv_split.time`).
+  time       Int?      @map("time")
+  /// Okamžik průběhu podle zařízení (po korekci hodin), pokud ho zdroj zná.
+  punchedAt  DateTime? @map("punched_at") @db.DateTime(3)
+  /// web | obd
+  source     String    @db.VarChar(8)
+  /// create | correct | delete
+  action     String    @db.VarChar(8)
+  /// Opravovaný zápis (entryKey) u `correct` / `delete`.
+  replaces   String?   @db.VarChar(80)
+  /// applied | duplicate | unchanged | conflict | resolved | rejected
+  outcome    String    @db.VarChar(12)
+  /// Doplňující informace (např. neznámé číslo, hodnota v konfliktu).
+  note       String?   @db.VarChar(255)
+  author     String    @map("autor") @db.VarChar(8)
+  userId     Int?      @map("user_id")
+  tokenId    Int?      @map("token_id")
+  receivedAt DateTime  @default(now()) @map("received_at") @db.DateTime(3)
+
+  @@index([year, split, bib])
+  @@index([year, outcome])
+  @@map("mcvv_split_entry")
+}
+
+/// API klíč zařízení v den závodu (klient OBD na cílovém PC). Uložený jen jako SHA-256.
+model IngestToken {
+  id         Int       @id @default(autoincrement())
+  label      String    @db.VarChar(64)
+  tokenHash  String    @unique @map("token_hash") @db.Char(64)
+  /// Prvních pár znaků klíče pro rozpoznání v adminu (ne tajné).
+  prefix     String    @db.VarChar(16)
+  year       Int       @map("rok") @db.SmallInt
+  /// Povolené kódy splitů, např. "9" nebo "139".
+  splits     String    @default("9") @db.VarChar(8)
+  /// Autor do `mcvv_split.autor` (max. 8 znaků), výchozí "LuM" jako v legacy.
+  author     String    @default("LuM") @db.VarChar(8)
+  validFrom  DateTime  @map("valid_from")
+  validUntil DateTime  @map("valid_until")
+  revokedAt  DateTime? @map("revoked_at")
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  Int?      @map("created_by")
+
+  @@index([year])
+  @@map("mcvv_ingest_token")
+}
+
+// ============================================
 // Startovka (#114, #115, #116)
 // ============================================
 

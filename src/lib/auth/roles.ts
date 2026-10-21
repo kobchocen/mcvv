@@ -35,6 +35,11 @@ export function canAccessSplits(role: UserRole): boolean {
   return role === "splitmaker" || isStaffRole(role);
 }
 
+/** Správa živých výsledků (#120–#122): opravy a konflikty mezičasů, OFeed, API klíče zařízení. */
+export function canManageLiveResults(role: UserRole): boolean {
+  return role === "admin";
+}
+
 /** Úroveň přístupu do /admin: plná, jen „Den závodu“, nebo žádná. */
 export type AdminAccess = "full" | "raceday" | "none";
 

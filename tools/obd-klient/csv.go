@@ -20,15 +20,19 @@ func (p Punch) Key(split string) string {
 	return fmt.Sprintf("%s:%d:%d", split, p.Bib, p.TimeS)
 }
 
-// ParseResult obsahuje platné řádky a počet přeskočených (hlavička, prázdné, nesmysl).
+// ParseResult obsahuje platné řádky a počet přeskočených (hlavička, prázdné, nesmysl)
+// a opakovaných čísel (platí první řádek jako v legacy).
 type ParseResult struct {
-	Punches []Punch
-	Skipped int
+	Punches    []Punch
+	Skipped    int
+	Duplicates int
 }
 
-// ParseSplitsCSV čte export ve formátu legacy `tmp/splits.csv`: `cislo;time_s` bez hlavičky.
-// Tolerantní: oddělovač `;`, `,` nebo tabulátor; UTF-8 BOM; CRLF; čas i jako m:ss nebo h:mm:ss;
-// hlavička a řádky bez čísla se přeskočí. Když je číslo v souboru vícekrát, platí poslední řádek.
+// ParseSplitsCSV čte export ve formátu legacy `tmp/splits.csv`: `cislo;time_s` bez hlavičky
+// (legacy `online/index_cHc_0607.php`: `fgetcsv($f, 30, ';')`, sloupec 0 = číslo, 1 = čas v s).
+// Navíc tolerantní: oddělovač `,` nebo tabulátor; UTF-8 BOM; CRLF; čas i jako m:ss nebo h:mm:ss;
+// hlavička a řádky bez čísla se přeskočí. Když je číslo v souboru vícekrát, platí první řádek
+// (1:1 s legacy: další INSERT do `mcvv_split` zastavil primární klíč).
 func ParseSplitsCSV(data []byte) ParseResult {
 	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	var result ParseResult
@@ -56,8 +60,8 @@ func ParseSplitsCSV(data []byte) ParseResult {
 			continue
 		}
 		punch := Punch{Bib: bib, TimeS: timeS}
-		if i, seen := index[bib]; seen {
-			result.Punches[i] = punch
+		if _, seen := index[bib]; seen {
+			result.Duplicates++
 			continue
 		}
 		index[bib] = len(result.Punches)

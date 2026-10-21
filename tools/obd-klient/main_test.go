@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,7 +17,8 @@ import (
 func TestParseSplitsCSV(t *testing.T) {
 	data := []byte("\xEF\xBB\xBFcislo;time_s\r\n41;1686\r\n42;28:06\n\n 643 ; 0:30:00 \nx;1\n44;\n45,1700\n46\t1701\n41;1690\n47;-5\n48;99999\n")
 	got := ParseSplitsCSV(data)
-	want := []Punch{{41, 1690}, {42, 1686}, {643, 1800}, {45, 1700}, {46, 1701}}
+	// číslo 41 je v souboru dvakrát: platí první řádek (1:1 s legacy INSERT + PK)
+	want := []Punch{{41, 1686}, {42, 1686}, {643, 1800}, {45, 1700}, {46, 1701}}
 	if len(got.Punches) != len(want) {
 		t.Fatalf("punches = %v", got.Punches)
 	}
@@ -27,6 +29,9 @@ func TestParseSplitsCSV(t *testing.T) {
 	}
 	if got.Skipped != 5 {
 		t.Errorf("skipped = %d, want 5", got.Skipped)
+	}
+	if got.Duplicates != 1 {
+		t.Errorf("duplicates = %d, want 1", got.Duplicates)
 	}
 }
 
@@ -74,10 +79,12 @@ func TestStateRoundTripAndCorrupt(t *testing.T) {
 type fakeServer struct {
 	mu       sync.Mutex
 	seen     map[string]int
+	held     map[int]int // co drží web od OBD: číslo → čas
 	failNext int
 	status   int
 	calls    int
 	auth     string
+	actions  []string
 }
 
 func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
@@ -103,13 +110,31 @@ func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	results := []map[string]any{}
+	if f.held == nil {
+		f.held = map[int]int{}
+	}
 	for _, item := range body.Items {
 		key := Punch{item.Bib, item.TimeS}.Key(item.Split)
+		f.actions = append(f.actions, item.Action+":"+key)
 		outcome := "applied"
-		if f.seen[key] > 0 {
+		if item.Action == "delete" {
 			outcome = "unchanged"
+			if held, ok := f.held[item.Bib]; ok && held == item.TimeS {
+				delete(f.held, item.Bib)
+				outcome = "deleted"
+			}
+		} else {
+			held, ok := f.held[item.Bib]
+			switch {
+			case ok && held == item.TimeS:
+				outcome = "unchanged"
+			case ok && !item.Replace:
+				outcome = "conflict" // výchozí: platí první zapsaný čas
+			default:
+				f.held[item.Bib] = item.TimeS
+			}
+			f.seen[key]++
 		}
-		f.seen[key]++
 		results = append(results, map[string]any{"id": key, "outcome": outcome, "bib": item.Bib})
 	}
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "results": results})
@@ -168,7 +193,7 @@ func TestRunnerSurvivesOutageWithoutDuplicates(t *testing.T) {
 		t.Errorf("auth header = %q", fake.auth)
 	}
 	// ztracený stav → znovu odeslání je bezpečné (server vrátí unchanged)
-	runner.state.Acked = map[string]string{}
+	runner.state = newState(runner.cfg.StateFile)
 	if err := runner.Tick(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -216,5 +241,159 @@ func TestConfigValidation(t *testing.T) {
 	ok := Config{URL: "https://www.mcvv.org", Token: "mcvv_live_x", Year: 2026, File: "a.csv", Split: "9", IntervalS: 5}
 	if err := ok.validate(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Výchozí (Q22, 1:1 s legacy): platí první zapsaný čas, oprava ani smazání z OBD nic nezmění.
+func TestDefaultFirstTimeWins(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	runner := newRunner(t, server.URL, file)
+	ctx := context.Background()
+	for n, body := range []string{"41;1686\n42;1700\n43;1710\n", "41;1686\n42;1705\n", "41;1686\n42;1705\n", "41;1686\n42;1705\n"} {
+		_ = os.WriteFile(file, []byte(body), 0o644)
+		stamp := time.Now().Add(time.Duration(n) * time.Minute)
+		_ = os.Chtimes(file, stamp, stamp)
+		if err := runner.Tick(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if fake.held[42] != 1700 || fake.held[43] != 1710 {
+		t.Fatalf("first time must win and nothing may be deleted: %v", fake.held)
+	}
+	deletes, corrections := 0, 0
+	for _, action := range fake.actions {
+		if strings.HasPrefix(action, "delete:") {
+			deletes++
+		}
+		if action == "set:9:42:1705" {
+			corrections++
+		}
+	}
+	if deletes != 0 || corrections != 1 {
+		t.Errorf("deletes=%d corrections sent=%d (want 0 and 1): %v", deletes, corrections, fake.actions)
+	}
+	if runner.state.Acked["9:42:1705"] != "conflict" {
+		t.Errorf("changed time outcome = %q, want conflict", runner.state.Acked["9:42:1705"])
+	}
+}
+
+// Přepínače applyCorrections + deleteMissing: oprava = změněný řádek, smazání = řádek chybí.
+func TestSnapshotCorrectionAndDeletion(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	write := func(content string, n int) {
+		_ = os.WriteFile(file, []byte(content), 0o644)
+		stamp := time.Now().Add(time.Duration(n) * time.Minute)
+		_ = os.Chtimes(file, stamp, stamp)
+	}
+	runner := newRunner(t, server.URL, file)
+	runner.cfg.ApplyCorrections, runner.cfg.DeleteMissing, runner.client.Replace = true, true, true
+	ctx := context.Background()
+	tick := func() {
+		t.Helper()
+		if err := runner.Tick(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("41;1686\n42;1700\n43;1710\n", 1)
+	tick()
+	// oprava 42, smazání 43 (OBD soubor přepsal)
+	write("41;1686\n42;1705\n", 2)
+	tick()
+	if fake.held[42] != 1705 {
+		t.Fatalf("correction not sent: %v", fake.held)
+	}
+	if _, still := fake.held[43]; !still {
+		t.Fatal("deletion must wait for a second snapshot")
+	}
+	tick() // stejný soubor (stejné mtime) – nepočítá se jako nová verze
+	if _, still := fake.held[43]; !still {
+		t.Fatal("same snapshot must not count twice")
+	}
+	write("41;1686\n42;1705\n", 3)
+	tick()
+	if _, still := fake.held[43]; still {
+		t.Fatalf("vanished row should be deleted, held=%v actions=%v", fake.held, fake.actions)
+	}
+	// číslo se vrátí se stejným časem → znovu se pošle
+	write("41;1686\n42;1705\n43;1710\n", 4)
+	tick()
+	if fake.held[43] != 1710 {
+		t.Fatalf("re-added row not sent: %v", fake.held)
+	}
+	// nic se nemění → nic se neposílá
+	before := fake.calls
+	write("41;1686\n42;1705\n43;1710\n", 5)
+	tick()
+	if fake.calls != before {
+		t.Errorf("unchanged snapshot sent %d requests", fake.calls-before)
+	}
+}
+
+func TestEmptyOrTruncatedFileDeletesNothing(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	content := ""
+	for bib := 1; bib <= 40; bib++ {
+		content += strconv.Itoa(bib) + ";" + strconv.Itoa(1000+bib) + "\n"
+	}
+	runner := newRunner(t, server.URL, file)
+	runner.cfg.DeleteMissing = true
+	ctx := context.Background()
+	for n, body := range []string{content, "", "", "1;1001\n2;1002\n", "1;1001\n2;1002\n"} {
+		_ = os.WriteFile(file, []byte(body), 0o644)
+		stamp := time.Now().Add(time.Duration(n) * time.Minute)
+		_ = os.Chtimes(file, stamp, stamp)
+		if err := runner.Tick(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(fake.held) != 40 {
+		t.Fatalf("empty/truncated file must not delete, held %d", len(fake.held))
+	}
+}
+
+func TestSetupWritesConfig(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	splits := filepath.Join(dir, "splits.csv")
+	_ = os.WriteFile(splits, []byte("1;100\n"), 0o644)
+	input := strings.NewReader("\nabc\nmcvv_live_abc\n2026\n" + splits + "\n")
+	var out strings.Builder
+	if err := runSetup(path, input, &out, ""); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := loadConfig(path)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out.String())
+	}
+	if cfg.URL != defaultURL || cfg.Token != "mcvv_live_abc" || cfg.Year != 2026 || cfg.File != splits || cfg.Split != "9" {
+		t.Fatalf("config = %+v", cfg)
+	}
+	if !strings.Contains(out.String(), "klíč začíná mcvv_live_") {
+		t.Errorf("invalid token should be asked again:\n%s", out.String())
+	}
+	// -file přepíše cestu z configu
+	other, err := loadConfigWithFile(path, `D:\OBD\vystup\splits.csv`)
+	if err != nil || other.File != `D:\OBD\vystup\splits.csv` {
+		t.Fatalf("file override = %q, %v", other.File, err)
+	}
+	// opětovné nastavení: Enter ponechá uložené hodnoty včetně tokenu
+	if err := runSetup(path, strings.NewReader("\n\n\n\n"), &out, ""); err != nil {
+		t.Fatal(err)
+	}
+	again, err := loadConfig(path)
+	if err != nil || again.Token != "mcvv_live_abc" || again.File != splits {
+		t.Fatalf("re-setup = %+v, %v", again, err)
+	}
+	if info, _ := os.Stat(path); info.Mode().Perm()&0o077 != 0 {
+		t.Errorf("config permissions = %v", info.Mode().Perm())
 	}
 }

@@ -54,8 +54,16 @@ export const webBatchSchema = z.object({
 
 export type WebEntry = z.infer<typeof webEntrySchema>;
 
-/** Položka z klienta OBD: `cislo;time_s` ze `splits.csv` (+ volitelný kód splitu). */
+/**
+ * Položka z klienta OBD: `cislo;time_s` ze `splits.csv` (+ volitelný kód splitu).
+ * Výchozí chování je 1:1 s legacy (Pavel, Q22): platí první zapsaný čas, oprava v OBD vznikne
+ * jako konflikt pro admina a smazání se nepropaguje. Za přepínačem v klientovi:
+ * - `replace: true` (klient `applyCorrections`): jiný čas přepíše hodnotu, kterou zapsalo OBD;
+ * - `action: "delete"` (klient `deleteMissing`): řádek s tímto časem ze souboru zmizel.
+ */
 export const deviceItemSchema = z.object({
+  action: z.enum(["set", "delete"]).default("set"),
+  replace: z.boolean().default(false),
   bib,
   split: split.default(FINISH_SPLIT),
   timeS: z.number().int().min(0).max(MAX_RACE_SECONDS),
@@ -89,7 +97,7 @@ export type WriteDecision = "insert" | "duplicate" | "unchanged" | "conflict";
 /**
  * - nic tam není → zapsat;
  * - web (splitmaker): první zápis vyhrává, další je duplicita (dvojí zadání téhož běžce);
- * - OBD: stejná hodnota = beze změny, jiná = konflikt, nepřepisuje se automaticky (#120).
+ * - OBD: stejná hodnota = beze změny, jiná = konflikt (API zařízení: `decideDeviceWrite`).
  */
 export function decideWrite(
   existing: { time: number } | null,
@@ -99,6 +107,34 @@ export function decideWrite(
   if (!existing) return "insert";
   if (source === "web") return "duplicate";
   return existing.time === incomingTime ? "unchanged" : "conflict";
+}
+
+export type DeviceWriteDecision = "insert" | "unchanged" | "replace" | "conflict";
+
+/**
+ * Zápis z OBD: nic tam není → zapsat; stejný čas → beze změny; jiný čas → konflikt (výchozí,
+ * 1:1 s legacy: platí první zapsaný čas). Jen s `allowReplace` (přepínač `applyCorrections`)
+ * se přepíše čas, který dřív zapsalo OBD; ruční zápis (splitmaker, admin) se nepřepíše nikdy.
+ */
+export function decideDeviceWrite(
+  existing: { time: number; ownedByObd: boolean } | null,
+  incomingTime: number,
+  allowReplace = false,
+): DeviceWriteDecision {
+  if (!existing) return "insert";
+  if (existing.time === incomingTime) return "unchanged";
+  return allowReplace && existing.ownedByObd ? "replace" : "conflict";
+}
+
+export type DeviceDeleteDecision = "delete" | "missing" | "not-owned";
+
+/** Řádek zmizel ze souboru OBD: smazat jen hodnotu, kterou zapsalo OBD a která se nezměnila. */
+export function decideDeviceDelete(
+  existing: { time: number; ownedByObd: boolean } | null,
+  removedTime: number,
+): DeviceDeleteDecision {
+  if (!existing || existing.time !== removedTime) return "missing";
+  return existing.ownedByObd ? "delete" : "not-owned";
 }
 
 export type TimeCheck = { ok: true; time: number } | { ok: false; reason: string };
@@ -120,10 +156,23 @@ export function checkPunch(punchedAt: number, startAt: Date, now: Date): TimeChe
 /** Idempotenční klíč položky z API: stejná trojice + čas = stejný zápis. */
 export function deviceEntryKey(
   tokenId: number,
-  item: { bib: number; split: string; timeS: number },
+  item: { bib: number; split: string; timeS: number; action?: "set" | "delete" },
 ) {
-  return `dev${tokenId}:${item.split}:${item.bib}:${item.timeS}`;
+  const prefix = item.action === "delete" ? "del:" : "";
+  return `dev${tokenId}:${prefix}${item.split}:${item.bib}:${item.timeS}`;
 }
+
+/**
+ * Stejný čas se může v OBD objevit znovu (smazán a vrácen). Další zápis se stejným klíčem
+ * dostane pořadové číslo `#2`, `#3`…, aby šel znovu zapsat, a opakované odeslání zůstalo idempotentní.
+ */
+export function nextDeviceEntryKey(base: string, existingKeys: readonly string[]): string {
+  const n = existingKeys.filter((key) => key === base || key.startsWith(`${base}#`)).length;
+  return n === 0 ? base : `${base}#${n + 1}`;
+}
+
+/** Zápisy, které už neplatí (přepsané / smazané) – stejný klíč je pak nový zápis. */
+export const SUPERSEDED_OUTCOMES: Outcome[] = ["replaced", "deleted"];
 
 /** Odpověď pro klienta: souhrn počtů podle výsledku. */
 export function summarize(outcomes: Outcome[]): Record<string, number> {

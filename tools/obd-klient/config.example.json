@@ -5,5 +5,8 @@
   "file": "C:\\OBD\\tmp\\splits.csv",
   "split": "9",
   "intervalS": 5,
-  "maxBackoffS": 60
+  "maxBackoffS": 60,
+  "missingSnapshots": 2,
+  "deleteMissing": false,
+  "applyCorrections": false
 }

@@ -44,6 +44,7 @@ export default defineRouting({
     "/admin/newsletter/novy": "/admin/newsletter/novy",
     "/admin/newsletter/[id]": "/admin/newsletter/[id]",
     "/admin/platby": "/admin/platby",
+    "/admin/tisk": "/admin/tisk",
     "/admin/zpravy": "/admin/zpravy",
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
     "/newsletter/odhlasit": "/newsletter/odhlasit",

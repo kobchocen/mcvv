@@ -2,9 +2,11 @@
 <html lang="cs">
   <head>
     <meta charset="utf-8" />
-    <!-- Zdroj výchozího banneru newsletteru (public/images/newsletter/banner-2026.png). Vykreslit v Chrome/Playwright: viewport 1200×400, deviceScaleFactor 1, pak PNG s paletou (sharp: palette, quality 92). -->
+    <!-- Zdroj výchozího banneru newsletteru (public/images/newsletter/banner-2026.png). Vykreslit v Chrome/Playwright: viewport 1200×400, deviceScaleFactor 1, pak PNG s paletou (sharp: palette, quality 92).
+         Texty jsou předsložené (NFC) a rovnou verzálkami; Oswald i Inter se načítají i v podmnožině latin-ext (Ř, Ě, Ň, Č…).
+         Výška řádku nadpisu musí nechat místo pro diakritiku: při menší line-height než ~1.3 sahá vysoká čárka nad É z druhého řádku až k účaří prvního a pod mezerou za MALÁ vypadá jako čárka („MALÁ, CENA“). -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=block"
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&subset=latin,latin-ext&display=block"
       rel="stylesheet"
     />
     <style>
@@ -62,28 +64,27 @@
       .kicker {
         display: inline-block;
         font:
-          600 22px/1 Oswald,
+          600 22px/1.3 Oswald,
           sans-serif;
         letter-spacing: 3px;
-        text-transform: uppercase;
         color: #0f2a1c;
         background: #e2531c;
-        padding: 8px 14px 7px;
+        padding: 5px 14px 4px;
       }
       .kicker b {
         color: #fff;
         font-weight: 700;
       }
       h1 {
-        margin-top: 18px;
+        margin-top: 8px;
+        padding-top: 2px;
         font:
-          700 68px/0.98 Oswald,
+          700 62px/1.32 Oswald,
           sans-serif;
         letter-spacing: 0.5px;
-        text-transform: uppercase;
       }
       .meta {
-        margin-top: 22px;
+        margin-top: 16px;
         display: flex;
         gap: 28px;
         font:
@@ -108,13 +109,12 @@
       .cta .btn {
         display: inline-block;
         font:
-          700 26px/1 Oswald,
+          700 26px/1.25 Oswald,
           sans-serif;
         letter-spacing: 1px;
-        text-transform: uppercase;
         background: #e2531c;
         color: #fff;
-        padding: 16px 24px 15px;
+        padding: 13px 24px 12px;
       }
       .cta .note {
         margin-top: 10px;
@@ -141,7 +141,6 @@
           600 24px/1.2 Oswald,
           sans-serif;
         letter-spacing: 3px;
-        text-transform: uppercase;
         color: #f2f6f1;
         margin-top: 6px;
       }
@@ -152,18 +151,18 @@
       <div class="photo"></div>
       <div class="shade"></div>
       <div class="c">
-        <div class="kicker"><b>34.</b> ročník · Choceň</div>
-        <h1>Malá cena<br />Velké Verandy</h1>
+        <div class="kicker"><b>34.</b> ROČNÍK · CHOCEŇ</div>
+        <h1>MALÁ CENA<br />VELKÉ VERANDY</h1>
         <div class="meta">
           <span><i>●</i>Choceň – Velká Veranda</span><span><i>●</i>4,3 km lesního krosu</span>
         </div>
       </div>
       <div class="date">
         <div class="d">6. 12.</div>
-        <div class="w">neděle 2026</div>
+        <div class="w">NEDĚLE 2026</div>
       </div>
       <div class="cta">
-        <div class="btn">Přihlas se na mcvv.org</div>
+        <div class="btn">PŘIHLAS SE NA MCVV.ORG</div>
         <div class="note">Přihlášky online do 2. 12. 2026</div>
       </div>
       <div class="bar"></div>

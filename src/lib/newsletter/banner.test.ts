@@ -96,6 +96,15 @@ describe("newsletter banner – choice, alt and link", () => {
       assert.ok(readFileSync(file).length < 300 * 1024, "banner should stay small for e-mail");
     }
   });
+  it("banner source keeps Czech diacritics readable (NFC, latin-ext, roomy headline)", () => {
+    const html = readFileSync(join(ROOT, "scripts/newsletter-banner/banner-2026.html"), "utf8");
+    assert.equal(html, html.normalize("NFC"));
+    assert.doesNotMatch(html, /[\u0300-\u036f]/);
+    assert.match(html, /subset=latin,latin-ext/);
+    // Při menší výšce řádku sahá čárka nad É (2. řádek) k účaří 1. řádku a čte se jako „MALÁ, CENA“.
+    const h1 = /h1 \{[^}]*?(\d+)px\/([\d.]+) Oswald/.exec(html);
+    assert.ok(h1 && Number(h1[2]) >= 1.3, "headline line-height must be >= 1.3");
+  });
 });
 
 describe("newsletter banner – template", () => {

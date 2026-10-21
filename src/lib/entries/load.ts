@@ -2,6 +2,8 @@ import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { buildQuickList } from "@/lib/entries/quick";
+import { recordEntryChange } from "@/lib/entries/changes";
+import { isUserRole } from "@/lib/auth/roles";
 import { currentRaceYear } from "@/lib/entries/year";
 
 function emailMatch(value: string | null | undefined, email: string): boolean {
@@ -48,6 +50,19 @@ export async function loadMyEntry(email: string, displayName: string) {
         },
       },
     });
+    const account = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, role: true },
+    });
+    await recordEntryChange(
+      {
+        id: account?.id ?? null,
+        email,
+        role: account && isUserRole(account.role) ? account.role : "registrar",
+      },
+      "entry.created",
+      { year, registrationId: registration.id, registrationName: registration.name },
+    );
   }
 
   const pastRegs = await prisma.registration.findMany({

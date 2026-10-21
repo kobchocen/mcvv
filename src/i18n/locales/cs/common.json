@@ -739,6 +739,8 @@
     "settingsNotifyOrganizerHint": "Nejvýš 1 e-mail denně na pořadatelský e-mail, jen když přišly nové nepřečtené zprávy.",
     "settingsNotifyUser": "Upozornit přihlašující e-mailem na odpověď",
     "settingsNotifyUserHint": "Nejvýš 1 e-mail na konverzaci, další až po přečtení. Odchází asi s 10min zpožděním. Mimo produkci jde místo přihlašujícímu na pořadatelský e-mail.",
+    "settingsNotifyChanges": "Změny přihlášek v denním souhrnu pořadateli",
+    "settingsNotifyChangesHint": "Nové přihlášky, přihlášení a odhlášení běžci, noví běžci a kluby, změna názvu přihlášky a klubu. Ve stejném denním e-mailu jako souhrn zpráv, nejvýš 1× denně.",
     "settingsOrganizerEmail": "Pořadatelský e-mail",
     "settingsOrganizerEmailHint": "Sem chodí kontaktní formulář a souhrn zpráv. Prázdné = {fallback}.",
     "settingsOrganizerEmailInvalid": "Pořadatelský e-mail není platný.",

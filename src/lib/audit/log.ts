@@ -8,7 +8,18 @@ export type AuditAction =
   | "user.role_change"
   | "raceday.obd_export"
   | "raceday.import_presentation"
-  | "raceday.import_results";
+  | "raceday.import_results"
+  // Změny přihlášek od přihlašujících (#130) – podklad pro denní souhrn pořadateli.
+  | "entry.created"
+  | "entry.runner_added"
+  | "entry.runner_removed"
+  | "entry.runner_created"
+  | "entry.club_created"
+  | "entry.header_changed"
+  | "entry.line_club_changed";
+
+/** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
+export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };
 
 type Db = Pick<PrismaClient, "auditLog"> | Prisma.TransactionClient;
 
@@ -18,7 +29,7 @@ type Db = Pick<PrismaClient, "auditLog"> | Prisma.TransactionClient;
  */
 export async function writeAudit(
   entry: {
-    actor: SessionUser;
+    actor: AuditActor;
     action: AuditAction;
     target?: string;
     detail?: Prisma.InputJsonValue;

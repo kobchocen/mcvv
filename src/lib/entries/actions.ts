@@ -9,16 +9,38 @@ import { resolveClubId } from "@/lib/entries/club";
 import { computeLineFee } from "@/lib/entries/fee";
 import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/runner";
 import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
-import { recalculateRegistrationStatus } from "@/lib/entries/status";
+import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
+import { ensureRegistration } from "@/lib/entries/ensure";
 import { entryWritable } from "@/lib/entries/guard";
 import { promotionValue } from "@/lib/entries/promotion";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 
+/** Vlastní nezrušená přihláška (zrušenou pořadatelem už přihlašující měnit nesmí). */
 async function ownRegistration(year: number, id: number, email: string) {
   return prisma.registration.findFirst({
-    where: { year, id, email: { equals: email } },
+    where: {
+      year,
+      id,
+      email: { equals: email },
+      OR: [{ status: { not: ENTRY_STATUS.cancelled } }, { status: null }],
+    },
   });
+}
+
+/**
+ * Přihláška pro nového běžce: s číslem z formuláře jen vlastní přihláška, bez čísla (0)
+ * se přihláška ročníku najde nebo založí – až teď, po validaci běžce.
+ */
+async function registrationForNewLine(
+  year: number,
+  registrationId: number | null,
+  session: { email: string; name: string },
+) {
+  if (registrationId) {
+    return ownRegistration(year, registrationId, session.email);
+  }
+  return (await ensureRegistration(year, session.email, session.name)).registration;
 }
 
 export async function saveEntryHeader(formData: FormData): Promise<void> {
@@ -52,14 +74,13 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   const year = formInt(formData, "year");
   const registrationId = formInt(formData, "registrationId");
   const runnerId = formString(formData, "runnerId");
-  if (!session || year === null || registrationId === null || !runnerId) {
+  if (!session || year === null || !runnerId) {
     return;
   }
   if (!entryWritable(await currentRaceYear(), year)) {
     return;
   }
-  const registration = await ownRegistration(year, registrationId, session.email);
-  if (!registration) {
+  if (registrationId && !(await ownRegistration(year, registrationId, session.email))) {
     return;
   }
   const taken = await prisma.registrationLine.findFirst({ where: { year, runnerId } });
@@ -71,6 +92,10 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   if (!category) {
     return;
   }
+  const registration = await registrationForNewLine(year, registrationId, session);
+  if (!registration) {
+    return;
+  }
   const clubId = await resolveClubId(formString(formData, "clubName"), year);
   const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
@@ -79,13 +104,13 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
       runnerId,
       clubId,
       categoryId: category.id,
-      registrationId,
+      registrationId: registration.id,
       entryFee: fee,
       author: session.email,
     },
   });
-  await touchRegistration(year, registrationId);
-  await recalculateRegistrationStatus(year, registrationId);
+  await touchRegistration(year, registration.id);
+  await recalculateRegistrationStatus(year, registration.id);
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
@@ -112,8 +137,7 @@ export async function addNewRunner(
   if (!entryWritable(await currentRaceYear(), year)) {
     return { error: "invalid" };
   }
-  const registration = await ownRegistration(year, registrationId, session.email);
-  if (!registration) {
+  if (registrationId && !(await ownRegistration(year, registrationId, session.email))) {
     return { error: "invalid" };
   }
   const categories = await prisma.category.findMany();
@@ -130,6 +154,10 @@ export async function addNewRunner(
   if (taken) {
     return { error: "taken" };
   }
+  const registration = await registrationForNewLine(year, registrationId, session);
+  if (!registration) {
+    return { error: "invalid" };
+  }
   const clubId = await resolveClubId(formString(formData, "clubName"), year);
   const { fee } = await computeLineFee(session.email, resolved.id, category.entryFee);
   await prisma.registrationLine.create({
@@ -138,13 +166,13 @@ export async function addNewRunner(
       runnerId: resolved.id,
       clubId,
       categoryId: category.id,
-      registrationId,
+      registrationId: registration.id,
       entryFee: fee,
       author: session.email,
     },
   });
-  await touchRegistration(year, registrationId);
-  await recalculateRegistrationStatus(year, registrationId);
+  await touchRegistration(year, registration.id);
+  await recalculateRegistrationStatus(year, registration.id);
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");

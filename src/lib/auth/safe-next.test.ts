@@ -104,3 +104,37 @@ describe("loginTarget – Časomíra (raceday access)", () => {
     assert.deepEqual(loginTarget("/admin/den-zavodu", "none"), { kind: "default" });
   });
 });
+
+describe("loginTarget – default target by role (no next)", () => {
+  it("sends full staff to the administration", () => {
+    assert.deepEqual(loginTarget(null, "full", "organizer"), { kind: "admin", next: "/admin" });
+    assert.deepEqual(loginTarget(null, "full", "admin"), { kind: "admin", next: "/admin" });
+    assert.deepEqual(loginTarget("/", true), { kind: "admin", next: "/admin" });
+  });
+  it("sends the split-time operator to the split entry page", () => {
+    assert.deepEqual(loginTarget(null, "none", "splitmaker"), {
+      kind: "user",
+      path: "/mezicasy",
+      query: "",
+    });
+  });
+  it("keeps the race-day target for Časomíra and the application page for registrars", () => {
+    assert.deepEqual(loginTarget(null, "raceday", "timing"), {
+      kind: "admin",
+      next: "/admin/den-zavodu",
+    });
+    assert.deepEqual(loginTarget(null, "none", "registrar"), { kind: "default" });
+  });
+  it("an explicit next still wins", () => {
+    assert.deepEqual(loginTarget("/prihlasky", "full", "admin"), {
+      kind: "user",
+      path: "/prihlasky",
+      query: "",
+    });
+    assert.deepEqual(loginTarget("/navod", "none", "splitmaker"), {
+      kind: "user",
+      path: "/navod",
+      query: "",
+    });
+  });
+});

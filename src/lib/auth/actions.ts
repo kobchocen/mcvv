@@ -5,7 +5,7 @@ import { getLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
-import { adminAccess, requiresVerifiedEmail } from "@/lib/auth/roles";
+import { requiresVerifiedEmail } from "@/lib/auth/roles";
 import { clearSession, setSession } from "@/lib/auth/session";
 import { redirect, type Locale } from "@/i18n/routing";
 
@@ -48,7 +48,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
 
   const locale = (await getLocale()) as Locale;
   const next = safeNext(formData.get("next"));
-  redirectAfterLogin(next, adminAccess(user.role), locale);
+  redirectAfterLogin(next, user.role, locale);
   return {};
 }
 

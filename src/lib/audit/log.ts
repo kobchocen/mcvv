@@ -17,7 +17,8 @@ export type AuditAction =
   | "entry.runner_created"
   | "entry.club_created"
   | "entry.header_changed"
-  | "entry.line_club_changed";
+  | "entry.line_club_changed"
+  | "entry.cancelled";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

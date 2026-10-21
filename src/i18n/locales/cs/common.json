@@ -806,6 +806,7 @@
     "hiddenEmpty": "{count, plural, one {Skrytá # prázdná přihláška} few {Skryté # prázdné přihlášky} other {Skryto # prázdných přihlášek}} (bez běžců).",
     "showEmpty": "Zobrazit",
     "cancelEntry": "Zrušit",
+    "cancelEntryHint": "Zrušení odhlásí {count, plural, one {# závodníka} few {# závodníky} other {# závodníků}} (smažou se řádky přihlášky, aby šli přihlásit jinou přihláškou). {paid, plural, =0 {} other {Platby (# Kč) zůstanou u zrušené přihlášky – případné vrácení vyřešte ručně.}}",
     "confirmEntry": "Potvrdit",
     "regsReceipt": "Doklad o zaplacení (PDF)",
     "confirmMailFail": "Přihláška je potvrzená, ale e-mail se nepodařilo odeslat.",

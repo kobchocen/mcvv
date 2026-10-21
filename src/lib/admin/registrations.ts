@@ -5,10 +5,13 @@ import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
-import { computeLineFee } from "@/lib/entries/fee";
+import { computeLineFee, paidAmount } from "@/lib/entries/fee";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
 import { canCancelRegistration } from "@/lib/entries/empty-registrations";
+import { cancellationDetail } from "@/lib/entries/cancel-core";
+import { entryTarget } from "@/lib/entries/changes-core";
+import { writeAudit } from "@/lib/audit/log";
 import { isPromotionOptOut, promotionValue } from "@/lib/entries/promotion";
 import { setAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { prisma } from "@/lib/db/client";
@@ -130,25 +133,61 @@ export async function deletePayment(formData: FormData): Promise<void> {
 }
 
 export async function cancelRegistration(formData: FormData): Promise<void> {
-  await requireStaff();
+  const session = await requireStaff();
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   if (!year || id === null) {
     return;
   }
-  const row = await prisma.registration.findUnique({
-    where: { year_id: { year, id } },
-    select: { status: true, _count: { select: { lines: true } } },
-  });
-  // Prázdnou přihlášku nerušit – nic neblokuje a přihlašujícího by „zasekla“.
-  if (!row || !canCancelRegistration({ status: row.status, lineCount: row._count.lines })) {
-    return;
-  }
-  await prisma.registration.update({
-    where: { year_id: { year, id } },
-    data: { status: ENTRY_STATUS.cancelled },
+  const paid = await paidAmount(year, id);
+  // Zrušení smaže řádky (závodníky) – PK řádku je (rok, běžec), takže jinak by závodníka
+  // nešlo přihlásit znovu jinou přihláškou. Hlavička zůstává ve stavu 0, platby zůstávají
+  // navázané na přihlášku (případné vrácení řeší pořadatel ručně). Odhlášené závodníky
+  // zapíše audit `entry.cancelled`.
+  await prisma.$transaction(async (tx) => {
+    const row = await tx.registration.findUnique({
+      where: { year_id: { year, id } },
+      select: {
+        status: true,
+        name: true,
+        lines: {
+          select: {
+            runnerId: true,
+            entryFee: true,
+            runner: { select: { name: true } },
+            category: { select: { name: true } },
+          },
+        },
+      },
+    });
+    // Prázdnou přihlášku nerušit – nic neblokuje a přihlašujícího by „zasekla“.
+    if (!row || !canCancelRegistration({ status: row.status, lineCount: row.lines.length })) {
+      return;
+    }
+    await tx.registrationLine.deleteMany({ where: { year, registrationId: id } });
+    await tx.registration.update({
+      where: { year_id: { year, id } },
+      data: { status: ENTRY_STATUS.cancelled },
+    });
+    await writeAudit(
+      {
+        actor: session,
+        action: "entry.cancelled",
+        target: entryTarget(year, id),
+        detail: cancellationDetail({
+          year,
+          registrationId: id,
+          registrationName: row.name,
+          lines: row.lines,
+          paid,
+        }),
+      },
+      tx,
+    );
   });
   revalidateRegistrations();
+  revalidatePath("/[locale]/prihlasky", "page");
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
 }
 
 export async function confirmRegistration(formData: FormData): Promise<void> {

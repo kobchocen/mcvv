@@ -16,12 +16,21 @@ export const ENTRY_CHANGE_ACTIONS = [
   "entry.club_created",
   "entry.header_changed",
   "entry.line_club_changed",
+  "entry.cancelled",
 ] as const;
 export type EntryChangeAction = (typeof ENTRY_CHANGE_ACTIONS)[number];
 
 export function isEntryChangeAction(value: string): value is EntryChangeAction {
   return (ENTRY_CHANGE_ACTIONS as readonly string[]).includes(value);
 }
+
+/** Závodník odhlášený zrušením přihlášky (audit `entry.cancelled`). */
+export type EntryCancelledRunner = {
+  runnerId: string;
+  runnerName: string | null;
+  category: string | null;
+  fee: number | null;
+};
 
 /** Detail auditního záznamu (bez osobních údajů navíc – jen to, co je i v přihlášce). */
 export type EntryChangeDetail = {
@@ -37,6 +46,10 @@ export type EntryChangeDetail = {
   clubName?: string | null;
   from?: string | null;
   to?: string | null;
+  /** `entry.cancelled`: odhlášení závodníci (řádky přihlášky se při zrušení mažou). */
+  runners?: EntryCancelledRunner[];
+  /** `entry.cancelled`: zaplaceno celkem (platby zůstávají u zrušené přihlášky). */
+  paid?: number;
 };
 
 /** Cíl auditního záznamu: "registration:2026/12". */
@@ -104,6 +117,15 @@ export function describeEntryChange(row: EntryChangeRow): string | null {
       return `Změna názvu přihlášky: „${text(detail.from)}“ → „${text(detail.to)}“`;
     case "entry.line_club_changed":
       return `Změna klubu: ${runnerLabel(detail)}: ${text(detail.from) || "bez klubu"} → ${text(detail.to) || "bez klubu"}`;
+    case "entry.cancelled": {
+      const runners = Array.isArray(detail.runners) ? detail.runners : [];
+      const names = runners.map((runner) => runnerLabel(runner)).join(", ");
+      const paid =
+        typeof detail.paid === "number" && detail.paid > 0
+          ? `; zaplaceno ${detail.paid} Kč zůstává u přihlášky`
+          : "";
+      return `Přihláška zrušena${names ? `, odhlášeni závodníci: ${names}` : ""}${paid}`;
+    }
   }
 }
 

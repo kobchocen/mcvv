@@ -199,6 +199,9 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               >
                 {copy("cancelEntry")}
               </Button>
+              <p className="mt-2 max-w-md text-xs text-race-muted">
+                {copy("cancelEntryHint", { count: registration.lines.length, paid })}
+              </p>
             </form>
           ) : null}
           {receiptReady ? (

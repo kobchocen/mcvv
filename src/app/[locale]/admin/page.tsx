@@ -47,6 +47,7 @@ export default async function AdminPage({ params }: PageProps) {
       | "/admin/zpravy"
       | "/admin/nastaveni"
       | "/admin/den-zavodu"
+      | "/admin/po-zavode"
       | "/admin/uzivatele";
     title: string;
     detail?: string;
@@ -66,6 +67,7 @@ export default async function AdminPage({ params }: PageProps) {
     { href: "/admin/newsletter", title: copy("navNewsletter") },
     { href: "/admin/platby", title: copy("navPayments") },
     { href: "/admin/den-zavodu", title: copy("navRaceDay") },
+    { href: "/admin/po-zavode", title: copy("navAfterRace") },
     { href: "/admin/tisk", title: copy("navPrintBibs") },
   ];
   if (session.role === "admin") {

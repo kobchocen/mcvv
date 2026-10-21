@@ -695,6 +695,7 @@
   },
   "Admin": {
     "navRaceDay": "Race day",
+    "navAfterRace": "After the race: raffle",
     "navUsers": "Users",
     "navMessages": "Messages",
     "messagesTile": "{count, plural, =0 {nothing unread} one {# unread conversation} other {# unread conversations}}",
@@ -843,6 +844,10 @@
     "dictsSort": "Sort",
     "dictsSex": "Sex",
     "dictsRecord": "Record (s)",
+    "dictsRecalcRecords": "Recalculate records from results",
+    "dictsRecalcHint": "Record = best time across editions for the category sex and age rule (same as legacy setkatrek.php). It is also recalculated after each results import and feeds the OBD export.",
+    "dictsRecalcChanged": "Records recalculated, changed categories: {list}.",
+    "dictsRecalcUnchanged": "Records recalculated, no change.",
     "dictsFee": "Entry fee",
     "dictsBibFrom": "Bib from",
     "dictsBibTo": "Bib to",
@@ -1493,7 +1498,26 @@
     "errChanged": "The data or files changed since the preview. Run a new preview.",
     "doneUnchanged": "No change – the database already matches the files.",
     "donePresentation": "The presentation import has been written.",
-    "doneResults": "Results have been written ({count, plural, one {# row} other {# rows}})."
+    "doneResults": "Results have been written ({count, plural, one {# row} other {# rows}}).",
+    "doneRecords": "Category records recalculated: {list}.",
+    "doneRecordsUnchanged": "Category records unchanged."
+  },
+  "AfterRace": {
+    "title": "After the race – raffle",
+    "adminHome": "Administration",
+    "heading": "After the race {year}",
+    "intro": "Tools for the organizers on site after the race.",
+    "tombola": "Tombola",
+    "tombolaHint": "Random names of finishers (edition results, before the import finish punches). Nobody is drawn twice. The draw is stored in the page address, so reloading or printing keeps it; if someone is missing, raise the count – the names stay and more are added. “Draw again” reshuffles.",
+    "year": "Edition",
+    "count": "Count",
+    "apply": "Apply",
+    "redraw": "Draw again",
+    "excludeClubs": "Exclude clubs (excluded: {count})",
+    "noFinishers": "No finishers for this edition yet (no results or finish punches).",
+    "poolInfo": "Drawing from {eligible} of {total} finishers ({source}), draw {seed}.",
+    "sourceResults": "results",
+    "sourceSplits": "finish punches"
   },
   "StartAdmin": {
     "navStartList": "Start list",

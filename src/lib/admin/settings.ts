@@ -47,6 +47,7 @@ export async function saveSettings(formData: FormData): Promise<void> {
     enabled: formData.get("messagesEnabled") === "on",
     notifyOrganizer: formData.get("messagesNotifyOrganizer") === "on",
     notifyUser: formData.get("messagesNotifyUser") === "on",
+    notifyChanges: formData.get("entriesNotifyChanges") === "on",
     organizerEmail: organizerEmail ?? "",
   });
   await saveReceiptIssuer({

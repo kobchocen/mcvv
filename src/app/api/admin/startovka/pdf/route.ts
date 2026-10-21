@@ -1,6 +1,7 @@
 import { staffAccess } from "@/lib/admin/staff";
 import { FIRST_EDITION_YEAR } from "@/lib/entries/year";
 import { NO_STORE, pdfResponse } from "@/lib/print/http";
+import { parseStartListOrder, sortStartList } from "@/lib/print/presentation-core";
 import { loadReceiptFonts } from "@/lib/receipts/fonts";
 import { renderStartListPdf } from "@/lib/race/startlist-pdf";
 import { startListPdfLabels } from "@/lib/race/startlist-pdf-labels";
@@ -14,7 +15,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/admin/startovka/pdf?rok=2026&lang=cs – tisková startovka (A4, PDF).
+ * GET /api/admin/startovka/pdf?rok=2026&lang=cs&razeni=cas|cislo – tisková startovka (A4, PDF),
+ * řazená podle startovního času (výchozí) nebo podle čísla (#125).
  * Jen pro pořadatele / administrátory; zveřejnění startovky na webu na tom nezávisí.
  */
 export async function GET(request: Request): Promise<Response> {
@@ -30,7 +32,9 @@ export async function GET(request: Request): Promise<Response> {
   }
   const locale = params.get("lang") === "en" ? "en" : "cs";
   const settings = await loadStartSettings(year);
-  const { rows } = await loadPublicStartList(year, settings.model);
+  const order = parseStartListOrder(params.get("razeni"));
+  const { rows: loaded } = await loadPublicStartList(year, settings.model);
+  const rows = sortStartList(loaded, settings.model, order);
   const labels = startListPdfLabels(locale, {
     year,
     editionNumber: settings.editionId ?? year - FIRST_EDITION_YEAR + 1,
@@ -39,6 +43,7 @@ export async function GET(request: Request): Promise<Response> {
     count: rows.length,
     generatedAt: new Date(),
   });
-  const pdf = renderStartListPdf(rows, settings.model, labels, await loadReceiptFonts());
-  return pdfResponse(pdf, `mcvv-startovka-${year}.pdf`);
+  const pdf = renderStartListPdf(rows, settings.model, labels, await loadReceiptFonts(), { order });
+  const suffix = order === "bib" ? "-cisla" : "";
+  return pdfResponse(pdf, `mcvv-startovka-${year}${suffix}.pdf`);
 }

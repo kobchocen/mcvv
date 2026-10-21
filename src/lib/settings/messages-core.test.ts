@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  ENTRY_CHANGES_NOTIFY_KEY,
   MESSAGES_ENABLED_KEY,
   MESSAGES_NOTIFY_ORGANIZER_KEY,
   MESSAGES_NOTIFY_USER_KEY,
@@ -16,6 +17,7 @@ test("výchozí nastavení: zprávy zapnuté, e-mailová upozornění vypnutá",
     enabled: true,
     notifyOrganizer: false,
     notifyUser: false,
+    notifyChanges: false,
     organizerEmail: "",
   });
 });
@@ -27,8 +29,15 @@ test("uložené hodnoty", () => {
       { key: MESSAGES_NOTIFY_ORGANIZER_KEY, text: "1" },
       { key: MESSAGES_NOTIFY_USER_KEY, text: "1" },
       { key: ORGANIZER_EMAIL_KEY, text: " Info@MCVV.org " },
+      { key: ENTRY_CHANGES_NOTIFY_KEY, text: "1" },
     ]),
-    { enabled: false, notifyOrganizer: true, notifyUser: true, organizerEmail: "info@mcvv.org" },
+    {
+      enabled: false,
+      notifyOrganizer: true,
+      notifyUser: true,
+      notifyChanges: true,
+      organizerEmail: "info@mcvv.org",
+    },
   );
 });
 

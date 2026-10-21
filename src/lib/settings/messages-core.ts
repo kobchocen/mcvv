@@ -7,12 +7,15 @@ export const MESSAGES_ENABLED_KEY = "messages.enabled";
 export const MESSAGES_NOTIFY_ORGANIZER_KEY = "messages.notify_organizer";
 export const MESSAGES_NOTIFY_USER_KEY = "messages.notify_user";
 export const ORGANIZER_EMAIL_KEY = "organizer.email";
+/** Sekce „Změny přihlášek“ v denním souhrnu pořadateli (#130). */
+export const ENTRY_CHANGES_NOTIFY_KEY = "entries.notify_changes";
 
 export const MESSAGE_SETTING_KEYS = [
   MESSAGES_ENABLED_KEY,
   MESSAGES_NOTIFY_ORGANIZER_KEY,
   MESSAGES_NOTIFY_USER_KEY,
   ORGANIZER_EMAIL_KEY,
+  ENTRY_CHANGES_NOTIFY_KEY,
 ] as const;
 
 /** Poslední záchrana, když není nastavení ani env CONTACT_TO. */
@@ -25,6 +28,11 @@ export type MessageSettings = {
   notifyOrganizer: boolean;
   /** Upozornění přihlašujícím (výchozí vypnuto). */
   notifyUser: boolean;
+  /**
+   * Změny přihlášek v denním souhrnu pořadateli (výchozí vypnuto). Nezávisí na `enabled`
+   * (vypínač zpráv), souhrn s nimi odejde i bez zpráv.
+   */
+  notifyChanges: boolean;
   /** Uložená hodnota „Pořadatelský e-mail“ (prázdná = fallback). */
   organizerEmail: string;
 };
@@ -45,6 +53,7 @@ export function messageSettingsFromRows(rows: { key: string; text: string }[]): 
     enabled: enabledRaw === undefined || enabledRaw.trim() === "" ? true : parseFlag(enabledRaw),
     notifyOrganizer: parseFlag(map.get(MESSAGES_NOTIFY_ORGANIZER_KEY)),
     notifyUser: parseFlag(map.get(MESSAGES_NOTIFY_USER_KEY)),
+    notifyChanges: parseFlag(map.get(ENTRY_CHANGES_NOTIFY_KEY)),
     organizerEmail: parseEmail(map.get(ORGANIZER_EMAIL_KEY)) ?? "",
   };
 }

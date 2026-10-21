@@ -258,12 +258,20 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
               <p className="text-sm font-semibold uppercase tracking-[2px] text-race-accent">
                 {t("eyebrow")}
               </p>
-              <NextLink
-                href={`/${locale}/`}
-                className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-race-accent border border-race-accent/60 rounded hover:bg-race-accent/10 transition"
-              >
-                ← {t("home")}
-              </NextLink>
+              <div className="flex items-center gap-2">
+                <NextLink
+                  href={`/${locale}/statistiky`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-race-accent border border-race-accent/60 rounded hover:bg-race-accent/10 transition"
+                >
+                  {t("stats")}
+                </NextLink>
+                <NextLink
+                  href={`/${locale}/`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-race-accent border border-race-accent/60 rounded hover:bg-race-accent/10 transition"
+                >
+                  ← {t("home")}
+                </NextLink>
+              </div>
             </div>
             <h1 className="mt-3 font-display text-5xl font-bold tracking-tight">{t("title")}</h1>
             <p className="mt-2 max-w-2xl text-race-muted">{t("intro")}</p>

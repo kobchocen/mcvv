@@ -37,14 +37,17 @@ export type StartListPdfLabels = {
 };
 
 /**
- * Tisková startovka (A4 na výšku): řazeno podle startovního času, obě vlny prolnuté,
- * čísla 2. startu oranžově. Jen pro pořadatele (route /api/admin/startovka/pdf).
+ * Tisková startovka (A4 na výšku): řádky v pořadí, jak přijdou (route je řadí podle
+ * startovního času s prolnutými vlnami, nebo podle čísla), čísla 2. startu oranžově.
+ * Linky mezi minutami jen při řazení podle času. Jen pro pořadatele
+ * (route /api/admin/startovka/pdf).
  */
 export function renderStartListPdf(
   rows: PublicStartRow[],
   model: StartModel,
   labels: StartListPdfLabels,
   fonts: ReceiptFonts,
+  options: { order?: "time" | "bib" } = {},
 ): Uint8Array {
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
   doc.addFileToVFS("DejaVuSans.ttf", fonts.regular);
@@ -143,7 +146,7 @@ export function renderStartListPdf(
   const minuteStarts = new Set<number>();
   rows.forEach((row, index) => {
     const minute = row.time.slice(0, 5);
-    if (minute !== lastMinute && index > 0) {
+    if (options.order !== "bib" && minute !== lastMinute && index > 0) {
       minuteStarts.add(index);
     }
     lastMinute = minute;

@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { requireRaceDay } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
+import { formatRaceTime } from "@/lib/utils";
 
 import {
   decodeObdFile,
@@ -327,7 +328,7 @@ export async function resultsImportAction(
     return { status: "error", message: t("errChanged"), view };
   }
   if (view.unchanged) return { status: "done", message: t("doneUnchanged"), view };
-  await applyResultsPlan(plan, session, {
+  const records = await applyResultsPlan(plan, session, {
     name: upload.name,
     sha256: upload.sha256,
     rows: parsed.rows.length,
@@ -337,5 +338,9 @@ export async function resultsImportAction(
   revalidatePath("/[locale]/vysledky", "page");
   revalidatePath("/[locale]/statistiky", "layout");
   revalidatePath("/[locale]/admin/den-zavodu", "layout");
-  return { status: "done", message: t("doneResults", { count: plan.rows.length }), view };
+  const done = t("doneResults", { count: plan.rows.length });
+  const recordsNote = records.length
+    ? t("doneRecords", { list: records.map((r) => `${r.id} ${formatRaceTime(r.to)}`).join(", ") })
+    : t("doneRecordsUnchanged");
+  return { status: "done", message: `${done} ${recordsNote}`, view };
 }

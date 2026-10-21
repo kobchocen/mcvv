@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/client";
 
 /** Akce zapisované do auditu (mcvv_audit_log). */
 export type AuditAction =
+  | "category.records_recalculated"
   | "user.role_change"
   | "raceday.obd_export"
   | "raceday.import_presentation"

@@ -95,6 +95,48 @@ model Club {
   @@map("cis_klub")
 }
 
+/// Kanonický klub napříč ročníky (#104). Vzniká jen ručním potvrzením návrhu v administraci,
+/// migrace ani import nic nemapují. Do potvrzení se klub zobrazuje pod zapsaným názvem.
+model CanonicalClub {
+  id        Int      @id @default(autoincrement())
+  /// URL profilu /kluby/[slug]
+  slug      String   @unique @db.VarChar(80)
+  name      String   @db.VarChar(80)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  aliases ClubAlias[]
+
+  @@map("mcvv_klub")
+}
+
+/// Varianta zapsaného názvu klubu (klíč = normalizovaný název) ručně přiřazená kanonickému klubu.
+model ClubAlias {
+  /// normalizeClubName(): bez diakritiky, velikosti písmen, mezer a interpunkce
+  key       String   @id @db.VarChar(80)
+  /// Název tak, jak byl zapsán (nejčastější varianta v době sloučení)
+  name      String   @db.VarChar(80)
+  clubId    Int      @map("klub_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  author    String?  @db.VarChar(255)
+
+  club CanonicalClub @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@map("mcvv_klub_alias")
+}
+
+/// Zamítnutý návrh sloučení dvou názvů (klíče seřazené), aby se znovu nenabízel.
+model ClubMergeRejection {
+  keyA      String   @map("key_a") @db.VarChar(80)
+  keyB      String   @map("key_b") @db.VarChar(80)
+  createdAt DateTime @default(now()) @map("created_at")
+  author    String?  @db.VarChar(255)
+
+  @@id([keyA, keyB])
+  @@map("mcvv_klub_navrh_zamitnuty")
+}
+
 /// Číselník typů obrázků pro web
 model WebImageType {
   id   Int    @id @default(autoincrement()) @map("id") @db.SmallInt

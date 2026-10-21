@@ -4,6 +4,12 @@
  * All values are plain JSON (unstable_cache serializes the result).
  */
 import {
+  createClubResolver,
+  mostCommonSpelling,
+  normalizeClubName,
+  type ClubResolver,
+} from "@/lib/clubs/core";
+import {
   personalRecordsByYear,
   runnerBirthYear,
   runnerSex,
@@ -68,7 +74,8 @@ export type StatsOverview = {
     trend: { year: number; share: number }[];
     peak: { year: number; share: number } | null;
   };
-  clubs: { name: string; starts: number }[];
+  /** Canonical club when merged in the admin (#104), else the written name. */
+  clubs: { name: string; slug: string; starts: number }[];
   together: { seconds: number; hours: number; days: number; climbKm: number };
 };
 
@@ -97,15 +104,7 @@ export function rankRows<T extends { value: number }>(rows: T[]): (T & { rank: n
  * ("K.O.B. Choceň" = "KOB Chocen"). Different spellings or renamed clubs are still counted
  * separately – the result is an approximation until club names are unified (#104).
  */
-export function normalizeClubName(name: string | null | undefined): string {
-  return (name ?? "")
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-const NO_CLUB = new Set(["", "neregistrovany", "neregistrovana", "nereg", "bezklubu", "zadny"]);
+export { normalizeClubName };
 
 function sortedByTime(rows: RawResult[]): RawResult[] {
   return [...rows].sort((a, b) => a.time - b.time || a.runnerId.localeCompare(b.runnerId));
@@ -115,6 +114,7 @@ export function computeStatsOverview(
   results: RawResult[],
   photoCounts: PhotoCount[] = [],
   photoTotal = 0,
+  clubResolver: ClubResolver = createClubResolver(),
 ): StatsOverview {
   const years = [...new Set(results.map((row) => row.year))].sort((a, b) => a - b);
   const byYear = new Map<number, RawResult[]>();
@@ -280,26 +280,37 @@ export function computeStatsOverview(
     null,
   );
 
-  // Most loyal club (starts per normalized club name).
-  const clubs = new Map<string, { starts: number; spellings: Map<string, number> }>();
+  // Most loyal club: canonical club once merged in the admin, else the written name
+  // (case, diacritics and punctuation ignored).
+  const clubs = new Map<
+    string,
+    { starts: number; slug: string; canonical: string | null; spellings: Map<string, number> }
+  >();
   for (const row of results) {
-    const key = normalizeClubName(row.clubName);
-    if (NO_CLUB.has(key)) {
+    const resolved = clubResolver.resolve(row.clubName);
+    if (!resolved) {
       continue;
     }
-    const entry = clubs.get(key) ?? { starts: 0, spellings: new Map<string, number>() };
+    const entry = clubs.get(resolved.key) ?? {
+      starts: 0,
+      slug: resolved.slug,
+      canonical: resolved.canonicalName,
+      spellings: new Map<string, number>(),
+    };
     entry.starts += 1;
     const spelling = (row.clubName ?? "").trim();
     entry.spellings.set(spelling, (entry.spellings.get(spelling) ?? 0) + 1);
-    clubs.set(key, entry);
+    clubs.set(resolved.key, entry);
   }
   const topClubs = [...clubs.values()]
-    .map((entry) => ({
-      name: [...entry.spellings.entries()].sort(
-        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-      )[0][0],
-      starts: entry.starts,
-    }))
+    .map((entry) => {
+      const name = entry.canonical ?? mostCommonSpelling(entry.spellings);
+      return {
+        name,
+        slug: entry.canonical ? entry.slug : (clubResolver.resolve(name)?.slug ?? entry.slug),
+        starts: entry.starts,
+      };
+    })
     .sort((a, b) => b.starts - a.starts || a.name.localeCompare(b.name, "cs"))
     .slice(0, 3);
 

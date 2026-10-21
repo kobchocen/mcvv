@@ -20,12 +20,30 @@
         "href": "/"
       },
       "links": [
-        { "label": "O závodě", "href": "#about" },
-        { "label": "Trať", "href": "#route" },
-        { "label": "Termín", "href": "#date" },
-        { "label": "Statistiky", "href": "/statistiky" },
-        { "label": "Fotky", "href": "#gallery" },
-        { "label": "Partneři", "href": "#partners" }
+        {
+          "label": "O závodě",
+          "href": "#about"
+        },
+        {
+          "label": "Trať",
+          "href": "#route"
+        },
+        {
+          "label": "Termín",
+          "href": "#date"
+        },
+        {
+          "label": "Statistiky",
+          "href": "/statistiky"
+        },
+        {
+          "label": "Fotky",
+          "href": "#gallery"
+        },
+        {
+          "label": "Partneři",
+          "href": "#partners"
+        }
       ]
     },
     "hero": {
@@ -78,12 +96,30 @@
         "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
       ],
       "actions": [
-        { "label": "Rozpis", "href": "/program" },
-        { "label": "Přihlášky", "href": "/prihlaseni-zavodnici" },
-        { "label": "Pokyny", "href": "/pokyny" },
-        { "label": "Startovka", "href": "/startovka" },
-        { "label": "Výsledky", "href": "/vysledky" },
-        { "label": "Máš dotaz? Ozvi se pořadateli.", "href": "/kontakt" }
+        {
+          "label": "Rozpis",
+          "href": "/program"
+        },
+        {
+          "label": "Přihlášky",
+          "href": "/prihlaseni-zavodnici"
+        },
+        {
+          "label": "Pokyny",
+          "href": "/pokyny"
+        },
+        {
+          "label": "Startovka",
+          "href": "/startovka"
+        },
+        {
+          "label": "Výsledky",
+          "href": "/vysledky"
+        },
+        {
+          "label": "Máš dotaz? Ozvi se pořadateli.",
+          "href": "/kontakt"
+        }
       ],
       "cards": [
         {
@@ -152,8 +188,14 @@
       "eyebrow": "03 — Termín a místo",
       "title": "Neděle 6. prosince",
       "items": [
-        { "icon": "calendar", "text": "Každou první prosincovou neděli" },
-        { "icon": "clock", "text": "Intervalový start od 10:15" },
+        {
+          "icon": "calendar",
+          "text": "Každou první prosincovou neděli"
+        },
+        {
+          "icon": "clock",
+          "text": "Intervalový start od 10:15"
+        },
         {
           "icon": "pin",
           "text": "Choceň - Velká Veranda - ",
@@ -191,7 +233,13 @@
         "closeLabel": "Zavřít mapu",
         "townLabel": "Choceň",
         "verandaLabel": "Veranda",
-        "labels": { "veranda": "S/C", "p1": "P1", "p2": "P2", "train": "Vlak", "bus": "Bus" }
+        "labels": {
+          "veranda": "S/C",
+          "p1": "P1",
+          "p2": "P2",
+          "train": "Vlak",
+          "bus": "Bus"
+        }
       }
     },
     "results": {
@@ -273,25 +321,52 @@
         {
           "title": "Závod",
           "links": [
-            { "label": "O závodě", "href": "#about" },
-            { "label": "Rozpis", "href": "/program" },
-            { "label": "Přihláška", "href": "/prihlasky" }
+            {
+              "label": "O závodě",
+              "href": "#about"
+            },
+            {
+              "label": "Rozpis",
+              "href": "/program"
+            },
+            {
+              "label": "Přihláška",
+              "href": "/prihlasky"
+            }
           ]
         },
         {
           "title": "Statistiky",
           "links": [
-            { "label": "Přehled statistik", "href": "/statistiky" },
-            { "label": "Poslední ročník", "href": "/results/{year}" },
-            { "label": "Archiv výsledků", "href": "/results" },
-            { "label": "Traťové rekordy", "href": "/statistiky/rekordy" }
+            {
+              "label": "Přehled statistik",
+              "href": "/statistiky"
+            },
+            {
+              "label": "Poslední ročník",
+              "href": "/results/{year}"
+            },
+            {
+              "label": "Archiv výsledků",
+              "href": "/results"
+            },
+            {
+              "label": "Traťové rekordy",
+              "href": "/statistiky/rekordy"
+            }
           ]
         },
         {
           "title": "Kontakt",
           "links": [
-            { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
-            { "label": "Napsat pořadateli", "href": "/kontakt" }
+            {
+              "label": "K.O.B. Choceň, z.s.",
+              "href": "#partners"
+            },
+            {
+              "label": "Napsat pořadateli",
+              "href": "/kontakt"
+            }
           ]
         }
       ],
@@ -589,6 +664,25 @@
     "empty": "Pro {sex, select, F {tuto běžkyni} other {tohoto běžce}} zatím nejsou výsledky.",
     "registeredFirstStart": "{sex, select, F {Přihlášena} other {Přihlášen}} na ročník {year} – první start",
     "back": "Archiv výsledků"
+  },
+  "Club": {
+    "eyebrow": "Klub",
+    "starts": "Startů",
+    "runners": "Běžců",
+    "editions": "Ročníků",
+    "years": "Roky",
+    "variants": "Zapsáno také jako",
+    "statsLink": "Další statistiky závodu",
+    "perYear": "Starty po letech",
+    "best": "Nejlepší výsledky",
+    "men": "Muži",
+    "women": "Ženy",
+    "members": "Běžci klubu",
+    "runner": "Jméno",
+    "year": "Rok",
+    "time": "Čas",
+    "personalBest": "Nejlepší čas",
+    "writtenNote": "Počítají se starty pod tímto zapsaným názvem (bez ohledu na velká písmena, diakritiku a interpunkci). Různé zápisy téhož klubu se sloučí až po ručním potvrzení v administraci."
   },
   "Messages": {
     "title": "Zprávy",
@@ -913,7 +1007,40 @@
     "regsNewPayment": "Nová platba",
     "regsDeletePayment": "Smazat platbu",
     "regsEmpty": "Žádné přihlášky v tomto roce.",
-    "regsBack": "Zpět na přihlášky"
+    "regsBack": "Zpět na přihlášky",
+    "clubMergeTitle": "Kluby – sloučení názvů",
+    "clubMergeHint": "Návrhy ke sloučení různě zapsaných názvů klubů pod jeden klub. Potvrzuje se ručně.",
+    "clubMergeIntro": "Stejný klub je v historických výsledcích zapsaný různě (zkratky, překlepy, přejmenování). Níže jsou návrhy podle podobnosti názvů. Nic se neslučuje samo: dokud dvojici nepotvrdíte, zobrazuje se klub dál pod zapsaným názvem. Potvrzené sloučení se projeví ve statistice Nejvěrnější klub, ve výsledcích a na profilu klubu; každá změna se zapisuje do auditu.",
+    "clubMergeSummary": "{names} zapsaných názvů · {clubs} sloučených klubů · {aliases} přiřazených názvů",
+    "clubMergeSaved": "Uloženo.",
+    "clubMergeError": "Zadejte dva různé názvy klubů.",
+    "clubMergeSuggestions": "Návrhy ke sloučení",
+    "clubMergeAll": "Vše ({count})",
+    "clubMergeConfidence_high": "Vysoká shoda",
+    "clubMergeConfidence_medium": "Střední shoda",
+    "clubMergeConfidence_low": "Nízká shoda",
+    "clubMergeScoreHint": "Skóre 0–1 porovnává názvy bez diakritiky, typu klubu (OK, TJ, SK, K.O.B. …) a se známými zkratkami (Loko, HK, Č. Třebová …). Různé typy klubů v jednom městě (např. AC × K.O.B.) skóre snižují. I vysoká shoda je jen návrh.",
+    "clubMergeReason_same_core": "stejný název bez typu klubu",
+    "clubMergeReason_abbreviation": "zkratka",
+    "clubMergeReason_prefix_missing": "chybí typ klubu",
+    "clubMergeReason_prefix_conflict": "jiný typ klubu",
+    "clubMergeReason_spelling": "podobný zápis",
+    "clubMergeReason_subset": "jeden název obsahuje druhý",
+    "clubMergeUsage": "{starts, plural, one {# start} few {# starty} other {# startů}}, {years}",
+    "clubMergeSpellings": "Zápisy",
+    "clubMergeCanonical": "Název sloučeného klubu",
+    "clubMergeConfirm": "Sloučit",
+    "clubMergeReject": "Zamítnout",
+    "clubMergeMore": "Zobrazit další ({count})",
+    "clubMergeManual": "Ruční sloučení",
+    "clubMergeManualHint": "Pro dvojici, která mezi návrhy není: vyberte dva zapsané názvy.",
+    "clubMergeNameA": "První název",
+    "clubMergeNameB": "Druhý název",
+    "clubMergeClubs": "Sloučené kluby",
+    "clubMergeNoClubs": "Zatím žádné – všechny kluby se zobrazují pod zapsanými názvy.",
+    "clubMergeRemoveAlias": "Odebrat „{name}“ ze sloučení",
+    "clubMergeRejected": "Zamítnuté návrhy ({count})",
+    "clubMergeRestore": "Vrátit mezi návrhy"
   },
   "Stats": {
     "overview": {

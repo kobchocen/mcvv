@@ -6,6 +6,7 @@ export * from "./photo-lightbox";
 export * from "./race-countdown";
 export * from "./highlight-hashed-row";
 export * from "./runner-name-link";
+export * from "./club-name-link";
 export * from "./runner-portrait";
 export * from "./runner-perf-bar";
 export * from "./runner-photo-grid";

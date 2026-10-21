@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { saveClub } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
-import { type Locale } from "@/i18n/routing";
+import { Link, type Locale } from "@/i18n/routing";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/admin/staff";
@@ -47,6 +47,12 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("dictsClubs")}
         </h1>
+        <Link
+          href="/admin/ciselniky/kluby/slouceni"
+          className="mt-2 inline-block text-sm font-semibold text-race-accent hover:underline"
+        >
+          {copy("clubMergeTitle")} →
+        </Link>
         <form className="mt-4 flex flex-wrap items-end gap-3" method="get">
           <AdminField
             name="rok"

@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 
+import { getClubResolver } from "@/lib/clubs/queries";
 import { prisma } from "@/lib/db/client";
 import { PHOTOS_CACHE_TAG } from "@/lib/photos/queries";
 import { loadAllResults } from "@/lib/stats/queries";
@@ -36,13 +37,18 @@ async function loadPhotoCounts(): Promise<{ counts: PhotoCount[]; total: number 
 }
 
 /**
- * Everything the /statistiky overview needs, computed once per hour. Tagged "stats" and,
+ * Everything the /statistiky overview needs, computed once per hour. Tagged "stats" (also
+ * revalidated by club merges in the admin) and,
  * because of the photo tile, "photos" (photo uploads / tagging revalidate it too).
  */
 export const getStatsOverview = unstable_cache(
   async (): Promise<StatsOverview> => {
-    const [results, photos] = await Promise.all([loadAllResults(), loadPhotoCounts()]);
-    return computeStatsOverview(results, photos.counts, photos.total);
+    const [results, photos, clubs] = await Promise.all([
+      loadAllResults(),
+      loadPhotoCounts(),
+      getClubResolver(),
+    ]);
+    return computeStatsOverview(results, photos.counts, photos.total, clubs);
   },
   ["stats-overview"],
   { revalidate: 3600, tags: [STATS_CACHE_TAG, PHOTOS_CACHE_TAG] },

@@ -737,6 +737,8 @@
     "settingsNotifyOrganizerHint": "At most 1 e-mail per day to the organiser e-mail, only when new unread messages arrived.",
     "settingsNotifyUser": "Notify registrants of a reply by e-mail",
     "settingsNotifyUserHint": "At most 1 e-mail per conversation, the next one only after it is read. Sent with a ~10 minute delay. Outside production it goes to the organiser e-mail instead.",
+    "settingsNotifyChanges": "Registration changes in the daily organiser digest",
+    "settingsNotifyChangesHint": "New registrations, runners added and removed, new runners and clubs, registration name and club changes. In the same daily e-mail as the message digest, at most once a day.",
     "settingsOrganizerEmail": "Organiser e-mail",
     "settingsOrganizerEmailHint": "Receives the contact form and the message digest. Empty = {fallback}.",
     "settingsOrganizerEmailInvalid": "The organiser e-mail is not valid.",

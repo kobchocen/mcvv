@@ -365,7 +365,8 @@ func TestSetupWritesConfig(t *testing.T) {
 	path := filepath.Join(dir, "config.json")
 	splits := filepath.Join(dir, "splits.csv")
 	_ = os.WriteFile(splits, []byte("1;100\n"), 0o644)
-	input := strings.NewReader("\nabc\nmcvv_live_abc\n2026\n" + splits + "\n")
+	// cesta v uvozovkách jako z „Kopírovat jako cestu“ v Průzkumníku
+	input := strings.NewReader("\nabc\nmcvv_live_abc\n2026\n\"" + splits + "\"\n")
 	var out strings.Builder
 	if err := runSetup(path, input, &out, ""); err != nil {
 		t.Fatal(err)
@@ -395,5 +396,33 @@ func TestSetupWritesConfig(t *testing.T) {
 	}
 	if info, _ := os.Stat(path); info.Mode().Perm()&0o077 != 0 {
 		t.Errorf("config permissions = %v", info.Mode().Perm())
+	}
+}
+
+func TestCleanInput(t *testing.T) {
+	cases := map[string]string{
+		`  C:\OBD\tmp\splits.csv ` + "\r\n": `C:\OBD\tmp\splits.csv`,
+		`"C:\Program Files\OBD\splits.csv"`: `C:\Program Files\OBD\splits.csv`,
+		`'C:\OBD\splits.csv'`:               `C:\OBD\splits.csv`,
+		`"`:                                 `"`,
+		``:                                  ``,
+	}
+	for in, want := range cases {
+		if got := cleanInput(in); got != want {
+			t.Errorf("cleanInput(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestVersionString(t *testing.T) {
+	oldVersion, oldCommit := version, commit
+	t.Cleanup(func() { version, commit = oldVersion, oldCommit })
+	version, commit = "0.1.0", ""
+	if got := versionString(); got != "0.1.0" {
+		t.Errorf("versionString() = %q", got)
+	}
+	commit = "abc1234"
+	if got := versionString(); got != "0.1.0 (abc1234)" {
+		t.Errorf("versionString() = %q", got)
 	}
 }

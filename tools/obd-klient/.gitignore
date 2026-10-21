@@ -5,3 +5,5 @@
 # lokální konfigurace s tokenem a stav
 config.json
 state.json
+# prostředky Windows (ikona, manifest, verze) generuje go-winres při sestavení
+rsrc_windows_*.syso

@@ -36,7 +36,16 @@ Podrobnosti: `docs/DEN-ZAVODU-MEZICASY.md`.
 
 ```sh
 go test ./...
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=0.2.0" -o dist/obd-klient.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=0.2.0 -X main.commit=abc1234" -o dist/obd-klient.exe .
+# balíček pro časomíru (exe s ikonou, manifestem a verzí + NAVOD.txt, config.example.json, splits-ukazka.csv)
+VERSION=0.2.0 ./build-release.sh   # → dist/obd-klient-0.2.0/ a dist/obd-klient-0.2.0-win-x64.zip
 ```
 
+`obd-klient.exe -version` vypíše verzi a commit. Návod pro obsluhu je v `balik/NAVOD.txt`
+(do balíčku se uloží jako UTF-8 s BOM a CRLF kvůli Poznámkovému bloku). Ikonu, manifest
+(`asInvoker`, DPI, dlouhé cesty) a údaje ve Vlastnostech souboru vkládá `go-winres` z `winres/`.
+
 Binárky se necommitují; CI je sestaví jako artefakt `obd-klient-windows-amd64` (Windows 10/11, x64).
+Release: tag `obd-klient-vX.Y.Z` na commitu z `main`/`develop` → workflow
+`.github/workflows/obd-klient-release.yml` vytvoří GitHub Release s `.exe`, zipem a `SHA256SUMS.txt`
+(není „latest“, aby nepřekryl release webu).

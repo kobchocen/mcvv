@@ -1,0 +1,175 @@
+MČVV obd-klient – návod pro časomíru (cílové PC s OBD)
+=======================================================
+
+Verzi programu zjistíte příkazem:  obd-klient.exe -version
+
+
+1. CO PROGRAM DĚLÁ
+------------------
+obd-klient běží v okně na cílovém počítači vedle OBD. Hlídá soubor s cílovými časy
+(splits.csv), který OBD zapisuje stejně jako dřív pro starý web, a posílá nové časy
+na web MČVV (www.mcvv.org). Na webu se objeví u závodníků jako cílové časy.
+
+- OBD ani jeho nastavení se nemění. Program soubor jen čte, nic do něj nezapisuje.
+- Soubor kontroluje každých 5 sekund (OBD ho přepisuje zhruba každou minutu).
+  Čas je tedy na webu nejpozději asi minutu po zápisu v OBD.
+- Formát souboru: na každém řádku "startovní číslo;čas v sekundách od startu",
+  např. 41;1686 (= 28:06).
+- Platí první čas, stejně jako u starého webu. Když v OBD čas opravíte, web ho sám
+  nepřepíše – oprava se v adminu webu ukáže jako konflikt a rozhodne o ní správce webu.
+  Smazaný řádek v OBD se na webu nemaže.
+- Instalace ani práva správce nejsou potřeba. Je to jeden soubor obd-klient.exe.
+
+
+2. PŘÍPRAVA
+-----------
+1) Celý zip rozbalte do složky, kam smí běžný uživatel zapisovat, např.
+   C:\MCVV\obd-klient\   (ne do "Program Files" a nespouštějte exe přímo ze zipu –
+   vedle exe se ukládá nastavení config.json a stav state.json).
+2) Kontrola, že soubor není poškozený (nepovinné): v té složce spusťte příkazový řádek
+   (do adresního řádku Průzkumníka napište cmd a Enter) a zadejte
+       certutil -hashfile obd-klient.exe SHA256
+   Výsledek musí být stejný jako v souboru obd-klient.exe.sha256.
+
+
+3. UPOZORNĚNÍ WINDOWS (SmartScreen)
+-----------------------------------
+Program zatím není digitálně podepsaný, proto Windows při prvním spuštění může ukázat
+modré okno "Systém Windows ochránil váš počítač". Klikněte na "Další informace" a pak
+na "Přesto spustit". Stačí jednou.
+(Můžete to předejít tak, že ještě před rozbalením kliknete pravým tlačítkem na zip →
+Vlastnosti → zaškrtnete "Odblokovat" → OK.)
+Kdyby program zablokoval antivir, pošlete Pavlovi snímek obrazovky s hlášením.
+
+
+4. PRVNÍ SPUŠTĚNÍ
+-----------------
+Spusťte obd-klient.exe dvojklikem. Otevře se černé okno a zeptá se na 4 údaje.
+Hodnota v hranatých závorkách je předvyplněná – Enter ji potvrdí.
+
+  Adresa webu ......... https://www.mcvv.org   (na závod)
+                        https://dev.mcvv.org   (jen pro zkoušku na testovacím webu)
+  Klíč zařízení ....... dlouhý kód začínající mcvv_live_  (viz níže)
+  Ročník .............. rok závodu, např. 2026
+  Cesta k souboru ..... plná cesta k souboru splits.csv z OBD (viz kapitola 5)
+
+Klíč zařízení:
+- Klíč vám pošle Pavel (nebo jiný správce webu). Vytváří se na webu v administraci:
+  Admin → Den závodu → Živě (adresa /admin/den-zavodu/zive), sekce "Klíče zařízení
+  (klient OBD na cílovém PC)" → "Vytvořit klíč". Povolený split 9 (= cíl), autor LuM.
+- Klíč platí jen pro zadaný ročník a jen v nastaveném čase (nejvýš 3 dny, obvykle
+  den závodu 6:00–18:00). Mimo tuto dobu ho web odmítne.
+- Klíč je jako heslo: nikomu ho nepřeposílejte, nefoťte a nikam nevkládejte, jen do
+  tohoto programu. Při ztrátě vytvoří správce nový a starý zneplatní.
+- Do okna ho vložíte pravým tlačítkem myši nebo Ctrl+V a potvrdíte Enterem.
+
+Po vyplnění se nastavení uloží do config.json vedle exe a program rovnou začne pracovat.
+Při dalším spuštění už se na nic neptá.
+
+
+5. JAK VYBRAT SOUBOR splits.csv
+-------------------------------
+Je to soubor, který OBD zapisuje pro web (u starého webu typicky ve složce tmp,
+např. C:\OBD\tmp\splits.csv). Plnou cestu získáte nejsnáz takto:
+- v Průzkumníku klikněte na soubor pravým tlačítkem → "Kopírovat jako cestu"
+  (nebo soubor označte a stiskněte Ctrl+Shift+C) a v okně programu vložte Ctrl+V;
+- nebo soubor myší přetáhněte do okna programu – cesta se vypíše sama.
+Uvozovky okolo cesty nevadí. Pak Enter.
+
+Pokud soubor ještě neexistuje (OBD ho vytvoří až s prvním časem), program napíše
+upozornění, ale nastavení uloží a na soubor počká.
+
+Změna nastavení později:
+- otevřete příkazový řádek ve složce programu (adresní řádek Průzkumníka → cmd → Enter)
+  a zadejte   obd-klient.exe -setup   – zeptá se znovu na všechny 4 údaje
+  (Enter = ponechat dosavadní hodnotu, i uložený klíč);
+- jednorázově jiný soubor (bez uložení):   obd-klient.exe -file "C:\cesta\splits.csv"
+- ověření klíče a spojení bez odesílání:   obd-klient.exe -check
+
+
+6. ZKOUŠKA NANEČISTO
+--------------------
+V balíčku je ukázkový soubor splits-ukazka.csv (8 vymyšlených časů).
+1) Od Pavla si vyžádejte TESTOVACÍ klíč pro https://dev.mcvv.org.
+2) Spusťte obd-klient.exe, adresa https://dev.mcvv.org, testovací klíč, ročník podle
+   Pavla, a jako soubor zadejte cestu k splits-ukazka.csv.
+3) V okně by mělo být "Spojení OK" a pak "Soubor: 8 řádků … 8 k odeslání" a
+   "Odesláno 8: map[set:applied:8]" (když už na testovacím webu tato čísla časy mají,
+   bude tam místo applied "unchanged" nebo "conflict" – to je v pořádku). Program
+   nechte běžet; při dalších kontrolách už nic neposílá (soubor se nezměnil).
+4) Otevřete splits-ukazka.csv v Poznámkovém bloku, přidejte na konec řádek,
+   např. 109;2210, a uložte – do 5 s se pošle jen ten nový řádek.
+5) Zkuste vypnout Wi-Fi/odpojit kabel, přidat další řádek a po chvíli síť zase zapnout
+   – čas se pošle sám (viz kapitola 9).
+6) Po zkoušce okno zavřete, SMAŽTE soubory config.json a state.json a před závodem
+   spusťte program znovu se skutečnými údaji (adresa www.mcvv.org, ostrý klíč,
+   soubor z OBD).
+
+
+7. CO ZNAMENAJÍ HLÁŠKY
+----------------------
+Každý řádek v okně začíná časem (hh:mm:ss).
+
+obd-klient 0.1.0 · https://… · rok 2026 · úsek 9 · soubor … · opravy vypnuté · mazání vypnuté
+    Program se spustil s tímto nastavením. "opravy/mazání vypnuté" je správně.
+Spojení OK: {…}
+    Klíč platí a web je dostupný. V závorce je ročník, název zařízení a povolené úseky.
+Ověření tokenu selhalo: …
+    Klíč nebo spojení nefunguje (podrobnosti níže). Program přesto běží a zkouší to dál.
+Soubor: 120 řádků, 0 přeskočeno, 0 opakovaných čísel, 3 k odeslání (z toho 0 smazání)
+    Program načetl novou verzi souboru. "přeskočeno" = řádky, kterým nerozumí (prázdné,
+    hlavička, nesmysl). "opakovaných čísel" = číslo je v souboru vícekrát, platí první
+    řádek. "k odeslání" = nové časy, které jdou na web.
+Odesláno 3: map[set:applied:3]
+    Web časy přijal. applied = nově zapsáno, unchanged = web už stejný čas má,
+    conflict = web má jiný čas, rejected = web čas odmítl.
+KONFLIKT č. 42: posláno 28:25, na webu je 28:06 (platí první čas) – rozhodne admin …
+    Na webu už je u čísla jiný čas (zadal ho člověk nebo ho OBD poslalo dřív).
+    Nic se nepřepsalo, rozhodne správce webu. Vy nemusíte dělat nic.
+ODMÍTNUTO č. 42 (…): too-long
+    Web čas odmítl (např. too-long = víc než 6 hodin). Zkontrolujte čas v OBD.
+Chyba: soubor C:\…\splits.csv: … – další pokus za 4s
+    Soubor na zadané cestě není. Zkontrolujte cestu (kapitola 5) nebo jestli ho OBD
+    už vytvořilo.
+Chyba: Post "https://…": dial tcp … / no such host / timeout … – další pokus za 8s
+    Nejde internet nebo web. Nic se neztratí, program to zkouší sám (kapitola 9).
+… HTTP 401 … (invalid / expired / revoked / not-yet-valid)
+    Klíč je špatně opsaný, prošlý, zneplatněný nebo ještě neplatí. Volejte Pavla
+    o nový klíč, pak obd-klient.exe -setup.
+… HTTP 403 … year-mismatch
+    Ročník v nastavení neodpovídá klíči. Opravte přes obd-klient.exe -setup.
+… HTTP 403 … split-not-allowed
+    Klíč nemá povolený cíl (split 9). Správce musí vytvořit nový klíč.
+… HTTP 429 …
+    Příliš mnoho požadavků za chvíli; program sám zpomalí a pokračuje.
+Konfigurace: … / Nastavení: …
+    Chyba v config.json. Spusťte obd-klient.exe -setup, nebo config.json smažte
+    a spusťte program znovu.
+Ukončeno.
+    Program byl zastaven (Ctrl+C).
+
+
+8. JAK PROGRAM ZASTAVIT
+-----------------------
+Klikněte do okna a stiskněte Ctrl+C (vypíše "Ukončeno."), nebo okno zavřete křížkem.
+Obojí je bezpečné kdykoli – co web potvrdil, je uložené v state.json, a co nestihl,
+pošle program po dalším spuštění. Během závodu ho ale nechte běžet a okno nezavírejte.
+Klidně ho minimalizujte.
+
+
+9. VÝPADEK INTERNETU
+--------------------
+Žádná ruční akce není potřeba a okno nezavírejte.
+- Program nemá zvláštní frontu: frontou je samotný soubor z OBD. Každý čas, který web
+  zatím nepotvrdil, se posílá znovu, dokud ho web nepřijme.
+- Při chybě zkouší znovu s prodlužující se pauzou (2 s, 4 s, 8 s … nejvýš asi 60 s).
+  Po obnovení spojení pošle všechno, co mezitím přibylo. Nic se neztratí ani nezdvojí.
+- To platí i po restartu počítače nebo programu: po spuštění pošle, co chybí.
+- Když internet nejde delší dobu, dejte vědět Pavlovi – výsledky lze nahrát i dodatečně.
+
+
+10. KONTAKT
+-----------
+Pavel Švadlena, pavel.svadlena@kobchocen.cz
+Při potížích pošlete snímek obrazovky okna programu. Za běhu se klíč v okně nevypisuje;
+je vidět jen při nastavování (-setup) – takový snímek neposílejte nebo klíč zakryjte.

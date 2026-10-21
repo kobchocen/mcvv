@@ -18,7 +18,19 @@ import (
 	"time"
 )
 
-var version = "dev"
+// Nastaví build: -ldflags "-X main.version=0.1.0 -X main.commit=abc1234".
+var (
+	version = "dev"
+	commit  = ""
+)
+
+// versionString: „0.1.0 (abc1234)“, bez commitu jen verze.
+func versionString() string {
+	if commit == "" {
+		return version
+	}
+	return version + " (" + commit + ")"
+}
 
 type Config struct {
 	URL          string `json:"url"`          // https://www.mcvv.org
@@ -114,7 +126,7 @@ func main() {
 	showVersion := flag.Bool("version", false, "vypíše verzi")
 	flag.Parse()
 	if *showVersion {
-		fmt.Println(version)
+		fmt.Println("obd-klient " + versionString())
 		return
 	}
 	if !filepath.IsAbs(*configPath) {
@@ -140,7 +152,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	logf("obd-klient %s · %s · rok %d · úsek %s · soubor %s · opravy %s · mazání %s", version, cfg.URL, cfg.Year, cfg.Split, cfg.File, onOff(cfg.ApplyCorrections), onOff(cfg.DeleteMissing))
+	logf("obd-klient %s · %s · rok %d · úsek %s · soubor %s · opravy %s · mazání %s", versionString(), cfg.URL, cfg.Year, cfg.Split, cfg.File, onOff(cfg.ApplyCorrections), onOff(cfg.DeleteMissing))
 	if info, err := client.Ping(ctx); err != nil {
 		logf("Ověření tokenu selhalo: %v", err)
 		if *check {
@@ -256,7 +268,11 @@ func (r *Runner) Tick(ctx context.Context) error {
 			r.state.Record(split, change, result.Outcome)
 			counts[change.action()+":"+result.Outcome]++
 			if result.Outcome == "conflict" {
-				logf("KONFLIKT č. %d: posláno %s, na webu je jiný čas (zadal ho člověk) – rozhodne admin v /admin/den-zavodu/zive", change.Bib, fmtTime(change.TimeS))
+				held := "jiný čas"
+				if result.ExistingTime != nil {
+					held = fmtTime(*result.ExistingTime)
+				}
+				logf("KONFLIKT č. %d: posláno %s, na webu je %s (platí první čas) – rozhodne admin v /admin/den-zavodu/zive", change.Bib, fmtTime(change.TimeS), held)
 			}
 			if result.Outcome == "rejected" {
 				logf("ODMÍTNUTO č. %d (%s): %s", change.Bib, fmtTime(change.TimeS), result.Note)

@@ -1,0 +1,79 @@
+name: obd-klient release
+
+# Tag obd-klient-vX.Y.Z (na commitu z main nebo develop) → GitHub Release s obd-klient.exe
+# a balíčkem pro časomíru (exe, NAVOD.txt, config.example.json, splits-ukazka.csv, SHA-256).
+#   git tag obd-klient-v0.1.0 <commit> && git push origin obd-klient-v0.1.0
+on:
+  push:
+    tags: ["obd-klient-v*"]
+
+permissions: {}
+
+concurrency:
+  group: obd-klient-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'kobchocen/mcvv'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: tools/obd-klient
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tools/obd-klient/go.mod
+          cache: false
+      - name: Version from tag
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#obd-klient-v}"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Tag $TAG musí mít tvar obd-klient-vX.Y.Z"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main && ! git merge-base --is-ancestor "$GITHUB_SHA" origin/develop; then
+            echo "::error::Tag $TAG neukazuje na commit z main ani develop"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Build Windows package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: COMMIT="${GITHUB_SHA::7}" ./build-release.sh
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          NAME="obd-klient-$VERSION"
+          cp "dist/$NAME/obd-klient.exe" "dist/obd-klient-$VERSION.exe"
+          (cd dist && sha256sum "obd-klient-$VERSION.exe" "$NAME-win-x64.zip" > SHA256SUMS.txt)
+          {
+            echo "Klient OBD pro cílové PC časomíry (Windows 10/11 x64), commit ${GITHUB_SHA::7}."
+            echo
+            echo "Stáhněte \`$NAME-win-x64.zip\`, rozbalte a postupujte podle \`NAVOD.txt\`."
+            echo 'Exe není podepsané – SmartScreen: „Další informace → Přesto spustit“.'
+            echo
+            echo '```'
+            cat dist/SHA256SUMS.txt
+            echo '```'
+          } > dist/notes.md
+          gh release create "$TAG" --verify-tag --latest=false --title "obd-klient $VERSION" \
+            --notes-file dist/notes.md \
+            "dist/$NAME-win-x64.zip" "dist/obd-klient-$VERSION.exe" dist/SHA256SUMS.txt

@@ -11,7 +11,8 @@ export function McvvQuickAdd({
   copy,
 }: {
   year: number;
-  registrationId: number;
+  /** null = přihláška ještě neexistuje, založí se s prvním běžcem. */
+  registrationId: number | null;
   runners: { id: string; name: string }[];
   clubName: string;
   copy: { quickAdd: string; runnerTitle: string };
@@ -24,7 +25,7 @@ export function McvvQuickAdd({
           <li key={runner.id}>
             <form action={addExistingRunner}>
               <input type="hidden" name="year" value={year} />
-              <input type="hidden" name="registrationId" value={registrationId} />
+              <input type="hidden" name="registrationId" value={registrationId ?? 0} />
               <input type="hidden" name="runnerId" value={runner.id} />
               <input type="hidden" name="clubName" value={clubName} />
               <Button

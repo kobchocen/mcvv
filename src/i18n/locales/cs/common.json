@@ -23,7 +23,7 @@
         { "label": "O závodě", "href": "#about" },
         { "label": "Trať", "href": "#route" },
         { "label": "Termín", "href": "#date" },
-        { "label": "Statistiky", "href": "#results" },
+        { "label": "Statistiky", "href": "/statistiky" },
         { "label": "Fotky", "href": "#gallery" },
         { "label": "Partneři", "href": "#partners" }
       ]
@@ -199,6 +199,7 @@
       "overline": "Výsledky",
       "title": "Generace běžců, jedna trať",
       "allLabel": "Archiv výsledků",
+      "statsLabel": "Všechny statistiky",
       "yearLabel": "Poslední ročník",
       "linkLabel": "Kompletní výsledky",
       "empty": "Výsledky se doplní po doběhu ročníku.",
@@ -280,6 +281,7 @@
         {
           "title": "Statistiky",
           "links": [
+            { "label": "Přehled statistik", "href": "/statistiky" },
             { "label": "Poslední ročník", "href": "/results/{year}" },
             { "label": "Archiv výsledků", "href": "/results" },
             { "label": "Traťové rekordy", "href": "/statistiky/rekordy" }
@@ -503,7 +505,6 @@
     "readOnly": "jen čtení",
     "name": "Název přihlášky",
     "email": "E-mail",
-    "note": "Poznámka",
     "noMail": "Nechci zasílat informace e-mailem",
     "save": "Uložit",
     "saved": "Uloženo",
@@ -560,6 +561,7 @@
     "back": "Zpět na úvod"
   },
   "Runner": {
+    "statsLink": "Jak si stojíš v historii? Prohlédni si statistiky",
     "eyebrow": "{sex, select, F {Běžkyně} other {Běžec}}",
     "starts": "Účasti",
     "record": "Osobní rekord",
@@ -697,6 +699,7 @@
   },
   "Admin": {
     "navRaceDay": "Den závodu",
+    "navAfterRace": "Po závodě: tombola",
     "navUsers": "Uživatelé",
     "navMessages": "Zprávy",
     "messagesTile": "{count, plural, =0 {žádné nepřečtené} one {# nepřečtená konverzace} few {# nepřečtené konverzace} other {# nepřečtených konverzací}}",
@@ -741,6 +744,8 @@
     "settingsNotifyOrganizerHint": "Nejvýš 1 e-mail denně na pořadatelský e-mail, jen když přišly nové nepřečtené zprávy.",
     "settingsNotifyUser": "Upozornit přihlašující e-mailem na odpověď",
     "settingsNotifyUserHint": "Nejvýš 1 e-mail na konverzaci, další až po přečtení. Odchází asi s 10min zpožděním. Mimo produkci jde místo přihlašujícímu na pořadatelský e-mail.",
+    "settingsNotifyChanges": "Změny přihlášek v denním souhrnu pořadateli",
+    "settingsNotifyChangesHint": "Nové přihlášky, přihlášení a odhlášení běžci, noví běžci a kluby, změna názvu přihlášky a klubu. Ve stejném denním e-mailu jako souhrn zpráv, nejvýš 1× denně.",
     "settingsOrganizerEmail": "Pořadatelský e-mail",
     "settingsOrganizerEmailHint": "Sem chodí kontaktní formulář a souhrn zpráv. Prázdné = {fallback}.",
     "settingsOrganizerEmailInvalid": "Pořadatelský e-mail není platný.",
@@ -760,7 +765,7 @@
     "navNewsletter": "Newsletter",
     "navPayments": "Platby (Fio)",
     "navRegistrations": "Přihlášky",
-    "navPrintBibs": "Tisk startovních čísel",
+    "navPrintBibs": "Tisk čísel a sestav prezentace",
     "navSettings": "Nastavení",
     "settingsTitle": "Nastavení",
     "settingsIntro": "Startovka, online výsledky, statistiky a přihlášky zdarma.",
@@ -789,6 +794,7 @@
     "status3": "Zaplacená",
     "status4": "Přeplacená",
     "status5": "Potvrzená",
+    "freeAutoConfirmed": "Zdarma – potvrzeno automaticky",
     "statusUnknown": "—",
     "filter": "Filtrovat",
     "includeCancelled": "včetně zrušených",
@@ -842,6 +848,10 @@
     "dictsSort": "Pořadí",
     "dictsSex": "Pohlaví",
     "dictsRecord": "Rekord (s)",
+    "dictsRecalcRecords": "Přepočítat rekordy z výsledků",
+    "dictsRecalcHint": "Rekord = nejlepší čas napříč ročníky podle pohlaví a věku kategorie (jako legacy setkatrek.php). Přepočítá se i automaticky po importu výsledků; jde do exportu pro OBD.",
+    "dictsRecalcChanged": "Rekordy přepočítány, změněné kategorie: {list}.",
+    "dictsRecalcUnchanged": "Rekordy přepočítány, beze změny.",
     "dictsFee": "Startovné",
     "dictsBibFrom": "Číslo od",
     "dictsBibTo": "Číslo do",
@@ -1087,7 +1097,7 @@
       {
         "image": "10-uprava.jpg",
         "title": "Úpravy do uzávěrky",
-        "text": "Poznámku, klub nebo seznam běžců můžete měnit až do uzávěrky. Změny hlavičky potvrďte tlačítkem <b>Uložit</b>."
+        "text": "Klub nebo seznam běžců můžete měnit až do uzávěrky. Změny hlavičky potvrďte tlačítkem <b>Uložit</b>."
       },
       {
         "image": "11-login.jpg",
@@ -1164,6 +1174,7 @@
   "ResultsArchive": {
     "eyebrow": "05 — Výsledky a historie",
     "home": "Domů",
+    "stats": "Statistiky",
     "title": "Archiv výsledků",
     "intro": "Vyberte ročník a prohlédněte si kompletní výsledkovou listinu.",
     "selectYear": "Vyberte ročník",
@@ -1491,7 +1502,26 @@
     "errChanged": "Data nebo soubory se od náhledu změnily. Udělejte nový náhled.",
     "doneUnchanged": "Beze změny – databáze už odpovídá souborům.",
     "donePresentation": "Import po prezentaci je zapsaný.",
-    "doneResults": "Výsledky jsou zapsané (počet řádků: {count})."
+    "doneResults": "Výsledky jsou zapsané (počet řádků: {count}).",
+    "doneRecords": "Rekordy kategorií přepočítány: {list}.",
+    "doneRecordsUnchanged": "Rekordy kategorií beze změny."
+  },
+  "AfterRace": {
+    "title": "Po závodě – tombola",
+    "adminHome": "Administrace",
+    "heading": "Po závodě {year}",
+    "intro": "Nástroje pro pořadatele na místě po doběhu.",
+    "tombola": "Tombola",
+    "tombolaHint": "Náhodná jména z doběhnuvších (výsledky ročníku, před importem průchody cílem). Vylosovaní se neopakují. Los je v adrese stránky, takže obnovení ani tisk výsledek nezmění; když někdo chybí, zvyšte počet – dosavadní jména zůstanou a přibudou další. „Losovat znovu“ zamíchá nově.",
+    "year": "Ročník",
+    "count": "Počet",
+    "apply": "Použít",
+    "redraw": "Losovat znovu",
+    "excludeClubs": "Vynechat kluby (vynecháno: {count})",
+    "noFinishers": "Ročník zatím nemá žádné doběhnuvší (výsledky ani průchody cílem).",
+    "poolInfo": "Losuje se z {eligible} z {total} doběhnuvších ({source}), los {seed}.",
+    "sourceResults": "výsledky",
+    "sourceSplits": "průchody cílem"
   },
   "StartAdmin": {
     "navStartList": "Startovka",
@@ -1628,5 +1658,43 @@
     "issue_rangeOverlap": "Rozsahy kategorií {category} a {other} se překrývají.",
     "issue_championInRange": "Číslo obhájce {other} leží v rozsahu kategorie {category}.",
     "issue_championSame": "Čísla obhájců mužů a žen musí být různá."
+  },
+  "PrintReports": {
+    "heading": "Sestavy pro prezentaci",
+    "intro": "PDF na A4 pro prezentaci v den závodu z aktuálních přihlášek ročníku {year} (bez zrušených). Startovní časy podle nastavení ročníku.",
+    "presentation": "Prezentace podle přihlášek",
+    "presentationHint": "Blok na přihlášku: číslo, start, jméno, ročník, klub, kategorie, startovné a zbývá uhradit. Blok se nedělí mezi stránky.",
+    "pagePerRegistration": "Každá přihláška na samostatné stránce",
+    "alphabet": "Abecední seznam",
+    "alphabetHint": "Všichni běžci z přihlášek podle jména: číslo, start, ročník, klub, kategorie a číslo přihlášky.",
+    "startList": "Startovka k tisku",
+    "startListHint": "Stejný zdroj jako veřejná startovka (po importu prezentace z OBD startovka OBD).",
+    "order": "Řazení",
+    "orderTime": "podle startovního času",
+    "orderBib": "podle čísla",
+    "download": "Stáhnout PDF",
+    "pdfPresentationTitle": "Prezentace {year}",
+    "pdfAlphabetTitle": "Abecední seznam {year}",
+    "pdfPresentationSubtitle": "Prezentace podle přihlášek",
+    "pdfAlphabetSubtitle": "Abecední seznam závodníků",
+    "pdfSummary": "Přihlášek: {registrations} · závodníků: {runners} · startovné {fee} Kč · zbývá uhradit celkem {due} Kč",
+    "pdfAlphabetSummary": "Závodníků: {runners}",
+    "colBib": "Č.",
+    "colTime": "Start",
+    "colName": "Jméno",
+    "colBirth": "Roč.",
+    "colClub": "Klub",
+    "colCategory": "Kategorie",
+    "colCategoryShort": "Kat.",
+    "colFee": "Startovné",
+    "colRegistration": "Přihl.",
+    "registration": "Přihláška č. {label}",
+    "blockTotal": "Celkem {runners} · startovné {fee} Kč · uhrazeno {paid} Kč",
+    "runners": "{count, plural, one {# závodník} few {# závodníci} other {# závodníků}}",
+    "due": "Zbývá uhradit {amount} Kč",
+    "settled": "Uhrazeno",
+    "overpaid": "Přeplatek {amount} Kč",
+    "currency": "{amount} Kč",
+    "empty": "Ročník zatím nemá žádné přihlášky."
   }
 }

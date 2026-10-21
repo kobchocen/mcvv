@@ -1,10 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
+import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
+import { redirect } from "@/i18n/routing";
+import { recalculateCategoryRecords } from "@/lib/stats/records";
 
 function revalidateDicts() {
   revalidatePath("/[locale]/admin/ciselniky", "layout");
@@ -32,6 +36,33 @@ export async function saveCategory(formData: FormData): Promise<void> {
     create: { id, ...data },
   });
   revalidateDicts();
+}
+
+/** Ruční přepočet rekordů kategorií ze všech výsledků (#129), stejně jako po importu. */
+export async function recalculateRecords(): Promise<void> {
+  const session = await requireStaff();
+  const locale = await getLocale();
+  const records = await prisma.$transaction(async (tx) => {
+    const changes = await recalculateCategoryRecords(tx);
+    await writeAudit(
+      {
+        actor: session,
+        action: "category.records_recalculated",
+        target: "categories",
+        detail: { records: changes },
+      },
+      tx,
+    );
+    return changes;
+  });
+  revalidateDicts();
+  redirect({
+    href: {
+      pathname: "/admin/ciselniky/kategorie",
+      query: { rekordy: records.map((r) => r.id).join(",") || "-" },
+    },
+    locale,
+  });
 }
 
 export async function saveClub(formData: FormData): Promise<void> {

@@ -1,19 +1,18 @@
 import { MetadataRoute } from "next";
 
 import { locales } from "@/i18n/routing";
+import { SITEMAP_ROUTES } from "@/lib/site/sitemap-routes";
 import { siteUrl } from "@/lib/site/url";
 
 // Read SITE_URL at request time (runtime env on Azure), not at build time.
 export const dynamic = "force-dynamic";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ["", "/results", "/navod"];
-
   const base = siteUrl();
   const entries: MetadataRoute.Sitemap = [];
 
   locales.forEach((locale) => {
-    routes.forEach((route) => {
+    SITEMAP_ROUTES.forEach((route) => {
       entries.push({
         url: `${base}/${locale}${route}`,
         lastModified: new Date(),

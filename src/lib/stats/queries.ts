@@ -1,19 +1,11 @@
 import { prisma } from "@/lib/db/client";
-import { isEligibleByBirthYear } from "@/lib/entries/category";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { formatRaceTime } from "@/lib/utils";
 
 import { personalRecordsByYear, runnerBirthYear, runnerSex, type RawResult } from "./core";
+import { recordEvolution } from "./records-core";
 
 export * from "./core";
-
-export function isEligible(
-  runnerId: string,
-  raceYear: number,
-  category: { sex: string; age: number },
-): boolean {
-  return isEligibleByBirthYear(runnerBirthYear(runnerId), runnerSex(runnerId), raceYear, category);
-}
 
 export async function loadAllResults(): Promise<RawResult[]> {
   const rows = await prisma.result.findMany({
@@ -53,32 +45,18 @@ export async function getRecordEvolution(): Promise<RecordEvolutionGroup[]> {
     prisma.category.findMany({ orderBy: { sort: "asc" } }),
     loadAllResults(),
   ]);
-  const years = [...new Set(results.map((row) => row.year))].sort((a, b) => a - b);
   const groups: RecordEvolutionGroup[] = [];
 
   for (const category of categories) {
-    let best = Number.POSITIVE_INFINITY;
-    const rows: RecordEvolutionGroup["rows"] = [];
-    for (const year of years) {
-      const eligible = results.filter(
-        (row) => row.year === year && isEligible(row.runnerId, year, category),
-      );
-      if (eligible.length === 0) {
-        continue;
-      }
-      const winner = eligible.reduce((a, b) => (a.time <= b.time ? a : b));
-      if (winner.time < best) {
-        best = winner.time;
-        rows.push({
-          year,
-          name: winner.runnerName || "—",
-          birthYear: String(runnerBirthYear(winner.runnerId)),
-          club: winner.clubName || "—",
-          time: formatRaceTime(winner.time),
-          runnerId: winner.runnerId,
-        });
-      }
-    }
+    // Stejné pravidlo jako uložený rekord kategorie (records-core, #129).
+    const rows = recordEvolution(category, results).map((winner) => ({
+      year: winner.year,
+      name: winner.runnerName || "—",
+      birthYear: String(runnerBirthYear(winner.runnerId)),
+      club: winner.clubName || "—",
+      time: formatRaceTime(winner.time),
+      runnerId: winner.runnerId,
+    }));
     if (rows.length > 0) {
       groups.push({ category: category.name, rows });
     }

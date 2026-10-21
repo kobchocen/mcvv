@@ -501,6 +501,7 @@
     "noRegistrationHint": "Přihláška se založí automaticky, jakmile přidáte prvního běžce.",
     "cancelledNotice": "Přihláška č. {id} byla zrušena pořadatelem.",
     "accountMessagesIntro": "Dotaz k účtu nebo k závodu můžete pořadateli poslat i bez přihlášky.",
+    "accountSettings": "Nastavení účtu",
     "deadline": "Uzávěrka",
     "readOnly": "jen čtení",
     "name": "Název přihlášky",

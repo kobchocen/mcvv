@@ -42,29 +42,6 @@ export function pickCancelledRegistrations<
     .sort((a, b) => a.id - b.id);
 }
 
-/**
- * Souhlas se zasíláním informací pro novou přihlášku: převezme se z poslední přihlášky
- * stejného e-mailu (rok, created, číslo), aby nová přihláška neobnovila dřívější odhlášení.
- */
-export function inheritedPromotion(
-  rows: readonly { year: number; id: number; created: Date | null; promotion: string | null }[],
-): string | null {
-  let latest: (typeof rows)[number] | null = null;
-  for (const row of rows) {
-    if (
-      !latest ||
-      row.year > latest.year ||
-      (row.year === latest.year &&
-        ((row.created?.getTime() ?? 0) > (latest.created?.getTime() ?? 0) ||
-          ((row.created?.getTime() ?? 0) === (latest.created?.getTime() ?? 0) &&
-            row.id > latest.id)))
-    ) {
-      latest = row;
-    }
-  }
-  return latest?.promotion ?? null;
-}
-
 export function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === "object" &&

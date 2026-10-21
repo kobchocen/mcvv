@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FileDown, PlayCircle, Trash2 } from "lucide-react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
+import { McvvAccountPromotionForm } from "@/components/organisms/mcvv-account-promotion-form";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
@@ -24,7 +25,7 @@ import { computeLineFee } from "@/lib/entries/fee";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
-import { isPromotionOptOut } from "@/lib/entries/promotion";
+import { loadAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { formatDate } from "@/lib/format/date";
@@ -123,6 +124,19 @@ async function EntryBody({
   const { year, open, deadline, registration, cancelled, past, quick, payments } =
     await loadMyEntry(email);
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
+  // Souhlas se zasíláním informací patří účtu (dřív jen přihlášce).
+  const noMail = await loadAccountPromotionOptOut(email);
+  const promotionForm = (
+    <section>
+      <h2 className="font-display text-2xl font-semibold">{copy("accountSettings")}</h2>
+      <div className="mt-3">
+        <McvvAccountPromotionForm
+          noMail={noMail}
+          copy={{ noMail: copy("noMail"), save: copy("save"), saved: copy("saved") }}
+        />
+      </div>
+    </section>
+  );
   const yearClubs = await prisma.club.findMany({
     where: { year },
     orderBy: { name: "asc" },
@@ -284,6 +298,8 @@ async function EntryBody({
           </section>
         ) : null}
 
+        {promotionForm}
+
         {pastSection}
       </div>
     );
@@ -323,11 +339,11 @@ async function EntryBody({
 
       <section>
         <McvvEntryHeaderForm
-          key={`${registration.name ?? ""}:${registration.promotion ?? ""}`}
+          key={`${registration.name ?? ""}:${noMail ? "N" : ""}`}
           year={year}
           id={registration.id}
           name={registration.name ?? ""}
-          noMail={isPromotionOptOut(registration.promotion)}
+          noMail={noMail}
           email={email}
           open={open}
           copy={{
@@ -339,6 +355,8 @@ async function EntryBody({
           }}
         />
       </section>
+
+      {open ? null : promotionForm}
 
       {messagesEnabled ? (
         <section id="zpravy" className="scroll-mt-28">

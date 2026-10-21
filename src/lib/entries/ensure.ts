@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db/client";
+import { loadAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import {
-  emailEquals,
-  inheritedPromotion,
   nextRegistrationId,
   pickActiveRegistration,
   retryOnUniqueViolation,
 } from "@/lib/entries/ensure-core";
+import { promotionValue } from "@/lib/entries/promotion";
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
 
 export type EnsuredRegistration = {
@@ -24,6 +24,8 @@ export async function ensureRegistration(
   email: string,
   displayName: string,
 ): Promise<EnsuredRegistration> {
+  // Legacy sloupec `promotion` se plní ze souhlasu na účtu (newsletter už čte účet).
+  const promotion = promotionValue(await loadAccountPromotionOptOut(email));
   return retryOnUniqueViolation(() =>
     prisma.$transaction(async (tx) => {
       const yearRows = await tx.registration.findMany({
@@ -34,10 +36,6 @@ export async function ensureRegistration(
       if (existing) {
         return { registration: existing, created: false };
       }
-      const history = await tx.registration.findMany({
-        where: { email: { equals: email } },
-        select: { year: true, id: true, created: true, promotion: true, email: true },
-      });
       const id = nextRegistrationId(Math.max(0, ...yearRows.map((row) => row.id)));
       const registration = await tx.registration.create({
         data: {
@@ -49,7 +47,7 @@ export async function ensureRegistration(
           status: ENTRY_STATUS.empty,
           author: email,
           created: new Date(),
-          promotion: inheritedPromotion(history.filter((row) => emailEquals(row.email, email))),
+          promotion,
         },
         select: { year: true, id: true, name: true, email: true },
       });

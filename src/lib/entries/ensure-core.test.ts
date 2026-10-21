@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  inheritedPromotion,
   isUniqueViolation,
   nextRegistrationId,
   pickActiveRegistration,
@@ -36,20 +35,6 @@ test("only cancelled registration means no active one (a new one may be created)
   assert.deepEqual(
     pickCancelledRegistrations(rows, "jana@example.cz").map((row) => row.id),
     [3],
-  );
-});
-
-test("new registration inherits the promotion opt-out of the latest one", () => {
-  const history = [
-    { year: 2024, id: 10, created: new Date("2024-10-01"), promotion: null },
-    { year: 2025, id: 4, created: new Date("2025-10-01"), promotion: "N" },
-    { year: 2025, id: 2, created: new Date("2025-09-01"), promotion: null },
-  ];
-  assert.equal(inheritedPromotion(history), "N");
-  assert.equal(inheritedPromotion([]), null);
-  assert.equal(
-    inheritedPromotion([...history, { year: 2026, id: 1, created: null, promotion: null }]),
-    null,
   );
 });
 

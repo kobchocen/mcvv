@@ -501,6 +501,7 @@
     "noRegistrationHint": "The entry is created automatically when you add the first runner.",
     "cancelledNotice": "Entry no. {id} was cancelled by the organizer.",
     "accountMessagesIntro": "You can send the organizer a question about your account or the race even without an entry.",
+    "accountSettings": "Account settings",
     "deadline": "Deadline",
     "readOnly": "read only",
     "name": "Entry name",

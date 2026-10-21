@@ -4,7 +4,9 @@ import { test } from "node:test";
 import {
   buildAudience,
   currentEntrantEmails,
+  effectivePromotionOptOut,
   latestPromotionOptOuts,
+  promotionOptOuts,
   legacyFromYear,
   normalizeEmail,
   processBatch,
@@ -302,4 +304,55 @@ test("buildAudience excludes current entrants only when the option is on", () =>
   assert.deepEqual(off.emails, ["l@x.cz", "letos@x.cz", "u@x.cz"]);
   assert.equal(off.currentEntrants, 0);
   assert.equal(off.excluded, 2);
+});
+
+const reg = (
+  email: string,
+  year: number,
+  promotion: string | null,
+  lineCount?: number,
+  id = 1,
+) => ({ email, year, promotion, id, created: null, lineCount });
+
+test("an auto-created empty registration does not revoke an earlier opt-out", () => {
+  const out = latestPromotionOptOuts([
+    reg("a@x.cz", 2025, "N", 3),
+    reg("a@x.cz", 2026, null, 0), // prázdná, založená návštěvou stránky
+    reg("b@x.cz", 2025, "N", 2),
+    reg("b@x.cz", 2026, null, 1), // nová přihláška s běžcem = nový souhlas
+    reg("c@x.cz", 2025, null, 2),
+    reg("c@x.cz", 2026, "N", 0), // výslovné N platí i u prázdné
+  ]);
+  assert.deepEqual([...out].sort(), ["a@x.cz", "c@x.cz"]);
+});
+
+test("promotionOptOuts: the account decides, registrations only when undecided", () => {
+  const registrations = [
+    reg("a@x.cz", 2025, "N", 1),
+    reg("b@x.cz", 2025, null, 1),
+    reg("c@x.cz", 2025, "N", 1),
+  ];
+  const out = promotionOptOuts(
+    [
+      { email: "A@x.cz", promotionOptOut: false }, // na účtu znovu povolil
+      { email: "b@x.cz", promotionOptOut: true }, // na účtu odmítl
+      { email: "c@x.cz", promotionOptOut: null }, // nerozhodnuto → poslední přihláška
+      { email: "d@x.cz", promotionOptOut: true }, // bez přihlášky
+    ],
+    registrations,
+  );
+  assert.deepEqual([...out].sort(), ["b@x.cz", "c@x.cz", "d@x.cz"]);
+});
+
+test("effectivePromotionOptOut for the entry form", () => {
+  const registrations = [reg("a@x.cz", 2025, "N", 1)];
+  assert.equal(
+    effectivePromotionOptOut({ email: "a@x.cz", promotionOptOut: null }, registrations),
+    true,
+  );
+  assert.equal(
+    effectivePromotionOptOut({ email: "a@x.cz", promotionOptOut: false }, registrations),
+    false,
+  );
+  assert.equal(effectivePromotionOptOut({ email: "n@x.cz", promotionOptOut: null }, []), false);
 });

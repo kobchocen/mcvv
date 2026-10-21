@@ -25,16 +25,26 @@ export async function ensureEmptyClub(year: number): Promise<string> {
 }
 
 export async function resolveClubId(name: string, year: number): Promise<string> {
+  return (await resolveClub(name, year)).id;
+}
+
+/**
+ * Klub podle názvu v ročníku. `created` = v ročníku založen nový klub (pro souhrn změn #130).
+ */
+export async function resolveClub(
+  name: string,
+  year: number,
+): Promise<{ id: string; name: string; created: boolean }> {
   const label = name.trim().slice(0, 50);
   if (!label) {
-    return ensureEmptyClub(year);
+    return { id: await ensureEmptyClub(year), name: "", created: false };
   }
   const thisYear = await prisma.club.findFirst({
     where: { year, name: label },
     select: { id: true },
   });
   if (thisYear) {
-    return thisYear.id;
+    return { id: thisYear.id, name: label, created: false };
   }
   const historic = await prisma.club.findFirst({
     where: { name: label },
@@ -45,7 +55,7 @@ export async function resolveClubId(name: string, year: number): Promise<string>
   await prisma.club.create({
     data: { id, year, name: label, author: "web" },
   });
-  return id;
+  return { id, name: label, created: true };
 }
 
 async function nextNumericClubId(): Promise<string> {

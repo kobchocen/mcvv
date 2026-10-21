@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
-import { saveCategory } from "@/lib/admin/dictionaries";
+import { recalculateRecords, saveCategory } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ rekordy?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -17,12 +19,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("dictsCategories") };
 }
 
-export default async function AdminCategoriesPage({ params }: PageProps) {
+export default async function AdminCategoriesPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
+  const { rekordy } = await searchParams;
+  const changed = rekordy && rekordy !== "-" ? rekordy.split(",").filter(Boolean) : [];
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -31,6 +36,23 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("dictsCategories")}
         </h1>
+        <form
+          action={recalculateRecords}
+          className="mt-6 flex flex-wrap items-center gap-4"
+          data-testid="records-recalc"
+        >
+          <Button type="submit" variant="outline" className="border-race-line bg-race-surface">
+            {copy("dictsRecalcRecords")}
+          </Button>
+          <p className="max-w-2xl text-sm text-race-muted">{copy("dictsRecalcHint")}</p>
+        </form>
+        {rekordy ? (
+          <p className="mt-3 text-sm font-medium text-race-accent" role="status">
+            {changed.length
+              ? copy("dictsRecalcChanged", { list: changed.join(", ") })
+              : copy("dictsRecalcUnchanged")}
+          </p>
+        ) : null}
         <div className="mt-8 overflow-x-auto">
           <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
             <thead>

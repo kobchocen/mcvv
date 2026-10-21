@@ -11,8 +11,11 @@ import {
   savePayment,
   saveRegistrationHeader,
 } from "@/lib/admin/registrations";
+import { canCancelRegistration } from "@/lib/entries/empty-registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
 import { registrationFee } from "@/lib/entries/fee-total";
+import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
@@ -32,6 +35,7 @@ import { showInternalNote } from "@/lib/messages/core";
 import { loadRegistrationThread } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { Link } from "@/i18n/routing";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
@@ -49,6 +53,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   const { mail, sex: sexChanged } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const year = Number.parseInt(rok, 10);
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(year) || !Number.isFinite(id)) {
@@ -121,9 +126,10 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       })
     ).map((row) => row.runnerId),
   );
-  const [thread, messageSettings] = await Promise.all([
+  const [thread, messageSettings, autoConfirmed] = await Promise.all([
     loadRegistrationThread(year, id),
     getMessageSettings(),
+    freeAutoConfirmedIds(year),
   ]);
   // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
   // jen ke čtení jako interní poznámka.
@@ -161,6 +167,15 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                       : registration.status === 5
                         ? copy("status5")
                         : "—"}
+            {showFreeAutoBadge({
+              status: registration.status,
+              fee,
+              autoConfirmed: autoConfirmed.has(id),
+            }) ? (
+              <span className="ml-2 inline-block rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                {copy("freeAutoConfirmed")}
+              </span>
+            ) : null}
           </p>
           {sexChange ? (
             <p role="status" className="mt-3 text-sm font-medium text-race-accent">
@@ -170,8 +185,10 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           {mail === "0" ? (
             <p className="mt-3 text-sm text-red-600 dark:text-red-400">{copy("confirmMailFail")}</p>
           ) : null}
-          {registration.status === ENTRY_STATUS.empty ||
-          registration.status === ENTRY_STATUS.unpaid ? (
+          {canCancelRegistration({
+            status: registration.status,
+            lineCount: registration.lines.length,
+          }) ? (
             <form action={cancelRegistration} className="mt-4">
               <input type="hidden" name="year" value={year} />
               <input type="hidden" name="id" value={id} />
@@ -182,6 +199,9 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               >
                 {copy("cancelEntry")}
               </Button>
+              <p className="mt-2 max-w-md text-xs text-race-muted">
+                {copy("cancelEntryHint", { count: registration.lines.length, paid })}
+              </p>
             </form>
           ) : null}
           {receiptReady ? (
@@ -226,11 +246,15 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               type="email"
               defaultValue={registration.email ?? ""}
             />
-            <AdminField
-              name="promotion"
-              label={copy("regsPromotion")}
-              defaultValue={registration.promotion ?? ""}
-            />
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="noNewsletter"
+                value="N"
+                defaultChecked={isPromotionOptOut(registration.promotion)}
+              />
+              {copy("regsNoNewsletter")}
+            </label>
             <Button
               type="submit"
               className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"

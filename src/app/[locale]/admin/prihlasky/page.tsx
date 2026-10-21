@@ -7,15 +7,18 @@ import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { confirmRegistration } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
+import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { registrationThreadSummaries, summaryKey } from "@/lib/messages/store";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ rok?: string; stav?: string; zrusene?: string }>;
+  searchParams: Promise<{ rok?: string; stav?: string; zrusene?: string; prazdne?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -59,8 +62,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const { rok, stav, zrusene } = await searchParams;
+  const { rok, stav, zrusene, prazdne } = await searchParams;
 
   const [latest, yearRows] = await Promise.all([
     prisma.edition.findFirst({ orderBy: { id: "desc" }, select: { date: true, id: true } }),
@@ -78,10 +82,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     : includeCancelled
       ? {}
       : { OR: [{ status: { not: 0 } }, { status: null }] };
+  // Prázdné přihlášky (bez běžců) jsou ve výchozím stavu skryté – filtr „s běžci“.
+  // Při výběru stavu 1 („prázdná“) se zobrazí vždy; přihláška pořadatelů č. 1 také.
+  const includeEmpty = prazdne === "1" || statusFilter === ENTRY_STATUS.empty;
+  const emptyWhere = includeEmpty ? {} : { OR: [{ lines: { some: {} } }, { id: 1 }] };
+  const hiddenEmpty = includeEmpty
+    ? 0
+    : await prisma.registration.count({
+        where: { year: selectedYear, ...statusWhere, lines: { none: {} }, id: { not: 1 } },
+      });
 
-  const [registrations, payments] = await Promise.all([
+  const [registrations, payments, autoConfirmed] = await Promise.all([
     prisma.registration.findMany({
-      where: { year: selectedYear, ...statusWhere },
+      where: { year: selectedYear, AND: [statusWhere, emptyWhere] },
       include: { lines: { select: { entryFee: true } } },
       orderBy: { id: "asc" },
     }),
@@ -89,6 +102,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       where: { year: selectedYear },
       select: { registrationId: true, amount: true },
     }),
+    freeAutoConfirmedIds(selectedYear),
   ]);
 
   const threadSummaries = await registrationThreadSummaries(
@@ -134,6 +148,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <input type="checkbox" name="zrusene" value="1" defaultChecked={includeCancelled} />
             {copy("includeCancelled")}
           </label>
+          <label className="flex h-10 items-center gap-2 text-sm">
+            <input type="checkbox" name="prazdne" value="1" defaultChecked={includeEmpty} />
+            {copy("includeEmpty")}
+          </label>
           <Button type="submit" variant="outline" className="h-10 border-race-line bg-race-surface">
             {copy("filter")}
           </Button>
@@ -153,6 +171,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {year}
               </Link>
             ))}
+          </p>
+        ) : null}
+        {hiddenEmpty > 0 ? (
+          <p className="mt-3 text-sm text-race-muted">
+            {copy("hiddenEmpty", { count: hiddenEmpty })}{" "}
+            <Link
+              href={{
+                pathname: "/admin/prihlasky",
+                query: {
+                  rok: String(selectedYear),
+                  prazdne: "1",
+                  ...(Number.isFinite(statusFilter) ? { stav: String(statusFilter) } : {}),
+                  ...(zrusene === "1" ? { zrusene: "1" } : {}),
+                },
+              }}
+              className="font-medium text-race-accent hover:underline"
+            >
+              {copy("showEmpty")}
+            </Link>
           </p>
         ) : null}
         {registrations.length === 0 ? (
@@ -194,8 +231,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       <td className="py-2.5 pr-3">{diff}</td>
                       <td className={cn("py-2.5 pr-3", statusClass(row.status))}>
                         {copy(statusKey(row.status))}
+                        {showFreeAutoBadge({
+                          status: row.status,
+                          fee,
+                          autoConfirmed: autoConfirmed.has(row.id),
+                        }) ? (
+                          <span className="mt-1 block w-fit whitespace-nowrap rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                            {copy("freeAutoConfirmed")}
+                          </span>
+                        ) : null}
                       </td>
-                      <td className="py-2.5 pr-3">{row.promotion ?? ""}</td>
+                      <td className="py-2.5 pr-3">
+                        {isPromotionOptOut(row.promotion) ? (
+                          <span
+                            title={copy("regsNoNewsletter")}
+                            className="rounded-full border border-race-line px-2 py-0.5 text-xs text-race-muted"
+                          >
+                            {copy("regsNewsletterOff")}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="py-2.5 pr-3">
                         {summary ? (
                           <Link

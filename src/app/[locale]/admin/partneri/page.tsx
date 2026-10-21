@@ -7,6 +7,7 @@ import { McvvAdminHomeLink } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -22,6 +23,7 @@ export default async function AdminPartnersPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const rows = await prisma.sponsor.findMany({
     omit: { logo: true },

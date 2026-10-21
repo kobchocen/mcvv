@@ -1,12 +1,27 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
+import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
+import { isUserRole, type UserRole } from "@/lib/auth/roles";
+import {
+  decodeSessionToken as decode,
+  encodeSessionToken as encode,
+  SESSION_COOKIE,
+  usableSessionSecret,
+} from "@/lib/auth/session-token";
 
-export const SESSION_COOKIE = "mcvv_session";
+export {
+  adminAccess,
+  canAccessRaceDay,
+  canAccessSplits,
+  isStaffRole,
+  type AdminAccess,
+  type UserRole,
+} from "@/lib/auth/roles";
+
+export { SESSION_COOKIE };
 const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
-
-export type UserRole = "registrar" | "organizer" | "admin";
 
 export type SessionUser = {
   id: number;
@@ -15,64 +30,37 @@ export type SessionUser = {
   role: UserRole;
 };
 
-type SessionPayload = SessionUser & { exp: number };
-
 function sessionSecret(): string | undefined {
-  const secret = env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    return undefined;
-  }
-  return secret;
+  return usableSessionSecret(env.SESSION_SECRET);
 }
 
-function sign(body: string, secret: string): string {
-  return createHmac("sha256", secret).update(body).digest("base64url");
-}
-
-function encode(payload: SessionPayload, secret: string): string {
-  const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-  return `${body}.${sign(body, secret)}`;
-}
-
-function decode(token: string, secret: string): SessionPayload | null {
-  const dot = token.lastIndexOf(".");
-  if (dot <= 0) {
-    return null;
-  }
-  const body = token.slice(0, dot);
-  const signature = token.slice(dot + 1);
-  const expected = sign(body, secret);
-  const left = Buffer.from(signature);
-  const right = Buffer.from(expected);
-  if (left.length !== right.length || !timingSafeEqual(left, right)) {
+/**
+ * Aktuální účet z podepsané cookie. Role (a jméno/e-mail) se dočítají z DB, jednou za
+ * request (`React.cache`), takže změna nebo odebrání role v administraci platí hned,
+ * ne až po vypršení 7denní cookie. Smazaný účet = odhlášený.
+ */
+export const getSession = cache(async (): Promise<SessionUser | null> => {
+  const fromCookie = await sessionFromCookie();
+  if (!fromCookie) {
     return null;
   }
   try {
-    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as SessionPayload;
-    if (
-      typeof payload.id !== "number" ||
-      typeof payload.email !== "string" ||
-      typeof payload.name !== "string" ||
-      typeof payload.role !== "string" ||
-      typeof payload.exp !== "number" ||
-      payload.exp * 1000 < Date.now()
-    ) {
+    const account = await prisma.user.findUnique({
+      where: { id: fromCookie.id },
+      select: { email: true, name: true, role: true },
+    });
+    if (!account || !isUserRole(account.role)) {
       return null;
     }
-    if (payload.role !== "registrar" && payload.role !== "organizer" && payload.role !== "admin") {
-      return null;
-    }
-    return payload;
-  } catch {
-    return null;
+    return { id: fromCookie.id, email: account.email, name: account.name, role: account.role };
+  } catch (error) {
+    // Bez DB nelze roli ověřit: privilegované role nepouštět (fail closed).
+    console.error("[session] role refresh failed", error);
+    return fromCookie.role === "registrar" ? fromCookie : null;
   }
-}
+});
 
-export function isStaffRole(role: UserRole): boolean {
-  return role === "organizer" || role === "admin";
-}
-
-export async function getSession(): Promise<SessionUser | null> {
+async function sessionFromCookie(): Promise<SessionUser | null> {
   const secret = sessionSecret();
   if (!secret) {
     return null;

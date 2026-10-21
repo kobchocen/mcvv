@@ -3,12 +3,13 @@ import { prisma } from "@/lib/db/client";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { buildQuickList } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
+import { pickActiveRegistration, pickCancelledRegistrations } from "@/lib/entries/ensure-core";
 
 function emailMatch(value: string | null | undefined, email: string): boolean {
   return value?.trim().toLowerCase() === email.toLowerCase();
 }
 
-export async function loadMyEntry(email: string, displayName: string) {
+export async function loadMyEntry(email: string) {
   const { year, open, deadline } = await currentRaceYear();
   const yearRegs = await prisma.registration.findMany({
     where: { year },
@@ -23,32 +24,13 @@ export async function loadMyEntry(email: string, displayName: string) {
       },
     },
   });
-  let registration = yearRegs.find((row) => emailMatch(row.email, email)) ?? null;
-  if (!registration && open) {
-    const nextId = (Math.max(0, ...yearRegs.map((row) => row.id)) || 0) + 1;
-    registration = await prisma.registration.create({
-      data: {
-        year,
-        id: nextId,
-        email,
-        name: displayName.slice(0, 128),
-        type: "O",
-        status: 1,
-        author: email,
-        created: new Date(),
-      },
-      include: {
-        lines: {
-          include: {
-            runner: { select: { id: true, name: true } },
-            club: { select: { id: true, name: true } },
-            category: { select: { name: true, entryFee: true } },
-          },
-          orderBy: { runnerId: "asc" },
-        },
-      },
-    });
-  }
+  // Přihláška se tu už nezakládá – vzniká až s prvním běžcem (ensureRegistration).
+  let registration = pickActiveRegistration(yearRegs, email);
+  const cancelled = pickCancelledRegistrations(yearRegs, email).map((row) => ({
+    year: row.year,
+    id: row.id,
+    name: row.name,
+  }));
 
   const pastRegs = await prisma.registration.findMany({
     where: { year: { not: year } },
@@ -97,5 +79,5 @@ export async function loadMyEntry(email: string, displayName: string) {
       ).filter((payment) => paymentRegistrationId(payment.registrationId) === registration!.id)
     : [];
 
-  return { year, open, deadline, registration, past: minePast, quick, payments };
+  return { year, open, deadline, registration, cancelled, past: minePast, quick, payments };
 }

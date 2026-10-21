@@ -6,6 +6,8 @@
  * - an allowlist of public pages (e.g. `/prihlasky`, `/navod`).
  * The locale prefix (`/cs`, `/en`) is stripped; the result is a locale-less path.
  */
+import { adminPathAllowed, RACE_DAY_PATH, type AdminAccess, type UserRole } from "./roles";
+
 export const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
 const SAFE_QUERY = /^[\w.=&-]*$/;
 /** Detail konverzace (odkaz z e-mailového upozornění). */
@@ -25,6 +27,7 @@ export const USER_NEXT_PATHS = [
   "/fotogalerie",
   "/statistiky",
   "/zpravy",
+  "/mezicasy",
 ] as const;
 export type UserNextPath = (typeof USER_NEXT_PATHS)[number];
 
@@ -103,11 +106,24 @@ export type LoginTarget =
   | { kind: "thread"; id: string }
   | { kind: "default" };
 
-/** Decides where to go after a successful login. Default is the application page. */
-export function loginTarget(next: string | null, staff: boolean): LoginTarget {
+/**
+ * Decides where to go after a successful login when no usable `next` was given:
+ * - full staff (organizer, admin) → administration,
+ * - race-day-only account (Časomíra) → race-day section,
+ * - split-time operator (splitmaker) → split entry page,
+ * - everybody else → the application page (`/prihlasky`).
+ * `access` accepts the legacy boolean (`true` = full staff); `role` is needed only to
+ * tell the splitmaker apart (it has no admin access).
+ */
+export function loginTarget(
+  next: string | null,
+  access: boolean | AdminAccess,
+  role?: UserRole,
+): LoginTarget {
+  const level: AdminAccess = access === true ? "full" : access === false ? "none" : access;
   if (next) {
     if (isAdminNext(next)) {
-      if (staff) {
+      if (adminPathAllowed(level, next.split("?")[0] ?? "")) {
         return { kind: "admin", next };
       }
     } else {
@@ -120,6 +136,15 @@ export function loginTarget(next: string | null, staff: boolean): LoginTarget {
         return { kind: "user", path: path as UserNextPath, query };
       }
     }
+  }
+  if (level === "raceday") {
+    return { kind: "admin", next: RACE_DAY_PATH };
+  }
+  if (level === "full") {
+    return { kind: "admin", next: "/admin" };
+  }
+  if (role === "splitmaker") {
+    return { kind: "user", path: "/mezicasy", query: "" };
   }
   return { kind: "default" };
 }

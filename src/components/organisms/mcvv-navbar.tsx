@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 
 import { LanguageSwitcher, RaceBrand, ThemeToggle } from "@/components/atoms";
 import { Button } from "@/components/ui/button";
+import { isActivePath } from "@/lib/site/active-path";
 import {
   Sheet,
   SheetClose,
@@ -22,7 +23,10 @@ import { cn } from "@/lib/utils";
 export type McvvNavbarAccount = {
   name: string;
   email: string;
+  /** Zobrazit odkaz do administrace (plný staff i omezená role Časomíra). */
   staff?: boolean;
+  /** Cíl odkazu do administrace (výchozí /admin; Časomíra → /admin/den-zavodu). */
+  adminHref?: string;
   /** Odznak zpráv (null = funkce vypnutá / bez dat). */
   messages?: { count: number; href: "/zpravy" | "/admin/zpravy" } | null;
 };
@@ -86,14 +90,6 @@ function getLocalizedHref(href: string, locale: string) {
 
 const navIconButtonClass =
   "size-10 rounded-[12px] border border-race-line/70 bg-transparent text-foreground shadow-none hover:bg-race-forest-2 hover:text-foreground dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14 dark:hover:text-white";
-
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") {
-    return pathname === "/" || /^\/[a-z]{2}$/.test(pathname);
-  }
-
-  return pathname.endsWith(href);
-}
 
 function MobileLink({ link, locale, active }: { link: NavLink; locale: string; active?: boolean }) {
   return (
@@ -179,7 +175,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                   aria-label={content.nav.admin}
                   title={content.nav.admin}
                 >
-                  <Link href={getLocalizedHref("/admin", locale)}>
+                  <Link href={getLocalizedHref(account.adminHref ?? "/admin", locale)}>
                     <Settings className="size-[18px]" aria-hidden="true" />
                     <span className="sr-only">{content.nav.admin}</span>
                   </Link>
@@ -300,7 +296,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                               aria-label={content.nav.admin}
                               title={content.nav.admin}
                             >
-                              <Link href={getLocalizedHref("/admin", locale)}>
+                              <Link href={getLocalizedHref(account.adminHref ?? "/admin", locale)}>
                                 <Settings className="size-[18px]" aria-hidden="true" />
                                 <span className="sr-only">{content.nav.admin}</span>
                               </Link>

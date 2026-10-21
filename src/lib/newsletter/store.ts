@@ -6,7 +6,7 @@ import { currentRaceYear } from "@/lib/entries/year";
 import {
   buildAudience,
   currentEntrantEmails,
-  latestPromotionOptOuts,
+  promotionOptOuts,
   legacyFromYear,
   type Audience,
   type AudienceOptions,
@@ -26,13 +26,18 @@ export async function loadCurrentEntrants(): Promise<{ year: number; emails: Set
 }
 
 export async function loadAudience(options: AudienceOptions): Promise<Audience> {
-  const [users, legacy, unsubscribed, promotion, entrants] = await Promise.all([
+  const [users, legacy, unsubscribed, promotion, accounts, entrants] = await Promise.all([
     options.users
       ? prisma.user.findMany({ where: { emailVerified: { not: null } }, select: { email: true } })
       : Promise.resolve([]),
     options.years > 0
       ? prisma.registration.findMany({
-          where: { year: { gte: legacyFromYear(options.years) }, email: { contains: "@" } },
+          // Jen přihlášky s běžci – prázdné (dřív zakládané návštěvou stránky) nejsou zájem o závod.
+          where: {
+            year: { gte: legacyFromYear(options.years) },
+            email: { contains: "@" },
+            lines: { some: {} },
+          },
           select: { email: true },
           distinct: ["email"],
         })
@@ -41,10 +46,21 @@ export async function loadAudience(options: AudienceOptions): Promise<Audience> 
       where: { unsubscribedAt: { not: null } },
       select: { email: true },
     }),
-    // Latest application per email decides the promotion opt-out (all years, not just the window).
+    // Souhlas na účtu rozhoduje; bez rozhodnutí účtu platí poslední přihláška (všechny roky).
     prisma.registration.findMany({
       where: { email: { contains: "@" } },
-      select: { email: true, promotion: true, year: true, created: true, id: true },
+      select: {
+        email: true,
+        promotion: true,
+        year: true,
+        created: true,
+        id: true,
+        _count: { select: { lines: true } },
+      },
+    }),
+    prisma.user.findMany({
+      where: { promotionOptOut: { not: null } },
+      select: { email: true, promotionOptOut: true },
     }),
     options.excludeCurrentEntrants ? loadCurrentEntrants() : Promise.resolve(null),
   ]);
@@ -53,7 +69,10 @@ export async function loadAudience(options: AudienceOptions): Promise<Audience> 
       userEmails: users.map((u) => u.email),
       legacyEmails: legacy.map((r) => r.email),
       unsubscribed: unsubscribed.map((u) => u.email),
-      noPromotion: latestPromotionOptOuts(promotion),
+      noPromotion: promotionOptOuts(
+        accounts,
+        promotion.map(({ _count, ...row }) => ({ ...row, lineCount: _count.lines })),
+      ),
       currentEntrants: entrants?.emails ?? [],
     },
     options,

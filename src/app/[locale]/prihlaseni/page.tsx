@@ -7,7 +7,7 @@ import { McvvResendVerification } from "@/components/organisms/mcvv-resend-verif
 import { McvvOauthButtons } from "@/components/organisms/mcvv-oauth-buttons";
 import { appleEnabled, googleEnabled } from "@/lib/auth/oauth";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { getSession } from "@/lib/auth/session";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
@@ -34,7 +34,7 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
   const session = await getSession();
 
   if (session) {
-    redirectAfterLogin(next, isStaffRole(session.role), locale);
+    redirectAfterLogin(next, session.role, locale);
   }
 
   const home = await getTranslations({ locale, namespace: "Home" });

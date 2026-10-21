@@ -7,11 +7,18 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // PDF doklad čte přibalené fonty z disku (src/lib/receipts/fonts.ts).
+  // PDF doklad a tiskové sestavy čtou přibalené fonty z disku (src/lib/receipts/fonts.ts).
   outputFileTracingIncludes: {
     "/api/prihlasky/[rok]/[id]/doklad": ["./src/assets/fonts/*.ttf"],
+    "/api/admin/startovka/pdf": ["./src/assets/fonts/*.ttf"],
+    "/api/admin/tisk/cisla": ["./src/assets/fonts/*.ttf"],
+    "/api/statistiky/[slug]/pdf": ["./src/assets/fonts/*.ttf"],
   },
   poweredByHeader: false,
+  experimental: {
+    // forbidden() → HTTP 403 pro omezené role (Časomíra) mimo povolenou sekci administrace.
+    authInterrupts: true,
+  },
   async headers() {
     return [
       {

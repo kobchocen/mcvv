@@ -5,7 +5,7 @@ import { applyWebEntries } from "@/lib/live/ingest";
 import { sameOrigin, summarize, webBatchSchema } from "@/lib/live/ingest-core";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
 import { RateLimiter } from "@/lib/live/rate-limit";
-import { canAccessSplits } from "@/lib/live/roles";
+import { canAccessSplits } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noStore });
-  if (!canAccessSplits(session)) {
+  if (!session || !canAccessSplits(session.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: noStore });
   }
   if (!limiter.take(`u${session.id}`)) {

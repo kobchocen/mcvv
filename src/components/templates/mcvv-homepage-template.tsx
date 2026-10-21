@@ -14,7 +14,8 @@ import {
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 import { getTranslations } from "next-intl/server";
 
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { adminAccess, getSession } from "@/lib/auth/session";
+import { adminHomeHref } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
 import { countValidRunners } from "@/lib/entries/status";
 import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
@@ -108,7 +109,8 @@ export async function McvvHomepageTemplate({
             ? {
                 name: session.name,
                 email: session.email,
-                staff: isStaffRole(session.role),
+                staff: adminAccess(session.role) !== "none",
+                adminHref: adminHomeHref(session.role),
                 messages: await getUnreadCount(),
               }
             : null

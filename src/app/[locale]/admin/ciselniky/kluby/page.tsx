@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -23,6 +24,7 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const { rok } = await searchParams;
 

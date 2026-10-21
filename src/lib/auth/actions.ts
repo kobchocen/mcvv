@@ -5,7 +5,8 @@ import { getLocale } from "next-intl/server";
 
 import { prisma } from "@/lib/db/client";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
-import { clearSession, isStaffRole, setSession } from "@/lib/auth/session";
+import { adminAccess, requiresVerifiedEmail } from "@/lib/auth/roles";
+import { clearSession, setSession } from "@/lib/auth/session";
 import { redirect, type Locale } from "@/i18n/routing";
 
 export type LoginState = {
@@ -30,7 +31,8 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     return { error: true };
   }
 
-  if (!user.emailVerified && !isStaffRole(user.role)) {
+  // Nové role timing/splitmaker potřebují ověřený e-mail stejně jako registrar.
+  if (!user.emailVerified && requiresVerifiedEmail(user.role)) {
     return { unverified: true, email: user.email };
   }
 
@@ -46,7 +48,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
 
   const locale = (await getLocale()) as Locale;
   const next = safeNext(formData.get("next"));
-  redirectAfterLogin(next, isStaffRole(user.role), locale);
+  redirectAfterLogin(next, adminAccess(user.role), locale);
   return {};
 }
 

@@ -6,6 +6,7 @@ import { saveCategory } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
+import { requireStaff } from "@/lib/admin/staff";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -21,6 +22,7 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
 

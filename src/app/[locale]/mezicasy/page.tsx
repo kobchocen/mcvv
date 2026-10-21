@@ -5,7 +5,7 @@ import { McvvSplitsClient } from "@/components/organisms/mcvv-splits-client";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
-import { canAccessSplits } from "@/lib/live/roles";
+import { canAccessSplits } from "@/lib/auth/roles";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -26,7 +26,7 @@ export default async function SplitsPage({ params }: PageProps) {
     return null;
   }
   const t = await getTranslations({ locale, namespace: "Splits" });
-  if (!canAccessSplits(session)) {
+  if (!canAccessSplits(session.role)) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
         <div className="mx-auto max-w-md">

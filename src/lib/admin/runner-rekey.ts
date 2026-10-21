@@ -8,6 +8,7 @@ export const RUNNER_REKEYED_MODELS = [
   "StartEntry",
   "RunnerPhoto",
   "WebImage",
+  "StartLineMeta",
 ] as const;
 
 /**
@@ -27,6 +28,8 @@ export type SexChangeCounts = {
   startEntries: number;
   runnerPhotos: number;
   webImages: number;
+  /** Zámek / skupina na startovce (mcvv_start_radek). */
+  startLines: number;
 };
 
 export type SexChangeOutcome = SexChangePlan & { counts: SexChangeCounts };
@@ -149,8 +152,8 @@ export async function previewSexChange(
 
 /**
  * Flips the runner's sex in ONE transaction: creates the runner under a new id (next free id
- * of the birth year for the other sex), re-points registration lines, start list, photo tags
- * and web images, recalculates categories (and the fee of the current year's lines) and
+ * of the birth year for the other sex), re-points registration lines, start list (incl. lock /
+ * group meta), photo tags and web images, recalculates categories (and the fee of the current year's lines) and
  * deletes the old id. Only for newcomers: rejected with `has_results` when the runner has any
  * result; mcvv_time is never written.
  */
@@ -174,6 +177,7 @@ export async function applySexChange(
         startEntries: (await tx.startEntry.updateMany(from)).count,
         runnerPhotos: (await tx.runnerPhoto.updateMany(from)).count,
         webImages: (await tx.webImage.updateMany(from)).count,
+        startLines: (await tx.startLineMeta.updateMany(from)).count,
       };
       for (const line of plan.lines) {
         if (!line.newCategory) continue;

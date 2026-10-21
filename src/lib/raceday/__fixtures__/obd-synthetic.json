@@ -1,0 +1,166 @@
+{
+  "year": 2026,
+  "categories": [
+    {
+      "id": "A",
+      "name": "muži",
+      "record": 885
+    },
+    {
+      "id": "B",
+      "name": " muži nad 40 let\t",
+      "record": 0
+    },
+    {
+      "id": "F",
+      "name": "ženy",
+      "record": 59
+    },
+    {
+      "id": "J",
+      "name": "žáci",
+      "record": 60
+    },
+    {
+      "id": "K",
+      "name": "žákyně",
+      "record": 3599
+    },
+    {
+      "id": "Z",
+      "name": "Řádní veteráni",
+      "record": 6000
+    }
+  ],
+  "clubs": [
+    {
+      "id": "000",
+      "name": ""
+    },
+    {
+      "id": "000",
+      "name": "stary prazdny"
+    },
+    {
+      "id": "010",
+      "name": "Oddíl deset"
+    },
+    {
+      "id": "10",
+      "name": "Volné porovnání PHP: \"10\" == \"010\""
+    },
+    {
+      "id": "1e1",
+      "name": "Taky číslo deset (1e1)"
+    },
+    {
+      "id": "CHC",
+      "name": "  K.O.B. Choceň  "
+    },
+    {
+      "id": "CHC",
+      "name": "K.O.B. Choceň (starý název)"
+    },
+    {
+      "id": "LPU",
+      "name": "Lokomotiva Pardubice"
+    },
+    {
+      "id": "ÚOL",
+      "name": "Ústí nad Orlicí – Šťastný oddíl"
+    },
+    {
+      "id": "ZZZ",
+      "name": "Łódź & Öhlschläger"
+    }
+  ],
+  "runners": [
+    {
+      "id": "19800001",
+      "name": "Novák Jan"
+    },
+    {
+      "id": "19805001",
+      "name": "Šťastná Ďáblová Řehořa"
+    },
+    {
+      "id": "19900002",
+      "name": "  Žluťoučký Kůň  "
+    },
+    {
+      "id": "20000003",
+      "name": "Středník; Jan"
+    },
+    {
+      "id": "20105004",
+      "name": "Őrsi Łucja"
+    },
+    {
+      "id": "20120005",
+      "name": "Čech Ěmil"
+    },
+    {
+      "id": "20150006",
+      "name": "Tab\tUvnitř"
+    },
+    {
+      "id": "20200007",
+      "name": "Poslední Běžec"
+    },
+    {
+      "id": "20210008",
+      "name": "Bez Čísla"
+    }
+  ],
+  "starts": [
+    {
+      "runnerId": "19900002",
+      "clubId": "ÚOL",
+      "categoryId": "A",
+      "year": 2026,
+      "bib": 5
+    },
+    {
+      "runnerId": "19805001",
+      "clubId": "000",
+      "categoryId": "F",
+      "year": 2026,
+      "bib": 5
+    },
+    {
+      "runnerId": "20000003",
+      "clubId": "010",
+      "categoryId": "J",
+      "year": 2026,
+      "bib": 99
+    },
+    {
+      "runnerId": "20105004",
+      "clubId": "ZZZ",
+      "categoryId": "K",
+      "year": 2026,
+      "bib": 100
+    },
+    {
+      "runnerId": "19800001",
+      "clubId": "CHC",
+      "categoryId": "A",
+      "year": 2026,
+      "bib": 301
+    },
+    {
+      "runnerId": "20200007",
+      "clubId": "10",
+      "categoryId": "J",
+      "year": 2026,
+      "bib": 601
+    },
+    {
+      "runnerId": "20120005",
+      "clubId": "LPU",
+      "categoryId": "B",
+      "year": 2026,
+      "bib": 1000
+    }
+  ]
+}

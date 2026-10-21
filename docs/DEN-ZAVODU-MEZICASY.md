@@ -28,9 +28,10 @@ OBD v cíli (LuM) ─▶ splits.csv ─▶ obd-klient.exe ─▶ POST /api/race/
 
 ## Web klient `/mezicasy` (#121)
 
-- Přístup: role `splitmaker`, `organizer`, `admin` (`canUseSplitsClient`). Ostatní vidí „nemáte
-  oprávnění“. Role `splitmaker` přichází z větve `feature/role-obd-export` (#112); do jejího merge
-  ji session neumí načíst, takže zatím fungují organizer/admin.
+- Přístup: role `splitmaker`, `organizer`, `admin` (`canAccessSplits` v `@/lib/auth/roles`, #112).
+  Ostatní (včetně `timing`) vidí „nemáte oprávnění“. Nepřihlášený jde na přihlášení s
+  `next=/mezicasy` a po přihlášení se vrátí sem. Správa (`/admin/den-zavodu/zive`, OFeed, klíče
+  zařízení) jen admin (`canManageLiveResults`); odkaz na ni je v hubu `/admin/den-zavodu`.
 - Mobil napřed: velké pole + číselník, „Zapsat“ uloží čas v okamžiku ťuknutí (korigovaný na hodiny
   serveru, vzorek s nejmenším RTT, každou minutu). „Razítko bez čísla“ = čas teď, číslo doplním.
 - Fronta v IndexedDB (záložně localStorage), přežije reload, zavření prohlížeče i restart telefonu.

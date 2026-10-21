@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
+import { adminAccess } from "@/lib/auth/roles";
 import { getSession } from "@/lib/auth/session";
 import { mailPolicy } from "@/lib/mail/queue";
 import { mailStats } from "@/lib/mail/queue-store";
@@ -24,8 +25,8 @@ export default async function AdminPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const current = await getSession();
-  if (current?.role === "timing") {
-    // Časomíra vidí jen „Den závodu“.
+  if (current && adminAccess(current.role) === "raceday") {
+    // Časomíra (timing) vidí jen „Den závodu“.
     redirect({ href: "/admin/den-zavodu", locale });
   }
   const session = await requireStaff();

@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { outsideCategory } from "@/lib/race/startlist-check";
+import { startListProposalLock } from "@/lib/race/startlist-proposal-lock";
 import { generateStartList } from "@/lib/race/startlist-generator";
 import {
   buildGeneratorInput,
@@ -16,6 +17,7 @@ import {
   loadStartSettings,
   ORGANIZER_REGISTRATION_ID,
 } from "@/lib/race/startlist-load";
+import { getSiteSettings } from "@/lib/settings/site";
 import { redirect } from "@/i18n/routing";
 
 const MAX_BIB = 9999;
@@ -160,13 +162,17 @@ export async function toggleStartLock(formData: FormData): Promise<void> {
 /**
  * Uložení návrhu „Navrhnout startovku“ (#115). Návrh se přepočítá na serveru a uloží jen nad
  * stejnými daty, jaká byla v náhledu (otisk) – ochrana proti dvojímu odeslání i souběhu.
- * Nic se nezveřejňuje; zveřejnění zůstává přepínačem v nastavení.
+ * Nic se nezveřejňuje; zveřejnění zůstává přepínačem v nastavení. Po zveřejnění je návrh
+ * zakázaný i na serveru (`startListProposalLock`), ruční úpravy řádků zůstávají povolené.
  */
 export async function applyStartListProposal(formData: FormData): Promise<void> {
   await requireStaff();
   const year = yearOf(formData);
   if (!year) {
     return;
+  }
+  if (startListProposalLock(await getSiteSettings()).locked) {
+    await back(year, { chyba: "published" });
   }
   const [settings, rows, groups] = await Promise.all([
     loadStartSettings(year),

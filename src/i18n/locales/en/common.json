@@ -1364,6 +1364,7 @@
     "issueGroupSplit": "Group no. {id} ({kind}) does not start together",
     "proposeButton": "Propose start list",
     "proposeHint": "Organizers from entry no. 1 from 1 and 601, champions on the champion bibs, evenly within each category, newcomers and runners without last year's time first, then by last year's time (fastest last). Groups stay together, even across categories; locked bibs never change.",
+    "proposeLockedPublished": "The start list is published – proposing is disabled; use manual edits for changes or unpublish the start list.",
     "proposalHeading": "Start list proposal",
     "proposalSummary": "{changed, plural, one {# row will change.} other {# rows will change.}}",
     "proposalNoChange": "The proposal matches the saved start list – nothing to save.",

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { bibStartModel, bibStartTime, DEFAULT_BIB_START_MODEL } from "./bib-start";
+import { DEFAULT_START_MODEL, startModelFromEdition, startTimeForBib } from "@/lib/race/start-time";
+
 import {
   bibSurname,
   buildBibCard,
@@ -16,13 +17,13 @@ import {
 const options: BuildBibOptions = {
   mode: "all",
   year: 2026,
-  model: DEFAULT_BIB_START_MODEL,
+  model: DEFAULT_START_MODEL,
   championBibs: [400, 950],
   veterans: new Map([["19750101", 33]]),
   logoCount: 15,
 };
 
-describe("bibStartTime (legacy tiskcisel.php / #114)", () => {
+describe("start time on the bib (legacy tiskcisel.php / #114)", () => {
   const cases: [number, string][] = [
     [1, "10:15:00"],
     [41, "10:25:00"],
@@ -32,12 +33,19 @@ describe("bibStartTime (legacy tiskcisel.php / #114)", () => {
     [901, "11:30:00"],
   ];
   for (const [bib, time] of cases) {
-    it(`bib ${bib} → ${time}`, () =>
-      assert.equal(bibStartTime(DEFAULT_BIB_START_MODEL, bib), time));
+    it(`bib ${bib} → ${time}`, () => assert.equal(buildBlankBibCard(bib, options).startTime, time));
   }
-  it("uses the edition interval", () => {
-    assert.equal(bibStartTime(bibStartModel({ startInterval: 20 }), 4), "10:16:00");
-    assert.equal(bibStartTime(bibStartModel({ startInterval: null }), 4), "10:15:45");
+  it("uses the edition start model (zero, interval, 2nd start) via startTimeForBib", () => {
+    const at = (edition: Parameters<typeof startModelFromEdition>[0], bib: number) =>
+      buildBlankBibCard(bib, { ...options, model: startModelFromEdition(edition) }).startTime;
+    assert.equal(at({ startInterval: 20 }, 4), "10:16:00");
+    assert.equal(at({ startInterval: null }, 4), "10:15:45");
+    const edition = { startZeroSeconds: 11 * 3600, startInterval: 30, secondStartFrom: 501 };
+    assert.equal(at(edition, 501), "11:00:00");
+    assert.equal(at(edition, 503), "11:01:00");
+    for (const bib of [1, 77, 501, 640]) {
+      assert.equal(at(edition, bib), startTimeForBib(startModelFromEdition(edition), bib));
+    }
   });
 });
 
@@ -112,7 +120,7 @@ describe("parseBibList / parseBibPrintParams", () => {
       offset: 100,
       limit: 100,
       bibs: [],
-      championBibs: [400, 950],
+      championBibs: null,
     });
     assert.deepEqual(
       parseBibPrintParams(new URLSearchParams("mode=selected&bibs=5&red="))?.championBibs,

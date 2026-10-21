@@ -1,17 +1,15 @@
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { staffAccess } from "@/lib/admin/staff";
+import { NO_STORE } from "@/lib/http/no-store";
 
-export const NO_STORE = { "Cache-Control": "private, no-store" };
+export { NO_STORE };
 
-/** Tiskové sestavy smí stáhnout jen pořadatel / administrátor (role s přístupem do adminu). */
+/**
+ * Tiskové sestavy smí stáhnout jen pořadatel / administrátor (`isStaffRole`).
+ * Nepřihlášený 401, jiná role 404 (sestava pro ni „neexistuje“).
+ */
 export async function staffOnly(): Promise<Response | null> {
-  const session = await getSession();
-  if (!session) {
-    return new Response("Unauthorized", { status: 401, headers: NO_STORE });
-  }
-  if (!isStaffRole(session.role)) {
-    return new Response("Not found", { status: 404, headers: NO_STORE });
-  }
-  return null;
+  const access = await staffAccess({ status: 404, body: "Not found" });
+  return access.ok ? null : access.response;
 }
 
 export function pdfResponse(pdf: Uint8Array, filename: string, inline = false): Response {

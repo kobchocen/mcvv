@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { DEFAULT_START_MODEL } from "@/lib/race/start-time";
 import { loadReceiptFonts } from "@/lib/receipts/fonts";
 import { STAT_SLUGS } from "@/lib/stats/core";
 
-import { DEFAULT_BIB_START_MODEL } from "./bib-start";
 import { buildBibCard, buildBlankBibCard, type BuildBibOptions } from "./bibs-core";
 import { renderBibsPdf } from "./render-bibs";
 import { renderStatsPdf, type StatsReport } from "./render-stats";
@@ -14,7 +14,7 @@ import { layoutStats } from "./stats-layout";
 const options: BuildBibOptions = {
   mode: "all",
   year: 2026,
-  model: DEFAULT_BIB_START_MODEL,
+  model: DEFAULT_START_MODEL,
   championBibs: [400],
   veterans: new Map(),
   logoCount: 0,

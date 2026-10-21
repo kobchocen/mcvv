@@ -1,51 +1,39 @@
 /**
- * Startovní čas z čísla pro tisk čísel (#118).
+ * Adaptér startovky (#114/#115/#119) pro tisk startovních čísel (#118).
  *
- * Pravidlo je 1:1 s legacy `tiskcisel.php` a se zadáním #114:
- *   n' = cislo >= prvni_cislo_2_startu ? cislo - (prvni_cislo_2_startu - 1) : cislo
- *   start = nula + interval * (n' - 1)
- *
- * Nastavení ročníku z #114 (nula, 2. start, čísla obhájců) zatím na develop není –
- * do jeho sloučení se bere výchozí model (10:15:00, 2. start od 601) a interval
- * z `mcvv_info.st_interval`. Po sloučení #114 nahradit voláním `startTimeForBib`
- * z `@/lib/race/start-time` (stejný tvar `StartModel`).
+ * Tisk nemá vlastní model startu ani vlastní seznam čísel:
+ * - startovní čas na čísle = `startTimeForBib` z `@/lib/race/start-time` s modelem ročníku
+ *   (`startModelFromEdition`: nula, interval, 1. číslo 2. startu z `mcvv_info`),
+ * - čísla, jména a kategorie = stejný zdroj jako veřejná startovka a PDF startovky
+ *   (`loadPublicStartList`): po importu z prezentace (#119) `mcvv_start`, předtím čísla
+ *   z řádků přihlášek (`mcvv_prihlaska_radek.cislo`, zámky/skupiny v `mcvv_start_radek`),
+ * - výchozí červená čísla = čísla obhájců z ročníku (`st_obhajce_m`, `st_obhajce_z`).
  */
-export type BibStartModel = {
-  /** Nulový čas v sekundách od půlnoci (Europe/Prague). */
-  zeroSeconds: number;
-  intervalSeconds: number;
-  secondStartFrom: number;
-};
+import type { ChampionBibs } from "@/lib/race/start-settings";
+import type { PublicStartRow } from "@/lib/race/startlist-load";
 
-export const DEFAULT_BIB_START_MODEL: BibStartModel = {
-  zeroSeconds: 10 * 3600 + 15 * 60,
-  intervalSeconds: 15,
-  secondStartFrom: 601,
-};
+import type { BibEntryRow } from "./bibs-core";
 
-/** Výchozí červená čísla obhájců (legacy natvrdo 400 a 950); v UI tisku jdou změnit. */
-export const DEFAULT_CHAMPION_BIBS = [400, 950] as const;
-
-export function bibStartModel(edition: { startInterval?: number | null } | null): BibStartModel {
-  const interval = edition?.startInterval;
-  return {
-    ...DEFAULT_BIB_START_MODEL,
-    intervalSeconds: interval && interval > 0 ? interval : DEFAULT_BIB_START_MODEL.intervalSeconds,
-  };
+/** Čísla obhájců ročníku jako výchozí červená čísla (bez nevyplněných, bez duplicit). */
+export function championBibList(champions: ChampionBibs): number[] {
+  return [...new Set([champions.men, champions.women].filter((bib): bib is number => bib != null))];
 }
 
-function clock(seconds: number): string {
-  const day = ((seconds % 86400) + 86400) % 86400;
-  return [Math.floor(day / 3600), Math.floor((day % 3600) / 60), day % 60]
-    .map((part) => String(part).padStart(2, "0"))
-    .join(":");
-}
-
-/** „HH:MM:SS“, nebo "" pro neplatné číslo. */
-export function bibStartTime(model: BibStartModel, bib: number): string {
-  if (!Number.isInteger(bib) || bib <= 0) {
-    return "";
-  }
-  const slot = bib >= model.secondStartFrom ? bib - (model.secondStartFrom - 1) : bib;
-  return clock(model.zeroSeconds + model.intervalSeconds * (slot - 1));
+/**
+ * Řádky startovky → řádky tisku. Číslo přihlášky (pořadí „podle přihlášky“ a „(id)“ na
+ * čísle) se dohledá podle běžce; běžec jen v `mcvv_start` (přihláška na místě) ho nemá.
+ */
+export function bibRowsFromStartList(
+  rows: readonly PublicStartRow[],
+  registrationOf: ReadonlyMap<string, number>,
+): BibEntryRow[] {
+  return rows
+    .filter((row) => Number.isInteger(row.bib) && row.bib > 0)
+    .map((row) => ({
+      bib: row.bib,
+      runnerId: row.runnerId,
+      name: row.name,
+      categoryId: row.categoryId,
+      registrationId: registrationOf.get(row.runnerId) ?? null,
+    }));
 }

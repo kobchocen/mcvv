@@ -1,5 +1,6 @@
-import { getSession, isStaffRole } from "@/lib/auth/session";
+import { staffAccess } from "@/lib/admin/staff";
 import { FIRST_EDITION_YEAR } from "@/lib/entries/year";
+import { NO_STORE, pdfResponse } from "@/lib/print/http";
 import { loadReceiptFonts } from "@/lib/receipts/fonts";
 import { renderStartListPdf } from "@/lib/race/startlist-pdf";
 import { startListPdfLabels } from "@/lib/race/startlist-pdf-labels";
@@ -12,16 +13,14 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const NO_STORE = { "Cache-Control": "private, no-store" };
-
 /**
  * GET /api/admin/startovka/pdf?rok=2026&lang=cs – tisková startovka (A4, PDF).
  * Jen pro pořadatele / administrátory; zveřejnění startovky na webu na tom nezávisí.
  */
 export async function GET(request: Request): Promise<Response> {
-  const session = await getSession();
-  if (!session || !isStaffRole(session.role)) {
-    return new Response("Unauthorized", { status: 401, headers: NO_STORE });
+  const access = await staffAccess({ status: 401, body: "Unauthorized" });
+  if (!access.ok) {
+    return access.response;
   }
   const params = new URL(request.url).searchParams;
   const rawYear = params.get("rok") ?? "";
@@ -41,12 +40,5 @@ export async function GET(request: Request): Promise<Response> {
     generatedAt: new Date(),
   });
   const pdf = renderStartListPdf(rows, settings.model, labels, await loadReceiptFonts());
-  return new Response(new Uint8Array(pdf), {
-    headers: {
-      ...NO_STORE,
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="mcvv-startovka-${year}.pdf"`,
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
+  return pdfResponse(pdf, `mcvv-startovka-${year}.pdf`);
 }

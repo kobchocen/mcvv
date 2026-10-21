@@ -21,6 +21,7 @@ import {
   type StartListIssue,
 } from "@/lib/race/startlist-check";
 import { generateStartList, type GeneratorWarning } from "@/lib/race/startlist-generator";
+import { startListProposalLock } from "@/lib/race/startlist-proposal-lock";
 import {
   buildGeneratorInput,
   inputFingerprint,
@@ -112,7 +113,9 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const valid = allRows.filter((row) => row.valid);
   const withBib = valid.filter((row) => row.bib != null).length;
 
-  const showProposal = query.navrh === "1";
+  // Po zveřejnění je návrh zakázaný (UI i server action); náhled se ani nepočítá.
+  const proposalLocked = startListProposalLock(site).locked;
+  const showProposal = query.navrh === "1" && !proposalLocked;
   const input = showProposal ? await buildGeneratorInput(year, settings, allRows, groups) : null;
   const proposal = input ? generateStartList(input) : null;
   const fingerprint = input ? inputFingerprint(input) : "";
@@ -216,6 +219,8 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("errBlocking");
       case "groupSize":
         return t("errGroupSize");
+      case "published":
+        return t("proposeLockedPublished");
       default:
         return null;
     }
@@ -385,6 +390,9 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                 <input type="hidden" name="navrh" value="1" />
                 <Button
                   type="submit"
+                  disabled={proposalLocked}
+                  aria-describedby={proposalLocked ? "startlist-propose-locked" : undefined}
+                  data-testid="startlist-propose"
                   className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
                 >
                   {t("proposeButton")}
@@ -392,6 +400,18 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
               </form>
             )}
           </div>
+          {proposalLocked ? (
+            <p
+              id="startlist-propose-locked"
+              data-testid="startlist-propose-locked"
+              className="mt-2 max-w-4xl border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm"
+            >
+              {t("proposeLockedPublished")}{" "}
+              <Link href="/admin/nastaveni" className={linkButton}>
+                {t("publishLink")}
+              </Link>
+            </p>
+          ) : null}
           <p className="mt-1 max-w-4xl text-sm leading-6 text-race-muted">{t("proposeHint")}</p>
           {proposal ? (
             <div className="mt-4 grid gap-4">

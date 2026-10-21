@@ -15,6 +15,8 @@ export type ConfirmationInput = {
 export const RACE_PLACE = "Velká Veranda, Choceň";
 export const SIGNATURE = "Tým pořadatelů z K.O.B. Choceň";
 export const RECEIPT_NOTE = "Doklad o zaplacení startovného (PDF) si stáhnete v sekci";
+/** Řádek potvrzení přihlášky se startovným 0 Kč (vítězové, veteráni, pořadatelé). */
+export const FREE_ENTRY_NOTE = "Startovné neplatíte.";
 
 const kc = (value: number) => `${value.toLocaleString("cs-CZ").replace(/\u00a0/g, " ")} Kč`;
 
@@ -33,7 +35,10 @@ export function raceDateLabel(year: number): string {
 export function renderEntryConfirmation(input: ConfirmationInput) {
   const subject = `Potvrzení přihlášky ${input.year}/${input.id}`;
   const greeting = `Dobrý den${input.name ? `, ${input.name}` : ""},`;
-  const intro = `děkujeme za přihlášku a platbu. Vaše přihláška č. ${input.year}/${input.id} je potvrzená.`;
+  const free = input.fee === 0 && input.paid === 0;
+  const intro = free
+    ? `děkujeme za přihlášku. Vaše přihláška č. ${input.year}/${input.id} je potvrzená.`
+    : `děkujeme za přihlášku a platbu. Vaše přihláška č. ${input.year}/${input.id} je potvrzená.`;
   const remaining = Math.max(0, input.fee - input.paid);
   const start = `${RACE_START_HOUR}:${String(RACE_START_MINUTE).padStart(2, "0")}`;
   const date = raceDateLabel(input.year);
@@ -58,13 +63,15 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     p(escapeHtml(intro)),
     `<h2 style="margin:8px 0 8px;font-size:17px;color:#0f2a1c">Přihlášení závodníci</h2>`,
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px"><tr><th ${th}>Jméno</th><th ${th}>Klub</th><th ${th}>Kategorie</th><th ${th} align="right">Startovné</th></tr>${rows}</table>`,
-    `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px auto;background:#f7f9f6">${totalsRow("Startovné celkem", kc(input.fee))}${totalsRow("Zaplaceno", kc(input.paid))}${totalsRow("Zbývá zaplatit", kc(remaining), true)}</table>`,
+    free
+      ? p(`<strong>${escapeHtml(FREE_ENTRY_NOTE)}</strong>`)
+      : `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px auto;background:#f7f9f6">${totalsRow("Startovné celkem", kc(input.fee))}${totalsRow("Zaplaceno", kc(input.paid))}${totalsRow("Zbývá zaplatit", kc(remaining), true)}</table>`,
     `<h2 style="margin:8px 0 8px;font-size:17px;color:#0f2a1c">Závod</h2>`,
     p(
       `<strong>${escapeHtml(date)}</strong>, ${escapeHtml(RACE_PLACE)}<br>Intervalový start od ${start}`,
     ),
     p(`Přihlášku můžete upravit v sekci ${link("Moje přihlášky", editUrl)}.`),
-    p(`${RECEIPT_NOTE} ${link("Moje přihlášky", editUrl)}.`),
+    ...(free ? [] : [p(`${RECEIPT_NOTE} ${link("Moje přihlášky", editUrl)}.`)]),
     p(`Těšíme se na vás!<br>${escapeHtml(SIGNATURE)}`),
   ];
 
@@ -76,14 +83,18 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     "Přihlášení závodníci:",
     ...input.lines.map((l) => `- ${l.runner} · ${l.club} · ${l.category} · ${kc(l.fee)}`),
     "",
-    `Startovné celkem: ${kc(input.fee)}`,
-    `Zaplaceno: ${kc(input.paid)}`,
-    `Zbývá zaplatit: ${kc(remaining)}`,
+    ...(free
+      ? [FREE_ENTRY_NOTE]
+      : [
+          `Startovné celkem: ${kc(input.fee)}`,
+          `Zaplaceno: ${kc(input.paid)}`,
+          `Zbývá zaplatit: ${kc(remaining)}`,
+        ]),
     "",
     `Závod: ${date}, ${RACE_PLACE}, intervalový start od ${start}`,
     "",
     `Úprava přihlášky: ${editUrl}`,
-    `${RECEIPT_NOTE} ${editUrl}`,
+    ...(free ? [] : [`${RECEIPT_NOTE} ${editUrl}`]),
     "",
     "Těšíme se na vás!",
     SIGNATURE,

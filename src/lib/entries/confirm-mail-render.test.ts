@@ -47,3 +47,17 @@ test("potvrzení má brandovaný layout, závodníky, součty a odkazy", () => {
   assert.match(html, /Intervalový start od 10:15/);
   assert.doesNotMatch(html + text, /[Ss]tart v 10:15/);
 });
+
+test("přihláška se startovným 0 Kč: „Startovné neplatíte“, bez součtů a dokladu", () => {
+  const { html, text } = renderEntryConfirmation({
+    ...input,
+    lines: [{ runner: "Jan Veterán", club: "K.O.B. Choceň", category: "H60", fee: 0 }],
+    fee: 0,
+    paid: 0,
+  });
+  assert.match(html, /Startovné neplatíte/);
+  assert.match(text, /^Startovné neplatíte\.$/m);
+  assert.doesNotMatch(text, /Zbývá zaplatit/);
+  assert.doesNotMatch(text, /a platbu/);
+  assert.doesNotMatch(text, /Doklad o zaplacení/);
+});

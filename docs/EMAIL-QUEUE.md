@@ -21,3 +21,10 @@ Newsletter má vlastní tabulku příjemců, ale počítá se do stejného denn�
 `POST /api/cron/mail` s hlavičkou `Authorization: Bearer $CRON_SECRET` každých 15 min.
 Doporučení pro ACA: Scheduled Container Apps Job (`*/15 * * * *`, parallelism 1) s malým obrazem
 (`curl`), který volá interní FQDN webu. Alternativa: GitHub Actions `schedule` (méně přesné, závisí na GitHubu).
+
+Týž běh před odesláním fronty automaticky potvrdí přihlášky letošního ročníku se startovným
+0 Kč (stav 3 → 5), které se aspoň 45 min nezměnily (`FREE_AUTO_CONFIRM_QUIET_MS`). Potvrzovací
+e-mail s řádkem „Startovné neplatíte“ jde do fronty jako `confirmation` s klíčem podle přihlášky
+a jejích běžců (stejná sestava = jeden e-mail). Mimo `APP_ENV=prod` jde na pořadatelský e-mail
+s předmětem `[TEST – pro …]`. Každé potvrzení zapíše audit `entry.auto_confirmed_free`
+(aktér `system`); podle něj administrace ukazuje odznak „Zdarma – potvrzeno automaticky“.

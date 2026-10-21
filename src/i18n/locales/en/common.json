@@ -23,7 +23,7 @@
         { "label": "About", "href": "#about" },
         { "label": "Course", "href": "#route" },
         { "label": "Date", "href": "#date" },
-        { "label": "Statistics", "href": "#results" },
+        { "label": "Statistics", "href": "/statistiky" },
         { "label": "Photos", "href": "#gallery" },
         { "label": "Partners", "href": "#partners" }
       ]
@@ -199,6 +199,7 @@
       "overline": "Results",
       "title": "Generations of runners, one course",
       "allLabel": "Results archive",
+      "statsLabel": "All statistics",
       "yearLabel": "Latest edition",
       "linkLabel": "Full results",
       "empty": "Results will appear after the next race.",
@@ -280,6 +281,7 @@
         {
           "title": "Statistics",
           "links": [
+            { "label": "Statistics overview", "href": "/statistiky" },
             { "label": "Latest edition", "href": "/results/{year}" },
             { "label": "Results archive", "href": "/results" },
             { "label": "Course records", "href": "/statistiky/rekordy" }
@@ -499,7 +501,6 @@
     "readOnly": "read only",
     "name": "Entry name",
     "email": "Email",
-    "note": "Note",
     "noMail": "I do not want email updates",
     "save": "Save",
     "saved": "Saved",
@@ -556,6 +557,7 @@
     "back": "Back to home"
   },
   "Runner": {
+    "statsLink": "How do you rank in history? Browse the statistics",
     "eyebrow": "Runner",
     "starts": "Starts",
     "record": "Personal best",
@@ -693,6 +695,7 @@
   },
   "Admin": {
     "navRaceDay": "Race day",
+    "navAfterRace": "After the race: raffle",
     "navUsers": "Users",
     "navMessages": "Messages",
     "messagesTile": "{count, plural, =0 {nothing unread} one {# unread conversation} other {# unread conversations}}",
@@ -737,6 +740,8 @@
     "settingsNotifyOrganizerHint": "At most 1 e-mail per day to the organiser e-mail, only when new unread messages arrived.",
     "settingsNotifyUser": "Notify registrants of a reply by e-mail",
     "settingsNotifyUserHint": "At most 1 e-mail per conversation, the next one only after it is read. Sent with a ~10 minute delay. Outside production it goes to the organiser e-mail instead.",
+    "settingsNotifyChanges": "Registration changes in the daily organiser digest",
+    "settingsNotifyChangesHint": "New registrations, runners added and removed, new runners and clubs, registration name and club changes. In the same daily e-mail as the message digest, at most once a day.",
     "settingsOrganizerEmail": "Organiser e-mail",
     "settingsOrganizerEmailHint": "Receives the contact form and the message digest. Empty = {fallback}.",
     "settingsOrganizerEmailInvalid": "The organiser e-mail is not valid.",
@@ -756,7 +761,7 @@
     "navNewsletter": "Newsletter",
     "navPayments": "Payments (Fio)",
     "navRegistrations": "Entries",
-    "navPrintBibs": "Print bib numbers",
+    "navPrintBibs": "Print bibs and check-in reports",
     "navSettings": "Settings",
     "settingsTitle": "Settings",
     "settingsIntro": "Start list, online results, statistics and free entries.",
@@ -785,6 +790,7 @@
     "status3": "Paid",
     "status4": "Overpaid",
     "status5": "Confirmed",
+    "freeAutoConfirmed": "Free – confirmed automatically",
     "statusUnknown": "—",
     "filter": "Filter",
     "includeCancelled": "include cancelled",
@@ -838,6 +844,10 @@
     "dictsSort": "Sort",
     "dictsSex": "Sex",
     "dictsRecord": "Record (s)",
+    "dictsRecalcRecords": "Recalculate records from results",
+    "dictsRecalcHint": "Record = best time across editions for the category sex and age rule (same as legacy setkatrek.php). It is also recalculated after each results import and feeds the OBD export.",
+    "dictsRecalcChanged": "Records recalculated, changed categories: {list}.",
+    "dictsRecalcUnchanged": "Records recalculated, no change.",
     "dictsFee": "Entry fee",
     "dictsBibFrom": "Bib from",
     "dictsBibTo": "Bib to",
@@ -1083,7 +1093,7 @@
       {
         "image": "10-uprava.jpg",
         "title": "Edit until the deadline",
-        "text": "You can change the note, club or list of runners until the entry deadline. Confirm header changes with <b>Uložit</b> (Save)."
+        "text": "You can change the club or list of runners until the entry deadline. Confirm header changes with <b>Uložit</b> (Save)."
       },
       {
         "image": "11-login.jpg",
@@ -1160,6 +1170,7 @@
   "ResultsArchive": {
     "eyebrow": "05 — Results and history",
     "home": "Home",
+    "stats": "Statistics",
     "title": "Results Archive",
     "intro": "Select a year to view the complete results list.",
     "selectYear": "Select year",
@@ -1487,7 +1498,26 @@
     "errChanged": "The data or files changed since the preview. Run a new preview.",
     "doneUnchanged": "No change – the database already matches the files.",
     "donePresentation": "The presentation import has been written.",
-    "doneResults": "Results have been written ({count, plural, one {# row} other {# rows}})."
+    "doneResults": "Results have been written ({count, plural, one {# row} other {# rows}}).",
+    "doneRecords": "Category records recalculated: {list}.",
+    "doneRecordsUnchanged": "Category records unchanged."
+  },
+  "AfterRace": {
+    "title": "After the race – raffle",
+    "adminHome": "Administration",
+    "heading": "After the race {year}",
+    "intro": "Tools for the organizers on site after the race.",
+    "tombola": "Tombola",
+    "tombolaHint": "Random names of finishers (edition results, before the import finish punches). Nobody is drawn twice. The draw is stored in the page address, so reloading or printing keeps it; if someone is missing, raise the count – the names stay and more are added. “Draw again” reshuffles.",
+    "year": "Edition",
+    "count": "Count",
+    "apply": "Apply",
+    "redraw": "Draw again",
+    "excludeClubs": "Exclude clubs (excluded: {count})",
+    "noFinishers": "No finishers for this edition yet (no results or finish punches).",
+    "poolInfo": "Drawing from {eligible} of {total} finishers ({source}), draw {seed}.",
+    "sourceResults": "results",
+    "sourceSplits": "finish punches"
   },
   "StartAdmin": {
     "navStartList": "Start list",
@@ -1624,5 +1654,43 @@
     "issue_rangeOverlap": "The ranges of categories {category} and {other} overlap.",
     "issue_championInRange": "Champion bib {other} lies in the range of category {category}.",
     "issue_championSame": "The men's and women's champion bibs must differ."
+  },
+  "PrintReports": {
+    "heading": "Check-in reports",
+    "intro": "A4 PDFs for race-day check-in from the current entries of {year} (cancelled entries excluded). Start times follow the edition settings.",
+    "presentation": "Check-in by entry",
+    "presentationHint": "One block per entry: bib, start, name, birth year, club, category, fee and amount due. A block never splits across pages.",
+    "pagePerRegistration": "Each entry on its own page",
+    "alphabet": "Alphabetical list",
+    "alphabetHint": "All entered runners by name: bib, start, birth year, club, category and entry number.",
+    "startList": "Printable start list",
+    "startListHint": "Same source as the public start list (after the OBD check-in import, the OBD start list).",
+    "order": "Order",
+    "orderTime": "by start time",
+    "orderBib": "by bib",
+    "download": "Download PDF",
+    "pdfPresentationTitle": "Check-in {year}",
+    "pdfAlphabetTitle": "Alphabetical list {year}",
+    "pdfPresentationSubtitle": "Check-in by entry",
+    "pdfAlphabetSubtitle": "Runners in alphabetical order",
+    "pdfSummary": "Entries: {registrations} · runners: {runners} · fees CZK {fee} · total due CZK {due}",
+    "pdfAlphabetSummary": "Runners: {runners}",
+    "colBib": "Bib",
+    "colTime": "Start",
+    "colName": "Name",
+    "colBirth": "Born",
+    "colClub": "Club",
+    "colCategory": "Category",
+    "colCategoryShort": "Cat.",
+    "colFee": "Fee",
+    "colRegistration": "Entry",
+    "registration": "Entry no. {label}",
+    "blockTotal": "Total {runners} · fee CZK {fee} · paid CZK {paid}",
+    "runners": "{count, plural, one {# runner} other {# runners}}",
+    "due": "Due CZK {amount}",
+    "settled": "Paid",
+    "overpaid": "Overpaid CZK {amount}",
+    "currency": "CZK {amount}",
+    "empty": "No entries for this edition yet."
   }
 }

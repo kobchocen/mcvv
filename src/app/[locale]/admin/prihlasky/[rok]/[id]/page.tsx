@@ -12,6 +12,7 @@ import {
   saveRegistrationHeader,
 } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
+import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
 import { registrationFee } from "@/lib/entries/fee-total";
 import { isPromotionOptOut } from "@/lib/entries/promotion";
 import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
@@ -124,9 +125,10 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       })
     ).map((row) => row.runnerId),
   );
-  const [thread, messageSettings] = await Promise.all([
+  const [thread, messageSettings, autoConfirmed] = await Promise.all([
     loadRegistrationThread(year, id),
     getMessageSettings(),
+    freeAutoConfirmedIds(year),
   ]);
   // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
   // jen ke čtení jako interní poznámka.
@@ -164,6 +166,15 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                       : registration.status === 5
                         ? copy("status5")
                         : "—"}
+            {showFreeAutoBadge({
+              status: registration.status,
+              fee,
+              autoConfirmed: autoConfirmed.has(id),
+            }) ? (
+              <span className="ml-2 inline-block rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                {copy("freeAutoConfirmed")}
+              </span>
+            ) : null}
           </p>
           {sexChange ? (
             <p role="status" className="mt-3 text-sm font-medium text-race-accent">

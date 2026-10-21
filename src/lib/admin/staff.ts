@@ -1,5 +1,10 @@
+import { headers } from "next/headers";
 import { forbidden } from "next/navigation";
 import { getLocale } from "next-intl/server";
+
+import { REQUEST_PATH_HEADER } from "@/lib/auth/admin-gate";
+import { loginHref } from "@/lib/auth/login-next";
+import { safeNext } from "@/lib/auth/safe-next";
 
 import { adminAccess, canAccessRaceDay, isStaffRole, type UserRole } from "@/lib/auth/roles";
 import { getSession, type SessionUser } from "@/lib/auth/session";
@@ -11,14 +16,16 @@ import { redirect } from "@/i18n/routing";
  * i route handleru (layout sám nestačí: server action jde zavolat přímým POSTem).
  *
  * - Nepřihlášený nebo účet bez jakéhokoli přístupu do administrace → přihlášení
- *   (dosavadní chování).
+ *   s `next=<původní cesta>` (cestu předává `src/proxy.ts`; nepřihlášené přesměruje
+ *   už proxy skutečným 307, sem dojde např. účet, kterému mezitím vzali roli).
  * - Přihlášený účet s omezenou rolí (`timing`), který nemá oprávnění k dané akci → 403.
  */
 async function requireRole(allowed: (role: UserRole) => boolean): Promise<SessionUser> {
   const session = await getSession();
   if (!session || adminAccess(session.role) === "none") {
     const locale = await getLocale();
-    redirect({ href: "/prihlaseni", locale });
+    const next = safeNext((await headers()).get(REQUEST_PATH_HEADER));
+    redirect({ href: loginHref(next), locale });
   }
   if (!allowed(session!.role)) {
     forbidden();

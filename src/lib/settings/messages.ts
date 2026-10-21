@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
 
 import {
+  ENTRY_CHANGES_NOTIFY_KEY,
   MESSAGE_SETTING_KEYS,
   MESSAGES_ENABLED_KEY,
   MESSAGES_NOTIFY_ORGANIZER_KEY,
@@ -40,6 +41,7 @@ export async function saveMessageSettings(settings: MessageSettings): Promise<vo
     [MESSAGES_NOTIFY_ORGANIZER_KEY, settings.notifyOrganizer ? "1" : "0"],
     [MESSAGES_NOTIFY_USER_KEY, settings.notifyUser ? "1" : "0"],
     [ORGANIZER_EMAIL_KEY, settings.organizerEmail],
+    [ENTRY_CHANGES_NOTIFY_KEY, settings.notifyChanges ? "1" : "0"],
   ];
   await prisma.$transaction(
     entries.map(([key, text]) =>

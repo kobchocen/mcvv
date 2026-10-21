@@ -1513,6 +1513,7 @@
     "issueGroupSplit": "Skupina č. {id} ({kind}) nestartuje u sebe",
     "proposeButton": "Navrhnout startovku",
     "proposeHint": "Pořadatelé z přihlášky č. 1 od 1 a 601, obhájci na čísla obhájců, v kategorii rovnoměrně, nejdřív nováčci a bez loňského času, pak podle loňského času (nejrychlejší na konci). Skupiny drží u sebe i napříč kategoriemi, zamčená čísla se nemění.",
+    "proposeLockedPublished": "Startovka je zveřejněna – návrh je zakázán; pro změny použij ruční úpravy nebo zruš zveřejnění.",
     "proposalHeading": "Návrh startovky",
     "proposalSummary": "{changed, plural, one {Změní se # řádek.} few {Změní se # řádky.} other {Změní se # řádků.}}",
     "proposalNoChange": "Návrh odpovídá uložené startovce – není co ukládat.",

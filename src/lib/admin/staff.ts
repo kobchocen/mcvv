@@ -3,6 +3,7 @@ import { getLocale } from "next-intl/server";
 
 import { adminAccess, canAccessRaceDay, isStaffRole, type UserRole } from "@/lib/auth/roles";
 import { getSession, type SessionUser } from "@/lib/auth/session";
+import { NO_STORE } from "@/lib/http/no-store";
 import { redirect } from "@/i18n/routing";
 
 /**
@@ -45,19 +46,44 @@ export async function requireRaceDay(): Promise<SessionUser> {
   return requireRole(canAccessRaceDay);
 }
 
+export type RouteAccess = { ok: true; session: SessionUser } | { ok: false; response: Response };
+
 /**
- * Varianta pro route handlery: místo přesměrování vrací HTTP odpověď 401/403.
+ * Varianta stráží pro route handlery: místo přesměrování vrací HTTP odpověď.
+ * Nepřihlášený → 401; přihlášený bez oprávnění → `forbidden` (výchozí 403).
  */
-export async function raceDayAccess(): Promise<
-  { ok: true; session: SessionUser } | { ok: false; response: Response }
-> {
+async function routeAccess(
+  allowed: (role: UserRole) => boolean,
+  forbidden: { status: number; body: string } = { status: 403, body: "Forbidden" },
+): Promise<RouteAccess> {
   const session = await getSession();
-  const headers = { "Cache-Control": "private, no-store" };
   if (!session) {
-    return { ok: false, response: new Response("Unauthorized", { status: 401, headers }) };
+    return {
+      ok: false,
+      response: new Response("Unauthorized", { status: 401, headers: NO_STORE }),
+    };
   }
-  if (!canAccessRaceDay(session.role)) {
-    return { ok: false, response: new Response("Forbidden", { status: 403, headers }) };
+  if (!allowed(session.role)) {
+    return {
+      ok: false,
+      response: new Response(forbidden.body, { status: forbidden.status, headers: NO_STORE }),
+    };
   }
   return { ok: true, session };
+}
+
+/** Route handlery „Den závodu“ (export / importy OBD): timing, organizer, admin. */
+export async function raceDayAccess(): Promise<RouteAccess> {
+  return routeAccess(canAccessRaceDay);
+}
+
+/**
+ * Route handlery jen pro plnou administraci (organizer, admin) – tiskové sestavy a PDF.
+ * `forbidden` zachovává dosavadní odpověď konkrétní cesty (tisk 404, PDF startovky 401).
+ */
+export async function staffAccess(forbidden?: {
+  status: number;
+  body: string;
+}): Promise<RouteAccess> {
+  return routeAccess(isStaffRole, forbidden);
 }

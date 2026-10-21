@@ -1,4 +1,4 @@
-import { bibStartTime, DEFAULT_CHAMPION_BIBS, type BibStartModel } from "./bib-start";
+import { startTimeForBib, type StartModel } from "@/lib/race/start-time";
 
 /** Režim tisku: celá startovka (po dávkách), vybraná čísla, prázdná čísla (rezerva). */
 export type BibPrintMode = "all" | "selected" | "blank";
@@ -31,7 +31,8 @@ export type BibEntryRow = {
   runnerId: string;
   name: string;
   categoryId: string;
-  registrationId: number;
+  /** Null u běžce jen v `mcvv_start` (přihláška na místě, bez řádku přihlášky). */
+  registrationId: number | null;
 };
 
 /** Na čísla jdou jen loga partnerů kategorie 1 a 2 (generální a hlavní partneři). */
@@ -99,7 +100,7 @@ export function bibSurname(name: string): string {
 export type BuildBibOptions = {
   mode: BibPrintMode;
   year: number;
-  model: BibStartModel;
+  model: StartModel;
   championBibs: readonly number[];
   /** bezec_id → počet startů (jen veteráni). */
   veterans: ReadonlyMap<string, number>;
@@ -109,7 +110,7 @@ export type BuildBibOptions = {
 function base(bib: number, options: BuildBibOptions) {
   return {
     bib,
-    startTime: bibStartTime(options.model, bib),
+    startTime: startTimeForBib(options.model, bib),
     logoIndex: options.logoCount > 0 ? bib % options.logoCount : null,
     titleColor: TITLE_COLORS[options.mode],
     title:
@@ -155,8 +156,9 @@ export type BibOrder = "registration" | "bib";
 
 /** Legacy pořadí startovky: podle přihlášky, pak čísla (rodiny a oddíly pohromadě). */
 export function sortBibRows(rows: BibEntryRow[], order: BibOrder): BibEntryRow[] {
+  const registration = (row: BibEntryRow) => row.registrationId ?? Number.MAX_SAFE_INTEGER;
   return [...rows].sort((a, b) =>
-    order === "bib" ? a.bib - b.bib : a.registrationId - b.registrationId || a.bib - b.bib,
+    order === "bib" ? a.bib - b.bib : registration(a) - registration(b) || a.bib - b.bib,
   );
 }
 
@@ -174,8 +176,8 @@ export type BibPrintRequest = {
   /** Dávka celé startovky: přeskočit `offset`, vzít `limit`. */
   offset: number;
   limit: number;
-  /** Červená čísla obhájců. */
-  championBibs: number[];
+  /** Červená čísla obhájců; null = parametr `red` chybí → čísla obhájců z ročníku. */
+  championBibs: number[] | null;
 };
 
 export const DEFAULT_BATCH = 100;
@@ -202,10 +204,9 @@ export function parseBibPrintParams(params: URLSearchParams): BibPrintRequest | 
   const offset = intParam(params.get("offset"), 0, 0, MAX_BIB);
   const limit = intParam(params.get("limit"), DEFAULT_BATCH, 1, MAX_BIBS_PER_PDF);
   const bibs = parseBibList(params.get("bibs"));
-  const champions = params.has("red")
-    ? parseBibList(params.get("red"))
-    : [...DEFAULT_CHAMPION_BIBS];
-  if (offset === null || limit === null || bibs === null || champions === null) {
+  const red = params.has("red");
+  const champions = red ? parseBibList(params.get("red")) : null;
+  if (offset === null || limit === null || bibs === null || (red && champions === null)) {
     return null;
   }
   if (mode !== "all" && bibs.length === 0) {

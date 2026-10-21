@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 
 import { prisma } from "@/lib/db/client";
+import { currentRaceYear } from "@/lib/entries/year";
 import { ENTRY_STATUS, validRegistrationIds } from "@/lib/entries/status";
 
 import type { BibRange, ChampionBibs } from "./start-settings";
 import {
   compareByStart,
+  DEFAULT_CHAMPION_BIBS,
   startModelFromEdition,
   startTimeForBib,
   type StartModel,
@@ -37,12 +39,9 @@ export async function editionForYear(year: number) {
   return prisma.edition.findFirst({ where: { date: yearBounds(year) }, orderBy: { id: "desc" } });
 }
 
+/** Rok posledního ročníku (= `currentRaceYear`, stejné pravidlo jako veřejný web a tisk). */
 export async function latestEditionYear(): Promise<number> {
-  const latest = await prisma.edition.findFirst({
-    orderBy: { id: "desc" },
-    select: { date: true },
-  });
-  return latest?.date.getUTCFullYear() ?? new Date().getFullYear();
+  return (await currentRaceYear()).year;
 }
 
 /** Rozsahy čísel ročníku; když pro rok nejsou uložené, převezmou se z číselníku kategorií. */
@@ -80,8 +79,8 @@ export async function loadStartSettings(year: number): Promise<StartSettings> {
     raceDate: edition?.date ?? null,
     model: startModelFromEdition(edition),
     champions: {
-      men: edition ? edition.championBibMen : 400,
-      women: edition ? edition.championBibWomen : 950,
+      men: edition ? edition.championBibMen : DEFAULT_CHAMPION_BIBS.men,
+      women: edition ? edition.championBibWomen : DEFAULT_CHAMPION_BIBS.women,
     },
     ranges: ranges.ranges,
     rangesStored: ranges.stored,

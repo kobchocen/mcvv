@@ -1,5 +1,6 @@
 import { raceDayAccess } from "@/lib/admin/staff";
 import { writeAudit } from "@/lib/audit/log";
+import { NO_STORE } from "@/lib/http/no-store";
 import {
   findEncodingIssues,
   renderObdExport,
@@ -10,8 +11,6 @@ import { loadObdExportData } from "@/lib/raceday/obd-export-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const NO_STORE = { "Cache-Control": "private, no-store" };
 
 /**
  * GET /api/den-zavodu/obd-export?format=txt|html[&nahradit=1]

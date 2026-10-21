@@ -33,12 +33,27 @@ describe("admin guards", () => {
     assert.match(raceDay, /await requireRaceDay\(\)/);
     const users = readFileSync(join(ROOT, "app/[locale]/admin/uzivatele/page.tsx"), "utf8");
     assert.match(users, /await requireAdmin\(\)/);
+    for (const sub of ["prezentace", "vysledky"]) {
+      const page = readFileSync(
+        join(ROOT, `app/[locale]/admin/den-zavodu/${sub}/page.tsx`),
+        "utf8",
+      );
+      assert.match(page, /await requireRaceDay\(\)/);
+    }
+  });
+
+  it("race-day import actions guard before reading the upload", () => {
+    const source = readFileSync(join(ROOT, "lib/raceday/import-actions.ts"), "utf8");
+    for (const body of source.split(/\nexport async function /).slice(1)) {
+      assert.ok(body.indexOf("await requireRaceDay()") < body.indexOf("formData.get"));
+    }
   });
 
   it("every exported admin server action calls a guard", () => {
-    const actionFiles = files(join(ROOT, "lib/admin"), (name) => name.endsWith(".ts")).filter(
-      (path) => readFileSync(path, "utf8").startsWith('"use server"'),
-    );
+    const actionFiles = ["lib/admin", "lib/raceday"]
+      .flatMap((dir) => files(join(ROOT, dir), (name) => name.endsWith(".ts")))
+      .filter((path) => readFileSync(path, "utf8").startsWith('"use server"'));
+    assert.ok(actionFiles.some((path) => path.endsWith("raceday/import-actions.ts")));
     for (const path of actionFiles) {
       const source = readFileSync(path, "utf8");
       const bodies = source.split(/\nexport async function /).slice(1);

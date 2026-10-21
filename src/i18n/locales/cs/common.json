@@ -785,6 +785,7 @@
     "status3": "Zaplacená",
     "status4": "Přeplacená",
     "status5": "Potvrzená",
+    "freeAutoConfirmed": "Zdarma – potvrzeno automaticky",
     "statusUnknown": "—",
     "filter": "Filtrovat",
     "includeCancelled": "včetně zrušených",

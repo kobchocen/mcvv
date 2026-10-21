@@ -344,15 +344,18 @@ enum UserRole {
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique @db.VarChar(255)
-  passwordHash  String    @map("password_hash") @db.VarChar(255)
-  name          String    @db.VarChar(80)
-  clubName      String?   @map("club_name") @db.VarChar(50)
-  role          UserRole
-  emailVerified DateTime? @map("email_verified")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id              Int       @id @default(autoincrement())
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  name            String    @db.VarChar(80)
+  clubName        String?   @map("club_name") @db.VarChar(50)
+  role            UserRole
+  emailVerified   DateTime? @map("email_verified")
+  /// Souhlas se zasíláním informací e-mailem (dřív jen `mcvv_prihlaska.promotion`):
+  /// true = nechce, false = chce, null = nerozhodl (platí poslední přihláška se stejným e-mailem).
+  promotionOptOut Boolean?  @map("promotion_optout")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   emailTokens    EmailVerificationToken[]
   newsletters    NewsletterCampaign[]

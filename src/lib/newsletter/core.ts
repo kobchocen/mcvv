@@ -68,7 +68,20 @@ export type PromotionRecord = {
   year: number;
   created: Date | null;
   id: number;
+  /** Počet běžců; undefined = neznámý (bere se jako rozhodnutí přihlašujícího). */
+  lineCount?: number;
 };
+
+/**
+ * Říká přihláška něco o souhlasu? Prázdná přihláška (bez běžců) s `promotion` NULL vznikala
+ * dřív automaticky při návštěvě /prihlasky – není to rozhodnutí přihlašujícího, takže nesmí
+ * přebít dřívější odhlášení. Výslovné 'N' platí vždy.
+ */
+export function isPromotionDecision(record: PromotionRecord): boolean {
+  return (
+    isPromotionOptOut(record.promotion) || record.lineCount === undefined || record.lineCount > 0
+  );
+}
 
 /**
  * Emails that refused promotion: for each email the latest application
@@ -79,6 +92,7 @@ export function latestPromotionOptOuts(records: Iterable<PromotionRecord>): Set<
   const latest = new Map<string, PromotionRecord>();
   const key = (r: PromotionRecord) => [r.year, r.created?.getTime() ?? 0, r.id];
   for (const r of records) {
+    if (!isPromotionDecision(r)) continue;
     const email = normalizeEmail(r.email);
     if (!email) continue;
     const prev = latest.get(email);
@@ -95,6 +109,45 @@ export function latestPromotionOptOuts(records: Iterable<PromotionRecord>): Set<
     if (isPromotionOptOut(r.promotion)) out.add(email);
   }
   return out;
+}
+
+export type AccountPromotion = {
+  email: string | null;
+  /** Souhlas na účtu (`mcvv_user.promotion_optout`): true = nechce, false = chce, null = nerozhodl. */
+  promotionOptOut: boolean | null;
+};
+
+/**
+ * Odhlášení z informačních e-mailů: rozhoduje účet ; u adres bez účtu nebo
+ * s nerozhodnutým účtem (null) platí dál poslední přihláška (`latestPromotionOptOuts`).
+ */
+export function promotionOptOuts(
+  accounts: Iterable<AccountPromotion>,
+  registrations: Iterable<PromotionRecord>,
+): Set<string> {
+  const fromRegistrations = latestPromotionOptOuts(registrations);
+  const decided = new Map<string, boolean>();
+  for (const account of accounts) {
+    const email = normalizeEmail(account.email);
+    if (email && account.promotionOptOut !== null) decided.set(email, account.promotionOptOut);
+  }
+  const out = new Set<string>();
+  for (const email of fromRegistrations) {
+    if (decided.get(email) !== false) out.add(email);
+  }
+  for (const [email, optOut] of decided) {
+    if (optOut) out.add(email);
+  }
+  return out;
+}
+
+/** Souhlas jednoho účtu pro formulář: uložená hodnota, jinak podle poslední přihlášky. */
+export function effectivePromotionOptOut(
+  account: AccountPromotion,
+  registrations: Iterable<PromotionRecord>,
+): boolean {
+  const email = normalizeEmail(account.email);
+  return email ? promotionOptOuts([account], registrations).has(email) : false;
 }
 
 export type Audience = {

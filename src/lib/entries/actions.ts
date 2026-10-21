@@ -11,6 +11,7 @@ import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/r
 import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { ensureRegistration } from "@/lib/entries/ensure";
+import { setAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { entryWritable } from "@/lib/entries/guard";
 import { promotionValue } from "@/lib/entries/promotion";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -65,7 +66,32 @@ export async function saveEntryHeader(formData: FormData): Promise<void> {
       promotion: promotionValue(noMail),
     },
   });
+  // Souhlas patří účtu; sloupec přihlášky zůstává v souladu kvůli legacy výpisům.
+  await setAccountPromotionOptOut(session.email, noMail);
   await touchRegistration(year, id);
+  revalidatePath("/[locale]/prihlasky", "page");
+}
+
+/**
+ * Souhlas se zasíláním informací e-mailem na účtu – i bez přihlášky a i po uzávěrce.
+ * Aktivní přihláška aktuálního ročníku dostane stejnou hodnotu do legacy sloupce.
+ */
+export async function saveAccountPromotion(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) {
+    return;
+  }
+  const noMail = formString(formData, "noMail") === "N";
+  await setAccountPromotionOptOut(session.email, noMail);
+  const { year } = await currentRaceYear();
+  await prisma.registration.updateMany({
+    where: {
+      year,
+      email: { equals: session.email },
+      OR: [{ status: { not: ENTRY_STATUS.cancelled } }, { status: null }],
+    },
+    data: { promotion: promotionValue(noMail) },
+  });
   revalidatePath("/[locale]/prihlasky", "page");
 }
 

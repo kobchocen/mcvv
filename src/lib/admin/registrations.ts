@@ -8,7 +8,8 @@ import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/ad
 import { computeLineFee } from "@/lib/entries/fee";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
-import { promotionValue } from "@/lib/entries/promotion";
+import { isPromotionOptOut, promotionValue } from "@/lib/entries/promotion";
+import { setAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
 
@@ -43,15 +44,25 @@ export async function saveRegistrationHeader(formData: FormData): Promise<void> 
     return;
   }
   const email = formString(formData, "email").toLowerCase() || null;
+  const before = await prisma.registration.findUnique({
+    where: { year_id: { year, id } },
+    select: { promotion: true },
+  });
+  const noNewsletter = formString(formData, "noNewsletter") === "N";
   await prisma.registration.update({
     where: { year_id: { year, id } },
     data: {
       email,
       name: formString(formData, "name") || null,
       // Poznámka se už needituje (nahradily ji zprávy #108); sloupec zůstává jen ke čtení.
-      promotion: promotionValue(formString(formData, "noNewsletter") === "N"),
+      promotion: promotionValue(noNewsletter),
     },
   });
+  // Souhlas patří účtu: změnu provedenou pořadatelem promítnout i do účtu (jen při změně,
+  // aby úprava staré přihlášky nepřepsala novější rozhodnutí na účtu).
+  if (email && before && isPromotionOptOut(before.promotion) !== noNewsletter) {
+    await setAccountPromotionOptOut(email, noNewsletter);
+  }
   if (email) {
     await refreshLineFees(year, id, email);
   }

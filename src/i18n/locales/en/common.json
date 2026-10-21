@@ -789,6 +789,7 @@
     "status3": "Paid",
     "status4": "Overpaid",
     "status5": "Confirmed",
+    "freeAutoConfirmed": "Free – confirmed automatically",
     "statusUnknown": "—",
     "filter": "Filter",
     "includeCancelled": "include cancelled",

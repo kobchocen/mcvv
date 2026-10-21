@@ -10,6 +10,10 @@ export type NewsletterFormValues = {
   audienceUsers: boolean;
   audienceYears: number;
   excludeCurrentEntrants: boolean;
+  /** "" | "preset:<klíč>" | "image:<id>" (viz parseBannerChoice). */
+  banner: string;
+  bannerAlt: string;
+  bannerLink: string;
 };
 
 export const NEWSLETTER_YEAR_OPTIONS = [0, 1, 2, 3, 5, 10, 20];
@@ -17,8 +21,10 @@ export const NEWSLETTER_YEAR_OPTIONS = [0, 1, 2, 3, 5, 10, 20];
 export function McvvAdminNewsletterForm({
   values,
   audienceHints,
+  bannerOptions,
 }: {
   values: NewsletterFormValues;
+  bannerOptions: { value: string; label: string }[];
   audienceHints: {
     users: number;
     years: Record<number, number>;
@@ -41,6 +47,47 @@ export function McvvAdminNewsletterForm({
           className="min-h-72 bg-race-surface font-mono text-sm"
         />
       </AdminField>
+      <fieldset className="grid gap-3 border border-race-line/55 p-4">
+        <legend className="px-1 text-sm font-semibold">Banner v hlavičce (volitelné)</legend>
+        <label className="grid gap-1 text-sm">
+          Připravený nebo dříve nahraný banner
+          <select
+            name="banner"
+            defaultValue={values.banner}
+            className="h-10 max-w-xl border border-race-line bg-race-surface px-2"
+          >
+            {bannerOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm">
+          Nebo nahrát nový (JPG, PNG nebo WebP, max. 1 MB, ideálně 1200 × 400 px)
+          <input
+            type="file"
+            name="bannerFile"
+            accept="image/jpeg,image/png,image/webp"
+            className="text-sm"
+          />
+          <span className="text-xs text-race-muted">
+            Nahraný obrázek má přednost před výběrem. Server ho zmenší na šířku 1200 px (ostrý na
+            retina displejích), v e-mailu se zobrazí v šířce 600 px a na mobilu se zmenší.
+          </span>
+        </label>
+        <AdminField
+          name="bannerAlt"
+          label="Alt text banneru (povinný u nahraného obrázku; u připraveného se jinak použije výchozí)"
+          defaultValue={values.bannerAlt}
+        />
+        <AdminField
+          name="bannerLink"
+          label="Odkaz po kliknutí na banner (prázdné = https://mcvv.org)"
+          type="url"
+          defaultValue={values.bannerLink}
+        />
+      </fieldset>
       <fieldset className="grid gap-2 border border-race-line/55 p-4">
         <legend className="px-1 text-sm font-semibold">Publikum</legend>
         <label className="flex items-center gap-2 text-sm">

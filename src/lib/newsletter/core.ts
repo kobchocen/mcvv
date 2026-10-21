@@ -4,6 +4,7 @@
  */
 
 import { isPromotionOptOut } from "../entries/promotion";
+import { BANNER_DISPLAY_WIDTH, type NewsletterBanner } from "./banner";
 
 const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i;
 
@@ -301,14 +302,26 @@ export function markdownToText(markdown: string): string {
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
+/**
+ * Banner v hlavičce (pod brandovým pruhem): obrázek 1200 px zobrazený v 600 px, na mobilu
+ * se zmenší (width:100%). Vždy odkaz na veřejnou URL, nikdy příloha/base64.
+ */
+export function renderBannerRow(banner: NewsletterBanner): string {
+  return `<tr><td style="padding:0;line-height:0;font-size:0;background:#0f2a1c">
+<a href="${escapeHtml(banner.href)}" style="display:block;text-decoration:none"><img src="${escapeHtml(banner.src)}" width="${BANNER_DISPLAY_WIDTH}" alt="${escapeHtml(banner.alt)}" style="display:block;width:100%;max-width:${BANNER_DISPLAY_WIDTH}px;height:auto;border:0;outline:none;text-decoration:none;color:#ffffff;font-size:16px;line-height:1.4"></a>
+</td></tr>`;
+}
+
 export function renderNewsletter(input: {
   subject: string;
   body: string;
   unsubscribeUrl: string;
   siteUrl: string;
+  banner?: NewsletterBanner | null;
 }): RenderedEmail {
   const unsub = escapeHtml(input.unsubscribeUrl);
   const site = escapeHtml(input.siteUrl);
+  const bannerRow = input.banner ? `${renderBannerRow(input.banner)}\n` : "";
   const html = `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.subject)}</title></head>
 <body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
@@ -318,7 +331,7 @@ export function renderNewsletter(input: {
 <a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
 <span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
 </td></tr>
-<tr><td style="padding:28px;font-size:16px;line-height:1.55">
+${bannerRow}<tr><td style="padding:28px;font-size:16px;line-height:1.55">
 ${renderMarkdown(input.body)}
 </td></tr>
 <tr><td style="padding:18px 28px;background:#f7f9f6;color:#5d6d63;font-size:12px;line-height:1.5">
@@ -326,7 +339,8 @@ Tento e-mail dostáváte, protože jste se registrovali na <a href="${site}" sty
 Nechcete už od nás novinky? <a href="${unsub}" style="color:#e2531c">Odhlásit odběr jedním kliknutím</a>.
 </td></tr>
 </table></td></tr></table></body></html>`;
-  const text = `${markdownToText(input.body)}
+  const bannerText = input.banner ? `${input.banner.alt}\n${input.banner.href}\n\n` : "";
+  const text = `${bannerText}${markdownToText(input.body)}
 
 --
 MCVV – Malá cena Velké Verandy, ${input.siteUrl}

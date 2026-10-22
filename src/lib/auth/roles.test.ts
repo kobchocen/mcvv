@@ -7,6 +7,7 @@ import {
   adminPathAllowed,
   canAccessRaceDay,
   canAccessSplits,
+  canMergeClubs,
   canManageLiveResults,
   isStaffRole,
   requiresVerifiedEmail,
@@ -15,6 +16,12 @@ import {
 } from "./roles";
 
 describe("role permissions", () => {
+  it("club merge (preview and apply, Q47): admin only, not organizer", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(canMergeClubs(role), role === "admin", role);
+    }
+  });
+
   it("splits client: splitmaker, organizer, admin; live results management: admin only", () => {
     for (const role of ["splitmaker", "organizer", "admin"] as const) {
       assert.ok(canAccessSplits(role), role);

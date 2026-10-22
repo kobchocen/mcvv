@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireAdmin, requireStaff } from "@/lib/admin/staff";
 import { formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
 import { clubKey, clubPair } from "@/lib/clubs";
@@ -19,7 +19,8 @@ import { redirect } from "@/i18n/routing";
  * Nevratné – audit (`club.merge`) drží úplný stav před sloučením pro ruční opravu.
  *
  * Postup: volba dvojice a hlavního id → náhled s počty dotčených řádků (`?hlavni=&sloucit=`)
- * → výslovné potvrzení nevratnosti → sloučení v jedné transakci.
+ * → výslovné potvrzení nevratnosti → sloučení v jedné transakci. Náhled i sloučení smí jen
+ * admin (Q47); zamítnutí / vrácení návrhu i organizer.
  */
 
 function revalidateClubs() {
@@ -42,7 +43,7 @@ async function back(query: Record<string, string> = {}): Promise<never> {
  * → náhled sloučení s počty dotčených řádků. Nic nemění.
  */
 export async function previewClubMergeAction(formData: FormData): Promise<void> {
-  await requireStaff();
+  await requireAdmin();
   const idA = clubKey(formString(formData, "idA"));
   const idB = clubKey(formString(formData, "idB"));
   const side = formString(formData, "main");
@@ -62,7 +63,7 @@ export async function previewClubMergeAction(formData: FormData): Promise<void> 
  * audit s úplným stavem před sloučením. Vyžaduje zaškrtnuté potvrzení nevratnosti.
  */
 export async function confirmClubMerge(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireAdmin();
   const main = clubKey(formString(formData, "hlavni"));
   const other = clubKey(formString(formData, "sloucit"));
   if (!main || !other || main === other) {

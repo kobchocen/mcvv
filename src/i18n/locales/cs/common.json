@@ -1072,6 +1072,7 @@
     "clubMergeTitle": "Kluby – sloučení id",
     "clubMergeHint": "Návrhy ke sloučení různých id klubů, která jsou fakticky jeden klub. Hlavní id se volí ručně, sloučení je nevratné.",
     "clubMergeIntro": "Klub je jeho id z číselníku: přejmenovaný klub zůstává jedním klubem a jeho názvy po ročnících jsou historie. Některé kluby ale mají víc id (např. při přihlášce vznikl nový záznam místo starého). Níže jsou návrhy dvojic různých id podle podobnosti jejich názvů. Nic se neslučuje samo: u každého sloučení zvolte, které id zůstává hlavní, a v náhledu zkontrolujte, kolik řádků se změní. Sloučení přepíše data: přihlášky, startovky i výsledky slučovaného id dostanou hlavní id a slučované id z číselníku zmizí. Sloučení je NEVRATNÉ; do auditu se ukládá úplný stav před sloučením pro případnou ruční opravu.",
+    "clubMergeAdminOnly": "Sloučit kluby (náhled i provedení) může jen administrátor. Návrhy můžete zamítnout.",
     "clubMergeSummary": "{clubs} klubů (id)",
     "clubMergeDone": "Sloučeno: id {merged} je přepsané na {main} a z číselníku zmizelo. Stav před sloučením je v auditu.",
     "clubMergeError_potvrzeni": "Potvrďte, že rozumíte nevratnosti sloučení.",

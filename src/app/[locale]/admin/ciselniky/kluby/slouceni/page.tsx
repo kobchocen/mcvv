@@ -11,6 +11,7 @@ import {
   restoreClubMerge,
 } from "@/lib/admin/club-merge-actions";
 import { requireStaff } from "@/lib/admin/staff";
+import { canMergeClubs } from "@/lib/auth/roles";
 import { clubUsage, createClubResolver, suggestClubMerges, type ClubUsage } from "@/lib/clubs";
 import { previewClubMerge, type ClubMergePreview } from "@/lib/clubs/merge-apply";
 import { loadClubNames } from "@/lib/clubs/queries";
@@ -77,7 +78,9 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  const session = await requireStaff();
+  // Q47: an organizer sees the suggestions and may reject them; preview and merge are admin only.
+  const canMerge = canMergeClubs(session.role);
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const query = await searchParams;
   const confidence = CONFIDENCES.find((value) => value === query.jistota);
@@ -87,7 +90,7 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
     loadAllResults(),
     loadClubNames(),
     prisma.clubMergeRejection.findMany({ orderBy: { createdAt: "desc" } }),
-    query.hlavni && query.sloucit
+    canMerge && query.hlavni && query.sloucit
       ? previewClubMerge(prisma, query.hlavni, query.sloucit)
       : Promise.resolve(null),
   ]);
@@ -125,7 +128,7 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
       className="flex flex-1 cursor-pointer flex-col gap-1 border border-race-line/70 p-3 has-[:checked]:border-race-accent has-[:checked]:bg-race-accent/10"
     >
       <span className="flex items-center gap-2">
-        <input type="radio" name="main" value={side} required />
+        {canMerge ? <input type="radio" name="main" value={side} required /> : null}
         <span className="text-xs font-semibold uppercase tracking-wide text-race-dim">
           {copy("clubMergeKeepMain")}
         </span>
@@ -250,6 +253,11 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
           {copy("clubMergeTitle")}
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{copy("clubMergeIntro")}</p>
+        {canMerge ? null : (
+          <p className="mt-3 border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
+            {copy("clubMergeAdminOnly")}
+          </p>
+        )}
         <p className="mt-2 text-sm text-race-muted">
           {copy("clubMergeSummary", { clubs: usage.length })}
         </p>
@@ -314,16 +322,20 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
                   <input type="hidden" name="idA" value={s.a.id} />
                   <input type="hidden" name="idB" value={s.b.id} />
                   <fieldset className="flex flex-col gap-2 sm:flex-row">
-                    <legend className="mb-1 text-xs font-semibold text-foreground">
-                      {copy("clubMergeChooseMain")}
-                    </legend>
+                    {canMerge ? (
+                      <legend className="mb-1 text-xs font-semibold text-foreground">
+                        {copy("clubMergeChooseMain")}
+                      </legend>
+                    ) : null}
                     {renderSide(s.a, "a")}
                     {renderSide(s.b, "b")}
                   </fieldset>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="submit" formAction={previewClubMergeAction} className="h-9">
-                      {copy("clubMergeConfirm")}
-                    </Button>
+                    {canMerge ? (
+                      <Button type="submit" formAction={previewClubMergeAction} className="h-9">
+                        {copy("clubMergeConfirm")}
+                      </Button>
+                    ) : null}
                     <Button
                       type="submit"
                       formAction={rejectClubMerge}
@@ -354,39 +366,43 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
           </Link>
         ) : null}
 
-        <h2 className="mt-12 font-display text-2xl font-semibold text-foreground dark:text-white">
-          {copy("clubMergeManual")}
-        </h2>
-        <p className="mt-2 text-sm text-race-muted">{copy("clubMergeManualHint")}</p>
-        <datalist id="club-ids">
-          {usage.map((club) => (
-            <option key={club.id} value={club.id} label={label(club.id)} />
-          ))}
-        </datalist>
-        <form
-          action={previewClubMergeAction}
-          className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"
-        >
-          <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
-            {copy("clubMergeIdA")}
-            <input name="idA" list="club-ids" required className={inputClass} />
-            <span className="flex items-center gap-2 text-foreground">
-              <input type="radio" name="main" value="a" required />
-              {copy("clubMergeKeepMain")}
-            </span>
-          </label>
-          <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
-            {copy("clubMergeIdB")}
-            <input name="idB" list="club-ids" required className={inputClass} />
-            <span className="flex items-center gap-2 text-foreground">
-              <input type="radio" name="main" value="b" required />
-              {copy("clubMergeKeepMain")}
-            </span>
-          </label>
-          <Button type="submit" className="h-9">
-            {copy("clubMergeConfirm")}
-          </Button>
-        </form>
+        {canMerge ? (
+          <>
+            <h2 className="mt-12 font-display text-2xl font-semibold text-foreground dark:text-white">
+              {copy("clubMergeManual")}
+            </h2>
+            <p className="mt-2 text-sm text-race-muted">{copy("clubMergeManualHint")}</p>
+            <datalist id="club-ids">
+              {usage.map((club) => (
+                <option key={club.id} value={club.id} label={label(club.id)} />
+              ))}
+            </datalist>
+            <form
+              action={previewClubMergeAction}
+              className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"
+            >
+              <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
+                {copy("clubMergeIdA")}
+                <input name="idA" list="club-ids" required className={inputClass} />
+                <span className="flex items-center gap-2 text-foreground">
+                  <input type="radio" name="main" value="a" required />
+                  {copy("clubMergeKeepMain")}
+                </span>
+              </label>
+              <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
+                {copy("clubMergeIdB")}
+                <input name="idB" list="club-ids" required className={inputClass} />
+                <span className="flex items-center gap-2 text-foreground">
+                  <input type="radio" name="main" value="b" required />
+                  {copy("clubMergeKeepMain")}
+                </span>
+              </label>
+              <Button type="submit" className="h-9">
+                {copy("clubMergeConfirm")}
+              </Button>
+            </form>
+          </>
+        ) : null}
 
         {rejections.length > 0 ? (
           <>

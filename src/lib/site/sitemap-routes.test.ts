@@ -11,5 +11,6 @@ test("sitemap lists the statistics landing page and every statistics subpage", (
     assert.ok(SITEMAP_ROUTES.includes(`/statistiky/${slug}`), slug);
   }
   assert.ok(SITEMAP_ROUTES.includes(""));
+  assert.ok(SITEMAP_ROUTES.includes("/kluby"), "public club list");
   assert.equal(new Set(SITEMAP_ROUTES).size, SITEMAP_ROUTES.length);
 });

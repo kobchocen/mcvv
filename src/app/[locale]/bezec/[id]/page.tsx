@@ -97,6 +97,7 @@ export default async function RunnerPage({ params }: PageProps) {
     : await prisma.registrationLine.findUnique({
         where: { year_runnerId: { year: raceYear.year, runnerId: id } },
         select: {
+          clubId: true,
           club: { select: { name: true } },
           category: { select: { name: true } },
         },
@@ -115,12 +116,13 @@ export default async function RunnerPage({ params }: PageProps) {
   const record = stats?.record ?? 0;
   const average = stats?.average ?? 0;
   const last = results.at(0);
-  // Canonical club once merged in the admin (#104), else the name as written.
-  const lastClubWritten = last
-    ? last.club?.name || last.clubName || ""
-    : registration?.club.name || "";
-  const lastClubResolved = clubs.resolve(lastClubWritten);
-  const lastClub = lastClubWritten ? clubs.display(lastClubWritten) : "";
+  // Club by id (#104): name of the edition; a merged id shows the main id's name.
+  const lastClubResolved = last
+    ? clubs.resolve(last.clubId, last.year, last.club?.name || last.clubName)
+    : registration
+      ? clubs.resolve(registration.clubId, raceYear.year, registration.club.name)
+      : null;
+  const lastClub = lastClubResolved?.name ?? "";
   const registeredCategory = registration?.category.name || "";
   const photos = [
     ...new Map(
@@ -302,8 +304,15 @@ export default async function RunnerPage({ params }: PageProps) {
                         </td>
                         <td className="py-2.5 pr-4 text-race-muted">
                           <ClubNameLink
-                            slug={clubs.resolve(row.club?.name || row.clubName)?.slug}
-                            name={clubs.display(row.club?.name || row.clubName)}
+                            slug={
+                              clubs.resolve(row.clubId, row.year, row.club?.name || row.clubName)
+                                ?.slug
+                            }
+                            name={clubs.display(
+                              row.clubId,
+                              row.year,
+                              row.club?.name || row.clubName,
+                            )}
                           />
                         </td>
                         <td className="py-2.5 text-race-muted">{row.category.name}</td>

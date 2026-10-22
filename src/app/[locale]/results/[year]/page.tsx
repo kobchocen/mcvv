@@ -61,13 +61,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
     },
   });
 
-  // Canonical club once merged in the admin (#104), else the name as written.
+  // Club by id (#104): name of the edition; a merged id shows the main id's name.
   const clubs = await getClubResolver();
   const results: ResultRow[] = rawResults.map(({ runner, ...r }) => ({
     ...r,
     runnerName: runnerNameFor("results", r.runnerName, runner?.name),
-    _clubName: clubs.display(r.club?.name || r.clubName),
-    _clubSlug: clubs.resolve(r.club?.name || r.clubName)?.slug ?? null,
+    _clubName: clubs.display(r.clubId, r.year, r.club?.name || r.clubName),
+    _clubSlug: clubs.resolve(r.clubId, r.year, r.club?.name || r.clubName)?.slug ?? null,
     _birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
   })) as ResultRow[];
 

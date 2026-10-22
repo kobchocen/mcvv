@@ -6,6 +6,14 @@ import { createClubResolver } from "@/lib/clubs/core";
 import type { RawResult } from "./core";
 import { computeStatsOverview, normalizeClubName, rankRows } from "./overview";
 
+// Club ids (cis_klub.id) of the written names below; "" = club 000 (no club).
+const CLUB_IDS: Record<string, string> = {
+  kobchocen: "CHC",
+  oklokomotivapardubice: "LPU",
+  lokoobpardubice: "275",
+  "": "000",
+};
+
 // ids: YYYY + sex digit (0–4 men, 5–9 women) + sequence
 const r = (
   year: number,
@@ -13,7 +21,8 @@ const r = (
   time: number,
   runnerName: string,
   clubName: string | null = null,
-): RawResult => ({ year, runnerId, time, runnerName, clubName });
+  clubId: string | null = clubName ? (CLUB_IDS[normalizeClubName(clubName)] ?? null) : null,
+): RawResult => ({ year, runnerId, time, runnerName, clubId, clubName });
 
 const RESULTS: RawResult[] = [
   // 2001: men 900 / 905 (gap 5), women 1100 / 1160 (gap 60)
@@ -147,15 +156,21 @@ describe("computeStatsOverview", () => {
     assert.deepEqual(o.women.peak, { year: 2003, share: 1 });
   });
 
-  it("groups clubs by written name, case/diacritics/punctuation ignored (#104)", () => {
+  it("groups clubs by id, not by name: a renamed / differently written club is one (#104)", () => {
+    // Without the cis_klub names: the most common spelling of the id, slug from the id.
     assert.deepEqual(o.clubs, [
-      { name: "K.O.B. Choceň", slug: "k-o-b-chocen", starts: 5 },
-      { name: "OK Lokomotiva Pardubice", slug: "ok-lokomotiva-pardubice", starts: 3 },
+      { name: "K.O.B. Choceň", slug: "chc", starts: 5 },
+      { name: "OK Lokomotiva Pardubice", slug: "lpu", starts: 3 },
     ]);
+    // Same name under another id is a different club until merged.
+    const other = computeStatsOverview([
+      ...RESULTS,
+      r(2003, "19700001", 1500, "Jiný Pavel", "K.O.B. Choceň", "216"),
+    ]);
+    assert.equal(other.clubs[0].starts, 5);
   });
 
-  it("uses the canonical club once names are merged in the admin (#104)", () => {
-    const club = { id: 2, slug: "lokomotiva-pardubice", name: "OK Lokomotiva Pardubice" };
+  it("merged ids count under the main id, shown under its newest name (#104)", () => {
     const merged = computeStatsOverview(
       [
         ...RESULTS,
@@ -165,22 +180,19 @@ describe("computeStatsOverview", () => {
       ],
       [],
       0,
-      createClubResolver([
-        { key: "oklokomotivapardubice", club },
-        { key: "lokoobpardubice", club },
-      ]),
+      createClubResolver({
+        names: [
+          { id: "LPU", year: 2003, name: "OK Lokomotiva Pardubice" },
+          { id: "275", year: 2003, name: "Loko OB Pardubice" },
+        ],
+        merges: [{ clubId: "275", mainClubId: "LPU" }],
+      }),
     );
     assert.deepEqual(merged.clubs[0], {
       name: "OK Lokomotiva Pardubice",
-      slug: club.slug,
-      starts: 6, // 3 × OK Lokomotiva + 3 × Loko OB
+      slug: "lpu-ok-lokomotiva-pardubice",
+      starts: 6, // 3 × LPU + 3 × 275 (merged), 2003 under the main id's name
     });
-    // Not merged: the unmapped "Loko OB Pardubice" would be its own club.
-    const unmerged = computeStatsOverview([
-      ...RESULTS,
-      r(2003, "19700001", 1500, "Loko Pavel", "Loko OB Pardubice"),
-    ]);
-    assert.ok(unmerged.clubs.some((row) => row.name === "Loko OB Pardubice" && row.starts === 1));
   });
 
   it("time together on the course and total climb (starts × 200 m)", () => {

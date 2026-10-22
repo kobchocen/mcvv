@@ -7,6 +7,7 @@ import {
   buildObdExportText,
   findEncodingIssues,
   firstClubRows,
+  longClubIds,
   phpLooseEquals,
   phpTrim,
   renderObdExport,
@@ -123,5 +124,26 @@ describe("start list warnings", () => {
       { kind: "cancelled_registration", bib: 100, runnerId: "20105004" },
       { kind: "duplicate_bib", bib: 5, runnerIds: ["19900002", "19805001"] },
     ]);
+  });
+});
+
+describe("club ids longer than 3 characters (#104, varchar(8))", () => {
+  it("today's data (fixture) has none – export bytes unchanged", () => {
+    assert.deepEqual(longClubIds(data), []);
+  });
+
+  it("an id 1000+ is written as it is, but reported so the export can stop", () => {
+    const withLong: ObdExportData = {
+      ...data,
+      clubs: [...data.clubs, { id: "1000", name: "Nový klub" }],
+      starts: [
+        ...data.starts,
+        { runnerId: "19900001", clubId: "1000", categoryId: "A", year: data.year, bib: 999 },
+      ],
+    };
+    assert.deepEqual(longClubIds(withLong), ["1000"]);
+    const text = buildObdExportText(withLong);
+    assert.match(text, /\n1000;Nový klub\n/);
+    assert.match(text, /\n19900001;1000;A;\d+;999\n$/);
   });
 });

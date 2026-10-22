@@ -9,6 +9,7 @@ import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
 import { recalculateCategoryRecords } from "@/lib/stats/records";
+import { CLUB_ID_MAX_LENGTH } from "@/lib/entries/club-id";
 
 function revalidateDicts() {
   revalidatePath("/[locale]/admin/ciselniky", "layout");
@@ -67,7 +68,7 @@ export async function recalculateRecords(): Promise<void> {
 
 export async function saveClub(formData: FormData): Promise<void> {
   await requireStaff();
-  const id = formString(formData, "id").slice(0, 3).toUpperCase();
+  const id = formString(formData, "id").slice(0, CLUB_ID_MAX_LENGTH).toUpperCase();
   const year = formInt(formData, "year");
   const name = formString(formData, "name").slice(0, 50);
   if (!id || !year || !name) {

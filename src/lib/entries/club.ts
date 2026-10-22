@@ -1,14 +1,7 @@
 import { prisma } from "@/lib/db/client";
+import { nextNumericClubIdFrom } from "@/lib/entries/club-id";
 
 export const EMPTY_CLUB_ID = "000";
-
-function numericClubId(id: string): number | null {
-  const trimmed = id.trim();
-  if (trimmed >= "AAA" || !/^\d+$/.test(trimmed)) {
-    return null;
-  }
-  return Number.parseInt(trimmed, 10);
-}
 
 export async function ensureEmptyClub(year: number): Promise<string> {
   const existing = await prisma.club.findUnique({
@@ -59,13 +52,6 @@ export async function resolveClub(
 }
 
 async function nextNumericClubId(): Promise<string> {
-  const rows = await prisma.club.findMany({ select: { id: true } });
-  const numbers = rows
-    .map((row) => numericClubId(row.id))
-    .filter((value): value is number => value !== null);
-  const next = numbers.length > 0 ? Math.max(...numbers) + 1 : 111;
-  if (next > 999) {
-    return "111";
-  }
-  return String(next);
+  const rows = await prisma.club.findMany({ select: { id: true }, distinct: ["id"] });
+  return nextNumericClubIdFrom(rows.map((row) => row.id));
 }

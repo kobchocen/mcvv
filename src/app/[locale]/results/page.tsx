@@ -229,7 +229,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     time: t("colTime"),
     empty: t("empty"),
   };
-  // Canonical club once merged in the admin (#104), else the name as written.
+  // Club by id (#104): name of the edition; a merged id shows the main id's name.
   const clubs = await getClubResolver();
   const toRow = (r: ResultRow, rank: number | undefined, withCategory: boolean) => ({
     key: r.runnerId,
@@ -237,8 +237,8 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     runnerName: r.runnerName,
     rank,
     birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
-    club: clubs.display(r.club?.name || r.clubName),
-    clubSlug: clubs.resolve(r.club?.name || r.clubName)?.slug ?? null,
+    club: clubs.display(r.clubId, r.year, r.club?.name || r.clubName),
+    clubSlug: clubs.resolve(r.clubId, r.year, r.club?.name || r.clubName)?.slug ?? null,
     category: withCategory ? `${r.category?.name || r.categoryId} (${r._catRank}.)` : undefined,
     ...pickSplits(r._splits || []),
     time: r.time,

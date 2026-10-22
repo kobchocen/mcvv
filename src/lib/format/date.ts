@@ -60,3 +60,21 @@ export function formatDateTime(value: Date, locale: string): string {
     timeZone: TIME_ZONE,
   }).format(value);
 }
+
+/**
+ * Short date and time for read receipts: cs "22. 10. 14:05", en "22 Oct, 14:05".
+ * The year is added only when it differs from `now` (Prague calendar).
+ */
+export function formatShortDateTime(value: Date, locale: string, now = new Date()): string {
+  const year = (date: Date) =>
+    new Intl.DateTimeFormat("en", { year: "numeric", timeZone: TIME_ZONE }).format(date);
+  const sameYear = year(value) === year(now);
+  return new Intl.DateTimeFormat(tag(locale), {
+    day: "numeric",
+    month: locale === "en" ? "short" : "numeric",
+    ...(sameYear ? {} : { year: "numeric" as const }),
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TIME_ZONE,
+  }).format(value);
+}

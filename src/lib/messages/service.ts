@@ -5,14 +5,18 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
+import { isStaffRole } from "@/lib/auth/roles";
 import type { SessionUser } from "@/lib/auth/session";
 
 import {
   checkRateLimit,
   patchForMarkRead,
   patchForNewMessage,
+  shouldRecordUserView,
+  staffMessagesToMarkSeen,
   type MessageSide,
   type RateVerdict,
+  type ReceiptMessage,
 } from "./core";
 import { cancelPendingUserNotification } from "./notify";
 import { rateUsage } from "./store";
@@ -93,6 +97,8 @@ export async function appendMessage(input: {
     }),
   ]);
   if (input.side === "user") {
+    // Odpověď přihlašujícího = viděl všechny dosavadní zprávy pořadatele.
+    await markStaffMessagesSeen(input.threadId, now);
     await cancelPendingUserNotification(input.threadId);
   }
 }
@@ -103,7 +109,52 @@ export async function markRead(threadId: number, side: MessageSide, now = new Da
     data: patchForMarkRead(side, now),
   });
   if (side === "user") {
+    await markStaffMessagesSeen(threadId, now);
     await cancelPendingUserNotification(threadId);
+  }
+}
+
+/**
+ * Potvrzení o přečtení: zprávy pořadatele ve vlákně, které přihlašující ještě neviděl,
+ * dostanou read_at = now. `ids` omezí zápis na zprávy, které se skutečně zobrazily
+ * (zpráva doručená mezi načtením a zápisem tak nepřečtená zůstane); bez `ids` platí
+ * vše vytvořené do `now`. Už nastavené read_at se nepřepisuje (první přečtení).
+ */
+export async function markStaffMessagesSeen(
+  threadId: number,
+  now = new Date(),
+  ids?: number[],
+): Promise<number> {
+  if (ids && ids.length === 0) return 0;
+  const result = await prisma.message.updateMany({
+    where: {
+      threadId,
+      side: "staff",
+      readAt: null,
+      ...(ids ? { id: { in: ids } } : { createdAt: { lte: now } }),
+    },
+    data: { readAt: now },
+  });
+  return result.count;
+}
+
+/**
+ * Zobrazení vlákna přihlašujícím (/zpravy/[id], sekce zpráv v /prihlasky). Volající ověřil
+ * přístup (vlastník přihlášky / vlákna). Pořadatel ani admin přečtení nezakládá.
+ * Chyba zápisu stránku nerozbije – potvrzení je jen informativní.
+ */
+export async function recordUserView(
+  thread: { id: number; messages: ReceiptMessage[] },
+  session: Pick<SessionUser, "role">,
+  now = new Date(),
+): Promise<void> {
+  if (!shouldRecordUserView({ isStaff: isStaffRole(session.role), canAccess: true })) return;
+  const ids = staffMessagesToMarkSeen(thread.messages);
+  if (ids.length === 0) return;
+  try {
+    await markStaffMessagesSeen(thread.id, now, ids);
+  } catch (error) {
+    console.error("[messages] read receipt failed", error);
   }
 }
 

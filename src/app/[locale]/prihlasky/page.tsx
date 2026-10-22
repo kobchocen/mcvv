@@ -19,6 +19,7 @@ import {
   summaryKey,
   userUnreadCount,
 } from "@/lib/messages/store";
+import { recordUserView } from "@/lib/messages/service";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
 import { computeLineFee } from "@/lib/entries/fee";
@@ -199,6 +200,9 @@ async function EntryBody({
   const threadUnread = thread
     ? countUnreadMessages(thread.messages, thread.lastReadByUser, "user")
     : 0;
+  // Vlákno se v sekci #zpravy vykreslí celé → zprávy pořadatele přihlašující viděl
+  // (přihláška je dohledaná podle e-mailu účtu, tedy vlastník).
+  if (thread) await recordUserView(thread, session);
   const pastSummaries = messagesEnabled
     ? await registrationThreadSummaries(
         past.map((row) => ({ year: row.year, id: row.id })),

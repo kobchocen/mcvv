@@ -6,6 +6,7 @@ import { FileDown, PlayCircle, Trash2 } from "lucide-react";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvAccountPromotionForm } from "@/components/organisms/mcvv-account-promotion-form";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
+import { McvvClubDatalist } from "@/components/organisms/mcvv-club-datalist";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
@@ -21,6 +22,8 @@ import {
 } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
+import { loadClubOptions } from "@/lib/entries/club";
+import { clubOptionValue } from "@/lib/entries/club-options";
 import { computeLineFee } from "@/lib/entries/fee";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
@@ -36,6 +39,9 @@ import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
+
+/** Společná nabídka klubů pro všechna pole klubu na stránce. */
+const CLUB_LIST_ID = "club-options";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -137,19 +143,8 @@ async function EntryBody({
       </div>
     </section>
   );
-  const yearClubs = await prisma.club.findMany({
-    where: { year },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
-  const clubOptions = [...yearClubs];
-  if (registration) {
-    for (const line of registration.lines) {
-      if (!clubOptions.some((club) => club.id === line.clubId)) {
-        clubOptions.push({ id: line.clubId, name: line.club.name });
-      }
-    }
-  }
+  // Všechna id klubů z číselníku, ne jen letošní ročník (Q35).
+  const clubOptions = await loadClubOptions();
   const account = registration
     ? null
     : await prisma.user.findUnique({ where: { email }, select: { clubName: true } });
@@ -223,6 +218,8 @@ async function EntryBody({
     const unread = messagesEnabled ? await userUnreadCount(session) : 0;
     return (
       <div className="mt-8 space-y-12">
+        {/* Skrytý prvek jako první potomek: space-y (Tailwind 4) odsazuje jen spodní okraj. */}
+        {open ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
         {open ? (
           <div className="grid gap-3">
             {deadline ? (
@@ -267,7 +264,7 @@ async function EntryBody({
                 year={year}
                 registrationId={null}
                 categories={categories}
-                clubs={clubOptions}
+                clubListId={CLUB_LIST_ID}
                 defaultClubName={defaultClubName}
                 copy={newRunnerCopy(copy)}
               />
@@ -307,6 +304,7 @@ async function EntryBody({
 
   return (
     <div className="mt-8 space-y-12">
+      {open ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
       {deadline ? (
         <p className="text-sm text-race-muted">
           {copy("deadline")}: {formatDate(deadline, locale)}
@@ -435,8 +433,8 @@ async function EntryBody({
                           year={year}
                           registrationId={registration.id}
                           runnerId={line.runnerId}
-                          clubName={line.club.name}
-                          clubs={clubOptions}
+                          clubName={clubOptionValue(line.clubId, line.club.name, clubOptions)}
+                          listId={CLUB_LIST_ID}
                         />
                       ) : (
                         line.club.name
@@ -501,7 +499,7 @@ async function EntryBody({
               year={year}
               registrationId={registration.id}
               categories={categories}
-              clubs={clubOptions}
+              clubListId={CLUB_LIST_ID}
               defaultClubName={defaultClubName}
               copy={newRunnerCopy(copy)}
             />

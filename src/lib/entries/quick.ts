@@ -32,3 +32,32 @@ export function buildQuickList(
   });
   return unique;
 }
+
+export type QuickRunner = { id: string; name: string; clubId?: string; clubName?: string };
+
+/**
+ * Rychlé přidání předvyplní klub z poslední přihlášky běžce (Q35): id klubu z nejnovějšího
+ * ročníku. Řádky bez klubu („000“ nebo prázdný název) se přeskočí, pak platí výchozí klub
+ * přihlášky.
+ */
+export function withLastClub(
+  runners: readonly { id: string; name: string }[],
+  lines: readonly { runnerId: string; year: number; clubId: string; clubName: string }[],
+): QuickRunner[] {
+  const last = new Map<string, { year: number; clubId: string; clubName: string }>();
+  for (const line of lines) {
+    const clubId = line.clubId.trim();
+    const clubName = line.clubName.trim();
+    if (!clubId || clubId === "000" || !clubName) {
+      continue;
+    }
+    const seen = last.get(line.runnerId);
+    if (!seen || line.year > seen.year) {
+      last.set(line.runnerId, { year: line.year, clubId, clubName });
+    }
+  }
+  return runners.map((runner) => {
+    const club = last.get(runner.id);
+    return club ? { ...runner, clubId: club.clubId, clubName: club.clubName } : { ...runner };
+  });
+}

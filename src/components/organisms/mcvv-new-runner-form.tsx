@@ -4,7 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 
 import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { addNewRunner, type AddRunnerState } from "@/lib/entries/actions";
-import { McvvClubCombobox, type ClubOption } from "@/components/organisms/mcvv-club-combobox";
+import { McvvClubCombobox } from "@/components/organisms/mcvv-club-combobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,7 @@ export function McvvNewRunnerForm({
   year,
   registrationId,
   categories,
-  clubs,
+  clubListId,
   defaultClubName,
   copy,
 }: {
@@ -23,7 +23,8 @@ export function McvvNewRunnerForm({
   /** null = přihláška ještě neexistuje, založí se s prvním běžcem. */
   registrationId: number | null;
   categories: CategoryOption[];
-  clubs: ClubOption[];
+  /** Id společné nabídky klubů (`McvvClubDatalist`). */
+  clubListId: string;
   defaultClubName: string;
   copy: {
     firstName: string;
@@ -175,10 +176,9 @@ export function McvvNewRunnerForm({
         <input type="hidden" name="clubName" value={club} />
         <McvvClubCombobox
           id="clubName"
-          clubs={clubs}
           value={club}
           onChange={setClub}
-          listId="new-runner-club"
+          listId={clubListId}
           className="h-10"
         />
       </div>

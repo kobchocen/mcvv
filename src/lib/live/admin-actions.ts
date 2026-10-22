@@ -11,6 +11,14 @@ import { parseEventId, parsePassword, saveOfeedSettings } from "@/lib/ofeed/sett
 
 import { parsePragueLocal } from "./admin-core";
 import { clearSplits } from "./clear";
+import { deleteManualSplit, setManualSplit } from "./manual";
+import {
+  clockToRaceTime,
+  isManualSplit,
+  isValidBib,
+  parseExpected,
+  parseRaceTime,
+} from "./manual-core";
 import {
   clearableSplits,
   clearBlocked,
@@ -125,10 +133,12 @@ export async function resolveConflictAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const id = Number(formData.get("id"));
   const decision = String(formData.get("decision") ?? "");
+  let result: string = "missing";
   if (Number.isInteger(id) && id > 0) {
-    if (decision === "accept") await resolveConflict(id, session.id);
-    else if (decision === "dismiss") await dismissConflict(id, session.id);
+    if (decision === "accept") result = await resolveConflict(id, session);
+    else if (decision === "dismiss") result = await dismissConflict(id, session);
   }
+  if (result === "stale") await back({ error: "conflictStale" });
   await back({ saved: "conflict" });
 }
 
@@ -172,4 +182,76 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     },
     SPLITS_PAGE,
   );
+}
+
+/** Společné načtení formuláře ruční editace (číslo, split, očekávaná hodnota, důvod). */
+async function manualForm(formData: FormData) {
+  const session = await requireAdmin();
+  const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
+  const bib = Number(formData.get("bib"));
+  const split = String(formData.get("split") ?? "");
+  const expected = parseExpected(String(formData.get("expected") ?? ""));
+  const reason = String(formData.get("reason") ?? "");
+  const edit = Number.isInteger(bib) ? String(bib) : "";
+  if (!isValidBib(bib)) await back({ error: "bib" }, SPLITS_PAGE);
+  if (
+    !isManualSplit(
+      split,
+      stations.map((s) => s.code),
+    )
+  ) {
+    await back({ edit, error: "split" }, SPLITS_PAGE);
+  }
+  if (expected === undefined) await back({ edit, error: "changed" }, SPLITS_PAGE);
+  if (String(formData.get("year") ?? "") !== String(ctx.year)) {
+    await back({ edit, error: "year" }, SPLITS_PAGE);
+  }
+  return { session, ctx, bib, split, expected: expected!, reason, edit };
+}
+
+/**
+ * Ruční zápis / přepis jednoho mezičasu (Q31: jen admin). Jde vždy, i v den závodu (Q32).
+ * Čas od startu (`m:ss`, `h:mm:ss`) nebo denní čas průchodu (`hh:mm:ss`, režim `clock`).
+ */
+export async function setSplitAction(formData: FormData): Promise<void> {
+  const { session, ctx, bib, split, expected, reason, edit } = await manualForm(formData);
+  const raw = String(formData.get("value") ?? "");
+  const time =
+    formData.get("mode") === "clock"
+      ? clockToRaceTime(raw, ctx.zero, bib, ctx.intervalS)
+      : parseRaceTime(raw);
+  if (time === null) await back({ edit, error: "time" }, SPLITS_PAGE);
+  const known = await prisma.startEntry.findFirst({
+    where: { year: ctx.year, bib },
+    select: { bib: true },
+  });
+  if (!known && formData.get("force") !== "on") {
+    await back({ edit, error: "unknownBib" }, SPLITS_PAGE);
+  }
+  const result = await setManualSplit({
+    year: ctx.year,
+    bib,
+    split,
+    time: time!,
+    expected,
+    reason,
+    actor: session,
+  });
+  if (!result.ok) await back({ edit, error: result.reason }, SPLITS_PAGE);
+  await back({ edit, saved: result.ok ? result.action : "" }, SPLITS_PAGE);
+}
+
+/** Ruční smazání jednoho mezičasu (důvod povinný). */
+export async function deleteSplitAction(formData: FormData): Promise<void> {
+  const { session, ctx, bib, split, expected, reason, edit } = await manualForm(formData);
+  const result = await deleteManualSplit({
+    year: ctx.year,
+    bib,
+    split,
+    expected,
+    reason,
+    actor: session,
+  });
+  if (!result.ok) await back({ edit, error: result.reason }, SPLITS_PAGE);
+  await back({ edit, saved: "delete" }, SPLITS_PAGE);
 }

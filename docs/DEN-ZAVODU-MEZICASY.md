@@ -118,12 +118,33 @@ Všechno 1:1 podle legacy, LuM ani OBD nic nemění.
 Klient navíc snese `,`/tab, BOM, CRLF, hlavičku a čas `m:ss` / `h:mm:ss` (legacy by je nepřijal,
 OBD je nepíše). Když je číslo v souboru vícekrát, platí první řádek jako v legacy.
 
+## Výpis a ruční editace mezičasů (Q31)
+
+Na stejné stránce `/admin/den-zavodu/zive/casy`, jen admin, **vždy** (i v den závodu, Q32).
+
+- Tabulka čísel ročníku (startovka + čísla, která mají čas, ale nejsou ve startovce): sloupce
+  stanoviště a cíl, štítek „ručně“ (zapsal admin), `!` otevřený konflikt, `↕` časy nejdou po sobě.
+  Hledání podle čísla nebo jména, volitelně i čísla bez časů.
+- Editace čísla (`?edit={číslo}`): u každého splitu doplnit / přepsat / smazat. Čas od startu
+  (`m:ss`, `h:mm:ss`, sekundy; 0–6 h) nebo denní čas průchodu `hh:mm[:ss]` (Europe/Prague, den nuly;
+  přepočte se podle startu čísla). Číslo mimo startovku jen se zaškrtnutím „přesto uložit“.
+- Ruční zápis je vědomé přebití pravidla „první vyhrává“: přepíše uloženou hodnotu, přepis a smazání
+  vyžadují důvod. Formulář nese zobrazenou hodnotu – když se mezitím změnila, nic se neuloží.
+- Deník: zápis `source: "admin"`, `entry_key` `adm:{uuid}`, `user_id`, důvod v `note`; původní
+  vlastnící zápis → `replaced` / `deleted`, otevřené konflikty k buňce → `rejected`
+  (`superseded-by-admin`). `mcvv_split.autor` = `admin`. OBD ruční hodnotu nepřepíše ani
+  s `applyCorrections` (vlastní ji admin, ne OBD), web dostane `duplicate`.
+- Audit: `raceday.split_set` / `raceday.split_deleted` (z čeho na co, důvod),
+  `raceday.split_conflict_resolved` / `raceday.split_conflict_dismissed`.
+- „Přijmout“ konflikt projde jen, když v `mcvv_split` pořád je hodnota, proti které konflikt
+  vznikl (`existing=` v poznámce); jinak hláška a nic se nemění.
+
 ## Vyčištění mezičasů ročníku (Q31, Q32)
 
 `/admin/den-zavodu/zive/casy` (odkaz „Mezičasy ročníku“ na stránce Živě), jen admin.
 
-- Filtr: splity (stanoviště + cíl 9) a zdroj: vše / web / OBD (všechny klíče) / konkrétní klíč
-  zařízení. „Vše“ smaže všechny řádky `mcvv_split` vybraných splitů aktuálního ročníku (i legacy
+- Filtr: splity (stanoviště + cíl 9) a zdroj: vše / web / OBD (všechny klíče) / ručně (admin) /
+  konkrétní klíč zařízení. „Vše“ smaže všechny řádky `mcvv_split` vybraných splitů aktuálního ročníku (i legacy
   řádky bez deníku); se zdrojem jen řádky, které ten zdroj vlastní (zápis `applied` / `resolved`
   se stejným číslem a časem), a jeho záznamy v deníku.
 - Náhled počtů → potvrzení opsáním ročníku → jedna transakce: smaže `mcvv_split`, záznamy deníku

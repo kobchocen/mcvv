@@ -7,7 +7,7 @@ import { FINISH_SPLIT, isSplitCode, type Station } from "./stations";
  */
 
 /** Zdroj zápisu v deníku `mcvv_split_entry.source`. */
-export const CLEAR_SOURCES = ["web", "obd"] as const;
+export const CLEAR_SOURCES = ["web", "obd", "admin"] as const;
 export type ClearSourceKind = (typeof CLEAR_SOURCES)[number];
 
 export type ClearSource =

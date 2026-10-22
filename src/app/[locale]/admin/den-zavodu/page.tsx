@@ -25,11 +25,19 @@ const ACTION_KEYS: Record<
   | "action_import_presentation"
   | "action_import_results"
   | "action_splits_cleared"
+  | "action_split_set"
+  | "action_split_deleted"
+  | "action_split_conflict_resolved"
+  | "action_split_conflict_dismissed"
 > = {
   "raceday.obd_export": "action_obd_export",
   "raceday.import_presentation": "action_import_presentation",
   "raceday.import_results": "action_import_results",
   "raceday.splits_cleared": "action_splits_cleared",
+  "raceday.split_set": "action_split_set",
+  "raceday.split_deleted": "action_split_deleted",
+  "raceday.split_conflict_resolved": "action_split_conflict_resolved",
+  "raceday.split_conflict_dismissed": "action_split_conflict_dismissed",
 };
 
 /** Stahování z route handleru (ne stránka) – proto obyčejný odkaz, ne <Link>. */

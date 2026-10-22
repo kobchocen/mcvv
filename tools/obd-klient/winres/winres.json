@@ -1,0 +1,41 @@
+{
+  "RT_GROUP_ICON": {
+    "APP": {
+      "0000": "icon.png"
+    }
+  },
+  "RT_MANIFEST": {
+    "#1": {
+      "0409": {
+        "description": "MČVV – klient OBD (mezičasy do webu)",
+        "minimum-os": "win10",
+        "execution-level": "as invoker",
+        "dpi-awareness": "per monitor v2",
+        "long-path-aware": true,
+        "use-common-controls-v6": true
+      }
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": {
+          "file_version": "0.0.0.0",
+          "product_version": "0.0.0.0"
+        },
+        "info": {
+          "0405": {
+            "CompanyName": "KOB Choceň",
+            "FileDescription": "MČVV obd-klient – posílá časy z OBD na web",
+            "FileVersion": "0.0.0",
+            "InternalName": "obd-klient",
+            "LegalCopyright": "© KOB Choceň",
+            "OriginalFilename": "obd-klient.exe",
+            "ProductName": "MČVV obd-klient",
+            "ProductVersion": "0.0.0"
+          }
+        }
+      }
+    }
+  }
+}

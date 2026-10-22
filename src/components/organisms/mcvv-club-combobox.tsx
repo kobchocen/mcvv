@@ -2,11 +2,13 @@
 
 import { cn } from "@/lib/utils";
 
-export type ClubOption = { id: string; name: string };
-
+/**
+ * Pole klubu s našeptáváním z číselníku (Q35). Nabídku (`McvvClubDatalist`) vykresluje
+ * stránka jednou a pole na ni odkazuje přes `listId`. Server podle vybraného textu dohledá
+ * id klubu, nový název založí nový klub.
+ */
 export function McvvClubCombobox({
   name = "clubName",
-  clubs,
   defaultValue,
   value,
   onChange,
@@ -17,7 +19,6 @@ export function McvvClubCombobox({
   onBlurSubmit,
 }: {
   name?: string;
-  clubs: ClubOption[];
   defaultValue?: string;
   value?: string;
   onChange?: (value: string) => void;
@@ -29,39 +30,30 @@ export function McvvClubCombobox({
 }) {
   const controlled = value !== undefined;
   return (
-    <>
-      <input
-        id={id}
-        name={controlled ? undefined : name}
-        list={listId}
-        value={controlled ? value : undefined}
-        defaultValue={controlled ? undefined : defaultValue}
-        required={required}
-        autoComplete="off"
-        onChange={(event) => onChange?.(event.currentTarget.value)}
-        onBlur={(event) => {
-          if (!onBlurSubmit) {
-            return;
-          }
-          const next = event.currentTarget.value.trim();
-          const initial = (controlled ? value : defaultValue)?.trim() ?? "";
-          if (next === initial) {
-            return;
-          }
-          event.currentTarget.form?.requestSubmit();
-        }}
-        className={cn(
-          "h-9 w-full min-w-[10rem] border border-race-line bg-race-surface px-2 text-sm",
-          className,
-        )}
-      />
-      <datalist id={listId}>
-        {clubs
-          .filter((club) => club.id !== "000" && club.name.trim())
-          .map((club) => (
-            <option key={club.id} value={club.name} />
-          ))}
-      </datalist>
-    </>
+    <input
+      id={id}
+      name={controlled ? undefined : name}
+      list={listId}
+      value={controlled ? value : undefined}
+      defaultValue={controlled ? undefined : defaultValue}
+      required={required}
+      autoComplete="off"
+      onChange={(event) => onChange?.(event.currentTarget.value)}
+      onBlur={(event) => {
+        if (!onBlurSubmit) {
+          return;
+        }
+        const next = event.currentTarget.value.trim();
+        const initial = (controlled ? value : defaultValue)?.trim() ?? "";
+        if (next === initial) {
+          return;
+        }
+        event.currentTarget.form?.requestSubmit();
+      }}
+      className={cn(
+        "h-9 w-full min-w-[10rem] border border-race-line bg-race-surface px-2 text-sm",
+        className,
+      )}
+    />
   );
 }

@@ -21,11 +21,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 const ACTION_KEYS: Record<
   string,
-  "action_obd_export" | "action_import_presentation" | "action_import_results"
+  | "action_obd_export"
+  | "action_import_presentation"
+  | "action_import_results"
+  | "action_splits_cleared"
 > = {
   "raceday.obd_export": "action_obd_export",
   "raceday.import_presentation": "action_import_presentation",
   "raceday.import_results": "action_import_results",
+  "raceday.splits_cleared": "action_splits_cleared",
 };
 
 /** Stahování z route handleru (ne stránka) – proto obyčejný odkaz, ne <Link>. */

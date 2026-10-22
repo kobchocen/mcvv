@@ -88,6 +88,13 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             <Link href="/mezicasy" className="font-medium text-race-accent hover:underline">
               {t("openSplits")}
             </Link>
+            <Link
+              href="/admin/den-zavodu/zive/casy"
+              className="font-medium text-race-accent hover:underline"
+              data-testid="open-splits-admin"
+            >
+              {t("openSplitsAdmin")}
+            </Link>
             <a
               href={OFEED_BOARD_URL}
               target="_blank"

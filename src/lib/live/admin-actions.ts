@@ -10,18 +10,31 @@ import { runOfeedPublish } from "@/lib/ofeed/publisher";
 import { parseEventId, parsePassword, saveOfeedSettings } from "@/lib/ofeed/settings";
 
 import { parsePragueLocal } from "./admin-core";
+import { clearSplits } from "./clear";
+import {
+  clearableSplits,
+  clearBlocked,
+  confirmationMatches,
+  formatClearSource,
+  parseClearFilter,
+} from "./clear-core";
 import { dismissConflict, resolveConflict } from "./ingest";
-import { getRaceContext, LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
+import { getRaceContext, getStations, LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
 import { formatStations, LIVE_STATIONS_KEY, LIVE_STATIONS_MAX, parseStations } from "./stations";
 import { createDeviceToken, revokeDeviceToken } from "./tokens";
 import { normalizeAuthor, normalizeTokenSplits } from "./tokens-core";
 
-const PAGE = "/admin/den-zavodu/zive";
+const PAGE = "/admin/den-zavodu/zive" as const;
+const SPLITS_PAGE = "/admin/den-zavodu/zive/casy" as const;
 
-async function back(query: Record<string, string>): Promise<never> {
+async function back(
+  query: Record<string, string | string[]>,
+  pathname: typeof PAGE | typeof SPLITS_PAGE = PAGE,
+): Promise<never> {
   const locale = await getLocale();
   revalidatePath("/[locale]/admin/den-zavodu/zive", "page");
-  redirect({ href: { pathname: PAGE, query }, locale });
+  revalidatePath("/[locale]/admin/den-zavodu/zive/casy", "page");
+  redirect({ href: { pathname, query }, locale });
   throw new Error("unreachable");
 }
 
@@ -117,4 +130,46 @@ export async function resolveConflictAction(formData: FormData): Promise<void> {
     else if (decision === "dismiss") await dismissConflict(id, session.id);
   }
   await back({ saved: "conflict" });
+}
+
+/**
+ * Hromadné vyčištění mezičasů aktuálního ročníku (Q31: jen admin; Q32: zakázané od skutečné
+ * nuly ročníku). Potvrzení = opsaný ročník. Maže mcvv_split i deník včetně konfliktů.
+ */
+export async function clearSplitsAction(formData: FormData): Promise<void> {
+  const session = await requireAdmin();
+  const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
+  const filter = parseClearFilter(
+    {
+      splits: formData.getAll("splits").map(String),
+      source: String(formData.get("source") ?? "all"),
+    },
+    clearableSplits(stations),
+  );
+  if (!filter) await back({ error: "filter" }, SPLITS_PAGE);
+  if (clearBlocked(new Date(), ctx.officialZero)) await back({ error: "blocked" }, SPLITS_PAGE);
+  const query = { splits: filter!.splits, source: formatClearSource(filter!.source) };
+  if (String(formData.get("year") ?? "") !== String(ctx.year)) {
+    await back({ ...query, error: "year" }, SPLITS_PAGE);
+  }
+  if (!confirmationMatches(String(formData.get("confirmYear") ?? ""), ctx.year)) {
+    await back({ ...query, preview: "1", error: "confirm" }, SPLITS_PAGE);
+  }
+  const result = await clearSplits(
+    ctx.year,
+    filter!,
+    {
+      revokeTokens: formData.get("revokeTokens") === "on",
+      clearZeroOverride: formData.get("clearZeroOverride") === "on",
+    },
+    session,
+  );
+  await back(
+    {
+      cleared: String(result.splitsTotal),
+      entries: String(result.entries),
+      tokens: String(result.tokensRevoked),
+    },
+    SPLITS_PAGE,
+  );
 }

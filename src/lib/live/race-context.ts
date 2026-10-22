@@ -14,6 +14,8 @@ export type RaceContext = {
   intervalS: number;
   /** Nula je přepsaná pro zkoušku nanečisto. */
   zeroOverridden: boolean;
+  /** Skutečná nula ročníku (den závodu 10:15) bez ohledu na zkušební nulu. */
+  officialZero: Date;
   raceDate: Date | null;
 };
 
@@ -37,9 +39,11 @@ export async function getRaceContext(): Promise<RaceContext> {
     prisma.setting.findUnique({ where: { key: LIVE_ZERO_OVERRIDE_KEY }, select: { text: true } }),
   ]);
   const overrideZero = parseZeroOverride(override?.text);
+  const officialZero = raceStartFor(current.raceDate, current.year);
   return {
     year: current.year,
-    zero: overrideZero ?? raceStartFor(current.raceDate, current.year),
+    zero: overrideZero ?? officialZero,
+    officialZero,
     intervalS: edition?.startInterval || DEFAULT_START_INTERVAL_S,
     zeroOverridden: overrideZero !== null,
     raceDate: current.raceDate,

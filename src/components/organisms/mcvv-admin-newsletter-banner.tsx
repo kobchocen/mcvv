@@ -29,6 +29,9 @@ type DraftState = {
   saved: BannerDraft;
   setDraft: React.Dispatch<React.SetStateAction<BannerDraft>>;
   text?: TextDraft;
+  /** Neuložené změny celého formuláře (hlásí formulář; null = formulář nehlásí). */
+  changes?: string[] | null;
+  setChanges?: (changes: string[]) => void;
 };
 
 /** Prodleva, než se psaní v textu promítne do náhledu (iframe se při změně načítá znovu). */
@@ -46,9 +49,13 @@ export function McvvNewsletterBannerDraftProvider({
 }) {
   const [draft, setDraft] = useState<BannerDraft>(initial);
   const [text, setText] = useState<TextDraft>(null);
+  const [changes, setChanges] = useState<string[] | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => clearTimeout(timer.current ?? undefined), []);
-  const value = useMemo(() => ({ draft, saved: initial, setDraft, text }), [draft, initial, text]);
+  const value = useMemo(
+    () => ({ draft, saved: initial, setDraft, text, changes, setChanges }),
+    [draft, initial, text, changes],
+  );
 
   // Předmět a text čteme z formuláře při psaní (pole zůstávají neřízená, odesílají se jako dřív).
   const onInput = (event: React.FormEvent<HTMLDivElement>) => {
@@ -75,6 +82,36 @@ export function McvvNewsletterBannerDraftProvider({
         {children}
       </div>
     </BannerDraftContext.Provider>
+  );
+}
+
+/** Hook pro formulář kampaně: sdílený stav náhledu (null mimo detail kampaně). */
+export function useNewsletterDraft(): DraftState | null {
+  return useContext(BannerDraftContext);
+}
+
+/** Žlutá výzva „Neuložené změny“ – stejná nad náhledem i u tlačítka Uložit koncept. */
+export function McvvUnsavedNotice({
+  changes,
+  className = "",
+  children,
+}: {
+  changes: string[];
+  className?: string;
+  children?: React.ReactNode;
+}) {
+  if (changes.length === 0 && !children) return null;
+  return (
+    <p
+      data-slot="unsaved-notice"
+      role="status"
+      className={`border border-amber-500/60 bg-amber-500/10 p-3 text-sm ${className}`}
+    >
+      {children}
+      {changes.length > 0
+        ? `Neuložené změny (${changes.join(", ")}) – náhled je ukazuje hned, do e-mailu se dostanou až po „Uložit koncept“.`
+        : null}
+    </p>
   );
 }
 
@@ -320,21 +357,17 @@ export function McvvNewsletterEmailPreview(props: NewsletterPreviewProps) {
     origin: props.origin,
     banner,
   }).html;
-  const changed = [dirty ? "banner" : null, textDirty ? "text" : null].filter(Boolean).join(" a ");
+  const changes =
+    shared?.changes ??
+    [textDirty ? "text" : null, dirty ? "banner" : null].filter((c): c is string => Boolean(c));
 
   return (
     <>
-      {dirty || textDirty ? (
-        <p
-          data-slot="banner-draft-hint"
-          className="mb-3 border border-amber-500/60 bg-amber-500/10 p-3 text-sm"
-        >
-          {preview && !preview.ok
-            ? `Banner z formuláře nejde uložit: ${BANNER_ERROR_MESSAGES[preview.error]} Náhled ukazuje uložený banner. `
-            : ""}
-          {`Náhled ukazuje neuložené změny (${changed}) – do e-mailu se dostanou až po „Uložit koncept“.`}
-        </p>
-      ) : null}
+      <McvvUnsavedNotice changes={changes} className="mb-3">
+        {preview && !preview.ok
+          ? `Banner z formuláře nejde uložit: ${BANNER_ERROR_MESSAGES[preview.error]} Náhled ukazuje uložený banner. `
+          : null}
+      </McvvUnsavedNotice>
       {emailBanner ? (
         <p className="mb-3 text-sm text-race-muted">
           Banner v e-mailu:{" "}

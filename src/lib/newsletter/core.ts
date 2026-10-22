@@ -234,6 +234,39 @@ export function legacyFromYear(years: number, now = new Date()): number {
   return now.getFullYear() - Math.max(1, years) + 1;
 }
 
+/**
+ * Data pro výpočet publika načtená z DB jednou (viz `loadAudienceData`): z nich se spočítá
+ * publikum kampaně i nápovědy ve formuláři pro všechny volby let bez dalších dotazů.
+ */
+export type AudienceData = {
+  userEmails: (string | null)[];
+  /** Přihlášky s běžci a e-mailem od roku `legacyFromYear(maxYears)` (email + ročník). */
+  legacy: { email: string | null; year: number }[];
+  unsubscribed: string[];
+  noPromotion: Iterable<string>;
+  currentEntrants: { year: number; emails: Iterable<string> };
+};
+
+/** Publikum z předem načtených dat – stejný výsledek jako dřívější dotaz pro dané volby. */
+export function audienceFromData(
+  data: AudienceData,
+  options: AudienceOptions,
+  now = new Date(),
+): Audience {
+  const from = legacyFromYear(options.years, now);
+  return buildAudience(
+    {
+      userEmails: data.userEmails,
+      legacyEmails:
+        options.years > 0 ? data.legacy.filter((r) => r.year >= from).map((r) => r.email) : [],
+      unsubscribed: data.unsubscribed,
+      noPromotion: data.noPromotion,
+      currentEntrants: data.currentEntrants.emails,
+    },
+    options,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Rendering
 // ---------------------------------------------------------------------------

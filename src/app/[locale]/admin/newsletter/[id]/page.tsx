@@ -7,9 +7,10 @@ import { prisma } from "@/lib/db/client";
 import { BANNER_ERROR_MESSAGES, bannerChoiceValue, campaignBanner } from "@/lib/newsletter/banner";
 import { loadBannerOptions } from "@/lib/newsletter/banner-store";
 import { deleteNewsletterDraft, retryFailedNewsletter } from "@/lib/newsletter/actions";
-import { audienceHints } from "@/lib/newsletter/hints";
+import { audienceFromData } from "@/lib/newsletter/core";
+import { HINT_MAX_YEARS, audienceHintsFromData } from "@/lib/newsletter/hints";
 import { newsletterOrigin } from "@/lib/newsletter/origin";
-import { loadAudience, recipientCounts } from "@/lib/newsletter/store";
+import { loadAudienceData, recipientCounts } from "@/lib/newsletter/store";
 import { NEWSLETTER_BATCH_PAUSE_MS, newsletterDryRun } from "@/lib/newsletter/transport";
 import {
   McvvNewsletterProgress,
@@ -75,8 +76,13 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
     link: campaign.bannerLink ?? "",
   };
   const counts = await recipientCounts(campaign.id);
-  const audience = editable
-    ? await loadAudience({
+  // Publikum i nápovědy formuláře z jednoho načtení (dřív 8 průchodů všemi přihláškami).
+  const audienceData = editable
+    ? await loadAudienceData(Math.max(HINT_MAX_YEARS, campaign.audienceYears))
+    : null;
+  const hints = audienceData ? audienceHintsFromData(audienceData) : null;
+  const audience = audienceData
+    ? audienceFromData(audienceData, {
         users: campaign.audienceUsers,
         years: campaign.audienceYears,
         excludeCurrentEntrants: campaign.excludeCurrentEntrants,
@@ -116,12 +122,7 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
             Banner se neuložil: {bannerError} Ostatní úpravy jsou uložené.
           </p>
         ) : null}
-
-        {/* Klíč = poslední uložení: po „Uložit koncept“ začne náhled znovu z uloženého stavu. */}
-        <McvvNewsletterBannerDraftProvider
-          key={campaign.updatedAt.toISOString()}
-          initial={bannerDraft}
-        >
+        <McvvNewsletterBannerDraftProvider initial={bannerDraft}>
           <Section title="Náhled">
             <McvvNewsletterEmailPreview
               subject={campaign.subject}
@@ -132,7 +133,7 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
             />
           </Section>
 
-          {editable ? (
+          {editable && hints ? (
             <>
               <Section title="1. Úpravy">
                 <McvvAdminNewsletterForm
@@ -147,7 +148,7 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
                     bannerAlt: bannerDraft.alt,
                     bannerLink: bannerDraft.link,
                   }}
-                  audienceHints={await audienceHints()}
+                  audienceHints={hints}
                   bannerOptions={await loadBannerOptions()}
                 />
                 <form action={deleteNewsletterDraft} className="mt-4">

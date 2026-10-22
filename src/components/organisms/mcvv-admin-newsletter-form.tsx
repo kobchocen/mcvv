@@ -1,7 +1,27 @@
-import { saveNewsletter } from "@/lib/newsletter/actions";
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+
+import { saveNewsletterDraft, type SaveNewsletterResult } from "@/lib/newsletter/actions";
+import {
+  NEWSLETTER_YEAR_OPTIONS,
+  changedNewsletterFields,
+  snapshotFromForm,
+  snapshotFromValues,
+} from "@/lib/newsletter/form-state";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
-import { McvvNewsletterBannerFields } from "@/components/organisms/mcvv-admin-newsletter-banner";
+import {
+  McvvNewsletterBannerFields,
+  McvvUnsavedNotice,
+  useNewsletterDraft,
+} from "@/components/organisms/mcvv-admin-newsletter-banner";
 import { Button } from "@/components/ui/button";
+import {
+  McvvSaveStatus,
+  saveButtonState,
+  type SaveFeedback,
+} from "@/components/organisms/mcvv-admin-newsletter-save";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 export type NewsletterFormValues = {
@@ -17,8 +37,6 @@ export type NewsletterFormValues = {
   bannerLink: string;
 };
 
-export const NEWSLETTER_YEAR_OPTIONS = [0, 1, 2, 3, 5, 10, 20];
-
 export function McvvAdminNewsletterForm({
   values,
   audienceHints,
@@ -32,8 +50,83 @@ export function McvvAdminNewsletterForm({
     currentEntrants: { year: number; count: number };
   };
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const shared = useNewsletterDraft();
+  const isNew = !values.id;
+  const saved = useMemo(() => snapshotFromValues(values), [values]);
+  const [changes, setChanges] = useState<string[]>([]);
+  const [pending, startTransition] = useTransition();
+  const [feedback, setFeedback] = useState<SaveFeedback>(null);
+  const dirty = changes.length > 0;
+  const publish = shared?.setChanges;
+
+  // Neuložené změny = aktuální pole formuláře proti uložené verzi (props po uložení).
+  const recheck = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const next = changedNewsletterFields(snapshotFromForm(new FormData(form)), saved);
+    setChanges((prev) => (prev.join() === next.join() ? prev : next));
+  }, [saved]);
+
+  useEffect(() => {
+    recheck();
+  }, [recheck, shared?.draft]);
+
+  useEffect(() => {
+    publish?.(changes);
+  }, [publish, changes]);
+
+  // Varování při odchodu ze stránky s neuloženými změnami.
+  useEffect(() => {
+    if (!dirty || pending) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty, pending]);
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    setFeedback(null);
+    startTransition(async () => {
+      let result: SaveNewsletterResult;
+      try {
+        result = await saveNewsletterDraft(data);
+      } catch (error) {
+        // Přesměrování nové kampaně do detailu řeší Next.js (není to chyba).
+        if (isNew) throw error;
+        setFeedback({ kind: "error", message: "server neodpověděl, zkuste to znovu." });
+        return;
+      }
+      if (!result.ok) {
+        setFeedback({ kind: "error", message: result.message });
+        return;
+      }
+      if (!result.bannerError) {
+        // Uložený banner (např. nově nahraný → „image:<id>“) se propíše do polí; soubor se vyprázdní.
+        const file = form.elements.namedItem("bannerFile");
+        if (file instanceof HTMLInputElement) file.value = "";
+        shared?.setDraft({ ...result.banner, uploadSrc: null, uploadDataUrl: null });
+      }
+      setFeedback({ kind: "saved", at: result.savedAt, bannerError: result.bannerError });
+    });
+  };
+
+  const button = saveButtonState({ isNew, dirty, pending });
+
   return (
-    <form action={saveNewsletter} className="grid max-w-3xl gap-4">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      onInput={recheck}
+      onChange={recheck}
+      className="grid max-w-3xl gap-4"
+    >
       {values.id ? <input type="hidden" name="id" value={values.id} /> : null}
       <AdminField name="subject" label="Předmět" defaultValue={values.subject} required />
       <AdminField
@@ -95,12 +188,19 @@ export function McvvAdminNewsletterForm({
           v detailu kampaně.
         </p>
       </fieldset>
-      <Button
-        type="submit"
-        className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
-      >
-        Uložit koncept
-      </Button>
+      {isNew ? null : <McvvUnsavedNotice changes={changes} />}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={button.disabled}
+          aria-busy={pending}
+          className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
+        >
+          {pending ? <Spinner aria-hidden /> : null}
+          {button.label}
+        </Button>
+        <McvvSaveStatus pending={pending} feedback={feedback} dirty={dirty} />
+      </div>
     </form>
   );
 }

@@ -11,6 +11,7 @@ import {
   McvvNewsletterBannerFields,
   McvvNewsletterBannerThumbnail,
   McvvNewsletterEmailPreview,
+  McvvUnsavedNotice,
   bannerDraftDirty,
   type TextDraft,
 } from "./mcvv-admin-newsletter-banner";
@@ -74,7 +75,7 @@ test("selected preset: thumbnail under the select and banner in the e-mail previ
   assert.equal(doc, expected, "preview iframe = e-mail template");
   assert.match(doc, /<img src="\/images\/newsletter\/banner-2026\.png"/);
   assert.match(html, /Banner v e-mailu: <code[^>]*>https:\/\/mcvv\.org\/images\/newsletter/);
-  assert.doesNotMatch(html, /banner-draft-hint/, "saved state needs no hint");
+  assert.doesNotMatch(html, /unsaved-notice/, "saved state needs no hint");
 });
 
 test("no banner: no image in the preview and a clear note under the select", () => {
@@ -108,8 +109,8 @@ test("an unsaved selection is rendered live into the e-mail preview with a hint"
   const empty = { choice: "", alt: "", link: "" };
   const html = unsaved(empty, { ...empty, choice: "preset:mcvv-2026" });
   assert.match(srcdoc(html), /<img src="\/images\/newsletter\/banner-2026\.png"/);
-  assert.match(html, /data-slot="banner-draft-hint"/);
-  assert.match(html, /Náhled ukazuje neuložené změny \(banner\)/);
+  assert.match(html, /data-slot="unsaved-notice"/);
+  assert.match(html, /Neuložené změny \(banner\) – náhled je ukazuje hned/);
 });
 
 test("a new local file is previewed before upload (data: URL in the sandboxed iframe)", () => {
@@ -143,9 +144,12 @@ test("unsaved subject and text are rendered live with the same template", () => 
     }).html,
   );
   assert.match(doc, /<strong>tučně<\/strong>/);
-  assert.match(html, /Náhled ukazuje neuložené změny \(text\)/);
+  assert.match(html, /Neuložené změny \(text\)/);
   // Stejný text jako uložený = žádná výzva k uložení.
-  assert.doesNotMatch(unsaved(empty, empty, { subject: "Předmět", body: "Ahoj" }), /draft-hint/);
+  assert.doesNotMatch(
+    unsaved(empty, empty, { subject: "Předmět", body: "Ahoj" }),
+    /unsaved-notice/,
+  );
 });
 
 test("dirty detection ignores whitespace-only changes", () => {
@@ -165,4 +169,34 @@ test("thumbnail of a new local file uses its object URL", () => {
   );
   assert.match(html, /<img src="blob:http:\/\/localhost:3000\/abc"/);
   assert.match(html, /Nový soubor banner\.png/);
+});
+
+test("the form's list of unsaved changes drives the same notice above the preview", () => {
+  const empty = { choice: "", alt: "", link: "" };
+  const html = renderToStaticMarkup(
+    createElement(
+      BannerDraftContext.Provider,
+      {
+        value: {
+          draft: empty,
+          saved: empty,
+          setDraft: () => {},
+          changes: ["předmět", "publikum"],
+        },
+      },
+      createElement(McvvNewsletterEmailPreview, {
+        subject: "Předmět",
+        body: "Ahoj",
+        origin: ORIGIN,
+        savedPreview: null,
+        savedEmail: null,
+      }),
+    ),
+  );
+  assert.match(html, /data-slot="unsaved-notice"[^>]*>Neuložené změny \(předmět, publikum\)/);
+  assert.equal(
+    renderToStaticMarkup(createElement(McvvUnsavedNotice, { changes: [] })),
+    "",
+    "nothing unsaved → no notice",
+  );
 });

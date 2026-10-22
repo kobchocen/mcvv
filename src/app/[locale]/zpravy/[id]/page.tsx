@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
+import { recordUserView } from "@/lib/messages/service";
 import { loadThread, userCanAccessThread } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 
@@ -35,6 +36,8 @@ export default async function MessageThreadPage({ params }: PageProps) {
   if (session && settings?.enabled && (!thread || !(await userCanAccessThread(thread, session)))) {
     notFound();
   }
+  // Potvrzení o přečtení pro pořadatele: zobrazené zprávy pořadatele = přečtené (ne pro staff).
+  if (session && thread) await recordUserView(thread, session);
   const title = thread
     ? thread.year !== null && thread.registrationId !== null
       ? t("threadRegistration", { year: thread.year, id: thread.registrationId })

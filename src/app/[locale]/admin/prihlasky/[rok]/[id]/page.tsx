@@ -289,6 +289,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                 body: message.body,
                 createdAt: message.createdAt,
                 authorName: message.author?.name ?? "",
+                readAt: message.readAt,
               }))}
               lastRead={thread?.lastReadByStaff ?? null}
               status={thread?.status ?? null}
@@ -300,6 +301,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               markReadAction={markReadByStaff}
               statusAction={setThreadStatus}
               showAuthorNames
+              showReadReceipts
             />
           </div>
           {internalNote ? (

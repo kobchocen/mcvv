@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { buildQuickList } from "./quick";
+import { buildQuickList, withLastClub } from "./quick";
 
 test("quick list is sorted by surname, then first name, Czech collation", () => {
   const list = buildQuickList([
@@ -39,5 +39,24 @@ test("same runner id is listed once; namesakes stay separate, ordered by birth y
     { id: "19700001", name: "Adámek Karel" },
     { id: "19800025", name: "Komárek Josef" },
     { id: "20150002", name: "Komárek Josef" },
+  ]);
+});
+
+test("quick add prefills the club id from the runner's latest registration", () => {
+  const runners = [
+    { id: "19900001", name: "Čermák Petr" },
+    { id: "19900002", name: "Chalupa Adam" },
+    { id: "19900003", name: "Hruška Jan" },
+  ];
+  const list = withLastClub(runners, [
+    { runnerId: "19900001", year: 2023, clubId: "CHC", clubName: "K.O.B. Choceň" },
+    { runnerId: "19900001", year: 2025, clubId: "412", clubName: "Běžci Vysoké Mýto" },
+    { runnerId: "19900002", year: 2025, clubId: "000", clubName: "" },
+    { runnerId: "19900002", year: 2024, clubId: "CHC", clubName: "K.O.B. Choceň" },
+  ]);
+  assert.deepEqual(list, [
+    { id: "19900001", name: "Čermák Petr", clubId: "412", clubName: "Běžci Vysoké Mýto" },
+    { id: "19900002", name: "Chalupa Adam", clubId: "CHC", clubName: "K.O.B. Choceň" },
+    { id: "19900003", name: "Hruška Jan" },
   ]);
 });

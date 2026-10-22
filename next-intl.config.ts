@@ -20,6 +20,8 @@ export default defineRouting({
     "/statistiky": "/statistiky",
     "/statistiky/[slug]": "/statistiky/[slug]",
     "/bezec/[id]": "/bezec/[id]",
+    // profily klubů (#105) a jejich sloučení v adminu (#104)
+    "/kluby/[slug]": "/kluby/[slug]",
     "/fotogalerie": "/fotogalerie",
     "/prihlaseni": "/prihlaseni",
     "/registrace": "/registrace",
@@ -38,6 +40,7 @@ export default defineRouting({
     "/admin/ciselniky": "/admin/ciselniky",
     "/admin/ciselniky/kategorie": "/admin/ciselniky/kategorie",
     "/admin/ciselniky/kluby": "/admin/ciselniky/kluby",
+    "/admin/ciselniky/kluby/slouceni": "/admin/ciselniky/kluby/slouceni",
     "/admin/prihlasky": "/admin/prihlasky",
     "/admin/startovka": "/admin/startovka",
     "/admin/newsletter": "/admin/newsletter",
@@ -57,6 +60,7 @@ export default defineRouting({
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
     // den závodu: živé mezičasy a OFeed (#120–#122)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
+    "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
     "/mezicasy": "/mezicasy",
   },
 });

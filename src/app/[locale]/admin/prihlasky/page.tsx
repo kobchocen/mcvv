@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { registrationThreadSummaries, summaryKey } from "@/lib/messages/store";
 import { requireStaff } from "@/lib/admin/staff";
+import { loadRegistrationTimeline } from "@/lib/admin/registration-timeline-data";
+import { McvvAdminRegistrationTimeline } from "@/components/organisms/mcvv-admin-registration-timeline";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -92,7 +94,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         where: { year: selectedYear, ...statusWhere, lines: { none: {} }, id: { not: 1 } },
       });
 
-  const [registrations, payments, autoConfirmed] = await Promise.all([
+  const [registrations, payments, autoConfirmed, timeline] = await Promise.all([
     prisma.registration.findMany({
       where: { year: selectedYear, AND: [statusWhere, emptyWhere] },
       include: { lines: { select: { entryFee: true } } },
@@ -103,6 +105,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       select: { registrationId: true, amount: true },
     }),
     freeAutoConfirmedIds(selectedYear),
+    loadRegistrationTimeline(selectedYear),
   ]);
 
   const threadSummaries = await registrationThreadSummaries(
@@ -173,6 +176,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ))}
           </p>
         ) : null}
+        <McvvAdminRegistrationTimeline data={timeline} />
         {hiddenEmpty > 0 ? (
           <p className="mt-3 text-sm text-race-muted">
             {copy("hiddenEmpty", { count: hiddenEmpty })}{" "}

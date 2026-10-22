@@ -6,7 +6,7 @@ import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
-import { formatDateTime } from "@/lib/format/date";
+import { formatDateTime, formatShortDateTime } from "@/lib/format/date";
 import { parseAdminThreadFilters, sortAdminThreads } from "@/lib/messages/core";
 import { listAdminThreads } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
@@ -143,6 +143,26 @@ export default async function AdminMessagesPage({ params, searchParams }: PagePr
                       {formatDateTime(thread.lastMessageAt, locale)} ·{" "}
                       {thread.status === "open" ? copy("msgStatusOpen") : copy("msgStatusResolved")}
                       {thread.unread ? ` · ${copy("msgUnread")}` : ""}
+                      {thread.replyReceipt ? (
+                        <>
+                          {" · "}
+                          <span
+                            className={cn(
+                              thread.replyReceipt.read
+                                ? "text-race-accent"
+                                : "font-medium text-race-muted",
+                            )}
+                            title={copy("msgReceiptHint")}
+                            data-read-receipt={thread.replyReceipt.read ? "read" : "unread"}
+                          >
+                            {thread.replyReceipt.read
+                              ? copy("msgReplyRead", {
+                                  time: formatShortDateTime(thread.replyReceipt.at, locale),
+                                })
+                              : copy("msgReplyUnread", { count: thread.replyReceipt.unreadCount })}
+                          </span>
+                        </>
+                      ) : null}
                     </p>
                   </Link>
                 </li>

@@ -172,7 +172,11 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   if (!registration) {
     return;
   }
-  const club = await resolveClub(formString(formData, "clubName"), year);
+  const club = await resolveClub(
+    formString(formData, "clubName"),
+    year,
+    formString(formData, "clubId"),
+  );
   const { fee } = await computeLineFee(session.email, runnerId, category.entryFee);
   await prisma.registrationLine.create({
     data: {
@@ -244,7 +248,11 @@ export async function addNewRunner(
   if (!registration) {
     return { error: "invalid" };
   }
-  const club = await resolveClub(formString(formData, "clubName"), year);
+  const club = await resolveClub(
+    formString(formData, "clubName"),
+    year,
+    formString(formData, "clubId"),
+  );
   const { fee } = await computeLineFee(session.email, resolved.id, category.entryFee);
   await prisma.registrationLine.create({
     data: {
@@ -299,7 +307,11 @@ export async function updateLineClub(formData: FormData): Promise<void> {
     where: { year, runnerId, registrationId },
     select: { clubId: true, club: { select: { name: true } }, runner: { select: { name: true } } },
   });
-  const club = await resolveClub(formString(formData, "clubName"), year);
+  const club = await resolveClub(
+    formString(formData, "clubName"),
+    year,
+    formString(formData, "clubId"),
+  );
   // Jen řádek vlastní přihlášky (dřív šlo přímým POSTem změnit klub běžce v cizí přihlášce).
   const updated = await prisma.registrationLine.updateMany({
     where: { year, runnerId, registrationId },

@@ -15,14 +15,10 @@ import {
   sanitizeError,
   shouldUpload,
 } from "./publisher-core";
-import { getOfeedSettings, readOfeedCredentials } from "./settings";
+import { getOfeedSettings, OFEED_STATE, readOfeedCredentials } from "./settings";
 
+export { OFEED_STATE };
 export const OFEED_JOB = "ofeed";
-const STATE = {
-  lease: "ofeed_lease",
-  lastHash: "ofeed_last_hash",
-  lastOkAt: "ofeed_last_ok_at",
-} as const;
 
 const INSTANCE_ID = `${hostname().slice(0, 40)}:${randomUUID().slice(0, 8)}`;
 
@@ -44,12 +40,12 @@ export function ofeedApiUrl(): string {
  */
 async function acquireLease(now: Date): Promise<boolean> {
   await prisma.jobState.createMany({
-    data: [{ name: STATE.lease, value: INSTANCE_ID }],
+    data: [{ name: OFEED_STATE.lease, value: INSTANCE_ID }],
     skipDuplicates: true,
   });
   const taken = await prisma.jobState.updateMany({
     where: {
-      name: STATE.lease,
+      name: OFEED_STATE.lease,
       OR: [{ value: INSTANCE_ID }, { updatedAt: { lt: new Date(now.getTime() - LEASE_TTL_MS) } }],
     },
     data: { value: INSTANCE_ID },
@@ -59,7 +55,7 @@ async function acquireLease(now: Date): Promise<boolean> {
 
 async function releaseLease(): Promise<void> {
   await prisma.jobState.updateMany({
-    where: { name: STATE.lease, value: INSTANCE_ID },
+    where: { name: OFEED_STATE.lease, value: INSTANCE_ID },
     data: { value: "", updatedAt: new Date(0) },
   });
 }
@@ -138,16 +134,23 @@ async function publishLocked(
 
   const hash = fingerprint(xml);
   const [lastHash, lastOkRaw] = await Promise.all([
-    readState(STATE.lastHash),
-    readState(STATE.lastOkAt),
+    readState(OFEED_STATE.lastHash),
+    readState(OFEED_STATE.lastOkAt),
   ]);
   const lastOkAt = lastOkRaw ? new Date(lastOkRaw) : null;
   if (!shouldUpload({ hash, lastHash, lastOkAt, now, force: trigger !== "scheduler" })) {
     return { status: "unchanged", competitors };
   }
 
+  // Běhy do testovací akce jsou v historii označené `test:` (Q33).
+  const profile = credentials?.profile ?? (await getOfeedSettings()).profile;
+  const baseMode = dryRun ? "dry-run" : trigger;
   const run = await prisma.jobRun.create({
-    data: { job: OFEED_JOB, mode: dryRun ? "dry-run" : trigger, fetched: competitors },
+    data: {
+      job: OFEED_JOB,
+      mode: profile === "test" ? `test:${baseMode}` : baseMode,
+      fetched: competitors,
+    },
     select: { id: true },
   });
   let ok: boolean;
@@ -172,8 +175,8 @@ async function publishLocked(
   });
   if (ok) {
     await Promise.all([
-      writeState(STATE.lastHash, hash),
-      writeState(STATE.lastOkAt, now.toISOString()),
+      writeState(OFEED_STATE.lastHash, hash),
+      writeState(OFEED_STATE.lastOkAt, now.toISOString()),
     ]);
   } else {
     console.warn(`[ofeed] upload failed: ${safe}`);
@@ -196,7 +199,7 @@ export async function ofeedStatus() {
         fetched: true,
       },
     }),
-    readState(STATE.lastOkAt),
+    readState(OFEED_STATE.lastOkAt),
   ]);
   return {
     runs,

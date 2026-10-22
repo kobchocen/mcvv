@@ -1,7 +1,7 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
-import { buildQuickList } from "@/lib/entries/quick";
+import { buildQuickList, withLastClub } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
 import { pickActiveRegistration, pickCancelledRegistrations } from "@/lib/entries/ensure-core";
 
@@ -45,12 +45,29 @@ export async function loadMyEntry(email: string) {
       (row) => row.runnerId,
     ),
   );
-  const quick = buildQuickList(
+  const quickRunners = buildQuickList(
     minePast.flatMap((row) =>
       row.lines
         .filter((line) => !thisYearTaken.has(line.runnerId))
         .map((line) => ({ id: line.runnerId, name: line.runner.name })),
     ),
+  );
+  // Klub z poslední přihlášky běžce (kterékoli, ne jen vlastní) – id rozhoduje (Q35).
+  const pastLines =
+    quickRunners.length > 0
+      ? await prisma.registrationLine.findMany({
+          where: { year: { lt: year }, runnerId: { in: quickRunners.map((runner) => runner.id) } },
+          select: { runnerId: true, year: true, clubId: true, club: { select: { name: true } } },
+        })
+      : [];
+  const quick = withLastClub(
+    quickRunners,
+    pastLines.map((line) => ({
+      runnerId: line.runnerId,
+      year: line.year,
+      clubId: line.clubId,
+      clubName: line.club.name,
+    })),
   );
 
   if (registration) {

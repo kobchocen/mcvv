@@ -1,7 +1,8 @@
-import { MessageSquare } from "lucide-react";
+import { Check, CheckCheck, MessageSquare } from "lucide-react";
 
 import type { MessageFormState } from "@/lib/messages/actions";
-import { formatDateTime } from "@/lib/format/date";
+import { readReceipt } from "@/lib/messages/core";
+import { formatDateTime, formatShortDateTime } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +14,8 @@ export type McvvThreadMessage = {
   body: string;
   createdAt: Date;
   authorName: string;
+  /** Kdy zprávu pořadatele viděl přihlašující (potvrzení o přečtení). */
+  readAt?: Date | null;
 };
 
 export type McvvMessageThreadCopy = {
@@ -25,12 +28,17 @@ export type McvvMessageThreadCopy = {
   resolvedNote?: string;
   resolve?: string;
   reopen?: string;
+  /** Potvrzení o přečtení u zpráv pořadatele (jen administrace); `{time}` = čas přečtení. */
+  receiptRead?: string;
+  receiptUnread?: string;
+  receiptHint?: string;
   reply: McvvMessageReplyCopy;
 };
 
 /**
  * Vlákno zpráv (sdílené webem i administrací). Otevření vlákna nic neoznačuje –
- * přečtení jen tlačítkem „Potvrdit přečtení“ nebo odpovědí.
+ * přečtení jen tlačítkem „Potvrdit přečtení“ nebo odpovědí. (Potvrzení o přečtení zpráv
+ * pořadatele – `readAt` – zapisuje stránka přihlašujícího, ne tato komponenta.)
  */
 export function McvvMessageThread({
   viewer,
@@ -46,6 +54,7 @@ export function McvvMessageThread({
   statusAction,
   canReply = true,
   showAuthorNames = false,
+  showReadReceipts = false,
 }: {
   viewer: "user" | "staff";
   messages: McvvThreadMessage[];
@@ -61,6 +70,8 @@ export function McvvMessageThread({
   statusAction?: (formData: FormData) => Promise<void>;
   canReply?: boolean;
   showAuthorNames?: boolean;
+  /** U zpráv pořadatele ukázat „Přečteno …“ / „Nepřečteno“ (přečtení přihlašujícím). */
+  showReadReceipts?: boolean;
 }) {
   const isUnread = (message: McvvThreadMessage) =>
     message.side !== viewer && (!lastRead || message.createdAt.getTime() > lastRead.getTime());
@@ -101,6 +112,9 @@ export function McvvMessageThread({
                   ) : null}
                 </p>
                 <p className="mt-1.5 whitespace-pre-wrap break-words">{message.body}</p>
+                {showReadReceipts ? (
+                  <McvvReadReceipt message={message} locale={locale} copy={copy} />
+                ) : null}
               </li>
             );
           })}
@@ -147,6 +161,43 @@ export function McvvMessageThread({
         </form>
       ) : null}
     </div>
+  );
+}
+
+/** „Přečteno 22. 10. 14:05“ / „Nepřečteno“ pod zprávou pořadatele. */
+function McvvReadReceipt({
+  message,
+  locale,
+  copy,
+}: {
+  message: McvvThreadMessage;
+  locale: string;
+  copy: McvvMessageThreadCopy;
+}) {
+  const receipt = readReceipt({ side: message.side, readAt: message.readAt ?? null });
+  if (!receipt || !copy.receiptRead || !copy.receiptUnread) return null;
+  return (
+    <p
+      className={cn(
+        "mt-2 flex items-center justify-end gap-1 text-xs",
+        receipt.read ? "text-race-accent" : "text-race-muted",
+      )}
+      title={copy.receiptHint}
+      data-read-receipt={receipt.read ? "read" : "unread"}
+    >
+      {receipt.read ? (
+        <CheckCheck className="size-3.5" aria-hidden="true" />
+      ) : (
+        <Check className="size-3.5" aria-hidden="true" />
+      )}
+      {receipt.read ? (
+        <time dateTime={receipt.at.toISOString()}>
+          {copy.receiptRead.replace("{time}", formatShortDateTime(receipt.at, locale))}
+        </time>
+      ) : (
+        copy.receiptUnread
+      )}
+    </p>
   );
 }
 

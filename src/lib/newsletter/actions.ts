@@ -17,6 +17,16 @@ import {
   unsubscribeUrl,
   type BatchOutcome,
 } from "./core";
+import {
+  BANNER_ERROR_MESSAGES,
+  bannerPreset,
+  campaignBanner,
+  normalizeBannerAlt,
+  normalizeBannerLink,
+  parseBannerChoice,
+} from "./banner";
+import { processBannerImage } from "./banner-image";
+import { bannerImageExists, storeBannerImage } from "./banner-store";
 import { newsletterOrigin } from "./origin";
 import { runNewsletterBatch } from "./runner";
 import { ensureOptOutTokens, loadAudience, tokenFor } from "./store";
@@ -33,6 +43,58 @@ function revalidateNewsletter(id?: number) {
 
 function clampYears(value: number | null): number {
   return Math.min(30, Math.max(0, value ?? 0));
+}
+
+type BannerFields = {
+  bannerImageId: number | null;
+  bannerPreset: string | null;
+  bannerAlt: string | null;
+  bannerLink: string | null;
+};
+
+type BannerError = keyof typeof BANNER_ERROR_MESSAGES;
+
+/**
+ * Banner z formuláře: nahraný soubor má přednost před výběrem. Při chybě se banner nemění
+ * (ostatní úpravy kampaně se uloží) a stránka ukáže hlášku.
+ */
+async function bannerFromForm(
+  formData: FormData,
+): Promise<{ fields: BannerFields } | { error: BannerError }> {
+  const alt = normalizeBannerAlt(formString(formData, "bannerAlt"));
+  const link = normalizeBannerLink(formString(formData, "bannerLink"));
+  if (!link) return { error: "link" };
+  const file = formData.get("bannerFile");
+  if (file instanceof File && file.size > 0) {
+    if (!alt) return { error: "alt" };
+    const processed = await processBannerImage(new Uint8Array(await file.arrayBuffer()));
+    if (!processed.ok) return { error: processed.error };
+    const id = await storeBannerImage(processed.data, alt);
+    return { fields: { bannerImageId: id, bannerPreset: null, bannerAlt: alt, bannerLink: link } };
+  }
+  const choice = parseBannerChoice(formString(formData, "banner"));
+  if (!choice) return { error: "choice" };
+  if (choice.kind === "none") {
+    return {
+      fields: { bannerImageId: null, bannerPreset: null, bannerAlt: null, bannerLink: null },
+    };
+  }
+  if (choice.kind === "preset") {
+    const presetAlt = normalizeBannerAlt(bannerPreset(choice.key)?.alt);
+    return {
+      fields: {
+        bannerImageId: null,
+        bannerPreset: choice.key,
+        bannerAlt: alt || presetAlt,
+        bannerLink: link,
+      },
+    };
+  }
+  if (!(await bannerImageExists(choice.id))) return { error: "choice" };
+  if (!alt) return { error: "alt" };
+  return {
+    fields: { bannerImageId: choice.id, bannerPreset: null, bannerAlt: alt, bannerLink: link },
+  };
 }
 
 export async function saveNewsletter(formData: FormData): Promise<void> {
@@ -53,6 +115,10 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
     if (!existing || existing.status === "sending" || existing.status === "sent") {
       throw new Error("Odesílanou nebo odeslanou kampaň nelze upravit.");
     }
+  }
+  const banner = await bannerFromForm(formData);
+  const bannerData = "fields" in banner ? banner.fields : {};
+  if (id) {
     // Any edit invalidates the previous test send.
     await prisma.newsletterCampaign.update({
       where: { id },
@@ -62,6 +128,7 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
         audienceUsers,
         audienceYears,
         excludeCurrentEntrants,
+        ...bannerData,
         status: "draft",
         testSentAt: null,
       },
@@ -74,6 +141,7 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
         audienceUsers,
         audienceYears,
         excludeCurrentEntrants,
+        ...bannerData,
         createdById: session.id,
       },
     });
@@ -81,7 +149,11 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
   }
   revalidateNewsletter(campaignId ?? undefined);
   redirect({
-    href: { pathname: "/admin/newsletter/[id]", params: { id: String(campaignId) } },
+    href: {
+      pathname: "/admin/newsletter/[id]",
+      params: { id: String(campaignId) },
+      ...("error" in banner ? { query: { banner: banner.error } } : {}),
+    },
     locale,
   });
 }
@@ -108,6 +180,7 @@ export async function sendNewsletterTest(
     body: campaign.body,
     unsubscribeUrl: unsubscribeUrl(origin, token),
     siteUrl: origin,
+    banner: campaignBanner(campaign, origin),
   });
   const result = await sendNewsletterBatch(
     [{ ...mail, to, headers: unsubscribeHeaders(origin, token) }],

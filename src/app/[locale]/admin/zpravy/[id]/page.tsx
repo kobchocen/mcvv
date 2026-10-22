@@ -83,6 +83,7 @@ export default async function AdminMessageThreadPage({ params }: PageProps) {
               body: message.body,
               createdAt: message.createdAt,
               authorName: message.author?.name ?? "",
+              readAt: message.readAt,
             }))}
             lastRead={thread.lastReadByStaff}
             status={thread.status}
@@ -93,6 +94,7 @@ export default async function AdminMessageThreadPage({ params }: PageProps) {
             markReadAction={markReadByStaff}
             statusAction={setThreadStatus}
             showAuthorNames
+            showReadReceipts
           />
         </div>
       </div>

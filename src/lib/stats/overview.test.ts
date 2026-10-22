@@ -1,8 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { createClubResolver } from "@/lib/clubs/core";
+
 import type { RawResult } from "./core";
 import { computeStatsOverview, normalizeClubName, rankRows } from "./overview";
+
+// Club ids (cis_klub.id) of the written names below; "" = club 000 (no club).
+const CLUB_IDS: Record<string, string> = {
+  kobchocen: "CHC",
+  oklokomotivapardubice: "LPU",
+  lokoobpardubice: "275",
+  "": "000",
+};
 
 // ids: YYYY + sex digit (0–4 men, 5–9 women) + sequence
 const r = (
@@ -11,7 +21,8 @@ const r = (
   time: number,
   runnerName: string,
   clubName: string | null = null,
-): RawResult => ({ year, runnerId, time, runnerName, clubName });
+  clubId: string | null = clubName ? (CLUB_IDS[normalizeClubName(clubName)] ?? null) : null,
+): RawResult => ({ year, runnerId, time, runnerName, clubId, clubName });
 
 const RESULTS: RawResult[] = [
   // 2001: men 900 / 905 (gap 5), women 1100 / 1160 (gap 60)
@@ -25,8 +36,8 @@ const RESULTS: RawResult[] = [
   r(2002, "19855001", 1090, "Svižná Eva", "OK Lokomotiva Pardubice"),
   r(2002, "19865001", 1091, "Pomalá Ivana", null),
   r(2002, "19305001", 2000, "Stará Marie", null), // age 72 (oldest)
-  r(2002, "19990001", 1500, "Malý Tom", null), // age 3 → implausible, ignored
-  r(2002, "19940001", 1400, "Mladý Ondra", "K.O.B. Choceň"), // age 8 → youngest
+  r(2002, "19990001", 1500, "Malý Tom", null), // age 3 → youngest (no minimum age)
+  r(2002, "19940001", 1400, "Mladý Ondra", "K.O.B. Choceň"), // age 8
   // 2003: one runner
   r(2003, "19855001", 1080, "Svižná Eva", "OK Lokomotiva Pardubice"),
 ];
@@ -100,11 +111,24 @@ describe("computeStatsOverview", () => {
     });
   });
 
-  it("oldest and youngest finisher ignore implausible ages (< 6)", () => {
+  it("oldest and youngest finisher: no minimum age", () => {
     assert.equal(o.ageExtremes.oldest?.age, 72);
     assert.equal(o.ageExtremes.oldest?.name, "Stará Marie");
-    assert.equal(o.ageExtremes.youngest?.age, 8);
-    assert.equal(o.ageExtremes.youngest?.name, "Mladý Ondra");
+    assert.equal(o.ageExtremes.youngest?.age, 3);
+    assert.equal(o.ageExtremes.youngest?.name, "Malý Tom");
+  });
+
+  it("youngest finisher skips only invalid ages (missing birth year, age ≤ 0)", () => {
+    const ages = computeStatsOverview([
+      r(2010, "20050001", 1500, "Malá Ema"), // age 5 → valid, youngest
+      r(2010, "20100001", 1400, "Ročník závodu"), // age 0 → invalid, ignored
+      r(2010, "20150001", 1300, "Budoucí ročník"), // age −5 → invalid, ignored
+      r(2010, "xxxx0001", 1200, "Bez ročníku"), // no birth year → ignored
+      r(2010, "00000001", 1100, "Nulový ročník"), // birth year 0 → ignored
+    ]).ageExtremes;
+    assert.equal(ages.youngest?.age, 5);
+    assert.equal(ages.youngest?.name, "Malá Ema");
+    assert.equal(ages.oldest?.name, "Malá Ema");
   });
 
   it("record edition with bars for all years", () => {
@@ -132,11 +156,43 @@ describe("computeStatsOverview", () => {
     assert.deepEqual(o.women.peak, { year: 2003, share: 1 });
   });
 
-  it("groups clubs by normalized name (approximation, #104)", () => {
+  it("groups clubs by id, not by name: a renamed / differently written club is one (#104)", () => {
+    // Without the cis_klub names: the most common spelling of the id, slug from the id.
     assert.deepEqual(o.clubs, [
-      { name: "K.O.B. Choceň", starts: 5 },
-      { name: "OK Lokomotiva Pardubice", starts: 3 },
+      { name: "K.O.B. Choceň", slug: "chc", starts: 5 },
+      { name: "OK Lokomotiva Pardubice", slug: "lpu", starts: 3 },
     ]);
+    // Same name under another id is a different club until merged.
+    const other = computeStatsOverview([
+      ...RESULTS,
+      r(2003, "19700001", 1500, "Jiný Pavel", "K.O.B. Choceň", "216"),
+    ]);
+    assert.equal(other.clubs[0].starts, 5);
+  });
+
+  it("merged ids count under the main id, shown under its newest name (#104)", () => {
+    const merged = computeStatsOverview(
+      [
+        ...RESULTS,
+        r(2003, "19700001", 1500, "Loko Pavel", "Loko OB Pardubice"),
+        r(2003, "19700002", 1500, "Loko Petr", "Loko OB Pardubice"),
+        r(2003, "19700003", 1500, "Loko Jan", "Loko OB Pardubice"),
+      ],
+      [],
+      0,
+      createClubResolver({
+        names: [
+          { id: "LPU", year: 2003, name: "OK Lokomotiva Pardubice" },
+          { id: "275", year: 2003, name: "Loko OB Pardubice" },
+        ],
+        merges: [{ clubId: "275", mainClubId: "LPU" }],
+      }),
+    );
+    assert.deepEqual(merged.clubs[0], {
+      name: "OK Lokomotiva Pardubice",
+      slug: "lpu-ok-lokomotiva-pardubice",
+      starts: 6, // 3 × LPU + 3 × 275 (merged), 2003 under the main id's name
+    });
   });
 
   it("time together on the course and total climb (starts × 200 m)", () => {

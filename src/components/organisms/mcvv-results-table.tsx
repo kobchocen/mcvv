@@ -1,4 +1,4 @@
-import { RunnerNameLink } from "@/components/molecules";
+import { ClubNameLink, RunnerNameLink } from "@/components/molecules";
 import { shortBirthYear } from "@/lib/format/birth-year";
 import { detailLine, splitsLine, type SplitTimes } from "@/lib/results/table";
 import { formatRaceTime } from "@/lib/utils";
@@ -11,6 +11,8 @@ export type McvvResultsTableRow = SplitTimes & {
   /** Four-digit birth year (or "—"). */
   birthYear: string;
   club: string;
+  /** Club profile slug (/kluby/[slug]); canonical club once merged in the admin. */
+  clubSlug?: string | null;
   /** Overall view only: category with rank, e.g. "M40 (3.)". */
   category?: string;
   time: number;
@@ -137,7 +139,9 @@ export function McvvResultsGroup({
                       <span className="hidden sm:inline">{r.birthYear}</span>
                       <span className="sm:hidden">{shortBirthYear(r.birthYear)}</span>
                     </td>
-                    <td className={`${cx.desktop} text-race-muted`}>{r.club}</td>
+                    <td className={`${cx.desktop} text-race-muted`}>
+                      <ClubNameLink slug={r.clubSlug} name={r.club} />
+                    </td>
                     {showCategory ? (
                       <td className={`${cx.desktop} text-race-muted text-xs`}>{r.category}</td>
                     ) : null}

@@ -30,6 +30,9 @@ export async function staffThreadCopy(locale: string): Promise<McvvMessageThread
     empty: t("sectionEmpty"),
     resolve: a("msgResolve"),
     reopen: a("msgReopen"),
+    receiptRead: a.raw("msgReceiptRead") as string,
+    receiptUnread: a("msgReceiptUnread"),
+    receiptHint: a("msgReceiptHint"),
     reply: replyCopy(t),
   };
 }

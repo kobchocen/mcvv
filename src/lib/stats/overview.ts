@@ -4,6 +4,12 @@
  * All values are plain JSON (unstable_cache serializes the result).
  */
 import {
+  createClubResolver,
+  mostCommonSpelling,
+  normalizeClubName,
+  type ClubResolver,
+} from "@/lib/clubs/core";
+import {
   personalRecordsByYear,
   runnerBirthYear,
   runnerSex,
@@ -15,11 +21,11 @@ export const COURSE_KM = 4.3;
 /** Elevation gain of one lap of the course. */
 export const COURSE_CLIMB_M = 200;
 /**
- * Plausible finisher ages for "Nejstarší a nejmladší v cíli". Runner ids encode the birth
- * year; a few legacy ids give ages below 6 (most likely a placeholder / mistyped birth year
- * of small children running with a parent), so ages outside 6–99 are ignored.
+ * Finisher ages for "Nejstarší a nejmladší v cíli". Runner ids encode the birth year
+ * (age = race year − birth year). There is no minimum age; only invalid values are skipped:
+ * a missing / non-numeric birth year or an age of 0 or less (birth year in or after the race
+ * year). Ages above 99 are ignored as implausible.
  */
-export const MIN_PLAUSIBLE_AGE = 6;
 export const MAX_PLAUSIBLE_AGE = 99;
 
 export type Sex = "M" | "F";
@@ -68,7 +74,8 @@ export type StatsOverview = {
     trend: { year: number; share: number }[];
     peak: { year: number; share: number } | null;
   };
-  clubs: { name: string; starts: number }[];
+  /** Clubs by id (#104), merged ids under the main id; newest name and profile slug. */
+  clubs: { name: string; slug: string; starts: number }[];
   together: { seconds: number; hours: number; days: number; climbKm: number };
 };
 
@@ -92,20 +99,8 @@ export function rankRows<T extends { value: number }>(rows: T[]): (T & { rank: n
   });
 }
 
-/**
- * Club key for grouping starts: case, diacritics, punctuation and spaces are ignored
- * ("K.O.B. Choceň" = "KOB Chocen"). Different spellings or renamed clubs are still counted
- * separately – the result is an approximation until club names are unified (#104).
- */
-export function normalizeClubName(name: string | null | undefined): string {
-  return (name ?? "")
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-const NO_CLUB = new Set(["", "neregistrovany", "neregistrovana", "nereg", "bezklubu", "zadny"]);
+/** Comparison key of a club name (not the identity of a club – that is its id, #104). */
+export { normalizeClubName };
 
 function sortedByTime(rows: RawResult[]): RawResult[] {
   return [...rows].sort((a, b) => a.time - b.time || a.runnerId.localeCompare(b.runnerId));
@@ -115,6 +110,7 @@ export function computeStatsOverview(
   results: RawResult[],
   photoCounts: PhotoCount[] = [],
   photoTotal = 0,
+  clubResolver: ClubResolver = createClubResolver(),
 ): StatsOverview {
   const years = [...new Set(results.map((row) => row.year))].sort((a, b) => a - b);
   const byYear = new Map<number, RawResult[]>();
@@ -226,13 +222,13 @@ export function computeStatsOverview(
     }
   }
 
-  // Oldest and youngest finisher (plausible ages only).
+  // Oldest and youngest finisher (valid ages only, no minimum age).
   let oldest: (Performance & { age: number }) | null = null;
   let youngest: (Performance & { age: number }) | null = null;
   for (const row of results) {
     const born = runnerBirthYear(row.runnerId);
     const age = row.year - born;
-    if (!Number.isFinite(born) || age < MIN_PLAUSIBLE_AGE || age > MAX_PLAUSIBLE_AGE) {
+    if (!Number.isFinite(born) || born <= 0 || age <= 0 || age > MAX_PLAUSIBLE_AGE) {
       continue;
     }
     if (!oldest || age > oldest.age || (age === oldest.age && row.time < oldest.time)) {
@@ -280,24 +276,23 @@ export function computeStatsOverview(
     null,
   );
 
-  // Most loyal club (starts per normalized club name).
+  // Most loyal club: starts per club id (#104, Q34) – a renamed club stays one club, ids merged
+  // in the admin count under the main id. Shown under the club's newest name.
   const clubs = new Map<string, { starts: number; spellings: Map<string, number> }>();
   for (const row of results) {
-    const key = normalizeClubName(row.clubName);
-    if (NO_CLUB.has(key)) {
+    const resolved = clubResolver.resolve(row.clubId, row.year, row.clubName);
+    if (!resolved) {
       continue;
     }
-    const entry = clubs.get(key) ?? { starts: 0, spellings: new Map<string, number>() };
+    const entry = clubs.get(resolved.mainId) ?? { starts: 0, spellings: new Map<string, number>() };
     entry.starts += 1;
-    const spelling = (row.clubName ?? "").trim();
-    entry.spellings.set(spelling, (entry.spellings.get(spelling) ?? 0) + 1);
-    clubs.set(key, entry);
+    entry.spellings.set(resolved.name, (entry.spellings.get(resolved.name) ?? 0) + 1);
+    clubs.set(resolved.mainId, entry);
   }
-  const topClubs = [...clubs.values()]
-    .map((entry) => ({
-      name: [...entry.spellings.entries()].sort(
-        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-      )[0][0],
+  const topClubs = [...clubs.entries()]
+    .map(([mainId, entry]) => ({
+      name: clubResolver.profileName(mainId) || mostCommonSpelling(entry.spellings),
+      slug: clubResolver.slug(mainId),
       starts: entry.starts,
     }))
     .sort((a, b) => b.starts - a.starts || a.name.localeCompare(b.name, "cs"))

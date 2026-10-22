@@ -58,8 +58,9 @@ export async function McvvHomepageTemplate({
     entriesCount,
     startlistCount,
     resultsCount,
-    // ručně zadaná URL má přednost, jinak veřejná stránka akce v OFeed (#127)
-    onlineResultsUrl: resolveOnlineResultsUrl(settings.onlineResultsUrl, ofeed?.eventId ?? null),
+    // ručně zadaná URL má přednost, jinak veřejná stránka akce v OFeed (#127);
+    // při testovací akci OFeed web na OFeed neodkazuje (Q33)
+    onlineResultsUrl: resolveOnlineResultsUrl(settings.onlineResultsUrl, ofeed),
   });
   const deadlineEnd = registrationDeadlineEnd(deadline);
   const t = await getTranslations({ locale, namespace: "Home.hero" });

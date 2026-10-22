@@ -12,6 +12,9 @@ export type RawResult = {
   time: number;
   runnerId: string;
   runnerName: string | null;
+  /** cis_klub.id – identity of the club (#104). */
+  clubId: string | null;
+  /** Name of that id in the edition (cis_klub.jmeno), as written. */
   clubName: string | null;
 };
 

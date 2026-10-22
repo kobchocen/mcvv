@@ -16,7 +16,7 @@ import (
 // Cestu a název souboru s mezičasy zadá obsluha (OBD ani LuM se nemění): v config.json (`file`),
 // parametrem `-file`, nebo dotazem při prvním spuštění (`runSetup`, znovu přes `-setup`).
 
-const defaultURL = "https://www.mcvv.org"
+const defaultURL = "https://mcvv.org"
 
 // interactive: běží v okně konzole (ne jako služba / s přesměrovaným vstupem).
 func interactive() bool {
@@ -30,10 +30,22 @@ func loadConfigWithFile(path, file string) (Config, error) {
 	if err != nil {
 		return cfg, err
 	}
-	if file != "" {
+	if file = cleanInput(file); file != "" {
 		cfg.File = file
 	}
 	return cfg, cfg.validate()
+}
+
+// cleanInput ořízne mezery a uvozovky okolo hodnoty: Průzkumník („Kopírovat jako cestu“,
+// Ctrl+Shift+C) i přetažení souboru do okna konzole vkládají cestu v uvozovkách.
+func cleanInput(value string) string {
+	value = strings.TrimSpace(value)
+	for _, quote := range []string{`"`, `'`} {
+		if len(value) >= 2 && strings.HasPrefix(value, quote) && strings.HasSuffix(value, quote) {
+			value = strings.TrimSpace(value[1 : len(value)-1])
+		}
+	}
+	return value
 }
 
 // runSetup se zeptá na URL, token, ročník a cestu k souboru a uloží config.json (práva 0600).
@@ -65,7 +77,7 @@ func runSetup(path string, in io.Reader, out io.Writer, fileFlag string) error {
 			if err != nil && !(errors.Is(err, io.EOF) && line != "") {
 				return "", fmt.Errorf("vstup ukončen")
 			}
-			value := strings.TrimSpace(line)
+			value := cleanInput(line)
 			if value == "" {
 				value = fallback
 			}

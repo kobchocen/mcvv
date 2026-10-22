@@ -20,12 +20,30 @@
         "href": "/"
       },
       "links": [
-        { "label": "O závodě", "href": "#about" },
-        { "label": "Trať", "href": "#route" },
-        { "label": "Termín", "href": "#date" },
-        { "label": "Statistiky", "href": "/statistiky" },
-        { "label": "Fotky", "href": "#gallery" },
-        { "label": "Partneři", "href": "#partners" }
+        {
+          "label": "O závodě",
+          "href": "#about"
+        },
+        {
+          "label": "Trať",
+          "href": "#route"
+        },
+        {
+          "label": "Termín",
+          "href": "#date"
+        },
+        {
+          "label": "Statistiky",
+          "href": "/statistiky"
+        },
+        {
+          "label": "Fotky",
+          "href": "#gallery"
+        },
+        {
+          "label": "Partneři",
+          "href": "#partners"
+        }
       ]
     },
     "hero": {
@@ -78,12 +96,30 @@
         "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
       ],
       "actions": [
-        { "label": "Rozpis", "href": "/program" },
-        { "label": "Přihlášky", "href": "/prihlaseni-zavodnici" },
-        { "label": "Pokyny", "href": "/pokyny" },
-        { "label": "Startovka", "href": "/startovka" },
-        { "label": "Výsledky", "href": "/vysledky" },
-        { "label": "Máš dotaz? Ozvi se pořadateli.", "href": "/kontakt" }
+        {
+          "label": "Rozpis",
+          "href": "/program"
+        },
+        {
+          "label": "Přihlášky",
+          "href": "/prihlaseni-zavodnici"
+        },
+        {
+          "label": "Pokyny",
+          "href": "/pokyny"
+        },
+        {
+          "label": "Startovka",
+          "href": "/startovka"
+        },
+        {
+          "label": "Výsledky",
+          "href": "/vysledky"
+        },
+        {
+          "label": "Máš dotaz? Ozvi se pořadateli.",
+          "href": "/kontakt"
+        }
       ],
       "cards": [
         {
@@ -152,8 +188,14 @@
       "eyebrow": "03 — Termín a místo",
       "title": "Neděle 6. prosince",
       "items": [
-        { "icon": "calendar", "text": "Každou první prosincovou neděli" },
-        { "icon": "clock", "text": "Intervalový start od 10:15" },
+        {
+          "icon": "calendar",
+          "text": "Každou první prosincovou neděli"
+        },
+        {
+          "icon": "clock",
+          "text": "Intervalový start od 10:15"
+        },
         {
           "icon": "pin",
           "text": "Choceň - Velká Veranda - ",
@@ -191,7 +233,13 @@
         "closeLabel": "Zavřít mapu",
         "townLabel": "Choceň",
         "verandaLabel": "Veranda",
-        "labels": { "veranda": "S/C", "p1": "P1", "p2": "P2", "train": "Vlak", "bus": "Bus" }
+        "labels": {
+          "veranda": "S/C",
+          "p1": "P1",
+          "p2": "P2",
+          "train": "Vlak",
+          "bus": "Bus"
+        }
       }
     },
     "results": {
@@ -273,25 +321,52 @@
         {
           "title": "Závod",
           "links": [
-            { "label": "O závodě", "href": "#about" },
-            { "label": "Rozpis", "href": "/program" },
-            { "label": "Přihláška", "href": "/prihlasky" }
+            {
+              "label": "O závodě",
+              "href": "#about"
+            },
+            {
+              "label": "Rozpis",
+              "href": "/program"
+            },
+            {
+              "label": "Přihláška",
+              "href": "/prihlasky"
+            }
           ]
         },
         {
           "title": "Statistiky",
           "links": [
-            { "label": "Přehled statistik", "href": "/statistiky" },
-            { "label": "Poslední ročník", "href": "/results/{year}" },
-            { "label": "Archiv výsledků", "href": "/results" },
-            { "label": "Traťové rekordy", "href": "/statistiky/rekordy" }
+            {
+              "label": "Přehled statistik",
+              "href": "/statistiky"
+            },
+            {
+              "label": "Poslední ročník",
+              "href": "/results/{year}"
+            },
+            {
+              "label": "Archiv výsledků",
+              "href": "/results"
+            },
+            {
+              "label": "Traťové rekordy",
+              "href": "/statistiky/rekordy"
+            }
           ]
         },
         {
           "title": "Kontakt",
           "links": [
-            { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
-            { "label": "Napsat pořadateli", "href": "/kontakt" }
+            {
+              "label": "K.O.B. Choceň, z.s.",
+              "href": "#partners"
+            },
+            {
+              "label": "Napsat pořadateli",
+              "href": "/kontakt"
+            }
           ]
         }
       ],
@@ -590,6 +665,27 @@
     "registeredFirstStart": "{sex, select, F {Přihlášena} other {Přihlášen}} na ročník {year} – první start",
     "back": "Archiv výsledků"
   },
+  "Club": {
+    "eyebrow": "Klub",
+    "starts": "Startů",
+    "runners": "Běžců",
+    "editions": "Ročníků",
+    "years": "Roky",
+    "statsLink": "Další statistiky závodu",
+    "perYear": "Starty po letech",
+    "best": "Nejlepší výsledky",
+    "men": "Muži",
+    "women": "Ženy",
+    "members": "Běžci klubu",
+    "runner": "Jméno",
+    "year": "Rok",
+    "time": "Čas",
+    "personalBest": "Nejlepší čas",
+    "clubId": "Id klubu {id}",
+    "mergedIds": "sloučeno: {ids}",
+    "history": "Názvy klubu po ročnících",
+    "idNote": "Klub je jeho id v číselníku: přejmenovaný klub zůstává jedním klubem. Id, která pořadatel sloučil, se počítají pod hlavním id."
+  },
   "Messages": {
     "title": "Zprávy",
     "eyebrow": "Zprávy pořadateli",
@@ -736,6 +832,11 @@
     "msgAccount": "Účet",
     "msgLastMessage": "Poslední zpráva",
     "msgCount": "{count, plural, one {# zpráva} few {# zprávy} other {# zpráv}}",
+    "msgReceiptRead": "Přečteno {time}",
+    "msgReceiptUnread": "Nepřečteno",
+    "msgReceiptHint": "Zda přihlašující zprávu viděl na webu po přihlášení (u přihlášky nebo ve Zprávách). E-mailové upozornění se nepočítá.",
+    "msgReplyRead": "Odpověď přečtena {time}",
+    "msgReplyUnread": "{count, plural, one {Odpověď nepřečtena} few {# odpovědi nepřečteny} other {# odpovědí nepřečteno}}",
     "msgToRegistration": "Detail přihlášky",
     "regsMessages": "Zprávy",
     "settingsMessages": "Zprávy",
@@ -864,6 +965,29 @@
     "dictsBibFrom": "Číslo od",
     "dictsBibTo": "Číslo do",
     "regsTitle": "Přihlášky",
+    "timelineTitle": "Vývoj přihlášek podle dní do závodu",
+    "timelineUnitRunners": "běžců",
+    "timelineUnitRegs": "přihlášek",
+    "timelineToday": "Dnes {days, plural, one {zbývá # den} few {zbývají # dny} other {zbývá # dní}} do závodu – letos {count} {unit}.",
+    "timelineLastYear": "Loni ve stejné době {value} ({diff}).",
+    "timelineAverage": "Průměr srovnávacích ročníků ({count}): {value}.",
+    "timelinePrediction": "Odhad celkem ke dni závodu: ~{point} {unit} (rozpětí {min}–{max}).",
+    "timelineUnreliable": "orientační – zatím málo dat",
+    "timelineMetricRunners": "Běžci",
+    "timelineMetricRegs": "Přihlášky",
+    "timelineDeadline": "uzávěrka",
+    "timelineTodayMark": "dnes",
+    "timelineTooltipDay": "{days, plural, =0 {Den závodu} one {# den do závodu} few {# dny do závodu} other {# dní do závodu}}",
+    "timelineForecast": "Odhad",
+    "timelineForecastLegend": "odhad do dne závodu (pruh = rozpětí min–max)",
+    "timelineCovid": "covid",
+    "timelineLast": "posledních {count}",
+    "timelineAll": "vše",
+    "timelineMethod": "Jak vzniká odhad: u každého srovnávacího ročníku ({years}) se zjistí, jaký podíl konečného počtu měl ke stejnému dni před závodem. Letošní počet vydělený tímto podílem dá odhad z daného ročníku; zobrazené číslo je medián těchto odhadů, rozpětí je min–max. Srovnává se posledních 5 ukončených ročníků bez roku 2020 (covid). Brzy po otevření přihlášek je odhad hrubý.",
+    "timelineDataNote": "Data: den založení přihlášky; běžci přihlášky se počítají ke stejnému dni. Jen přihlášky ve stavu nezaplacená, zaplacená, přeplatek nebo potvrzená s alespoň jedním běžcem (bez zrušených a prázdných). V letech 2012–2016 se stavy přihlášek ještě nepoužívaly, proto se tam počítají i přihlášky ve stavu Nová, pokud mají aspoň jednoho běžce. Běžci přidaní až na místě nejsou zahrnuti.",
+    "timelineMissing": "Bez dat o přihláškách (v grafu chybí): {years}.",
+    "timelineAfterRace": "{year}: {count, plural, one {# přihláška založená} few {# přihlášky založené} other {# přihlášek založených}} po datu závodu není v grafu.",
+    "timelineNoCreated": "{year}: {count, plural, one {# přihláška} few {# přihlášky} other {# přihlášek}} bez data založení není v grafu.",
     "regsYear": "Rok",
     "regsId": "ID",
     "regsName": "Název",
@@ -913,7 +1037,52 @@
     "regsNewPayment": "Nová platba",
     "regsDeletePayment": "Smazat platbu",
     "regsEmpty": "Žádné přihlášky v tomto roce.",
-    "regsBack": "Zpět na přihlášky"
+    "regsBack": "Zpět na přihlášky",
+    "clubMergeTitle": "Kluby – sloučení id",
+    "clubMergeHint": "Návrhy ke sloučení různých id klubů, která jsou fakticky jeden klub. Hlavní id se volí ručně.",
+    "clubMergeIntro": "Klub je jeho id z číselníku: přejmenovaný klub zůstává jedním klubem a jeho názvy po ročnících jsou historie. Některé kluby ale mají víc id (např. při přihlášce vznikl nový záznam místo starého). Níže jsou návrhy dvojic různých id podle podobnosti jejich názvů. Nic se neslučuje samo: u každého sloučení zvolte, které id zůstává hlavní. Starty sloučeného id se pak počítají pod hlavním id (profil, výsledky, statistiky); v datech se nic nepřepisuje a sloučení jde kdykoli zrušit. Každá změna se zapisuje do auditu.",
+    "clubMergeSummary": "{clubs} klubů (id) · {merged} sloučených id pod {mains} hlavními",
+    "clubMergeSaved": "Uloženo.",
+    "clubMergeError_ids": "Zadejte dvě různá id klubů.",
+    "clubMergeError_hlavni": "Zvolte, které id zůstává hlavní.",
+    "clubMergeError_nezname": "Id klubu v číselníku neexistuje.",
+    "clubMergeError_same": "Hlavní a slučované id musí být různé.",
+    "clubMergeError_empty": "Zadejte dvě id klubů.",
+    "clubMergeError_main_merged": "Zvolené hlavní id je samo sloučené pod jiné id – zvolte to hlavní, nebo sloučení nejdřív zrušte.",
+    "clubMergeError_other_merged": "Slučované id už je sloučené pod jiné id – nejdřív to sloučení zrušte.",
+    "clubMergeSuggestions": "Návrhy ke sloučení",
+    "clubMergeAll": "Vše ({count})",
+    "clubMergeConfidence_high": "Vysoká shoda",
+    "clubMergeConfidence_medium": "Střední shoda",
+    "clubMergeConfidence_low": "Nízká shoda",
+    "clubMergeScoreHint": "Skóre 0–1 porovnává nejpodobnější názvy obou id bez diakritiky, typu klubu (OK, TJ, SK, K.O.B. …) a se známými zkratkami (Loko, HK, Č. Třebová …). Různé typy klubů v jednom městě (např. AC × K.O.B.) skóre snižují. Přejmenování v rámci jednoho id se nenabízí – to je pořád stejný klub. I vysoká shoda je jen návrh.",
+    "clubMergeReason_same_core": "stejný název bez typu klubu",
+    "clubMergeReason_abbreviation": "zkratka",
+    "clubMergeReason_prefix_missing": "chybí typ klubu",
+    "clubMergeReason_prefix_conflict": "jiný typ klubu",
+    "clubMergeReason_spelling": "podobný zápis",
+    "clubMergeReason_subset": "jeden název obsahuje druhý",
+    "clubMergeMatched": "„{a}“ ≈ „{b}“",
+    "clubMergeSameYears": "Obě id existují ve stejném ročníku: {years}. Po sloučení se starty obou id v těchto ročnících sečtou pod hlavní id a zobrazí se pod názvem hlavního id.",
+    "clubMergeChooseMain": "Které id zůstává hlavní?",
+    "clubMergeKeepMain": "Ponechat jako hlavní id",
+    "clubMergeAlreadyMerged": "Už sloučeno: {ids}",
+    "clubMergeProfile": "Profil klubu",
+    "clubMergeUsage": "{starts, plural, one {# start} few {# starty} other {# startů}}, {years}",
+    "clubMergeConfirm": "Sloučit pod zvolené hlavní id",
+    "clubMergeReject": "Zamítnout",
+    "clubMergeMore": "Zobrazit další ({count})",
+    "clubMergeManual": "Ruční sloučení",
+    "clubMergeManualHint": "Pro dvojici, která mezi návrhy není: zadejte dvě id klubů a zvolte, které zůstává hlavní.",
+    "clubMergeIdA": "První id",
+    "clubMergeIdB": "Druhé id",
+    "clubMergeClubs": "Sloučené kluby",
+    "clubMergeMainBadge": "Hlavní id",
+    "clubMergeNoClubs": "Zatím žádné – každé id je samostatný klub.",
+    "clubMergeUnmerge": "Zrušit sloučení id {id}",
+    "clubMergeUnmergeShort": "Zrušit sloučení",
+    "clubMergeRejected": "Zamítnuté návrhy ({count})",
+    "clubMergeRestore": "Vrátit mezi návrhy"
   },
   "Stats": {
     "overview": {
@@ -949,14 +1118,13 @@
       "oldest": "Nejstarší · {year}",
       "youngest": "Nejmladší · {year}",
       "ageUnit": "{age, plural, one {rok} few {roky} other {let}}",
-      "agesNote": "Věk = rok závodu − rok narození. Věk pod 6 let vynecháváme (nejspíš chybně zapsaný ročník).",
+      "agesNote": "Věk = rok závodu − rok narození.",
       "recordEdition": "Rekordní ročník · {year}",
       "recordEditionUnit": "{count, plural, one {účastník} few {účastníci} other {účastníků}} · {newcomers, plural, one {# nováček} few {# nováčci} other {# nováčků}} · {prs, plural, one {# osobní rekord} few {# osobní rekordy} other {# osobních rekordů}}",
       "women": "Ženy na trati",
       "womenUnit": "všech startů",
       "womenPeak": "max. {year}: {share}",
       "clubs": "Nejvěrnější klub",
-      "clubsNote": "Startů za klub. Orientačně – názvy klubů zatím nejsou sjednocené.",
       "together": "Společně na trati",
       "togetherUnit": "hodin běhu",
       "togetherNote": "≈ {days} dní nepřetržitého běhu · {climb} km převýšení ({starts} × {metres} m)",
@@ -1264,10 +1432,13 @@
       "future": "čas z budoucnosti",
       "stale": "starší než 24 h",
       "too-long": "příliš dlouhý čas",
-      "original-missing": "původní zápis nenalezen"
+      "original-missing": "původní zápis nenalezen",
+      "station-not-assigned": "stanoviště ti není přiřazené"
     },
     "forbiddenTitle": "Bez oprávnění",
     "forbiddenText": "Zadávání mezičasů je jen pro obsluhu stanovišť (role splitmaker) a pořadatele.",
+    "noStationTitle": "Nemáš přiřazené stanoviště",
+    "noStationText": "Požádej administrátora, ať ti v administraci (Den závodu → Živě → Splitmakeři a stanoviště) přiřadí stanoviště. Pak tuhle stránku načti znovu.",
     "home": "Na úvod"
   },
   "LiveResults": {
@@ -1275,13 +1446,21 @@
     "intro": "Mezičasy od splitmakerů a z cílového PC (OBD) a publikace do OFeed. Nula závodu: {zero}.",
     "zeroOverridden": "Nula je přepsaná pro zkoušku nanečisto!",
     "openSplits": "Otevřít zadávání mezičasů",
+    "openSplitsAdmin": "Mezičasy ročníku – přehled a vyčištění",
     "openBoard": "Tabule OFB",
     "openOfeed": "Akce v OFeed",
+    "openOfeedTest": "Testovací akce v OFeed",
     "saved": "Uloženo.",
     "error": {
       "eventId": "Neplatné ID akce OFeed.",
       "password": "Neplatné heslo (4–200 znaků, jeden řádek).",
-      "zero": "Neplatná zkušební nula."
+      "zero": "Neplatná zkušební nula.",
+      "conflictStale": "Konflikt už neodpovídá uloženému času (mezitím ruční oprava nebo jiné rozhodnutí) – nic se nezměnilo.",
+      "assignment": "Přiřazení se nepodařilo uložit (účet nemá roli splitmaker).",
+      "testEventId": "Neplatné ID testovací akce OFeed.",
+      "testPassword": "Neplatné heslo testovací akce (4–200 znaků, jeden řádek).",
+      "ofeedProfile": "Neznámý profil OFeed.",
+      "ofeedTestMissing": "Nejdřív uložte ID testovací akce OFeed."
     },
     "publish": {
       "disabled": "Publikace je vypnutá.",
@@ -1311,8 +1490,23 @@
     "colMode": "Režim",
     "colCompetitors": "Závodníků",
     "ofeedTitle": "OFeed – živé výsledky a tabule OFB",
-    "ofeedIntro": "Akci v OFeed zakládá Pavel nebo Martin. Sem se vloží její ID a heslo (platí 7 dní). Server pak během závodu každých ~30 s nahraje IOF XML ResultList (jediný zapisovatel).",
+    "ofeedIntro": "Akci v OFeed zakládá Pavel nebo Martin. Sem se vloží její ID a heslo (platí 7 dní); pro generálku zvlášť testovací akce. Server pak během závodu každých ~30 s nahraje IOF XML ResultList (jediný zapisovatel).",
     "ofeedDryRun": "Dry-run (mimo produkci): XML se generuje, ale do OFeed se nic neposílá.",
+    "ofeedProfileActive": {
+      "live": "Nahrává se do OSTRÉ akce OFeed",
+      "test": "Nahrává se do TESTOVACÍ akce OFeed"
+    },
+    "ofeedProfileHint": {
+      "live": "Veřejný web odkazuje na tuto akci (tlačítko „Online výsledky“ v den závodu).",
+      "test": "Generálka: data jdou do testovací akce a web na OFeed veřejně neodkazuje. Před závodem přepněte zpět na ostrou akci."
+    },
+    "ofeedSwitchToTest": "Přepnout na testovací akci",
+    "ofeedSwitchToLive": "Přepnout na ostrou akci",
+    "ofeedProfileName": {
+      "live": "Ostrá akce",
+      "test": "Testovací akce"
+    },
+    "ofeedProfileCurrent": "aktivní",
     "ofeedEnabled": "Publikovat do OFeed",
     "ofeedEnabledHint": "Automaticky jen v okně 2 h před nulou až 5 h po ní a jen při změně dat (jinak 1× za 10 min).",
     "ofeedEventId": "ID akce v OFeed",
@@ -1327,6 +1521,7 @@
     "onlineLink": "Odkaz „Online výsledky“ na webu",
     "onlineLinkAuto": "automaticky z ID akce",
     "onlineLinkNone": "není nastaven",
+    "onlineLinkHiddenTest": "(odkaz na OFeed je skrytý, aktivní je testovací akce)",
     "publishNow": "Nahrát teď",
     "downloadXml": "Stáhnout IOF XML",
     "devicesTitle": "Klíče zařízení (klient OBD na cílovém PC)",
@@ -1359,7 +1554,87 @@
     "stations": "Stanoviště splitmakerů",
     "stationsHint": "Řádky kód=popis, kód 1–8 (9 = cíl z OBD). Výchozí 1=1,3 km a 3=2,7 km.",
     "zeroOverride": "Zkušební nula (generálka)",
-    "zeroOverrideHint": "Prázdné = den závodu 10:15. Pro zkoušku nastavte např. dnešek a čas. Po zkoušce smažte!"
+    "zeroOverrideHint": "Prázdné = den závodu 10:15. Pro zkoušku nastavte např. dnešek a čas. Po zkoušce smažte!",
+    "splitmakersTitle": "Splitmakeři a stanoviště",
+    "splitmakersIntro": "Účty s rolí splitmaker (roli nastavíte v Uživatelích). Splitmaker vidí na /mezicasy jen přiřazená stanoviště a server zápis na jiné odmítne. Bez přiřazení nezapisuje nic. Admin a organizer smí na všechna.",
+    "splitmakersEmpty": "Žádný účet nemá roli splitmaker.",
+    "splitmakerNone": "bez stanoviště – nezapisuje"
+  },
+  "LiveSplits": {
+    "title": "Mezičasy ročníku",
+    "heading": "Mezičasy {year}",
+    "intro": "Přehled, oprava a úklid mezičasů aktuálního ročníku. Skutečná nula ročníku: {zero}. Jen pro administrátora.",
+    "error": {
+      "filter": "Neplatný výběr splitů nebo zdroje.",
+      "blocked": "Hromadné vyčištění je od nuly závodu zakázané. Jednotlivé časy opravte v editaci.",
+      "year": "Mezitím se změnil aktuální ročník – načtěte stránku znovu.",
+      "confirm": "Opsaný ročník nesouhlasí, nic se nesmazalo.",
+      "bib": "Neplatné startovní číslo (1–999).",
+      "split": "Neplatný split.",
+      "time": "Neplatný čas (m:ss nebo h:mm:ss od startu, 0–6 h; denní čas po startu čísla).",
+      "unknownBib": "Číslo není ve startovce – zaškrtněte „přesto uložit“.",
+      "changed": "Čas se mezitím změnil – zkontrolujte aktuální hodnotu a zkuste znovu.",
+      "reason-required": "Při přepisu nebo smazání vyplňte důvod.",
+      "missing": "Čas už neexistuje."
+    },
+    "clearDone": "Smazáno mezičasů: {splits}, záznamů deníku: {entries}, zneplatněno klíčů: {tokens}.",
+    "clearTitle": "Vyčistit mezičasy ročníku",
+    "clearIntro": "Po zkoušce nanečisto smaže mezičasy (mcvv_split) i jejich deník včetně konfliktů. Do auditu se uloží snímek smazaných časů. Výsledky (mcvv_time), rekordy ani startovka se nemění.",
+    "clearAllowedUntil": "Povoleno do nuly závodu ({zero}). Pak už jen jednotlivé opravy.",
+    "clearBlocked": "Hromadné vyčištění je od nuly závodu ({zero}) zakázané. Jednotlivé časy opravte v editaci mezičasů.",
+    "filterSplits": "Splity",
+    "filterSource": "Zdroj",
+    "filterSourceHint": "„Vše“ smaže všechny časy vybraných splitů. Se zdrojem nebo klíčem jen časy, které ten zdroj zapsal, a jeho záznamy v deníku.",
+    "sourceAll": "vše",
+    "sourceWeb": "web (splitmakeři)",
+    "sourceObd": "OBD (všechny klíče zařízení)",
+    "sourceToken": "klíč {label}",
+    "previewButton": "Zobrazit náhled",
+    "previewSummary": "Smaže se mezičasů: {splits}, záznamů deníku: {entries} (z toho konfliktů: {conflicts}).",
+    "optionRevokeTokens": "Zároveň zneplatnit všechny klíče zařízení ročníku",
+    "optionClearZero": "Zároveň smazat zkušební nulu",
+    "clearAfterHint": "Po vyčištění: na cílovém PC smažte state.json klienta OBD (jinak už potvrzené řádky znovu nepošle) a splitmakeři ať načtou /mezicasy znovu. Příští nahrání do OFeed proběhne i beze změny dat.",
+    "confirmLabel": "Pro potvrzení opište ročník ({year})",
+    "clearButton": "Nevratně smazat",
+    "badgeManual": "ručně",
+    "badgeLegacy": "bez deníku",
+    "sourceAdmin": "ručně (admin)",
+    "saved": {
+      "create": "Čas doplněn.",
+      "correct": "Čas přepsán.",
+      "unchanged": "Beze změny – čas už je uložený.",
+      "delete": "Čas smazán."
+    },
+    "editTitle": "Číslo {bib}",
+    "unknownBib": "Číslo není ve startovce ročníku. Uložit jde jen se zaškrtnutím „přesto uložit“.",
+    "orderWarning": "Pozor: časy nejdou po sobě (mezičas 1 < mezičas 2 < cíl).",
+    "editIntro": "Ruční zápis vždy přepíše uložený čas (i v den závodu) a OBD ani web ho už nepřepíšou. Přepis a smazání vyžadují důvod; vše jde do deníku i auditu. Otevřené konflikty k času se zamítnou.",
+    "hasConflict": "otevřený konflikt",
+    "noTime": "bez času",
+    "valueLabel": "Čas",
+    "modeLabel": "Formát času",
+    "modeRace": "od startu (m:ss)",
+    "modeClock": "denní čas (hh:mm:ss)",
+    "reasonRequired": "Důvod (povinný)",
+    "reasonOptional": "Poznámka (nepovinná)",
+    "forceUnknown": "přesto uložit",
+    "overwrite": "Přepsat",
+    "add": "Doplnit",
+    "deleteReason": "důvod smazání",
+    "delete": "Smazat",
+    "historyTitle": "Deník zápisů tohoto čísla",
+    "closeEdit": "Zavřít editaci",
+    "tableTitle": "Mezičasy",
+    "searchLabel": "Číslo nebo jméno",
+    "showAll": "i čísla bez časů",
+    "search": "Hledat",
+    "editBibLabel": "Upravit číslo",
+    "editOpen": "Otevřít",
+    "tableLegend": "„ručně“ = zapsal admin, ! = otevřený konflikt, ↕ = časy nejdou po sobě.",
+    "tableEmpty": "Žádné mezičasy.",
+    "colName": "Jméno",
+    "notInStart": "není ve startovce",
+    "editLink": "Upravit"
   },
   "AdminUsers": {
     "title": "Uživatelé a role",
@@ -1433,6 +1708,12 @@
     "action_obd_export": "export pro OBD",
     "action_import_presentation": "import po prezentaci",
     "action_import_results": "import výsledků",
+    "action_splits_cleared": "vyčištění mezičasů",
+    "action_split_set": "ruční zápis mezičasu",
+    "action_split_deleted": "ruční smazání mezičasu",
+    "action_split_conflict_resolved": "konflikt mezičasu přijat",
+    "action_split_conflict_dismissed": "konflikt mezičasu zamítnut",
+    "action_ofeed_profile": "přepnutí akce OFeed",
     "action_other": "akce"
   },
   "RaceDayImport": {

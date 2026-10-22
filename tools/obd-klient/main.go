@@ -10,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -18,10 +17,22 @@ import (
 	"time"
 )
 
-var version = "dev"
+// Nastaví build: -ldflags "-X main.version=0.1.1 -X main.commit=abc1234".
+var (
+	version = "dev"
+	commit  = ""
+)
+
+// versionString: „0.1.0 (abc1234)“, bez commitu jen verze.
+func versionString() string {
+	if commit == "" {
+		return version
+	}
+	return version + " (" + commit + ")"
+}
 
 type Config struct {
-	URL          string `json:"url"`          // https://www.mcvv.org
+	URL          string `json:"url"`          // https://mcvv.org
 	Token        string `json:"token"`        // mcvv_live_… z /admin/den-zavodu/zive (zobrazí se jen jednou)
 	Year         int    `json:"year"`         // ročník, např. 2026
 	File         string `json:"file"`         // cesta k exportu OBD, např. C:\OBD\tmp\splits.csv
@@ -114,7 +125,7 @@ func main() {
 	showVersion := flag.Bool("version", false, "vypíše verzi")
 	flag.Parse()
 	if *showVersion {
-		fmt.Println(version)
+		fmt.Println("obd-klient " + versionString())
 		return
 	}
 	if !filepath.IsAbs(*configPath) {
@@ -136,11 +147,11 @@ func main() {
 	if err != nil {
 		fatal("Konfigurace: %v", err)
 	}
-	client := &Client{BaseURL: cfg.URL, Token: cfg.Token, Year: cfg.Year, Split: cfg.Split, Version: version, Replace: cfg.ApplyCorrections, HTTP: &http.Client{Timeout: 15 * time.Second}}
+	client := &Client{BaseURL: cfg.URL, Token: cfg.Token, Year: cfg.Year, Split: cfg.Split, Version: version, Replace: cfg.ApplyCorrections, HTTP: newHTTPClient(15 * time.Second)}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	logf("obd-klient %s · %s · rok %d · úsek %s · soubor %s · opravy %s · mazání %s", version, cfg.URL, cfg.Year, cfg.Split, cfg.File, onOff(cfg.ApplyCorrections), onOff(cfg.DeleteMissing))
+	logf("obd-klient %s · %s · rok %d · úsek %s · soubor %s · opravy %s · mazání %s", versionString(), cfg.URL, cfg.Year, cfg.Split, cfg.File, onOff(cfg.ApplyCorrections), onOff(cfg.DeleteMissing))
 	if info, err := client.Ping(ctx); err != nil {
 		logf("Ověření tokenu selhalo: %v", err)
 		if *check {
@@ -245,6 +256,9 @@ func (r *Runner) Tick(ctx context.Context) error {
 		results, err := r.client.Upload(ctx, batch, seenAt)
 		if err != nil {
 			var apiErr *APIError
+			if errors.As(err, &apiErr) && apiErr.Redirect() {
+				return fmt.Errorf("chyba konfigurace: %w", err)
+			}
 			if errors.As(err, &apiErr) && !apiErr.Retryable() {
 				return fmt.Errorf("server odmítl dávku (zkontrolujte token/rok/úsek): %w", err)
 			}
@@ -256,7 +270,11 @@ func (r *Runner) Tick(ctx context.Context) error {
 			r.state.Record(split, change, result.Outcome)
 			counts[change.action()+":"+result.Outcome]++
 			if result.Outcome == "conflict" {
-				logf("KONFLIKT č. %d: posláno %s, na webu je jiný čas (zadal ho člověk) – rozhodne admin v /admin/den-zavodu/zive", change.Bib, fmtTime(change.TimeS))
+				held := "jiný čas"
+				if result.ExistingTime != nil {
+					held = fmtTime(*result.ExistingTime)
+				}
+				logf("KONFLIKT č. %d: posláno %s, na webu je %s (platí první čas) – rozhodne admin v /admin/den-zavodu/zive", change.Bib, fmtTime(change.TimeS), held)
 			}
 			if result.Outcome == "rejected" {
 				logf("ODMÍTNUTO č. %d (%s): %s", change.Bib, fmtTime(change.TimeS), result.Note)

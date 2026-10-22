@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 
-import { StatsNav, type StatsNavItem } from "@/components/molecules";
+import { ClubNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 import { Link } from "@/i18n/routing";
@@ -35,7 +35,7 @@ export type McvvStatsOverviewCopy = {
   };
   recordEdition: { title: string; unit: string };
   womenTile: { title: string; value: string; unit: string; axis: [string, string, string] };
-  clubs: { title: string; note: string };
+  clubs: { title: string };
   together: { title: string; value: string; unit: string; note: string };
   moment: { title: string; headline: string; body: string } | null;
   footnote: string;
@@ -143,7 +143,7 @@ function PerfCell({ label, perf }: { label: string; perf: Performance | null }) 
 function RankedList({
   rows,
 }: {
-  rows: { rank: number; name: string; value: string; runnerId?: string }[];
+  rows: { rank: number; name: string; value: string; runnerId?: string; clubSlug?: string }[];
 }) {
   return (
     <ol className="flex flex-col gap-1.5">
@@ -156,6 +156,12 @@ function RankedList({
             <span className="inline-block w-5 text-race-dim">{row.rank}</span>
             {row.runnerId ? (
               <RunnerLink id={row.runnerId} name={row.name} className="font-medium" />
+            ) : row.clubSlug ? (
+              <ClubNameLink
+                slug={row.clubSlug}
+                name={row.name}
+                className="font-medium text-race-accent underline-offset-2 hover:underline"
+              />
             ) : (
               row.name
             )}
@@ -508,10 +514,10 @@ export function McvvStatsOverview({ brand, nav, data, copy, statsNav }: McvvStat
                   rows={data.clubs.map((club, index) => ({
                     rank: index + 1,
                     name: club.name,
+                    clubSlug: club.slug,
                     value: `≈${copy.number(club.starts)}`,
                   }))}
                 />
-                <p className={metaClass}>{copy.clubs.note}</p>
               </Tile>
             ) : null}
 

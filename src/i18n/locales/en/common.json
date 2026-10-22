@@ -20,12 +20,30 @@
         "href": "/"
       },
       "links": [
-        { "label": "About", "href": "#about" },
-        { "label": "Course", "href": "#route" },
-        { "label": "Date", "href": "#date" },
-        { "label": "Statistics", "href": "/statistiky" },
-        { "label": "Photos", "href": "#gallery" },
-        { "label": "Partners", "href": "#partners" }
+        {
+          "label": "About",
+          "href": "#about"
+        },
+        {
+          "label": "Course",
+          "href": "#route"
+        },
+        {
+          "label": "Date",
+          "href": "#date"
+        },
+        {
+          "label": "Statistics",
+          "href": "/statistiky"
+        },
+        {
+          "label": "Photos",
+          "href": "#gallery"
+        },
+        {
+          "label": "Partners",
+          "href": "#partners"
+        }
       ]
     },
     "hero": {
@@ -78,12 +96,30 @@
         "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
       ],
       "actions": [
-        { "label": "Race notice", "href": "/program" },
-        { "label": "Entries", "href": "/prihlaseni-zavodnici" },
-        { "label": "Instructions", "href": "/pokyny" },
-        { "label": "Start list", "href": "/startovka" },
-        { "label": "Results", "href": "/vysledky" },
-        { "label": "Have a question? Contact the organizer.", "href": "/kontakt" }
+        {
+          "label": "Race notice",
+          "href": "/program"
+        },
+        {
+          "label": "Entries",
+          "href": "/prihlaseni-zavodnici"
+        },
+        {
+          "label": "Instructions",
+          "href": "/pokyny"
+        },
+        {
+          "label": "Start list",
+          "href": "/startovka"
+        },
+        {
+          "label": "Results",
+          "href": "/vysledky"
+        },
+        {
+          "label": "Have a question? Contact the organizer.",
+          "href": "/kontakt"
+        }
       ],
       "cards": [
         {
@@ -152,8 +188,14 @@
       "eyebrow": "03 — Date and place",
       "title": "Sunday, December 6",
       "items": [
-        { "icon": "calendar", "text": "Every first Sunday in December" },
-        { "icon": "clock", "text": "Interval start from 10:15" },
+        {
+          "icon": "calendar",
+          "text": "Every first Sunday in December"
+        },
+        {
+          "icon": "clock",
+          "text": "Interval start from 10:15"
+        },
         {
           "icon": "pin",
           "text": "Choceň - Velká Veranda - ",
@@ -191,7 +233,13 @@
         "closeLabel": "Close map",
         "townLabel": "Choceň",
         "verandaLabel": "Veranda",
-        "labels": { "veranda": "S/C", "p1": "P1", "p2": "P2", "train": "Train", "bus": "Bus" }
+        "labels": {
+          "veranda": "S/C",
+          "p1": "P1",
+          "p2": "P2",
+          "train": "Train",
+          "bus": "Bus"
+        }
       }
     },
     "results": {
@@ -273,25 +321,52 @@
         {
           "title": "Race",
           "links": [
-            { "label": "About", "href": "#about" },
-            { "label": "Race notice", "href": "/program" },
-            { "label": "Registration", "href": "/prihlasky" }
+            {
+              "label": "About",
+              "href": "#about"
+            },
+            {
+              "label": "Race notice",
+              "href": "/program"
+            },
+            {
+              "label": "Registration",
+              "href": "/prihlasky"
+            }
           ]
         },
         {
           "title": "Statistics",
           "links": [
-            { "label": "Statistics overview", "href": "/statistiky" },
-            { "label": "Latest edition", "href": "/results/{year}" },
-            { "label": "Results archive", "href": "/results" },
-            { "label": "Course records", "href": "/statistiky/rekordy" }
+            {
+              "label": "Statistics overview",
+              "href": "/statistiky"
+            },
+            {
+              "label": "Latest edition",
+              "href": "/results/{year}"
+            },
+            {
+              "label": "Results archive",
+              "href": "/results"
+            },
+            {
+              "label": "Course records",
+              "href": "/statistiky/rekordy"
+            }
           ]
         },
         {
           "title": "Contact",
           "links": [
-            { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
-            { "label": "Contact the organizer", "href": "/kontakt" }
+            {
+              "label": "K.O.B. Choceň, z.s.",
+              "href": "#partners"
+            },
+            {
+              "label": "Contact the organizer",
+              "href": "/kontakt"
+            }
           ]
         }
       ],
@@ -590,6 +665,27 @@
     "registeredFirstStart": "Registered for {year} – first start",
     "back": "Results archive"
   },
+  "Club": {
+    "eyebrow": "Club",
+    "starts": "Starts",
+    "runners": "Runners",
+    "editions": "Editions",
+    "years": "Years",
+    "statsLink": "More race statistics",
+    "perYear": "Starts per year",
+    "best": "Best results",
+    "men": "Men",
+    "women": "Women",
+    "members": "Club runners",
+    "runner": "Name",
+    "year": "Year",
+    "time": "Time",
+    "personalBest": "Best time",
+    "clubId": "Club id {id}",
+    "mergedIds": "merged: {ids}",
+    "history": "Club names by edition",
+    "idNote": "A club is its id in the club list: a renamed club stays one club. Ids merged by the organiser are counted under the main id."
+  },
   "Messages": {
     "title": "Messages",
     "eyebrow": "Messages to the organiser",
@@ -736,6 +832,11 @@
     "msgAccount": "Account",
     "msgLastMessage": "Last message",
     "msgCount": "{count, plural, one {# message} other {# messages}}",
+    "msgReceiptRead": "Read {time}",
+    "msgReceiptUnread": "Not read",
+    "msgReceiptHint": "Whether the registrant has seen the message on the website while signed in (on the entry or in Messages). The e-mail notification does not count.",
+    "msgReplyRead": "Reply read {time}",
+    "msgReplyUnread": "{count, plural, one {Reply not read} other {# replies not read}}",
     "msgToRegistration": "Entry detail",
     "regsMessages": "Messages",
     "settingsMessages": "Messages",
@@ -864,6 +965,29 @@
     "dictsBibFrom": "Bib from",
     "dictsBibTo": "Bib to",
     "regsTitle": "Entries",
+    "timelineTitle": "Entries by days to race",
+    "timelineUnitRunners": "runners",
+    "timelineUnitRegs": "entries",
+    "timelineToday": "{days, plural, one {# day} other {# days}} to the race – {count} {unit} this year.",
+    "timelineLastYear": "Same time last year: {value} ({diff}).",
+    "timelineAverage": "Average of reference years ({count}): {value}.",
+    "timelinePrediction": "Projected total on race day: ~{point} {unit} (range {min}–{max}).",
+    "timelineUnreliable": "rough – little data so far",
+    "timelineMetricRunners": "Runners",
+    "timelineMetricRegs": "Entries",
+    "timelineDeadline": "deadline",
+    "timelineTodayMark": "today",
+    "timelineTooltipDay": "{days, plural, =0 {Race day} one {# day to race} other {# days to race}}",
+    "timelineForecast": "Projection",
+    "timelineForecastLegend": "projection to race day (band = min–max range)",
+    "timelineCovid": "covid",
+    "timelineLast": "last {count}",
+    "timelineAll": "all",
+    "timelineMethod": "How the projection works: for each reference year ({years}) we take the share of its final count reached on the same day before the race. This year's count divided by that share gives one estimate per year; the number shown is their median, the range is min–max. Reference years are the last 5 completed editions excluding 2020 (covid). Shortly after entries open the projection is rough.",
+    "timelineDataNote": "Data: the day an entry was created; its runners count on the same day. Only entries that are unpaid, paid, overpaid or confirmed with at least one runner (no cancelled or empty entries). Entry statuses were not yet used in 2012–2016, so entries with status New are counted there too if they have at least one runner. Runners added on site are not included.",
+    "timelineMissing": "No entry data (missing from the chart): {years}.",
+    "timelineAfterRace": "{year}: {count, plural, one {# entry} other {# entries}} created after race day not shown.",
+    "timelineNoCreated": "{year}: {count, plural, one {# entry} other {# entries}} without a creation date not shown.",
     "regsYear": "Year",
     "regsId": "ID",
     "regsName": "Name",
@@ -913,7 +1037,52 @@
     "regsNewPayment": "New payment",
     "regsDeletePayment": "Delete payment",
     "regsEmpty": "No entries in this year.",
-    "regsBack": "Back to entries"
+    "regsBack": "Back to entries",
+    "clubMergeTitle": "Clubs – merging ids",
+    "clubMergeHint": "Suggestions to merge different club ids that are in fact one club. The main id is chosen manually.",
+    "clubMergeIntro": "A club is its id in the club list: a renamed club stays one club and its names per edition are its history. Some clubs have more than one id, though (e.g. a registration created a new record instead of reusing the old one). Below are suggested pairs of different ids based on the similarity of their names. Nothing is merged automatically: for every merge choose which id stays the main one. Starts of the merged id are then counted under the main id (profile, results, statistics); no data is rewritten and a merge can be undone at any time. Every change is audited.",
+    "clubMergeSummary": "{clubs} clubs (ids) · {merged} merged ids under {mains} main ids",
+    "clubMergeSaved": "Saved.",
+    "clubMergeError_ids": "Enter two different club ids.",
+    "clubMergeError_hlavni": "Choose which id stays the main one.",
+    "clubMergeError_nezname": "The club id is not in the club list.",
+    "clubMergeError_same": "The main and the merged id must differ.",
+    "clubMergeError_empty": "Enter two club ids.",
+    "clubMergeError_main_merged": "The chosen main id is itself merged into another id – choose that one, or undo the merge first.",
+    "clubMergeError_other_merged": "The id is already merged into another id – undo that merge first.",
+    "clubMergeSuggestions": "Merge suggestions",
+    "clubMergeAll": "All ({count})",
+    "clubMergeConfidence_high": "High match",
+    "clubMergeConfidence_medium": "Medium match",
+    "clubMergeConfidence_low": "Low match",
+    "clubMergeScoreHint": "The 0–1 score compares the most similar names of both ids without diacritics, club type (OK, TJ, SK, K.O.B. …) and with known abbreviations (Loko, HK, Č. Třebová …). Different club types in one town (e.g. AC × K.O.B.) lower the score. Renames within one id are not suggested – that is still the same club. Even a high match is only a suggestion.",
+    "clubMergeReason_same_core": "same name without club type",
+    "clubMergeReason_abbreviation": "abbreviation",
+    "clubMergeReason_prefix_missing": "club type missing",
+    "clubMergeReason_prefix_conflict": "different club type",
+    "clubMergeReason_spelling": "similar spelling",
+    "clubMergeReason_subset": "one name contains the other",
+    "clubMergeMatched": "“{a}” ≈ “{b}”",
+    "clubMergeSameYears": "Both ids exist in the same edition: {years}. After the merge, starts of both ids in these editions are added up under the main id and shown under the main id's name.",
+    "clubMergeChooseMain": "Which id stays the main one?",
+    "clubMergeKeepMain": "Keep as main id",
+    "clubMergeAlreadyMerged": "Already merged: {ids}",
+    "clubMergeProfile": "Club profile",
+    "clubMergeUsage": "{starts, plural, one {# start} other {# starts}}, {years}",
+    "clubMergeConfirm": "Merge under the chosen main id",
+    "clubMergeReject": "Reject",
+    "clubMergeMore": "Show more ({count})",
+    "clubMergeManual": "Manual merge",
+    "clubMergeManualHint": "For a pair that is not suggested: enter two club ids and choose which one stays the main one.",
+    "clubMergeIdA": "First id",
+    "clubMergeIdB": "Second id",
+    "clubMergeClubs": "Merged clubs",
+    "clubMergeMainBadge": "Main id",
+    "clubMergeNoClubs": "None yet – every id is a club of its own.",
+    "clubMergeUnmerge": "Undo the merge of id {id}",
+    "clubMergeUnmergeShort": "Undo merge",
+    "clubMergeRejected": "Rejected suggestions ({count})",
+    "clubMergeRestore": "Restore to suggestions"
   },
   "Stats": {
     "overview": {
@@ -949,14 +1118,13 @@
       "oldest": "Oldest · {year}",
       "youngest": "Youngest · {year}",
       "ageUnit": "{age, plural, one {year} other {years}}",
-      "agesNote": "Age = race year − year of birth. Ages below 6 are left out (most likely a mistyped year of birth).",
+      "agesNote": "Age = race year − year of birth.",
       "recordEdition": "Record edition · {year}",
       "recordEditionUnit": "{count, plural, one {participant} other {participants}} · {newcomers, plural, one {# newcomer} other {# newcomers}} · {prs, plural, one {# personal best} other {# personal bests}}",
       "women": "Women on the course",
       "womenUnit": "of all starts",
       "womenPeak": "peak {year}: {share}",
       "clubs": "Most loyal club",
-      "clubsNote": "Starts per club. Approximate – club names are not unified yet.",
       "together": "Together on the course",
       "togetherUnit": "hours of running",
       "togetherNote": "≈ {days} days of non-stop running · {climb} km of climbing ({starts} × {metres} m)",
@@ -1264,10 +1432,13 @@
       "future": "time in the future",
       "stale": "older than 24 h",
       "too-long": "time too long",
-      "original-missing": "original entry not found"
+      "original-missing": "original entry not found",
+      "station-not-assigned": "station not assigned to you"
     },
     "forbiddenTitle": "Not allowed",
     "forbiddenText": "Split entry is only for station operators (splitmaker role) and organizers.",
+    "noStationTitle": "No station assigned",
+    "noStationText": "Ask an administrator to assign you a station (Race day → Live → Split operators and stations), then reload this page.",
     "home": "Home"
   },
   "LiveResults": {
@@ -1275,13 +1446,21 @@
     "intro": "Splits from station operators and the finish PC (OBD), and publishing to OFeed. Race zero: {zero}.",
     "zeroOverridden": "Zero time is overridden for a rehearsal!",
     "openSplits": "Open split entry",
+    "openSplitsAdmin": "Edition splits – overview and cleanup",
     "openBoard": "OFB board",
     "openOfeed": "Event in OFeed",
+    "openOfeedTest": "Test event in OFeed",
     "saved": "Saved.",
     "error": {
       "eventId": "Invalid OFeed event ID.",
       "password": "Invalid password (4–200 characters, single line).",
-      "zero": "Invalid test zero time."
+      "zero": "Invalid test zero time.",
+      "conflictStale": "The conflict no longer matches the stored time (manual correction or another decision meanwhile) – nothing changed.",
+      "assignment": "The assignment could not be saved (the account is not a splitmaker).",
+      "testEventId": "Invalid OFeed test event ID.",
+      "testPassword": "Invalid test event password (4–200 characters, single line).",
+      "ofeedProfile": "Unknown OFeed profile.",
+      "ofeedTestMissing": "Save the OFeed test event ID first."
     },
     "publish": {
       "disabled": "Publishing is disabled.",
@@ -1311,8 +1490,23 @@
     "colMode": "Mode",
     "colCompetitors": "Competitors",
     "ofeedTitle": "OFeed – live results and OFB board",
-    "ofeedIntro": "The OFeed event is created by Pavel or Martin. Paste its ID and password (valid 7 days). During the race the server uploads an IOF XML ResultList every ~30 s (single writer).",
+    "ofeedIntro": "The OFeed event is created by Pavel or Martin. Paste its ID and password (valid 7 days); a separate test event is used for the rehearsal. During the race the server uploads an IOF XML ResultList every ~30 s (single writer).",
     "ofeedDryRun": "Dry run (outside production): XML is generated but nothing is sent to OFeed.",
+    "ofeedProfileActive": {
+      "live": "Uploading to the LIVE OFeed event",
+      "test": "Uploading to the TEST OFeed event"
+    },
+    "ofeedProfileHint": {
+      "live": "The public website links to this event (the “Online results” button on race day).",
+      "test": "Rehearsal: data goes to the test event and the website does not link to OFeed publicly. Switch back to the live event before the race."
+    },
+    "ofeedSwitchToTest": "Switch to the test event",
+    "ofeedSwitchToLive": "Switch to the live event",
+    "ofeedProfileName": {
+      "live": "Live event",
+      "test": "Test event"
+    },
+    "ofeedProfileCurrent": "active",
     "ofeedEnabled": "Publish to OFeed",
     "ofeedEnabledHint": "Automatic only from 2 h before to 5 h after race zero, and only when data changed (otherwise every 10 min).",
     "ofeedEventId": "OFeed event ID",
@@ -1327,6 +1521,7 @@
     "onlineLink": "“Online results” link on the website",
     "onlineLinkAuto": "automatic from event ID",
     "onlineLinkNone": "not set",
+    "onlineLinkHiddenTest": "(OFeed link hidden, the test event is active)",
     "publishNow": "Upload now",
     "downloadXml": "Download IOF XML",
     "devicesTitle": "Device keys (OBD client on the finish PC)",
@@ -1359,7 +1554,87 @@
     "stations": "Split stations",
     "stationsHint": "Lines code=label, code 1–8 (9 = finish from OBD). Default 1=1,3 km and 3=2,7 km.",
     "zeroOverride": "Test zero time (rehearsal)",
-    "zeroOverrideHint": "Empty = race day 10:15. For a rehearsal set e.g. today and a time. Clear it afterwards!"
+    "zeroOverrideHint": "Empty = race day 10:15. For a rehearsal set e.g. today and a time. Clear it afterwards!",
+    "splitmakersTitle": "Split operators and stations",
+    "splitmakersIntro": "Accounts with the splitmaker role (set the role under Users). An operator sees only the assigned stations on /mezicasy and the server rejects entries for other ones. Without an assignment nothing can be entered. Admins and organizers may use all stations.",
+    "splitmakersEmpty": "No account has the splitmaker role.",
+    "splitmakerNone": "no station – cannot enter"
+  },
+  "LiveSplits": {
+    "title": "Edition splits",
+    "heading": "Splits {year}",
+    "intro": "Overview, corrections and cleanup of the current edition's splits. Official race zero: {zero}. Admin only.",
+    "error": {
+      "filter": "Invalid split or source selection.",
+      "blocked": "Bulk clearing is disabled from race zero on. Correct single times in the editor.",
+      "year": "The current edition changed meanwhile – reload the page.",
+      "confirm": "The typed year does not match, nothing was deleted.",
+      "bib": "Invalid bib (1–999).",
+      "split": "Invalid split.",
+      "time": "Invalid time (m:ss or h:mm:ss since start, 0–6 h; wall clock after the bib's start).",
+      "unknownBib": "The bib is not in the start list – tick “save anyway”.",
+      "changed": "The time changed meanwhile – check the current value and try again.",
+      "reason-required": "Enter a reason when overwriting or deleting.",
+      "missing": "The time no longer exists."
+    },
+    "clearDone": "Deleted: {splits} splits, {entries} journal entries, revoked keys: {tokens}.",
+    "clearTitle": "Clear edition splits",
+    "clearIntro": "After a dry run, deletes the splits (mcvv_split) and their journal including conflicts. A snapshot of the deleted times is stored in the audit log. Results (mcvv_time), records and the start list are not touched.",
+    "clearAllowedUntil": "Allowed until race zero ({zero}). After that only single corrections.",
+    "clearBlocked": "Bulk clearing is disabled from race zero ({zero}) on. Correct single times in the split editor.",
+    "filterSplits": "Splits",
+    "filterSource": "Source",
+    "filterSourceHint": "“All” deletes every time of the selected splits. With a source or key only times written by that source and its journal entries.",
+    "sourceAll": "all",
+    "sourceWeb": "web (split operators)",
+    "sourceObd": "OBD (all device keys)",
+    "sourceToken": "key {label}",
+    "previewButton": "Show preview",
+    "previewSummary": "{splits} splits and {entries} journal entries will be deleted ({conflicts} of them conflicts).",
+    "optionRevokeTokens": "Also revoke all device keys of the edition",
+    "optionClearZero": "Also remove the test zero",
+    "clearAfterHint": "Afterwards: delete the OBD client's state.json on the finish PC (otherwise it will not resend confirmed rows) and let operators reload /mezicasy. The next OFeed upload runs even without data changes.",
+    "confirmLabel": "Type the year to confirm ({year})",
+    "clearButton": "Delete permanently",
+    "badgeManual": "manual",
+    "badgeLegacy": "no journal",
+    "sourceAdmin": "manual (admin)",
+    "saved": {
+      "create": "Time added.",
+      "correct": "Time overwritten.",
+      "unchanged": "No change – the time is already stored.",
+      "delete": "Time deleted."
+    },
+    "editTitle": "Bib {bib}",
+    "unknownBib": "The bib is not in this edition's start list. Saving requires “save anyway”.",
+    "orderWarning": "Warning: times are not increasing (split 1 < split 2 < finish).",
+    "editIntro": "A manual entry always overwrites the stored time (even on race day) and neither OBD nor the web will overwrite it. Overwriting and deleting require a reason; everything goes to the journal and audit log. Open conflicts for the time are dismissed.",
+    "hasConflict": "open conflict",
+    "noTime": "no time",
+    "valueLabel": "Time",
+    "modeLabel": "Time format",
+    "modeRace": "since start (m:ss)",
+    "modeClock": "wall clock (hh:mm:ss)",
+    "reasonRequired": "Reason (required)",
+    "reasonOptional": "Note (optional)",
+    "forceUnknown": "save anyway",
+    "overwrite": "Overwrite",
+    "add": "Add",
+    "deleteReason": "reason for deletion",
+    "delete": "Delete",
+    "historyTitle": "Journal of this bib",
+    "closeEdit": "Close editor",
+    "tableTitle": "Splits",
+    "searchLabel": "Bib or name",
+    "showAll": "include bibs without times",
+    "search": "Search",
+    "editBibLabel": "Edit bib",
+    "editOpen": "Open",
+    "tableLegend": "“manual” = entered by admin, ! = open conflict, ↕ = times not increasing.",
+    "tableEmpty": "No splits.",
+    "colName": "Name",
+    "notInStart": "not in start list",
+    "editLink": "Edit"
   },
   "AdminUsers": {
     "title": "Users and roles",
@@ -1433,6 +1708,12 @@
     "action_obd_export": "OBD export",
     "action_import_presentation": "post-presentation import",
     "action_import_results": "results import",
+    "action_splits_cleared": "splits cleared",
+    "action_split_set": "manual split entry",
+    "action_split_deleted": "manual split deletion",
+    "action_split_conflict_resolved": "split conflict accepted",
+    "action_split_conflict_dismissed": "split conflict dismissed",
+    "action_ofeed_profile": "OFeed event switch",
     "action_other": "action"
   },
   "RaceDayImport": {

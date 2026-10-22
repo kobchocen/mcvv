@@ -91,8 +91,11 @@ export type ObdRowError = {
 };
 
 export const RUNNER_ID = /^\d{8}$/;
-/** Kód klubu: char(3), 1–3 znaky bez mezer a středníku (např. CHC, 119, 000, ÚOL). */
-export const CLUB_ID = /^[^\s;]{1,3}$/u;
+/**
+ * Kód klubu: 1–8 znaků bez mezer a středníku (např. CHC, 119, 000, ÚOL, 1000). cis_klub.id je
+ * od #104 varchar(8); OBD dnes posílá jen id, která dostalo v exportu.
+ */
+export const CLUB_ID = /^[^\s;]{1,8}$/u;
 export const NAME_MAX = 50;
 const SMALLINT_MAX = 32767;
 
@@ -143,7 +146,7 @@ export function parseRunnersFile(lines: ObdLine[]) {
   return parseDict("cis_bezec", lines, RUNNER_ID);
 }
 
-/** `cis_klub.csv`: `id;jmeno` (id char(3)). */
+/** `cis_klub.csv`: `id;jmeno` (id varchar(8)). */
 export function parseClubsFile(lines: ObdLine[]) {
   return parseDict("cis_klub", lines, CLUB_ID);
 }

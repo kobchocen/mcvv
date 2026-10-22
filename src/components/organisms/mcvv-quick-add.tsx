@@ -13,7 +13,8 @@ export function McvvQuickAdd({
   year: number;
   /** null = přihláška ještě neexistuje, založí se s prvním běžcem. */
   registrationId: number | null;
-  runners: { id: string; name: string }[];
+  /** Klub z poslední přihlášky běžce (id + text), jinak výchozí klub přihlášky (Q35). */
+  runners: { id: string; name: string; clubId?: string; clubName?: string }[];
   clubName: string;
   copy: { quickAdd: string; runnerTitle: string };
 }) {
@@ -27,7 +28,8 @@ export function McvvQuickAdd({
               <input type="hidden" name="year" value={year} />
               <input type="hidden" name="registrationId" value={registrationId ?? 0} />
               <input type="hidden" name="runnerId" value={runner.id} />
-              <input type="hidden" name="clubName" value={clubName} />
+              <input type="hidden" name="clubId" value={runner.clubId ?? ""} />
+              <input type="hidden" name="clubName" value={runner.clubName ?? clubName} />
               <Button
                 type="submit"
                 variant="outline"

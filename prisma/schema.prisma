@@ -78,9 +78,11 @@ model PhotoLocation {
   @@map("cis_fotka_kde")
 }
 
-/// Číselník klubů v rámci roků (composite key: id + rok)
+/// Číselník klubů v rámci roků (composite key: id + rok). Identita klubu napříč ročníky je
+/// `id` (#104); `jmeno` je název platný v daném ročníku (klub se může přejmenovat).
+/// varchar(8): legacy char(3) by číselná id nad 999 nepojal (dnešní id mají nejvýš 3 znaky).
 model Club {
-  id      String    @map("id") @db.Char(3)
+  id      String    @map("id") @db.VarChar(8)
   year    Int       @map("rok") @db.SmallInt
   name    String    @map("jmeno") @db.VarChar(50)
   created DateTime? @map("created")
@@ -93,6 +95,30 @@ model Club {
 
   @@id([id, year])
   @@map("cis_klub")
+}
+
+/// Ruční sloučení dvou id klubů, která jsou fakticky jeden klub (#104), např. 216 → CHC.
+/// Jen mapování: legacy tabulky se nepřepisují, smazáním řádku se sloučení vrátí.
+/// Vždy ploché: hlavní id (`hlavni_klub_id`) samo sloučené není.
+model ClubMerge {
+  clubId     String   @id @map("klub_id") @db.VarChar(8)
+  mainClubId String   @map("hlavni_klub_id") @db.VarChar(8)
+  createdAt  DateTime @default(now()) @map("created_at")
+  author     String?  @db.VarChar(255)
+
+  @@index([mainClubId])
+  @@map("mcvv_klub_slouceni")
+}
+
+/// Zamítnutý návrh sloučení dvou id klubů (seřazená dvojice), aby se znovu nenabízel.
+model ClubMergeRejection {
+  clubIdA   String   @map("klub_id_a") @db.VarChar(8)
+  clubIdB   String   @map("klub_id_b") @db.VarChar(8)
+  createdAt DateTime @default(now()) @map("created_at")
+  author    String?  @db.VarChar(255)
+
+  @@id([clubIdA, clubIdB])
+  @@map("mcvv_klub_navrh_zamitnuty")
 }
 
 /// Číselník typů obrázků pro web
@@ -206,7 +232,8 @@ model WebImage {
   type   WebImageType @relation(fields: [typeId], references: [id])
   runner Runner?      @relation(fields: [runnerId], references: [id])
 
-  news News[]
+  news                News[]
+  newsletterCampaigns NewsletterCampaign[]
 
   @@map("webimages")
 }
@@ -238,7 +265,7 @@ model Registration {
 /// Řádek přihlášky (jeden běžec v přihlášce)
 model RegistrationLine {
   runnerId       String    @map("bezec_id") @db.Char(8)
-  clubId         String    @map("klub_id") @db.Char(3)
+  clubId         String    @map("klub_id") @db.VarChar(8)
   categoryId     String    @map("kateg_id") @db.Char(1)
   year           Int       @map("rok") @db.SmallInt
   bib            Int?      @map("cislo") @db.SmallInt
@@ -274,7 +301,7 @@ model Payment {
 /// Startovní listina (přiřazená čísla)
 model StartEntry {
   runnerId   String  @map("bezec_id") @db.Char(8)
-  clubId     String  @map("klub_id") @db.Char(3)
+  clubId     String  @map("klub_id") @db.VarChar(8)
   categoryId String  @map("kateg_id") @db.Char(1)
   year       Int     @map("rok") @db.SmallInt
   bib        Int     @map("cislo") @db.SmallInt
@@ -293,7 +320,7 @@ model StartEntry {
 model Result {
   runnerId   String  @map("bezec_id") @db.Char(8)
   year       Int     @map("rok") @db.SmallInt
-  clubId     String  @map("klub_id") @db.Char(3)
+  clubId     String  @map("klub_id") @db.VarChar(8)
   categoryId String  @map("kateg_id") @db.Char(1)
   time       Int     @map("time") @db.SmallInt // v sekundách
   runnerName String? @map("bezec_name") @db.VarChar(50)
@@ -354,6 +381,9 @@ model User {
   /// Souhlas se zasíláním informací e-mailem (dřív jen `mcvv_prihlaska.promotion`):
   /// true = nechce, false = chce, null = nerozhodl (platí poslední přihláška se stejným e-mailem).
   promotionOptOut Boolean?  @map("promotion_optout")
+  /// Přiřazená stanoviště splitmakera (kódy splitů, např. "1" nebo "13"); null = žádné.
+  /// Admin a organizer zapisují na všechna stanoviště bez ohledu na tohle pole.
+  splitStations   String?   @map("split_stations") @db.VarChar(8)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -463,10 +493,21 @@ model NewsletterCampaign {
   createdAt              DateTime         @default(now()) @map("created_at")
   updatedAt              DateTime         @updatedAt @map("updated_at")
 
-  createdBy  User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  recipients NewsletterRecipient[]
+  /// Volitelný banner v hlavičce e-mailu (#Q27): nahraný obrázek (webimages, typ „newsletter“)
+  /// nebo připravený banner z public/images/newsletter (klíč v NEWSLETTER_BANNER_PRESETS).
+  bannerImageId Int?    @map("banner_image_id") @db.SmallInt
+  bannerPreset  String? @map("banner_preset") @db.VarChar(40)
+  /// Alt text banneru (povinný, pokud je banner zvolený).
+  bannerAlt     String? @map("banner_alt") @db.VarChar(200)
+  /// Odkaz po kliknutí na banner (výchozí https://mcvv.org).
+  bannerLink    String? @map("banner_link") @db.VarChar(500)
+
+  createdBy   User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  bannerImage WebImage?             @relation(fields: [bannerImageId], references: [id], onDelete: SetNull)
+  recipients  NewsletterRecipient[]
 
   @@index([createdById])
+  @@index([bannerImageId])
   @@map("mcvv_newsletter")
 }
 
@@ -694,6 +735,10 @@ model Message {
   side         MessageSide
   body         String      @db.Text
   createdAt    DateTime    @default(now()) @map("created_at")
+  /// Potvrzení o přečtení (jen u zpráv pořadatele): kdy zprávu poprvé zobrazil přihlašující
+  /// (přihlášený vlastník přihlášky / vlákna, ne pořadatel) na webu, potvrdil přečtení nebo
+  /// odpověděl. E-mailové upozornění přečtení nedokazuje, proto ho nenastavuje.
+  readAt       DateTime?   @map("read_at")
 
   thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   author User?         @relation(fields: [authorUserId], references: [id], onDelete: SetNull)

@@ -98,7 +98,7 @@ describe("dictionary files", () => {
 
   it("parses cis_klub incl. club 000 with an empty name", () => {
     const parsed = parseClubsFile(
-      lines("000;\nNEW;Nový oddíl\ntst;Duplicitní\nTST;Testovací klub\nTOOLONG;x"),
+      lines("000;\nNEW;Nový oddíl\ntst;Duplicitní\nTST;Testovací klub\nTOOLONGID;x"),
     );
     assert.deepEqual(
       parsed.rows.map((row) => row.id),

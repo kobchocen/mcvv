@@ -10,6 +10,8 @@ export type AuditAction =
   | "raceday.obd_export"
   | "raceday.import_presentation"
   | "raceday.import_results"
+  // Den závodu: hromadné vyčištění mezičasů ročníku (Q31, Q32), detail se snímkem smazaných řádků.
+  | "raceday.splits_cleared"
   // Změny přihlášek od přihlašujících (#130) – podklad pro denní souhrn pořadateli.
   | "entry.created"
   | "entry.runner_added"

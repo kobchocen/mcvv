@@ -60,6 +60,7 @@ export default defineRouting({
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
     // den závodu: živé mezičasy a OFeed (#120–#122)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
+    "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
     "/mezicasy": "/mezicasy",
   },
 });

@@ -118,6 +118,26 @@ Všechno 1:1 podle legacy, LuM ani OBD nic nemění.
 Klient navíc snese `,`/tab, BOM, CRLF, hlavičku a čas `m:ss` / `h:mm:ss` (legacy by je nepřijal,
 OBD je nepíše). Když je číslo v souboru vícekrát, platí první řádek jako v legacy.
 
+## Vyčištění mezičasů ročníku (Q31, Q32)
+
+`/admin/den-zavodu/zive/casy` (odkaz „Mezičasy ročníku“ na stránce Živě), jen admin.
+
+- Filtr: splity (stanoviště + cíl 9) a zdroj: vše / web / OBD (všechny klíče) / konkrétní klíč
+  zařízení. „Vše“ smaže všechny řádky `mcvv_split` vybraných splitů aktuálního ročníku (i legacy
+  řádky bez deníku); se zdrojem jen řádky, které ten zdroj vlastní (zápis `applied` / `resolved`
+  se stejným číslem a časem), a jeho záznamy v deníku.
+- Náhled počtů → potvrzení opsáním ročníku → jedna transakce: smaže `mcvv_split`, záznamy deníku
+  `mcvv_split_entry` včetně konfliktů (jinak by „Přijmout“ vrátil testovací čas a deduplikace by
+  stejný čas ze stejného klíče znovu nezapsala), vynuluje `ofeed_last_hash` (příští upload do OFeed
+  proběhne i beze změny). Volitelně zneplatní klíče zařízení ročníku a smaže zkušební nulu.
+- Audit `raceday.splits_cleared` (`target year:{rok}`): filtr, počty a snímek smazaných řádků
+  `[číslo, split, čas, autor, created]` jako podklad pro případnou obnovu. Ukazuje se v historii
+  na `/admin/den-zavodu`.
+- Q32: hromadné vyčištění je zakázané od skutečné nuly ročníku (den závodu 10:15, zkušební nula se
+  nebere v úvahu) dál; před ní povolené. Jednotlivé opravy jdou vždy (editace mezičasů).
+- Starší ročníky (legacy archiv) se tudy smazat nedají – vždy jen aktuální ročník.
+- Po vyčištění smazat na cílovém PC `state.json` klienta OBD, jinak už potvrzené řádky znovu nepošle.
+
 ## OFeed (#122, #127)
 
 - Událost na orienteerfeed.com zakládá Pavel nebo Martin (veřejná). V `/admin/den-zavodu/zive` se uloží
@@ -146,4 +166,5 @@ OBD je nepíše). Když je číslo v souboru vícekrát, platí první řádek j
 3. Na cílovém PC (Windows 11) spustit `obd-klient.exe` – při prvním spuštění se zeptá na adresu,
    klíč, ročník a cestu k souboru s mezičasy –, `obd-klient.exe -check`, pak běh. Vyzkoušet i opravu
    času v OBD (na webu zůstane první čas, admin uvidí konflikt).
-4. Po generálce smazat zkušební nulu, zrušit tokeny, smazat testovací záznamy.
+4. Po generálce: `/admin/den-zavodu/zive/casy` → „Vyčistit mezičasy ročníku“ (vše, zaškrtnout
+   zneplatnění klíčů a smazání zkušební nuly), na cílovém PC smazat `state.json` klienta.

@@ -1424,6 +1424,7 @@
     "intro": "Splits from station operators and the finish PC (OBD), and publishing to OFeed. Race zero: {zero}.",
     "zeroOverridden": "Zero time is overridden for a rehearsal!",
     "openSplits": "Open split entry",
+    "openSplitsAdmin": "Edition splits – overview and cleanup",
     "openBoard": "OFB board",
     "openOfeed": "Event in OFeed",
     "saved": "Saved.",
@@ -1510,6 +1511,36 @@
     "zeroOverride": "Test zero time (rehearsal)",
     "zeroOverrideHint": "Empty = race day 10:15. For a rehearsal set e.g. today and a time. Clear it afterwards!"
   },
+  "LiveSplits": {
+    "title": "Edition splits",
+    "heading": "Splits {year}",
+    "intro": "Overview, corrections and cleanup of the current edition's splits. Official race zero: {zero}. Admin only.",
+    "error": {
+      "filter": "Invalid split or source selection.",
+      "blocked": "Bulk clearing is disabled from race zero on. Correct single times in the editor.",
+      "year": "The current edition changed meanwhile – reload the page.",
+      "confirm": "The typed year does not match, nothing was deleted."
+    },
+    "clearDone": "Deleted: {splits} splits, {entries} journal entries, revoked keys: {tokens}.",
+    "clearTitle": "Clear edition splits",
+    "clearIntro": "After a dry run, deletes the splits (mcvv_split) and their journal including conflicts. A snapshot of the deleted times is stored in the audit log. Results (mcvv_time), records and the start list are not touched.",
+    "clearAllowedUntil": "Allowed until race zero ({zero}). After that only single corrections.",
+    "clearBlocked": "Bulk clearing is disabled from race zero ({zero}) on. Correct single times in the split editor.",
+    "filterSplits": "Splits",
+    "filterSource": "Source",
+    "filterSourceHint": "“All” deletes every time of the selected splits. With a source or key only times written by that source and its journal entries.",
+    "sourceAll": "all",
+    "sourceWeb": "web (split operators)",
+    "sourceObd": "OBD (all device keys)",
+    "sourceToken": "key {label}",
+    "previewButton": "Show preview",
+    "previewSummary": "{splits} splits and {entries} journal entries will be deleted ({conflicts} of them conflicts).",
+    "optionRevokeTokens": "Also revoke all device keys of the edition",
+    "optionClearZero": "Also remove the test zero",
+    "clearAfterHint": "Afterwards: delete the OBD client's state.json on the finish PC (otherwise it will not resend confirmed rows) and let operators reload /mezicasy. The next OFeed upload runs even without data changes.",
+    "confirmLabel": "Type the year to confirm ({year})",
+    "clearButton": "Delete permanently"
+  },
   "AdminUsers": {
     "title": "Users and roles",
     "intro": "Site accounts and their roles. Only an administrator can change roles; the change applies immediately (also to signed-in users) and is written to the audit log. A privileged role requires a verified e-mail. The last administrator cannot be removed and you cannot change your own role.",
@@ -1582,6 +1613,7 @@
     "action_obd_export": "OBD export",
     "action_import_presentation": "post-presentation import",
     "action_import_results": "results import",
+    "action_splits_cleared": "splits cleared",
     "action_other": "action"
   },
   "RaceDayImport": {

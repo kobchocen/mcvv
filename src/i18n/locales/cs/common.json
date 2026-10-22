@@ -1424,6 +1424,7 @@
     "intro": "Mezičasy od splitmakerů a z cílového PC (OBD) a publikace do OFeed. Nula závodu: {zero}.",
     "zeroOverridden": "Nula je přepsaná pro zkoušku nanečisto!",
     "openSplits": "Otevřít zadávání mezičasů",
+    "openSplitsAdmin": "Mezičasy ročníku – přehled a vyčištění",
     "openBoard": "Tabule OFB",
     "openOfeed": "Akce v OFeed",
     "saved": "Uloženo.",
@@ -1510,6 +1511,36 @@
     "zeroOverride": "Zkušební nula (generálka)",
     "zeroOverrideHint": "Prázdné = den závodu 10:15. Pro zkoušku nastavte např. dnešek a čas. Po zkoušce smažte!"
   },
+  "LiveSplits": {
+    "title": "Mezičasy ročníku",
+    "heading": "Mezičasy {year}",
+    "intro": "Přehled, oprava a úklid mezičasů aktuálního ročníku. Skutečná nula ročníku: {zero}. Jen pro administrátora.",
+    "error": {
+      "filter": "Neplatný výběr splitů nebo zdroje.",
+      "blocked": "Hromadné vyčištění je od nuly závodu zakázané. Jednotlivé časy opravte v editaci.",
+      "year": "Mezitím se změnil aktuální ročník – načtěte stránku znovu.",
+      "confirm": "Opsaný ročník nesouhlasí, nic se nesmazalo."
+    },
+    "clearDone": "Smazáno mezičasů: {splits}, záznamů deníku: {entries}, zneplatněno klíčů: {tokens}.",
+    "clearTitle": "Vyčistit mezičasy ročníku",
+    "clearIntro": "Po zkoušce nanečisto smaže mezičasy (mcvv_split) i jejich deník včetně konfliktů. Do auditu se uloží snímek smazaných časů. Výsledky (mcvv_time), rekordy ani startovka se nemění.",
+    "clearAllowedUntil": "Povoleno do nuly závodu ({zero}). Pak už jen jednotlivé opravy.",
+    "clearBlocked": "Hromadné vyčištění je od nuly závodu ({zero}) zakázané. Jednotlivé časy opravte v editaci mezičasů.",
+    "filterSplits": "Splity",
+    "filterSource": "Zdroj",
+    "filterSourceHint": "„Vše“ smaže všechny časy vybraných splitů. Se zdrojem nebo klíčem jen časy, které ten zdroj zapsal, a jeho záznamy v deníku.",
+    "sourceAll": "vše",
+    "sourceWeb": "web (splitmakeři)",
+    "sourceObd": "OBD (všechny klíče zařízení)",
+    "sourceToken": "klíč {label}",
+    "previewButton": "Zobrazit náhled",
+    "previewSummary": "Smaže se mezičasů: {splits}, záznamů deníku: {entries} (z toho konfliktů: {conflicts}).",
+    "optionRevokeTokens": "Zároveň zneplatnit všechny klíče zařízení ročníku",
+    "optionClearZero": "Zároveň smazat zkušební nulu",
+    "clearAfterHint": "Po vyčištění: na cílovém PC smažte state.json klienta OBD (jinak už potvrzené řádky znovu nepošle) a splitmakeři ať načtou /mezicasy znovu. Příští nahrání do OFeed proběhne i beze změny dat.",
+    "confirmLabel": "Pro potvrzení opište ročník ({year})",
+    "clearButton": "Nevratně smazat"
+  },
   "AdminUsers": {
     "title": "Uživatelé a role",
     "intro": "Účty webu a jejich role. Roli může měnit jen administrátor; změna platí okamžitě (i pro už přihlášené) a zapisuje se do auditu. Privilegovanou roli lze dát jen účtu s ověřeným e-mailem. Posledního administrátora nelze odebrat a vlastní roli si změnit nemůžete.",
@@ -1582,6 +1613,7 @@
     "action_obd_export": "export pro OBD",
     "action_import_presentation": "import po prezentaci",
     "action_import_results": "import výsledků",
+    "action_splits_cleared": "vyčištění mezičasů",
     "action_other": "akce"
   },
   "RaceDayImport": {

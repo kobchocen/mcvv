@@ -10,6 +10,8 @@ import { runOfeedPublish } from "@/lib/ofeed/publisher";
 import { parseEventId, parsePassword, saveOfeedSettings } from "@/lib/ofeed/settings";
 
 import { parsePragueLocal } from "./admin-core";
+import { saveAssignment } from "./assignment";
+import { assignmentFromForm } from "./assignment-core";
 import { clearSplits } from "./clear";
 import { deleteManualSplit, setManualSplit } from "./manual";
 import {
@@ -254,4 +256,16 @@ export async function deleteSplitAction(formData: FormData): Promise<void> {
   });
   if (!result.ok) await back({ edit, error: result.reason }, SPLITS_PAGE);
   await back({ edit, saved: "delete" }, SPLITS_PAGE);
+}
+
+/** Přiřazení stanovišť splitmakerovi (jen admin). Prázdný výběr = splitmaker nezapisuje nic. */
+export async function saveSplitmakerStationsAction(formData: FormData): Promise<void> {
+  const session = await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId) || userId < 1) await back({ error: "assignment" });
+  const stations = await getStations();
+  const value = assignmentFromForm(formData.getAll("stations").map(String), stations);
+  const result = await saveAssignment(session, userId, value);
+  if (result === "not_found") await back({ error: "assignment" });
+  await back({ saved: "assignment" });
 }

@@ -1413,10 +1413,13 @@
       "future": "time in the future",
       "stale": "older than 24 h",
       "too-long": "time too long",
-      "original-missing": "original entry not found"
+      "original-missing": "original entry not found",
+      "station-not-assigned": "station not assigned to you"
     },
     "forbiddenTitle": "Not allowed",
     "forbiddenText": "Split entry is only for station operators (splitmaker role) and organizers.",
+    "noStationTitle": "No station assigned",
+    "noStationText": "Ask an administrator to assign you a station (Race day → Live → Split operators and stations), then reload this page.",
     "home": "Home"
   },
   "LiveResults": {
@@ -1432,7 +1435,8 @@
       "eventId": "Invalid OFeed event ID.",
       "password": "Invalid password (4–200 characters, single line).",
       "zero": "Invalid test zero time.",
-      "conflictStale": "The conflict no longer matches the stored time (manual correction or another decision meanwhile) – nothing changed."
+      "conflictStale": "The conflict no longer matches the stored time (manual correction or another decision meanwhile) – nothing changed.",
+      "assignment": "The assignment could not be saved (the account is not a splitmaker)."
     },
     "publish": {
       "disabled": "Publishing is disabled.",
@@ -1510,7 +1514,11 @@
     "stations": "Split stations",
     "stationsHint": "Lines code=label, code 1–8 (9 = finish from OBD). Default 1=1,3 km and 3=2,7 km.",
     "zeroOverride": "Test zero time (rehearsal)",
-    "zeroOverrideHint": "Empty = race day 10:15. For a rehearsal set e.g. today and a time. Clear it afterwards!"
+    "zeroOverrideHint": "Empty = race day 10:15. For a rehearsal set e.g. today and a time. Clear it afterwards!",
+    "splitmakersTitle": "Split operators and stations",
+    "splitmakersIntro": "Accounts with the splitmaker role (set the role under Users). An operator sees only the assigned stations on /mezicasy and the server rejects entries for other ones. Without an assignment nothing can be entered. Admins and organizers may use all stations.",
+    "splitmakersEmpty": "No account has the splitmaker role.",
+    "splitmakerNone": "no station – cannot enter"
   },
   "LiveSplits": {
     "title": "Edition splits",

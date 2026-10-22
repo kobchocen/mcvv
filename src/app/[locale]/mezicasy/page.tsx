@@ -4,6 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvSplitsClient } from "@/components/organisms/mcvv-splits-client";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
+import { getAssignedStations } from "@/lib/live/assignment";
+import { allowedStationsFor } from "@/lib/live/assignment-core";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
 import { canAccessSplits } from "@/lib/auth/roles";
 
@@ -42,7 +44,29 @@ export default async function SplitsPage({ params }: PageProps) {
       </main>
     );
   }
-  const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
+  const [ctx, allStations, assigned] = await Promise.all([
+    getRaceContext(),
+    getStations(),
+    getAssignedStations(session.id),
+  ]);
+  // Splitmaker vidí jen přiřazená stanoviště (server zápis na jiné odmítne).
+  const stations = allowedStationsFor(session.role, assigned, allStations);
+  if (stations.length === 0) {
+    return (
+      <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
+        <div className="mx-auto max-w-md" data-testid="no-station">
+          <h1 className="font-display text-2xl font-bold">{t("noStationTitle")}</h1>
+          <p className="mt-3 text-sm text-race-muted">{t("noStationText")}</p>
+          <Link
+            href="/"
+            className="mt-6 inline-block text-sm font-medium text-race-accent hover:underline"
+          >
+            {t("home")}
+          </Link>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <McvvSplitsClient

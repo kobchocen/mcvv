@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
-import { applyWebEntries } from "@/lib/live/ingest";
+import { allowedStationsFor } from "@/lib/live/assignment-core";
+import { getAssignedStations } from "@/lib/live/assignment";
+import { applyWebEntries, rejectWebEntries, type EntryResult } from "@/lib/live/ingest";
 import { sameOrigin, summarize, webBatchSchema } from "@/lib/live/ingest-core";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
 import { RateLimiter } from "@/lib/live/rate-limit";
@@ -46,14 +48,27 @@ export async function POST(request: NextRequest) {
       { status: 422, headers: noStore },
     );
   }
-  const stations = await getStations();
-  const allowed = new Set(stations.map((station) => station.code));
-  if (parsed.data.entries.some((entry) => !allowed.has(entry.split))) {
+  const [stations, assigned] = await Promise.all([getStations(), getAssignedStations(session.id)]);
+  const known = new Set(stations.map((station) => station.code));
+  if (parsed.data.entries.some((entry) => !known.has(entry.split))) {
     return NextResponse.json({ error: "station" }, { status: 422, headers: noStore });
   }
+  // Splitmaker smí jen na přiřazená stanoviště; admin a organizer na všechna.
+  const allowed = new Set(
+    allowedStationsFor(session.role, assigned, stations).map((station) => station.code),
+  );
   try {
     const ctx = await getRaceContext();
-    const results = await applyWebEntries(parsed.data.entries, ctx, session);
+    const permitted = parsed.data.entries.filter((entry) => allowed.has(entry.split));
+    const refused = parsed.data.entries.filter((entry) => !allowed.has(entry.split));
+    const byId = new Map<string, EntryResult>();
+    for (const result of await applyWebEntries(permitted, ctx, session)) {
+      byId.set(result.id, result);
+    }
+    for (const result of await rejectWebEntries(refused, ctx, session, "station-not-assigned")) {
+      byId.set(result.id, result);
+    }
+    const results = parsed.data.entries.map((entry) => byId.get(entry.id)!);
     return NextResponse.json(
       {
         ok: true,

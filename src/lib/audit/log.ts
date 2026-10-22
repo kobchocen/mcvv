@@ -7,6 +7,8 @@ import { prisma } from "@/lib/db/client";
 export type AuditAction =
   | "category.records_recalculated"
   | "user.role_change"
+  // Přiřazení splitmakera ke stanovišti (mcvv_user.split_stations).
+  | "user.split_stations_change"
   | "raceday.obd_export"
   | "raceday.import_presentation"
   | "raceday.import_results"

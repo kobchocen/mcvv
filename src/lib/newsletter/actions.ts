@@ -19,6 +19,7 @@ import {
 } from "./core";
 import {
   BANNER_ERROR_MESSAGES,
+  bannerChoiceValue,
   bannerPreset,
   campaignBanner,
   normalizeBannerAlt,
@@ -97,7 +98,24 @@ async function bannerFromForm(
   };
 }
 
-export async function saveNewsletter(formData: FormData): Promise<void> {
+/** Výsledek uložení konceptu (formulář zůstává na stránce, žádné přesměrování). */
+export type SaveNewsletterResult =
+  | {
+      ok: true;
+      /** Čas uložení (ISO) pro „Uloženo v HH:MM“. */
+      savedAt: string;
+      /** Banner, jak je teď uložený (hodnoty pro pole formuláře). */
+      banner: { choice: string; alt: string; link: string };
+      /** Banner se neuložil (ostatní úpravy ano). */
+      bannerError?: string;
+    }
+  | { ok: false; message: string };
+
+/**
+ * Uloží koncept. Existující kampaň se uloží na místě (vrátí výsledek, stránka se jen obnoví
+ * přes revalidatePath); nová kampaň se po uložení přesměruje do detailu.
+ */
+export async function saveNewsletterDraft(formData: FormData): Promise<SaveNewsletterResult> {
   const session = await requireStaff();
   const id = formInt(formData, "id");
   const subject = formString(formData, "subject").slice(0, 200);
@@ -105,35 +123,21 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
   const audienceUsers = formChecked(formData, "audienceUsers");
   const audienceYears = clampYears(formInt(formData, "audienceYears"));
   const excludeCurrentEntrants = formChecked(formData, "excludeCurrentEntrants");
-  const locale = await getLocale();
   if (!subject || !body.trim()) {
-    throw new Error("Předmět i text jsou povinné.");
+    return { ok: false, message: "Předmět i text jsou povinné." };
   }
-  let campaignId = id;
   if (id) {
-    const existing = await prisma.newsletterCampaign.findUnique({ where: { id } });
+    const existing = await prisma.newsletterCampaign.findUnique({
+      where: { id },
+      select: { status: true },
+    });
     if (!existing || existing.status === "sending" || existing.status === "sent") {
-      throw new Error("Odesílanou nebo odeslanou kampaň nelze upravit.");
+      return { ok: false, message: "Odesílanou nebo odeslanou kampaň nelze upravit." };
     }
   }
   const banner = await bannerFromForm(formData);
   const bannerData = "fields" in banner ? banner.fields : {};
-  if (id) {
-    // Any edit invalidates the previous test send.
-    await prisma.newsletterCampaign.update({
-      where: { id },
-      data: {
-        subject,
-        body,
-        audienceUsers,
-        audienceYears,
-        excludeCurrentEntrants,
-        ...bannerData,
-        status: "draft",
-        testSentAt: null,
-      },
-    });
-  } else {
+  if (!id) {
     const created = await prisma.newsletterCampaign.create({
       data: {
         subject,
@@ -144,18 +148,53 @@ export async function saveNewsletter(formData: FormData): Promise<void> {
         ...bannerData,
         createdById: session.id,
       },
+      select: { id: true },
     });
-    campaignId = created.id;
+    revalidatePath("/[locale]/admin/newsletter", "page");
+    // Nová kampaň: do detailu (redirect vyhazuje, return jen pro typy).
+    return redirect({
+      href: {
+        pathname: "/admin/newsletter/[id]",
+        params: { id: String(created.id) },
+        ...("error" in banner ? { query: { banner: banner.error } } : {}),
+      },
+      locale: await getLocale(),
+    });
   }
-  revalidateNewsletter(campaignId ?? undefined);
-  redirect({
-    href: {
-      pathname: "/admin/newsletter/[id]",
-      params: { id: String(campaignId) },
-      ...("error" in banner ? { query: { banner: banner.error } } : {}),
+  // Any edit invalidates the previous test send.
+  const saved = await prisma.newsletterCampaign.update({
+    where: { id },
+    data: {
+      subject,
+      body,
+      audienceUsers,
+      audienceYears,
+      excludeCurrentEntrants,
+      ...bannerData,
+      status: "draft",
+      testSentAt: null,
     },
-    locale,
+    select: {
+      updatedAt: true,
+      bannerImageId: true,
+      bannerPreset: true,
+      bannerAlt: true,
+      bannerLink: true,
+    },
   });
+  revalidateNewsletter(id);
+  return {
+    ok: true,
+    savedAt: saved.updatedAt.toISOString(),
+    banner: {
+      choice: bannerChoiceValue(saved),
+      alt: saved.bannerAlt ?? "",
+      link: saved.bannerLink ?? "",
+    },
+    ...("error" in banner
+      ? { bannerError: `Banner se neuložil: ${BANNER_ERROR_MESSAGES[banner.error]}` }
+      : {}),
+  };
 }
 
 export async function sendNewsletterTest(

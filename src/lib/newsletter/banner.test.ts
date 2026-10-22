@@ -9,15 +9,18 @@ import {
   BANNER_ERROR_MESSAGES,
   DEFAULT_BANNER_LINK,
   NEWSLETTER_BANNER_PRESETS,
+  bannerChoiceSrc,
   bannerChoiceValue,
+  bannerFileIssue,
   campaignBanner,
+  draftBanner,
   normalizeBannerAlt,
   normalizeBannerLink,
   parseBannerChoice,
 } from "./banner";
 import { bannerResponseHeaders } from "./banner-http";
 import { processBannerImage } from "./banner-image";
-import { renderNewsletter } from "./core";
+import { renderNewsletter, renderNewsletterPreview, unsubscribeUrl } from "./core";
 
 const ROOT = join(import.meta.dirname, "..", "..", "..");
 const none = { bannerImageId: null, bannerPreset: null, bannerAlt: null, bannerLink: null };
@@ -132,10 +135,17 @@ describe("newsletter banner – template", () => {
       siteUrl: "https://mcvv.org",
       banner,
     });
-    const header = mail.html.indexOf("Malá cena Velké Verandy</span>");
     const img = mail.html.indexOf('<img src="https://mcvv.org/api/newsletter-banner?id=5"');
     const body = mail.html.indexOf('<p style="margin:0 0 16px">Ahoj');
-    assert.ok(header > 0 && img > header && body > img, "banner sits between brand bar and body");
+    assert.ok(img > 0 && body > img, "banner sits above the body");
+    // Banner nahrazuje výchozí tmavý pruh – hlavička se nesmí zdvojit.
+    assert.doesNotMatch(mail.html, /Malá cena Velké Verandy<\/span>/);
+    assert.doesNotMatch(mail.html, /border-bottom:4px solid #e2531c/);
+    assert.equal(
+      mail.html.match(/<tr>/g)?.length,
+      4,
+      "wrapper + banner, body and footer rows only",
+    );
     assert.match(mail.html, /<a href="https:\/\/mcvv\.org"[^>]*><img [^>]*width="600"/);
     assert.match(mail.html, /width:100%;max-width:600px;height:auto/);
     assert.match(mail.html, /alt="A &quot;B&quot; &lt;C&gt;"/);
@@ -151,6 +161,11 @@ describe("newsletter banner – template", () => {
       siteUrl: "https://mcvv.org",
     });
     assert.doesNotMatch(mail.html, /<img /);
+    // Bez banneru zůstává výchozí hlavička MCVV.
+    assert.match(
+      mail.html,
+      /<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">\n<a href="https:\/\/mcvv\.org"[^>]*>MCVV<\/a>\n<span[^>]*>Malá cena Velké Verandy<\/span>/,
+    );
   });
 
   it("serves the public image cross-origin (webmail) with a long immutable cache", () => {
@@ -217,5 +232,107 @@ describe("newsletter banner – upload processing", () => {
     ]) {
       assert.ok(BANNER_ERROR_MESSAGES[key as keyof typeof BANNER_ERROR_MESSAGES]);
     }
+  });
+});
+
+describe("newsletter banner – live preview of the unsaved form", () => {
+  const draft = { choice: "", alt: "", link: "" };
+
+  it("resolves the thumbnail of the selected banner", () => {
+    assert.equal(bannerChoiceSrc(""), null);
+    assert.equal(bannerChoiceSrc("preset:mcvv-2026"), "/images/newsletter/banner-2026.png");
+    assert.equal(bannerChoiceSrc("image:12"), "/api/newsletter-banner?id=12");
+    assert.equal(bannerChoiceSrc("preset:neexistuje"), null);
+  });
+
+  it("builds the same banner the save will store (preset, uploaded, none)", () => {
+    const preset = draftBanner({ ...draft, choice: "preset:mcvv-2026" }, "https://mcvv.org");
+    // Uložení u připraveného banneru doplní výchozí alt a odkaz (viz saveNewsletter).
+    const stored = {
+      ...none,
+      bannerPreset: "mcvv-2026",
+      bannerAlt: normalizeBannerAlt(NEWSLETTER_BANNER_PRESETS[0].alt),
+      bannerLink: normalizeBannerLink(""),
+    };
+    assert.deepEqual(preset, { ok: true, banner: campaignBanner(stored, "https://mcvv.org") });
+    assert.equal(preset.ok && preset.banner?.href, "https://mcvv.org/");
+    const image = draftBanner(
+      { choice: "image:12", alt: " Pozvánka ", link: "https://mcvv.org/cs/prihlasky" },
+      "",
+    );
+    assert.deepEqual(image, {
+      ok: true,
+      banner: {
+        src: "/api/newsletter-banner?id=12",
+        alt: "Pozvánka",
+        href: "https://mcvv.org/cs/prihlasky",
+      },
+    });
+    assert.deepEqual(draftBanner(draft, "https://mcvv.org"), { ok: true, banner: null });
+    // Vyplněný alt/odkaz bez vybraného banneru nic nevykreslí (uložení banner smaže).
+    assert.deepEqual(draftBanner({ choice: "", alt: "x", link: "https://x.cz" }, ""), {
+      ok: true,
+      banner: null,
+    });
+  });
+
+  it("a new local file wins over the select and shows from its object URL", () => {
+    const result = draftBanner(
+      { choice: "preset:mcvv-2026", alt: "Nový", link: "", uploadSrc: "blob:http://x/1" },
+      "",
+    );
+    assert.deepEqual(result, {
+      ok: true,
+      banner: { src: "blob:http://x/1", alt: "Nový", href: "https://mcvv.org/" },
+    });
+  });
+
+  it("reports the errors the save would report (banner then stays unchanged)", () => {
+    assert.deepEqual(draftBanner({ ...draft, choice: "image:3" }, ""), {
+      ok: false,
+      error: "alt",
+    });
+    assert.deepEqual(draftBanner({ ...draft, uploadSrc: "blob:x" }, ""), {
+      ok: false,
+      error: "alt",
+    });
+    assert.deepEqual(
+      draftBanner({ ...draft, alt: "a", uploadSrc: "blob:x", uploadError: "too_large" }, ""),
+      { ok: false, error: "too_large" },
+    );
+    assert.deepEqual(draftBanner({ ...draft, choice: "preset:x", link: "" }, ""), {
+      ok: false,
+      error: "choice",
+    });
+    assert.deepEqual(draftBanner({ ...draft, choice: "preset:mcvv-2026", link: "ftp://x" }, ""), {
+      ok: false,
+      error: "link",
+    });
+  });
+
+  it("checks a chosen file in the browser like the server does", () => {
+    const ok = { size: 1000, type: "image/png" };
+    assert.equal(bannerFileIssue(ok), null);
+    assert.equal(bannerFileIssue({ ...ok, width: 1200 }), null);
+    assert.equal(bannerFileIssue({ ...ok, size: 0 }), "empty");
+    assert.equal(bannerFileIssue({ ...ok, size: 1024 * 1024 + 1 }), "too_large");
+    assert.equal(bannerFileIssue({ ...ok, type: "image/svg+xml" }), "type");
+    assert.equal(bannerFileIssue({ ...ok, width: 599 }), "too_small");
+  });
+
+  it("the admin preview is the e-mail template, only with a dummy unsubscribe token", () => {
+    const banner = campaignBanner({ ...none, bannerPreset: "mcvv-2026" }, "https://mcvv.org");
+    const input = { subject: "S", body: "# Ahoj\n\ntext", banner };
+    const preview = renderNewsletterPreview({ ...input, origin: "https://mcvv.org" });
+    const mail = renderNewsletter({
+      ...input,
+      siteUrl: "https://mcvv.org",
+      unsubscribeUrl: unsubscribeUrl("https://mcvv.org", "0".repeat(64)),
+    });
+    assert.deepEqual(preview, mail);
+    assert.match(
+      preview.html,
+      /<img src="https:\/\/mcvv\.org\/images\/newsletter\/banner-2026\.png"/,
+    );
   });
 });

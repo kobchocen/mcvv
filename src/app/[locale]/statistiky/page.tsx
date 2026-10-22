@@ -79,6 +79,7 @@ export default async function StatsIndexPage({ params }: PageProps) {
       attendance: t("moreAttendance"),
       ages: t("moreAges"),
       times: t("moreTimes"),
+      clubs: t("moreClubs"),
     },
     records: {
       title: t("records"),

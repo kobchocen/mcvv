@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import type { RawResult } from "@/lib/stats/core";
 
 import { createClubResolver, type ClubNameRow } from "./core";
-import { computeClubProfile } from "./profile";
+import { computeClubProfile, resolveClubSlug } from "./profile";
 import { clubUsage } from "./usage";
 
 // ids: YYYY + sex digit (0–4 men, 5–9 women) + sequence
@@ -81,6 +81,41 @@ describe("computeClubProfile", () => {
     const clubs = createClubResolver({ names: NAMES });
     assert.equal(computeClubProfile(RESULTS, clubs, "ZZZ"), null);
     assert.equal(computeClubProfile(RESULTS, clubs, "000"), null);
+  });
+});
+
+describe("club profile from the club's own rows", () => {
+  it("equals the profile computed from all results (the page loads only the club's ids)", () => {
+    const clubs = createClubResolver({
+      names: NAMES,
+      merges: [{ clubId: "216", mainClubId: "CHC" }],
+    });
+    for (const id of ["CHC", "ACH"]) {
+      const ids = new Set(clubs.members(id));
+      const own = RESULTS.filter((row) => ids.has(row.clubId ?? ""));
+      assert.deepEqual(computeClubProfile(own, clubs, id), computeClubProfile(RESULTS, clubs, id));
+    }
+  });
+});
+
+describe("resolveClubSlug", () => {
+  const clubs = createClubResolver({
+    names: NAMES,
+    merges: [{ clubId: "216", mainClubId: "CHC" }],
+  });
+
+  it("the id decides; a merged id or a stale name part points to the main id's slug", () => {
+    assert.deepEqual(resolveClubSlug("chc-k-o-b-chocen", NAMES, clubs), {
+      mainId: "CHC",
+      canonical: "chc-k-o-b-chocen",
+    });
+    assert.equal(resolveClubSlug("chc-old-name", NAMES, clubs)?.canonical, "chc-k-o-b-chocen");
+    assert.equal(resolveClubSlug("216-kob-chocen", NAMES, clubs)?.mainId, "CHC");
+  });
+
+  it("an old name-only slug means the id that used the name most recently", () => {
+    assert.equal(resolveClubSlug("ac-chocen", NAMES, clubs)?.mainId, "ACH");
+    assert.equal(resolveClubSlug("nobody-here", NAMES, clubs), null);
   });
 });
 

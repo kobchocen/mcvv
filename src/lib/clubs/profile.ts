@@ -6,7 +6,13 @@
 import type { RawResult } from "@/lib/stats/core";
 import { runnerSex } from "@/lib/stats/core";
 
-import { clubKey, type ClubResolver } from "./core";
+import {
+  clubIdFromSlug,
+  clubKey,
+  normalizeClubName,
+  type ClubNameRow,
+  type ClubResolver,
+} from "./core";
 
 export type ClubPerformance = { runnerId: string; name: string; year: number; time: number };
 
@@ -125,4 +131,27 @@ export function computeClubProfile(
     ),
     best: { M: bestOf("M"), F: bestOf("F") },
   };
+}
+
+/**
+ * Main id and canonical slug for a requested profile slug. The id decides (#104, Q34); an old
+ * name-only slug (#167) means the id that used that name most recently. null = unknown club.
+ */
+export function resolveClubSlug(
+  slug: string,
+  names: readonly ClubNameRow[],
+  resolver: ClubResolver,
+): { mainId: string; canonical: string } | null {
+  let id = clubIdFromSlug(slug);
+  if (!names.some((row) => clubKey(row.id) === id)) {
+    const key = normalizeClubName(slug);
+    if (!key) return null;
+    const match = [...names]
+      .sort((a, b) => b.year - a.year)
+      .find((row) => normalizeClubName(row.name) === key);
+    if (!match) return null;
+    id = clubKey(match.id);
+  }
+  const mainId = resolver.mainId(id);
+  return { mainId, canonical: resolver.slug(mainId) };
 }

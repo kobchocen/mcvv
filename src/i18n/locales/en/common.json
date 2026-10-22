@@ -353,6 +353,10 @@
             {
               "label": "Course records",
               "href": "/statistiky/rekordy"
+            },
+            {
+              "label": "Clubs",
+              "href": "/kluby"
             }
           ]
         },
@@ -684,7 +688,37 @@
     "clubId": "Club id {id}",
     "mergedIds": "merged: {ids}",
     "history": "Club names by edition",
-    "idNote": "A club is its id in the club list: a renamed club stays one club. Ids merged by the organiser are counted under the main id."
+    "idNote": "A club is its id in the club list: a renamed club stays one club. Ids merged by the organiser are counted under the main id.",
+    "allClubs": "All clubs",
+    "membersShown": "Showing {from}–{to} of {total} runners",
+    "membersPages": "Pages of club runners",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}"
+  },
+  "Clubs": {
+    "metaTitle": "Clubs",
+    "eyebrow": "Clubs",
+    "title": "Clubs at MCVV",
+    "intro": "Every club whose runners finished Malá cena Velké Verandy, with their starts and editions.",
+    "lead": "{clubs, plural, one {# club} other {# clubs}} and {starts} starts in the results of all editions. A club is its id in the club list; merged ids are counted under the main id.",
+    "searchLabel": "Find a club",
+    "searchPlaceholder": "Club name or id, including a former name",
+    "search": "Search",
+    "reset": "Clear search",
+    "shown": "Showing {from}–{to} of {total}",
+    "empty": "No club matches the search.",
+    "club": "Club",
+    "id": "Id",
+    "starts": "Starts",
+    "runners": "Runners",
+    "editions": "Editions",
+    "years": "Years",
+    "pages": "Pages of the club list",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}",
+    "idNote": "A renamed club stays one club (by its id); the name shown is the newest one. Ids merged by the organiser are listed with the main id."
   },
   "Messages": {
     "title": "Messages",
@@ -1136,6 +1170,7 @@
       "moreAttendance": "Overall attendance",
       "moreAges": "Records by age",
       "moreTimes": "Best times",
+      "moreClubs": "All clubs",
       "footnote": "Distance = starts × {km} km (all categories run the same course), climbing = starts × {metres} m. Names as in the runner's current record."
     },
     "eyebrow": "Statistics",

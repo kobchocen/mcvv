@@ -353,6 +353,10 @@
             {
               "label": "Traťové rekordy",
               "href": "/statistiky/rekordy"
+            },
+            {
+              "label": "Kluby",
+              "href": "/kluby"
             }
           ]
         },
@@ -684,7 +688,37 @@
     "clubId": "Id klubu {id}",
     "mergedIds": "sloučeno: {ids}",
     "history": "Názvy klubu po ročnících",
-    "idNote": "Klub je jeho id v číselníku: přejmenovaný klub zůstává jedním klubem. Id, která pořadatel sloučil, se počítají pod hlavním id."
+    "idNote": "Klub je jeho id v číselníku: přejmenovaný klub zůstává jedním klubem. Id, která pořadatel sloučil, se počítají pod hlavním id.",
+    "allClubs": "Všechny kluby",
+    "membersShown": "Zobrazeno {from}–{to} z {total} běžců",
+    "membersPages": "Stránky běžců klubu",
+    "previous": "Předchozí",
+    "next": "Další",
+    "page": "Stránka {page}"
+  },
+  "Clubs": {
+    "metaTitle": "Kluby",
+    "eyebrow": "Kluby",
+    "title": "Kluby na MCVV",
+    "intro": "Všechny kluby, jejichž běžci doběhli Malou cenu Velké Verandy, s počtem startů a ročníků.",
+    "lead": "{clubs, plural, one {# klub} few {# kluby} other {# klubů}} a {starts} startů ve výsledcích všech ročníků. Klub je jeho id v číselníku, sloučená id se počítají pod hlavním id.",
+    "searchLabel": "Hledat klub",
+    "searchPlaceholder": "Název nebo id klubu, i dřívější název",
+    "search": "Hledat",
+    "reset": "Zrušit hledání",
+    "shown": "Zobrazeno {from}–{to} z {total}",
+    "empty": "Žádný klub neodpovídá hledání.",
+    "club": "Klub",
+    "id": "Id",
+    "starts": "Startů",
+    "runners": "Běžců",
+    "editions": "Ročníků",
+    "years": "Roky",
+    "pages": "Stránky seznamu klubů",
+    "previous": "Předchozí",
+    "next": "Další",
+    "page": "Stránka {page}",
+    "idNote": "Přejmenovaný klub zůstává jedním klubem (podle id); název je ten nejnovější. Id, která pořadatel sloučil, jsou uvedena u hlavního id."
   },
   "Messages": {
     "title": "Zprávy",
@@ -1136,6 +1170,7 @@
       "moreAttendance": "Celková účast",
       "moreAges": "Rekordy dle věku",
       "moreTimes": "Nejlepší časy",
+      "moreClubs": "Všechny kluby",
       "footnote": "Naběhané kilometry = starty × {km} km (všechny kategorie běží stejnou trať), převýšení = starty × {metres} m. Jména podle aktuálního záznamu běžce."
     },
     "eyebrow": "Statistiky",

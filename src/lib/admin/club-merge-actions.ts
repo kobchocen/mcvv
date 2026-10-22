@@ -19,7 +19,7 @@ import { redirect } from "@/i18n/routing";
 
 function revalidateClubs() {
   revalidatePath("/[locale]/admin/ciselniky", "layout");
-  revalidatePath("/[locale]/kluby/[slug]", "page");
+  revalidatePath("/[locale]/kluby", "layout");
   revalidatePath("/[locale]/results", "layout");
   revalidatePath("/[locale]/bezec/[id]", "page");
   revalidatePath("/[locale]/statistiky", "layout");

@@ -3,6 +3,7 @@
  *
  * Pravidla čtení: vlákno se označí jako přečtené JEN tlačítkem „Potvrdit přečtení“ nebo
  * odpovědí. Pouhé otevření nic nemění. Pořadatelé sdílí jeden stav přečtení.
+ * Výjimka: potvrzení o přečtení pro pořadatele (Message.readAt, viz níže) zakládá už zobrazení.
  */
 
 export type MessageSide = "user" | "staff";
@@ -251,4 +252,57 @@ export function parseAdminThreadFilters(query: {
     type: query.typ === "registration" || query.typ === "general" ? query.typ : "all",
     year: Number.isFinite(year) && year > 1990 && year < 2100 ? year : null,
   };
+}
+
+/*
+ * Potvrzení o přečtení zpráv pořadatele (read_at na zprávě).
+ *
+ * Nezávislé na stavu „nepřečteno“ přihlašujícího (lastReadByUser): ten dál mění jen
+ * „Potvrdit přečtení“ nebo odpověď (indikátor a upozornění e-mailem se tím řídí beze změny).
+ * read_at říká pořadateli, že přihlašující zprávu na webu aspoň viděl: nastaví ho první
+ * zobrazení vlákna přihlášeným vlastníkem (ne pořadatelem), potvrzení přečtení i odpověď.
+ * E-mailové upozornění přečtení nedokazuje, takže read_at nenastavuje.
+ */
+
+export type ReceiptMessage = { id: number; side: MessageSide; readAt: Date | null };
+
+/** Zaznamenat zobrazení vlákna jako přečtení? Jen vlastník s přístupem, který není pořadatel. */
+export function shouldRecordUserView(viewer: { isStaff: boolean; canAccess: boolean }): boolean {
+  return viewer.canAccess && !viewer.isStaff;
+}
+
+/** Zprávy pořadatele, které zobrazení vlákna přihlašujícím označí jako přečtené. */
+export function staffMessagesToMarkSeen(messages: ReceiptMessage[]): number[] {
+  return messages
+    .filter((message) => message.side === "staff" && message.readAt === null)
+    .map((message) => message.id);
+}
+
+export type ReadReceipt = { read: true; at: Date } | { read: false };
+
+/** Stav přečtení zprávy pro pořadatele; u zpráv přihlašujícího null (neeviduje se). */
+export function readReceipt(message: {
+  side: MessageSide;
+  readAt: Date | null;
+}): ReadReceipt | null {
+  if (message.side !== "staff") return null;
+  return message.readAt ? { read: true, at: message.readAt } : { read: false };
+}
+
+export type StaffReplyReceipt = { read: true; at: Date } | { read: false; unreadCount: number };
+
+/**
+ * Přehled /admin/zpravy: stav přečtení odpovědí pořadatele ve vlákně.
+ * Přečteno = přihlašující viděl i poslední odpověď (čas přečtení poslední odpovědi).
+ * Nepřečteno = počet odpovědí pořadatele, které přihlašující ještě neviděl. Bez odpovědí null.
+ */
+export function staffReplyReceipt(
+  staffMessages: { createdAt: Date; readAt: Date | null }[],
+): StaffReplyReceipt | null {
+  if (staffMessages.length === 0) return null;
+  const latest = staffMessages.reduce((a, b) =>
+    b.createdAt.getTime() > a.createdAt.getTime() ? b : a,
+  );
+  if (latest.readAt) return { read: true, at: latest.readAt };
+  return { read: false, unreadCount: staffMessages.filter((message) => !message.readAt).length };
 }

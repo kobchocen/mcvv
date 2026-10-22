@@ -735,6 +735,10 @@ model Message {
   side         MessageSide
   body         String      @db.Text
   createdAt    DateTime    @default(now()) @map("created_at")
+  /// Potvrzení o přečtení (jen u zpráv pořadatele): kdy zprávu poprvé zobrazil přihlašující
+  /// (přihlášený vlastník přihlášky / vlákna, ne pořadatel) na webu, potvrdil přečtení nebo
+  /// odpověděl. E-mailové upozornění přečtení nedokazuje, proto ho nenastavuje.
+  readAt       DateTime?   @map("read_at")
 
   thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   author User?         @relation(fields: [authorUserId], references: [id], onDelete: SetNull)

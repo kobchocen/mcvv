@@ -9,6 +9,7 @@ import {
   countUnreadThreads,
   emailMatches,
   hasUnread,
+  staffReplyReceipt,
   type AdminThreadFilters,
   type MessageSide,
 } from "./core";
@@ -223,9 +224,24 @@ export async function listAdminThreads(filters: AdminThreadFilters) {
         })
       : [];
   const regMap = new Map(regs.map((reg) => [regKey(reg.year, reg.id), reg]));
+  // Potvrzení o přečtení odpovědí pořadatele (jeden dotaz pro celý seznam).
+  const staffMessages =
+    threads.length > 0
+      ? await prisma.message.findMany({
+          where: { threadId: { in: threads.map((thread) => thread.id) }, side: "staff" },
+          select: { threadId: true, createdAt: true, readAt: true },
+        })
+      : [];
+  const staffByThread = new Map<number, { createdAt: Date; readAt: Date | null }[]>();
+  for (const message of staffMessages) {
+    const list = staffByThread.get(message.threadId) ?? [];
+    list.push(message);
+    staffByThread.set(message.threadId, list);
+  }
   return threads
     .map((thread) => ({
       ...thread,
+      replyReceipt: staffReplyReceipt(staffByThread.get(thread.id) ?? []),
       registration:
         thread.year !== null && thread.registrationId !== null
           ? (regMap.get(regKey(thread.year, thread.registrationId)) ?? null)

@@ -34,7 +34,7 @@ export const NEWSLETTER_BANNER_PRESETS: readonly BannerPreset[] = [
     key: "mcvv-2026",
     label: "MCVV 2026 – pozvánka (34. ročník, 6. 12. 2026)",
     path: "/images/newsletter/banner-2026.png",
-    alt: "34. Malá cena Velké Verandy – neděle 6. 12. 2026, Choceň – Velká Veranda, 4,3 km lesního krosu. Přihlášky online do 2. 12. na mcvv.org",
+    alt: "34. Malá cena Velké Verandy – neděle 6. 12. 2026, Choceň – Velká Veranda, 4 300 m, lesní kros. Přihlášky online do 2. 12. na mcvv.org",
   },
 ];
 

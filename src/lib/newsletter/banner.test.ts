@@ -96,14 +96,24 @@ describe("newsletter banner – choice, alt and link", () => {
       assert.ok(readFileSync(file).length < 300 * 1024, "banner should stay small for e-mail");
     }
   });
-  it("banner source keeps Czech diacritics readable (NFC, latin-ext, roomy headline)", () => {
+  it("banner source keeps Czech diacritics readable and uses the agreed copy", () => {
     const html = readFileSync(join(ROOT, "scripts/newsletter-banner/banner-2026.html"), "utf8");
     assert.equal(html, html.normalize("NFC"));
     assert.doesNotMatch(html, /[\u0300-\u036f]/);
     assert.match(html, /subset=latin,latin-ext/);
-    // Při menší výšce řádku sahá čárka nad É (2. řádek) k účaří 1. řádku a čte se jako „MALÁ, CENA“.
+    // Při malé výšce řádku sahá čárka nad É (2. řádek) k účaří 1. řádku a čte se jako „MALÁ, CENA“.
     const h1 = /h1 \{[^}]*?(\d+)px\/([\d.]+) Oswald/.exec(html);
-    assert.ok(h1 && Number(h1[2]) >= 1.3, "headline line-height must be >= 1.3");
+    assert.ok(
+      h1 && Number(h1[2]) >= 1.45,
+      "headline line-height must leave clear room for accents",
+    );
+    // Údaje jsou svislý seznam; 4 300 m s nezlomitelnou mezerou, „lesní kros“ samostatně.
+    const items = [...html.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
+    assert.deepEqual(items, ["Choceň – Velká Veranda", "4\u00a0300 m", "lesní kros"]);
+    assert.match(html, /flex-direction: column/);
+    assert.doesNotMatch(html, /4,3 km/);
+    const preset = NEWSLETTER_BANNER_PRESETS.find((p) => p.key === "mcvv-2026");
+    assert.match(preset?.alt ?? "", /4\u00a0300 m, lesní kros/);
   });
 });
 

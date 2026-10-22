@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <!-- Zdroj výchozího banneru newsletteru (public/images/newsletter/banner-2026.png). Vykreslit v Chrome/Playwright: viewport 1200×400, deviceScaleFactor 1, pak PNG s paletou (sharp: palette, quality 92).
          Texty jsou předsložené (NFC) a rovnou verzálkami; Oswald i Inter se načítají i v podmnožině latin-ext (Ř, Ě, Ň, Č…).
-         Výška řádku nadpisu musí nechat místo pro diakritiku: při menší line-height než ~1.3 sahá vysoká čárka nad É z druhého řádku až k účaří prvního a pod mezerou za MALÁ vypadá jako čárka („MALÁ, CENA“). -->
+         Výška řádku nadpisu (1.5) musí nechat kolem diakritiky jasnou mezeru: při menší line-height než ~1.3 sahá vysoká čárka nad É z druhého řádku až k účaří prvního a pod mezerou za MALÁ vypadá jako čárka („MALÁ, CENA“). -->
     <link
       href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&subset=latin,latin-ext&display=block"
       rel="stylesheet"
@@ -58,7 +58,7 @@
       .c {
         position: absolute;
         left: 64px;
-        top: 48px;
+        top: 38px;
         right: 360px;
       }
       .kicker {
@@ -76,29 +76,32 @@
         font-weight: 700;
       }
       h1 {
-        margin-top: 8px;
-        padding-top: 2px;
+        margin-top: 4px;
         font:
-          700 62px/1.32 Oswald,
+          700 56px/1.5 Oswald,
           sans-serif;
         letter-spacing: 0.5px;
       }
       .meta {
-        margin-top: 16px;
+        margin-top: 8px;
+        list-style: none;
         display: flex;
-        gap: 28px;
+        flex-direction: column;
+        gap: 4px;
         font:
-          600 25px/1.2 Inter,
+          600 22px/1.3 Inter,
           sans-serif;
         color: #e8efe9;
       }
-      .meta span {
+      .meta li {
         white-space: nowrap;
       }
-      .meta i {
-        font-style: normal;
+      .meta li::before {
+        content: "●";
         color: #e2531c;
-        margin-right: 8px;
+        margin-right: 10px;
+        font-size: 16px;
+        vertical-align: 2px;
       }
       .cta {
         position: absolute;
@@ -153,9 +156,11 @@
       <div class="c">
         <div class="kicker"><b>34.</b> ROČNÍK · CHOCEŇ</div>
         <h1>MALÁ CENA<br />VELKÉ VERANDY</h1>
-        <div class="meta">
-          <span><i>●</i>Choceň – Velká Veranda</span><span><i>●</i>4,3 km lesního krosu</span>
-        </div>
+        <ul class="meta">
+          <li>Choceň – Velká Veranda</li>
+          <li>4 300 m</li>
+          <li>lesní kros</li>
+        </ul>
       </div>
       <div class="date">
         <div class="d">6. 12.</div>

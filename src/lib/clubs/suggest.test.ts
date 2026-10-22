@@ -1,24 +1,27 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { normalizeClubName } from "./core";
 import {
   clubNameSimilarity,
   confidenceOf,
-  pairKey,
   parseClubName,
   suggestClubMerges,
-  type ClubNameUsage,
+  type ClubUsage,
 } from "./suggest";
 
-const usage = (name: string, starts = 1, canonicalId: number | null = null): ClubNameUsage => ({
-  key: normalizeClubName(name),
-  name,
-  starts,
-  firstYear: 2000,
-  lastYear: 2010,
-  canonicalId,
-});
+const usage = (id: string, names: string | string[], starts = 1, years = [2000]): ClubUsage => {
+  const list = Array.isArray(names) ? names : [names];
+  return {
+    id,
+    name: list[0],
+    names: list.map((name) => ({ name, years })),
+    ids: [id],
+    years,
+    starts,
+    firstYear: years[0],
+    lastYear: years.at(-1)!,
+  };
+};
 
 describe("parseClubName", () => {
   it("splits club-type prefixes and expands abbreviations", () => {
@@ -56,42 +59,50 @@ describe("clubNameSimilarity", () => {
 });
 
 describe("suggestClubMerges", () => {
-  const names = [
-    usage("OK Lokomotiva Pardubice", 900),
-    usage("Lokomotiva Pardubice", 150),
-    usage("Loko OB Pardubice", 49),
-    usage("K.O.B. Choceň", 950),
-    usage("AC Choceň", 277),
-    usage("Iscarex Česká Třebová", 116),
-    usage("Iscarex Č.Třebová", 1),
+  const clubs = [
+    usage("LPU", ["OK Lokomotiva Pardubice", "Loko OB Pardubice"], 900),
+    usage("275", "Lokomotiva Pardubice", 150),
+    usage("CHC", "K.O.B. Choceň", 950, [2017, 2018]),
+    usage("216", "KOB Choceń", 30, [2018, 2019]),
+    usage("ACH", "AC Choceň", 277),
+    usage("ICT", "Iscarex Česká Třebová", 116),
+    usage("348", "Iscarex Č.Třebová", 1),
   ];
 
-  it("suggests pairs only, larger club first, best first", () => {
-    const suggestions = suggestClubMerges(names);
-    const pairs = suggestions.map((s) => `${s.a.name} ⇄ ${s.b.name}`);
-    assert.ok(pairs.includes("Iscarex Česká Třebová ⇄ Iscarex Č.Třebová"));
-    assert.ok(pairs.includes("OK Lokomotiva Pardubice ⇄ Lokomotiva Pardubice"));
-    assert.ok(!pairs.some((pair) => pair.includes("AC Choceň")));
+  it("suggests pairs of different ids only, larger club first, best first", () => {
+    const suggestions = suggestClubMerges(clubs);
+    const pairs = suggestions.map((s) => `${s.a.id} ⇄ ${s.b.id}`);
+    assert.ok(pairs.includes("ICT ⇄ 348"));
+    assert.ok(pairs.includes("LPU ⇄ 275"));
+    assert.ok(pairs.includes("CHC ⇄ 216"));
+    assert.ok(!pairs.some((pair) => pair.includes("ACH")));
     for (let i = 1; i < suggestions.length; i += 1) {
       assert.ok(suggestions[i - 1].score >= suggestions[i].score);
     }
   });
 
-  it("skips rejected pairs and pairs already in one canonical club", () => {
-    const [a, b] = pairKey(
-      normalizeClubName("Iscarex Česká Třebová"),
-      normalizeClubName("Iscarex Č.Třebová"),
+  it("names of one id (rename) are never a suggestion; best pair of names wins", () => {
+    const suggestions = suggestClubMerges(clubs);
+    assert.ok(!suggestions.some((s) => s.a.id === s.b.id));
+    const loko = suggestions.find((s) => s.a.id === "LPU" && s.b.id === "275");
+    assert.ok(loko);
+    assert.equal(
+      loko.score,
+      clubNameSimilarity("OK Lokomotiva Pardubice", "Lokomotiva Pardubice").score,
     );
-    const rejected = new Set([`${a}|${b}`]);
-    const withoutRejected = suggestClubMerges(names, { rejected });
-    assert.ok(!withoutRejected.some((s) => s.a.name.startsWith("Iscarex")));
+  });
 
-    const merged = names.map((row) =>
-      row.name.includes("Lokomotiva") ? { ...row, canonicalId: 1 } : row,
-    );
-    const pairs = suggestClubMerges(merged).map((s) => `${s.a.name} ⇄ ${s.b.name}`);
-    assert.ok(!pairs.includes("OK Lokomotiva Pardubice ⇄ Lokomotiva Pardubice"));
-    // A name not merged yet is still suggested against the canonical club's names.
-    assert.ok(pairs.some((pair) => pair.includes("Loko OB Pardubice")));
+  it("same normalized name under two ids is high, with the editions both ids exist in", () => {
+    const kob = suggestClubMerges(clubs).find((s) => s.a.id === "CHC" && s.b.id === "216");
+    assert.ok(kob);
+    assert.equal(kob.confidence, "high");
+    assert.deepEqual(kob.matched, ["K.O.B. Choceň", "KOB Choceń"]);
+    assert.deepEqual(kob.sameYears, [2018]);
+  });
+
+  it("skips rejected pairs (order independent ids)", () => {
+    const rejected = new Set(["348|ICT"]);
+    const withoutRejected = suggestClubMerges(clubs, { rejected });
+    assert.ok(!withoutRejected.some((s) => s.a.id === "ICT"));
   });
 });

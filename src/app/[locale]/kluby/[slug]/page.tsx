@@ -7,17 +7,15 @@ import { McvvPublicNavbar } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import {
-  clubSlug,
+  clubIdFromSlug,
+  clubKey,
   computeClubProfile,
   createClubResolver,
-  nameTarget,
   normalizeClubName,
   type ClubPerformance,
   type ClubProfile,
-  type ClubTarget,
 } from "@/lib/clubs";
-import { loadClubAliases } from "@/lib/clubs/queries";
-import { prisma } from "@/lib/db/client";
+import { loadClubMerges, loadClubNames } from "@/lib/clubs/queries";
 import { loadAllResults } from "@/lib/stats/queries";
 import { formatRaceTime } from "@/lib/utils";
 
@@ -26,34 +24,33 @@ type PageProps = Readonly<{
 }>;
 
 /**
- * Club profile (#105). A canonical club (merged in the admin, #104) is found by its slug;
- * any other slug is a written name (case, diacritics and punctuation ignored). A written
- * name that is an alias of a canonical club redirects to the canonical profile.
+ * Club profile (#105). The club is its id (#104, Q34): the slug is "<id>-<newest name>".
+ * A merged id, a stale name part or an old name-only slug (#167) redirects to the profile
+ * of the main id.
  */
 async function loadProfile(
   slug: string,
 ): Promise<{ profile: ClubProfile | null; redirectTo?: string }> {
-  const [aliases, canonical] = await Promise.all([
-    loadClubAliases(),
-    prisma.canonicalClub.findUnique({
-      where: { slug },
-      select: { id: true, slug: true, name: true },
-    }),
-  ]);
-  const resolver = createClubResolver(aliases);
-  let target: ClubTarget;
-  if (canonical) {
-    target = { kind: "canonical", ...canonical };
-  } else {
+  const [names, merges] = await Promise.all([loadClubNames(), loadClubMerges()]);
+  const resolver = createClubResolver({ names, merges });
+  const known = new Set(names.map((row) => clubKey(row.id)));
+  let id = clubIdFromSlug(slug);
+  if (!known.has(id)) {
+    // Old slug made of a written name only: the id that used that name most recently.
     const key = normalizeClubName(slug);
-    const alias = aliases.find((row) => row.key === key);
-    if (alias) {
-      return { profile: null, redirectTo: alias.club.slug };
-    }
-    target = nameTarget(slug);
+    const match = [...names]
+      .sort((a, b) => b.year - a.year)
+      .find((row) => key && normalizeClubName(row.name) === key);
+    if (!match) return { profile: null };
+    id = clubKey(match.id);
+  }
+  const main = resolver.mainId(id);
+  const canonical = resolver.slug(main);
+  if (canonical !== slug) {
+    return { profile: null, redirectTo: canonical };
   }
   const results = await loadAllResults();
-  return { profile: computeClubProfile(results, resolver, target, slug) };
+  return { profile: computeClubProfile(results, resolver, main) };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -117,7 +114,7 @@ export default async function ClubPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const slug = decodeURIComponent(rawSlug);
-  if (!clubSlug(slug)) {
+  if (!slug.trim()) {
     notFound();
   }
 
@@ -144,7 +141,8 @@ export default async function ClubPage({ params }: PageProps) {
       label: copy("years"),
     },
   ];
-  const otherVariants = profile.variants.filter((variant) => variant.name !== profile.name);
+  const years = (row: { firstYear: number; lastYear: number }) =>
+    row.firstYear === row.lastYear ? `${row.firstYear}` : `${row.firstYear}–${row.lastYear}`;
   const tableCopy = { year: copy("year"), name: copy("runner"), time: copy("time") };
 
   return (
@@ -167,10 +165,28 @@ export default async function ClubPage({ params }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {profile.name}
           </h1>
-          {otherVariants.length > 0 ? (
-            <p className="mt-3 text-sm text-race-muted">
-              {copy("variants")}: {otherVariants.map((variant) => variant.name).join(" · ")}
-            </p>
+          <p className="mt-3 text-sm text-race-muted">
+            {copy("clubId", { id: profile.id })}
+            {profile.mergedIds.length > 0
+              ? ` · ${copy("mergedIds", { ids: profile.mergedIds.join(", ") })}`
+              : ""}
+          </p>
+          {profile.history.length > 1 ? (
+            <details className="mt-3 text-sm text-race-muted">
+              <summary className="cursor-pointer font-semibold text-race-accent">
+                {copy("history")}
+              </summary>
+              <ul className="mt-2 flex flex-col gap-0.5">
+                {profile.history.map((row) => (
+                  <li key={`${row.id}-${row.firstYear}`}>
+                    <span className="tabular-nums">{years(row)}</span> · {row.name}
+                    {profile.mergedIds.length > 0 ? (
+                      <span className="text-race-dim"> ({row.id})</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </details>
           ) : null}
 
           <article className="mt-6 border border-race-line/55 bg-race-surface p-5">
@@ -256,9 +272,7 @@ export default async function ClubPage({ params }: PageProps) {
               </tbody>
             </table>
           </div>
-          {!profile.canonical ? (
-            <p className="mt-8 text-xs leading-5 text-race-dim">{copy("writtenNote")}</p>
-          ) : null}
+          <p className="mt-8 text-xs leading-5 text-race-dim">{copy("idNote")}</p>
         </div>
       </section>
     </main>

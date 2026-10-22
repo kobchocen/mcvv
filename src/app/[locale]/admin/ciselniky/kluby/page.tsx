@@ -82,8 +82,8 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
                       <input
                         name="id"
                         defaultValue={row.id}
-                        maxLength={3}
-                        className="h-9 w-16 border border-race-line bg-race-surface px-2"
+                        maxLength={8}
+                        className="h-9 w-24 border border-race-line bg-race-surface px-2"
                       />
                       <input
                         name="name"

@@ -1,23 +1,24 @@
 /**
  * Public club profile /kluby/[slug] (#105): starts per year, the club's runners and best
- * results. Pure; rows are all results with the written club name.
+ * results. A club is its id (#104, Q34) with the ids merged into it; its names per edition
+ * are its history. Pure; rows are all results.
  */
 import type { RawResult } from "@/lib/stats/core";
 import { runnerSex } from "@/lib/stats/core";
 
-import { mostCommonSpelling, normalizeClubName, type ClubResolver } from "./core";
-
-export type ClubTarget =
-  { kind: "canonical"; id: number; slug: string; name: string } | { kind: "name"; key: string };
+import { clubKey, type ClubResolver } from "./core";
 
 export type ClubPerformance = { runnerId: string; name: string; year: number; time: number };
 
 export type ClubProfile = {
+  /** Main id. */
+  id: string;
   name: string;
   slug: string;
-  canonical: boolean;
-  /** Written names counted under this club, most used first. */
-  variants: { name: string; starts: number }[];
+  /** Ids merged into this club (without the main id). */
+  mergedIds: string[];
+  /** Names of the club per id, newest first: when each name was used. */
+  history: { id: string; name: string; firstYear: number; lastYear: number }[];
   starts: number;
   runners: number;
   firstYear: number;
@@ -35,34 +36,34 @@ export type ClubProfile = {
   best: Record<"M" | "F", ClubPerformance[]>;
 };
 
-export function clubTargetMatches(
-  target: ClubTarget,
-  resolver: ClubResolver,
-  clubName: string | null | undefined,
-): boolean {
-  const resolved = resolver.resolve(clubName);
-  if (!resolved) return false;
-  return target.kind === "canonical"
-    ? resolved.canonicalId === target.id
-    : resolved.canonicalId === null && resolved.key === `n:${target.key}`;
-}
-
 export function computeClubProfile(
   results: readonly RawResult[],
   resolver: ClubResolver,
-  target: ClubTarget,
-  slug: string,
+  mainIdRaw: string,
   bestLimit = 10,
 ): ClubProfile | null {
-  const rows = results.filter((row) => clubTargetMatches(target, resolver, row.clubName));
-  if (rows.length === 0) return null;
+  const mainId = clubKey(mainIdRaw);
+  if (!mainId || resolver.mainId(mainId) !== mainId) return null;
+  const rows = results.filter(
+    (row) => resolver.resolve(row.clubId, row.year, row.clubName)?.mainId === mainId,
+  );
+  const ids = resolver.members(mainId);
+  const history = ids.flatMap((id) => {
+    // Consecutive editions with the same name form one entry.
+    const entries: ClubProfile["history"] = [];
+    for (const { year, name } of [...resolver.history(id)].reverse()) {
+      const last = entries.at(-1);
+      if (last && last.name === name) last.lastYear = year;
+      else entries.push({ id, name, firstYear: year, lastYear: year });
+    }
+    return entries;
+  });
+  if (rows.length === 0 && history.length === 0) return null;
+  history.sort((a, b) => b.lastYear - a.lastYear || b.firstYear - a.firstYear);
 
-  const spellings = new Map<string, number>();
   const perYear = new Map<number, number>();
   const members = new Map<string, ClubProfile["members"][number]>();
   for (const row of rows) {
-    const spelling = (row.clubName ?? "").trim();
-    spellings.set(spelling, (spellings.get(spelling) ?? 0) + 1);
     perYear.set(row.year, (perYear.get(row.year) ?? 0) + 1);
     const member = members.get(row.runnerId);
     const name = row.runnerName || "—";
@@ -106,18 +107,17 @@ export function computeClubProfile(
   };
 
   const years = [...perYear.keys()].sort((a, b) => a - b);
-  const variants = [...spellings.entries()]
-    .map(([name, starts]) => ({ name, starts }))
-    .sort((a, b) => b.starts - a.starts || a.name.localeCompare(b.name, "cs"));
+  const historyYears = history.flatMap((row) => [row.firstYear, row.lastYear]);
   return {
-    name: target.kind === "canonical" ? target.name : mostCommonSpelling(spellings),
-    slug,
-    canonical: target.kind === "canonical",
-    variants,
+    id: mainId,
+    name: resolver.profileName(mainId),
+    slug: resolver.slug(mainId),
+    mergedIds: ids.slice(1),
+    history,
     starts: rows.length,
     runners: members.size,
-    firstYear: years[0],
-    lastYear: years.at(-1) as number,
+    firstYear: years[0] ?? Math.min(...historyYears),
+    lastYear: years.at(-1) ?? Math.max(...historyYears),
     perYear: years.map((year) => ({ year, starts: perYear.get(year) ?? 0 })),
     members: [...members.values()].sort(
       (a, b) =>
@@ -125,9 +125,4 @@ export function computeClubProfile(
     ),
     best: { M: bestOf("M"), F: bestOf("F") },
   };
-}
-
-/** Target for a slug of a written (not yet merged) name. */
-export function nameTarget(slug: string): ClubTarget {
-  return { kind: "name", key: normalizeClubName(slug) };
 }

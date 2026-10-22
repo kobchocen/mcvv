@@ -7,18 +7,12 @@ import { Link, type Locale } from "@/i18n/routing";
 import {
   confirmClubMerge,
   rejectClubMerge,
-  removeClubAlias,
-  renameCanonicalClub,
   restoreClubMerge,
+  unmergeClub,
 } from "@/lib/admin/club-merge-actions";
 import { requireStaff } from "@/lib/admin/staff";
-import {
-  clubNameUsage,
-  createClubResolver,
-  suggestClubMerges,
-  type MergeSuggestion,
-} from "@/lib/clubs";
-import { loadClubAliases } from "@/lib/clubs/queries";
+import { clubUsage, createClubResolver, suggestClubMerges, type ClubUsage } from "@/lib/clubs";
+import { loadClubMerges, loadClubNames } from "@/lib/clubs/queries";
 import { prisma } from "@/lib/db/client";
 import { loadAllResults } from "@/lib/stats/queries";
 
@@ -29,6 +23,7 @@ type PageProps = Readonly<{
 
 const CONFIDENCES = ["high", "medium", "low"] as const;
 const PAGE = 50;
+const ERRORS = ["ids", "hlavni", "nezname", "same", "empty", "main_merged", "other_merged"];
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
@@ -38,6 +33,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 const inputClass = "h-9 min-w-[12rem] flex-1 border border-race-line bg-race-surface px-2 text-sm";
 const outlineClass = "h-9 border-race-line bg-race-surface";
+
+function yearsLabel(years: readonly number[]): string {
+  if (years.length === 0) return "";
+  // Runs of consecutive years: 2018, 2020–2022
+  const parts: string[] = [];
+  let start = years[0];
+  let previous = years[0];
+  for (const year of [...years.slice(1), Number.NaN]) {
+    if (year === previous + 1) {
+      previous = year;
+      continue;
+    }
+    parts.push(start === previous ? `${start}` : `${start}–${previous}`);
+    start = year;
+    previous = year;
+  }
+  return parts.join(", ");
+}
 
 export default async function AdminClubMergePage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
@@ -49,37 +62,71 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   const confidence = CONFIDENCES.find((value) => value === query.jistota);
   const limit = Math.max(PAGE, Number.parseInt(query.pocet ?? "", 10) || PAGE);
 
-  const [results, aliases, rejections, canonical] = await Promise.all([
+  const [results, names, merges, rejections] = await Promise.all([
     loadAllResults(),
-    loadClubAliases(),
+    loadClubNames(),
+    loadClubMerges(),
     prisma.clubMergeRejection.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.canonicalClub.findMany({
-      orderBy: { name: "asc" },
-      include: { aliases: { orderBy: { name: "asc" } } },
-    }),
   ]);
-  const resolver = createClubResolver(aliases);
-  const usage = clubNameUsage(results, resolver);
-  const startsByKey = new Map(usage.map((row) => [row.key, row]));
-  const rejected = new Set(rejections.map((row) => `${row.keyA}|${row.keyB}`));
+  const resolver = createClubResolver({ names, merges });
+  const usage = clubUsage(results, names, resolver);
+  const byId = new Map(usage.map((club) => [club.id, club]));
+  const rejected = new Set(rejections.map((row) => `${row.clubIdA}|${row.clubIdB}`));
   const all = suggestClubMerges(usage, { rejected });
   const counts = Object.fromEntries(
     CONFIDENCES.map((value) => [value, all.filter((s) => s.confidence === value).length]),
   ) as Record<(typeof CONFIDENCES)[number], number>;
   const filtered = confidence ? all.filter((s) => s.confidence === confidence) : all;
   const shown = filtered.slice(0, limit);
-  const canonicalById = new Map(canonical.map((club) => [club.id, club]));
+  const mergedClubs = usage.filter((club) => club.ids.length > 1);
+  const error = ERRORS.find((value) => value === query.chyba);
 
-  const defaultName = (s: MergeSuggestion) =>
-    (s.a.canonicalId && canonicalById.get(s.a.canonicalId)?.name) ||
-    (s.b.canonicalId && canonicalById.get(s.b.canonicalId)?.name) ||
-    s.a.name;
-  const usageLabel = (row: { name: string; starts: number; firstYear: number; lastYear: number }) =>
+  const label = (id: string) => `${id} – ${resolver.profileName(id) || "?"}`;
+  const usageLabel = (club: ClubUsage) =>
     copy("clubMergeUsage", {
-      starts: row.starts,
+      starts: club.starts,
       years:
-        row.firstYear === row.lastYear ? `${row.firstYear}` : `${row.firstYear}–${row.lastYear}`,
+        club.firstYear === club.lastYear
+          ? `${club.firstYear}`
+          : `${club.firstYear}–${club.lastYear}`,
     });
+
+  /** One side of a merge: id, names per edition, usage and the radio "keep as main". */
+  const renderSide = (club: ClubUsage, side: "a" | "b") => (
+    <label
+      key={side}
+      className="flex flex-1 cursor-pointer flex-col gap-1 border border-race-line/70 p-3 has-[:checked]:border-race-accent has-[:checked]:bg-race-accent/10"
+    >
+      <span className="flex items-center gap-2">
+        <input type="radio" name="main" value={side} required />
+        <span className="text-xs font-semibold uppercase tracking-wide text-race-dim">
+          {copy("clubMergeKeepMain")}
+        </span>
+      </span>
+      <span>
+        <b className="font-mono">{club.id}</b> · <b>{club.name}</b>{" "}
+        <span className="text-race-dim">({usageLabel(club)})</span>
+      </span>
+      {club.ids.length > 1 ? (
+        <span className="text-xs text-race-dim">
+          {copy("clubMergeAlreadyMerged", { ids: club.ids.slice(1).join(", ") })}
+        </span>
+      ) : null}
+      <ul className="text-xs text-race-muted">
+        {club.names.map((row) => (
+          <li key={row.name}>
+            {row.name} <span className="text-race-dim">({yearsLabel(row.years)})</span>
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={{ pathname: "/kluby/[slug]", params: { slug: resolver.slug(club.id) } }}
+        className="text-xs font-semibold text-race-accent hover:underline"
+      >
+        {copy("clubMergeProfile")}
+      </Link>
+    </label>
+  );
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -91,9 +138,9 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
         <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{copy("clubMergeIntro")}</p>
         <p className="mt-2 text-sm text-race-muted">
           {copy("clubMergeSummary", {
-            names: usage.length,
-            clubs: canonical.length,
-            aliases: aliases.length,
+            clubs: usage.length,
+            merged: merges.length,
+            mains: mergedClubs.length,
           })}
         </p>
         {query.ok ? (
@@ -101,9 +148,9 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
             {copy("clubMergeSaved")}
           </p>
         ) : null}
-        {query.chyba ? (
+        {error ? (
           <p className="mt-4 border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm">
-            {copy("clubMergeError")}
+            {copy(`clubMergeError_${error}`)}
           </p>
         ) : null}
 
@@ -130,54 +177,53 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
         <p className="mt-2 text-xs text-race-dim">{copy("clubMergeScoreHint")}</p>
 
         <ul className="mt-4 flex flex-col gap-3">
-          {shown.map((s) => (
-            <li
-              key={`${s.a.key}|${s.b.key}`}
-              className="border border-race-line/55 bg-race-surface p-3 text-sm"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p>
-                  <b>{s.a.name}</b> <span className="text-race-dim">({usageLabel(s.a)})</span>
-                  <span className="mx-2 text-race-dim">⇄</span>
-                  <b>{s.b.name}</b> <span className="text-race-dim">({usageLabel(s.b)})</span>
-                </p>
+          {shown.map((s) => {
+            const formId = `merge-${s.a.id}-${s.b.id}`;
+            return (
+              <li
+                key={`${s.a.id}|${s.b.id}`}
+                className="border border-race-line/55 bg-race-surface p-3 text-sm"
+              >
                 <p className="text-xs text-race-muted">
                   {copy(`clubMergeConfidence_${s.confidence}`)} · {s.score.toFixed(2)}
                   {s.reasons.length > 0
                     ? ` · ${s.reasons.map((reason) => copy(`clubMergeReason_${reason}`)).join(", ")}`
-                    : ""}
+                    : ""}{" "}
+                  · {copy("clubMergeMatched", { a: s.matched[0], b: s.matched[1] })}
                 </p>
-              </div>
-              {[s.a, s.b].some((row) => (startsByKey.get(row.key)?.spellings.length ?? 0) > 1) ? (
-                <p className="mt-1 text-xs text-race-dim">
-                  {copy("clubMergeSpellings")}:{" "}
-                  {[s.a, s.b]
-                    .flatMap((row) => startsByKey.get(row.key)?.spellings ?? [])
-                    .map((sp) => `${sp.name} (${sp.starts})`)
-                    .join(" · ")}
-                </p>
-              ) : null}
-              <form className="mt-2 flex flex-wrap items-end gap-2">
-                <input type="hidden" name="nameA" value={s.a.name} />
-                <input type="hidden" name="nameB" value={s.b.name} />
-                <label className="flex min-w-[16rem] flex-1 flex-col gap-1 text-xs text-race-dim">
-                  {copy("clubMergeCanonical")}
-                  <input name="canonical" defaultValue={defaultName(s)} className={inputClass} />
-                </label>
-                <Button type="submit" formAction={confirmClubMerge} className="h-9">
-                  {copy("clubMergeConfirm")}
-                </Button>
-                <Button
-                  type="submit"
-                  formAction={rejectClubMerge}
-                  variant="outline"
-                  className={outlineClass}
-                >
-                  {copy("clubMergeReject")}
-                </Button>
-              </form>
-            </li>
-          ))}
+                {s.sameYears.length > 0 ? (
+                  <p className="mt-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    {copy("clubMergeSameYears", { years: yearsLabel(s.sameYears) })}
+                  </p>
+                ) : null}
+                <form id={formId} className="mt-2 flex flex-col gap-2">
+                  <input type="hidden" name="idA" value={s.a.id} />
+                  <input type="hidden" name="idB" value={s.b.id} />
+                  <fieldset className="flex flex-col gap-2 sm:flex-row">
+                    <legend className="mb-1 text-xs font-semibold text-foreground">
+                      {copy("clubMergeChooseMain")}
+                    </legend>
+                    {renderSide(s.a, "a")}
+                    {renderSide(s.b, "b")}
+                  </fieldset>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="submit" formAction={confirmClubMerge} className="h-9">
+                      {copy("clubMergeConfirm")}
+                    </Button>
+                    <Button
+                      type="submit"
+                      formAction={rejectClubMerge}
+                      formNoValidate
+                      variant="outline"
+                      className={outlineClass}
+                    >
+                      {copy("clubMergeReject")}
+                    </Button>
+                  </div>
+                </form>
+              </li>
+            );
+          })}
         </ul>
         {filtered.length > shown.length ? (
           <Link
@@ -198,27 +244,31 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
           {copy("clubMergeManual")}
         </h2>
         <p className="mt-2 text-sm text-race-muted">{copy("clubMergeManualHint")}</p>
-        <datalist id="club-names">
-          {usage.map((row) => (
-            <option key={row.key} value={row.name} />
+        <datalist id="club-ids">
+          {usage.map((club) => (
+            <option key={club.id} value={club.id} label={label(club.id)} />
           ))}
         </datalist>
-        <form action={confirmClubMerge} className="mt-3 flex flex-wrap items-end gap-2">
-          <input
-            name="nameA"
-            list="club-names"
-            required
-            placeholder={copy("clubMergeNameA")}
-            className={inputClass}
-          />
-          <input
-            name="nameB"
-            list="club-names"
-            required
-            placeholder={copy("clubMergeNameB")}
-            className={inputClass}
-          />
-          <input name="canonical" placeholder={copy("clubMergeCanonical")} className={inputClass} />
+        <form
+          action={confirmClubMerge}
+          className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"
+        >
+          <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
+            {copy("clubMergeIdA")}
+            <input name="idA" list="club-ids" required className={inputClass} />
+            <span className="flex items-center gap-2 text-foreground">
+              <input type="radio" name="main" value="a" required />
+              {copy("clubMergeKeepMain")}
+            </span>
+          </label>
+          <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
+            {copy("clubMergeIdB")}
+            <input name="idB" list="club-ids" required className={inputClass} />
+            <span className="flex items-center gap-2 text-foreground">
+              <input type="radio" name="main" value="b" required />
+              {copy("clubMergeKeepMain")}
+            </span>
+          </label>
           <Button type="submit" className="h-9">
             {copy("clubMergeConfirm")}
           </Button>
@@ -227,46 +277,47 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
         <h2 className="mt-12 font-display text-2xl font-semibold text-foreground dark:text-white">
           {copy("clubMergeClubs")}
         </h2>
-        {canonical.length === 0 ? (
+        {mergedClubs.length === 0 ? (
           <p className="mt-2 text-sm text-race-muted">{copy("clubMergeNoClubs")}</p>
         ) : (
           <ul className="mt-3 flex flex-col gap-3">
-            {canonical.map((club) => (
+            {mergedClubs.map((club) => (
               <li key={club.id} className="border border-race-line/55 bg-race-surface p-3 text-sm">
-                <form action={renameCanonicalClub} className="flex flex-wrap items-end gap-2">
-                  <input type="hidden" name="id" value={club.id} />
-                  <input name="name" defaultValue={club.name} className={inputClass} />
-                  <Button type="submit" variant="outline" className={outlineClass}>
-                    {copy("save")}
-                  </Button>
+                <p>
+                  <span className="mr-2 border border-race-accent px-1 text-xs font-semibold uppercase text-race-accent">
+                    {copy("clubMergeMainBadge")}
+                  </span>
+                  <b className="font-mono">{club.id}</b> · <b>{club.name}</b>{" "}
+                  <span className="text-race-dim">({usageLabel(club)})</span>{" "}
                   <Link
-                    href={{ pathname: "/kluby/[slug]", params: { slug: club.slug } }}
+                    href={{ pathname: "/kluby/[slug]", params: { slug: resolver.slug(club.id) } }}
                     className="text-xs font-semibold text-race-accent hover:underline"
                   >
-                    /kluby/{club.slug}
+                    /kluby/{resolver.slug(club.id)}
                   </Link>
-                </form>
+                </p>
                 <ul className="mt-2 flex flex-wrap gap-2">
-                  {club.aliases.map((alias) => (
-                    <li key={alias.key}>
+                  {club.ids.slice(1).map((id) => (
+                    <li key={id}>
                       <form
-                        action={removeClubAlias}
-                        className="flex items-center gap-1 border border-race-line px-2 py-1"
+                        action={unmergeClub}
+                        className="flex items-center gap-2 border border-race-line px-2 py-1"
                       >
-                        <input type="hidden" name="key" value={alias.key} />
+                        <input type="hidden" name="id" value={id} />
                         <span>
-                          {alias.name}{" "}
-                          <span className="text-race-dim">
-                            ({startsByKey.get(alias.key)?.starts ?? 0})
-                          </span>
+                          <b className="font-mono">{id}</b> ·{" "}
+                          {resolver
+                            .history(id)
+                            .map((row) => row.name)
+                            .filter((name, index, list) => list.indexOf(name) === index)
+                            .join(" / ")}
                         </span>
                         <button
                           type="submit"
                           className="text-xs text-race-dim hover:text-red-500"
-                          aria-label={copy("clubMergeRemoveAlias", { name: alias.name })}
-                          title={copy("clubMergeRemoveAlias", { name: alias.name })}
+                          title={copy("clubMergeUnmerge", { id })}
                         >
-                          ✕
+                          {copy("clubMergeUnmergeShort")}
                         </button>
                       </form>
                     </li>
@@ -284,13 +335,13 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
             </h2>
             <ul className="mt-3 flex flex-col gap-1 text-sm">
               {rejections.map((row) => (
-                <li key={`${row.keyA}|${row.keyB}`}>
+                <li key={`${row.clubIdA}|${row.clubIdB}`}>
                   <form action={restoreClubMerge} className="flex flex-wrap items-center gap-2">
-                    <input type="hidden" name="keyA" value={row.keyA} />
-                    <input type="hidden" name="keyB" value={row.keyB} />
+                    <input type="hidden" name="idA" value={row.clubIdA} />
+                    <input type="hidden" name="idB" value={row.clubIdB} />
                     <span>
-                      {startsByKey.get(row.keyA)?.name ?? row.keyA} ⇄{" "}
-                      {startsByKey.get(row.keyB)?.name ?? row.keyB}
+                      {byId.has(row.clubIdA) ? label(row.clubIdA) : row.clubIdA} ⇄{" "}
+                      {byId.has(row.clubIdB) ? label(row.clubIdB) : row.clubIdB}
                     </span>
                     <button type="submit" className="text-xs text-race-accent hover:underline">
                       {copy("clubMergeRestore")}

@@ -1,30 +1,42 @@
 /**
- * Merge suggestions for the admin (#104): pairs of written club names that look like the same
- * club. Only suggestions – nothing is merged until a person confirms the pair in the admin.
+ * Merge suggestions for the admin (#104): pairs of club ids (main ids) whose names look like
+ * the same club. A club keeps all names of its id, so renames are never suggested – only
+ * different ids. Only suggestions: nothing is merged until a person picks the main id.
  * Pure, no DB access. Pairs below 0.65 are mostly towns shared by different clubs.
  */
 import { normalizeClubName } from "./core";
+import { clubPair } from "./merge";
 
-/** One written club name (identity key) with its usage in results. */
-export type ClubNameUsage = {
-  key: string;
-  /** Most frequent spelling of the key. */
+/** One club (main id with merged ids) and its names and usage. */
+export type ClubUsage = {
+  /** Main id. */
+  id: string;
+  /** Profile name (newest name). */
   name: string;
+  /** All names of the club with the editions they were used in, newest first. */
+  names: { name: string; years: number[] }[];
+  /** Main id and merged ids. */
+  ids: string[];
+  /** Editions with a cis_klub row of any of the ids. */
+  years: number[];
+  /** Starts in results. */
   starts: number;
   firstYear: number;
   lastYear: number;
-  /** Canonical club the key is already assigned to (confirmed alias), if any. */
-  canonicalId?: number | null;
 };
 
 export type MergeSuggestion = {
-  a: ClubNameUsage;
-  b: ClubNameUsage;
-  /** 0–1, higher = more similar. */
+  a: ClubUsage;
+  b: ClubUsage;
+  /** 0–1, higher = more similar (best pair of names). */
   score: number;
   confidence: "high" | "medium" | "low";
   /** Why: shared words, differing club-type prefixes, expanded abbreviations… */
   reasons: SuggestionReason[];
+  /** The two names that matched best. */
+  matched: [string, string];
+  /** Editions in which both ids exist (both registered under different ids). */
+  sameYears: number[];
 };
 
 export type SuggestionReason =
@@ -212,27 +224,28 @@ export function confidenceOf(score: number): MergeSuggestion["confidence"] {
   return score >= 0.9 ? "high" : score >= 0.75 ? "medium" : "low";
 }
 
-/** Canonical pair key of two identity keys (order independent). */
-export function pairKey(a: string, b: string): [string, string] {
-  return a < b ? [a, b] : [b, a];
-}
-
 /**
- * Suggested merges among written names. Pairs already in one canonical club and rejected pairs
- * are skipped. Sorted by score, then by starts involved. Candidates must share an identifying
- * word or its first 4 letters (blocking keeps it fast for ~1 000 names).
+ * Suggested merges among clubs (main ids). Rejected pairs are skipped. Sorted by score, then
+ * by starts involved. Candidates must share an identifying word or its first 4 letters
+ * (blocking keeps it fast for ~1 000 ids).
  */
 export function suggestClubMerges(
-  names: readonly ClubNameUsage[],
+  clubs: readonly ClubUsage[],
   options: { rejected?: ReadonlySet<string>; minScore?: number; limit?: number } = {},
 ): MergeSuggestion[] {
   const minScore = options.minScore ?? 0.65;
-  const parsed = names.map((usage) => ({ usage, parsed: parseClubName(usage.name) }));
+  const parsed = clubs.map((club) => ({
+    club,
+    names: club.names.map((row) => row.name),
+    years: new Set(club.years),
+  }));
   const index = new Map<string, number[]>();
-  parsed.forEach(({ parsed: p }, i) => {
+  parsed.forEach(({ names }, i) => {
     const tokens = new Set<string>();
-    for (const word of p.core) {
-      if (word.length >= 2) tokens.add(word.length > 4 ? word.slice(0, 4) : word);
+    for (const name of names) {
+      for (const word of parseClubName(name).core) {
+        if (word.length >= 2) tokens.add(word.length > 4 ? word.slice(0, 4) : word);
+      }
     }
     for (const token of tokens) {
       const list = index.get(token) ?? [];
@@ -245,19 +258,35 @@ export function suggestClubMerges(
   for (const list of index.values()) {
     for (let x = 0; x < list.length; x += 1) {
       for (let y = x + 1; y < list.length; y += 1) {
-        const a = parsed[list[x]].usage;
-        const b = parsed[list[y]].usage;
-        const [k1, k2] = pairKey(a.key, b.key);
-        const id = `${k1}|${k2}`;
+        const p = parsed[list[x]];
+        const q = parsed[list[y]];
+        if (p.club.id === q.club.id) continue;
+        const id = clubPair(p.club.id, q.club.id).join("|");
         if (seen.has(id)) continue;
         seen.add(id);
-        if (a.key === b.key) continue;
-        if (a.canonicalId && a.canonicalId === b.canonicalId) continue;
         if (options.rejected?.has(id)) continue;
-        const { score, reasons } = clubNameSimilarity(a.name, b.name);
-        if (score < minScore) continue;
-        const [first, second] = a.starts >= b.starts ? [a, b] : [b, a];
-        out.push({ a: first, b: second, score, confidence: confidenceOf(score), reasons });
+        let best: { score: number; reasons: SuggestionReason[]; matched: [string, string] } | null =
+          null;
+        for (const nameA of p.names) {
+          for (const nameB of q.names) {
+            const result = clubNameSimilarity(nameA, nameB);
+            if (!best || result.score > best.score) best = { ...result, matched: [nameA, nameB] };
+          }
+        }
+        if (!best || best.score < minScore) continue;
+        const [first, second, matched] =
+          p.club.starts >= q.club.starts
+            ? [p, q, best.matched]
+            : [q, p, [best.matched[1], best.matched[0]] as [string, string]];
+        out.push({
+          a: first.club,
+          b: second.club,
+          score: best.score,
+          confidence: confidenceOf(best.score),
+          reasons: best.reasons,
+          matched,
+          sameYears: first.club.years.filter((year) => second.years.has(year)),
+        });
       }
     }
   }

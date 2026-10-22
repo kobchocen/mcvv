@@ -15,6 +15,7 @@ export async function loadAllResults(): Promise<RawResult[]> {
       time: true,
       runnerId: true,
       runnerName: true,
+      clubId: true,
       clubName: true,
       club: { select: { name: true } },
       runner: { select: { name: true } },
@@ -25,6 +26,7 @@ export async function loadAllResults(): Promise<RawResult[]> {
     time: row.time,
     runnerId: row.runnerId,
     runnerName: runnerNameFor("stats", row.runnerName, row.runner?.name),
+    clubId: row.clubId,
     clubName: row.club?.name || row.clubName || null,
   }));
 }
@@ -55,7 +57,7 @@ export async function getRecordEvolution(): Promise<RecordEvolutionGroup[]> {
       year: winner.year,
       name: winner.runnerName || "—",
       birthYear: String(runnerBirthYear(winner.runnerId)),
-      club: clubs.display(winner.clubName),
+      club: clubs.display(winner.clubId, winner.year, winner.clubName),
       time: formatRaceTime(winner.time),
       runnerId: winner.runnerId,
     }));
@@ -122,7 +124,7 @@ export async function getTopTimesBySex(
         year: row.year,
         name: row.runnerName || "—",
         birthYear: String(runnerBirthYear(row.runnerId)),
-        club: clubs.display(row.clubName),
+        club: clubs.display(row.clubId, row.year, row.clubName),
         time: formatRaceTime(row.time),
         runnerId: row.runnerId,
       }));

@@ -78,9 +78,11 @@ model PhotoLocation {
   @@map("cis_fotka_kde")
 }
 
-/// Číselník klubů v rámci roků (composite key: id + rok)
+/// Číselník klubů v rámci roků (composite key: id + rok). Identita klubu napříč ročníky je
+/// `id` (#104); `jmeno` je název platný v daném ročníku (klub se může přejmenovat).
+/// varchar(8): legacy char(3) by číselná id nad 999 nepojal (dnešní id mají nejvýš 3 znaky).
 model Club {
-  id      String    @map("id") @db.Char(3)
+  id      String    @map("id") @db.VarChar(8)
   year    Int       @map("rok") @db.SmallInt
   name    String    @map("jmeno") @db.VarChar(50)
   created DateTime? @map("created")
@@ -95,45 +97,27 @@ model Club {
   @@map("cis_klub")
 }
 
-/// Kanonický klub napříč ročníky (#104). Vzniká jen ručním potvrzením návrhu v administraci,
-/// migrace ani import nic nemapují. Do potvrzení se klub zobrazuje pod zapsaným názvem.
-model CanonicalClub {
-  id        Int      @id @default(autoincrement())
-  /// URL profilu /kluby/[slug]
-  slug      String   @unique @db.VarChar(80)
-  name      String   @db.VarChar(80)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+/// Ruční sloučení dvou id klubů, která jsou fakticky jeden klub (#104), např. 216 → CHC.
+/// Jen mapování: legacy tabulky se nepřepisují, smazáním řádku se sloučení vrátí.
+/// Vždy ploché: hlavní id (`hlavni_klub_id`) samo sloučené není.
+model ClubMerge {
+  clubId     String   @id @map("klub_id") @db.VarChar(8)
+  mainClubId String   @map("hlavni_klub_id") @db.VarChar(8)
+  createdAt  DateTime @default(now()) @map("created_at")
+  author     String?  @db.VarChar(255)
 
-  aliases ClubAlias[]
-
-  @@map("mcvv_klub")
+  @@index([mainClubId])
+  @@map("mcvv_klub_slouceni")
 }
 
-/// Varianta zapsaného názvu klubu (klíč = normalizovaný název) ručně přiřazená kanonickému klubu.
-model ClubAlias {
-  /// normalizeClubName(): bez diakritiky, velikosti písmen, mezer a interpunkce
-  key       String   @id @db.VarChar(80)
-  /// Název tak, jak byl zapsán (nejčastější varianta v době sloučení)
-  name      String   @db.VarChar(80)
-  clubId    Int      @map("klub_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  author    String?  @db.VarChar(255)
-
-  club CanonicalClub @relation(fields: [clubId], references: [id], onDelete: Cascade)
-
-  @@index([clubId])
-  @@map("mcvv_klub_alias")
-}
-
-/// Zamítnutý návrh sloučení dvou názvů (klíče seřazené), aby se znovu nenabízel.
+/// Zamítnutý návrh sloučení dvou id klubů (seřazená dvojice), aby se znovu nenabízel.
 model ClubMergeRejection {
-  keyA      String   @map("key_a") @db.VarChar(80)
-  keyB      String   @map("key_b") @db.VarChar(80)
+  clubIdA   String   @map("klub_id_a") @db.VarChar(8)
+  clubIdB   String   @map("klub_id_b") @db.VarChar(8)
   createdAt DateTime @default(now()) @map("created_at")
   author    String?  @db.VarChar(255)
 
-  @@id([keyA, keyB])
+  @@id([clubIdA, clubIdB])
   @@map("mcvv_klub_navrh_zamitnuty")
 }
 
@@ -281,7 +265,7 @@ model Registration {
 /// Řádek přihlášky (jeden běžec v přihlášce)
 model RegistrationLine {
   runnerId       String    @map("bezec_id") @db.Char(8)
-  clubId         String    @map("klub_id") @db.Char(3)
+  clubId         String    @map("klub_id") @db.VarChar(8)
   categoryId     String    @map("kateg_id") @db.Char(1)
   year           Int       @map("rok") @db.SmallInt
   bib            Int?      @map("cislo") @db.SmallInt
@@ -317,7 +301,7 @@ model Payment {
 /// Startovní listina (přiřazená čísla)
 model StartEntry {
   runnerId   String  @map("bezec_id") @db.Char(8)
-  clubId     String  @map("klub_id") @db.Char(3)
+  clubId     String  @map("klub_id") @db.VarChar(8)
   categoryId String  @map("kateg_id") @db.Char(1)
   year       Int     @map("rok") @db.SmallInt
   bib        Int     @map("cislo") @db.SmallInt
@@ -336,7 +320,7 @@ model StartEntry {
 model Result {
   runnerId   String  @map("bezec_id") @db.Char(8)
   year       Int     @map("rok") @db.SmallInt
-  clubId     String  @map("klub_id") @db.Char(3)
+  clubId     String  @map("klub_id") @db.VarChar(8)
   categoryId String  @map("kateg_id") @db.Char(1)
   time       Int     @map("time") @db.SmallInt // v sekundách
   runnerName String? @map("bezec_name") @db.VarChar(50)

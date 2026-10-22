@@ -4,16 +4,17 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
-import { formInt, formString } from "@/lib/admin/parse";
+import { formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
-import { isNoClub, normalizeClubName, pairKey, planClubMerge, uniqueClubSlug } from "@/lib/clubs";
+import { clubKey, clubPair, planClubMerge } from "@/lib/clubs";
 import { prisma } from "@/lib/db/client";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 import { redirect } from "@/i18n/routing";
 
 /**
- * Ruční sjednocení názvů klubů (#104). Každá změna je výslovné rozhodnutí v administraci
- * (potvrzení / zamítnutí návrhu, odebrání aliasu); nic se neslučuje automaticky.
+ * Ruční sloučení id klubů (#104, Q34). Identita klubu je cis_klub.id; slučují se jen různá id,
+ * která jsou fakticky jeden klub, a vždy s výslovně zvoleným hlavním id. Jde jen o mapování
+ * (mcvv_klub_slouceni) – legacy tabulky se nemění a každé sloučení jde vrátit.
  */
 
 function revalidateClubs() {
@@ -31,90 +32,75 @@ async function back(query: Record<string, string> = {}): Promise<never> {
   throw new Error("unreachable");
 }
 
-/** Potvrdí sloučení dvou zapsaných názvů pod jeden kanonický klub. */
+/**
+ * Sloučí dvě id. `main` = "a" | "b" je povinná volba hlavního id (bez výchozí hodnoty):
+ * hlavní id zůstává, druhé se počítá pod ním.
+ */
 export async function confirmClubMerge(formData: FormData): Promise<void> {
   const session = await requireStaff();
-  const nameA = formString(formData, "nameA").slice(0, 80);
-  const nameB = formString(formData, "nameB").slice(0, 80);
-  const canonicalName = (formString(formData, "canonical") || nameA).slice(0, 80);
-  const keyA = normalizeClubName(nameA).slice(0, 80);
-  const keyB = normalizeClubName(nameB).slice(0, 80);
-  if (!keyA || !keyB || keyA === keyB || isNoClub(nameA) || isNoClub(nameB)) {
-    return back({ chyba: "nazvy" });
+  const idA = clubKey(formString(formData, "idA"));
+  const idB = clubKey(formString(formData, "idB"));
+  const side = formString(formData, "main");
+  if (!idA || !idB || idA === idB) {
+    return back({ chyba: "ids" });
   }
+  if (side !== "a" && side !== "b") {
+    return back({ chyba: "hlavni" });
+  }
+  const main = side === "a" ? idA : idB;
+  const other = main === idA ? idB : idA;
 
   const result = await prisma.$transaction(async (tx) => {
-    const existing = await tx.clubAlias.findMany({
-      where: { key: { in: [keyA, keyB] } },
-      select: { key: true, clubId: true },
+    const known = await tx.club.findMany({
+      where: { id: { in: [idA, idB] } },
+      select: { id: true },
+      distinct: ["id"],
     });
-    const clubOf = (key: string) => existing.find((row) => row.key === key)?.clubId ?? null;
-    const plan = planClubMerge(clubOf(keyA), clubOf(keyB));
-    const author = session.email;
-    let clubId: number;
-    if (plan.kind === "create") {
-      const taken = new Set(
-        (await tx.canonicalClub.findMany({ select: { slug: true } })).map((row) => row.slug),
-      );
-      const club = await tx.canonicalClub.create({
-        data: { name: canonicalName, slug: uniqueClubSlug(canonicalName, taken) },
+    if (known.length < 2) return { ok: false as const, error: "nezname" };
+    const merges = await tx.clubMerge.findMany({ select: { clubId: true, mainClubId: true } });
+    const plan = planClubMerge(main, other, merges);
+    if (!plan.ok) return { ok: false as const, error: plan.error };
+    for (const row of plan.rows) {
+      await tx.clubMerge.upsert({
+        where: { clubId: row.clubId },
+        update: { mainClubId: row.mainClubId, author: session.email },
+        create: { ...row, author: session.email },
       });
-      clubId = club.id;
-      await tx.clubAlias.createMany({
-        data: [
-          { key: keyA, name: nameA, clubId, author },
-          { key: keyB, name: nameB, clubId, author },
-        ],
-      });
-    } else if (plan.kind === "attach") {
-      clubId = plan.clubId;
-      const missing = clubOf(keyA) ? { key: keyB, name: nameB } : { key: keyA, name: nameA };
-      await tx.clubAlias.create({ data: { ...missing, clubId, author } });
-    } else if (plan.kind === "join") {
-      clubId = plan.into;
-      await tx.clubAlias.updateMany({ where: { clubId: plan.from }, data: { clubId } });
-      await tx.canonicalClub.delete({ where: { id: plan.from } });
-    } else {
-      clubId = plan.clubId;
     }
     await writeAudit(
       {
         actor: session,
         action: "club.merge",
-        target: `club:${clubId}`,
-        detail: { plan: plan.kind, names: [nameA, nameB], keys: [keyA, keyB] },
+        target: `club:${plan.mainId}`,
+        detail: { main: plan.mainId, merged: plan.rows.map((row) => row.clubId) },
       },
       tx,
     );
-    return { clubId, plan: plan.kind };
+    return { ok: true as const, main: plan.mainId };
   });
 
+  if (!result.ok) {
+    return back({ chyba: result.error });
+  }
   revalidateClubs();
-  return back({ ok: `merge-${result.clubId}` });
+  return back({ ok: `merge-${result.main}` });
 }
 
-/** Zamítne návrh: dvojice se už nebude nabízet. */
+/** Zamítne návrh: dvojice id se už nebude nabízet. */
 export async function rejectClubMerge(formData: FormData): Promise<void> {
   const session = await requireStaff();
-  const [keyA, keyB] = pairKey(
-    normalizeClubName(formString(formData, "nameA")).slice(0, 80),
-    normalizeClubName(formString(formData, "nameB")).slice(0, 80),
-  );
-  if (!keyA || !keyB || keyA === keyB) {
-    return back({ chyba: "nazvy" });
+  const [clubIdA, clubIdB] = clubPair(formString(formData, "idA"), formString(formData, "idB"));
+  if (!clubIdA || !clubIdB || clubIdA === clubIdB) {
+    return back({ chyba: "ids" });
   }
   await prisma.$transaction(async (tx) => {
     await tx.clubMergeRejection.upsert({
-      where: { keyA_keyB: { keyA, keyB } },
+      where: { clubIdA_clubIdB: { clubIdA, clubIdB } },
       update: {},
-      create: { keyA, keyB, author: session.email },
+      create: { clubIdA, clubIdB, author: session.email },
     });
     await writeAudit(
-      {
-        actor: session,
-        action: "club.merge_rejected",
-        target: `pair:${keyA}|${keyB}`.slice(0, 128),
-      },
+      { actor: session, action: "club.merge_rejected", target: `pair:${clubIdA}|${clubIdB}` },
       tx,
     );
   });
@@ -125,16 +111,11 @@ export async function rejectClubMerge(formData: FormData): Promise<void> {
 /** Vrátí zamítnutý návrh zpět mezi návrhy. */
 export async function restoreClubMerge(formData: FormData): Promise<void> {
   const session = await requireStaff();
-  const keyA = formString(formData, "keyA");
-  const keyB = formString(formData, "keyB");
+  const [clubIdA, clubIdB] = clubPair(formString(formData, "idA"), formString(formData, "idB"));
   await prisma.$transaction(async (tx) => {
-    await tx.clubMergeRejection.deleteMany({ where: { keyA, keyB } });
+    await tx.clubMergeRejection.deleteMany({ where: { clubIdA, clubIdB } });
     await writeAudit(
-      {
-        actor: session,
-        action: "club.merge_restored",
-        target: `pair:${keyA}|${keyB}`.slice(0, 128),
-      },
+      { actor: session, action: "club.merge_restored", target: `pair:${clubIdA}|${clubIdB}` },
       tx,
     );
   });
@@ -142,55 +123,24 @@ export async function restoreClubMerge(formData: FormData): Promise<void> {
   return back({ ok: "restore" });
 }
 
-/** Odebere zapsaný název z kanonického klubu (zobrazí se zase pod sebou). */
-export async function removeClubAlias(formData: FormData): Promise<void> {
+/** Zruší sloučení jednoho id: zobrazuje se zase jako samostatný klub. */
+export async function unmergeClub(formData: FormData): Promise<void> {
   const session = await requireStaff();
-  const key = formString(formData, "key");
+  const clubId = clubKey(formString(formData, "id"));
   await prisma.$transaction(async (tx) => {
-    const alias = await tx.clubAlias.findUnique({ where: { key } });
-    if (!alias) return;
-    await tx.clubAlias.delete({ where: { key } });
-    const left = await tx.clubAlias.count({ where: { clubId: alias.clubId } });
-    // A club with a single remaining name is no merge any more: dissolve it.
-    if (left <= 1) {
-      await tx.canonicalClub.delete({ where: { id: alias.clubId } });
-    }
+    const merge = await tx.clubMerge.findUnique({ where: { clubId } });
+    if (!merge) return;
+    await tx.clubMerge.delete({ where: { clubId } });
     await writeAudit(
       {
         actor: session,
-        action: "club.alias_removed",
-        target: `club:${alias.clubId}`,
-        detail: { key, name: alias.name, dissolved: left <= 1 },
+        action: "club.unmerged",
+        target: `club:${merge.mainClubId}`,
+        detail: { main: merge.mainClubId, unmerged: clubId },
       },
       tx,
     );
   });
   revalidateClubs();
-  return back({ ok: "alias" });
-}
-
-/** Přejmenuje kanonický klub (adresa profilu zůstává). */
-export async function renameCanonicalClub(formData: FormData): Promise<void> {
-  const session = await requireStaff();
-  const id = formInt(formData, "id");
-  const name = formString(formData, "name").slice(0, 80);
-  if (!id || !name) {
-    return back({ chyba: "nazvy" });
-  }
-  await prisma.$transaction(async (tx) => {
-    const before = await tx.canonicalClub.findUnique({ where: { id }, select: { name: true } });
-    if (!before) return;
-    await tx.canonicalClub.update({ where: { id }, data: { name } });
-    await writeAudit(
-      {
-        actor: session,
-        action: "club.renamed",
-        target: `club:${id}`,
-        detail: { from: before.name, to: name },
-      },
-      tx,
-    );
-  });
-  revalidateClubs();
-  return back({ ok: "rename" });
+  return back({ ok: "unmerge" });
 }

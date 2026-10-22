@@ -259,7 +259,8 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
             {copy("perYear")}
           </h2>
           <ol className="mt-4 flex flex-col gap-1.5" aria-label={copy("perYear")}>
-            {profile.perYear.map((row) => (
+            {/* Newest edition first. */}
+            {[...profile.perYear].reverse().map((row) => (
               <li
                 key={row.year}
                 className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-3 text-sm sm:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.3fr)]"

@@ -148,7 +148,6 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
                 <thead>
                   <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                     <th className="py-2 pr-4">{sortLink("nazev", copy("club"))}</th>
-                    <th className="py-2 pr-4">{copy("id")}</th>
                     <th className="py-2 pr-4 text-right">{sortLink("starty", copy("starts"))}</th>
                     <th className="py-2 pr-4 text-right">{copy("runners")}</th>
                     <th className="py-2 pr-4 text-right">
@@ -166,9 +165,6 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
                           name={row.name}
                           className="font-semibold text-race-accent underline-offset-2 hover:underline"
                         />
-                      </td>
-                      <td className="py-2 pr-4 text-race-muted">
-                        {[row.id, ...row.mergedIds].join(", ")}
                       </td>
                       <td className="py-2 pr-4 text-right tabular-nums">{row.starts}</td>
                       <td className="py-2 pr-4 text-right tabular-nums">{row.runners}</td>
@@ -192,7 +188,6 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
               page: (page) => copy("page", { page }),
             }}
           />
-          <p className="mt-8 text-xs leading-5 text-race-dim">{copy("idNote")}</p>
         </div>
       </section>
     </main>

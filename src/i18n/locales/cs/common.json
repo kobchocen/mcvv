@@ -700,15 +700,14 @@
     "eyebrow": "Kluby",
     "title": "Kluby na MCVV",
     "intro": "Všechny kluby, jejichž běžci doběhli Malou cenu Velké Verandy, s počtem startů a ročníků.",
-    "lead": "{clubs, plural, one {# klub} few {# kluby} other {# klubů}} a {starts} startů ve výsledcích všech ročníků. Klub je jeho id v číselníku, sloučená id se počítají pod hlavním id.",
+    "lead": "{clubs, plural, one {# klub} few {# kluby} other {# klubů}} a {starts} startů ve výsledcích všech ročníků.",
     "searchLabel": "Hledat klub",
-    "searchPlaceholder": "Název nebo id klubu, i dřívější název",
+    "searchPlaceholder": "Název klubu, i dřívější",
     "search": "Hledat",
     "reset": "Zrušit hledání",
     "shown": "Zobrazeno {from}–{to} z {total}",
     "empty": "Žádný klub neodpovídá hledání.",
     "club": "Klub",
-    "id": "Id",
     "starts": "Startů",
     "runners": "Běžců",
     "editions": "Ročníků",
@@ -716,8 +715,7 @@
     "pages": "Stránky seznamu klubů",
     "previous": "Předchozí",
     "next": "Další",
-    "page": "Stránka {page}",
-    "idNote": "Přejmenovaný klub zůstává jedním klubem (podle id); název je ten nejnovější. Id, která pořadatel sloučil, jsou uvedena u hlavního id."
+    "page": "Stránka {page}"
   },
   "Messages": {
     "title": "Zprávy",

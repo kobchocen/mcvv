@@ -700,15 +700,14 @@
     "eyebrow": "Clubs",
     "title": "Clubs at MCVV",
     "intro": "Every club whose runners finished Malá cena Velké Verandy, with their starts and editions.",
-    "lead": "{clubs, plural, one {# club} other {# clubs}} and {starts} starts in the results of all editions. A club is its id in the club list; merged ids are counted under the main id.",
+    "lead": "{clubs, plural, one {# club} other {# clubs}} and {starts} starts in the results of all editions.",
     "searchLabel": "Find a club",
-    "searchPlaceholder": "Club name or id, including a former name",
+    "searchPlaceholder": "Club name, including a former one",
     "search": "Search",
     "reset": "Clear search",
     "shown": "Showing {from}–{to} of {total}",
     "empty": "No club matches the search.",
     "club": "Club",
-    "id": "Id",
     "starts": "Starts",
     "runners": "Runners",
     "editions": "Editions",
@@ -716,8 +715,7 @@
     "pages": "Pages of the club list",
     "previous": "Previous",
     "next": "Next",
-    "page": "Page {page}",
-    "idNote": "A renamed club stays one club (by its id); the name shown is the newest one. Ids merged by the organiser are listed with the main id."
+    "page": "Page {page}"
   },
   "Messages": {
     "title": "Messages",

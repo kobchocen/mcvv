@@ -1521,7 +1521,7 @@
       "year": "Mezitím se změnil aktuální ročník – načtěte stránku znovu.",
       "confirm": "Opsaný ročník nesouhlasí, nic se nesmazalo."
     },
-    "clearDone": "Smazáno: {splits} mezičasů, {entries} záznamů deníku, zneplatněno klíčů: {tokens}.",
+    "clearDone": "Smazáno mezičasů: {splits}, záznamů deníku: {entries}, zneplatněno klíčů: {tokens}.",
     "clearTitle": "Vyčistit mezičasy ročníku",
     "clearIntro": "Po zkoušce nanečisto smaže mezičasy (mcvv_split) i jejich deník včetně konfliktů. Do auditu se uloží snímek smazaných časů. Výsledky (mcvv_time), rekordy ani startovka se nemění.",
     "clearAllowedUntil": "Povoleno do nuly závodu ({zero}). Pak už jen jednotlivé opravy.",
@@ -1534,7 +1534,7 @@
     "sourceObd": "OBD (všechny klíče zařízení)",
     "sourceToken": "klíč {label}",
     "previewButton": "Zobrazit náhled",
-    "previewSummary": "Smaže se {splits} mezičasů a {entries} záznamů deníku (z toho {conflicts} konfliktů).",
+    "previewSummary": "Smaže se mezičasů: {splits}, záznamů deníku: {entries} (z toho konfliktů: {conflicts}).",
     "optionRevokeTokens": "Zároveň zneplatnit všechny klíče zařízení ročníku",
     "optionClearZero": "Zároveň smazat zkušební nulu",
     "clearAfterHint": "Po vyčištění: na cílovém PC smažte state.json klienta OBD (jinak už potvrzené řádky znovu nepošle) a splitmakeři ať načtou /mezicasy znovu. Příští nahrání do OFeed proběhne i beze změny dat.",

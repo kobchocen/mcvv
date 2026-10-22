@@ -16,7 +16,7 @@ import (
 // Cestu a název souboru s mezičasy zadá obsluha (OBD ani LuM se nemění): v config.json (`file`),
 // parametrem `-file`, nebo dotazem při prvním spuštění (`runSetup`, znovu přes `-setup`).
 
-const defaultURL = "https://www.mcvv.org"
+const defaultURL = "https://mcvv.org"
 
 // interactive: běží v okně konzole (ne jako služba / s přesměrovaným vstupem).
 func interactive() bool {

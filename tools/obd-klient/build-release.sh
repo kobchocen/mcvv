@@ -1,6 +1,6 @@
 #!/bin/sh
 # Sestaví balíček pro časomíru: dist/obd-klient-$VERSION/ a dist/obd-klient-$VERSION-win-x64.zip
-#   VERSION=0.1.0 COMMIT=abc1234 ./build-release.sh
+#   VERSION=0.1.1 COMMIT=abc1234 ./build-release.sh
 # Potřebuje go, zip a sha256sum (CI: ubuntu; lokálně: Docker golang:1.25 + apt-get install zip).
 # Ikonu, manifest a údaje o verzi (Vlastnosti → Podrobnosti) vloží go-winres.
 set -eu

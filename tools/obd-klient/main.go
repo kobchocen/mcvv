@@ -10,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -18,7 +17,7 @@ import (
 	"time"
 )
 
-// Nastaví build: -ldflags "-X main.version=0.1.0 -X main.commit=abc1234".
+// Nastaví build: -ldflags "-X main.version=0.1.1 -X main.commit=abc1234".
 var (
 	version = "dev"
 	commit  = ""
@@ -33,7 +32,7 @@ func versionString() string {
 }
 
 type Config struct {
-	URL          string `json:"url"`          // https://www.mcvv.org
+	URL          string `json:"url"`          // https://mcvv.org
 	Token        string `json:"token"`        // mcvv_live_… z /admin/den-zavodu/zive (zobrazí se jen jednou)
 	Year         int    `json:"year"`         // ročník, např. 2026
 	File         string `json:"file"`         // cesta k exportu OBD, např. C:\OBD\tmp\splits.csv
@@ -148,7 +147,7 @@ func main() {
 	if err != nil {
 		fatal("Konfigurace: %v", err)
 	}
-	client := &Client{BaseURL: cfg.URL, Token: cfg.Token, Year: cfg.Year, Split: cfg.Split, Version: version, Replace: cfg.ApplyCorrections, HTTP: &http.Client{Timeout: 15 * time.Second}}
+	client := &Client{BaseURL: cfg.URL, Token: cfg.Token, Year: cfg.Year, Split: cfg.Split, Version: version, Replace: cfg.ApplyCorrections, HTTP: newHTTPClient(15 * time.Second)}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
@@ -257,6 +256,9 @@ func (r *Runner) Tick(ctx context.Context) error {
 		results, err := r.client.Upload(ctx, batch, seenAt)
 		if err != nil {
 			var apiErr *APIError
+			if errors.As(err, &apiErr) && apiErr.Redirect() {
+				return fmt.Errorf("chyba konfigurace: %w", err)
+			}
 			if errors.As(err, &apiErr) && !apiErr.Retryable() {
 				return fmt.Errorf("server odmítl dávku (zkontrolujte token/rok/úsek): %w", err)
 			}

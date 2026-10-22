@@ -49,13 +49,38 @@ type uploadResponse struct {
 	Reason  string         `json:"reason"`
 }
 
-// APIError nese HTTP status, aby smyčka věděla, jestli má smysl opakovat.
-type APIError struct {
-	Status int
-	Body   string
+// newHTTPClient: klient, který nenásleduje přesměrování. Go při přesměrování na jiný host
+// zahodí hlavičku Authorization a z POST (301/302) udělá GET – časy by se tiše neodeslaly.
+// Odpověď 3xx proto vrátíme tak, jak je, a do() z ní udělá chybu konfigurace s cílovou adresou.
+func newHTTPClient(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout: timeout,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 }
 
-func (e *APIError) Error() string { return fmt.Sprintf("HTTP %d: %s", e.Status, e.Body) }
+// APIError nese HTTP status, aby smyčka věděla, jestli má smysl opakovat.
+type APIError struct {
+	Status   int
+	Body     string
+	Location string // cíl přesměrování (jen u 3xx)
+}
+
+func (e *APIError) Error() string {
+	if e.Redirect() {
+		target := e.Location
+		if target == "" {
+			target = "(neuvedeno)"
+		}
+		return fmt.Sprintf("HTTP %d: server přesměrovává na %s – v nastavení je špatná adresa webu (url), opravte ji přes obd-klient.exe -setup (správně https://mcvv.org)", e.Status, target)
+	}
+	return fmt.Sprintf("HTTP %d: %s", e.Status, e.Body)
+}
+
+// Redirect: server odpověděl přesměrováním (3xx) – chyba konfigurace, ne výpadek.
+func (e *APIError) Redirect() bool { return e.Status >= 300 && e.Status < 400 }
 
 // Retryable: síť, 5xx a 429 se opakují s backoffem; 4xx (špatný token, rok, úsek) ne – chce zásah člověka.
 func (e *APIError) Retryable() bool { return e.Status >= 500 || e.Status == 429 || e.Status == 408 }
@@ -79,7 +104,15 @@ func (c *Client) do(ctx context.Context, method string, body []byte) ([]byte, er
 	defer res.Body.Close()
 	data, _ := io.ReadAll(io.LimitReader(res.Body, 1<<20))
 	if res.StatusCode >= 300 {
-		return nil, &APIError{Status: res.StatusCode, Body: strings.TrimSpace(string(data))}
+		apiErr := &APIError{Status: res.StatusCode, Body: strings.TrimSpace(string(data))}
+		if apiErr.Redirect() {
+			if location, err := res.Location(); err == nil {
+				apiErr.Location = location.String()
+			} else {
+				apiErr.Location = res.Header.Get("Location")
+			}
+		}
+		return nil, apiErr
 	}
 	return data, nil
 }

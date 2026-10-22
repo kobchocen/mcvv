@@ -8,7 +8,7 @@ Verzi programu zjistíte příkazem:  obd-klient.exe -version
 ------------------
 obd-klient běží v okně na cílovém počítači vedle OBD. Hlídá soubor s cílovými časy
 (splits.csv), který OBD zapisuje stejně jako dřív pro starý web, a posílá nové časy
-na web MČVV (www.mcvv.org). Na webu se objeví u závodníků jako cílové časy.
+na web MČVV (mcvv.org). Na webu se objeví u závodníků jako cílové časy.
 
 - OBD ani jeho nastavení se nemění. Program soubor jen čte, nic do něj nezapisuje.
 - Soubor kontroluje každých 5 sekund (OBD ho přepisuje zhruba každou minutu).
@@ -47,8 +47,7 @@ Kdyby program zablokoval antivir, pošlete Pavlovi snímek obrazovky s hlášen�
 Spusťte obd-klient.exe dvojklikem. Otevře se černé okno a zeptá se na 4 údaje.
 Hodnota v hranatých závorkách je předvyplněná – Enter ji potvrdí.
 
-  Adresa webu ......... https://www.mcvv.org   (na závod)
-                        https://dev.mcvv.org   (jen pro zkoušku na testovacím webu)
+  Adresa webu ......... https://mcvv.org   (bez "www" – na závod i na zkoušku)
   Klíč zařízení ....... dlouhý kód začínající mcvv_live_  (viz níže)
   Ročník .............. rok závodu, např. 2026
   Cesta k souboru ..... plná cesta k souboru splits.csv z OBD (viz kapitola 5)
@@ -89,28 +88,31 @@ Změna nastavení později:
 
 6. ZKOUŠKA NANEČISTO
 --------------------
-V balíčku je ukázkový soubor splits-ukazka.csv (8 vymyšlených časů).
-1) Od Pavla si vyžádejte TESTOVACÍ klíč pro https://dev.mcvv.org.
-2) Spusťte obd-klient.exe, adresa https://dev.mcvv.org, testovací klíč, ročník podle
+Zkouška běží proti ostrému webu https://mcvv.org s TESTOVACÍM klíčem, platným jen
+krátce. V balíčku je ukázkový soubor splits-ukazka.csv (8 vymyšlených časů).
+1) Testovací klíč vám předá Pavel (i s ročníkem, který máte zadat).
+2) Spusťte obd-klient.exe, adresa https://mcvv.org, testovací klíč, ročník podle
    Pavla, a jako soubor zadejte cestu k splits-ukazka.csv.
 3) V okně by mělo být "Spojení OK" a pak "Soubor: 8 řádků … 8 k odeslání" a
-   "Odesláno 8: map[set:applied:8]" (když už na testovacím webu tato čísla časy mají,
-   bude tam místo applied "unchanged" nebo "conflict" – to je v pořádku). Program
-   nechte běžet; při dalších kontrolách už nic neposílá (soubor se nezměnil).
+   "Odesláno 8: map[set:applied:8]" (když už na webu tato čísla časy mají, bude tam
+   místo applied "unchanged" nebo "conflict" – to je v pořádku). Program nechte běžet;
+   při dalších kontrolách už nic neposílá (soubor se nezměnil).
 4) Otevřete splits-ukazka.csv v Poznámkovém bloku, přidejte na konec řádek,
    např. 109;2210, a uložte – do 5 s se pošle jen ten nový řádek.
 5) Zkuste vypnout Wi-Fi/odpojit kabel, přidat další řádek a po chvíli síť zase zapnout
    – čas se pošle sám (viz kapitola 9).
-6) Po zkoušce okno zavřete, SMAŽTE soubory config.json a state.json a před závodem
-   spusťte program znovu se skutečnými údaji (adresa www.mcvv.org, ostrý klíč,
-   soubor z OBD).
+6) Po zkoušce okno zavřete a SMAŽTE soubory config.json a state.json ve složce programu.
+   Ukázkové časy z webu smaže správce webu, vy s nimi nic dělat nemusíte.
+7) Před závodem vám Pavel pošle nový OSTRÝ klíč (testovací už nebude platit). Spusťte
+   program znovu a zadejte adresu https://mcvv.org, ostrý klíč, ročník závodu a cestu
+   k souboru splits.csv z OBD.
 
 
 7. CO ZNAMENAJÍ HLÁŠKY
 ----------------------
 Každý řádek v okně začíná časem (hh:mm:ss).
 
-obd-klient 0.1.0 · https://… · rok 2026 · úsek 9 · soubor … · opravy vypnuté · mazání vypnuté
+obd-klient 0.1.1 · https://… · rok 2026 · úsek 9 · soubor … · opravy vypnuté · mazání vypnuté
     Program se spustil s tímto nastavením. "opravy/mazání vypnuté" je správně.
 Spojení OK: {…}
     Klíč platí a web je dostupný. V závorce je ročník, název zařízení a povolené úseky.
@@ -140,6 +142,9 @@ Chyba: Post "https://…": dial tcp … / no such host / timeout … – další
     Ročník v nastavení neodpovídá klíči. Opravte přes obd-klient.exe -setup.
 … HTTP 403 … split-not-allowed
     Klíč nemá povolený cíl (split 9). Správce musí vytvořit nový klíč.
+… HTTP 301 … server přesměrovává na … (nebo jiné číslo 3xx)
+    Adresa webu v nastavení je špatně (např. s "www"). Opravte ji přes
+    obd-klient.exe -setup na https://mcvv.org.
 … HTTP 429 …
     Příliš mnoho požadavků za chvíli; program sám zpomalí a pokračuje.
 Konfigurace: … / Nastavení: …

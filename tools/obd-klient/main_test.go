@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -147,7 +148,7 @@ func newRunner(t *testing.T, url, file string) *Runner {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Runner{cfg: cfg, state: state, now: time.Now, client: &Client{BaseURL: url, Token: cfg.Token, Year: 2026, Split: "9", Version: "test", HTTP: &http.Client{Timeout: 2 * time.Second}}}
+	return &Runner{cfg: cfg, state: state, now: time.Now, client: &Client{BaseURL: url, Token: cfg.Token, Year: 2026, Split: "9", Version: "test", HTTP: newHTTPClient(2 * time.Second)}}
 }
 
 func TestRunnerSurvivesOutageWithoutDuplicates(t *testing.T) {
@@ -215,6 +216,52 @@ func TestRunnerStopsOnAuthError(t *testing.T) {
 	}
 }
 
+// Přesměrování (např. www → bez www) se nenásleduje: Go by zahodilo Authorization a z POST
+// udělalo GET. Klient musí skončit chybou konfigurace s cílovou adresou a nic nepotvrdit.
+func TestRedirectIsConfigError(t *testing.T) {
+	var targetHits, auths int
+	var mu sync.Mutex
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		targetHits++
+		if r.Header.Get("Authorization") != "" {
+			auths++
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "results": []any{}})
+	}))
+	defer target.Close()
+	redirector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL+r.URL.Path, http.StatusMovedPermanently)
+	}))
+	defer redirector.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	_ = os.WriteFile(file, []byte("41;1686\n"), 0o644)
+	runner := newRunner(t, redirector.URL, file)
+
+	_, pingErr := runner.client.Ping(context.Background())
+	err := runner.Tick(context.Background())
+	for _, e := range []error{pingErr, err} {
+		if e == nil {
+			t.Fatal("expected redirect error")
+		}
+		var apiErr *APIError
+		if !errors.As(e, &apiErr) || !apiErr.Redirect() || apiErr.Retryable() {
+			t.Fatalf("expected non-retryable redirect APIError, got %v", e)
+		}
+		want := target.URL + "/api/race/2026/splits"
+		if apiErr.Location != want || !strings.Contains(e.Error(), want) || !strings.Contains(e.Error(), "301") {
+			t.Errorf("error should name target %s: %v", want, e)
+		}
+	}
+	if !strings.Contains(err.Error(), "chyba konfigurace") {
+		t.Errorf("tick error = %v", err)
+	}
+	if targetHits != 0 || len(runner.state.Acked) != 0 {
+		t.Errorf("redirect followed: targetHits=%d auths=%d acked=%d", targetHits, auths, len(runner.state.Acked))
+	}
+}
+
 func TestBatching(t *testing.T) {
 	fake := &fakeServer{seen: map[string]int{}}
 	server := httptest.NewServer(http.HandlerFunc(fake.handler))
@@ -238,7 +285,7 @@ func TestConfigValidation(t *testing.T) {
 	if err := (Config{URL: "http://x", Token: "abc", Year: 1, Split: "9", IntervalS: 1}).validate(); err == nil {
 		t.Fatal("expected validation errors")
 	}
-	ok := Config{URL: "https://www.mcvv.org", Token: "mcvv_live_x", Year: 2026, File: "a.csv", Split: "9", IntervalS: 5}
+	ok := Config{URL: "https://mcvv.org", Token: "mcvv_live_x", Year: 2026, File: "a.csv", Split: "9", IntervalS: 5}
 	if err := ok.validate(); err != nil {
 		t.Fatal(err)
 	}

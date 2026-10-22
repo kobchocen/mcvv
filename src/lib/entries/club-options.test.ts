@@ -49,25 +49,3 @@ test("clubOptionValue shows the option text for an id", () => {
   assert.equal(clubOptionValue("CHC", "x", options), "K.O.B. Choceň (CHC)");
   assert.equal(clubOptionValue("000", "", options), "");
 });
-
-test("merged ids are not offered on their own, the main id covers their years", () => {
-  const options = buildClubOptions(rows, [{ clubId: "216", mainClubId: "chc" }]);
-  assert.equal(
-    options.some((option) => option.id === "216"),
-    false,
-  );
-  const chc = options.find((option) => option.id === "CHC");
-  assert.deepEqual(chc?.ids, ["CHC", "216"]);
-  assert.equal(chc?.name, "K.O.B. Choceň");
-  // No other id shares the name now, so the value is the plain name.
-  assert.equal(chc?.value, "K.O.B. Choceň");
-  assert.equal(chc?.label, "CHC + 216 · 1993–2025");
-  assert.equal(findClubOption("K.O.B. Choceň", options)?.id, "CHC");
-  // A line stored under the merged id shows the main option.
-  assert.equal(clubOptionValue("216", "KOB Choceń", options), "K.O.B. Choceň");
-});
-
-test("a merge whose main id has no usable row leaves the merged id on its own", () => {
-  const options = buildClubOptions(rows, [{ clubId: "412", mainClubId: "999" }]);
-  assert.deepEqual(options.find((option) => option.id === "412")?.ids, ["412"]);
-});

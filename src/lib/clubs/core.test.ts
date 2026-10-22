@@ -98,20 +98,11 @@ describe("createClubResolver", () => {
     assert.equal(clubs.display("000", 2026, ""), "—");
   });
 
-  it("merged id counts under the main id; same edition shows the main id's name", () => {
-    const clubs = createClubResolver({
-      names: NAMES,
-      merges: [{ clubId: "216", mainClubId: "CHC" }],
-    });
-    // 2018: both ids exist → name of the main id in that edition
-    const both = clubs.resolve("216", 2018, "KOB Choceń");
-    assert.deepEqual(both, { mainId: "CHC", slug: "chc-k-o-b-chocen", name: "K.O.B. Choceň" });
-    // 2019: only the merged id exists → its own name of that edition, still under CHC
-    const own = clubs.resolve("216", 2019, "KOB Choceń");
-    assert.equal(own?.mainId, "CHC");
-    assert.equal(own?.name, "KOB Choceń");
-    assert.deepEqual(clubs.members("CHC"), ["CHC", "216"]);
-    assert.equal(clubs.mainId("chc"), "CHC");
+  it("the id is the club: canonical id, each row keeps its own name of the edition", () => {
+    const clubs = createClubResolver({ names: NAMES });
+    assert.equal(clubs.mainId(" chc "), "CHC");
+    assert.equal(clubs.mainId(null), "");
+    assert.equal(clubs.resolve("216", 2018, "KOB Choceń")?.name, "KOB Choceń");
   });
 
   it("history of an id, newest first, without placeholders", () => {

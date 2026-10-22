@@ -2,8 +2,9 @@
  * Club identity across editions (#104, Q34): a club is its `cis_klub.id`. The name belongs to
  * the edition (`cis_klub` key = id + year), so a renamed club keeps its id and profile.
  * Two ids that are in fact one club (e.g. 216 "KOB Choceń" and CHC "K.O.B. Choceň") are
- * joined only by a manual merge in the admin (`mcvv_klub_slouceni`, id → main id); the
- * legacy rows are never rewritten. Pure helpers, no DB access.
+ * joined only by a manual merge in the admin, which rewrites the data to the main id (Q45,
+ * `merge-apply.ts`): the merged id no longer exists, so reading needs no folding.
+ * Pure helpers, no DB access.
  */
 
 /**
@@ -63,20 +64,17 @@ export function clubIdFromSlug(slug: string): string {
 /** One `cis_klub` row: name of the id in an edition. */
 export type ClubNameRow = { id: string; year: number; name: string };
 
-/** One manual merge: `clubId` is counted under `mainClubId`. */
-export type ClubMergeRef = { clubId: string; mainClubId: string };
-
 export type ResolvedClub = {
-  /** Main id (the id itself unless merged). */
+  /** Club id (canonical form). Merged ids are rewritten in the data, so it is the club. */
   mainId: string;
-  /** Profile slug of the main id. */
+  /** Profile slug of the club. */
   slug: string;
   /** Name to show for this row (see `ClubResolver.display`). */
   name: string;
 };
 
 export type ClubResolver = {
-  /** Main id of an id (itself unless merged); "" for an empty id. */
+  /** Canonical club id (see `clubKey`); "" for an empty id. */
   mainId(id: string | null | undefined): string;
   /**
    * The club of a result / start row. `written` is the row's own name in that edition
@@ -87,28 +85,17 @@ export type ClubResolver = {
     year: number,
     written?: string | null,
   ): ResolvedClub | null;
-  /**
-   * Name for a row: for a merged id the main id's name in the same edition (both ids in one
-   * edition are shown as one club), otherwise the row's own name; "—" for no club.
-   */
+  /** Name for a row: the row's own name in that edition; "—" for no club. */
   display(id: string | null | undefined, year: number, written?: string | null): string;
-  /** Profile name of a main id: its newest name (or of a merged id when it has none). */
+  /** Profile name of a club: its newest name. */
   profileName(mainId: string): string;
-  /** Profile slug of a main id. */
+  /** Profile slug of a club. */
   slug(mainId: string): string;
-  /** Main id and every id merged into it, main first. */
-  members(mainId: string): string[];
   /** Names of an id per edition (newest first). */
   history(id: string): { year: number; name: string }[];
 };
 
-export function createClubResolver(
-  input: { names?: readonly ClubNameRow[]; merges?: readonly ClubMergeRef[] } = {},
-): ClubResolver {
-  const mainOf = new Map<string, string>();
-  for (const merge of input.merges ?? []) {
-    mainOf.set(clubKey(merge.clubId), clubKey(merge.mainClubId));
-  }
+export function createClubResolver(input: { names?: readonly ClubNameRow[] } = {}): ClubResolver {
   const byId = new Map<string, Map<number, string>>();
   for (const row of input.names ?? []) {
     const id = clubKey(row.id);
@@ -116,38 +103,22 @@ export function createClubResolver(
     years.set(row.year, row.name.trim());
     byId.set(id, years);
   }
-  const membersOf = new Map<string, string[]>();
-  for (const [id, main] of mainOf) {
-    membersOf.set(main, [...(membersOf.get(main) ?? []), id].sort());
-  }
 
-  const mainId = (id: string | null | undefined): string => {
-    const key = clubKey(id);
-    return mainOf.get(key) ?? key;
-  };
-  const nameIn = (id: string, year: number): string | null => {
-    const name = byId.get(id)?.get(year);
-    return name && !isNoClub(name) ? name : null;
-  };
   const history = (id: string) =>
     [...(byId.get(clubKey(id)) ?? new Map<number, string>()).entries()]
       .filter(([, name]) => !isNoClub(name))
       .map(([year, name]) => ({ year, name }))
       .sort((a, b) => b.year - a.year);
   const profileNames = new Map<string, string>();
-  const profileName = (main: string): string => {
-    const key = clubKey(main);
+  const profileName = (id: string): string => {
+    const key = clubKey(id);
     const cached = profileNames.get(key);
     if (cached !== undefined) return cached;
-    const own = history(key)[0]?.name;
-    const merged = (membersOf.get(key) ?? [])
-      .flatMap((id) => history(id))
-      .sort((a, b) => b.year - a.year)[0]?.name;
-    const name = own ?? merged ?? "";
+    const name = history(key)[0]?.name ?? "";
     profileNames.set(key, name);
     return name;
   };
-  const slug = (main: string) => clubIdSlug(main, profileName(main));
+  const slug = (id: string) => clubIdSlug(id, profileName(id));
   const resolve = (
     id: string | null | undefined,
     year: number,
@@ -156,22 +127,16 @@ export function createClubResolver(
     const key = clubKey(id);
     const own = (written ?? byId.get(key)?.get(year) ?? "").trim();
     if (!key || isNoClub(own)) return null;
-    const main = mainId(key);
-    const name = (main !== key ? nameIn(main, year) : null) ?? own;
-    return { mainId: main, slug: slug(main), name };
+    return { mainId: key, slug: slug(key), name: own };
   };
   return {
-    mainId,
+    mainId: clubKey,
     resolve,
     display(id, year, written) {
       return resolve(id, year, written)?.name ?? "—";
     },
     profileName,
     slug,
-    members(main) {
-      const key = clubKey(main);
-      return [key, ...(membersOf.get(key) ?? [])];
-    },
     history,
   };
 }

@@ -1,7 +1,7 @@
 /**
  * Public club profile /kluby/[slug] (#105): starts per year, the club's runners and best
- * results. A club is its id (#104, Q34) with the ids merged into it; its names per edition
- * are its history. Pure; rows are all results.
+ * results. A club is its id (#104, Q34; merged ids are rewritten to it, Q45); its names per
+ * edition are its history. Pure; rows are all results.
  */
 import type { RawResult } from "@/lib/stats/core";
 import { runnerSex } from "@/lib/stats/core";
@@ -11,13 +11,11 @@ import { clubKey, type ClubResolver } from "./core";
 export type ClubPerformance = { runnerId: string; name: string; year: number; time: number };
 
 export type ClubProfile = {
-  /** Main id. */
+  /** Club id. */
   id: string;
   name: string;
   slug: string;
-  /** Ids merged into this club (without the main id). */
-  mergedIds: string[];
-  /** Names of the club per id, newest first: when each name was used. */
+  /** Names of the club, newest first: when each name was used. */
   history: { id: string; name: string; firstYear: number; lastYear: number }[];
   starts: number;
   runners: number;
@@ -47,17 +45,13 @@ export function computeClubProfile(
   const rows = results.filter(
     (row) => resolver.resolve(row.clubId, row.year, row.clubName)?.mainId === mainId,
   );
-  const ids = resolver.members(mainId);
-  const history = ids.flatMap((id) => {
-    // Consecutive editions with the same name form one entry.
-    const entries: ClubProfile["history"] = [];
-    for (const { year, name } of [...resolver.history(id)].reverse()) {
-      const last = entries.at(-1);
-      if (last && last.name === name) last.lastYear = year;
-      else entries.push({ id, name, firstYear: year, lastYear: year });
-    }
-    return entries;
-  });
+  // Consecutive editions with the same name form one entry.
+  const history: ClubProfile["history"] = [];
+  for (const { year, name } of [...resolver.history(mainId)].reverse()) {
+    const last = history.at(-1);
+    if (last && last.name === name) last.lastYear = year;
+    else history.push({ id: mainId, name, firstYear: year, lastYear: year });
+  }
   if (rows.length === 0 && history.length === 0) return null;
   history.sort((a, b) => b.lastYear - a.lastYear || b.firstYear - a.firstYear);
 
@@ -112,7 +106,6 @@ export function computeClubProfile(
     id: mainId,
     name: resolver.profileName(mainId),
     slug: resolver.slug(mainId),
-    mergedIds: ids.slice(1),
     history,
     starts: rows.length,
     runners: members.size,

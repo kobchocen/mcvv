@@ -15,7 +15,6 @@ const usage = (id: string, names: string | string[], starts = 1, years = [2000])
     id,
     name: list[0],
     names: list.map((name) => ({ name, years })),
-    ids: [id],
     years,
     starts,
     firstYear: years[0],

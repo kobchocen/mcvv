@@ -15,7 +15,7 @@ import {
   type ClubPerformance,
   type ClubProfile,
 } from "@/lib/clubs";
-import { loadClubMerges, loadClubNames } from "@/lib/clubs/queries";
+import { loadClubNames } from "@/lib/clubs/queries";
 import { loadAllResults } from "@/lib/stats/queries";
 import { formatRaceTime } from "@/lib/utils";
 
@@ -25,14 +25,13 @@ type PageProps = Readonly<{
 
 /**
  * Club profile (#105). The club is its id (#104, Q34): the slug is "<id>-<newest name>".
- * A merged id, a stale name part or an old name-only slug (#167) redirects to the profile
- * of the main id.
+ * A stale name part or an old name-only slug (#167) redirects to the profile of the id.
  */
 async function loadProfile(
   slug: string,
 ): Promise<{ profile: ClubProfile | null; redirectTo?: string }> {
-  const [names, merges] = await Promise.all([loadClubNames(), loadClubMerges()]);
-  const resolver = createClubResolver({ names, merges });
+  const names = await loadClubNames();
+  const resolver = createClubResolver({ names });
   const known = new Set(names.map((row) => clubKey(row.id)));
   let id = clubIdFromSlug(slug);
   if (!known.has(id)) {
@@ -165,12 +164,7 @@ export default async function ClubPage({ params }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {profile.name}
           </h1>
-          <p className="mt-3 text-sm text-race-muted">
-            {copy("clubId", { id: profile.id })}
-            {profile.mergedIds.length > 0
-              ? ` · ${copy("mergedIds", { ids: profile.mergedIds.join(", ") })}`
-              : ""}
-          </p>
+          <p className="mt-3 text-sm text-race-muted">{copy("clubId", { id: profile.id })}</p>
           {profile.history.length > 1 ? (
             <details className="mt-3 text-sm text-race-muted">
               <summary className="cursor-pointer font-semibold text-race-accent">
@@ -180,9 +174,6 @@ export default async function ClubPage({ params }: PageProps) {
                 {profile.history.map((row) => (
                   <li key={`${row.id}-${row.firstYear}`}>
                     <span className="tabular-nums">{years(row)}</span> · {row.name}
-                    {profile.mergedIds.length > 0 ? (
-                      <span className="text-race-dim"> ({row.id})</span>
-                    ) : null}
                   </li>
                 ))}
               </ul>

@@ -74,7 +74,7 @@ export type StatsOverview = {
     trend: { year: number; share: number }[];
     peak: { year: number; share: number } | null;
   };
-  /** Clubs by id (#104), merged ids under the main id; newest name and profile slug. */
+  /** Clubs by id (#104; merged ids are rewritten to the main id, Q45); newest name and slug. */
   clubs: { name: string; slug: string; starts: number }[];
   together: { seconds: number; hours: number; days: number; climbKm: number };
 };
@@ -276,8 +276,8 @@ export function computeStatsOverview(
     null,
   );
 
-  // Most loyal club: starts per club id (#104, Q34) – a renamed club stays one club, ids merged
-  // in the admin count under the main id. Shown under the club's newest name.
+  // Most loyal club: starts per club id (#104, Q34) – a renamed club stays one club (a merge in
+  // the admin rewrites the merged id to the main id, Q45). Shown under the club's newest name.
   const clubs = new Map<string, { starts: number; spellings: Map<string, number> }>();
   for (const row of results) {
     const resolved = clubResolver.resolve(row.clubId, row.year, row.clubName);

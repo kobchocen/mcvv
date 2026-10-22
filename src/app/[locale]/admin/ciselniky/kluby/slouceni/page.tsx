@@ -6,24 +6,45 @@ import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 import {
   confirmClubMerge,
+  previewClubMergeAction,
   rejectClubMerge,
   restoreClubMerge,
-  unmergeClub,
 } from "@/lib/admin/club-merge-actions";
 import { requireStaff } from "@/lib/admin/staff";
 import { clubUsage, createClubResolver, suggestClubMerges, type ClubUsage } from "@/lib/clubs";
-import { loadClubMerges, loadClubNames } from "@/lib/clubs/queries";
+import { previewClubMerge, type ClubMergePreview } from "@/lib/clubs/merge-apply";
+import { loadClubNames } from "@/lib/clubs/queries";
 import { prisma } from "@/lib/db/client";
 import { loadAllResults } from "@/lib/stats/queries";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ jistota?: string; pocet?: string; ok?: string; chyba?: string }>;
+  searchParams: Promise<{
+    jistota?: string;
+    pocet?: string;
+    ok?: string;
+    chyba?: string;
+    /** Náhled sloučení: hlavní id a slučované id. */
+    hlavni?: string;
+    sloucit?: string;
+    /** Po sloučení: hlavní id a id, které zmizelo. */
+    hlavni_hotovo?: string;
+    sloucene?: string;
+  }>;
 }>;
 
 const CONFIDENCES = ["high", "medium", "low"] as const;
 const PAGE = 50;
-const ERRORS = ["ids", "hlavni", "nezname", "same", "empty", "main_merged", "other_merged"];
+const ERRORS = [
+  "ids",
+  "hlavni",
+  "potvrzeni",
+  "same",
+  "empty",
+  "no_club",
+  "unknown_main",
+  "unknown_other",
+];
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
@@ -62,13 +83,16 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   const confidence = CONFIDENCES.find((value) => value === query.jistota);
   const limit = Math.max(PAGE, Number.parseInt(query.pocet ?? "", 10) || PAGE);
 
-  const [results, names, merges, rejections] = await Promise.all([
+  const [results, names, rejections, previewResult] = await Promise.all([
     loadAllResults(),
     loadClubNames(),
-    loadClubMerges(),
     prisma.clubMergeRejection.findMany({ orderBy: { createdAt: "desc" } }),
+    query.hlavni && query.sloucit
+      ? previewClubMerge(prisma, query.hlavni, query.sloucit)
+      : Promise.resolve(null),
   ]);
-  const resolver = createClubResolver({ names, merges });
+  const preview = previewResult?.ok ? previewResult.preview : null;
+  const resolver = createClubResolver({ names });
   const usage = clubUsage(results, names, resolver);
   const byId = new Map(usage.map((club) => [club.id, club]));
   const rejected = new Set(rejections.map((row) => `${row.clubIdA}|${row.clubIdB}`));
@@ -78,8 +102,11 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   ) as Record<(typeof CONFIDENCES)[number], number>;
   const filtered = confidence ? all.filter((s) => s.confidence === confidence) : all;
   const shown = filtered.slice(0, limit);
-  const mergedClubs = usage.filter((club) => club.ids.length > 1);
-  const error = ERRORS.find((value) => value === query.chyba);
+  const error = ERRORS.find(
+    (value) =>
+      value === query.chyba ||
+      (previewResult && !previewResult.ok && previewResult.error === value),
+  );
 
   const label = (id: string) => `${id} – ${resolver.profileName(id) || "?"}`;
   const usageLabel = (club: ClubUsage) =>
@@ -107,11 +134,6 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
         <b className="font-mono">{club.id}</b> · <b>{club.name}</b>{" "}
         <span className="text-race-dim">({usageLabel(club)})</span>
       </span>
-      {club.ids.length > 1 ? (
-        <span className="text-xs text-race-dim">
-          {copy("clubMergeAlreadyMerged", { ids: club.ids.slice(1).join(", ") })}
-        </span>
-      ) : null}
       <ul className="text-xs text-race-muted">
         {club.names.map((row) => (
           <li key={row.name}>
@@ -128,6 +150,98 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
     </label>
   );
 
+  /**
+   * Náhled sloučení před potvrzením: co se nevratně změní (počty řádků po tabulkách, roky
+   * číselníku) a zaškrtávací potvrzení nevratnosti.
+   */
+  const renderPreview = (preview: ClubMergePreview) => {
+    const { counts } = preview;
+    const rows = [
+      { label: copy("clubMergeCount_entries"), value: counts.mcvv_prihlaska_radek },
+      { label: copy("clubMergeCount_starts"), value: counts.mcvv_start },
+      { label: copy("clubMergeCount_results"), value: counts.mcvv_time },
+      { label: copy("clubMergeCount_moved"), value: counts.cisKlubMoved },
+      { label: copy("clubMergeCount_dropped"), value: counts.cisKlubDropped },
+      { label: copy("clubMergeCount_created"), value: counts.cisKlubCreated },
+      { label: copy("clubMergeCount_rejected"), value: counts.rejectedPairs },
+    ];
+    return (
+      <section
+        id="nahled"
+        className="mt-8 border-2 border-red-500/60 bg-red-500/5 p-4 text-sm"
+        aria-labelledby="nahled-title"
+      >
+        <h2
+          id="nahled-title"
+          className="font-display text-2xl font-semibold text-foreground dark:text-white"
+        >
+          {copy("clubMergePreviewTitle", {
+            merged: preview.otherId,
+            mergedName: preview.otherName,
+            main: preview.mainId,
+            mainName: preview.mainName,
+          })}
+        </h2>
+        <p className="mt-3 font-semibold text-red-600 dark:text-red-400">
+          {copy("clubMergeIrreversible", { merged: preview.otherId, main: preview.mainId })}
+        </p>
+        <dl className="mt-4 grid max-w-xl grid-cols-[1fr_auto] gap-x-6 gap-y-1">
+          {rows.map((row) => (
+            <div key={row.label} className="contents">
+              <dt className="text-race-muted">{row.label}</dt>
+              <dd className="text-right font-semibold tabular-nums">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {preview.moveYears.length > 0 ? (
+          <p className="mt-3 text-race-muted">
+            {copy("clubMergeMoveYears", {
+              years: preview.moveYears.map((row) => `${row.year} ${row.name}`).join(" · "),
+            })}
+          </p>
+        ) : null}
+        {preview.dropYears.length > 0 ? (
+          <p className="mt-2 font-semibold text-amber-600 dark:text-amber-400">
+            {copy("clubMergeDropYears", {
+              years: preview.dropYears
+                .map((row) => `${row.year}: „${row.name}“ → „${row.mainName}“`)
+                .join(" · "),
+            })}
+          </p>
+        ) : null}
+        {preview.createYears.length > 0 ? (
+          <p className="mt-2 text-race-muted">
+            {copy("clubMergeCreateYears", {
+              years: preview.createYears.map((row) => row.year).join(", "),
+              name: preview.createYears[0]?.name ?? "",
+            })}
+          </p>
+        ) : null}
+        <form action={confirmClubMerge} className="mt-4 flex flex-col gap-3">
+          <input type="hidden" name="hlavni" value={preview.mainId} />
+          <input type="hidden" name="sloucit" value={preview.otherId} />
+          <label className="flex items-start gap-2">
+            <input type="checkbox" name="nevratne" value="ano" required className="mt-1" />
+            <span>
+              {copy("clubMergeAcknowledge", { merged: preview.otherId, main: preview.mainId })}
+            </span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" variant="destructive" className="h-9">
+              {copy("clubMergeExecute", { merged: preview.otherId, main: preview.mainId })}
+            </Button>
+            <Link
+              href={{ pathname: "/admin/ciselniky/kluby/slouceni" }}
+              className="inline-flex h-9 items-center border border-race-line px-3"
+            >
+              {copy("clubMergeCancel")}
+            </Link>
+          </div>
+        </form>
+      </section>
+    );
+  };
+
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -137,15 +251,13 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{copy("clubMergeIntro")}</p>
         <p className="mt-2 text-sm text-race-muted">
-          {copy("clubMergeSummary", {
-            clubs: usage.length,
-            merged: merges.length,
-            mains: mergedClubs.length,
-          })}
+          {copy("clubMergeSummary", { clubs: usage.length })}
         </p>
         {query.ok ? (
           <p className="mt-4 border border-race-accent/40 bg-race-accent/10 px-3 py-2 text-sm">
-            {copy("clubMergeSaved")}
+            {query.ok === "merge" && query.hlavni_hotovo && query.sloucene
+              ? copy("clubMergeDone", { main: query.hlavni_hotovo, merged: query.sloucene })
+              : copy("clubMergeSaved")}
           </p>
         ) : null}
         {error ? (
@@ -153,6 +265,8 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
             {copy(`clubMergeError_${error}`)}
           </p>
         ) : null}
+
+        {preview ? renderPreview(preview) : null}
 
         <h2 className="mt-10 font-display text-2xl font-semibold text-foreground dark:text-white">
           {copy("clubMergeSuggestions")}
@@ -207,7 +321,7 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
                     {renderSide(s.b, "b")}
                   </fieldset>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="submit" formAction={confirmClubMerge} className="h-9">
+                    <Button type="submit" formAction={previewClubMergeAction} className="h-9">
                       {copy("clubMergeConfirm")}
                     </Button>
                     <Button
@@ -250,7 +364,7 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
           ))}
         </datalist>
         <form
-          action={confirmClubMerge}
+          action={previewClubMergeAction}
           className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"
         >
           <label className="flex flex-1 flex-col gap-1 text-xs text-race-dim">
@@ -273,60 +387,6 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
             {copy("clubMergeConfirm")}
           </Button>
         </form>
-
-        <h2 className="mt-12 font-display text-2xl font-semibold text-foreground dark:text-white">
-          {copy("clubMergeClubs")}
-        </h2>
-        {mergedClubs.length === 0 ? (
-          <p className="mt-2 text-sm text-race-muted">{copy("clubMergeNoClubs")}</p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-3">
-            {mergedClubs.map((club) => (
-              <li key={club.id} className="border border-race-line/55 bg-race-surface p-3 text-sm">
-                <p>
-                  <span className="mr-2 border border-race-accent px-1 text-xs font-semibold uppercase text-race-accent">
-                    {copy("clubMergeMainBadge")}
-                  </span>
-                  <b className="font-mono">{club.id}</b> · <b>{club.name}</b>{" "}
-                  <span className="text-race-dim">({usageLabel(club)})</span>{" "}
-                  <Link
-                    href={{ pathname: "/kluby/[slug]", params: { slug: resolver.slug(club.id) } }}
-                    className="text-xs font-semibold text-race-accent hover:underline"
-                  >
-                    /kluby/{resolver.slug(club.id)}
-                  </Link>
-                </p>
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {club.ids.slice(1).map((id) => (
-                    <li key={id}>
-                      <form
-                        action={unmergeClub}
-                        className="flex items-center gap-2 border border-race-line px-2 py-1"
-                      >
-                        <input type="hidden" name="id" value={id} />
-                        <span>
-                          <b className="font-mono">{id}</b> ·{" "}
-                          {resolver
-                            .history(id)
-                            .map((row) => row.name)
-                            .filter((name, index, list) => list.indexOf(name) === index)
-                            .join(" / ")}
-                        </span>
-                        <button
-                          type="submit"
-                          className="text-xs text-race-dim hover:text-red-500"
-                          title={copy("clubMergeUnmerge", { id })}
-                        >
-                          {copy("clubMergeUnmergeShort")}
-                        </button>
-                      </form>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
 
         {rejections.length > 0 ? (
           <>

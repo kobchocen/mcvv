@@ -30,11 +30,11 @@ export type AuditAction =
   | "entry.header_changed"
   | "entry.line_club_changed"
   | "entry.cancelled"
-  // Ruční sloučení id klubů (#104).
+  // Ruční sloučení id klubů (#104). `club.merge` přepisuje data (Q45), detail = stav před
+  // sloučením (ClubMergeAuditDetail). `club.unmerged` jen ve starých záznamech (sloučení 1.4.0).
   | "club.merge"
   | "club.merge_rejected"
-  | "club.merge_restored"
-  | "club.unmerged";
+  | "club.merge_restored";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

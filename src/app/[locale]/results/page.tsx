@@ -9,6 +9,7 @@ import {
 } from "@/components/organisms/mcvv-results-table";
 import { pickSplits, yearHasSplits } from "@/lib/results/table";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
+import { getClubResolver } from "@/lib/clubs/queries";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
@@ -228,13 +229,16 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     time: t("colTime"),
     empty: t("empty"),
   };
+  // Canonical club once merged in the admin (#104), else the name as written.
+  const clubs = await getClubResolver();
   const toRow = (r: ResultRow, rank: number | undefined, withCategory: boolean) => ({
     key: r.runnerId,
     runnerId: r.runnerId,
     runnerName: r.runnerName,
     rank,
     birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
-    club: r.club?.name || r.clubName || "—",
+    club: clubs.display(r.club?.name || r.clubName),
+    clubSlug: clubs.resolve(r.club?.name || r.clubName)?.slug ?? null,
     category: withCategory ? `${r.category?.name || r.categoryId} (${r._catRank}.)` : undefined,
     ...pickSplits(r._splits || []),
     time: r.time,

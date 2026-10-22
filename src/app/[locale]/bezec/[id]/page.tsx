@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import {
+  ClubNameLink,
   RunnerPerfBar,
   RunnerPhotoGrid,
   RunnerPodiumBadges,
@@ -14,6 +15,7 @@ import {
   RecordBadge,
 } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
+import { getClubResolver } from "@/lib/clubs/queries";
 import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -49,7 +51,7 @@ export default async function RunnerPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
 
-  const [runner, results, photoLinks, peerTimes, portrait, raceYear] = await Promise.all([
+  const [runner, results, photoLinks, peerTimes, portrait, raceYear, clubs] = await Promise.all([
     prisma.runner.findUnique({ where: { id }, select: { name: true } }),
     prisma.result.findMany({
       where: { runnerId: id },
@@ -80,6 +82,7 @@ export default async function RunnerPage({ params }: PageProps) {
       select: { id: true },
     }),
     currentRaceYear(),
+    getClubResolver(),
   ]);
 
   // 404 only when the runner does not exist at all. A runner without results
@@ -112,7 +115,12 @@ export default async function RunnerPage({ params }: PageProps) {
   const record = stats?.record ?? 0;
   const average = stats?.average ?? 0;
   const last = results.at(0);
-  const lastClub = last ? last.club?.name || last.clubName || "" : registration?.club.name || "";
+  // Canonical club once merged in the admin (#104), else the name as written.
+  const lastClubWritten = last
+    ? last.club?.name || last.clubName || ""
+    : registration?.club.name || "";
+  const lastClubResolved = clubs.resolve(lastClubWritten);
+  const lastClub = lastClubWritten ? clubs.display(lastClubWritten) : "";
   const registeredCategory = registration?.category.name || "";
   const photos = [
     ...new Map(
@@ -172,7 +180,7 @@ export default async function RunnerPage({ params }: PageProps) {
             <article className="min-w-0 flex-1 self-stretch border border-race-line/55 bg-race-surface p-5">
               {lastClub ? (
                 <h2 className="font-display text-xl font-semibold text-foreground dark:text-white">
-                  {lastClub}
+                  <ClubNameLink slug={lastClubResolved?.slug} name={lastClub} />
                 </h2>
               ) : null}
               {summary.length > 0 ? (
@@ -293,7 +301,10 @@ export default async function RunnerPage({ params }: PageProps) {
                           )}
                         </td>
                         <td className="py-2.5 pr-4 text-race-muted">
-                          {row.club?.name || row.clubName || "—"}
+                          <ClubNameLink
+                            slug={clubs.resolve(row.club?.name || row.clubName)?.slug}
+                            name={clubs.display(row.club?.name || row.clubName)}
+                          />
                         </td>
                         <td className="py-2.5 text-race-muted">{row.category.name}</td>
                       </tr>

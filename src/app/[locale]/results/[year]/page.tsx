@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
+import { getClubResolver } from "@/lib/clubs/queries";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { HighlightHashedRow } from "@/components/molecules";
@@ -28,6 +29,7 @@ type ResultWithRels = Prisma.ResultGetPayload<{
 
 type ResultRow = ResultWithRels & {
   _clubName: string;
+  _clubSlug: string | null;
   _birthYear: string;
   _catRank?: number;
 };
@@ -59,10 +61,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
     },
   });
 
+  // Canonical club once merged in the admin (#104), else the name as written.
+  const clubs = await getClubResolver();
   const results: ResultRow[] = rawResults.map(({ runner, ...r }) => ({
     ...r,
     runnerName: runnerNameFor("results", r.runnerName, runner?.name),
-    _clubName: r.club?.name || r.clubName || "—",
+    _clubName: clubs.display(r.club?.name || r.clubName),
+    _clubSlug: clubs.resolve(r.club?.name || r.clubName)?.slug ?? null,
     _birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
   })) as ResultRow[];
 
@@ -225,6 +230,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
                     rank: r._catRank,
                     birthYear: r._birthYear,
                     club: r._clubName,
+                    clubSlug: r._clubSlug,
                     split1: null,
                     split2: null,
                     time: r.time,

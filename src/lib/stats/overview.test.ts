@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { createClubResolver } from "@/lib/clubs/core";
+
 import type { RawResult } from "./core";
 import { computeStatsOverview, normalizeClubName, rankRows } from "./overview";
 
@@ -145,11 +147,40 @@ describe("computeStatsOverview", () => {
     assert.deepEqual(o.women.peak, { year: 2003, share: 1 });
   });
 
-  it("groups clubs by normalized name (approximation, #104)", () => {
+  it("groups clubs by written name, case/diacritics/punctuation ignored (#104)", () => {
     assert.deepEqual(o.clubs, [
-      { name: "K.O.B. Choceň", starts: 5 },
-      { name: "OK Lokomotiva Pardubice", starts: 3 },
+      { name: "K.O.B. Choceň", slug: "k-o-b-chocen", starts: 5 },
+      { name: "OK Lokomotiva Pardubice", slug: "ok-lokomotiva-pardubice", starts: 3 },
     ]);
+  });
+
+  it("uses the canonical club once names are merged in the admin (#104)", () => {
+    const club = { id: 2, slug: "lokomotiva-pardubice", name: "OK Lokomotiva Pardubice" };
+    const merged = computeStatsOverview(
+      [
+        ...RESULTS,
+        r(2003, "19700001", 1500, "Loko Pavel", "Loko OB Pardubice"),
+        r(2003, "19700002", 1500, "Loko Petr", "Loko OB Pardubice"),
+        r(2003, "19700003", 1500, "Loko Jan", "Loko OB Pardubice"),
+      ],
+      [],
+      0,
+      createClubResolver([
+        { key: "oklokomotivapardubice", club },
+        { key: "lokoobpardubice", club },
+      ]),
+    );
+    assert.deepEqual(merged.clubs[0], {
+      name: "OK Lokomotiva Pardubice",
+      slug: club.slug,
+      starts: 6, // 3 × OK Lokomotiva + 3 × Loko OB
+    });
+    // Not merged: the unmapped "Loko OB Pardubice" would be its own club.
+    const unmerged = computeStatsOverview([
+      ...RESULTS,
+      r(2003, "19700001", 1500, "Loko Pavel", "Loko OB Pardubice"),
+    ]);
+    assert.ok(unmerged.clubs.some((row) => row.name === "Loko OB Pardubice" && row.starts === 1));
   });
 
   it("time together on the course and total climb (starts × 200 m)", () => {

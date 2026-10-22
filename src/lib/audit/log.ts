@@ -18,7 +18,13 @@ export type AuditAction =
   | "entry.club_created"
   | "entry.header_changed"
   | "entry.line_club_changed"
-  | "entry.cancelled";
+  | "entry.cancelled"
+  // Ruční sjednocení názvů klubů (#104).
+  | "club.merge"
+  | "club.merge_rejected"
+  | "club.merge_restored"
+  | "club.alias_removed"
+  | "club.renamed";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

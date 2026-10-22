@@ -20,12 +20,30 @@
         "href": "/"
       },
       "links": [
-        { "label": "About", "href": "#about" },
-        { "label": "Course", "href": "#route" },
-        { "label": "Date", "href": "#date" },
-        { "label": "Statistics", "href": "/statistiky" },
-        { "label": "Photos", "href": "#gallery" },
-        { "label": "Partners", "href": "#partners" }
+        {
+          "label": "About",
+          "href": "#about"
+        },
+        {
+          "label": "Course",
+          "href": "#route"
+        },
+        {
+          "label": "Date",
+          "href": "#date"
+        },
+        {
+          "label": "Statistics",
+          "href": "/statistiky"
+        },
+        {
+          "label": "Photos",
+          "href": "#gallery"
+        },
+        {
+          "label": "Partners",
+          "href": "#partners"
+        }
       ]
     },
     "hero": {
@@ -78,12 +96,30 @@
         "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
       ],
       "actions": [
-        { "label": "Race notice", "href": "/program" },
-        { "label": "Entries", "href": "/prihlaseni-zavodnici" },
-        { "label": "Instructions", "href": "/pokyny" },
-        { "label": "Start list", "href": "/startovka" },
-        { "label": "Results", "href": "/vysledky" },
-        { "label": "Have a question? Contact the organizer.", "href": "/kontakt" }
+        {
+          "label": "Race notice",
+          "href": "/program"
+        },
+        {
+          "label": "Entries",
+          "href": "/prihlaseni-zavodnici"
+        },
+        {
+          "label": "Instructions",
+          "href": "/pokyny"
+        },
+        {
+          "label": "Start list",
+          "href": "/startovka"
+        },
+        {
+          "label": "Results",
+          "href": "/vysledky"
+        },
+        {
+          "label": "Have a question? Contact the organizer.",
+          "href": "/kontakt"
+        }
       ],
       "cards": [
         {
@@ -152,8 +188,14 @@
       "eyebrow": "03 — Date and place",
       "title": "Sunday, December 6",
       "items": [
-        { "icon": "calendar", "text": "Every first Sunday in December" },
-        { "icon": "clock", "text": "Interval start from 10:15" },
+        {
+          "icon": "calendar",
+          "text": "Every first Sunday in December"
+        },
+        {
+          "icon": "clock",
+          "text": "Interval start from 10:15"
+        },
         {
           "icon": "pin",
           "text": "Choceň - Velká Veranda - ",
@@ -191,7 +233,13 @@
         "closeLabel": "Close map",
         "townLabel": "Choceň",
         "verandaLabel": "Veranda",
-        "labels": { "veranda": "S/C", "p1": "P1", "p2": "P2", "train": "Train", "bus": "Bus" }
+        "labels": {
+          "veranda": "S/C",
+          "p1": "P1",
+          "p2": "P2",
+          "train": "Train",
+          "bus": "Bus"
+        }
       }
     },
     "results": {
@@ -273,25 +321,52 @@
         {
           "title": "Race",
           "links": [
-            { "label": "About", "href": "#about" },
-            { "label": "Race notice", "href": "/program" },
-            { "label": "Registration", "href": "/prihlasky" }
+            {
+              "label": "About",
+              "href": "#about"
+            },
+            {
+              "label": "Race notice",
+              "href": "/program"
+            },
+            {
+              "label": "Registration",
+              "href": "/prihlasky"
+            }
           ]
         },
         {
           "title": "Statistics",
           "links": [
-            { "label": "Statistics overview", "href": "/statistiky" },
-            { "label": "Latest edition", "href": "/results/{year}" },
-            { "label": "Results archive", "href": "/results" },
-            { "label": "Course records", "href": "/statistiky/rekordy" }
+            {
+              "label": "Statistics overview",
+              "href": "/statistiky"
+            },
+            {
+              "label": "Latest edition",
+              "href": "/results/{year}"
+            },
+            {
+              "label": "Results archive",
+              "href": "/results"
+            },
+            {
+              "label": "Course records",
+              "href": "/statistiky/rekordy"
+            }
           ]
         },
         {
           "title": "Contact",
           "links": [
-            { "label": "K.O.B. Choceň, z.s.", "href": "#partners" },
-            { "label": "Contact the organizer", "href": "/kontakt" }
+            {
+              "label": "K.O.B. Choceň, z.s.",
+              "href": "#partners"
+            },
+            {
+              "label": "Contact the organizer",
+              "href": "/kontakt"
+            }
           ]
         }
       ],
@@ -589,6 +664,25 @@
     "empty": "No results for this runner yet.",
     "registeredFirstStart": "Registered for {year} – first start",
     "back": "Results archive"
+  },
+  "Club": {
+    "eyebrow": "Club",
+    "starts": "Starts",
+    "runners": "Runners",
+    "editions": "Editions",
+    "years": "Years",
+    "variants": "Also written as",
+    "statsLink": "More race statistics",
+    "perYear": "Starts per year",
+    "best": "Best results",
+    "men": "Men",
+    "women": "Women",
+    "members": "Club runners",
+    "runner": "Name",
+    "year": "Year",
+    "time": "Time",
+    "personalBest": "Best time",
+    "writtenNote": "Starts under this written name are counted (ignoring case, diacritics and punctuation). Different spellings of the same club are merged only after a manual confirmation in the admin."
   },
   "Messages": {
     "title": "Messages",
@@ -936,7 +1030,40 @@
     "regsNewPayment": "New payment",
     "regsDeletePayment": "Delete payment",
     "regsEmpty": "No entries in this year.",
-    "regsBack": "Back to entries"
+    "regsBack": "Back to entries",
+    "clubMergeTitle": "Clubs – merging names",
+    "clubMergeHint": "Suggestions to merge differently written club names into one club. Confirmed manually.",
+    "clubMergeIntro": "The same club is written differently in historical results (abbreviations, typos, renames). Below are suggestions based on name similarity. Nothing is merged automatically: until you confirm a pair, the club keeps showing under the written name. A confirmed merge is used in the Most loyal club statistic, in results and on the club profile; every change is audited.",
+    "clubMergeSummary": "{names} written names · {clubs} merged clubs · {aliases} assigned names",
+    "clubMergeSaved": "Saved.",
+    "clubMergeError": "Enter two different club names.",
+    "clubMergeSuggestions": "Merge suggestions",
+    "clubMergeAll": "All ({count})",
+    "clubMergeConfidence_high": "High match",
+    "clubMergeConfidence_medium": "Medium match",
+    "clubMergeConfidence_low": "Low match",
+    "clubMergeScoreHint": "Score 0–1 compares names without diacritics and club type (OK, TJ, SK, K.O.B. …) and with known abbreviations (Loko, HK, Č. Třebová …). Different club types in one town (e.g. AC × K.O.B.) lower the score. Even a high match is only a suggestion.",
+    "clubMergeReason_same_core": "same name without club type",
+    "clubMergeReason_abbreviation": "abbreviation",
+    "clubMergeReason_prefix_missing": "club type missing",
+    "clubMergeReason_prefix_conflict": "different club type",
+    "clubMergeReason_spelling": "similar spelling",
+    "clubMergeReason_subset": "one name contains the other",
+    "clubMergeUsage": "{starts, plural, one {# start} other {# starts}}, {years}",
+    "clubMergeSpellings": "Spellings",
+    "clubMergeCanonical": "Name of the merged club",
+    "clubMergeConfirm": "Merge",
+    "clubMergeReject": "Reject",
+    "clubMergeMore": "Show more ({count})",
+    "clubMergeManual": "Manual merge",
+    "clubMergeManualHint": "For a pair that is not suggested: pick two written names.",
+    "clubMergeNameA": "First name",
+    "clubMergeNameB": "Second name",
+    "clubMergeClubs": "Merged clubs",
+    "clubMergeNoClubs": "None yet – all clubs show under their written names.",
+    "clubMergeRemoveAlias": "Remove “{name}” from the merge",
+    "clubMergeRejected": "Rejected suggestions ({count})",
+    "clubMergeRestore": "Restore to suggestions"
   },
   "Stats": {
     "overview": {

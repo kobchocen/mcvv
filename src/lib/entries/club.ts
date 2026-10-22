@@ -6,6 +6,7 @@ import {
   type ResolvedClub,
 } from "@/lib/entries/club-core";
 import { buildClubOptions, type ClubOption } from "@/lib/entries/club-options";
+import { loadClubMerges, loadClubNames } from "@/lib/clubs/queries";
 import { nextNumericClubIdFrom } from "@/lib/entries/club-id";
 
 export { EMPTY_CLUB_ID };
@@ -24,10 +25,13 @@ export async function ensureEmptyClub(year: number): Promise<string> {
   return EMPTY_CLUB_ID;
 }
 
-/** Nabídka klubů pro přihlášku: všechna id z číselníku s nejnovějším názvem (Q35). */
+/**
+ * Nabídka klubů pro přihlášku: všechna id z číselníku s nejnovějším názvem (Q35),
+ * sloučená id schovaná pod hlavním id.
+ */
 export async function loadClubOptions(): Promise<ClubOption[]> {
-  const rows = await prisma.club.findMany({ select: { id: true, year: true, name: true } });
-  return buildClubOptions(rows);
+  const [rows, merges] = await Promise.all([loadClubNames(), loadClubMerges()]);
+  return buildClubOptions(rows, merges);
 }
 
 const prismaClubStore: ClubStore = {
@@ -40,6 +44,13 @@ const prismaClubStore: ClubStore = {
     prisma.club.findFirst({ where: { year, name }, select: { id: true } }),
   findLatestByName: (name) =>
     prisma.club.findFirst({ where: { name }, orderBy: { year: "desc" }, select: { id: true } }),
+  mainId: async (id) => {
+    const merge = await prisma.clubMerge.findUnique({
+      where: { clubId: id },
+      select: { mainClubId: true },
+    });
+    return merge?.mainClubId ?? id;
+  },
   options: loadClubOptions,
   create: async ({ id, year, name }) => {
     await prisma.club.create({ data: { id, year, name, author: "web" } });

@@ -11,7 +11,9 @@ export type ClubStore = {
   findLatest(id: string): Promise<{ name: string } | null>;
   findInYearByName(year: number, name: string): Promise<{ id: string } | null>;
   findLatestByName(name: string): Promise<{ id: string } | null>;
-  /** Nabídka klubů (všechna id). Načte se jen při potřebě. */
+  /** Hlavní id pro sloučené id (`mcvv_klub_slouceni`), jinak id samo. */
+  mainId(id: string): Promise<string>;
+  /** Nabídka klubů (hlavní id). Načte se jen při potřebě. */
   options(): Promise<readonly ClubOption[]>;
   create(row: { id: string; year: number; name: string }): Promise<void>;
   nextNumericId(): Promise<string>;
@@ -26,7 +28,8 @@ export type ResolvedClub = { id: string; name: string; created: boolean };
  * 3. jinak název v ročníku, pak nejnovější id s tímto názvem,
  * 4. jinak nový klub s novým číselným id.
  *
- * Když id v ročníku ještě nemá řádek, založí se s nejnovějším názvem id.
+ * Sloučené id se nahradí hlavním id (Q37), přihláška tak dostane klub, pod kterým se starty
+ * počítají. Když id v ročníku ještě nemá řádek, založí se s nejnovějším názvem id.
  * `created` = vzniklo nové id (souhrn změn #130 „Založen nový klub“), ne jen řádek ročníku.
  */
 export async function resolveClubWith(
@@ -55,7 +58,7 @@ export async function resolveClubWith(
   }
   const thisYear = await store.findInYearByName(year, label);
   if (thisYear) {
-    return { id: thisYear.id, name: label, created: false };
+    return ensureYearRow(store, thisYear.id, year, label);
   }
   const historic = await store.findLatestByName(label);
   if (historic) {
@@ -68,10 +71,11 @@ export async function resolveClubWith(
 
 async function ensureYearRow(
   store: ClubStore,
-  id: string,
+  chosenId: string,
   year: number,
   label: string,
 ): Promise<ResolvedClub> {
+  const id = await store.mainId(chosenId);
   const inYear = await store.findInYear(id, year);
   if (inYear) {
     return { id, name: inYear.name, created: false };

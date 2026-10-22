@@ -4,7 +4,11 @@ import { test } from "node:test";
 import { buildClubOptions, type ClubOptionRow } from "./club-options";
 import { resolveClubWith, type ClubStore } from "./club-core";
 
-function memoryStore(initial: ClubOptionRow[], nextId = "646") {
+function memoryStore(
+  initial: ClubOptionRow[],
+  nextId = "646",
+  merges: { clubId: string; mainClubId: string }[] = [],
+) {
   const rows = [...initial];
   const created: ClubOptionRow[] = [];
   const latest = (list: ClubOptionRow[]) => [...list].sort((a, b) => b.year - a.year)[0] ?? null;
@@ -15,7 +19,8 @@ function memoryStore(initial: ClubOptionRow[], nextId = "646") {
     findInYearByName: async (year, name) =>
       rows.find((row) => row.year === year && row.name === name) ?? null,
     findLatestByName: async (name) => latest(rows.filter((row) => row.name === name)),
-    options: async () => buildClubOptions(rows),
+    mainId: async (id) => merges.find((merge) => merge.clubId === id)?.mainClubId ?? id,
+    options: async () => buildClubOptions(rows, merges),
     create: async (row) => {
       rows.push(row);
       created.push(row);
@@ -93,4 +98,19 @@ test("empty text and no id means no club", async () => {
     created: false,
   });
   assert.equal(created.length, 0);
+});
+
+test("a merged id is replaced by its main id on every path", async () => {
+  const merges = [{ clubId: "216", mainClubId: "CHC" }];
+  const { store, created } = memoryStore(base, "646", merges);
+  // quick add with the runner's last id
+  assert.deepEqual(await resolveClubWith(store, "K.O.B. Choceň", 2026, "216"), {
+    id: "CHC",
+    name: "K.O.B. Choceň",
+    created: false,
+  });
+  // a written name found under the merged id only
+  const old = memoryStore([...base, { id: "216", year: 2018, name: "KOB Choceń" }], "646", merges);
+  assert.equal((await resolveClubWith(old.store, "KOB Choceń", 2026)).id, "CHC");
+  assert.deepEqual(created, [{ id: "CHC", year: 2026, name: "K.O.B. Choceň" }]);
 });

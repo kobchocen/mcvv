@@ -15,14 +15,10 @@ import {
   sanitizeError,
   shouldUpload,
 } from "./publisher-core";
-import { getOfeedSettings, readOfeedCredentials } from "./settings";
+import { getOfeedSettings, OFEED_STATE, readOfeedCredentials } from "./settings";
 
+export { OFEED_STATE };
 export const OFEED_JOB = "ofeed";
-export const OFEED_STATE = {
-  lease: "ofeed_lease",
-  lastHash: "ofeed_last_hash",
-  lastOkAt: "ofeed_last_ok_at",
-} as const;
 
 const INSTANCE_ID = `${hostname().slice(0, 40)}:${randomUUID().slice(0, 8)}`;
 
@@ -146,8 +142,15 @@ async function publishLocked(
     return { status: "unchanged", competitors };
   }
 
+  // Běhy do testovací akce jsou v historii označené `test:` (Q33).
+  const profile = credentials?.profile ?? (await getOfeedSettings()).profile;
+  const baseMode = dryRun ? "dry-run" : trigger;
   const run = await prisma.jobRun.create({
-    data: { job: OFEED_JOB, mode: dryRun ? "dry-run" : trigger, fetched: competitors },
+    data: {
+      job: OFEED_JOB,
+      mode: profile === "test" ? `test:${baseMode}` : baseMode,
+      fetched: competitors,
+    },
     select: { id: true },
   });
   let ok: boolean;

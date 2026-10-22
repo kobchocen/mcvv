@@ -19,6 +19,8 @@ export type AuditAction =
   | "raceday.split_deleted"
   | "raceday.split_conflict_resolved"
   | "raceday.split_conflict_dismissed"
+  // Přepnutí OFeed mezi testovací a ostrou akcí (Q33).
+  | "raceday.ofeed_profile"
   // Změny přihlášek od přihlašujících (#130) – podklad pro denní souhrn pořadateli.
   | "entry.created"
   | "entry.runner_added"

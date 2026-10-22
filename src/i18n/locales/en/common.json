@@ -1430,13 +1430,18 @@
     "openSplitsAdmin": "Edition splits – overview and cleanup",
     "openBoard": "OFB board",
     "openOfeed": "Event in OFeed",
+    "openOfeedTest": "Test event in OFeed",
     "saved": "Saved.",
     "error": {
       "eventId": "Invalid OFeed event ID.",
       "password": "Invalid password (4–200 characters, single line).",
       "zero": "Invalid test zero time.",
       "conflictStale": "The conflict no longer matches the stored time (manual correction or another decision meanwhile) – nothing changed.",
-      "assignment": "The assignment could not be saved (the account is not a splitmaker)."
+      "assignment": "The assignment could not be saved (the account is not a splitmaker).",
+      "testEventId": "Invalid OFeed test event ID.",
+      "testPassword": "Invalid test event password (4–200 characters, single line).",
+      "ofeedProfile": "Unknown OFeed profile.",
+      "ofeedTestMissing": "Save the OFeed test event ID first."
     },
     "publish": {
       "disabled": "Publishing is disabled.",
@@ -1466,8 +1471,23 @@
     "colMode": "Mode",
     "colCompetitors": "Competitors",
     "ofeedTitle": "OFeed – live results and OFB board",
-    "ofeedIntro": "The OFeed event is created by Pavel or Martin. Paste its ID and password (valid 7 days). During the race the server uploads an IOF XML ResultList every ~30 s (single writer).",
+    "ofeedIntro": "The OFeed event is created by Pavel or Martin. Paste its ID and password (valid 7 days); a separate test event is used for the rehearsal. During the race the server uploads an IOF XML ResultList every ~30 s (single writer).",
     "ofeedDryRun": "Dry run (outside production): XML is generated but nothing is sent to OFeed.",
+    "ofeedProfileActive": {
+      "live": "Uploading to the LIVE OFeed event",
+      "test": "Uploading to the TEST OFeed event"
+    },
+    "ofeedProfileHint": {
+      "live": "The public website links to this event (the “Online results” button on race day).",
+      "test": "Rehearsal: data goes to the test event and the website does not link to OFeed publicly. Switch back to the live event before the race."
+    },
+    "ofeedSwitchToTest": "Switch to the test event",
+    "ofeedSwitchToLive": "Switch to the live event",
+    "ofeedProfileName": {
+      "live": "Live event",
+      "test": "Test event"
+    },
+    "ofeedProfileCurrent": "active",
     "ofeedEnabled": "Publish to OFeed",
     "ofeedEnabledHint": "Automatic only from 2 h before to 5 h after race zero, and only when data changed (otherwise every 10 min).",
     "ofeedEventId": "OFeed event ID",
@@ -1482,6 +1502,7 @@
     "onlineLink": "“Online results” link on the website",
     "onlineLinkAuto": "automatic from event ID",
     "onlineLinkNone": "not set",
+    "onlineLinkHiddenTest": "(OFeed link hidden, the test event is active)",
     "publishNow": "Upload now",
     "downloadXml": "Download IOF XML",
     "devicesTitle": "Device keys (OBD client on the finish PC)",
@@ -1673,6 +1694,7 @@
     "action_split_deleted": "manual split deletion",
     "action_split_conflict_resolved": "split conflict accepted",
     "action_split_conflict_dismissed": "split conflict dismissed",
+    "action_ofeed_profile": "OFeed event switch",
     "action_other": "action"
   },
   "RaceDayImport": {

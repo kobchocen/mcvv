@@ -16,6 +16,7 @@ import {
   resolveConflictAction,
   revokeTokenAction,
   saveOfeedAction,
+  switchOfeedProfileAction,
   saveRaceSetupAction,
   saveSplitmakerStationsAction,
 } from "@/lib/live/admin-actions";
@@ -34,6 +35,7 @@ import {
   OFEED_BOARD_URL,
   ofeedPublicUrl,
   passwordExpiresAt,
+  resolveOnlineResultsUrl,
 } from "@/lib/ofeed/settings";
 import { getSiteSettings } from "@/lib/settings/site";
 
@@ -71,7 +73,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   ]);
   const now = new Date();
   const window = defaultTokenWindow(ctx.zero);
-  const expires = passwordExpiresAt(ofeed.passwordSetAt);
+  const publicOnlineUrl = resolveOnlineResultsUrl(site.onlineResultsUrl, ofeed);
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
   const stationName = (code: string) =>
     code === FINISH_SPLIT ? t("finish") : (stations.find((s) => s.code === code)?.label ?? code);
@@ -114,7 +116,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 rel="noreferrer"
                 className="font-medium text-race-accent hover:underline"
               >
-                {t("openOfeed")}
+                {t(ofeed.profile === "test" ? "openOfeedTest" : "openOfeed")}
               </a>
             ) : null}
           </p>
@@ -239,6 +241,36 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               {t("ofeedDryRun")}
             </p>
           ) : null}
+          <div
+            className={
+              ofeed.profile === "test"
+                ? "grid gap-2 border border-amber-500/60 bg-amber-500/10 p-3 text-sm"
+                : "grid gap-2 border border-race-line/60 p-3 text-sm"
+            }
+            data-testid="ofeed-profile"
+            data-profile={ofeed.profile}
+          >
+            <p>
+              <strong>{t(`ofeedProfileActive.${ofeed.profile}`)}</strong>{" "}
+              {ofeed.eventId ? <code className="text-xs">{ofeed.eventId}</code> : null}
+            </p>
+            <p className="text-race-muted">{t(`ofeedProfileHint.${ofeed.profile}`)}</p>
+            <form action={switchOfeedProfileAction}>
+              <input
+                type="hidden"
+                name="profile"
+                value={ofeed.profile === "test" ? "live" : "test"}
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                className="h-9"
+                data-testid="ofeed-profile-switch"
+              >
+                {t(ofeed.profile === "test" ? "ofeedSwitchToLive" : "ofeedSwitchToTest")}
+              </Button>
+            </form>
+          </div>
           <form action={saveOfeedAction} className="grid gap-4">
             <label className="flex items-start gap-3 text-sm">
               <input
@@ -252,41 +284,65 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 <span className="mt-1 block text-race-muted">{t("ofeedEnabledHint")}</span>
               </span>
             </label>
-            <div className="grid gap-1.5">
-              <Label htmlFor="eventId">{t("ofeedEventId")}</Label>
-              <Input
-                id="eventId"
-                name="eventId"
-                defaultValue={ofeed.eventId ?? ""}
-                maxLength={64}
-                autoComplete="off"
-                className="h-10 bg-race-surface font-mono"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="password">{t("ofeedPassword")}</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                maxLength={200}
-                placeholder={ofeed.hasPassword ? t("ofeedPasswordKeep") : ""}
-                className="h-10 bg-race-surface"
-              />
-              <p className="text-xs text-race-muted" data-testid="ofeed-password-state">
-                {ofeed.hasPassword
-                  ? t("ofeedPasswordSet", { at: fmt(ofeed.passwordSetAt), until: fmt(expires) })
-                  : t("ofeedPasswordMissing")}
-                {expires && expires < now ? ` ${t("ofeedPasswordExpired")}` : ""}
-              </p>
-              {ofeed.hasPassword ? (
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" name="clearPassword" className="size-4" />{" "}
-                  {t("ofeedPasswordClear")}
-                </label>
-              ) : null}
-            </div>
+            {(["live", "test"] as const).map((profile) => {
+              const data = ofeed.profiles[profile];
+              const prefix = profile === "test" ? "test" : "";
+              const name = (field: string) =>
+                prefix ? `${prefix}${field[0].toUpperCase()}${field.slice(1)}` : field;
+              const until = passwordExpiresAt(data.passwordSetAt);
+              return (
+                <fieldset
+                  key={profile}
+                  className="grid gap-3 border border-race-line/50 p-3"
+                  data-testid={`ofeed-fields-${profile}`}
+                >
+                  <legend className="px-1 text-sm font-semibold">
+                    {t(`ofeedProfileName.${profile}`)}
+                    {ofeed.profile === profile ? ` · ${t("ofeedProfileCurrent")}` : ""}
+                  </legend>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor={name("eventId")}>{t("ofeedEventId")}</Label>
+                    <Input
+                      id={name("eventId")}
+                      name={name("eventId")}
+                      defaultValue={data.eventId ?? ""}
+                      maxLength={64}
+                      autoComplete="off"
+                      className="h-10 bg-race-surface font-mono"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor={name("password")}>{t("ofeedPassword")}</Label>
+                    <Input
+                      id={name("password")}
+                      name={name("password")}
+                      type="password"
+                      autoComplete="new-password"
+                      maxLength={200}
+                      placeholder={data.hasPassword ? t("ofeedPasswordKeep") : ""}
+                      className="h-10 bg-race-surface"
+                    />
+                    <p
+                      className="text-xs text-race-muted"
+                      data-testid={
+                        profile === "live" ? "ofeed-password-state" : "ofeed-test-password-state"
+                      }
+                    >
+                      {data.hasPassword
+                        ? t("ofeedPasswordSet", { at: fmt(data.passwordSetAt), until: fmt(until) })
+                        : t("ofeedPasswordMissing")}
+                      {until && until < now ? ` ${t("ofeedPasswordExpired")}` : ""}
+                    </p>
+                    {data.hasPassword ? (
+                      <label className="flex items-center gap-2 text-xs">
+                        <input type="checkbox" name={name("clearPassword")} className="size-4" />{" "}
+                        {t("ofeedPasswordClear")}
+                      </label>
+                    ) : null}
+                  </div>
+                </fieldset>
+              );
+            })}
             <Button
               type="submit"
               className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
@@ -305,11 +361,12 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             ) : null}
             <p className="text-race-muted">
               {t("onlineLink")}:{" "}
-              {site.onlineResultsUrl
-                ? site.onlineResultsUrl
-                : ofeed.eventId
-                  ? `${ofeedPublicUrl(ofeed.eventId)} (${t("onlineLinkAuto")})`
-                  : t("onlineLinkNone")}
+              {publicOnlineUrl
+                ? publicOnlineUrl === site.onlineResultsUrl
+                  ? publicOnlineUrl
+                  : `${publicOnlineUrl} (${t("onlineLinkAuto")})`
+                : t("onlineLinkNone")}
+              {ofeed.profile === "test" ? ` ${t("onlineLinkHiddenTest")}` : ""}
             </p>
             <div className="flex flex-wrap gap-2">
               <form action={publishNowAction}>

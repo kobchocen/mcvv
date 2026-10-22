@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
+import { loadBannerOptions } from "@/lib/newsletter/banner-store";
 import { audienceHints } from "@/lib/newsletter/hints";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminNewsletterForm } from "@/components/organisms/mcvv-admin-newsletter-form";
@@ -41,8 +42,12 @@ export default async function AdminNewsletterNewPage({ params }: PageProps) {
             audienceUsers: true,
             audienceYears: 10,
             excludeCurrentEntrants: true,
+            banner: "",
+            bannerAlt: "",
+            bannerLink: "",
           }}
           audienceHints={await audienceHints()}
+          bannerOptions={await loadBannerOptions()}
         />
       </div>
     </main>

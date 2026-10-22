@@ -206,7 +206,8 @@ model WebImage {
   type   WebImageType @relation(fields: [typeId], references: [id])
   runner Runner?      @relation(fields: [runnerId], references: [id])
 
-  news News[]
+  news                News[]
+  newsletterCampaigns NewsletterCampaign[]
 
   @@map("webimages")
 }
@@ -463,10 +464,21 @@ model NewsletterCampaign {
   createdAt              DateTime         @default(now()) @map("created_at")
   updatedAt              DateTime         @updatedAt @map("updated_at")
 
-  createdBy  User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  recipients NewsletterRecipient[]
+  /// Volitelný banner v hlavičce e-mailu (#Q27): nahraný obrázek (webimages, typ „newsletter“)
+  /// nebo připravený banner z public/images/newsletter (klíč v NEWSLETTER_BANNER_PRESETS).
+  bannerImageId Int?    @map("banner_image_id") @db.SmallInt
+  bannerPreset  String? @map("banner_preset") @db.VarChar(40)
+  /// Alt text banneru (povinný, pokud je banner zvolený).
+  bannerAlt     String? @map("banner_alt") @db.VarChar(200)
+  /// Odkaz po kliknutí na banner (výchozí https://mcvv.org).
+  bannerLink    String? @map("banner_link") @db.VarChar(500)
+
+  createdBy   User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  bannerImage WebImage?             @relation(fields: [bannerImageId], references: [id], onDelete: SetNull)
+  recipients  NewsletterRecipient[]
 
   @@index([createdById])
+  @@index([bannerImageId])
   @@map("mcvv_newsletter")
 }
 

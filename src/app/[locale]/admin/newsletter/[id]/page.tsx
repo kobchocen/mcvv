@@ -4,6 +4,8 @@ import { setRequestLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
+import { BANNER_ERROR_MESSAGES, bannerChoiceValue, campaignBanner } from "@/lib/newsletter/banner";
+import { loadBannerOptions } from "@/lib/newsletter/banner-store";
 import { renderNewsletter, unsubscribeUrl } from "@/lib/newsletter/core";
 import { deleteNewsletterDraft, retryFailedNewsletter } from "@/lib/newsletter/actions";
 import { audienceHints } from "@/lib/newsletter/hints";
@@ -19,7 +21,10 @@ import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminNewsletterForm } from "@/components/organisms/mcvv-admin-newsletter-form";
 import { type Locale } from "@/i18n/routing";
 
-type PageProps = Readonly<{ params: Promise<{ locale: string; id: string }> }>;
+type PageProps = Readonly<{
+  params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ banner?: string }>;
+}>;
 
 export const metadata: Metadata = { title: "Kampaň — Newsletter" };
 
@@ -41,8 +46,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default async function AdminNewsletterDetailPage({ params }: PageProps) {
+export default async function AdminNewsletterDetailPage({ params, searchParams }: PageProps) {
   const { locale, id: rawId } = await params;
+  const { banner: bannerErrorKey } = await searchParams;
+  const bannerError =
+    bannerErrorKey && Object.hasOwn(BANNER_ERROR_MESSAGES, bannerErrorKey)
+      ? BANNER_ERROR_MESSAGES[bannerErrorKey as keyof typeof BANNER_ERROR_MESSAGES]
+      : null;
   setRequestLocale(locale as Locale);
   const session = await requireStaff();
   const id = Number.parseInt(rawId, 10);
@@ -58,7 +68,10 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
     body: campaign.body,
     unsubscribeUrl: unsubscribeUrl(origin, "0".repeat(64)),
     siteUrl: origin,
+    // Náhled běží na stejném webu: relativní cesta (v e-mailu je absolutní URL podle AUTH_ORIGIN).
+    banner: campaignBanner(campaign, ""),
   });
+  const emailBanner = campaignBanner(campaign, origin);
   const counts = await recipientCounts(campaign.id);
   const audience = editable
     ? await loadAudience({
@@ -96,7 +109,19 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
           </p>
         ) : null}
 
+        {bannerError ? (
+          <p role="alert" className="mt-4 border border-red-500/60 bg-red-500/10 p-3 text-sm">
+            Banner se neuložil: {bannerError} Ostatní úpravy jsou uložené.
+          </p>
+        ) : null}
+
         <Section title="Náhled">
+          {emailBanner ? (
+            <p className="mb-3 text-sm text-race-muted">
+              Banner v e-mailu: <code className="break-all">{emailBanner.src}</code> → odkaz{" "}
+              <code className="break-all">{emailBanner.href}</code>
+            </p>
+          ) : null}
           <iframe
             title="Náhled e-mailu"
             srcDoc={preview.html}
@@ -116,8 +141,12 @@ export default async function AdminNewsletterDetailPage({ params }: PageProps) {
                   audienceUsers: campaign.audienceUsers,
                   audienceYears: campaign.audienceYears,
                   excludeCurrentEntrants: campaign.excludeCurrentEntrants,
+                  banner: bannerChoiceValue(campaign),
+                  bannerAlt: campaign.bannerAlt ?? "",
+                  bannerLink: campaign.bannerLink ?? "",
                 }}
                 audienceHints={await audienceHints()}
+                bannerOptions={await loadBannerOptions()}
               />
               <form action={deleteNewsletterDraft} className="mt-4">
                 <input type="hidden" name="id" value={campaign.id} />

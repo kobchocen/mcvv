@@ -12,6 +12,7 @@ import {
   unsubscribeUrl,
   type BatchOutcome,
 } from "./core";
+import { campaignBanner } from "./banner";
 import { newsletterOrigin } from "./origin";
 import { prismaNewsletterStore } from "./store";
 import { NEWSLETTER_BATCH_SIZE, newsletterDryRun, sendNewsletterBatch } from "./transport";
@@ -40,6 +41,7 @@ export async function runNewsletterBatch(id: number): Promise<BatchOutcome> {
   }
   const origin = await newsletterOrigin();
   const dryRun = newsletterDryRun();
+  const banner = campaignBanner(campaign, origin);
   const outcome = await processBatch({
     campaignId: id,
     batchSize: Math.min(NEWSLETTER_BATCH_SIZE, budget),
@@ -51,6 +53,7 @@ export async function runNewsletterBatch(id: number): Promise<BatchOutcome> {
         body: campaign.body,
         unsubscribeUrl: unsubscribeUrl(origin, token),
         siteUrl: origin,
+        banner,
       }),
       to: email,
       headers: unsubscribeHeaders(origin, token),

@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // forbidden() → HTTP 403 pro omezené role (Časomíra) mimo povolenou sekci administrace.
     authInterrupts: true,
+    // Nahrání banneru newsletteru a loga partnera (max. 1 MB souboru + zbytek formuláře).
+    serverActions: { bodySizeLimit: "2mb" },
   },
   async headers() {
     return [

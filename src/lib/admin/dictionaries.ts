@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
 import { recalculateCategoryRecords } from "@/lib/stats/records";
 import { CLUB_ID_MAX_LENGTH } from "@/lib/entries/club-id";
+import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 
 function revalidateDicts() {
   revalidatePath("/[locale]/admin/ciselniky", "layout");
@@ -80,4 +81,7 @@ export async function saveClub(formData: FormData): Promise<void> {
     create: { id, year, name },
   });
   revalidateDicts();
+  // Club names are shown on the public club list and profiles (cached under "stats").
+  revalidatePath("/[locale]/kluby", "layout");
+  revalidateTag(STATS_CACHE_TAG, "max");
 }

@@ -7,17 +7,15 @@
 import { normalizeClubName } from "./core";
 import { clubPair } from "./merge";
 
-/** One club (main id with merged ids) and its names and usage. */
+/** One club (id) and its names and usage. */
 export type ClubUsage = {
-  /** Main id. */
+  /** Club id. */
   id: string;
   /** Profile name (newest name). */
   name: string;
   /** All names of the club with the editions they were used in, newest first. */
   names: { name: string; years: number[] }[];
-  /** Main id and merged ids. */
-  ids: string[];
-  /** Editions with a cis_klub row of any of the ids. */
+  /** Editions with a cis_klub row of the id. */
   years: number[];
   /** Starts in results. */
   starts: number;
@@ -225,7 +223,7 @@ export function confidenceOf(score: number): MergeSuggestion["confidence"] {
 }
 
 /**
- * Suggested merges among clubs (main ids). Rejected pairs are skipped. Sorted by score, then
+ * Suggested merges among existing club ids. Rejected pairs are skipped. Sorted by score, then
  * by starts involved. Candidates must share an identifying word or its first 4 letters
  * (blocking keeps it fast for ~1 000 ids).
  */

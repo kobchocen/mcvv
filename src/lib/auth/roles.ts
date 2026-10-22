@@ -40,6 +40,11 @@ export function canManageLiveResults(role: UserRole): boolean {
   return role === "admin";
 }
 
+/** Sloučení id klubů (náhled i provedení, Q45/Q47): nevratný přepis dat – jen admin. */
+export function canMergeClubs(role: UserRole): boolean {
+  return role === "admin";
+}
+
 /** Úroveň přístupu do /admin: plná, jen „Den závodu“, nebo žádná. */
 export type AdminAccess = "full" | "raceday" | "none";
 

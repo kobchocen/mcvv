@@ -4,11 +4,12 @@ import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 
 import {
-  buildAudience,
+  audienceFromData,
   currentEntrantEmails,
   promotionOptOuts,
   legacyFromYear,
   type Audience,
+  type AudienceData,
   type AudienceOptions,
   type NewsletterStore,
   type RecipientCounts,
@@ -25,21 +26,24 @@ export async function loadCurrentEntrants(): Promise<{ year: number; emails: Set
   return { year, emails: currentEntrantEmails(rows) };
 }
 
-export async function loadAudience(options: AudienceOptions): Promise<Audience> {
+/**
+ * Jedno načtení všeho, co potřebuje výpočet publika (dřív se pro každou volbu let v nápovědě
+ * formuláře načítaly znovu všechny přihlášky – 8× při každém zobrazení / uložení kampaně).
+ * `maxYears` = nejdelší období, které se z dat bude počítat.
+ */
+export async function loadAudienceData(maxYears: number): Promise<AudienceData> {
   const [users, legacy, unsubscribed, promotion, accounts, entrants] = await Promise.all([
-    options.users
-      ? prisma.user.findMany({ where: { emailVerified: { not: null } }, select: { email: true } })
-      : Promise.resolve([]),
-    options.years > 0
+    prisma.user.findMany({ where: { emailVerified: { not: null } }, select: { email: true } }),
+    maxYears > 0
       ? prisma.registration.findMany({
           // Jen přihlášky s běžci – prázdné (dřív zakládané návštěvou stránky) nejsou zájem o závod.
           where: {
-            year: { gte: legacyFromYear(options.years) },
+            year: { gte: legacyFromYear(maxYears) },
             email: { contains: "@" },
             lines: { some: {} },
           },
-          select: { email: true },
-          distinct: ["email"],
+          select: { email: true, year: true },
+          distinct: ["email", "year"],
         })
       : Promise.resolve([]),
     prisma.newsletterOptOut.findMany({
@@ -62,21 +66,22 @@ export async function loadAudience(options: AudienceOptions): Promise<Audience> 
       where: { promotionOptOut: { not: null } },
       select: { email: true, promotionOptOut: true },
     }),
-    options.excludeCurrentEntrants ? loadCurrentEntrants() : Promise.resolve(null),
+    loadCurrentEntrants(),
   ]);
-  return buildAudience(
-    {
-      userEmails: users.map((u) => u.email),
-      legacyEmails: legacy.map((r) => r.email),
-      unsubscribed: unsubscribed.map((u) => u.email),
-      noPromotion: promotionOptOuts(
-        accounts,
-        promotion.map(({ _count, ...row }) => ({ ...row, lineCount: _count.lines })),
-      ),
-      currentEntrants: entrants?.emails ?? [],
-    },
-    options,
-  );
+  return {
+    userEmails: users.map((u) => u.email),
+    legacy: legacy.map((r) => ({ email: r.email, year: r.year })),
+    unsubscribed: unsubscribed.map((u) => u.email),
+    noPromotion: promotionOptOuts(
+      accounts,
+      promotion.map(({ _count, ...row }) => ({ ...row, lineCount: _count.lines })),
+    ),
+    currentEntrants: entrants,
+  };
+}
+
+export async function loadAudience(options: AudienceOptions): Promise<Audience> {
+  return audienceFromData(await loadAudienceData(options.years), options);
 }
 
 /** Ensure each email has a stable unsubscribe token. */

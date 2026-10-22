@@ -126,7 +126,85 @@ export function campaignBanner(
   };
 }
 
+/** Relativní adresa obrázku vybraného v poli „banner“ (náhled v administraci), jinak null. */
+export function bannerChoiceSrc(value: string | null | undefined): string | null {
+  const choice = parseBannerChoice(value);
+  if (!choice || choice.kind === "none") return null;
+  return choice.kind === "image"
+    ? bannerImagePath(choice.id)
+    : (bannerPreset(choice.key)?.path ?? null);
+}
+
+/** Neuložený stav banneru ve formuláři kampaně (živý náhled). */
+export type BannerDraft = {
+  /** Hodnota pole „banner“: "", "preset:<klíč>" nebo "image:<id>". */
+  choice: string;
+  alt: string;
+  link: string;
+  /** Adresa nově vybraného (ještě nenahraného) souboru, typicky `blob:` z URL.createObjectURL. */
+  uploadSrc?: string | null;
+  /**
+   * Týž soubor jako `data:` URL pro náhled e-mailu: iframe náhledu je sandboxovaný (neprůhledný
+   * origin) a `blob:` adresu stránky v něm prohlížeč nenačte.
+   */
+  uploadDataUrl?: string | null;
+  /** Chyba nového souboru zjištěná už v prohlížeči (typ, velikost, šířka) – uložení by selhalo. */
+  uploadError?: BannerImageError | null;
+};
+
+export type BannerDraftResult =
+  | { ok: true; banner: NewsletterBanner | null }
+  | { ok: false; error: keyof typeof BANNER_ERROR_MESSAGES };
+
+/**
+ * Banner, který vznikne uložením neuloženého formuláře – stejná pravidla jako `saveNewsletter`
+ * (nový soubor má přednost před výběrem, alt povinný u nahraného, u připraveného výchozí alt,
+ * prázdný odkaz = mcvv.org). Při chybě se banner při uložení nezmění (`ok: false`).
+ */
+export function draftBanner(draft: BannerDraft, origin: string): BannerDraftResult {
+  const alt = normalizeBannerAlt(draft.alt);
+  const link = normalizeBannerLink(draft.link);
+  if (!link) return { ok: false, error: "link" };
+  if (draft.uploadSrc) {
+    if (draft.uploadError) return { ok: false, error: draft.uploadError };
+    if (!alt) return { ok: false, error: "alt" };
+    // Stejně jako campaignBanner po uložení (odkaz se normalizuje znovu → „https://mcvv.org/“).
+    const href = normalizeBannerLink(link) ?? DEFAULT_BANNER_LINK;
+    return { ok: true, banner: { src: draft.uploadSrc, alt, href } };
+  }
+  const choice = parseBannerChoice(draft.choice);
+  if (!choice) return { ok: false, error: "choice" };
+  if (choice.kind === "none") return { ok: true, banner: null };
+  if (choice.kind === "image" && !alt) return { ok: false, error: "alt" };
+  const fields: CampaignBannerFields =
+    choice.kind === "image"
+      ? { bannerImageId: choice.id, bannerPreset: null, bannerAlt: alt, bannerLink: link }
+      : {
+          bannerImageId: null,
+          bannerPreset: choice.key,
+          bannerAlt: alt || normalizeBannerAlt(bannerPreset(choice.key)?.alt),
+          bannerLink: link,
+        };
+  return { ok: true, banner: campaignBanner(fields, origin) };
+}
+
 export type BannerImageError = "empty" | "too_large" | "type" | "too_small" | "invalid";
+
+/**
+ * Rychlá kontrola vybraného souboru v prohlížeči (před nahráním). Server soubor stejně ověří
+ * (`processBannerImage`); šířka je známá až po načtení obrázku (`width`, jinak se nekontroluje).
+ */
+export function bannerFileIssue(file: {
+  size: number;
+  type: string;
+  width?: number;
+}): BannerImageError | null {
+  if (file.size <= 0) return "empty";
+  if (file.size > MAX_BANNER_BYTES) return "too_large";
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return "type";
+  if (file.width !== undefined && file.width < BANNER_MIN_WIDTH) return "too_small";
+  return null;
+}
 
 export const BANNER_ERROR_MESSAGES: Record<BannerImageError | "alt" | "link" | "choice", string> = {
   empty: "Soubor s bannerem je prázdný.",

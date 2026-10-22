@@ -17,7 +17,10 @@ export type McvvStatsOverviewCopy = {
   top: string;
   men: string;
   women: string;
-  more: Record<"records" | "wins" | "photos" | "winners" | "attendance" | "ages" | "times", string>;
+  more: Record<
+    "records" | "wins" | "photos" | "winners" | "attendance" | "ages" | "times" | "clubs",
+    string
+  >;
   records: { title: string; sameYear: string | null };
   wins: { title: string };
   photos: { title: string; total: string };
@@ -99,7 +102,7 @@ function MoreLink({
   href,
   label,
 }: {
-  href: "/fotogalerie" | { pathname: "/statistiky/[slug]"; params: { slug: string } };
+  href: "/fotogalerie" | "/kluby" | { pathname: "/statistiky/[slug]"; params: { slug: string } };
   label: string;
 }) {
   return (
@@ -509,7 +512,10 @@ export function McvvStatsOverview({ brand, nav, data, copy, statsNav }: McvvStat
             </Tile>
 
             {data.clubs.length > 0 ? (
-              <Tile title={copy.clubs.title}>
+              <Tile
+                title={copy.clubs.title}
+                more={<MoreLink href="/kluby" label={copy.more.clubs} />}
+              >
                 <RankedList
                   rows={data.clubs.map((club, index) => ({
                     rank: index + 1,

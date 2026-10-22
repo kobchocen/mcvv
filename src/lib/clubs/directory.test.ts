@@ -13,7 +13,8 @@ import {
 const NAMES: ClubNameRow[] = [
   { id: "CHC", year: 2001, name: "KOB Choceň" },
   { id: "CHC", year: 2002, name: "K.O.B. Choceň" },
-  { id: "216", year: 2003, name: "KOB Choceń" },
+  // 216 "KOB Choceń" (2003) after a merge into CHC (Q45): the row moved to CHC.
+  { id: "CHC", year: 2003, name: "KOB Choceń" },
   { id: "ACH", year: 2003, name: "AC Choceň" },
   { id: "ZLN", year: 2004, name: "Zlín" },
   { id: "000", year: 2003, name: "" },
@@ -26,7 +27,7 @@ const ROWS: ClubDirectoryInput[] = [
   row(2001, "19800001", "CHC", "KOB Choceň"),
   row(2002, "19800001", "CHC", "K.O.B. Choceň"),
   row(2002, "19855001", "CHC", "K.O.B. Choceň"),
-  row(2003, "19855001", "216", "KOB Choceń"),
+  row(2003, "19855001", "CHC", "KOB Choceń"), // rewritten from 216 by the merge
   row(2003, "19810001", "ACH", "AC Choceň"),
   row(2004, "19810001", "ZLN", "Zlín"),
   row(2004, "19820001", "ZLN", "Zlín"),
@@ -34,11 +35,8 @@ const ROWS: ClubDirectoryInput[] = [
 ];
 
 describe("computeClubDirectory", () => {
-  it("one row per main id; merged ids fold in, placeholders are skipped", () => {
-    const clubs = createClubResolver({
-      names: NAMES,
-      merges: [{ clubId: "216", mainClubId: "CHC" }],
-    });
+  it("one row per club id, placeholders are skipped", () => {
+    const clubs = createClubResolver({ names: NAMES });
     const list = computeClubDirectory(ROWS, clubs);
     assert.deepEqual(
       list.map((club) => [club.id, club.starts, club.runners, club.editions]),
@@ -49,27 +47,18 @@ describe("computeClubDirectory", () => {
       ],
     );
     const chc = list[0];
-    assert.equal(chc.name, "K.O.B. Choceň");
-    assert.equal(chc.slug, "chc-k-o-b-chocen");
-    assert.deepEqual(chc.mergedIds, ["216"]);
+    assert.equal(chc.name, "KOB Choceń");
+    assert.equal(chc.slug, "chc-kob-chocen");
     assert.equal(chc.firstYear, 2001);
     assert.equal(chc.lastYear, 2003);
     assert.ok(!list.some((club) => club.id === "216" || club.id === "000"));
   });
-
-  it("without a merge both ids are listed", () => {
-    const list = computeClubDirectory(ROWS, createClubResolver({ names: NAMES }));
-    assert.deepEqual(list.map((club) => club.id).sort(), ["216", "ACH", "CHC", "ZLN"]);
-  });
 });
 
 describe("filterClubDirectory / sortClubDirectory", () => {
-  const list = computeClubDirectory(
-    ROWS,
-    createClubResolver({ names: NAMES, merges: [{ clubId: "216", mainClubId: "CHC" }] }),
-  );
+  const list = computeClubDirectory(ROWS, createClubResolver({ names: NAMES }));
 
-  it("finds a club by its name, a former name or any of its ids", () => {
+  it("finds a club by its name, a former name or its id", () => {
     assert.deepEqual(
       filterClubDirectory(list, "chocen").map((club) => club.id),
       ["CHC", "ACH"],
@@ -79,9 +68,11 @@ describe("filterClubDirectory / sortClubDirectory", () => {
       ["CHC"],
     );
     assert.deepEqual(
-      filterClubDirectory(list, "216").map((club) => club.id),
+      filterClubDirectory(list, "chc").map((club) => club.id),
       ["CHC"],
     );
+    // A merged id no longer exists.
+    assert.equal(filterClubDirectory(list, "216").length, 0);
     assert.deepEqual(
       filterClubDirectory(list, "zlin").map((club) => club.id),
       ["ZLN"],

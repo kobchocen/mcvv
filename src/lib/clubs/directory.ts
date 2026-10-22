@@ -1,6 +1,7 @@
 /**
- * Public club list /kluby: every club (main id, merged ids folded in) that has a result, with
- * its starts, runners and editions. Pure; the query layer feeds it one light row per result.
+ * Public club list /kluby: every club id with a result, with its starts, runners and editions.
+ * A merge rewrites the data to the main id (Q45), so nothing is folded here. Pure; the query
+ * layer feeds it one light row per result.
  */
 import { clubKey, normalizeClubName, type ClubResolver } from "./core";
 
@@ -13,18 +14,17 @@ export type ClubDirectoryInput = {
 };
 
 export type ClubDirectoryRow = {
-  /** Main id. */
+  /** Club id. */
   id: string;
-  /** Newest name of the main id (profile name). */
+  /** Newest name of the club (profile name). */
   name: string;
   slug: string;
-  mergedIds: string[];
   starts: number;
   runners: number;
   editions: number;
   firstYear: number;
   lastYear: number;
-  /** Normalized names the club ever used (all its ids), for search only. */
+  /** Normalized names the club ever used, for search only. */
   searchKeys: string[];
 };
 
@@ -55,17 +55,12 @@ export function computeClubDirectory(
   }
   const list: ClubDirectoryRow[] = [];
   for (const [id, entry] of byMain) {
-    const ids = resolver.members(id);
     const years = [...entry.years].sort((a, b) => a - b);
-    const searchKeys = new Set<string>();
-    for (const member of ids) {
-      for (const { name } of resolver.history(member)) searchKeys.add(normalizeClubName(name));
-    }
+    const searchKeys = new Set(resolver.history(id).map(({ name }) => normalizeClubName(name)));
     list.push({
       id,
       name: resolver.profileName(id) || id,
       slug: resolver.slug(id),
-      mergedIds: ids.slice(1),
       starts: entry.starts,
       runners: entry.runners.size,
       editions: years.length,
@@ -77,7 +72,7 @@ export function computeClubDirectory(
   return sortClubDirectory(list, "starty");
 }
 
-/** Matches the newest name, any former name or any id of the club (case/diacritics ignored). */
+/** Matches the newest name, any former name or the id of the club (case/diacritics ignored). */
 export function filterClubDirectory(
   rows: readonly ClubDirectoryRow[],
   query: string,
@@ -89,7 +84,7 @@ export function filterClubDirectory(
     (row) =>
       (key && row.searchKeys.some((name) => name.includes(key))) ||
       (key && normalizeClubName(row.name).includes(key)) ||
-      [row.id, ...row.mergedIds].some((value) => value === id),
+      row.id === id,
   );
 }
 

@@ -2,10 +2,10 @@ import { unstable_cache } from "next/cache";
 
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 
-import { createClubResolver, type ClubMergeRef, type ClubNameRow } from "./core";
+import { createClubResolver, type ClubNameRow } from "./core";
 import { computeClubDirectory, type ClubDirectoryRow } from "./directory";
 import { computeClubProfile, type ClubProfile } from "./profile";
-import { loadClubDirectoryInput, loadClubMerges, loadClubNames, loadClubResults } from "./queries";
+import { loadClubDirectoryInput, loadClubNames, loadClubResults } from "./queries";
 
 /**
  * Cached club data for the public pages (/kluby, /kluby/[slug]). Results change only with a
@@ -14,33 +14,28 @@ import { loadClubDirectoryInput, loadClubMerges, loadClubNames, loadClubResults 
  */
 const CLUB_CACHE = { revalidate: 3600, tags: [STATS_CACHE_TAG] };
 
-export type ClubIndex = { names: ClubNameRow[]; merges: ClubMergeRef[] };
+export type ClubIndex = { names: ClubNameRow[] };
 
 async function loadClubIndex(): Promise<ClubIndex> {
-  const [names, merges] = await Promise.all([loadClubNames(), loadClubMerges()]);
-  return { names, merges };
+  return { names: await loadClubNames() };
 }
 
-/** Uncached club names and merges (a club id created since the cache was filled). */
+/** Uncached club names (a club id created since the cache was filled). */
 export const loadFreshClubIndex = loadClubIndex;
 
-export const getClubIndex = unstable_cache(loadClubIndex, ["club-index"], CLUB_CACHE);
+export const getClubIndex = unstable_cache(loadClubIndex, ["club-index-v2"], CLUB_CACHE);
 
-/** Profile of a main id, computed from that club's results only (uncached). */
-export async function loadClubProfile(
-  mainId: string,
-  index: ClubIndex,
-): Promise<ClubProfile | null> {
+/** Profile of a club id, computed from that club's results only (uncached). */
+export async function loadClubProfile(id: string, index: ClubIndex): Promise<ClubProfile | null> {
   const resolver = createClubResolver(index);
-  const results = await loadClubResults(resolver.members(mainId));
-  return computeClubProfile(results, resolver, mainId);
+  return computeClubProfile(await loadClubResults(resolver.mainId(id)), resolver, id);
 }
 
-/** Cached profile of a main id. */
+/** Cached profile of a club id. */
 export const getClubProfile = unstable_cache(
   async (mainId: string): Promise<ClubProfile | null> =>
     loadClubProfile(mainId, await getClubIndex()),
-  ["club-profile-v2"],
+  ["club-profile-v3"],
   CLUB_CACHE,
 );
 
@@ -49,6 +44,6 @@ export const getClubDirectory = unstable_cache(
     const [index, rows] = await Promise.all([getClubIndex(), loadClubDirectoryInput()]);
     return computeClubDirectory(rows, createClubResolver(index));
   },
-  ["club-directory"],
+  ["club-directory-v2"],
   CLUB_CACHE,
 );

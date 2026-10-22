@@ -11,9 +11,7 @@ export type ClubStore = {
   findLatest(id: string): Promise<{ name: string } | null>;
   findInYearByName(year: number, name: string): Promise<{ id: string } | null>;
   findLatestByName(name: string): Promise<{ id: string } | null>;
-  /** Hlavní id pro sloučené id (`mcvv_klub_slouceni`), jinak id samo. */
-  mainId(id: string): Promise<string>;
-  /** Nabídka klubů (hlavní id). Načte se jen při potřebě. */
+  /** Nabídka klubů. Načte se jen při potřebě. */
   options(): Promise<readonly ClubOption[]>;
   create(row: { id: string; year: number; name: string }): Promise<void>;
   nextNumericId(): Promise<string>;
@@ -71,11 +69,10 @@ export async function resolveClubWith(
 
 async function ensureYearRow(
   store: ClubStore,
-  chosenId: string,
+  id: string,
   year: number,
   label: string,
 ): Promise<ResolvedClub> {
-  const id = await store.mainId(chosenId);
   const inYear = await store.findInYear(id, year);
   if (inYear) {
     return { id, name: inYear.name, created: false };

@@ -80,6 +80,8 @@ model PhotoLocation {
 
 /// Číselník klubů v rámci roků (composite key: id + rok). Identita klubu napříč ročníky je
 /// `id` (#104); `jmeno` je název platný v daném ročníku (klub se může přejmenovat).
+/// Sloučení dvou id (admin, Q45) data přepíše na hlavní id a sloučené id smaže; historie je
+/// v auditu (`club.merge`), samostatná tabulka sloučení není.
 /// varchar(8): legacy char(3) by číselná id nad 999 nepojal (dnešní id mají nejvýš 3 znaky).
 model Club {
   id      String    @map("id") @db.VarChar(8)
@@ -95,19 +97,6 @@ model Club {
 
   @@id([id, year])
   @@map("cis_klub")
-}
-
-/// Ruční sloučení dvou id klubů, která jsou fakticky jeden klub (#104), např. 216 → CHC.
-/// Jen mapování: legacy tabulky se nepřepisují, smazáním řádku se sloučení vrátí.
-/// Vždy ploché: hlavní id (`hlavni_klub_id`) samo sloučené není.
-model ClubMerge {
-  clubId     String   @id @map("klub_id") @db.VarChar(8)
-  mainClubId String   @map("hlavni_klub_id") @db.VarChar(8)
-  createdAt  DateTime @default(now()) @map("created_at")
-  author     String?  @db.VarChar(255)
-
-  @@index([mainClubId])
-  @@map("mcvv_klub_slouceni")
 }
 
 /// Zamítnutý návrh sloučení dvou id klubů (seřazená dvojice), aby se znovu nenabízel.

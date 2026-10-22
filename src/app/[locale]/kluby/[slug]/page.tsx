@@ -33,8 +33,8 @@ const MEMBERS_PER_PAGE = 50;
 
 /**
  * Club profile (#105). The club is its id (#104, Q34): the slug is "<id>-<newest name>".
- * A merged id, a stale name part or an old name-only slug (#167) redirects to the profile
- * of the main id. Reads only the club's own results and caches the profile (tag "stats");
+ * A stale name part or an old name-only slug (#167) redirects to the profile of the id.
+ * Reads only the club's own results and caches the profile (tag "stats");
  * `cache` shares one load between generateMetadata and the page.
  */
 const loadProfile = cache(
@@ -197,9 +197,6 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
                 {profile.history.map((row) => (
                   <li key={`${row.id}-${row.firstYear}`}>
                     <span className="tabular-nums">{years(row)}</span> · {row.name}
-                    {profile.mergedIds.length > 0 ? (
-                      <span className="text-race-dim"> ({row.id})</span>
-                    ) : null}
                   </li>
                 ))}
               </ul>

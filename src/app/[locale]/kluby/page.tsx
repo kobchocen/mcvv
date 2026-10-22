@@ -38,8 +38,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * Public club list (#105 follow-up): every club with a result – main ids only, merged ids
- * folded in – linking to the club profiles. Search, sorting and paging are plain GET
+ * Public club list (#105 follow-up): every club id with a result (merged ids are rewritten
+ * to the main id, Q45), linking to the club profiles. Search, sorting and paging are plain GET
  * parameters (q, razeni, strana) over the cached list.
  */
 export default async function ClubsPage({ params, searchParams }: PageProps) {

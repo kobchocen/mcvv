@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { createClubResolver } from "@/lib/clubs/core";
-
 import type { RawResult } from "./core";
 import { computeStatsOverview, normalizeClubName, rankRows } from "./overview";
 
@@ -168,31 +166,6 @@ describe("computeStatsOverview", () => {
       r(2003, "19700001", 1500, "Jiný Pavel", "K.O.B. Choceň", "216"),
     ]);
     assert.equal(other.clubs[0].starts, 5);
-  });
-
-  it("merged ids count under the main id, shown under its newest name (#104)", () => {
-    const merged = computeStatsOverview(
-      [
-        ...RESULTS,
-        r(2003, "19700001", 1500, "Loko Pavel", "Loko OB Pardubice"),
-        r(2003, "19700002", 1500, "Loko Petr", "Loko OB Pardubice"),
-        r(2003, "19700003", 1500, "Loko Jan", "Loko OB Pardubice"),
-      ],
-      [],
-      0,
-      createClubResolver({
-        names: [
-          { id: "LPU", year: 2003, name: "OK Lokomotiva Pardubice" },
-          { id: "275", year: 2003, name: "Loko OB Pardubice" },
-        ],
-        merges: [{ clubId: "275", mainClubId: "LPU" }],
-      }),
-    );
-    assert.deepEqual(merged.clubs[0], {
-      name: "OK Lokomotiva Pardubice",
-      slug: "lpu-ok-lokomotiva-pardubice",
-      starts: 6, // 3 × LPU + 3 × 275 (merged), 2003 under the main id's name
-    });
   });
 
   it("time together on the course and total climb (starts × 200 m)", () => {

@@ -49,6 +49,16 @@ export function displayRunnerName(
   return `${c} (${s})`;
 }
 
+/**
+ * Compact name for tight lists: "Šlajs Tomáš" → "T. Šlajs" (initial of the first name,
+ * then the surname). A single word is returned as it is.
+ */
+export function shortRunnerName(name: string | null | undefined): string {
+  const [surname = "", first = ""] = normalize(name).split(" ");
+  if (!first) return surname;
+  return `${first.charAt(0).toLocaleUpperCase("cs")}. ${surname}`;
+}
+
 function normalize(value: string | null | undefined): string {
   return (value ?? "").trim().replace(/\s+/g, " ");
 }

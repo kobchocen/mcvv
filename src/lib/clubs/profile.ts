@@ -6,7 +6,13 @@
 import type { RawResult } from "@/lib/stats/core";
 import { runnerSex } from "@/lib/stats/core";
 
-import { clubKey, type ClubResolver } from "./core";
+import {
+  clubIdFromSlug,
+  clubKey,
+  normalizeClubName,
+  type ClubNameRow,
+  type ClubResolver,
+} from "./core";
 
 export type ClubPerformance = { runnerId: string; name: string; year: number; time: number };
 
@@ -23,7 +29,8 @@ export type ClubProfile = {
   runners: number;
   firstYear: number;
   lastYear: number;
-  perYear: { year: number; starts: number }[];
+  /** Starts per edition with the club's fastest man and woman of that edition. */
+  perYear: { year: number; starts: number; best: Partial<Record<"M" | "F", ClubPerformance>> }[];
   members: {
     runnerId: string;
     name: string;
@@ -32,7 +39,7 @@ export type ClubProfile = {
     firstYear: number;
     lastYear: number;
   }[];
-  /** Best time of each runner, fastest first (per sex). */
+  /** Best time of each runner, fastest first (per sex); `[0]` is the club record. */
   best: Record<"M" | "F", ClubPerformance[]>;
 };
 
@@ -62,9 +69,22 @@ export function computeClubProfile(
   history.sort((a, b) => b.lastYear - a.lastYear || b.firstYear - a.firstYear);
 
   const perYear = new Map<number, number>();
+  const yearBest = new Map<number, Partial<Record<"M" | "F", ClubPerformance>>>();
+  const faster = (a: ClubPerformance, b: ClubPerformance | undefined) =>
+    !b || a.time < b.time || (a.time === b.time && a.runnerId < b.runnerId);
   const members = new Map<string, ClubProfile["members"][number]>();
   for (const row of rows) {
     perYear.set(row.year, (perYear.get(row.year) ?? 0) + 1);
+    const sex = runnerSex(row.runnerId);
+    const inYear = yearBest.get(row.year) ?? {};
+    const performance = {
+      runnerId: row.runnerId,
+      name: row.runnerName || "—",
+      year: row.year,
+      time: row.time,
+    };
+    if (faster(performance, inYear[sex])) inYear[sex] = performance;
+    yearBest.set(row.year, inYear);
     const member = members.get(row.runnerId);
     const name = row.runnerName || "—";
     if (!member) {
@@ -118,11 +138,38 @@ export function computeClubProfile(
     runners: members.size,
     firstYear: years[0] ?? Math.min(...historyYears),
     lastYear: years.at(-1) ?? Math.max(...historyYears),
-    perYear: years.map((year) => ({ year, starts: perYear.get(year) ?? 0 })),
+    perYear: years.map((year) => ({
+      year,
+      starts: perYear.get(year) ?? 0,
+      best: yearBest.get(year) ?? {},
+    })),
     members: [...members.values()].sort(
       (a, b) =>
         b.starts - a.starts || b.lastYear - a.lastYear || a.name.localeCompare(b.name, "cs"),
     ),
     best: { M: bestOf("M"), F: bestOf("F") },
   };
+}
+
+/**
+ * Main id and canonical slug for a requested profile slug. The id decides (#104, Q34); an old
+ * name-only slug (#167) means the id that used that name most recently. null = unknown club.
+ */
+export function resolveClubSlug(
+  slug: string,
+  names: readonly ClubNameRow[],
+  resolver: ClubResolver,
+): { mainId: string; canonical: string } | null {
+  let id = clubIdFromSlug(slug);
+  if (!names.some((row) => clubKey(row.id) === id)) {
+    const key = normalizeClubName(slug);
+    if (!key) return null;
+    const match = [...names]
+      .sort((a, b) => b.year - a.year)
+      .find((row) => normalizeClubName(row.name) === key);
+    if (!match) return null;
+    id = clubKey(match.id);
+  }
+  const mainId = resolver.mainId(id);
+  return { mainId, canonical: resolver.slug(mainId) };
 }

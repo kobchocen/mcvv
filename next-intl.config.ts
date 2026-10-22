@@ -20,7 +20,8 @@ export default defineRouting({
     "/statistiky": "/statistiky",
     "/statistiky/[slug]": "/statistiky/[slug]",
     "/bezec/[id]": "/bezec/[id]",
-    // profily klubů (#105) a jejich sloučení v adminu (#104)
+    // seznam a profily klubů (#105) a jejich sloučení v adminu (#104)
+    "/kluby": "/kluby",
     "/kluby/[slug]": "/kluby/[slug]",
     "/fotogalerie": "/fotogalerie",
     "/prihlaseni": "/prihlaseni",

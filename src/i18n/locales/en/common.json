@@ -353,6 +353,10 @@
             {
               "label": "Course records",
               "href": "/statistiky/rekordy"
+            },
+            {
+              "label": "Clubs",
+              "href": "/kluby"
             }
           ]
         },
@@ -681,10 +685,37 @@
     "year": "Year",
     "time": "Time",
     "personalBest": "Best time",
-    "clubId": "Club id {id}",
-    "mergedIds": "merged: {ids}",
     "history": "Club names by edition",
-    "idNote": "A club is its id in the club list: a renamed club stays one club. Ids merged by the organiser are counted under the main id."
+    "allClubs": "All clubs",
+    "membersShown": "Showing {from}–{to} of {total} runners",
+    "membersPages": "Pages of club runners",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}",
+    "recordMen": "Club record – men",
+    "recordWomen": "Club record – women"
+  },
+  "Clubs": {
+    "metaTitle": "Clubs",
+    "eyebrow": "Clubs",
+    "title": "Clubs at MCVV",
+    "intro": "Every club whose runners finished Malá cena Velké Verandy, with their starts and editions.",
+    "lead": "{clubs, plural, one {# club} other {# clubs}} and {starts} starts in the results of all editions.",
+    "searchLabel": "Find a club",
+    "searchPlaceholder": "Club name, including a former one",
+    "search": "Search",
+    "reset": "Clear search",
+    "shown": "Showing {from}–{to} of {total}",
+    "empty": "No club matches the search.",
+    "club": "Club",
+    "starts": "Starts",
+    "runners": "Runners",
+    "editions": "Editions",
+    "years": "Years",
+    "pages": "Pages of the club list",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}"
   },
   "Messages": {
     "title": "Messages",
@@ -1136,6 +1167,7 @@
       "moreAttendance": "Overall attendance",
       "moreAges": "Records by age",
       "moreTimes": "Best times",
+      "moreClubs": "All clubs",
       "footnote": "Distance = starts × {km} km (all categories run the same course), climbing = starts × {metres} m. Names as in the runner's current record."
     },
     "eyebrow": "Statistics",

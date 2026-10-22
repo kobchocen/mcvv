@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import type { RawResult } from "@/lib/stats/core";
 
 import { createClubResolver, type ClubNameRow } from "./core";
-import { computeClubProfile } from "./profile";
+import { computeClubProfile, resolveClubSlug } from "./profile";
 import { clubUsage } from "./usage";
 
 // ids: YYYY + sex digit (0–4 men, 5–9 women) + sequence
@@ -65,12 +65,25 @@ describe("computeClubProfile", () => {
     assert.equal(profile.starts, 6);
     assert.equal(profile.runners, 2);
     assert.deepEqual(profile.mergedIds, ["216"]);
-    assert.deepEqual(profile.perYear, [
-      { year: 2001, starts: 1 },
-      { year: 2002, starts: 2 },
-      { year: 2003, starts: 2 }, // CHC + 216 in the same edition
-      { year: 2004, starts: 1 },
-    ]);
+    assert.deepEqual(
+      profile.perYear.map(({ year, starts }) => ({ year, starts })),
+      [
+        { year: 2001, starts: 1 },
+        { year: 2002, starts: 2 },
+        { year: 2003, starts: 2 }, // CHC + 216 in the same edition
+        { year: 2004, starts: 1 },
+      ],
+    );
+    // Fastest man and woman of the club in each edition (merged id included).
+    const y2003 = profile.perYear.find((row) => row.year === 2003);
+    assert.equal(y2003?.best.M?.name, "Rychlý Petr");
+    assert.equal(y2003?.best.M?.time, 870);
+    assert.equal(y2003?.best.F?.name, "Svižná Eva");
+    assert.equal(y2003?.best.F?.time, 1050);
+    assert.equal(profile.perYear[0].best.F, undefined);
+    // Club records = fastest of each sex ever.
+    assert.equal(profile.best.M[0]?.time, 870);
+    assert.equal(profile.best.F[0]?.year, 2004);
     assert.equal(profile.best.F[0]?.time, 1040);
     assert.ok(profile.history.some((row) => row.id === "216" && row.name === "KOB Choceń"));
     // The merged id has no profile of its own (the page redirects to the main id).
@@ -81,6 +94,41 @@ describe("computeClubProfile", () => {
     const clubs = createClubResolver({ names: NAMES });
     assert.equal(computeClubProfile(RESULTS, clubs, "ZZZ"), null);
     assert.equal(computeClubProfile(RESULTS, clubs, "000"), null);
+  });
+});
+
+describe("club profile from the club's own rows", () => {
+  it("equals the profile computed from all results (the page loads only the club's ids)", () => {
+    const clubs = createClubResolver({
+      names: NAMES,
+      merges: [{ clubId: "216", mainClubId: "CHC" }],
+    });
+    for (const id of ["CHC", "ACH"]) {
+      const ids = new Set(clubs.members(id));
+      const own = RESULTS.filter((row) => ids.has(row.clubId ?? ""));
+      assert.deepEqual(computeClubProfile(own, clubs, id), computeClubProfile(RESULTS, clubs, id));
+    }
+  });
+});
+
+describe("resolveClubSlug", () => {
+  const clubs = createClubResolver({
+    names: NAMES,
+    merges: [{ clubId: "216", mainClubId: "CHC" }],
+  });
+
+  it("the id decides; a merged id or a stale name part points to the main id's slug", () => {
+    assert.deepEqual(resolveClubSlug("chc-k-o-b-chocen", NAMES, clubs), {
+      mainId: "CHC",
+      canonical: "chc-k-o-b-chocen",
+    });
+    assert.equal(resolveClubSlug("chc-old-name", NAMES, clubs)?.canonical, "chc-k-o-b-chocen");
+    assert.equal(resolveClubSlug("216-kob-chocen", NAMES, clubs)?.mainId, "CHC");
+  });
+
+  it("an old name-only slug means the id that used the name most recently", () => {
+    assert.equal(resolveClubSlug("ac-chocen", NAMES, clubs)?.mainId, "ACH");
+    assert.equal(resolveClubSlug("nobody-here", NAMES, clubs), null);
   });
 });
 

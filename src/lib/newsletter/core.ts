@@ -303,12 +303,20 @@ export function markdownToText(markdown: string): string {
 export type RenderedEmail = { subject: string; html: string; text: string };
 
 /**
- * Banner v hlavičce (pod brandovým pruhem): obrázek 1200 px zobrazený v 600 px, na mobilu
+ * Banner v hlavičce (místo výchozího pruhu „MCVV – Malá cena Velké Verandy“): obrázek 1200 px zobrazený v 600 px, na mobilu
  * se zmenší (width:100%). Vždy odkaz na veřejnou URL, nikdy příloha/base64.
  */
 export function renderBannerRow(banner: NewsletterBanner): string {
   return `<tr><td style="padding:0;line-height:0;font-size:0;background:#0f2a1c">
 <a href="${escapeHtml(banner.href)}" style="display:block;text-decoration:none"><img src="${escapeHtml(banner.src)}" width="${BANNER_DISPLAY_WIDTH}" alt="${escapeHtml(banner.alt)}" style="display:block;width:100%;max-width:${BANNER_DISPLAY_WIDTH}px;height:auto;border:0;outline:none;text-decoration:none;color:#ffffff;font-size:16px;line-height:1.4"></a>
+</td></tr>`;
+}
+
+/** Výchozí hlavička bez banneru: tmavý pruh s názvem závodu a oranžovou linkou. */
+function renderBrandHeaderRow(site: string): string {
+  return `<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
+<a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
+<span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
 </td></tr>`;
 }
 
@@ -321,17 +329,15 @@ export function renderNewsletter(input: {
 }): RenderedEmail {
   const unsub = escapeHtml(input.unsubscribeUrl);
   const site = escapeHtml(input.siteUrl);
-  const bannerRow = input.banner ? `${renderBannerRow(input.banner)}\n` : "";
+  // S bannerem je banner hlavičkou e-mailu (nahradí výchozí tmavý pruh), bez něj zůstává pruh.
+  const header = input.banner ? renderBannerRow(input.banner) : renderBrandHeaderRow(site);
   const html = `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.subject)}</title></head>
 <body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f6f1"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff">
-<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
-<a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
-<span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
-</td></tr>
-${bannerRow}<tr><td style="padding:28px;font-size:16px;line-height:1.55">
+${header}
+<tr><td style="padding:28px;font-size:16px;line-height:1.55">
 ${renderMarkdown(input.body)}
 </td></tr>
 <tr><td style="padding:18px 28px;background:#f7f9f6;color:#5d6d63;font-size:12px;line-height:1.5">
@@ -365,6 +371,25 @@ export function unsubscribeHeaders(origin: string, token: string): Record<string
 // ---------------------------------------------------------------------------
 // Batch sending (resumable, idempotent)
 // ---------------------------------------------------------------------------
+
+/**
+ * Náhled kampaně v administraci: stejná šablona jako odesílaný e-mail (`renderNewsletter`),
+ * jen odkaz na odhlášení má místo tokenu nuly. Běží na serveru i v prohlížeči (živý náhled).
+ */
+export function renderNewsletterPreview(input: {
+  subject: string;
+  body: string;
+  origin: string;
+  banner: NewsletterBanner | null;
+}): RenderedEmail {
+  return renderNewsletter({
+    subject: input.subject,
+    body: input.body,
+    unsubscribeUrl: unsubscribeUrl(input.origin, "0".repeat(64)),
+    siteUrl: input.origin,
+    banner: input.banner,
+  });
+}
 
 export type RecipientRow = { id: number; email: string };
 

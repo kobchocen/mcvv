@@ -883,7 +883,7 @@
     "timelineLast": "posledních {count}",
     "timelineAll": "vše",
     "timelineMethod": "Jak vzniká odhad: u každého srovnávacího ročníku ({years}) se zjistí, jaký podíl konečného počtu měl ke stejnému dni před závodem. Letošní počet vydělený tímto podílem dá odhad z daného ročníku; zobrazené číslo je medián těchto odhadů, rozpětí je min–max. Srovnává se posledních 5 ukončených ročníků bez roku 2020 (covid). Brzy po otevření přihlášek je odhad hrubý.",
-    "timelineDataNote": "Data: den založení přihlášky; běžci přihlášky se počítají ke stejnému dni. Jen přihlášky ve stavu nezaplacená, zaplacená, přeplatek nebo potvrzená s alespoň jedním běžcem (bez zrušených a prázdných). Běžci přidaní až na místě nejsou zahrnuti.",
+    "timelineDataNote": "Data: den založení přihlášky; běžci přihlášky se počítají ke stejnému dni. Jen přihlášky ve stavu nezaplacená, zaplacená, přeplatek nebo potvrzená s alespoň jedním běžcem (bez zrušených a prázdných). V letech 2012–2016 se stavy přihlášek ještě nepoužívaly, proto se tam počítají i přihlášky ve stavu Nová, pokud mají aspoň jednoho běžce. Běžci přidaní až na místě nejsou zahrnuti.",
     "timelineMissing": "Bez dat o přihláškách (v grafu chybí): {years}.",
     "timelineAfterRace": "{year}: {count, plural, one {# přihláška založená} few {# přihlášky založené} other {# přihlášek založených}} po datu závodu není v grafu.",
     "timelineNoCreated": "{year}: {count, plural, one {# přihláška} few {# přihlášky} other {# přihlášek}} bez data založení není v grafu.",

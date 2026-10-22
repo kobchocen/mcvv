@@ -8,6 +8,8 @@
  *   nepoužívá – v legacy datech je hromadně přepsaný těsně před závodem.
  * - Počítají se jen platné přihlášky: stav 2–5 (nezaplacená, zaplacená, přeplatek,
  *   potvrzená) s alespoň jedním běžcem. Zrušené (0), prázdné (1) a neznámý stav ne.
+ *   Výjimka (Q28): v legacy ročnících 2012–2016 se stavy přihlášek ještě nepoužívaly,
+ *   takže se tam počítá i stav 1 („Nová“), pokud má přihláška aspoň jednoho běžce.
  * - Den přihlášky = kalendářní datum `created` tak, jak ho ukazuje seznam přihlášek
  *   (`dateInputValue`); „dnes“ = kalendářní den v Europe/Prague.
  */
@@ -15,6 +17,10 @@
 export type TimelineMetric = "runners" | "registrations";
 
 export const COUNTED_STATUSES: readonly number[] = [2, 3, 4, 5];
+
+/** Legacy ročníky, kde se stav 1 s běžci počítá jako platná přihláška (Q28). */
+export const LEGACY_STATUS1_FIRST_YEAR = 2012;
+export const LEGACY_STATUS1_LAST_YEAR = 2016;
 
 /** Ročníky s netypickým průběhem (covid: přihlášky ještě po termínu závodu). */
 export const ANOMALOUS_YEARS: readonly number[] = [2020];
@@ -64,8 +70,18 @@ export type YearSeries = {
   hasData: boolean;
 };
 
-export function isCountedRegistration(status: number | null | undefined, runners: number): boolean {
-  return status != null && COUNTED_STATUSES.includes(status) && runners > 0;
+export function isLegacyStatus1Year(year: number): boolean {
+  return year >= LEGACY_STATUS1_FIRST_YEAR && year <= LEGACY_STATUS1_LAST_YEAR;
+}
+
+export function isCountedRegistration(
+  status: number | null | undefined,
+  runners: number,
+  year: number,
+): boolean {
+  if (status == null || runners <= 0) return false;
+  if (COUNTED_STATUSES.includes(status)) return true;
+  return status === 1 && isLegacyStatus1Year(year);
 }
 
 function pad(value: number): string {
@@ -115,7 +131,8 @@ export function buildYearSeries(
   let firstDay: number | null = null;
   for (const registration of registrations) {
     if (registration.year !== edition.year) continue;
-    if (!isCountedRegistration(registration.status, registration.runners)) continue;
+    const { status, runners, year } = registration;
+    if (!isCountedRegistration(status, runners, year)) continue;
     if (!registration.created || Number.isNaN(registration.created.getTime())) {
       missingCreated += 1;
       continue;

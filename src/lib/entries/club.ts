@@ -6,16 +6,9 @@ import {
   type ResolvedClub,
 } from "@/lib/entries/club-core";
 import { buildClubOptions, type ClubOption } from "@/lib/entries/club-options";
+import { nextNumericClubIdFrom } from "@/lib/entries/club-id";
 
 export { EMPTY_CLUB_ID };
-
-function numericClubId(id: string): number | null {
-  const trimmed = id.trim();
-  if (trimmed >= "AAA" || !/^\d+$/.test(trimmed)) {
-    return null;
-  }
-  return Number.parseInt(trimmed, 10);
-}
 
 export async function ensureEmptyClub(year: number): Promise<string> {
   const existing = await prisma.club.findUnique({
@@ -67,13 +60,6 @@ export async function resolveClub(
 }
 
 async function nextNumericClubId(): Promise<string> {
-  const rows = await prisma.club.findMany({ select: { id: true } });
-  const numbers = rows
-    .map((row) => numericClubId(row.id))
-    .filter((value): value is number => value !== null);
-  const next = numbers.length > 0 ? Math.max(...numbers) + 1 : 111;
-  if (next > 999) {
-    return "111";
-  }
-  return String(next);
+  const rows = await prisma.club.findMany({ select: { id: true }, distinct: ["id"] });
+  return nextNumericClubIdFrom(rows.map((row) => row.id));
 }

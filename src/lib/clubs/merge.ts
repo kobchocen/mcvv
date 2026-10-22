@@ -1,37 +1,44 @@
 /**
- * What a confirmed merge of two written names does (#104). Pure; the admin action applies it.
- * Nothing calls this automatically – only a person confirming a suggestion in the admin.
+ * What a confirmed merge of two club ids does (#104). Pure; the admin action applies it.
+ * Nothing calls this automatically – only a person who picked the main id in the admin.
+ * Merges stay flat: a main id is never merged itself, so one lookup gives the main id.
  */
-import { clubSlug } from "./core";
+import { clubKey, type ClubMergeRef } from "./core";
 
-export type MergePlan =
-  /** Neither name is mapped yet: create a canonical club with both names as aliases. */
-  | { kind: "create" }
-  /** One name already belongs to a club: add the other one to it. */
-  | { kind: "attach"; clubId: number }
-  /** Each name belongs to a different club: move all aliases of `from` into `into`. */
-  | { kind: "join"; into: number; from: number }
-  /** Both names already belong to the same club. */
-  | { kind: "noop"; clubId: number };
+export type ClubMergePlan =
+  | {
+      ok: true;
+      mainId: string;
+      /** Rows to upsert into mcvv_klub_slouceni (the merged id and ids already under it). */
+      rows: ClubMergeRef[];
+    }
+  | { ok: false; error: "same" | "empty" | "main_merged" | "other_merged" };
 
-export function planClubMerge(clubOfA: number | null, clubOfB: number | null): MergePlan {
-  if (clubOfA && clubOfB) {
-    return clubOfA === clubOfB
-      ? { kind: "noop", clubId: clubOfA }
-      : { kind: "join", into: clubOfA, from: clubOfB };
-  }
-  if (clubOfA || clubOfB) {
-    return { kind: "attach", clubId: (clubOfA ?? clubOfB) as number };
-  }
-  return { kind: "create" };
+export function planClubMerge(
+  mainIdRaw: string,
+  otherIdRaw: string,
+  merges: readonly ClubMergeRef[],
+): ClubMergePlan {
+  const mainId = clubKey(mainIdRaw);
+  const otherId = clubKey(otherIdRaw);
+  if (!mainId || !otherId) return { ok: false, error: "empty" };
+  if (mainId === otherId) return { ok: false, error: "same" };
+  const mainOf = new Map(merges.map((row) => [clubKey(row.clubId), clubKey(row.mainClubId)]));
+  if (mainOf.has(mainId)) return { ok: false, error: "main_merged" };
+  if (mainOf.has(otherId)) return { ok: false, error: "other_merged" };
+  const rows: ClubMergeRef[] = [
+    { clubId: otherId, mainClubId: mainId },
+    // Ids merged into the other id move under the new main id (stays flat).
+    ...[...mainOf.entries()]
+      .filter(([, main]) => main === otherId)
+      .map(([clubId]) => ({ clubId, mainClubId: mainId })),
+  ];
+  return { ok: true, mainId, rows };
 }
 
-/** Slug for a new canonical club, "-2", "-3"… when taken. */
-export function uniqueClubSlug(name: string, taken: ReadonlySet<string>): string {
-  const base = clubSlug(name) || "klub";
-  if (!taken.has(base)) return base;
-  for (let n = 2; ; n += 1) {
-    const candidate = `${base.slice(0, 76)}-${n}`;
-    if (!taken.has(candidate)) return candidate;
-  }
+/** Canonical (order independent) pair of two ids, used for rejected suggestions. */
+export function clubPair(a: string, b: string): [string, string] {
+  const x = clubKey(a);
+  const y = clubKey(b);
+  return x < y ? [x, y] : [y, x];
 }

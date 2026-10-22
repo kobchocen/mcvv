@@ -151,6 +151,26 @@ export function findEncodingIssues(data: ObdExportData): ObdEncodingIssue[] {
   return issues;
 }
 
+/** Nejdelší id klubu, které legacy (char(3)) do OBD kdy posílal. */
+export const OBD_LEGACY_CLUB_ID_LENGTH = 3;
+
+/**
+ * Id klubů delší než 3 znaky v `#oddily` a `#startovka` (#104). Export je vypíše beze změny
+ * (bajty jsou dál 1:1 s legacy), ale OBD může mít kód oddílu jen na 3 znaky – proto je
+ * export bez výslovného potvrzení zastaví. Dnešní data žádné takové id nemají
+ * (číselná id došla k 645, 1000+ vznikne až po vyčerpání 999).
+ */
+export function longClubIds(data: ObdExportData): string[] {
+  const ids = new Set<string>();
+  for (const row of firstPerId(data.clubs)) {
+    if ([...row.id].length > OBD_LEGACY_CLUB_ID_LENGTH) ids.add(row.id);
+  }
+  for (const row of data.starts) {
+    if ([...row.clubId].length > OBD_LEGACY_CLUB_ID_LENGTH) ids.add(row.clubId);
+  }
+  return [...ids].sort();
+}
+
 /** Data s přepsanými (transliterovanými) jmény – jen na výslovnou žádost uživatele. */
 export function withTransliteratedNames(data: ObdExportData): ObdExportData {
   const fix = <T extends { id: string; name: string }>(rows: T[]): T[] =>

@@ -1,26 +1,41 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { planClubMerge, uniqueClubSlug } from "./merge";
+import { clubPair, planClubMerge } from "./merge";
 
 describe("planClubMerge", () => {
-  it("creates, attaches, joins or does nothing", () => {
-    assert.deepEqual(planClubMerge(null, null), { kind: "create" });
-    assert.deepEqual(planClubMerge(3, null), { kind: "attach", clubId: 3 });
-    assert.deepEqual(planClubMerge(null, 4), { kind: "attach", clubId: 4 });
-    assert.deepEqual(planClubMerge(3, 4), { kind: "join", into: 3, from: 4 });
-    assert.deepEqual(planClubMerge(5, 5), { kind: "noop", clubId: 5 });
+  it("merges the other id under the explicitly chosen main id", () => {
+    assert.deepEqual(planClubMerge("CHC", "216", []), {
+      ok: true,
+      mainId: "CHC",
+      rows: [{ clubId: "216", mainClubId: "CHC" }],
+    });
+  });
+
+  it("stays flat: ids already under the merged id move to the new main id", () => {
+    const plan = planClubMerge("CHC", "216", [{ clubId: "601", mainClubId: "216" }]);
+    assert.deepEqual(plan, {
+      ok: true,
+      mainId: "CHC",
+      rows: [
+        { clubId: "216", mainClubId: "CHC" },
+        { clubId: "601", mainClubId: "CHC" },
+      ],
+    });
+  });
+
+  it("refuses same, empty and already merged ids", () => {
+    assert.deepEqual(planClubMerge("CHC", "chc", []), { ok: false, error: "same" });
+    assert.deepEqual(planClubMerge("", "216", []), { ok: false, error: "empty" });
+    const merges = [{ clubId: "216", mainClubId: "CHC" }];
+    assert.deepEqual(planClubMerge("216", "PHK", merges), { ok: false, error: "main_merged" });
+    assert.deepEqual(planClubMerge("PHK", "216", merges), { ok: false, error: "other_merged" });
   });
 });
 
-describe("uniqueClubSlug", () => {
-  it("adds a number when the slug is taken", () => {
-    assert.equal(uniqueClubSlug("K.O.B. Choceň", new Set()), "k-o-b-chocen");
-    assert.equal(uniqueClubSlug("K.O.B. Choceň", new Set(["k-o-b-chocen"])), "k-o-b-chocen-2");
-    assert.equal(
-      uniqueClubSlug("K.O.B. Choceň", new Set(["k-o-b-chocen", "k-o-b-chocen-2"])),
-      "k-o-b-chocen-3",
-    );
-    assert.equal(uniqueClubSlug("…", new Set()), "klub");
+describe("clubPair", () => {
+  it("is order independent", () => {
+    assert.deepEqual(clubPair("chc", "216"), ["216", "CHC"]);
+    assert.deepEqual(clubPair("216", "CHC"), ["216", "CHC"]);
   });
 });

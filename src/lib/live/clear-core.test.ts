@@ -20,7 +20,8 @@ test("parseClearSource accepts all, web, obd and token ids only", () => {
   assert.deepEqual(parseClearSource("token:12"), { kind: "token", tokenId: 12 });
   assert.equal(parseClearSource("token:0"), null);
   assert.equal(parseClearSource("token:abc"), null);
-  assert.equal(parseClearSource("admin"), null);
+  assert.deepEqual(parseClearSource("admin"), { kind: "source", source: "admin" });
+  assert.equal(parseClearSource("lum"), null);
   assert.equal(formatClearSource({ kind: "token", tokenId: 3 }), "token:3");
 });
 

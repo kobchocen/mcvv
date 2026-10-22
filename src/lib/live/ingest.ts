@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
 
+import { writeAudit } from "@/lib/audit/log";
+import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 
 import {
@@ -15,6 +17,7 @@ import {
   type Outcome,
   type WebEntry,
 } from "./ingest-core";
+import { conflictStillCurrent } from "./manual-core";
 import type { RaceContext } from "./race-context";
 import { startInstant } from "./start-time";
 import { webAuthor } from "./stations";
@@ -357,12 +360,23 @@ export async function applyDeviceItems(
   return results;
 }
 
-/** Admin: přijmout hodnotu z konfliktu (přepíše mcvv_split). */
-export async function resolveConflict(entryId: number, adminId: number): Promise<boolean> {
+export type ConflictDecision = "ok" | "missing" | "stale";
+
+/**
+ * Admin: přijmout hodnotu z konfliktu (přepíše mcvv_split). Jen pokud v mcvv_split pořád je
+ * hodnota, proti které konflikt vznikl – jinak (mezitím ruční oprava, smazání, jiný přijatý
+ * konflikt) `stale` a nic se nemění. Audit `raceday.split_conflict_resolved`.
+ */
+export async function resolveConflict(
+  entryId: number,
+  actor: SessionUser,
+): Promise<ConflictDecision> {
   return prisma.$transaction(async (tx) => {
     const entry = await tx.splitEntry.findUnique({ where: { id: entryId } });
-    if (!entry || entry.outcome !== "conflict" || entry.time === null) return false;
+    if (!entry || entry.outcome !== "conflict" || entry.time === null) return "missing";
     const key = { bib_year_split: { bib: entry.bib, year: entry.year, split: entry.split } };
+    const current = await tx.split.findUnique({ where: key, select: { time: true } });
+    if (!conflictStillCurrent(entry.note, current)) return "stale";
     await tx.split.upsert({
       where: key,
       update: { time: entry.time, created: new Date(), author: entry.author },
@@ -386,19 +400,44 @@ export async function resolveConflict(entryId: number, adminId: number): Promise
     });
     await tx.splitEntry.update({
       where: { id: entry.id },
-      data: { outcome: "resolved", note: `${entry.note ?? ""};by=${adminId}`.slice(0, 255) },
+      data: { outcome: "resolved", note: `${entry.note ?? ""};by=${actor.id}`.slice(0, 255) },
     });
-    return true;
+    await writeAudit(
+      {
+        actor,
+        action: "raceday.split_conflict_resolved",
+        target: `split:${entry.year}:${entry.split}:${entry.bib}`,
+        detail: { entryId: entry.id, from: current?.time ?? null, to: entry.time },
+      },
+      tx,
+    );
+    return "ok";
   });
 }
 
 /** Admin: konflikt zamítnout (v mcvv_split zůstane původní hodnota). */
-export async function dismissConflict(entryId: number, adminId: number): Promise<boolean> {
-  const updated = await prisma.splitEntry.updateMany({
-    where: { id: entryId, outcome: "conflict" },
-    data: { outcome: "rejected", note: `dismissed;by=${adminId}` },
+export async function dismissConflict(
+  entryId: number,
+  actor: SessionUser,
+): Promise<ConflictDecision> {
+  return prisma.$transaction(async (tx) => {
+    const entry = await tx.splitEntry.findUnique({ where: { id: entryId } });
+    if (!entry || entry.outcome !== "conflict") return "missing";
+    await tx.splitEntry.update({
+      where: { id: entry.id },
+      data: { outcome: "rejected", note: `dismissed;by=${actor.id}` },
+    });
+    await writeAudit(
+      {
+        actor,
+        action: "raceday.split_conflict_dismissed",
+        target: `split:${entry.year}:${entry.split}:${entry.bib}`,
+        detail: { entryId: entry.id, rejected: entry.time },
+      },
+      tx,
+    );
+    return "ok";
   });
-  return updated.count > 0;
 }
 
 export async function raceDayOverview(year: number) {

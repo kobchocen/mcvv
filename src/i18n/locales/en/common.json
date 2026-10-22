@@ -1431,7 +1431,8 @@
     "error": {
       "eventId": "Invalid OFeed event ID.",
       "password": "Invalid password (4–200 characters, single line).",
-      "zero": "Invalid test zero time."
+      "zero": "Invalid test zero time.",
+      "conflictStale": "The conflict no longer matches the stored time (manual correction or another decision meanwhile) – nothing changed."
     },
     "publish": {
       "disabled": "Publishing is disabled.",
@@ -1519,7 +1520,14 @@
       "filter": "Invalid split or source selection.",
       "blocked": "Bulk clearing is disabled from race zero on. Correct single times in the editor.",
       "year": "The current edition changed meanwhile – reload the page.",
-      "confirm": "The typed year does not match, nothing was deleted."
+      "confirm": "The typed year does not match, nothing was deleted.",
+      "bib": "Invalid bib (1–999).",
+      "split": "Invalid split.",
+      "time": "Invalid time (m:ss or h:mm:ss since start, 0–6 h; wall clock after the bib's start).",
+      "unknownBib": "The bib is not in the start list – tick “save anyway”.",
+      "changed": "The time changed meanwhile – check the current value and try again.",
+      "reason-required": "Enter a reason when overwriting or deleting.",
+      "missing": "The time no longer exists."
     },
     "clearDone": "Deleted: {splits} splits, {entries} journal entries, revoked keys: {tokens}.",
     "clearTitle": "Clear edition splits",
@@ -1539,7 +1547,46 @@
     "optionClearZero": "Also remove the test zero",
     "clearAfterHint": "Afterwards: delete the OBD client's state.json on the finish PC (otherwise it will not resend confirmed rows) and let operators reload /mezicasy. The next OFeed upload runs even without data changes.",
     "confirmLabel": "Type the year to confirm ({year})",
-    "clearButton": "Delete permanently"
+    "clearButton": "Delete permanently",
+    "badgeManual": "manual",
+    "badgeLegacy": "no journal",
+    "sourceAdmin": "manual (admin)",
+    "saved": {
+      "create": "Time added.",
+      "correct": "Time overwritten.",
+      "unchanged": "No change – the time is already stored.",
+      "delete": "Time deleted."
+    },
+    "editTitle": "Bib {bib}",
+    "unknownBib": "The bib is not in this edition's start list. Saving requires “save anyway”.",
+    "orderWarning": "Warning: times are not increasing (split 1 < split 2 < finish).",
+    "editIntro": "A manual entry always overwrites the stored time (even on race day) and neither OBD nor the web will overwrite it. Overwriting and deleting require a reason; everything goes to the journal and audit log. Open conflicts for the time are dismissed.",
+    "hasConflict": "open conflict",
+    "noTime": "no time",
+    "valueLabel": "Time",
+    "modeLabel": "Time format",
+    "modeRace": "since start (m:ss)",
+    "modeClock": "wall clock (hh:mm:ss)",
+    "reasonRequired": "Reason (required)",
+    "reasonOptional": "Note (optional)",
+    "forceUnknown": "save anyway",
+    "overwrite": "Overwrite",
+    "add": "Add",
+    "deleteReason": "reason for deletion",
+    "delete": "Delete",
+    "historyTitle": "Journal of this bib",
+    "closeEdit": "Close editor",
+    "tableTitle": "Splits",
+    "searchLabel": "Bib or name",
+    "showAll": "include bibs without times",
+    "search": "Search",
+    "editBibLabel": "Edit bib",
+    "editOpen": "Open",
+    "tableLegend": "“manual” = entered by admin, ! = open conflict, ↕ = times not increasing.",
+    "tableEmpty": "No splits.",
+    "colName": "Name",
+    "notInStart": "not in start list",
+    "editLink": "Edit"
   },
   "AdminUsers": {
     "title": "Users and roles",
@@ -1614,6 +1661,10 @@
     "action_import_presentation": "post-presentation import",
     "action_import_results": "results import",
     "action_splits_cleared": "splits cleared",
+    "action_split_set": "manual split entry",
+    "action_split_deleted": "manual split deletion",
+    "action_split_conflict_resolved": "split conflict accepted",
+    "action_split_conflict_dismissed": "split conflict dismissed",
     "action_other": "action"
   },
   "RaceDayImport": {

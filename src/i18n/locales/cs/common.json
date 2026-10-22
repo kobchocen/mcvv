@@ -1431,7 +1431,8 @@
     "error": {
       "eventId": "Neplatné ID akce OFeed.",
       "password": "Neplatné heslo (4–200 znaků, jeden řádek).",
-      "zero": "Neplatná zkušební nula."
+      "zero": "Neplatná zkušební nula.",
+      "conflictStale": "Konflikt už neodpovídá uloženému času (mezitím ruční oprava nebo jiné rozhodnutí) – nic se nezměnilo."
     },
     "publish": {
       "disabled": "Publikace je vypnutá.",
@@ -1519,7 +1520,14 @@
       "filter": "Neplatný výběr splitů nebo zdroje.",
       "blocked": "Hromadné vyčištění je od nuly závodu zakázané. Jednotlivé časy opravte v editaci.",
       "year": "Mezitím se změnil aktuální ročník – načtěte stránku znovu.",
-      "confirm": "Opsaný ročník nesouhlasí, nic se nesmazalo."
+      "confirm": "Opsaný ročník nesouhlasí, nic se nesmazalo.",
+      "bib": "Neplatné startovní číslo (1–999).",
+      "split": "Neplatný split.",
+      "time": "Neplatný čas (m:ss nebo h:mm:ss od startu, 0–6 h; denní čas po startu čísla).",
+      "unknownBib": "Číslo není ve startovce – zaškrtněte „přesto uložit“.",
+      "changed": "Čas se mezitím změnil – zkontrolujte aktuální hodnotu a zkuste znovu.",
+      "reason-required": "Při přepisu nebo smazání vyplňte důvod.",
+      "missing": "Čas už neexistuje."
     },
     "clearDone": "Smazáno mezičasů: {splits}, záznamů deníku: {entries}, zneplatněno klíčů: {tokens}.",
     "clearTitle": "Vyčistit mezičasy ročníku",
@@ -1539,7 +1547,46 @@
     "optionClearZero": "Zároveň smazat zkušební nulu",
     "clearAfterHint": "Po vyčištění: na cílovém PC smažte state.json klienta OBD (jinak už potvrzené řádky znovu nepošle) a splitmakeři ať načtou /mezicasy znovu. Příští nahrání do OFeed proběhne i beze změny dat.",
     "confirmLabel": "Pro potvrzení opište ročník ({year})",
-    "clearButton": "Nevratně smazat"
+    "clearButton": "Nevratně smazat",
+    "badgeManual": "ručně",
+    "badgeLegacy": "bez deníku",
+    "sourceAdmin": "ručně (admin)",
+    "saved": {
+      "create": "Čas doplněn.",
+      "correct": "Čas přepsán.",
+      "unchanged": "Beze změny – čas už je uložený.",
+      "delete": "Čas smazán."
+    },
+    "editTitle": "Číslo {bib}",
+    "unknownBib": "Číslo není ve startovce ročníku. Uložit jde jen se zaškrtnutím „přesto uložit“.",
+    "orderWarning": "Pozor: časy nejdou po sobě (mezičas 1 < mezičas 2 < cíl).",
+    "editIntro": "Ruční zápis vždy přepíše uložený čas (i v den závodu) a OBD ani web ho už nepřepíšou. Přepis a smazání vyžadují důvod; vše jde do deníku i auditu. Otevřené konflikty k času se zamítnou.",
+    "hasConflict": "otevřený konflikt",
+    "noTime": "bez času",
+    "valueLabel": "Čas",
+    "modeLabel": "Formát času",
+    "modeRace": "od startu (m:ss)",
+    "modeClock": "denní čas (hh:mm:ss)",
+    "reasonRequired": "Důvod (povinný)",
+    "reasonOptional": "Poznámka (nepovinná)",
+    "forceUnknown": "přesto uložit",
+    "overwrite": "Přepsat",
+    "add": "Doplnit",
+    "deleteReason": "důvod smazání",
+    "delete": "Smazat",
+    "historyTitle": "Deník zápisů tohoto čísla",
+    "closeEdit": "Zavřít editaci",
+    "tableTitle": "Mezičasy",
+    "searchLabel": "Číslo nebo jméno",
+    "showAll": "i čísla bez časů",
+    "search": "Hledat",
+    "editBibLabel": "Upravit číslo",
+    "editOpen": "Otevřít",
+    "tableLegend": "„ručně“ = zapsal admin, ! = otevřený konflikt, ↕ = časy nejdou po sobě.",
+    "tableEmpty": "Žádné mezičasy.",
+    "colName": "Jméno",
+    "notInStart": "není ve startovce",
+    "editLink": "Upravit"
   },
   "AdminUsers": {
     "title": "Uživatelé a role",
@@ -1614,6 +1661,10 @@
     "action_import_presentation": "import po prezentaci",
     "action_import_results": "import výsledků",
     "action_splits_cleared": "vyčištění mezičasů",
+    "action_split_set": "ruční zápis mezičasu",
+    "action_split_deleted": "ruční smazání mezičasu",
+    "action_split_conflict_resolved": "konflikt mezičasu přijat",
+    "action_split_conflict_dismissed": "konflikt mezičasu zamítnut",
     "action_other": "akce"
   },
   "RaceDayImport": {

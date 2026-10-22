@@ -7,7 +7,15 @@ import { redirect } from "@/i18n/routing";
 import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 import { runOfeedPublish } from "@/lib/ofeed/publisher";
-import { parseEventId, parsePassword, saveOfeedSettings } from "@/lib/ofeed/settings";
+import {
+  getOfeedSettings,
+  parseEventId,
+  parsePassword,
+  parseProfile,
+  saveOfeedSettings,
+  switchOfeedProfile,
+  type OfeedProfileInput,
+} from "@/lib/ofeed/settings";
 
 import { parsePragueLocal } from "./admin-core";
 import { saveAssignment } from "./assignment";
@@ -52,22 +60,46 @@ async function put(key: string, text: string) {
   await prisma.setting.upsert({ where: { key }, update: { text }, create: { key, text } });
 }
 
-export async function saveOfeedAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const eventIdRaw = String(formData.get("eventId") ?? "").trim();
+/** Pole jednoho profilu z formuláře (`prefix` = "" pro ostrou akci, "test" pro testovací). */
+async function ofeedProfileFromForm(
+  formData: FormData,
+  prefix: "" | "test",
+): Promise<OfeedProfileInput> {
+  const field = (name: string) =>
+    prefix ? `${prefix}${name[0].toUpperCase()}${name.slice(1)}` : name;
+  const eventIdRaw = String(formData.get(field("eventId")) ?? "").trim();
   const eventId = eventIdRaw ? parseEventId(eventIdRaw) : null;
-  if (eventIdRaw && !eventId) await back({ error: "eventId" });
-  const passwordRaw = String(formData.get("password") ?? "");
-  const clearPassword = formData.get("clearPassword") === "on";
+  if (eventIdRaw && !eventId) await back({ error: field("eventId") });
+  const passwordRaw = String(formData.get(field("password")) ?? "");
   let password: string | null | undefined = undefined;
-  if (clearPassword) password = null;
+  if (formData.get(field("clearPassword")) === "on") password = null;
   else if (passwordRaw.trim()) {
     password = parsePassword(passwordRaw);
-    if (!password) await back({ error: "password" });
+    if (!password) await back({ error: field("password") });
   }
-  await saveOfeedSettings({ enabled: formData.get("enabled") === "on", eventId, password });
+  return { eventId, password };
+}
+
+export async function saveOfeedAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const live = await ofeedProfileFromForm(formData, "");
+  const test = await ofeedProfileFromForm(formData, "test");
+  await saveOfeedSettings({ enabled: formData.get("enabled") === "on", live, test });
   revalidatePath("/[locale]", "page");
   await back({ saved: "ofeed" });
+}
+
+/** Přepnutí testovací ↔ ostrá akce OFeed (Q33). Do testu jen s vyplněným ID testovací akce. */
+export async function switchOfeedProfileAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  const profile = parseProfile(String(formData.get("profile") ?? ""));
+  if (!profile) await back({ error: "ofeedProfile" });
+  if (profile === "test" && !(await getOfeedSettings()).profiles.test.eventId) {
+    await back({ error: "ofeedTestMissing" });
+  }
+  await switchOfeedProfile(profile!, user);
+  revalidatePath("/[locale]", "page");
+  await back({ saved: "ofeedProfile" });
 }
 
 export async function publishNowAction(): Promise<void> {

@@ -29,6 +29,7 @@ const ACTION_KEYS: Record<
   | "action_split_deleted"
   | "action_split_conflict_resolved"
   | "action_split_conflict_dismissed"
+  | "action_ofeed_profile"
 > = {
   "raceday.obd_export": "action_obd_export",
   "raceday.import_presentation": "action_import_presentation",
@@ -38,6 +39,7 @@ const ACTION_KEYS: Record<
   "raceday.split_deleted": "action_split_deleted",
   "raceday.split_conflict_resolved": "action_split_conflict_resolved",
   "raceday.split_conflict_dismissed": "action_split_conflict_dismissed",
+  "raceday.ofeed_profile": "action_ofeed_profile",
 };
 
 /** Stahování z route handleru (ne stránka) – proto obyčejný odkaz, ne <Link>. */

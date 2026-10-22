@@ -183,13 +183,22 @@ Na stejné stránce `/admin/den-zavodu/zive/casy`, jen admin, **vždy** (i v den
 - „Nahrát teď“ a stažení XML v adminu, stav posledních 10 běhů a poslední chyba.
 - Veřejný odkaz: když je OFeed nastavený a `online_results_url` prázdné, hero webu odkazuje na
   `https://orienteerfeed.com/events/{eventId}?tab=results`.
+- **Testovací a ostrá akce (Q33):** admin ukládá dvě sady ID a hesla, ostrou (`ofeed_event_id`,
+  `ofeed_password_enc`) a testovací (`ofeed_test_event_id`, `ofeed_test_password_enc`).
+  Tlačítkem „Přepnout na testovací / ostrou akci“ se mění `ofeed_profile` (bez záznamu = ostrá).
+  Přepnutí smaže `ofeed_last_hash` (první upload jde do nové akce celý) a zapíše audit
+  `raceday.ofeed_profile`. Do testu jde přepnout jen s uloženým ID testovací akce.
+  Při testovací akci web na OFeed **veřejně neodkazuje**: hero nemá automatický odkaz a skryje se
+  i ručně zadaná `online_results_url`, pokud míří na orienteerfeed.com. Jiná URL zůstane.
+  Běhy do testovací akce jsou v historii označené `test:` (např. `test:scheduler`).
 - Env: `OFEED_DRY_RUN` (výchozí `true` mimo `APP_ENV=prod` – XML se jen vygeneruje),
   `OFEED_API_URL` (výchozí `https://api.orienteerfeed.com`, pro test mock), `OFEED_SCHEDULER=false`
   vypne automatické nahrávání (zůstane ruční a `POST /api/cron/ofeed` s `CRON_SECRET`).
 
 ## Generálka
 
-1. Admin: zkušební nula = teď, OFeed na testovací událost, token pro cílové PC.
+1. Admin: zkušební nula = teď, v OFeed vyplnit testovací akci a „Přepnout na testovací akci“,
+   token pro cílové PC.
 2. Admin přiřadí splitmakerům stanoviště (Živě → „Splitmakeři a stanoviště“). Operátoři se
    přihlásí a otevřou `/mezicasy` (vidí jen svá stanoviště).
 3. Na cílovém PC (Windows 11) spustit `obd-klient.exe` – při prvním spuštění se zeptá na adresu,
@@ -197,3 +206,4 @@ Na stejné stránce `/admin/den-zavodu/zive/casy`, jen admin, **vždy** (i v den
    času v OBD (na webu zůstane první čas, admin uvidí konflikt).
 4. Po generálce: `/admin/den-zavodu/zive/casy` → „Vyčistit mezičasy ročníku“ (vše, zaškrtnout
    zneplatnění klíčů a smazání zkušební nuly), na cílovém PC smazat `state.json` klienta.
+   OFeed „Přepnout na ostrou akci“ a zkontrolovat ID a heslo ostré akce.

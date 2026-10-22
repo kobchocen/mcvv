@@ -19,6 +19,7 @@ import {
   loadClubProfile,
   loadFreshClubIndex,
 } from "@/lib/clubs/cached";
+import { shortRunnerName } from "@/lib/format/runner-name";
 import { paginate } from "@/lib/site/pagination";
 import { formatRaceTime } from "@/lib/utils";
 
@@ -144,6 +145,10 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
   ];
   const years = (row: { firstYear: number; lastYear: number }) =>
     row.firstYear === row.lastYear ? `${row.firstYear}` : `${row.firstYear}–${row.lastYear}`;
+  const records = [
+    { label: copy("recordMen"), row: profile.best.M[0] },
+    { label: copy("recordWomen"), row: profile.best.F[0] },
+  ].filter((item): item is { label: string; row: ClubPerformance } => Boolean(item.row));
   const tableCopy = { year: copy("year"), name: copy("runner"), time: copy("time") };
   const members = paginate(
     profile.members,
@@ -183,12 +188,6 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
           <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
             {profile.name}
           </h1>
-          <p className="mt-3 text-sm text-race-muted">
-            {copy("clubId", { id: profile.id })}
-            {profile.mergedIds.length > 0
-              ? ` · ${copy("mergedIds", { ids: profile.mergedIds.join(", ") })}`
-              : ""}
-          </p>
           {profile.history.length > 1 ? (
             <details className="mt-3 text-sm text-race-muted">
               <summary className="cursor-pointer font-semibold text-race-accent">
@@ -220,6 +219,34 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
                 </div>
               ))}
             </dl>
+            {records.length > 0 ? (
+              <dl className="mt-5 grid gap-4 border-t border-race-line/55 pt-5 sm:grid-cols-2">
+                {records.map(({ label, row }) => (
+                  <div key={label}>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-race-dim">
+                      {label}
+                    </dt>
+                    <dd className="mt-1">
+                      <span className="font-display text-3xl font-bold text-race-accent">
+                        {formatRaceTime(row.time)}
+                      </span>
+                      <span className="mt-1 block text-sm">
+                        <RunnerNameLink id={row.runnerId} name={row.name} />
+                        <span className="text-race-muted">
+                          {" · "}
+                          <Link
+                            href={`/results/${row.year}#${row.runnerId}` as never}
+                            className="hover:text-race-accent hover:underline"
+                          >
+                            {row.year}
+                          </Link>
+                        </span>
+                      </span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
             <Link
               href="/statistiky"
               className="mt-4 inline-block text-sm font-semibold text-race-accent hover:underline"
@@ -233,18 +260,37 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
           </h2>
           <ol className="mt-4 flex flex-col gap-1.5" aria-label={copy("perYear")}>
             {profile.perYear.map((row) => (
-              <li key={row.year} className="flex items-center gap-3 text-sm">
+              <li
+                key={row.year}
+                className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-3 text-sm sm:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.3fr)]"
+              >
                 <Link
                   href={`/results/${row.year}` as never}
-                  className="w-12 shrink-0 font-medium text-race-accent hover:underline"
+                  className="font-medium text-race-accent hover:underline"
                 >
                   {row.year}
                 </Link>
-                <span
-                  className="h-3 rounded-sm bg-race-accent/70"
-                  style={{ width: `${maxYear ? Math.max(2, (row.starts / maxYear) * 80) : 0}%` }}
-                />
-                <span className="text-race-muted">{row.starts}</span>
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3 rounded-sm bg-race-accent/70"
+                    style={{ width: `${maxYear ? Math.max(2, (row.starts / maxYear) * 85) : 0}%` }}
+                  />
+                  <span className="text-race-muted">{row.starts}</span>
+                </span>
+                <span className="col-start-2 flex flex-wrap gap-x-4 text-xs text-race-muted sm:col-start-auto">
+                  {(["M", "F"] as const).map((sex) => {
+                    const best = row.best?.[sex];
+                    if (!best) return null;
+                    return (
+                      <span key={sex} className="whitespace-nowrap">
+                        <span className="sr-only">
+                          {sex === "M" ? copy("men") : copy("women")}:{" "}
+                        </span>
+                        {`${sex === "M" ? "♂" : "♀"} ${shortRunnerName(best.name)} ${formatRaceTime(best.time)}`}
+                      </span>
+                    );
+                  })}
+                </span>
               </li>
             ))}
           </ol>
@@ -309,7 +355,6 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
               page: (page) => copy("page", { page }),
             }}
           />
-          <p className="mt-8 text-xs leading-5 text-race-dim">{copy("idNote")}</p>
         </div>
       </section>
     </main>

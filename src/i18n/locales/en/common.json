@@ -685,16 +685,15 @@
     "year": "Year",
     "time": "Time",
     "personalBest": "Best time",
-    "clubId": "Club id {id}",
-    "mergedIds": "merged: {ids}",
     "history": "Club names by edition",
-    "idNote": "A club is its id in the club list: a renamed club stays one club. Ids merged by the organiser are counted under the main id.",
     "allClubs": "All clubs",
     "membersShown": "Showing {from}–{to} of {total} runners",
     "membersPages": "Pages of club runners",
     "previous": "Previous",
     "next": "Next",
-    "page": "Page {page}"
+    "page": "Page {page}",
+    "recordMen": "Club record – men",
+    "recordWomen": "Club record – women"
   },
   "Clubs": {
     "metaTitle": "Clubs",

@@ -685,16 +685,15 @@
     "year": "Rok",
     "time": "Čas",
     "personalBest": "Nejlepší čas",
-    "clubId": "Id klubu {id}",
-    "mergedIds": "sloučeno: {ids}",
     "history": "Názvy klubu po ročnících",
-    "idNote": "Klub je jeho id v číselníku: přejmenovaný klub zůstává jedním klubem. Id, která pořadatel sloučil, se počítají pod hlavním id.",
     "allClubs": "Všechny kluby",
     "membersShown": "Zobrazeno {from}–{to} z {total} běžců",
     "membersPages": "Stránky běžců klubu",
     "previous": "Předchozí",
     "next": "Další",
-    "page": "Stránka {page}"
+    "page": "Stránka {page}",
+    "recordMen": "Klubový rekord – muži",
+    "recordWomen": "Klubový rekord – ženy"
   },
   "Clubs": {
     "metaTitle": "Kluby",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { displayRunnerName, runnerNameFor } from "./runner-name";
+import { displayRunnerName, runnerNameFor, shortRunnerName } from "./runner-name";
 
 test("same name stays unchanged", () => {
   assert.equal(displayRunnerName("Vetchá Adéla", "Vetchá Adéla"), "Vetchá Adéla");
@@ -47,4 +47,11 @@ test("profile context shows current with former name", () => {
     runnerNameFor("profile", "Dočkalová Martina", "Zvěřinová Martina"),
     "Zvěřinová (Dočkalová) Martina",
   );
+});
+
+test("shortRunnerName: initial of the first name and the surname", () => {
+  assert.equal(shortRunnerName("Šlajs Tomáš"), "T. Šlajs");
+  assert.equal(shortRunnerName("  Nová   eva "), "E. Nová");
+  assert.equal(shortRunnerName("Horáček"), "Horáček");
+  assert.equal(shortRunnerName(null), "");
 });

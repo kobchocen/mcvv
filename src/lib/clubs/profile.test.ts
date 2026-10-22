@@ -65,12 +65,25 @@ describe("computeClubProfile", () => {
     assert.equal(profile.starts, 6);
     assert.equal(profile.runners, 2);
     assert.deepEqual(profile.mergedIds, ["216"]);
-    assert.deepEqual(profile.perYear, [
-      { year: 2001, starts: 1 },
-      { year: 2002, starts: 2 },
-      { year: 2003, starts: 2 }, // CHC + 216 in the same edition
-      { year: 2004, starts: 1 },
-    ]);
+    assert.deepEqual(
+      profile.perYear.map(({ year, starts }) => ({ year, starts })),
+      [
+        { year: 2001, starts: 1 },
+        { year: 2002, starts: 2 },
+        { year: 2003, starts: 2 }, // CHC + 216 in the same edition
+        { year: 2004, starts: 1 },
+      ],
+    );
+    // Fastest man and woman of the club in each edition (merged id included).
+    const y2003 = profile.perYear.find((row) => row.year === 2003);
+    assert.equal(y2003?.best.M?.name, "Rychlý Petr");
+    assert.equal(y2003?.best.M?.time, 870);
+    assert.equal(y2003?.best.F?.name, "Svižná Eva");
+    assert.equal(y2003?.best.F?.time, 1050);
+    assert.equal(profile.perYear[0].best.F, undefined);
+    // Club records = fastest of each sex ever.
+    assert.equal(profile.best.M[0]?.time, 870);
+    assert.equal(profile.best.F[0]?.year, 2004);
     assert.equal(profile.best.F[0]?.time, 1040);
     assert.ok(profile.history.some((row) => row.id === "216" && row.name === "KOB Choceń"));
     // The merged id has no profile of its own (the page redirects to the main id).

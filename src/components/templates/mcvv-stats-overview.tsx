@@ -35,7 +35,7 @@ export type McvvStatsOverviewCopy = {
   };
   recordEdition: { title: string; unit: string };
   womenTile: { title: string; value: string; unit: string; axis: [string, string, string] };
-  clubs: { title: string; note: string };
+  clubs: { title: string };
   together: { title: string; value: string; unit: string; note: string };
   moment: { title: string; headline: string; body: string } | null;
   footnote: string;
@@ -511,7 +511,6 @@ export function McvvStatsOverview({ brand, nav, data, copy, statsNav }: McvvStat
                     value: `≈${copy.number(club.starts)}`,
                   }))}
                 />
-                <p className={metaClass}>{copy.clubs.note}</p>
               </Tile>
             ) : null}
 

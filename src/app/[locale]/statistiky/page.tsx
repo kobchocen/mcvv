@@ -133,7 +133,7 @@ export default async function StatsIndexPage({ params }: PageProps) {
         trend.at(-1) ? `${trend.at(-1)?.year}: ${percent(trend.at(-1)?.share ?? 0)}` : "",
       ],
     },
-    clubs: { title: t("clubs"), note: t("clubsNote") },
+    clubs: { title: t("clubs") },
     together: {
       title: t("together"),
       value: number(data.together.hours),

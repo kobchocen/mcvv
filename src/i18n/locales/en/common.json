@@ -883,7 +883,7 @@
     "timelineLast": "last {count}",
     "timelineAll": "all",
     "timelineMethod": "How the projection works: for each reference year ({years}) we take the share of its final count reached on the same day before the race. This year's count divided by that share gives one estimate per year; the number shown is their median, the range is min–max. Reference years are the last 5 completed editions excluding 2020 (covid). Shortly after entries open the projection is rough.",
-    "timelineDataNote": "Data: the day an entry was created; its runners count on the same day. Only entries that are unpaid, paid, overpaid or confirmed with at least one runner (no cancelled or empty entries). Runners added on site are not included.",
+    "timelineDataNote": "Data: the day an entry was created; its runners count on the same day. Only entries that are unpaid, paid, overpaid or confirmed with at least one runner (no cancelled or empty entries). Entry statuses were not yet used in 2012–2016, so entries with status New are counted there too if they have at least one runner. Runners added on site are not included.",
     "timelineMissing": "No entry data (missing from the chart): {years}.",
     "timelineAfterRace": "{year}: {count, plural, one {# entry} other {# entries}} created after race day not shown.",
     "timelineNoCreated": "{year}: {count, plural, one {# entry} other {# entries}} without a creation date not shown.",

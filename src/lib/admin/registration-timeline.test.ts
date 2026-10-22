@@ -68,9 +68,22 @@ describe("dates", () => {
 
 describe("isCountedRegistration", () => {
   it("counts statuses 2–5 with runners only", () => {
-    for (const status of [2, 3, 4, 5]) assert.equal(isCountedRegistration(status, 1), true);
-    for (const status of [0, 1, 9, null]) assert.equal(isCountedRegistration(status, 3), false);
-    assert.equal(isCountedRegistration(5, 0), false);
+    for (const status of [2, 3, 4, 5]) assert.equal(isCountedRegistration(status, 1, 2025), true);
+    for (const status of [0, 1, 9, null]) {
+      assert.equal(isCountedRegistration(status, 3, 2025), false);
+    }
+    assert.equal(isCountedRegistration(5, 0, 2025), false);
+  });
+
+  it("counts status 1 with runners in legacy years 2012–2016 (Q28)", () => {
+    for (const year of [2012, 2013, 2014, 2015, 2016]) {
+      assert.equal(isCountedRegistration(1, 1, year), true);
+      assert.equal(isCountedRegistration(1, 0, year), false);
+      assert.equal(isCountedRegistration(0, 3, year), false);
+      assert.equal(isCountedRegistration(9, 3, year), false);
+      assert.equal(isCountedRegistration(null, 3, year), false);
+    }
+    for (const year of [2011, 2017, 2026]) assert.equal(isCountedRegistration(1, 3, year), false);
   });
 });
 
@@ -102,6 +115,24 @@ describe("buildYearSeries", () => {
     ]);
     assert.equal(valueAt(series, "runners", 0), 2);
     assert.equal(valueAt(series, "registrations", 0), 1);
+  });
+
+  it("counts legacy status 1 with runners in 2012–2016 only (Q28)", () => {
+    const legacy = edition(2014, "2014-12-07");
+    const legacySeries = buildYearSeries(legacy, [
+      reg(legacy, 20, 3, 1),
+      reg(legacy, 20, 0, 1),
+      reg(legacy, 10, 2, 0),
+      reg(legacy, 5, 4, 2),
+    ]);
+    assert.equal(valueAt(legacySeries, "runners", 0), 7);
+    assert.equal(valueAt(legacySeries, "registrations", 0), 2);
+    assert.equal(legacySeries.firstDay, 20);
+
+    const later = edition(2017, "2017-12-03");
+    const laterSeries = buildYearSeries(later, [reg(later, 20, 3, 1), reg(later, 5, 4, 2)]);
+    assert.equal(valueAt(laterSeries, "runners", 0), 4);
+    assert.equal(laterSeries.firstDay, 5);
   });
 
   it("drops entries after the race and without a creation date, and reports them", () => {

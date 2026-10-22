@@ -17,7 +17,10 @@ import {
   revokeTokenAction,
   saveOfeedAction,
   saveRaceSetupAction,
+  saveSplitmakerStationsAction,
 } from "@/lib/live/admin-actions";
+import { listSplitmakers } from "@/lib/live/assignment";
+import { parseAssignment } from "@/lib/live/assignment-core";
 import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
@@ -57,13 +60,14 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const t = await getTranslations({ locale, namespace: "LiveResults" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
   const ctx = await getRaceContext();
-  const [stations, ofeed, status, tokens, overview, site] = await Promise.all([
+  const [stations, ofeed, status, tokens, overview, site, splitmakers] = await Promise.all([
     getStations(),
     getOfeedSettings(),
     ofeedStatus(),
     listDeviceTokens(ctx.year),
     raceDayOverview(ctx.year),
     getSiteSettings(),
+    listSplitmakers(),
   ]);
   const now = new Date();
   const window = defaultTokenWindow(ctx.zero);
@@ -383,6 +387,58 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             defaultFrom={toPragueLocalInput(window.from)}
             defaultUntil={toPragueLocalInput(window.until)}
           />
+        </fieldset>
+
+        <fieldset className={box} data-testid="splitmakers">
+          <legend className={legend}>{t("splitmakersTitle")}</legend>
+          <p className="text-sm text-race-muted">{t("splitmakersIntro")}</p>
+          {splitmakers.length === 0 ? (
+            <p className="text-sm text-race-muted">{t("splitmakersEmpty")}</p>
+          ) : (
+            <ul className="grid gap-2 text-sm">
+              {splitmakers.map((user) => {
+                const assigned = parseAssignment(user.splitStations);
+                return (
+                  <li
+                    key={user.id}
+                    className="border border-race-line/50 p-2"
+                    data-testid={`splitmaker-${user.id}`}
+                  >
+                    <form
+                      action={saveSplitmakerStationsAction}
+                      className="flex flex-wrap items-center gap-3"
+                    >
+                      <input type="hidden" name="userId" value={user.id} />
+                      <span className="min-w-48">
+                        <strong>{user.name}</strong>{" "}
+                        <span className="text-xs text-race-muted">{user.email}</span>
+                      </span>
+                      {stations.map((station) => (
+                        <label key={station.code} className="flex items-center gap-1.5">
+                          <input
+                            type="checkbox"
+                            name="stations"
+                            value={station.code}
+                            defaultChecked={assigned.includes(station.code)}
+                            className="size-4"
+                          />
+                          {station.label}
+                        </label>
+                      ))}
+                      {assigned.length === 0 ? (
+                        <span className="text-xs text-amber-700 dark:text-amber-300">
+                          {t("splitmakerNone")}
+                        </span>
+                      ) : null}
+                      <Button type="submit" variant="outline" className="h-8 px-3 text-xs">
+                        {admin("save")}
+                      </Button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </fieldset>
 
         <fieldset className={box}>

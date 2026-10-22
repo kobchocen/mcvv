@@ -32,6 +32,13 @@ OBD v cíli (LuM) ─▶ splits.csv ─▶ obd-klient.exe ─▶ POST /api/race/
   Ostatní (včetně `timing`) vidí „nemáte oprávnění“. Nepřihlášený jde na přihlášení s
   `next=/mezicasy` a po přihlášení se vrátí sem. Správa (`/admin/den-zavodu/zive`, OFeed, klíče
   zařízení) jen admin (`canManageLiveResults`); odkaz na ni je v hubu `/admin/den-zavodu`.
+- **Přiřazení stanoviště:** splitmaker zapisuje jen na stanoviště, která mu admin přiřadí na
+  `/admin/den-zavodu/zive` → „Splitmakeři a stanoviště“ (`mcvv_user.split_stations`, např. `1`
+  nebo `13`; audit `user.split_stations_change`). `/mezicasy` mu ukáže jen přiřazená stanoviště;
+  bez přiřazení vidí „Nemáš přiřazené stanoviště“ a nezapisuje nic. Server (`POST /api/live/splits`)
+  zápis na nepřiřazené stanoviště odmítne po položkách (`rejected`, poznámka `station-not-assigned`,
+  záznam v deníku), takže zápis klientovi nezůstane viset ve frontě. Admin a organizer smí dál na
+  všechna stanoviště. Stanoviště, které zmizí z `live_stations`, přestane platit i v přiřazení.
 - Mobil napřed: velké pole + číselník, „Zapsat“ uloží čas v okamžiku ťuknutí (korigovaný na hodiny
   serveru, vzorek s nejmenším RTT, každou minutu). „Razítko bez čísla“ = čas teď, číslo doplním.
 - Fronta v IndexedDB (záložně localStorage), přežije reload, zavření prohlížeče i restart telefonu.
@@ -183,7 +190,8 @@ Na stejné stránce `/admin/den-zavodu/zive/casy`, jen admin, **vždy** (i v den
 ## Generálka
 
 1. Admin: zkušební nula = teď, OFeed na testovací událost, token pro cílové PC.
-2. Operátoři se přihlásí, otevřou `/mezicasy`, vyberou stanoviště.
+2. Admin přiřadí splitmakerům stanoviště (Živě → „Splitmakeři a stanoviště“). Operátoři se
+   přihlásí a otevřou `/mezicasy` (vidí jen svá stanoviště).
 3. Na cílovém PC (Windows 11) spustit `obd-klient.exe` – při prvním spuštění se zeptá na adresu,
    klíč, ročník a cestu k souboru s mezičasy –, `obd-klient.exe -check`, pak běh. Vyzkoušet i opravu
    času v OBD (na webu zůstane první čas, admin uvidí konflikt).

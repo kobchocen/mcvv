@@ -229,6 +229,46 @@ async function withRetry(id: string, run: () => Promise<EntryResult>): Promise<E
   }
 }
 
+/**
+ * Zápisy na stanoviště, které účtu není přiřazené: nic se nezapíše, do deníku jde `rejected`
+ * s poznámkou (admin to vidí v přehledu) a klient dostane výsledek po položkách, takže mu
+ * zápis nezůstane viset ve frontě. Idempotentní podle `id` zápisu.
+ */
+export async function rejectWebEntries(
+  entries: WebEntry[],
+  ctx: RaceContext,
+  user: { id: number },
+  note: string,
+): Promise<EntryResult[]> {
+  const results: EntryResult[] = [];
+  for (const entry of entries) {
+    results.push(
+      await withRetry(entry.id, async () => {
+        const previous = await prisma.splitEntry.findUnique({ where: { entryKey: entry.id } });
+        if (previous) return storedResult(previous);
+        const row = await prisma.splitEntry.create({
+          data: {
+            entryKey: entry.id,
+            year: ctx.year,
+            split: entry.split,
+            bib: entry.action === "delete" ? 0 : entry.bib,
+            punchedAt: entry.action === "delete" ? null : new Date(entry.punchedAt),
+            source: "web",
+            action: entry.action,
+            replaces: entry.action === "create" ? null : entry.replaces,
+            outcome: "rejected",
+            note,
+            author: webAuthor(entry.split),
+            userId: user.id,
+          },
+        });
+        return storedResult(row);
+      }),
+    );
+  }
+  return results;
+}
+
 export type DeviceToken = { id: number; year: number; author: string };
 
 /** Řádek mcvv_split pro (rok, split, číslo) a zápis z OBD, který ho vlastní (pokud nějaký). */

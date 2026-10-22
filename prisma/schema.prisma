@@ -397,6 +397,9 @@ model User {
   /// Souhlas se zasíláním informací e-mailem (dřív jen `mcvv_prihlaska.promotion`):
   /// true = nechce, false = chce, null = nerozhodl (platí poslední přihláška se stejným e-mailem).
   promotionOptOut Boolean?  @map("promotion_optout")
+  /// Přiřazená stanoviště splitmakera (kódy splitů, např. "1" nebo "13"); null = žádné.
+  /// Admin a organizer zapisují na všechna stanoviště bez ohledu na tohle pole.
+  splitStations   String?   @map("split_stations") @db.VarChar(8)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

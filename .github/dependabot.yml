@@ -16,3 +16,8 @@ updates:
         dependency-type: "production"
       development-dependencies:
         dependency-type: "development"
+    ignore:
+      # TypeScript 7 (native port) has no JS compiler API yet; typescript-eslint
+      # supports only typescript <6.1. Re-enable once typescript-eslint supports TS 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]

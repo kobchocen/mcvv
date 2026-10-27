@@ -15,6 +15,7 @@ function startRow(bib: number, runnerId: string, name = runnerId): PublicStartRo
     name,
     birthYear: runnerId.slice(0, 4),
     club: "Klub",
+    clubId: "KLB",
     categoryId: "C",
     categoryName: "Muži",
   };

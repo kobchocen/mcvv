@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/format/date";
 import { isNewbie } from "@/lib/entries/newbie";
 import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
 import { validRegistrationIds } from "@/lib/entries/status";
-import { RunnerNameLink } from "@/components/molecules";
+import { ClubLink, RunnerNameLink } from "@/components/molecules";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
@@ -85,6 +85,7 @@ export default async function EntrantsPage({ params }: PageProps) {
         name: string;
         birth: string;
         club: string;
+        clubId: string;
         starts: number;
         newbie: boolean;
         record: number | null;
@@ -102,6 +103,7 @@ export default async function EntrantsPage({ params }: PageProps) {
       name: line.runner.name,
       birth: line.runnerId.slice(0, 4),
       club: line.club.name,
+      clubId: line.clubId,
       starts: startsById.get(line.runnerId) ?? 0,
       newbie: isNewbie(startsById.get(line.runnerId) ?? 0),
       record: recordsById.get(line.runnerId) ?? null,
@@ -191,7 +193,12 @@ export default async function EntrantsPage({ params }: PageProps) {
                             <td className={`${cx.nameCell} font-medium`}>
                               <RunnerNameLink id={runner.id} name={runner.name} />
                               <span className="mt-0.5 block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
-                                {runner.club.trim() ? `${runner.club} · ` : null}
+                                {runner.club.trim() ? (
+                                  <>
+                                    <ClubLink id={runner.clubId} name={runner.club} />
+                                    {" · "}
+                                  </>
+                                ) : null}
                                 {runner.newbie ? (
                                   <span className="rounded-full bg-race-accent/15 px-1.5 py-px text-[0.6875rem] font-semibold text-race-accent">
                                     {copy("newbie")}
@@ -205,7 +212,9 @@ export default async function EntrantsPage({ params }: PageProps) {
                               <span className="hidden sm:inline">{runner.birth}</span>
                               <span className="sm:hidden">{shortBirthYear(runner.birth)}</span>
                             </td>
-                            <td className={`${cx.desktopCell} text-race-muted`}>{runner.club}</td>
+                            <td className={`${cx.desktopCell} text-race-muted`}>
+                              <ClubLink id={runner.clubId} name={runner.club} />
+                            </td>
                             <td className={`${cx.desktopCell} text-race-muted`}>
                               {runner.newbie
                                 ? copy("newbie")

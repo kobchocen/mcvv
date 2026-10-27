@@ -111,6 +111,8 @@ export type AdminStartRow = {
   name: string;
   birthYear: string;
   clubName: string;
+  /** Club id (#196: link to the club profile). */
+  clubId: string;
   categoryId: string;
   categoryName: string;
   registrationId: number;
@@ -171,6 +173,7 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       name: line.runner.name,
       birthYear: line.runnerId.slice(0, 4),
       clubName: line.club.name,
+      clubId: line.clubId,
       categoryId: line.categoryId,
       categoryName: line.category.name,
       registrationId: line.registrationId,
@@ -271,6 +274,8 @@ export type PublicStartRow = {
   name: string;
   birthYear: string;
   club: string;
+  /** Club id (#196: link to the club profile); "" = no club. */
+  clubId: string;
   categoryId: string;
   categoryName: string;
 };
@@ -300,6 +305,7 @@ export async function loadPublicStartList(
       name: row.runnerName || row.runner.name,
       birthYear: row.runnerId.slice(0, 4),
       club: row.clubName || row.club.name,
+      clubId: row.clubId,
       categoryId: row.categoryId,
       categoryName: categoryName.get(row.categoryId) ?? row.categoryId,
     }));
@@ -320,6 +326,7 @@ export async function loadPublicStartList(
       name: line.runner.name,
       birthYear: line.runnerId.slice(0, 4),
       club: line.club.name,
+      clubId: line.clubId,
       categoryId: line.categoryId,
       categoryName: categoryName.get(line.categoryId) ?? line.categoryId,
     }));

@@ -5,6 +5,7 @@ import {
   clubIdFromSlug,
   clubIdSlug,
   clubKey,
+  clubLinkSlug,
   clubSlug,
   createClubResolver,
   isNoClub,
@@ -112,5 +113,31 @@ describe("createClubResolver", () => {
       { year: 1998, name: "Týniště nad Orlicí" },
     ]);
     assert.deepEqual(clubs.history("XXX"), []);
+  });
+});
+
+describe("clubLinkSlug (#196)", () => {
+  it("prefers a resolved slug", () => {
+    assert.equal(
+      clubLinkSlug({ slug: "chc-k-o-b-chocen", id: "CHC", name: "KOB" }),
+      "chc-k-o-b-chocen",
+    );
+  });
+
+  it("builds <id>-<name> from the club id (the id the data holds after a merge)", () => {
+    assert.equal(clubLinkSlug({ id: "chc", name: "K.O.B. Choceň" }), "chc-k-o-b-chocen");
+    assert.equal(clubLinkSlug({ id: " 216 ", name: "KOB Choceń" }), "216-kob-chocen");
+    // id with characters that need escaping (varchar(8))
+    assert.equal(clubLinkSlug({ id: "A/B", name: "Klub" }), "a%2Fb-klub");
+    // slug round-trips to the id
+    assert.equal(clubIdFromSlug(clubLinkSlug({ id: "A/B", name: "Klub" })!), "A/B");
+  });
+
+  it("returns null without a club", () => {
+    assert.equal(clubLinkSlug({ id: "", name: "Klub" }), null);
+    assert.equal(clubLinkSlug({ id: null, name: "Klub" }), null);
+    assert.equal(clubLinkSlug({ id: "000", name: "-" }), null);
+    assert.equal(clubLinkSlug({ id: "XXX", name: "neregistrovaný" }), null);
+    assert.equal(clubLinkSlug({ slug: "x", id: "000", name: "" }), null);
   });
 });

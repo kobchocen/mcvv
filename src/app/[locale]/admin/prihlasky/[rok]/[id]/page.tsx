@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { FileDown } from "lucide-react";
 
+import { ClubLink } from "@/components/molecules";
 import {
   cancelRegistration,
   confirmRegistration,
@@ -333,7 +334,9 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                   <tr key={line.runnerId} className="border-b border-race-line/40">
                     <td className="py-2.5 pr-3">{line.runner.name}</td>
                     <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
-                    <td className="py-2.5 pr-3">{line.club.name}</td>
+                    <td className="py-2.5 pr-3">
+                      <ClubLink id={line.clubId} name={line.club.name} />
+                    </td>
                     <td className="py-2.5 pr-3">{line.category.name}</td>
                     <td className="py-2.5 pr-3">{line.entryFee ?? ""}</td>
                     <td className="py-2.5 pr-3">{line.bib ?? ""}</td>

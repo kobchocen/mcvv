@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { ClubLink } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -378,7 +379,10 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
                       <td className="pr-2">
                         {row.name ?? <span className="text-red-600">{t("unknownShort")}</span>}
                         {row.club ? (
-                          <span className="text-xs text-race-muted"> · {row.club}</span>
+                          <span className="text-xs text-race-muted">
+                            {" · "}
+                            <ClubLink id={row.clubId} name={row.club} />
+                          </span>
                         ) : null}
                       </td>
                       <td className="pr-2">{row.categoryId ?? "–"}</td>

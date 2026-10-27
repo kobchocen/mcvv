@@ -13,6 +13,7 @@ import { utcDayStart } from "@/lib/mail/queue-core";
 import {
   chooseRequest,
   fetchFio,
+  fioFailureLogLine,
   FIO_MIN_INTERVAL_MS,
   healStrongAuth,
   isoDate,
@@ -342,6 +343,9 @@ export async function runPaymentsJob(
       }
     }
     if (!result.ok) {
+      // Do Log Analytics (#199): alert se posílá max. 1× denně, log je u každého selhání.
+      const log = result.kind === "rate_limit" ? console.warn : console.error;
+      log(fioFailureLogLine(result, request.mode, token));
       await prisma.jobRun.update({
         where: { id: run.id },
         data: { finishedAt: new Date(), ok: false, error: result.error.slice(0, 500) },

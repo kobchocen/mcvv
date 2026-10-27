@@ -43,6 +43,7 @@ type ItemResult struct {
 
 type uploadResponse struct {
 	OK      bool           `json:"ok"`
+	Epoch   string         `json:"epoch"`
 	Results []ItemResult   `json:"results"`
 	Summary map[string]int `json:"summary"`
 	Error   string         `json:"error"`
@@ -126,6 +127,25 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 	return string(data), nil
 }
 
+// ServerInfo: odpověď GET – epocha dat (#186) a příznak testovacího běhu.
+type ServerInfo struct {
+	Epoch string `json:"epoch"`
+	Test  bool   `json:"test"`
+}
+
+// Info zjistí epochu dat na serveru (GET). Starší server epochu neposílá → prázdná.
+func (c *Client) Info(ctx context.Context) (ServerInfo, error) {
+	var info ServerInfo
+	data, err := c.do(ctx, http.MethodGet, nil)
+	if err != nil {
+		return info, err
+	}
+	if err := json.Unmarshal(data, &info); err != nil {
+		return info, fmt.Errorf("neplatná odpověď serveru: %w", err)
+	}
+	return info, nil
+}
+
 // Change je jedna položka k odeslání: nový/opravený čas (set) nebo zmizelý řádek (delete).
 type Change struct {
 	Punch
@@ -139,8 +159,8 @@ func (c Change) action() string {
 	return "set"
 }
 
-// Upload pošle dávku (max 200) a vrátí výsledky po položkách.
-func (c *Client) Upload(ctx context.Context, changes []Change, seenAt time.Time) ([]ItemResult, error) {
+// Upload pošle dávku (max 200) a vrátí výsledky po položkách a epochu dat serveru.
+func (c *Client) Upload(ctx context.Context, changes []Change, seenAt time.Time) ([]ItemResult, string, error) {
 	items := make([]uploadItem, 0, len(changes))
 	for _, change := range changes {
 		items = append(items, uploadItem{Action: change.action(), Replace: c.Replace && !change.Delete, Bib: change.Bib, Split: c.Split, TimeS: change.TimeS, SeenAt: seenAt.UTC().Format(time.RFC3339)})
@@ -148,14 +168,14 @@ func (c *Client) Upload(ctx context.Context, changes []Change, seenAt time.Time)
 	body, _ := json.Marshal(map[string]any{"items": items, "client": "obd-klient/" + c.Version})
 	data, err := c.do(ctx, http.MethodPost, body)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	var response uploadResponse
 	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("neplatná odpověď serveru: %w", err)
+		return nil, "", fmt.Errorf("neplatná odpověď serveru: %w", err)
 	}
 	if len(response.Results) != len(changes) {
-		return nil, fmt.Errorf("server vrátil %d výsledků místo %d", len(response.Results), len(changes))
+		return nil, "", fmt.Errorf("server vrátil %d výsledků místo %d", len(response.Results), len(changes))
 	}
-	return response.Results, nil
+	return response.Results, response.Epoch, nil
 }

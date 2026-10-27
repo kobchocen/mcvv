@@ -30,6 +30,12 @@ nepřepíše), zmizelý řádek se nemaže. Za přepínači v `config.json` (vý
 Stav (`state.json` vedle configu) zajistí, že se po restartu neposílá všechno znovu; při výpadku sítě
 klient opakuje s backoffem (max. `maxBackoffS`). Opakované odeslání je bezpečné – server je idempotentní.
 
+Testovací běh (#186): server v odpovědích posílá `epoch` (id testovacího běhu + nula závodu).
+Klient se na ni ptá (GET) při každé nové verzi souboru a nejméně každých 30 s a čte ji i z odpovědi
+na dávku. Když se epocha změní (nový testovací běh, nová nula, konec testu), klient sám zahodí
+`state.json` a pošle soubor znovu – na cílovém PC se nic ručně nemaže. Server bez epochy
+(starší verze webu) stav nemění.
+
 Podrobnosti: `docs/DEN-ZAVODU-MEZICASY.md`.
 
 ## Vývoj

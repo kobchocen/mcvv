@@ -86,12 +86,20 @@ type fakeServer struct {
 	calls    int
 	auth     string
 	actions  []string
+	gets     int
+	epoch    string // epocha dat (#186); prázdná = starší server
+	// epochAfterPost: epocha, která platí od příští odpovědi na POST (nový běh během dávky)
+	epochAfterPost string
 }
 
 func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.calls++
+	if r.Method == http.MethodGet {
+		f.gets++
+	} else {
+		f.calls++
+	}
 	f.auth = r.Header.Get("Authorization")
 	if r.URL.Path != "/api/race/2026/splits" {
 		http.Error(w, "nope", http.StatusNotFound)
@@ -103,7 +111,7 @@ func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodGet {
-		_, _ = w.Write([]byte(`{"ok":true}`))
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "epoch": f.epoch})
 		return
 	}
 	var body struct {
@@ -138,7 +146,17 @@ func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
 		}
 		results = append(results, map[string]any{"id": key, "outcome": outcome, "bib": item.Bib})
 	}
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "results": results})
+	if f.epochAfterPost != "" {
+		f.epoch, f.epochAfterPost = f.epochAfterPost, ""
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "results": results, "epoch": f.epoch})
+}
+
+// reset napodobuje úklid testovacích dat na serveru (#186) a nový běh s jinou epochou.
+func (f *fakeServer) reset(epoch string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.seen, f.held, f.actions, f.epoch = map[string]int{}, map[int]int{}, nil, epoch
 }
 
 func newRunner(t *testing.T, url, file string) *Runner {
@@ -471,5 +489,111 @@ func TestVersionString(t *testing.T) {
 	commit = "abc1234"
 	if got := versionString(); got != "0.1.0 (abc1234)" {
 		t.Errorf("versionString() = %q", got)
+	}
+}
+
+func TestSyncEpoch(t *testing.T) {
+	state := newState(filepath.Join(t.TempDir(), "state.json"))
+	if state.SyncEpoch("") || state.Epoch != "" {
+		t.Fatal("empty epoch (older server) must not change anything")
+	}
+	if state.SyncEpoch("live@2026-12-06T09:15:00.000Z") {
+		t.Fatal("empty state: nothing to reset")
+	}
+	state.Acked["9:41:1686"], state.Sent["9:41"], state.Missing["9:42"] = "applied", 1686, 1
+	if state.SyncEpoch("live@2026-12-06T09:15:00.000Z") {
+		t.Fatal("same epoch must keep state")
+	}
+	if !state.SyncEpoch("test-abc123@2026-11-02T19:15:00.000Z") {
+		t.Fatal("new epoch must reset state")
+	}
+	if len(state.Acked)+len(state.Sent)+len(state.Missing) != 0 || state.Epoch != "test-abc123@2026-11-02T19:15:00.000Z" {
+		t.Fatalf("state not reset: %+v", state)
+	}
+}
+
+// Q72: nový testovací běh (nová epocha) → klient sám zahodí state.json a pošle soubor znovu,
+// na cílovém PC není potřeba nic mazat.
+func TestNewTestRunResetsState(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}, epoch: "test-aaaa@2026-11-02T09:15:00.000Z"}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	_ = os.WriteFile(file, []byte("41;1686\n42;1700\n"), 0o644)
+	runner := newRunner(t, server.URL, file)
+	clock := time.Date(2026, 11, 2, 10, 0, 0, 0, time.UTC)
+	runner.now = func() time.Time { return clock }
+	ctx := context.Background()
+	if err := runner.Tick(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(fake.seen) != 2 || runner.state.Epoch != fake.epoch {
+		t.Fatalf("first run: seen=%v epoch=%q", fake.seen, runner.state.Epoch)
+	}
+	// stejný soubor, stejná epocha → nic se neposílá
+	clock = clock.Add(time.Minute)
+	if err := runner.Tick(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if fake.calls != 1 {
+		t.Fatalf("unchanged epoch should send nothing, calls=%d", fake.calls)
+	}
+	// admin ukončil test (úklid) a spustil nový: soubor OBD se nezměnil
+	fake.reset("test-bbbb@2026-11-02T19:15:00.000Z")
+	clock = clock.Add(epochCheckEvery)
+	if err := runner.Tick(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(fake.seen) != 2 || fake.held[41] != 1686 || fake.held[42] != 1700 {
+		t.Fatalf("file should be resent after new test run: seen=%v held=%v", fake.seen, fake.held)
+	}
+	saved, err := LoadState(runner.cfg.StateFile)
+	if err != nil || saved.Epoch != "test-bbbb@2026-11-02T19:15:00.000Z" || saved.Sent["9:41"] != 1686 {
+		t.Fatalf("state.json should carry the new epoch: %+v %v", saved, err)
+	}
+}
+
+// Nový běh začal mezi dotazem GET a dávkou: odpověď POST nese novou epochu → stav se zahodí
+// a příští průchod pošle soubor znovu.
+func TestEpochChangeDuringUpload(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}, epoch: "live@2026-12-06T09:15:00.000Z"}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	_ = os.WriteFile(file, []byte("41;1686\n"), 0o644)
+	runner := newRunner(t, server.URL, file)
+	fake.epochAfterPost = "test-cccc@2026-11-03T09:15:00.000Z"
+	if err := runner.Tick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if runner.state.Epoch != "test-cccc@2026-11-03T09:15:00.000Z" || len(runner.state.Sent) != 0 {
+		t.Fatalf("state should be reset to the new epoch: %+v", runner.state)
+	}
+	if err := runner.Tick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if fake.seen["9:41:1686"] != 2 || runner.state.Sent["9:41"] != 1686 {
+		t.Fatalf("row should be resent once more: seen=%v state=%+v", fake.seen, runner.state)
+	}
+}
+
+// Starší server bez epochy: stav zůstává (žádné zbytečné přeposílání).
+func TestServerWithoutEpochKeepsState(t *testing.T) {
+	fake := &fakeServer{seen: map[string]int{}}
+	server := httptest.NewServer(http.HandlerFunc(fake.handler))
+	defer server.Close()
+	file := filepath.Join(t.TempDir(), "splits.csv")
+	_ = os.WriteFile(file, []byte("41;1686\n"), 0o644)
+	runner := newRunner(t, server.URL, file)
+	clock := time.Now()
+	runner.now = func() time.Time { return clock }
+	for i := 0; i < 3; i++ {
+		if err := runner.Tick(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		clock = clock.Add(epochCheckEvery)
+	}
+	if fake.calls != 1 || fake.gets != 3 || runner.state.Epoch != "" {
+		t.Fatalf("calls=%d gets=%d epoch=%q", fake.calls, fake.gets, runner.state.Epoch)
 	}
 }

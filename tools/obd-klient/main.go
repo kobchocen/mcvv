@@ -180,12 +180,48 @@ func main() {
 
 // Runner drží smyčku: přečti soubor → pošli nepotvrzené → při chybě backoff.
 type Runner struct {
-	cfg       Config
-	client    *Client
-	state     *State
-	now       func() time.Time
-	failures  int
-	lastStamp string
+	cfg         Config
+	client      *Client
+	state       *State
+	now         func() time.Time
+	failures    int
+	lastStamp   string
+	lastEpochAt time.Time // kdy se naposledy ověřovala epocha dat na serveru
+}
+
+// epochCheckEvery: jak často se ptát serveru na epochu dat i bez nové verze souboru.
+const epochCheckEvery = 30 * time.Second
+
+// checkEpoch se zeptá serveru na epochu dat (nový testovací běh / nová nula, #186) a při
+// změně zahodí stav – další průchod pošle celý soubor znovu.
+func (r *Runner) checkEpoch(ctx context.Context) error {
+	info, err := r.client.Info(ctx)
+	if err != nil {
+		var apiErr *APIError
+		if errors.As(err, &apiErr) && apiErr.Redirect() {
+			return fmt.Errorf("chyba konfigurace: %w", err)
+		}
+		if errors.As(err, &apiErr) && !apiErr.Retryable() {
+			return fmt.Errorf("server odmítl dotaz (zkontrolujte token/rok/úsek): %w", err)
+		}
+		return err
+	}
+	r.lastEpochAt = r.now()
+	return r.applyEpoch(info.Epoch)
+}
+
+// applyEpoch uloží novou epochu; když se tím zahodil stav, oznámí to do logu.
+func (r *Runner) applyEpoch(epoch string) error {
+	if epoch == "" || epoch == r.state.Epoch {
+		return nil
+	}
+	if r.state.SyncEpoch(epoch) {
+		logf("NOVÝ TESTOVACÍ BĚH / NOVÁ NULA na webu (%s) – stav klienta vynulován, soubor se pošle znovu.", epoch)
+	}
+	if err := r.state.Save(); err != nil {
+		return fmt.Errorf("uložení stavu: %w", err)
+	}
+	return nil
 }
 
 func (r *Runner) Loop(ctx context.Context) {
@@ -232,6 +268,11 @@ func (r *Runner) Tick(ctx context.Context) error {
 	}
 	parsed := ParseSplitsCSV(data)
 	newSnapshot := stamp != r.lastStamp
+	if newSnapshot || r.lastEpochAt.IsZero() || r.now().Sub(r.lastEpochAt) >= epochCheckEvery {
+		if err := r.checkEpoch(ctx); err != nil {
+			return err
+		}
+	}
 	r.lastStamp = stamp
 	split := r.cfg.Split
 
@@ -253,7 +294,7 @@ func (r *Runner) Tick(ctx context.Context) error {
 	for start := 0; start < len(changes); start += maxBatch {
 		end := min(start+maxBatch, len(changes))
 		batch := changes[start:end]
-		results, err := r.client.Upload(ctx, batch, seenAt)
+		results, epoch, err := r.client.Upload(ctx, batch, seenAt)
 		if err != nil {
 			var apiErr *APIError
 			if errors.As(err, &apiErr) && apiErr.Redirect() {
@@ -263,6 +304,11 @@ func (r *Runner) Tick(ctx context.Context) error {
 				return fmt.Errorf("server odmítl dávku (zkontrolujte token/rok/úsek): %w", err)
 			}
 			return err
+		}
+		if epoch != "" && epoch != r.state.Epoch {
+			// mezitím začal nový testovací běh: výsledky dávky patří nové epoše, ale stav se
+			// raději zahodí celý a příští průchod pošle soubor znovu (server deduplikuje)
+			return r.applyEpoch(epoch)
 		}
 		counts := map[string]int{}
 		for i, result := range results {

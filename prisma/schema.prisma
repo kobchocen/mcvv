@@ -370,7 +370,7 @@ model User {
   /// Souhlas se zasíláním informací e-mailem (dřív jen `mcvv_prihlaska.promotion`):
   /// true = nechce, false = chce, null = nerozhodl (platí poslední přihláška se stejným e-mailem).
   promotionOptOut Boolean?  @map("promotion_optout")
-  /// Přiřazená stanoviště splitmakera (kódy splitů, např. "1" nebo "13"); null = žádné.
+  /// Přiřazená stanoviště splitmakera (kódy splitů, např. "1" nebo "13", "0" = start); null = žádné.
   /// Admin a organizer zapisují na všechna stanoviště bez ohledu na tohle pole.
   splitStations   String?   @map("split_stations") @db.VarChar(8)
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -772,6 +772,50 @@ model SplitEntry {
   @@index([year, split, bib])
   @@index([year, outcome])
   @@map("mcvv_split_entry")
+}
+
+/// Evidence startu (#203): kdo opravdu odstartoval. Jen pro evidenci – výsledky, OFeed ani
+/// export pro OBD tuhle tabulku nečtou (počítají dál s plánovaným startem ze startovky).
+/// Jeden řádek = aktuální záznam čísla v ročníku (první zápis vyhrává jako u mezičasů).
+model StartCheck {
+  year      Int      @map("rok") @db.SmallInt
+  bib       Int      @map("cislo") @db.SmallInt
+  /// Okamžik startu podle zařízení (po korekci hodin) nebo ručního zápisu admina.
+  startedAt DateTime @map("started_at") @db.DateTime(3)
+  /// web | admin
+  source    String   @db.VarChar(8)
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@id([year, bib])
+  @@map("mcvv_start_check")
+}
+
+/// Deník zápisů evidence startu (idempotence podle `entryKey`, audit, opravy) – obdoba
+/// `mcvv_split_entry`, ale samostatná tabulka, aby se start nikdy nepletl do mezičasů.
+model StartCheckEntry {
+  id         Int       @id @default(autoincrement())
+  /// UUID zápisu z webového klienta (offline fronta), u ručního zápisu `adm:…`.
+  entryKey   String    @unique @map("entry_key") @db.VarChar(80)
+  year       Int       @map("rok") @db.SmallInt
+  bib        Int       @map("cislo") @db.SmallInt
+  startedAt  DateTime? @map("started_at") @db.DateTime(3)
+  /// Odchylka od plánovaného startu v sekundách (jen pro zobrazení, nikde se nepočítá).
+  offsetS    Int?      @map("offset_s")
+  /// web | admin
+  source     String    @db.VarChar(8)
+  /// create | correct | delete
+  action     String    @db.VarChar(8)
+  replaces   String?   @db.VarChar(80)
+  /// applied | duplicate | rejected | replaced | deleted
+  outcome    String    @db.VarChar(12)
+  note       String?   @db.VarChar(255)
+  userId     Int?      @map("user_id")
+  receivedAt DateTime  @default(now()) @map("received_at") @db.DateTime(3)
+
+  @@index([year, bib])
+  @@index([year, outcome])
+  @@map("mcvv_start_check_entry")
 }
 
 /// API klíč zařízení v den závodu (klient OBD na cílovém PC). Uložený jen jako SHA-256.

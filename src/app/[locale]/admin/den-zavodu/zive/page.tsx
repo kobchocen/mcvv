@@ -26,7 +26,7 @@ import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib
 import { raceDayOverview } from "@/lib/live/ingest";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
 import { formatRaceTime } from "@/lib/live/start-time";
-import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX } from "@/lib/live/stations";
+import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX, withStart } from "@/lib/live/stations";
 import { listDeviceTokens } from "@/lib/live/tokens";
 import { tokenState } from "@/lib/live/tokens-core";
 import { ofeedStatus } from "@/lib/ofeed/publisher";
@@ -100,6 +100,13 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               data-testid="open-splits-admin"
             >
               {t("openSplitsAdmin")}
+            </Link>
+            <Link
+              href="/admin/den-zavodu/start"
+              className="font-medium text-race-accent hover:underline"
+              data-testid="open-start-check"
+            >
+              {t("openStartCheck")}
             </Link>
             <a
               href={OFEED_BOARD_URL}
@@ -470,7 +477,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                         <strong>{user.name}</strong>{" "}
                         <span className="text-xs text-race-muted">{user.email}</span>
                       </span>
-                      {stations.map((station) => (
+                      {withStart(stations).map((station) => (
                         <label key={station.code} className="flex items-center gap-1.5">
                           <input
                             type="checkbox"

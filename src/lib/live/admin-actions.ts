@@ -38,7 +38,13 @@ import {
 } from "./clear-core";
 import { dismissConflict, resolveConflict } from "./ingest";
 import { getRaceContext, getStations, LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
-import { formatStations, LIVE_STATIONS_KEY, LIVE_STATIONS_MAX, parseStations } from "./stations";
+import {
+  formatStations,
+  LIVE_STATIONS_KEY,
+  LIVE_STATIONS_MAX,
+  parseStations,
+  withStart,
+} from "./stations";
 import { createDeviceToken, revokeDeviceToken } from "./tokens";
 import { normalizeAuthor, normalizeTokenSplits } from "./tokens-core";
 
@@ -290,12 +296,15 @@ export async function deleteSplitAction(formData: FormData): Promise<void> {
   await back({ edit, saved: "delete" }, SPLITS_PAGE);
 }
 
-/** Přiřazení stanovišť splitmakerovi (jen admin). Prázdný výběr = splitmaker nezapisuje nic. */
+/**
+ * Přiřazení stanovišť splitmakerovi (jen admin), včetně stanoviště Start (#203).
+ * Prázdný výběr = splitmaker nezapisuje nic.
+ */
 export async function saveSplitmakerStationsAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId < 1) await back({ error: "assignment" });
-  const stations = await getStations();
+  const stations = withStart(await getStations());
   const value = assignmentFromForm(formData.getAll("stations").map(String), stations);
   const result = await saveAssignment(session, userId, value);
   if (result === "not_found") await back({ error: "assignment" });

@@ -19,6 +19,10 @@ export type AuditAction =
   | "raceday.split_deleted"
   | "raceday.split_conflict_resolved"
   | "raceday.split_conflict_dismissed"
+  // Evidence startu (#203): ruční zápis / smazání adminem a hromadné vyčištění ročníku.
+  | "raceday.start_set"
+  | "raceday.start_deleted"
+  | "raceday.starts_cleared"
   // Přepnutí OFeed mezi testovací a ostrou akcí (Q33).
   | "raceday.ofeed_profile"
   // Změny přihlášek od přihlašujících (#130) – podklad pro denní souhrn pořadateli.

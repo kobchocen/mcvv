@@ -19,8 +19,9 @@ import {
   type SplitRecord,
 } from "@/lib/live/queue-core";
 import { loadQueue, loadValue, queueKey, saveValue } from "@/lib/live/queue-store";
-import { formatRaceTime, secondsSinceStart } from "@/lib/live/start-time";
-import type { Station } from "@/lib/live/stations";
+import { formatOffset } from "@/lib/live/start-check-core";
+import { formatRaceTime, secondsSinceStart, startInstant } from "@/lib/live/start-time";
+import { isStartStation, type Station } from "@/lib/live/stations";
 
 type Props = {
   stations: Station[];
@@ -309,6 +310,13 @@ export function McvvSplitsClient({
   const pending = queue.outbox.length;
   const drafts = queue.records.filter((r) => r.state === "draft" && r.split === station).length;
   const stationLabel = stations.find((s) => s.code === station)?.label ?? station;
+  const atStart = isStartStation(station);
+  /** Start (#203): odchylka od plánovaného startu; mezičas: čas od startu. */
+  const showTime = (seconds: number) => (atStart ? formatOffset(seconds) : formatRaceTime(seconds));
+  const estimateFor = (bib: number, punchedAt: number) =>
+    atStart
+      ? formatOffset(Math.round((punchedAt - startInstant(zero, bib, intervalS).getTime()) / 1000))
+      : formatRaceTime(secondsSinceStart(zero, bib, new Date(punchedAt), intervalS));
 
   const stateLabel = (r: SplitRecord) => {
     if (r.state === "applied" && r.note?.includes("unknown-bib")) return t("state.unknownBib");
@@ -361,7 +369,9 @@ export function McvvSplitsClient({
                   : "border-race-line/60 bg-race-surface text-foreground"
               }`}
             >
-              {t("stationLabel", { label: s.label, code: s.code })}
+              {isStartStation(s.code)
+                ? t("startStation")
+                : t("stationLabel", { label: s.label, code: s.code })}
             </button>
           ))}
         </div>
@@ -371,6 +381,14 @@ export function McvvSplitsClient({
           {lastSyncAt ? ` · ${t("lastSync", { time: clock(lastSyncAt) })}` : ""}
           {zeroOverridden ? ` · ${t("testZero", { time: clock(zero.getTime()) })}` : ""}
         </p>
+        {atStart ? (
+          <p
+            data-testid="start-hint"
+            className="border border-sky-500/50 bg-sky-500/10 p-2 text-xs text-foreground"
+          >
+            {t("startHint")}
+          </p>
+        ) : null}
         {problem ? (
           <p
             role="alert"
@@ -488,10 +506,7 @@ export function McvvSplitsClient({
         {visible.length === 0 ? <p className="text-sm text-race-muted">{t("empty")}</p> : null}
         <ul className="grid gap-1" data-testid="records">
           {visible.map((r) => {
-            const estimate =
-              r.bib !== null
-                ? formatRaceTime(secondsSinceStart(zero, r.bib, new Date(r.punchedAt), intervalS))
-                : "";
+            const estimate = r.bib !== null ? estimateFor(r.bib, r.punchedAt) : "";
             return (
               <li key={r.id} className="border border-race-line/50 bg-race-surface">
                 <button
@@ -510,11 +525,11 @@ export function McvvSplitsClient({
                     {clock(r.punchedAt)}
                     {r.bib !== null ? (
                       <span className="ml-2 font-semibold text-foreground">
-                        {typeof r.time === "number" ? formatRaceTime(r.time) : `≈ ${estimate}`}
+                        {typeof r.time === "number" ? showTime(r.time) : `≈ ${estimate}`}
                       </span>
                     ) : null}
                     {r.state === "duplicate" && typeof r.existingTime === "number"
-                      ? ` · ${t("existing", { time: formatRaceTime(r.existingTime) })}`
+                      ? ` · ${t("existing", { time: showTime(r.existingTime) })}`
                       : ""}
                   </span>
                   <span

@@ -1,17 +1,17 @@
 import { isStaffRole, type UserRole } from "@/lib/auth/roles";
 
-import { FINISH_SPLIT, isSplitCode, type Station } from "./stations";
+import { FINISH_SPLIT, isStationCode, type Station } from "./stations";
 
 /**
  * Přiřazení splitmakera ke stanovišti (čisté funkce). Uloženo v `mcvv_user.split_stations`
- * jako řetězec kódů ("1", "13"). Admin a organizer smí na všechna stanoviště, splitmaker
+ * jako řetězec kódů ("1", "13", "0" = start). Admin a organizer smí na všechna stanoviště, splitmaker
  * jen na přiřazená (a jen ta, která jsou v `live_stations`), ostatní role nikam.
  */
 
-/** Kódy z uloženého řetězce: jen platné kódy stanovišť (bez cíle 9), bez duplicit, seřazené. */
+/** Kódy z uloženého řetězce: platné kódy stanovišť a start (bez cíle 9), bez duplicit, seřazené. */
 export function parseAssignment(raw: string | null | undefined): string[] {
   return [...new Set((raw ?? "").split(""))]
-    .filter((code) => isSplitCode(code) && code !== FINISH_SPLIT)
+    .filter((code) => isStationCode(code) && code !== FINISH_SPLIT)
     .sort();
 }
 

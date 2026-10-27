@@ -13,6 +13,31 @@ export const DEFAULT_STATIONS: Station[] = [
   { code: "3", label: "2,7 km" },
 ];
 
+/**
+ * Stanoviště „Start“ (#203): evidence, kdo opravdu odstartoval. Kód "0" není kód splitu –
+ * zápisy ze startu nejdou do `mcvv_split` (výsledky, OFeed, OBD), ale do `mcvv_start_check`.
+ * Je vestavěné (není v `live_stations`), splitmakerovi se přiřazuje jako ostatní stanoviště.
+ */
+export const START_STATION = "0";
+export const START_STATION_LABEL = "Start";
+
+export function isStartStation(code: unknown): boolean {
+  return code === START_STATION;
+}
+
+/** Stanoviště pro klienta i server včetně startu (start první). */
+export function withStart(stations: Station[]): Station[] {
+  return [
+    { code: START_STATION, label: START_STATION_LABEL },
+    ...stations.filter((s) => s.code !== START_STATION),
+  ];
+}
+
+/** Kód stanoviště ve webovém klientu: split 1–9 nebo start 0. */
+export function isStationCode(value: unknown): value is string {
+  return isSplitCode(value) || isStartStation(value);
+}
+
 /** Kód splitu = jedna číslice 1–9 (sloupec char(1)). */
 export function isSplitCode(value: unknown): value is string {
   return typeof value === "string" && /^[1-9]$/.test(value);

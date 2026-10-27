@@ -62,6 +62,8 @@ export default defineRouting({
     // den závodu: živé mezičasy a OFeed (#120–#122)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
+    // evidence startu (#203)
+    "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
   },
 });

@@ -30,6 +30,9 @@ const ACTION_KEYS: Record<
   | "action_split_conflict_resolved"
   | "action_split_conflict_dismissed"
   | "action_ofeed_profile"
+  | "action_start_set"
+  | "action_start_deleted"
+  | "action_starts_cleared"
 > = {
   "raceday.obd_export": "action_obd_export",
   "raceday.import_presentation": "action_import_presentation",
@@ -40,6 +43,9 @@ const ACTION_KEYS: Record<
   "raceday.split_conflict_resolved": "action_split_conflict_resolved",
   "raceday.split_conflict_dismissed": "action_split_conflict_dismissed",
   "raceday.ofeed_profile": "action_ofeed_profile",
+  "raceday.start_set": "action_start_set",
+  "raceday.start_deleted": "action_start_deleted",
+  "raceday.starts_cleared": "action_starts_cleared",
 };
 
 /** Stahování z route handleru (ne stránka) – proto obyčejný odkaz, ne <Link>. */
@@ -198,6 +204,21 @@ export default async function RaceDayPage({ params }: PageProps) {
             </Link>
           </div>
         </section>
+
+        {isStaffRole(session.role) ? (
+          <section
+            className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
+            data-testid="start-check-link"
+          >
+            <h2 className="font-display text-xl font-semibold">{copy("startTitle")}</h2>
+            <p className="text-sm leading-6 text-race-muted">{copy("startIntro")}</p>
+            <div className="flex flex-wrap gap-3">
+              <Link className={buttonClass} href="/admin/den-zavodu/start">
+                {copy("startOpen")}
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         {canManageLiveResults(session.role) ? (
           <section

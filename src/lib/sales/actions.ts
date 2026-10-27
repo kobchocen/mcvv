@@ -5,7 +5,7 @@ import { getLocale } from "next-intl/server";
 
 import { redirect } from "@/i18n/routing";
 import { formInt, formString } from "@/lib/admin/parse";
-import { canManageSaleItems, canMarkSalePaidBank } from "@/lib/auth/roles";
+import { canChangeSaleStatus, canManageSaleItems } from "@/lib/auth/roles";
 import { currentRaceYear } from "@/lib/entries/year";
 
 import { parseSaleItemInput } from "./core";
@@ -49,7 +49,7 @@ async function toSale(id: number, query: Record<string, string>): Promise<never>
 }
 
 async function changeStatus(formData: FormData, to: "paid_cash" | "paid_bank" | "cancelled") {
-  const session = await cashDeskActionSession(to === "paid_bank" ? canMarkSalePaidBank : undefined);
+  const session = await cashDeskActionSession((role) => canChangeSaleStatus(role, to));
   const id = formInt(formData, "id");
   if (!id) return;
   if (!session) return toSale(id, { chyba: "forbidden" });

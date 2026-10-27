@@ -1745,7 +1745,7 @@
     "actions": "Actions",
     "markCash": "Paid in cash",
     "markBank": "Paid by transfer (manual)",
-    "markBankHint": "Organisers only: the transfer arrived but was not matched (e.g. a different amount). Then resolve the bank transaction in Payments.",
+    "markBankHint": "Admins only: the transfer arrived but was not matched (e.g. a different amount). Then resolve the bank transaction in Payments.",
     "markBankNote": "Note (e.g. date and counter-account)",
     "cancelConfirm": "Really cancel",
     "cancel": "Cancel sale",

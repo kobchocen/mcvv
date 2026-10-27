@@ -54,9 +54,20 @@ export function canManageSaleItems(role: UserRole): boolean {
   return role === "admin";
 }
 
-/** Ruční „zaplaceno převodem“ u prodejky (platba přišla, ale nespárovala se): jen staff. */
+/**
+ * Ruční „zaplaceno převodem“ u prodejky (platba přišla, ale nespárovala se): jen admin.
+ * Pořadatel (`organizer`) ne – s pokladnou kanceláře to nesouvisí (#207).
+ */
 export function canMarkSalePaidBank(role: UserRole): boolean {
-  return isStaffRole(role);
+  return role === "admin";
+}
+
+/** Změna stavu nezaplacené prodejky: hotově a storno smí pokladna, převod ručně jen admin. */
+export function canChangeSaleStatus(
+  role: UserRole,
+  to: "paid_cash" | "paid_bank" | "cancelled",
+): boolean {
+  return to === "paid_bank" ? canMarkSalePaidBank(role) : canUseCashDesk(role);
 }
 
 /** Správa živých výsledků (#120–#122): opravy a konflikty mezičasů, OFeed, API klíče zařízení. */

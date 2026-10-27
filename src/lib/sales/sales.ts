@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import { canChangeSaleStatus } from "@/lib/auth/roles";
 import type { SessionUser } from "@/lib/auth/session";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
@@ -111,7 +112,7 @@ export async function createSale(
   return { ok: false, error: "busy" };
 }
 
-export type SaleChangeResult = "ok" | "not_found" | "not_unpaid";
+export type SaleChangeResult = "ok" | "forbidden" | "not_found" | "not_unpaid";
 
 /** Nezaplacená → zaplacená hotově / ručně převodem (kdo a kdy), nebo storno. */
 export async function changeSaleStatus(
@@ -120,6 +121,8 @@ export async function changeSaleStatus(
   to: "paid_cash" | "paid_bank" | "cancelled",
   note?: string,
 ): Promise<SaleChangeResult> {
+  // Pojistka i mimo server action: ruční převod jen admin (#207).
+  if (!canChangeSaleStatus(session.role, to)) return "forbidden";
   const now = new Date();
   const name = actorName(session);
   return prisma.$transaction(async (db) => {

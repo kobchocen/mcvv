@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { chooseRequest, fetchFio, fioUrl, parseFioStatement, periodsWindow, redact } from "./fio";
+import {
+  chooseRequest,
+  fetchFio,
+  fioFailureLogLine,
+  fioUrl,
+  parseFioStatement,
+  periodsWindow,
+  redact,
+} from "./fio";
 
 const fixture = {
   accountStatement: {
@@ -99,4 +107,24 @@ test("token never leaks from URLs or errors", async () => {
   const ok = (async () => Response.json(fixture)) as unknown as typeof fetch;
   const good = await fetchFio(token, { mode: "periods", from: "2026-10-01", to: "2026-10-18" }, ok);
   assert.equal(good.ok && good.transactions.length, 2);
+});
+
+test("fioFailureLogLine: job, kind, mode and error for Log Analytics, token masked", async () => {
+  const token = "tok-SECRET-123";
+  const failure = await fetchFio(token, { mode: "last" }, (async () => {
+    throw new TypeError(`fetch failed for https://fioapi.fio.cz/v1/rest/last/${token}/`);
+  }) as typeof fetch);
+  assert.equal(failure.ok, false);
+  if (failure.ok) return;
+  const line = fioFailureLogLine(failure, "last", token);
+  assert.match(line, /^\[payments\] Fio fetch failed /);
+  assert.match(line, /"job":"payments"/);
+  assert.match(line, /"kind":"error"/);
+  assert.match(line, /"mode":"last"/);
+  assert.match(line, /fetch failed/);
+  assert.doesNotMatch(line, /SECRET/);
+  assert.doesNotMatch(
+    fioFailureLogLine({ kind: "error", error: `x ${token}` }, "last", token),
+    /SECRET/,
+  );
 });

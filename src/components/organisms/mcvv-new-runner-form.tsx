@@ -38,6 +38,8 @@ export function McvvNewRunnerForm({
     female: string;
     category: string;
     club: string;
+    clubOptional: string;
+    clubHint: string;
     add: string;
     ambiguous: string;
     taken: string;
@@ -172,15 +174,23 @@ export function McvvNewRunnerForm({
         </select>
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor="clubName">{copy.club}</Label>
+        {/* Klub je nepovinný (#204): štítek i nápověda to říkají výslovně. */}
+        <Label htmlFor="clubName">
+          {copy.club}
+          <span className="font-normal text-race-muted">{copy.clubOptional}</span>
+        </Label>
         <input type="hidden" name="clubName" value={club} />
         <McvvClubCombobox
           id="clubName"
           value={club}
           onChange={setClub}
           listId={clubListId}
+          describedBy="clubName-hint"
           className="h-10"
         />
+        <p id="clubName-hint" className="text-xs text-race-muted">
+          {copy.clubHint}
+        </p>
       </div>
       {state.error === "sex" ? (
         <p className="sm:col-span-2 text-sm text-destructive">{copy.sexRequired}</p>

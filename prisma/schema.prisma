@@ -356,6 +356,8 @@ enum UserRole {
   timing
   /// Obsluha mezičasových kontrol: jen stránka mezičasů (#121).
   splitmaker
+  /// „Závodní kancelář“ (#207): pokladna a prodejky na místě, bez administrace.
+  race_office
 }
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.
@@ -891,4 +893,72 @@ model StartLineMeta {
   @@id([year, runnerId])
   @@index([groupId])
   @@map("mcvv_start_radek")
+}
+
+/// Prodejní položka závodní kanceláře pro ročník (#207): dohláška na místě, merch apod.
+model SaleItem {
+  id        Int      @id @default(autoincrement())
+  year      Int      @map("rok") @db.SmallInt
+  name      String   @map("nazev") @db.VarChar(80)
+  /// Cena v celých Kč.
+  price     Int      @map("cena")
+  active    Boolean  @default(true) @map("aktivni")
+  sortOrder Int      @default(0) @map("poradi") @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lines SaleLine[]
+
+  @@index([year, active])
+  @@map("mcvv_sale_item")
+}
+
+/// Prodejka závodní kanceláře (#207). VS = rok + 9 + pořadí na 5 míst (např. 2026900001),
+/// nikdy se nepotká s VS přihlášky (rok + 1–9999). Částka a řádky se po vytvoření nemění.
+model Sale {
+  id            Int       @id @default(autoincrement())
+  year          Int       @map("rok") @db.SmallInt
+  /// Pořadí prodejky v ročníku (1, 2, …).
+  number        Int       @map("cislo")
+  vs            String    @unique @db.VarChar(10)
+  /// Celková částka v Kč (součet řádků).
+  total         Int       @map("castka")
+  /// unpaid | paid_bank | paid_cash | cancelled
+  status        String    @default("unpaid") @map("stav") @db.VarChar(12)
+  createdById   Int?      @map("vytvoril_id")
+  createdByName String    @map("vytvoril") @db.VarChar(80)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  paidAt        DateTime? @map("zaplaceno_at")
+  /// Kdo označil zaplaceno (hotově / ručně převodem); u spárování z Fio "fio".
+  paidByName    String?   @map("zaplatil_zapsal") @db.VarChar(80)
+  paidById      Int?      @map("zaplatil_zapsal_id")
+  /// Spárovaný pohyb z Fio (mcvv_bank_tx.id).
+  bankTxId      Int?      @map("bank_tx_id")
+  cancelledAt   DateTime? @map("storno_at")
+  cancelledBy   String?   @map("storno_kdo") @db.VarChar(80)
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  lines SaleLine[]
+
+  @@unique([year, number])
+  @@index([year, status])
+  @@index([year, createdAt])
+  @@map("mcvv_sale")
+}
+
+/// Řádek prodejky se snímkem názvu a ceny (pozdější změna ceníku historii nemění).
+model SaleLine {
+  id        Int    @id @default(autoincrement())
+  saleId    Int    @map("prodejka_id")
+  itemId    Int?   @map("polozka_id")
+  name      String @map("nazev") @db.VarChar(80)
+  unitPrice Int    @map("cena")
+  quantity  Int    @map("kusy") @db.SmallInt
+  lineTotal Int    @map("castka")
+
+  sale Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  item SaleItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([saleId])
+  @@map("mcvv_sale_line")
 }

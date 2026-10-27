@@ -34,6 +34,13 @@ export type AuditAction =
   | "entry.header_changed"
   | "entry.line_club_changed"
   | "entry.cancelled"
+  // Závodní kancelář (#207): prodejky a ceník. Spárování z Fio je v mcvv_bank_tx (bez auditu).
+  | "sale.created"
+  | "sale.paid_cash"
+  | "sale.paid_bank_manual"
+  | "sale.cancelled"
+  | "sale_item.created"
+  | "sale_item.updated"
   // Ruční sloučení id klubů (#104). `club.merge` přepisuje data (Q45), detail = stav před
   // sloučením (ClubMergeAuditDetail). `club.unmerged` jen ve starých záznamech (sloučení 1.4.0).
   | "club.merge"

@@ -8,6 +8,7 @@ import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
+import { matchSaleTransaction, parseSaleVs, type SaleSnapshot } from "@/lib/sales/core";
 import { utcDayStart } from "@/lib/mail/queue-core";
 
 import {
@@ -106,23 +107,12 @@ async function snapshot(year: number, id: number): Promise<RegistrationSnapshot>
   };
 }
 
-export type TxOutcome = "skipped" | "duplicate" | "matched" | "unmatched" | "dry_run";
-
-/** Zpracuje jeden pohyb; idempotentní díky unikátnímu fio_id. */
-export async function processTransaction(
+/** Založí řádek pohybu (idempotence přes unikátní fio_id); duplikát → null. */
+async function createBankTx(
   tx: FioTransaction,
   year: number,
-  options: { dryRun: boolean },
-): Promise<TxOutcome> {
-  // Snapshot jen pro přihlášku z VS; matchTransaction si ho vyžádá synchronně.
-  const pre = matchTransaction(tx, year, () => ({ status: null, fee: 1, paid: 0 }));
-  if (pre.kind === "skip") return "skipped";
-  const regId = pre.registrationId;
-  const reg = regId ? await snapshot(year, regId) : null;
-  const decision = matchTransaction(tx, year, () => reg);
-  if (decision.kind === "skip") return "skipped";
-
-  let bankTxId: number;
+  registrationId: number | null,
+): Promise<number | null> {
   try {
     const row = await prisma.bankTx.create({
       data: {
@@ -136,16 +126,98 @@ export async function processTransaction(
         message: tx.message?.slice(0, 255) ?? null,
         raw: tx.raw as Prisma.InputJsonValue,
         year,
-        registrationId: decision.registrationId,
+        registrationId,
       },
       select: { id: true },
     });
-    bankTxId = row.id;
+    return row.id;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
-      return "duplicate";
+      return null;
     throw error;
   }
+}
+
+/**
+ * Pohyb s VS prodejky (#207): přesná částka na nezaplacenou prodejku → prodejka
+ * „zaplaceno převodem“, pohyb `matched` s důvodem `sale` (bez mcvv_platba). Ostatní
+ * případy jdou mezi nespárované k ruční kontrole. Null = VS není prodejka.
+ */
+async function processSaleTransaction(
+  tx: FioTransaction,
+  year: number,
+  options: { dryRun: boolean },
+): Promise<TxOutcome | null> {
+  const number = tx.vs ? parseSaleVs(tx.vs, year) : null;
+  if (number === null || !(tx.amount > 0)) return null;
+  const found: SaleSnapshot = await prisma.sale.findUnique({
+    where: { year_number: { year, number } },
+    select: { id: true, total: true, status: true },
+  });
+  const decision = matchSaleTransaction(tx, year, () => found);
+  if (decision.kind === "not_sale") return null;
+
+  const bankTxId = await createBankTx(tx, year, null);
+  if (bankTxId === null) return "duplicate";
+  const note = `prodejka ${tx.vs!.trim()}`;
+
+  if (options.dryRun) {
+    await prisma.bankTx.update({
+      where: { id: bankTxId },
+      data: {
+        status: "dry_run",
+        reason: decision.kind === "unmatched" ? decision.reason : "would_match_sale",
+        note,
+      },
+    });
+    return "dry_run";
+  }
+  if (decision.kind === "unmatched") {
+    await prisma.bankTx.update({
+      where: { id: bankTxId },
+      data: { status: "unmatched", reason: decision.reason, note },
+    });
+    return "unmatched";
+  }
+  // Podmíněný zápis: mezitím mohla kancelář označit „zaplaceno hotově“ nebo stornovat.
+  return prisma.$transaction(async (db) => {
+    const paid = await db.sale.updateMany({
+      where: { id: decision.saleId, status: "unpaid" },
+      data: { status: "paid_bank", paidAt: new Date(), paidByName: "fio", bankTxId },
+    });
+    const ok = paid.count === 1;
+    await db.bankTx.update({
+      where: { id: bankTxId },
+      data: ok
+        ? { status: "matched", reason: "sale", note }
+        : { status: "unmatched", reason: "sale_paid", note },
+    });
+    return ok ? "matched" : "unmatched";
+  });
+}
+
+export type TxOutcome = "skipped" | "duplicate" | "matched" | "unmatched" | "dry_run";
+
+/** Zpracuje jeden pohyb; idempotentní díky unikátnímu fio_id. */
+export async function processTransaction(
+  tx: FioTransaction,
+  year: number,
+  options: { dryRun: boolean },
+): Promise<TxOutcome> {
+  // Prodejky závodní kanceláře (#207) mají vlastní rozsah VS (rok + 9 + 5 číslic).
+  const saleOutcome = await processSaleTransaction(tx, year, options);
+  if (saleOutcome) return saleOutcome;
+
+  // Snapshot jen pro přihlášku z VS; matchTransaction si ho vyžádá synchronně.
+  const pre = matchTransaction(tx, year, () => ({ status: null, fee: 1, paid: 0 }));
+  if (pre.kind === "skip") return "skipped";
+  const regId = pre.registrationId;
+  const reg = regId ? await snapshot(year, regId) : null;
+  const decision = matchTransaction(tx, year, () => reg);
+  if (decision.kind === "skip") return "skipped";
+
+  const bankTxId = await createBankTx(tx, year, decision.registrationId);
+  if (bankTxId === null) return "duplicate";
 
   if (options.dryRun) {
     await prisma.bankTx.update({

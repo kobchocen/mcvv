@@ -118,6 +118,19 @@ describe("loginTarget – default target by role (no next)", () => {
       query: "",
     });
   });
+  it("sends the race office to the cash desk (#207)", () => {
+    assert.deepEqual(loginTarget(null, "none", "race_office"), {
+      kind: "user",
+      path: "/kancelar",
+      query: "",
+    });
+    assert.equal(safeNext("/cs/kancelar/prodejky"), "/kancelar/prodejky");
+    assert.deepEqual(loginTarget("/kancelar/polozky", "full", "admin"), {
+      kind: "user",
+      path: "/kancelar/polozky",
+      query: "",
+    });
+  });
   it("keeps the race-day target for Časomíra and the application page for registrars", () => {
     assert.deepEqual(loginTarget(null, "raceday", "timing"), {
       kind: "admin",

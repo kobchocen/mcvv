@@ -1521,7 +1521,8 @@
       "testEventId": "Invalid OFeed test event ID.",
       "testPassword": "Invalid test event password (4–200 characters, single line).",
       "ofeedProfile": "Unknown OFeed profile.",
-      "ofeedTestMissing": "Save the OFeed test event ID first."
+      "ofeedTestMissing": "Save the OFeed test event ID first.",
+      "ofeedTestRun": "Cannot switch to the live event during a test run – end the test first."
     },
     "publish": {
       "disabled": "Publishing is disabled.",
@@ -1697,6 +1698,41 @@
     "colName": "Name",
     "notInStart": "not in start list",
     "editLink": "Edit"
+  },
+  "TestRun": {
+    "title": "Test run",
+    "intro": "Fictitious start using the real start list: from the chosen zero, split makers, the Start station, obd-klient and OFeed (test event only) work as on race day. The test ends by itself after 3 h, at the latest {cutoff}. On end, test splits, starts, the trial zero and device keys created during the test are deleted automatically.",
+    "zeroLabel": "Test zero",
+    "zeroIn5": "in 5 minutes",
+    "zeroAt1015": "today 10:15",
+    "zeroAt2015": "today 20:15",
+    "zeroCustom": "exact time",
+    "start": "Start test",
+    "end": "End test",
+    "endHint": "Ending deletes the test data right away (no further confirmation).",
+    "active": "Test run in progress – zero {zero}, automatic end {expires}.",
+    "requiresOfeed": "A test cannot start without an active OFeed test profile (OFeed section below: fill in the test event ID and switch to the test event).",
+    "blocked": "From race day ({cutoff}) a test run cannot be started.",
+    "tokenHint": "Device keys created now are test keys – they stop working when the test ends.",
+    "zeroLocked": "During a test run the zero is held by the test.",
+    "banner": "TEST – test run, zero {zero}, ends {expires}. Data are deleted afterwards and are not public.",
+    "leftovers": "WARNING: test data remain on race day – splits: {splits}, starts: {starts}{zero}{run}. Delete them before the start (Year splits – clear, Start check).",
+    "leftoversZero": ", trial zero set",
+    "leftoversRun": ", test run not ended",
+    "done": {
+      "started": "Test run started.",
+      "ended": "Test run ended, test data deleted."
+    },
+    "error": {
+      "zero": "Invalid test zero.",
+      "zeroPast": "The test zero is too far in the past (max. 10 minutes).",
+      "zeroFar": "The test zero can be at most 24 h ahead.",
+      "raceDay": "A test run cannot start from race day on (not even with a zero on race day).",
+      "active": "A test run is already in progress.",
+      "ofeedProfile": "Switch OFeed to the test event first.",
+      "ofeedTestMissing": "Save the OFeed test event ID first.",
+      "notActive": "No test run is in progress."
+    }
   },
   "CashDesk": {
     "metaTitle": "Race office",

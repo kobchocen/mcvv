@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
+import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,6 +96,7 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
       <div className="mx-auto grid max-w-5xl gap-8">
         <div>
           <McvvAdminHomeLink label={admin("title")} />
+          <McvvTestRunBanner locale={locale} leftovers className="mb-4" />
           <p className="mt-2 text-sm">
             <Link href="/admin/den-zavodu" className="text-race-accent hover:underline">
               ← {t("backRaceDay")}

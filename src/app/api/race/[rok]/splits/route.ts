@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { applyDeviceItems } from "@/lib/live/ingest";
 import { deviceBatchSchema, summarize } from "@/lib/live/ingest-core";
+import { getRaceContext } from "@/lib/live/race-context";
 import { RateLimiter } from "@/lib/live/rate-limit";
+import { dataEpoch, getActiveTestRun } from "@/lib/live/test-run";
 import { authenticateDevice } from "@/lib/live/tokens";
 import { tokenAllowsSplit } from "@/lib/live/tokens-core";
 
@@ -43,6 +45,15 @@ async function authorize(request: NextRequest, rok: string) {
   return { token: auth.token };
 }
 
+/**
+ * Epocha dat pro obd-klient (#186, Q72): mění se s novým testovacím během i s novou nulou.
+ * Klient při změně zahodí svůj state.json, takže na cílovém PC není potřeba nic mazat.
+ */
+async function epochInfo() {
+  const [run, ctx] = await Promise.all([getActiveTestRun(), getRaceContext()]);
+  return { epoch: dataEpoch(run, ctx.zero), test: run !== null };
+}
+
 /** Kontrola spojení a klíče z klienta na cílovém PC (#120). */
 export async function GET(request: NextRequest, { params }: Params) {
   const { rok } = await params;
@@ -54,6 +65,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       year: auth.token.year,
       label: auth.token.label,
       splits: auth.token.splits,
+      ...(await epochInfo()),
       now: Date.now(),
     },
     { headers: noStore },
@@ -98,7 +110,12 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     const results = await applyDeviceItems(parsed.data.items, auth.token);
     return NextResponse.json(
-      { ok: true, results, summary: summarize(results.map((r) => r.outcome)) },
+      {
+        ok: true,
+        results,
+        summary: summarize(results.map((r) => r.outcome)),
+        ...(await epochInfo()),
+      },
       { headers: noStore },
     );
   } catch (error) {

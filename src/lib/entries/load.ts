@@ -1,65 +1,90 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
-import { recalculateRegistrationStatus } from "@/lib/entries/status";
+import { nextStatus } from "@/lib/entries/status";
 import { buildQuickList, withLastClub } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
 import { pickActiveRegistration, pickCancelledRegistrations } from "@/lib/entries/ensure-core";
+import { pastRegistrationKeys } from "@/lib/entries/load-core";
 
-function emailMatch(value: string | null | undefined, email: string): boolean {
-  return value?.trim().toLowerCase() === email.toLowerCase();
-}
+const registrationInclude = {
+  lines: {
+    include: {
+      runner: { select: { id: true, name: true } },
+      club: { select: { id: true, name: true } },
+      category: { select: { name: true, entryFee: true } },
+    },
+    orderBy: { runnerId: "asc" as const },
+  },
+};
 
+/**
+ * Data stránky /prihlasky pro přihlášený e-mail.
+ *
+ * #189: stránka se vykresluje znovu po každé akci (rychlá nabídka, nový běžec, klub, odebrání),
+ * proto se dřív načítaly všechny přihlášky ročníku i všech minulých let i s řádky a filtrovaly
+ * až tady. Teď se načte jen lehký index (rok, číslo, e-mail, stav, název), e-mail se porovná stejně
+ * jako dřív (trim + bez ohledu na velikost písmen) a řádky se dočtou jen u vlastních přihlášek.
+ * Nezávislé dotazy běží souběžně.
+ */
 export async function loadMyEntry(email: string) {
   const { year, open, deadline } = await currentRaceYear();
-  const yearRegs = await prisma.registration.findMany({
-    where: { year },
-    include: {
-      lines: {
-        include: {
-          runner: { select: { id: true, name: true } },
-          club: { select: { id: true, name: true } },
-          category: { select: { name: true, entryFee: true } },
-        },
-        orderBy: { runnerId: "asc" },
-      },
-    },
+  const index = await prisma.registration.findMany({
+    select: { year: true, id: true, email: true, status: true, name: true },
   });
+  const yearIndex = index.filter((row) => row.year === year);
   // Přihláška se tu už nezakládá – vzniká až s prvním běžcem (ensureRegistration).
-  let registration = pickActiveRegistration(yearRegs, email);
-  const cancelled = pickCancelledRegistrations(yearRegs, email).map((row) => ({
+  const active = pickActiveRegistration(yearIndex, email);
+  const cancelled = pickCancelledRegistrations(yearIndex, email).map((row) => ({
     year: row.year,
     id: row.id,
     name: row.name,
   }));
+  const pastKeys = pastRegistrationKeys(index, year, email);
 
-  const pastRegs = await prisma.registration.findMany({
-    where: { year: { not: year } },
-    include: {
-      lines: { select: { runnerId: true, runner: { select: { id: true, name: true } } } },
-    },
-    orderBy: { year: "desc" },
-  });
-  const minePast = pastRegs.filter((row) => emailMatch(row.email, email));
-  const thisYearTaken = new Set(
-    (await prisma.registrationLine.findMany({ where: { year }, select: { runnerId: true } })).map(
-      (row) => row.runnerId,
-    ),
-  );
-  const quickRunners = buildQuickList(
-    minePast.flatMap((row) =>
-      row.lines
-        .filter((line) => !thisYearTaken.has(line.runnerId))
-        .map((line) => ({ id: line.runnerId, name: line.runner.name })),
-    ),
-  );
-  // Klub z poslední přihlášky běžce (kterékoli, ne jen vlastní) – id rozhoduje (Q35).
-  const pastLines =
-    quickRunners.length > 0
-      ? await prisma.registrationLine.findMany({
-          where: { year: { lt: year }, runnerId: { in: quickRunners.map((runner) => runner.id) } },
-          select: { runnerId: true, year: true, clubId: true, club: { select: { name: true } } },
+  const [current, minePast, yearPayments] = await Promise.all([
+    active
+      ? prisma.registration.findUnique({
+          where: { year_id: { year: active.year, id: active.id } },
+          include: registrationInclude,
         })
-      : [];
+      : null,
+    pastKeys.length > 0
+      ? prisma.registration.findMany({
+          where: { OR: pastKeys },
+          include: {
+            lines: { select: { runnerId: true, runner: { select: { id: true, name: true } } } },
+          },
+          orderBy: [{ year: "desc" }, { id: "asc" }],
+        })
+      : [],
+    active
+      ? prisma.payment.findMany({ where: { year }, orderBy: [{ date: "asc" }, { id: "asc" }] })
+      : [],
+  ]);
+
+  // Rychlá nabídka: běžci z minulých přihlášek, kteří letos ještě nejsou přihlášení.
+  const pastRunners = minePast.flatMap((row) =>
+    row.lines.map((line) => ({ id: line.runnerId, name: line.runner.name })),
+  );
+  const pastRunnerIds = [...new Set(pastRunners.map((runner) => runner.id))];
+  const [takenLines, pastLines] =
+    pastRunnerIds.length > 0
+      ? await Promise.all([
+          prisma.registrationLine.findMany({
+            where: { year, runnerId: { in: pastRunnerIds } },
+            select: { runnerId: true },
+          }),
+          // Klub z poslední přihlášky běžce (kterékoli, ne jen vlastní) – id rozhoduje (Q35).
+          prisma.registrationLine.findMany({
+            where: { year: { lt: year }, runnerId: { in: pastRunnerIds } },
+            select: { runnerId: true, year: true, clubId: true, club: { select: { name: true } } },
+          }),
+        ])
+      : [[], []];
+  const thisYearTaken = new Set(takenLines.map((row) => row.runnerId));
+  const quickRunners = buildQuickList(
+    pastRunners.filter((runner) => !thisYearTaken.has(runner.id)),
+  );
   const quick = withLastClub(
     quickRunners,
     pastLines.map((line) => ({
@@ -70,31 +95,26 @@ export async function loadMyEntry(email: string) {
     })),
   );
 
-  if (registration) {
-    await recalculateRegistrationStatus(registration.year, registration.id);
-    registration = await prisma.registration.findUnique({
-      where: { year_id: { year: registration.year, id: registration.id } },
-      include: {
-        lines: {
-          include: {
-            runner: { select: { id: true, name: true } },
-            club: { select: { id: true, name: true } },
-            category: { select: { name: true, entryFee: true } },
-          },
-          orderBy: { runnerId: "asc" },
-        },
-      },
-    });
-  }
-
+  let registration = current;
   const payments = registration
-    ? (
-        await prisma.payment.findMany({
-          where: { year },
-          orderBy: [{ date: "asc" }, { id: "asc" }],
-        })
-      ).filter((payment) => paymentRegistrationId(payment.registrationId) === registration!.id)
+    ? yearPayments.filter(
+        (payment) => paymentRegistrationId(payment.registrationId) === registration!.id,
+      )
     : [];
+  if (registration) {
+    // Stejný přepočet jako recalculateRegistrationStatus, jen z už načtených dat (bez dalšího
+    // čtení přihlášky, řádků a plateb a bez opětovného načtení přihlášky).
+    const fee = registration.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
+    const paid = payments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+    const status = nextStatus(registration.status, registration.lines.length, fee, paid);
+    if (status !== registration.status) {
+      await prisma.registration.update({
+        where: { year_id: { year: registration.year, id: registration.id } },
+        data: { status },
+      });
+      registration = { ...registration, status };
+    }
+  }
 
   return { year, open, deadline, registration, cancelled, past: minePast, quick, payments };
 }

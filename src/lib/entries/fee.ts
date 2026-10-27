@@ -1,63 +1,55 @@
 import { prisma } from "@/lib/db/client";
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { getFreeEntryEmails } from "@/lib/entries/settings";
+import {
+  absoluteWinnerIdsFrom,
+  feeReasonFor,
+  veteranIdsFrom,
+  type FeeReason,
+} from "@/lib/entries/fee-core";
 
-export type FeeReason = "organizer" | "winner" | "veteran";
+export type { FeeReason } from "@/lib/entries/fee-core";
 
-function runnerSex(id: string): "M" | "F" {
-  return id.charAt(4) < "5" ? "M" : "F";
-}
+export type LineFee = { fee: number; reason: FeeReason | null };
 
-async function absoluteWinnerIds(): Promise<Set<string>> {
-  const rows = await prisma.result.findMany({
-    select: { year: true, runnerId: true, time: true },
-  });
-  const best = new Map<string, { id: string; time: number }>();
-  for (const row of rows) {
-    const key = `${row.year}-${runnerSex(row.runnerId)}`;
-    const current = best.get(key);
-    if (!current || row.time < current.time) {
-      best.set(key, { id: row.runnerId, time: row.time });
+/**
+ * Výpočet startovného pro víc řádků najednou (#189): seznam e-mailů pořadatelů i tabulka
+ * výsledků se načtou nejvýš jednou (výsledky jen, když e-mail není pořadatelský), ne
+ * 1× / 2× pro každý řádek.
+ */
+export function createLineFeeResolver(): (
+  email: string,
+  runnerId: string,
+  categoryFee: number,
+) => Promise<LineFee> {
+  let freeEmails: Promise<Set<string>> | undefined;
+  let results: Promise<{ winners: Set<string>; veterans: Set<string> }> | undefined;
+  const loadResults = async () => {
+    const rows = await prisma.result.findMany({
+      select: { year: true, runnerId: true, time: true },
+    });
+    return { winners: absoluteWinnerIdsFrom(rows), veterans: veteranIdsFrom(rows) };
+  };
+  return async (email, runnerId, categoryFee) => {
+    freeEmails ??= getFreeEntryEmails();
+    const free = await freeEmails;
+    if (feeReasonFor(email, runnerId, { freeEmails: free, winners: EMPTY, veterans: EMPTY })) {
+      return { fee: 0, reason: "organizer" };
     }
-  }
-  return new Set([...best.values()].map((row) => row.id));
+    results ??= loadResults();
+    const reason = feeReasonFor(email, runnerId, { freeEmails: free, ...(await results) });
+    return reason ? { fee: 0, reason } : { fee: categoryFee, reason: null };
+  };
 }
 
-async function veteranIds(): Promise<Set<string>> {
-  const rows = await prisma.result.findMany({ select: { year: true, runnerId: true } });
-  const yearCount = new Set(rows.map((row) => row.year)).size;
-  const pocr = Math.round(yearCount / 2 + 0.5) - 1;
-  const starts = new Map<string, number>();
-  for (const row of rows) {
-    starts.set(row.runnerId, (starts.get(row.runnerId) ?? 0) + 1);
-  }
-  const ids = new Set<string>();
-  for (const [id, count] of starts) {
-    if (count > pocr) {
-      ids.add(id);
-    }
-  }
-  return ids;
-}
+const EMPTY: ReadonlySet<string> = new Set();
 
 export async function computeLineFee(
   email: string,
   runnerId: string,
   categoryFee: number,
-): Promise<{ fee: number; reason: FeeReason | null }> {
-  const freeEmails = await getFreeEntryEmails();
-  if (freeEmails.has(email.trim().toLowerCase())) {
-    return { fee: 0, reason: "organizer" };
-  }
-  const winners = await absoluteWinnerIds();
-  if (winners.has(runnerId)) {
-    return { fee: 0, reason: "winner" };
-  }
-  const veterans = await veteranIds();
-  if (veterans.has(runnerId)) {
-    return { fee: 0, reason: "veteran" };
-  }
-  return { fee: categoryFee, reason: null };
+): Promise<LineFee> {
+  return createLineFeeResolver()(email, runnerId, categoryFee);
 }
 
 export async function paidAmount(year: number, registrationId: number): Promise<number> {

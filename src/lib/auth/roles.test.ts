@@ -7,8 +7,11 @@ import {
   adminPathAllowed,
   canAccessRaceDay,
   canAccessSplits,
+  canManageSaleItems,
+  canMarkSalePaidBank,
   canMergeClubs,
   canManageLiveResults,
+  canUseCashDesk,
   isStaffRole,
   requiresVerifiedEmail,
   USER_ROLES,
@@ -16,6 +19,21 @@ import {
 } from "./roles";
 
 describe("role permissions", () => {
+  it("race office (#207): cash desk for race_office and staff, price list admin only, no admin", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(
+        canUseCashDesk(role),
+        role === "race_office" || role === "organizer" || role === "admin",
+        role,
+      );
+      assert.equal(canManageSaleItems(role), role === "admin", role);
+      assert.equal(canMarkSalePaidBank(role), role === "organizer" || role === "admin", role);
+    }
+    assert.equal(adminAccess("race_office"), "none");
+    assert.equal(isStaffRole("race_office"), false);
+    assert.equal(canAccessSplits("race_office"), false);
+    assert.equal(requiresVerifiedEmail("race_office"), true);
+  });
   it("club merge (preview and apply, Q47): admin only, not organizer", () => {
     for (const role of USER_ROLES) {
       assert.equal(canMergeClubs(role), role === "admin", role);
@@ -74,7 +92,7 @@ describe("role permissions", () => {
   it("new restricted roles need a verified e-mail like registrar", () => {
     assert.deepEqual(
       USER_ROLES.filter((role) => requiresVerifiedEmail(role)),
-      ["registrar", "timing", "splitmaker"],
+      ["registrar", "timing", "splitmaker", "race_office"],
     );
   });
 });

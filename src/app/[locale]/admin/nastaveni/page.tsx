@@ -16,6 +16,13 @@ import {
   RECEIPT_ADDRESS_MAX,
   RECEIPT_TEXT_MAX,
 } from "@/lib/settings/receipt";
+import {
+  envMailPolicy,
+  getMailSettings,
+  MAIL_LIMIT_MAX,
+  resolveMailPolicy,
+} from "@/lib/settings/mail";
+import { mailStats } from "@/lib/mail/queue-store";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
@@ -41,13 +48,17 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   setRequestLocale(locale);
   await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const [emails, site, messages, receipt, organizerRegEmail] = await Promise.all([
+  const [emails, site, messages, receipt, organizerRegEmail, mail, mailToday] = await Promise.all([
     getFreeEntryEmailsText(),
     getSiteSettings(),
     getMessageSettings(),
     getStoredReceiptIssuer(),
     getOrganizerRegistrationEmailText(),
+    getMailSettings(),
+    mailStats().catch(() => null),
   ]);
+  const mailFallback = envMailPolicy(env);
+  const mailPolicyNow = resolveMailPolicy(mail, env);
   const organizerFallback = resolveOrganizerEmail(null, env.CONTACT_TO);
 
   return (
@@ -65,6 +76,14 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
         ) : error === "organizerRegistrationEmail" ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
             {copy("settingsOrganizerRegistrationEmailInvalid")}
+          </p>
+        ) : error === "mailCap" ? (
+          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+            {copy("settingsMailCapInvalid", { max: MAIL_LIMIT_MAX })}
+          </p>
+        ) : error === "mailReserve" ? (
+          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+            {copy("settingsMailReserveInvalid")}
           </p>
         ) : error === "email" ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
@@ -194,6 +213,77 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
                 </span>
               </label>
             ))}
+          </fieldset>
+
+          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
+            <legend className="px-1 font-display text-lg font-semibold">
+              {copy("settingsMail")}
+            </legend>
+            {mailToday ? (
+              <p className="text-sm font-medium" data-testid="mail-today">
+                {mailPolicyNow.unlimited
+                  ? copy("settingsMailTodayUnlimited", { today: mailToday.today })
+                  : copy("settingsMailToday", {
+                      today: mailToday.today,
+                      cap: mailPolicyNow.cap,
+                    })}
+                {mailToday.quotaExceeded ? ` ${copy("mailQuotaExceeded")}` : ""}
+              </p>
+            ) : null}
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                name="mailUnlimited"
+                defaultChecked={mail.unlimited}
+                className="mt-0.5 size-4"
+              />
+              <span>
+                <span className="font-medium">{copy("settingsMailUnlimited")}</span>
+                <span className="mt-1 block text-race-muted">
+                  {copy("settingsMailUnlimitedHint")}
+                </span>
+              </span>
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label htmlFor="mailDailyCap">{copy("settingsMailCap")}</Label>
+                <Input
+                  id="mailDailyCap"
+                  name="mailDailyCap"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={MAIL_LIMIT_MAX}
+                  step={1}
+                  placeholder={String(mailFallback.cap)}
+                  defaultValue={mail.dailyCap ?? ""}
+                  aria-describedby="mailDailyCapHint"
+                  className="h-10 bg-race-surface"
+                />
+                <p id="mailDailyCapHint" className="text-xs text-race-muted">
+                  {copy("settingsMailCapHint", { fallback: mailFallback.cap })}
+                </p>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="mailPriorityReserve">{copy("settingsMailReserve")}</Label>
+                <Input
+                  id="mailPriorityReserve"
+                  name="mailPriorityReserve"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={MAIL_LIMIT_MAX}
+                  step={1}
+                  placeholder={String(mailFallback.reserve)}
+                  defaultValue={mail.priorityReserve ?? ""}
+                  aria-describedby="mailPriorityReserveHint"
+                  className="h-10 bg-race-surface"
+                />
+                <p id="mailPriorityReserveHint" className="text-xs text-race-muted">
+                  {copy("settingsMailReserveHint", { fallback: mailFallback.reserve })}
+                </p>
+              </div>
+            </div>
           </fieldset>
 
           <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">

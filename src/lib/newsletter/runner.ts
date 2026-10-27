@@ -28,7 +28,7 @@ export async function runNewsletterBatch(id: number): Promise<BatchOutcome> {
   }
   const now = new Date();
   const day = await prismaMailQueueStore.dayState(now);
-  const budget = newsletterBudget(day, mailPolicy(), await pendingPriority1(now));
+  const budget = newsletterBudget(day, await mailPolicy(), await pendingPriority1(now));
   if (budget <= 0) {
     return {
       counts: await prismaNewsletterStore.counts(id),

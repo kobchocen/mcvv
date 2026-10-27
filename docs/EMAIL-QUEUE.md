@@ -7,6 +7,11 @@ Newsletter má vlastní tabulku příjemců, ale počítá se do stejného denn�
 ## Pravidla
 
 - Den = UTC (tak resetuje kvótu Resend). Strop `MAIL_DAILY_CAP` (90), rezerva `MAIL_PRIORITY_RESERVE` (15).
+- Strop a rezervu lze nastavit v administraci (Nastavení → „E-maily – denní limit“, jen role admin;
+  klíče `mail.daily_cap`, `mail.priority_reserve`, `mail.unlimited` v `mcvv_setting`). Prázdné pole
+  = env, bez uloženého nastavení se nic nemění. Změnu zapisuje audit `settings.mail_limit`.
+- Přepínač „Bez denního limitu“ (vyšší tarif Resend) vypne vlastní strop fronty i newsletteru;
+  ochrana proti 429 kvóty (níže) platí dál. Newsletter i tak jde v dávkách max. 50.
 - Priorita 0 (`auth`, `confirmation`, `alert`) smí čerpat až do stropu; alerty až do 98.
 - Priorita 1 (`contact`, `reminder`, `summary`, `other`) jen do `strop − rezerva`.
 - Newsletter (nejnižší) dostane zbytek po čekajících e-mailech priority 1, max. 50 v dávce;

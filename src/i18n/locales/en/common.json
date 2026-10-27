@@ -594,6 +594,8 @@
     "feeReasonWinner": "winner",
     "feeReasonVeteran": "veteran",
     "club": "Club",
+    "clubOptional": "(optional)",
+    "clubHint": "Not running for a club? You can leave this field empty.",
     "runnerName": "Name",
     "category": "Category",
     "fee": "Fee",

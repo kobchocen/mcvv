@@ -587,6 +587,8 @@ function newRunnerCopy(copy: EntriesCopy) {
     female: copy("female"),
     category: copy("category"),
     club: copy("club"),
+    clubOptional: copy("clubOptional"),
+    clubHint: copy("clubHint"),
     add: copy("add"),
     ambiguous: copy("ambiguous"),
     taken: copy("taken"),

@@ -594,6 +594,8 @@
     "feeReasonWinner": "vítěz",
     "feeReasonVeteran": "veterán",
     "club": "Klub",
+    "clubOptional": "(nepovinné)",
+    "clubHint": "Neběžíte za klub? Pole můžete nechat prázdné.",
     "runnerName": "Jméno",
     "category": "Kategorie",
     "fee": "Startovné",

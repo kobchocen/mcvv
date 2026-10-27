@@ -7,6 +7,7 @@ import {
   adminPathAllowed,
   canAccessRaceDay,
   canAccessSplits,
+  canChangeSaleStatus,
   canManageSaleItems,
   canMarkSalePaidBank,
   canMergeClubs,
@@ -19,7 +20,7 @@ import {
 } from "./roles";
 
 describe("role permissions", () => {
-  it("race office (#207): cash desk for race_office and staff, price list admin only, no admin", () => {
+  it("race office (#207): cash desk for race_office and staff, price list and manual transfer admin only, no admin", () => {
     for (const role of USER_ROLES) {
       assert.equal(
         canUseCashDesk(role),
@@ -27,8 +28,15 @@ describe("role permissions", () => {
         role,
       );
       assert.equal(canManageSaleItems(role), role === "admin", role);
-      assert.equal(canMarkSalePaidBank(role), role === "organizer" || role === "admin", role);
+      // Q66: manual "paid by transfer" is admin only, organizer has nothing to do with it.
+      assert.equal(canMarkSalePaidBank(role), role === "admin", role);
+      const desk = role === "race_office" || role === "organizer" || role === "admin";
+      assert.equal(canChangeSaleStatus(role, "paid_cash"), desk, role);
+      assert.equal(canChangeSaleStatus(role, "cancelled"), desk, role);
+      assert.equal(canChangeSaleStatus(role, "paid_bank"), role === "admin", role);
     }
+    assert.equal(canMarkSalePaidBank("organizer"), false);
+    assert.equal(canChangeSaleStatus("race_office", "paid_bank"), false);
     assert.equal(adminAccess("race_office"), "none");
     assert.equal(isStaffRole("race_office"), false);
     assert.equal(canAccessSplits("race_office"), false);

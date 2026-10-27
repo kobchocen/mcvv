@@ -1745,7 +1745,7 @@
     "actions": "Akce",
     "markCash": "Zaplaceno hotově",
     "markBank": "Zaplaceno převodem (ručně)",
-    "markBankHint": "Jen pro pořadatele: platba na účet přišla, ale nespárovala se (např. jiná částka). Pohyb pak vyřiďte v Platbách.",
+    "markBankHint": "Jen pro administrátora: platba na účet přišla, ale nespárovala se (např. jiná částka). Pohyb pak vyřiďte v Platbách.",
     "markBankNote": "Poznámka (např. datum a protiúčet)",
     "cancelConfirm": "Opravdu stornovat",
     "cancel": "Storno prodejky",

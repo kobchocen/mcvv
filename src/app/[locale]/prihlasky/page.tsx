@@ -25,7 +25,7 @@ import { getMessageSettings } from "@/lib/settings/messages";
 import { removeRunner } from "@/lib/entries/actions";
 import { loadClubOptions } from "@/lib/entries/club";
 import { clubOptionValue } from "@/lib/entries/club-options";
-import { computeLineFee } from "@/lib/entries/fee";
+import { createLineFeeResolver } from "@/lib/entries/fee";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { loadMyEntry } from "@/lib/entries/load";
 import { isNewbie } from "@/lib/entries/newbie";
@@ -128,11 +128,17 @@ async function EntryBody({
   copy: Awaited<ReturnType<typeof getTranslations>>;
 }) {
   const email = session.email;
-  const { year, open, deadline, registration, cancelled, past, quick, payments } =
-    await loadMyEntry(email);
-  const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
-  // Souhlas se zasíláním informací patří účtu (dřív jen přihlášce).
-  const noMail = await loadAccountPromotionOptOut(email);
+  // Nezávislá data souběžně (#189): stránka se po každé akci v přihlášce vykresluje znovu.
+  const [entry, categories, noMail, clubOptions, messageSettings] = await Promise.all([
+    loadMyEntry(email),
+    prisma.category.findMany({ orderBy: { sort: "asc" } }),
+    // Souhlas se zasíláním informací patří účtu (dřív jen přihlášce).
+    loadAccountPromotionOptOut(email),
+    // Všechna id klubů z číselníku, ne jen letošní ročník (Q35).
+    loadClubOptions(),
+    getMessageSettings(),
+  ]);
+  const { year, open, deadline, registration, cancelled, past, quick, payments } = entry;
   const promotionForm = (
     <section>
       <h2 className="font-display text-2xl font-semibold">{copy("accountSettings")}</h2>
@@ -144,23 +150,23 @@ async function EntryBody({
       </div>
     </section>
   );
-  // Všechna id klubů z číselníku, ne jen letošní ročník (Q35).
-  const clubOptions = await loadClubOptions();
-  const account = registration
-    ? null
-    : await prisma.user.findUnique({ where: { email }, select: { clubName: true } });
-  const defaultClubName = (registration?.name ?? account?.clubName ?? "").trim();
   const lineRunnerIds = registration ? registration.lines.map((line) => line.runnerId) : [];
-  const startsById = await countPastStarts(lineRunnerIds, year);
-  const startsCopy = await getTranslations({ locale, namespace: "Entrants" });
+  const [account, startsById, startsCopy] = await Promise.all([
+    registration ? null : prisma.user.findUnique({ where: { email }, select: { clubName: true } }),
+    countPastStarts(lineRunnerIds, year),
+    getTranslations({ locale, namespace: "Entrants" }),
+  ]);
+  const defaultClubName = (registration?.name ?? account?.clubName ?? "").trim();
   const feeReasons = new Map<string, string | null>();
+  // Seznam pořadatelů a výsledky se načtou jednou pro všechny řádky, ne pro každý zvlášť.
+  const lineFee = createLineFeeResolver();
   if (registration) {
     for (const line of registration.lines) {
       const stored = line.entryFee ?? line.category.entryFee ?? 0;
       if (stored !== 0) {
         continue;
       }
-      const { reason } = await computeLineFee(email, line.runnerId, line.category.entryFee);
+      const { reason } = await lineFee(email, line.runnerId, line.category.entryFee);
       feeReasons.set(
         line.runnerId,
         reason === "organizer"
@@ -188,22 +194,23 @@ async function EntryBody({
   const qr =
     registration && hasLines && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
   const vs = registration ? variableSymbol(year, registration.id) : "";
-  const messagesEnabled = (await getMessageSettings()).enabled;
+  const messagesEnabled = messageSettings.enabled;
   const msg = await getTranslations({ locale, namespace: "Messages" });
-  const thread =
-    messagesEnabled && registration ? await loadRegistrationThread(year, registration.id) : null;
+  const [thread, pastSummaries] = await Promise.all([
+    messagesEnabled && registration ? loadRegistrationThread(year, registration.id) : null,
+    messagesEnabled
+      ? registrationThreadSummaries(
+          past.map((row) => ({ year: row.year, id: row.id })),
+          "user",
+        )
+      : (new Map() as Awaited<ReturnType<typeof registrationThreadSummaries>>),
+  ]);
   const threadUnread = thread
     ? countUnreadMessages(thread.messages, thread.lastReadByUser, "user")
     : 0;
   // Vlákno se v sekci #zpravy vykreslí celé → zprávy pořadatele přihlašující viděl
   // (přihláška je dohledaná podle e-mailu účtu, tedy vlastník).
   if (thread) await recordUserView(thread, session);
-  const pastSummaries = messagesEnabled
-    ? await registrationThreadSummaries(
-        past.map((row) => ({ year: row.year, id: row.id })),
-        "user",
-      )
-    : new Map();
 
   const pastSection =
     past.length > 0 ? (

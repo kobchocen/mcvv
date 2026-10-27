@@ -4,6 +4,14 @@ import { localeRedirectTarget } from "./i18n/locale-redirect";
 import { adminGate, REQUEST_PATH_HEADER } from "./lib/auth/admin-gate";
 import { decodeSessionToken, SESSION_COOKIE, usableSessionSecret } from "./lib/auth/session-token";
 import { env } from "./lib/env";
+import {
+  bezecRateLimit,
+  bezecRateLimitKey,
+  createRateLimiter,
+  isBezecPath,
+} from "./lib/security/rate-limit";
+
+const bezecLimiter = createRateLimiter({ limit: bezecRateLimit(env.BEZEC_RATE_LIMIT) });
 
 // Note: with the `src/` layout Next.js only picks up `src/proxy.ts`; the former root-level
 // `proxy.ts` (next-intl middleware) was never executed. Locale routing is handled by the
@@ -12,9 +20,26 @@ import { env } from "./lib/env";
 //   keeping the query,
 // - guards admin pages: without a valid session cookie of an admin-capable role it answers
 //   with a real 307 to /{locale}/prihlaseni?next=<original path> (pages still verify the
-//   role against the DB via requireStaff & co.).
+//   role against the DB via requireStaff & co.),
+// - rate-limits runner profiles /cs|en/bezec/* per client IP (#199, BEZEC_RATE_LIMIT).
 export default function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  if (isBezecPath(pathname)) {
+    const key = bezecRateLimitKey({ pathname, method: request.method, headers: request.headers });
+    const decision = key ? bezecLimiter.hit(key) : null;
+    if (decision?.limited) {
+      return new NextResponse("Too Many Requests", {
+        status: 429,
+        headers: {
+          "Retry-After": String(decision.retryAfterSeconds),
+          "Cache-Control": "no-store",
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      });
+    }
+    return NextResponse.next();
+  }
 
   const gate = adminGate({
     pathname,
@@ -58,9 +83,10 @@ function cookieRole(request: NextRequest) {
 
 export const config = {
   // Everything except locale-prefixed pages, API/internal routes and static files,
-  // plus the locale-prefixed admin pages (login guard).
+  // plus the locale-prefixed admin pages (login guard) and runner profiles (rate limit).
   matcher: [
     "/((?!cs/|cs$|en/|en$|api|_next|_vercel|healthz|readyz|test|.*\\..*).*)",
     "/(cs|en)/admin/:path*",
+    "/(cs|en)/bezec/:path*",
   ],
 };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { cache } from "react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import {
@@ -9,16 +10,18 @@ import {
   RunnerPhotoGrid,
   RunnerPodiumBadges,
   RunnerPortrait,
-  asPodiumRank,
   perfBarSegments,
-  podiumRank,
   RecordBadge,
 } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
+import { clubKey, createClubResolver } from "@/lib/clubs";
+import { getClubIndex } from "@/lib/clubs/cached";
 import { getClubResolver } from "@/lib/clubs/queries";
 import { displayRunnerName } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
+import { getRunnerPeerIndex, runnerProfileDb } from "@/lib/runner/cached";
+import { courseRecordOf, podiumPlacesOf } from "@/lib/runner/peers";
 import { isRunnerProfileMissing, summarizeRunnerResults } from "@/lib/runner/profile";
 import { runnerSex } from "@/lib/stats/queries";
 import { formatRaceTime } from "@/lib/utils";
@@ -27,15 +30,38 @@ import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }>;
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const runner = await prisma.runner.findUnique({
-    where: { id },
-    select: { name: true },
-  });
-  return { title: runner?.name ?? id };
+/**
+ * One runner lookup per request, shared by generateMetadata and the page (#199). All profile
+ * queries go through `runnerProfileDb` (max 3 of the 5 pool connections).
+ */
+const loadRunner = cache((id: string) =>
+  runnerProfileDb(() => prisma.runner.findUnique({ where: { id }, select: { name: true } })),
+);
+
+/**
+ * Club names for the profile: the cached index (tag "stats") unless a club id of the rows is
+ * not in it yet (e.g. a new club of a first-timer's registration), then a fresh load.
+ */
+async function profileClubResolver(clubIds: readonly (string | null | undefined)[]) {
+  const index = await getClubIndex();
+  const known = new Set(index.names.map((row) => clubKey(row.id)));
+  if (clubIds.every((clubId) => !clubKey(clubId) || known.has(clubKey(clubId)))) {
+    return createClubResolver(index);
+  }
+  return runnerProfileDb(() => getClubResolver());
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const runner = await loadRunner(id);
+  return {
+    title: runner?.name ?? id,
+    // The profile has no query parameters; variants with any are duplicates for crawlers.
+    ...(Object.keys(query).length > 0 ? { robots: { index: false, follow: false } } : {}),
+  };
 }
 
 function formatLoss(time: number, record: number, osLabel: string): string {
@@ -51,38 +77,42 @@ export default async function RunnerPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
 
-  const [runner, results, photoLinks, peerTimes, portrait, raceYear, clubs] = await Promise.all([
-    prisma.runner.findUnique({ where: { id }, select: { name: true } }),
-    prisma.result.findMany({
-      where: { runnerId: id },
-      orderBy: { year: "desc" },
-      include: {
-        category: { select: { name: true, age: true } },
-        club: { select: { name: true } },
-      },
-    }),
-    prisma.runnerPhoto.findMany({
-      where: { runnerId: id, photo: { hasImage: true } },
-      select: {
-        photoId: true,
-        photo: {
-          select: {
-            year: true,
-            debugText: true,
-            location: { select: { desc: true } },
+  // Only the runner's own rows hit the DB; course records and podium places of all results
+  // come from the cached peer index (#199, formerly a full scan of mcvv_time per request).
+  const [runner, results, photoLinks, portrait, peers] = await Promise.all([
+    loadRunner(id),
+    runnerProfileDb(() =>
+      prisma.result.findMany({
+        where: { runnerId: id },
+        orderBy: { year: "desc" },
+        include: {
+          category: { select: { name: true, age: true } },
+          club: { select: { name: true } },
+        },
+      }),
+    ),
+    runnerProfileDb(() =>
+      prisma.runnerPhoto.findMany({
+        where: { runnerId: id, photo: { hasImage: true } },
+        select: {
+          photoId: true,
+          photo: {
+            select: {
+              year: true,
+              debugText: true,
+              location: { select: { desc: true } },
+            },
           },
         },
-      },
-    }),
-    prisma.result.findMany({
-      select: { time: true, runnerId: true, year: true, categoryId: true },
-    }),
-    prisma.webImage.findFirst({
-      where: { runnerId: id, image: { not: null } },
-      select: { id: true },
-    }),
-    currentRaceYear(),
-    getClubResolver(),
+      }),
+    ),
+    runnerProfileDb(() =>
+      prisma.webImage.findFirst({
+        where: { runnerId: id, image: { not: null } },
+        select: { id: true },
+      }),
+    ),
+    getRunnerPeerIndex(),
   ]);
 
   // 404 only when the runner does not exist at all. A runner without results
@@ -92,16 +122,24 @@ export default async function RunnerPage({ params }: PageProps) {
   }
 
   const stats = summarizeRunnerResults(results);
-  const registration = stats
-    ? null
-    : await prisma.registrationLine.findUnique({
-        where: { year_runnerId: { year: raceYear.year, runnerId: id } },
-        select: {
-          clubId: true,
-          club: { select: { name: true } },
-          category: { select: { name: true } },
-        },
-      });
+  // The current edition matters only for the slim profile of a runner without results.
+  const raceYear = stats ? null : await runnerProfileDb(() => currentRaceYear());
+  const registration = raceYear
+    ? await runnerProfileDb(() =>
+        prisma.registrationLine.findUnique({
+          where: { year_runnerId: { year: raceYear.year, runnerId: id } },
+          select: {
+            clubId: true,
+            club: { select: { name: true } },
+            category: { select: { name: true } },
+          },
+        }),
+      )
+    : null;
+  const clubs = await profileClubResolver([
+    ...results.map((row) => row.clubId),
+    registration?.clubId,
+  ]);
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "Runner" });
@@ -119,7 +157,7 @@ export default async function RunnerPage({ params }: PageProps) {
   // Club by id (#104): name of the edition; a merged id shows the main id's name.
   const lastClubResolved = last
     ? clubs.resolve(last.clubId, last.year, last.club?.name || last.clubName)
-    : registration
+    : registration && raceYear
       ? clubs.resolve(registration.clubId, raceYear.year, registration.club.name)
       : null;
   const lastClub = lastClubResolved?.name ?? "";
@@ -137,9 +175,7 @@ export default async function RunnerPage({ params }: PageProps) {
     ).values(),
   ].sort((a, b) => b.year - a.year || b.id - a.id);
   const sex = runnerSex(id);
-  const sexRecord = peerTimes
-    .filter((row) => runnerSex(row.runnerId) === sex)
-    .reduce((min, row) => Math.min(min, row.time), Number.POSITIVE_INFINITY);
+  const sexRecord = courseRecordOf(peers, sex);
   const bars = results.map((row) => perfBarSegments(row.time, record, average, sexRecord));
   const barMax = bars.reduce((max, bar) => Math.max(max, bar.blue + bar.green + bar.red), 0);
 
@@ -208,7 +244,7 @@ export default async function RunnerPage({ params }: PageProps) {
                     </p>
                   ) : null}
                   <p className="mt-2 font-display text-lg font-semibold text-race-accent">
-                    {registration
+                    {registration && raceYear
                       ? copy("registeredFirstStart", { year: raceYear.year, sex })
                       : copy("empty", { sex })}
                   </p>
@@ -239,22 +275,9 @@ export default async function RunnerPage({ params }: PageProps) {
                 <tbody>
                   {results.map((row, index) => {
                     const bar = bars[index];
-                    const inYear = peerTimes.filter((peer) => peer.year === row.year);
-                    const absRank = asPodiumRank(
-                      podiumRank(
-                        inYear.filter((peer) => runnerSex(peer.runnerId) === sex),
-                        id,
-                      ),
-                    );
-                    const ageRank =
-                      row.category.age > 0
-                        ? asPodiumRank(
-                            podiumRank(
-                              inYear.filter((peer) => peer.categoryId === row.categoryId),
-                              id,
-                            ),
-                          )
-                        : undefined;
+                    const places = podiumPlacesOf(peers, row.year, id);
+                    const absRank = places.absolute;
+                    const ageRank = row.category.age > 0 ? places.category : undefined;
                     const isCourseRecord = row.time <= sexRecord;
                     const graph = isCourseRecord ? (
                       <RecordBadge kind="course" label={copy("courseRecord")} />

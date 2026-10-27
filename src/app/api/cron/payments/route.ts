@@ -14,8 +14,15 @@ export async function POST(request: Request) {
   }
   try {
     const result = await runPaymentsJob();
+    // Selhání Fio (síť, 5xx, 409) vrací 200 s ok=false: job to dožene za 15 min, 5xx by jen
+    // spouštělo opakování ACA Jobu a narazilo na limit Fio 1 dotaz / 30 s. Log viz job.ts.
     return NextResponse.json({ ok: result.status !== "failed", ...result });
-  } catch {
+  } catch (error) {
+    // job.ts už zalogoval detail (bez tokenu); tady jen to, co selhalo mimo něj.
+    console.error(
+      "[cron/payments] job threw",
+      error instanceof Error ? error.message.slice(0, 200) : "unknown error",
+    );
     return NextResponse.json({ ok: false, error: "job failed" }, { status: 500 });
   }
 }

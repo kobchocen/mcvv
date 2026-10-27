@@ -62,6 +62,26 @@ export function redact(text: string, token: string | undefined): string {
   return text.split(token).join("***").split(encodeURIComponent(token)).join("***");
 }
 
+/**
+ * Řádek do konzole (Azure Log Analytics) pro neúspěšné stažení z Fio (#199). Alert e-mailem
+ * jde max. 1× denně na druh, log u každého selhání. Token se pro jistotu maskuje i tady.
+ */
+export function fioFailureLogLine(
+  failure: { kind: FioErrorKind; error: string },
+  mode: FioRequest["mode"],
+  token: string | undefined,
+): string {
+  return redact(
+    `[payments] Fio fetch failed ${JSON.stringify({
+      job: "payments",
+      kind: failure.kind,
+      mode,
+      error: failure.error.slice(0, 300),
+    })}`,
+    token,
+  );
+}
+
 export function parseFioStatement(json: unknown): {
   transactions: FioTransaction[];
   lastId: bigint | null;

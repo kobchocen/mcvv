@@ -4,6 +4,8 @@
  * Resend Free: 100 e-mailů/den (reset v UTC). Fronta drží vlastní strop `cap` (výchozí 90)
  * a rezervu `reserve` pro prioritu 0 (potvrzení přihlášek, ověřovací e-maily, alerty).
  * Newsletter má nejnižší prioritu a čerpá jen to, co zbude po frontě.
+ * Limit a rezervu lze nastavit v administraci (#190), env je fallback; režim „bez limitu“
+ * (vyšší tarif Resend) vlastní strop vypne, ochrana proti 429 kvóty zůstává.
  */
 
 export type MailKind =
@@ -34,7 +36,12 @@ export const MAX_ATTEMPTS = 5;
 export const RETRY_DELAY_MS = 15 * 60 * 1000;
 export const STALE_CLAIM_MS = 15 * 60 * 1000;
 
-export type MailPolicy = { cap: number; reserve: number };
+export type MailPolicy = {
+  cap: number;
+  reserve: number;
+  /** Bez denního limitu (#190): fronta ani newsletter se vlastním stropem neomezují. */
+  unlimited?: boolean;
+};
 
 export type DayState = {
   sentToday: number;
@@ -50,6 +57,7 @@ export function remainingBudget(
   kind?: MailKind,
 ): number {
   if (day.quotaExceeded) return 0;
+  if (policy.unlimited) return Number.POSITIVE_INFINITY;
   const ceiling =
     kind === "alert"
       ? Math.max(policy.cap, PROVIDER_DAILY_LIMIT - 2)

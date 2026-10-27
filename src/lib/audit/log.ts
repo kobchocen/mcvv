@@ -34,7 +34,9 @@ export type AuditAction =
   // sloučením (ClubMergeAuditDetail). `club.unmerged` jen ve starých záznamech (sloučení 1.4.0).
   | "club.merge"
   | "club.merge_rejected"
-  | "club.merge_restored";
+  | "club.merge_restored"
+  // Denní limit e-mailů v Nastavení (#190), detail = před / po.
+  | "settings.mail_limit";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

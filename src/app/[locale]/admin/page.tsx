@@ -31,7 +31,7 @@ export default async function AdminPage({ params }: PageProps) {
   }
   const session = await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const mail = await mailStats().catch(() => null);
+  const [mail, policy] = await Promise.all([mailStats().catch(() => null), mailPolicy()]);
   const unreadThreads = await staffUnreadCount().catch(() => null);
 
   const tiles: {
@@ -93,7 +93,7 @@ export default async function AdminPage({ params }: PageProps) {
           <p className="mt-3 text-sm text-race-muted" data-testid="mail-stats">
             {copy("mailStats", {
               today: mail.today,
-              cap: mailPolicy().cap,
+              cap: policy.unlimited ? copy("mailUnlimited") : policy.cap,
               month: mail.month,
               pending: mail.pending,
               failed: mail.failed,

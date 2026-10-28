@@ -25,6 +25,9 @@ export type AuditAction =
   | "raceday.starts_cleared"
   // Přepnutí OFeed mezi testovací a ostrou akcí (Q33).
   | "raceday.ofeed_profile"
+  // Testovací běh nad produkcí (#186): spuštění a ukončení s automatickým úklidem (snímek dat).
+  | "raceday.test_started"
+  | "raceday.test_ended"
   // Změny přihlášek od přihlašujících (#130) – podklad pro denní souhrn pořadateli.
   | "entry.created"
   | "entry.runner_added"

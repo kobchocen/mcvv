@@ -101,8 +101,10 @@ krátce. V balíčku je ukázkový soubor splits-ukazka.csv (8 vymyšlených ča
    např. 109;2210, a uložte – do 5 s se pošle jen ten nový řádek.
 5) Zkuste vypnout Wi-Fi/odpojit kabel, přidat další řádek a po chvíli síť zase zapnout
    – čas se pošle sám (viz kapitola 9).
-6) Po zkoušce okno zavřete a SMAŽTE soubory config.json a state.json ve složce programu.
-   Ukázkové časy z webu smaže správce webu, vy s nimi nic dělat nemusíte.
+6) Po zkoušce okno zavřete. Soubor state.json mazat NEMUSÍTE: když na webu začne nový
+   testovací běh nebo se změní nula, program to sám pozná, stav vynuluje a soubor pošle
+   znovu (hláška "NOVÝ TESTOVACÍ BĚH / NOVÁ NULA"). Ukázkové časy z webu se po skončení
+   testu smažou samy, vy s nimi nic dělat nemusíte.
 7) Před závodem vám Pavel pošle nový OSTRÝ klíč (testovací už nebude platit). Spusťte
    program znovu a zadejte adresu https://mcvv.org, ostrý klíč, ročník závodu a cestu
    k souboru splits.csv z OBD.
@@ -122,6 +124,9 @@ Soubor: 120 řádků, 0 přeskočeno, 0 opakovaných čísel, 3 k odeslání (z 
     Program načetl novou verzi souboru. "přeskočeno" = řádky, kterým nerozumí (prázdné,
     hlavička, nesmysl). "opakovaných čísel" = číslo je v souboru vícekrát, platí první
     řádek. "k odeslání" = nové časy, které jdou na web.
+NOVÝ TESTOVACÍ BĚH / NOVÁ NULA na webu (…) – stav klienta vynulován, soubor se pošle znovu.
+    Na webu začal nový testovací běh (nebo se změnila nula závodu). Program zapomněl, co
+    už poslal, a pošle celý soubor znovu. Je to v pořádku, nic nedělejte.
 Odesláno 3: map[set:applied:3]
     Web časy přijal. applied = nově zapsáno, unchanged = web už stejný čas má,
     conflict = web má jiný čas, rejected = web čas odmítl.

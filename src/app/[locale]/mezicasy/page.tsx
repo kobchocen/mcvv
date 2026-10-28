@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvSplitsClient } from "@/components/organisms/mcvv-splits-client";
+import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
@@ -71,6 +72,7 @@ export default async function SplitsPage({ params }: PageProps) {
   }
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvTestRunBanner locale={locale} />
       <McvvSplitsClient
         stations={stations}
         year={ctx.year}

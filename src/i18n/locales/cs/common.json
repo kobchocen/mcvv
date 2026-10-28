@@ -1534,7 +1534,8 @@
       "testEventId": "Neplatné ID testovací akce OFeed.",
       "testPassword": "Neplatné heslo testovací akce (4–200 znaků, jeden řádek).",
       "ofeedProfile": "Neznámý profil OFeed.",
-      "ofeedTestMissing": "Nejdřív uložte ID testovací akce OFeed."
+      "ofeedTestMissing": "Nejdřív uložte ID testovací akce OFeed.",
+      "ofeedTestRun": "Během testovacího běhu nejde přepnout na ostrou akci – nejdřív test ukončete."
     },
     "publish": {
       "disabled": "Publikace je vypnutá.",
@@ -1710,6 +1711,41 @@
     "colName": "Jméno",
     "notInStart": "není ve startovce",
     "editLink": "Upravit"
+  },
+  "TestRun": {
+    "title": "Testovací běh",
+    "intro": "Fiktivní start podle skutečné startovky: od zvolené nuly fungují splitmakeři, stanoviště Start, obd-klient i OFeed (jen testovací akce) jako v den závodu. Test se sám ukončí po 3 h, nejpozději {cutoff}. Při ukončení se automaticky smažou testovací mezičasy, starty, zkušební nula a klíče zařízení vytvořené během testu.",
+    "zeroLabel": "Nula testu",
+    "zeroIn5": "za 5 minut",
+    "zeroAt1015": "dnes 10:15",
+    "zeroAt2015": "dnes 20:15",
+    "zeroCustom": "přesný čas",
+    "start": "Spustit test",
+    "end": "Ukončit test",
+    "endHint": "Ukončení hned smaže testovací data (bez dalšího potvrzení).",
+    "active": "Běží testovací běh – nula {zero}, automatický konec {expires}.",
+    "requiresOfeed": "Test nejde spustit bez aktivního testovacího profilu OFeed (sekce OFeed níže: vyplnit ID testovací akce a přepnout na testovací akci).",
+    "blocked": "Od dne závodu ({cutoff}) testovací běh spustit nejde.",
+    "tokenHint": "Klíče zařízení vytvořené teď jsou testovací – po skončení testu přestanou platit.",
+    "zeroLocked": "Během testovacího běhu nulu drží test.",
+    "banner": "TEST – testovací běh, nula {zero}, konec {expires}. Data se po skončení smažou a nejsou veřejná.",
+    "leftovers": "POZOR: v den závodu zůstala testovací data – mezičasů: {splits}, startů: {starts}{zero}{run}. Před startem je smažte (Mezičasy ročníku – vyčištění, Evidence startu).",
+    "leftoversZero": ", nastavená zkušební nula",
+    "leftoversRun": ", neukončený testovací běh",
+    "done": {
+      "started": "Testovací běh spuštěn.",
+      "ended": "Testovací běh ukončen, testovací data smazána."
+    },
+    "error": {
+      "zero": "Neplatná nula testu.",
+      "zeroPast": "Nula testu je příliš v minulosti (max. 10 minut).",
+      "zeroFar": "Nula testu může být nejvýš 24 h dopředu.",
+      "raceDay": "Od dne závodu testovací běh spustit nejde (ani s nulou v den závodu).",
+      "active": "Testovací běh už běží.",
+      "ofeedProfile": "Nejdřív přepněte OFeed na testovací akci.",
+      "ofeedTestMissing": "Nejdřív uložte ID testovací akce OFeed.",
+      "notActive": "Žádný testovací běh neběží."
+    }
   },
   "CashDesk": {
     "metaTitle": "Závodní kancelář",

@@ -695,7 +695,21 @@
     "next": "Next",
     "page": "Page {page}",
     "recordMen": "Club record – men",
-    "recordWomen": "Club record – women"
+    "recordWomen": "Club record – women",
+    "topRunners": "Top 10 runners of the club",
+    "topRunnersHint": "Each runner's personal best for the club – everyone listed once.",
+    "bestHint": "The club's fastest times across editions; a runner may appear more than once.",
+    "perYearHint": "Click a year to see the club's results in that edition.",
+    "mostStarts": "Most starts",
+    "mostStartsCount": "{count, plural, one {# start} other {# starts}}",
+    "yearResults": "Club results {year}",
+    "yearResultsLink": "Club results {year}",
+    "yearResultsClose": "Hide",
+    "yearResultsAll": "Full results of {year}",
+    "yearResultsEmpty": "The club has no result in this edition.",
+    "overallRank": "Overall",
+    "category": "Category",
+    "categoryRank": "In category"
   },
   "Clubs": {
     "metaTitle": "Clubs",

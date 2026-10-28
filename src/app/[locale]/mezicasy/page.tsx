@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvSplitsClient } from "@/components/organisms/mcvv-splits-client";
+import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
 import { allowedStationsFor } from "@/lib/live/assignment-core";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { withStart } from "@/lib/live/stations";
 import { canAccessSplits } from "@/lib/auth/roles";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
@@ -17,7 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("metaTitle"), robots: { index: false, follow: false } };
 }
 
-/** Webový klient pro zadávání mezičasů na kontrolách 1,3 km a 2,7 km (#121). */
+/** Webový klient pro zadávání mezičasů na kontrolách 1,3 km a 2,7 km (#121) a evidenci startu (#203). */
 export default async function SplitsPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
@@ -50,7 +52,8 @@ export default async function SplitsPage({ params }: PageProps) {
     getAssignedStations(session.id),
   ]);
   // Splitmaker vidí jen přiřazená stanoviště (server zápis na jiné odmítne).
-  const stations = allowedStationsFor(session.role, assigned, allStations);
+  // Start (#203) je vestavěné stanoviště: evidence, kdo odstartoval (jen evidence).
+  const stations = allowedStationsFor(session.role, assigned, withStart(allStations));
   if (stations.length === 0) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
@@ -69,6 +72,7 @@ export default async function SplitsPage({ params }: PageProps) {
   }
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvTestRunBanner locale={locale} />
       <McvvSplitsClient
         stations={stations}
         year={ctx.year}
@@ -77,6 +81,7 @@ export default async function SplitsPage({ params }: PageProps) {
         zeroIso={ctx.zero.toISOString()}
         intervalS={ctx.intervalS}
         zeroOverridden={ctx.zeroOverridden}
+        startLimitS={ctx.startLimitS}
         locale={locale}
       />
     </main>

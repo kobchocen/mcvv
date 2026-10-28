@@ -20,7 +20,7 @@ import {
 import { conflictStillCurrent } from "./manual-core";
 import type { RaceContext } from "./race-context";
 import { startInstant } from "./start-time";
-import { webAuthor } from "./stations";
+import { isSplitCode, webAuthor } from "./stations";
 
 type Tx = Prisma.TransactionClient;
 
@@ -203,6 +203,10 @@ export async function applyWebEntries(
   user: { id: number },
   now = new Date(),
 ): Promise<EntryResult[]> {
+  // Start (#203) do mcvv_split nepatří – volající ho posílá do evidence startu.
+  if (entries.some((entry) => !isSplitCode(entry.split))) {
+    throw new Error("applyWebEntries: non-split station");
+  }
   const results: EntryResult[] = [];
   for (const entry of entries) {
     results.push(await withRetry(entry.id, () => applyWebEntryTx(entry, ctx, user, now)));
@@ -240,6 +244,9 @@ export async function rejectWebEntries(
   user: { id: number },
   note: string,
 ): Promise<EntryResult[]> {
+  if (entries.some((entry) => !isSplitCode(entry.split))) {
+    throw new Error("rejectWebEntries: non-split station");
+  }
   const results: EntryResult[] = [];
   for (const entry of entries) {
     results.push(

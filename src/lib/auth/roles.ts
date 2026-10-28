@@ -7,13 +7,22 @@
  * - `timing` – „Časomíra“ (externí dodavatel OBD): jen sekce „Den závodu“
  *   (export podkladů pro OBD, importy z OBD),
  * - `splitmaker` – obsluha mezičasových kontrol: žádná administrace, jen stránka
- *   mezičasů (#121), kterou spouští podle role.
+ *   mezičasů (#121), kterou spouští podle role,
+ * - `race_office` – „Závodní kancelář“ (#207): žádná administrace, jen pokladna
+ *   a přehled prodejek na `/kancelar`.
  *
  * Oprávnění se vynucují na serveru (stránky, server actions, route handlery) přes
  * `src/lib/admin/staff.ts`; tady je jen jejich definice, aby šla testovat.
  */
 
-export const USER_ROLES = ["registrar", "organizer", "admin", "timing", "splitmaker"] as const;
+export const USER_ROLES = [
+  "registrar",
+  "organizer",
+  "admin",
+  "timing",
+  "splitmaker",
+  "race_office",
+] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export function isUserRole(value: unknown): value is UserRole {
@@ -33,6 +42,37 @@ export function canAccessRaceDay(role: UserRole): boolean {
 /** Zadávání mezičasů na kontrolách (#121). */
 export function canAccessSplits(role: UserRole): boolean {
   return role === "splitmaker" || isStaffRole(role);
+}
+
+/** Obrazovka pro speakera s průběžnými výsledky (#188, Q73): jen admin nebo pořadatel. */
+export function canViewSpeakerScreen(role: UserRole): boolean {
+  return isStaffRole(role);
+}
+
+/** Pokladna závodní kanceláře (#207): prodejky, „zaplaceno hotově“, storno nezaplacené. */
+export function canUseCashDesk(role: UserRole): boolean {
+  return role === "race_office" || isStaffRole(role);
+}
+
+/** Ceník prodejních položek (#207): zatím jen admin (konzervativně, viz otevřené otázky). */
+export function canManageSaleItems(role: UserRole): boolean {
+  return role === "admin";
+}
+
+/**
+ * Ruční „zaplaceno převodem“ u prodejky (platba přišla, ale nespárovala se): jen admin.
+ * Pořadatel (`organizer`) ne – s pokladnou kanceláře to nesouvisí (#207).
+ */
+export function canMarkSalePaidBank(role: UserRole): boolean {
+  return role === "admin";
+}
+
+/** Změna stavu nezaplacené prodejky: hotově a storno smí pokladna, převod ručně jen admin. */
+export function canChangeSaleStatus(
+  role: UserRole,
+  to: "paid_cash" | "paid_bank" | "cancelled",
+): boolean {
+  return to === "paid_bank" ? canMarkSalePaidBank(role) : canUseCashDesk(role);
 }
 
 /** Správa živých výsledků (#120–#122): opravy a konflikty mezičasů, OFeed, API klíče zařízení. */
@@ -70,7 +110,7 @@ export function adminPathAllowed(access: AdminAccess, path: string): boolean {
 
 /**
  * Přihlášení bez ověřeného e-mailu smí jen plný staff (účty zakládá seed).
- * Nové omezené role (`timing`, `splitmaker`) ověřený e-mail potřebují stejně jako `registrar`.
+ * Nové omezené role (`timing`, `splitmaker`, `race_office`) ověřený e-mail potřebují stejně jako `registrar`.
  */
 export function requiresVerifiedEmail(role: UserRole): boolean {
   return !isStaffRole(role);

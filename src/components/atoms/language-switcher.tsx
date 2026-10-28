@@ -77,6 +77,13 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       );
       return;
     }
+    if (pathname === "/kancelar/prodejky/[id]") {
+      router.replace(
+        { pathname: "/kancelar/prodejky/[id]", params: { id: String(params.id ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
     if (pathname === "/zpravy/[id]" || pathname === "/admin/zpravy/[id]") {
       router.replace({ pathname, params: { id: String(params.id ?? "") } }, { locale: nextLocale });
       return;

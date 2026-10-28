@@ -28,6 +28,10 @@ export const USER_NEXT_PATHS = [
   "/statistiky",
   "/zpravy",
   "/mezicasy",
+  "/mezicasy/speaker",
+  "/kancelar",
+  "/kancelar/prodejky",
+  "/kancelar/polozky",
 ] as const;
 export type UserNextPath = (typeof USER_NEXT_PATHS)[number];
 
@@ -111,9 +115,10 @@ export type LoginTarget =
  * - full staff (organizer, admin) → administration,
  * - race-day-only account (Časomíra) → race-day section,
  * - split-time operator (splitmaker) → split entry page,
+ * - race office (race_office) → cash desk (`/kancelar`),
  * - everybody else → the application page (`/prihlasky`).
  * `access` accepts the legacy boolean (`true` = full staff); `role` is needed only to
- * tell the splitmaker apart (it has no admin access).
+ * tell the splitmaker and the race office apart (they have no admin access).
  */
 export function loginTarget(
   next: string | null,
@@ -145,6 +150,9 @@ export function loginTarget(
   }
   if (role === "splitmaker") {
     return { kind: "user", path: "/mezicasy", query: "" };
+  }
+  if (role === "race_office") {
+    return { kind: "user", path: "/kancelar", query: "" };
   }
   return { kind: "default" };
 }

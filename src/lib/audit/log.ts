@@ -19,8 +19,15 @@ export type AuditAction =
   | "raceday.split_deleted"
   | "raceday.split_conflict_resolved"
   | "raceday.split_conflict_dismissed"
+  // Evidence startu (#203): ruční zápis / smazání adminem a hromadné vyčištění ročníku.
+  | "raceday.start_set"
+  | "raceday.start_deleted"
+  | "raceday.starts_cleared"
   // Přepnutí OFeed mezi testovací a ostrou akcí (Q33).
   | "raceday.ofeed_profile"
+  // Testovací běh nad produkcí (#186): spuštění a ukončení s automatickým úklidem (snímek dat).
+  | "raceday.test_started"
+  | "raceday.test_ended"
   // Změny přihlášek od přihlašujících (#130) – podklad pro denní souhrn pořadateli.
   | "entry.created"
   | "entry.runner_added"
@@ -30,11 +37,20 @@ export type AuditAction =
   | "entry.header_changed"
   | "entry.line_club_changed"
   | "entry.cancelled"
+  // Závodní kancelář (#207): prodejky a ceník. Spárování z Fio je v mcvv_bank_tx (bez auditu).
+  | "sale.created"
+  | "sale.paid_cash"
+  | "sale.paid_bank_manual"
+  | "sale.cancelled"
+  | "sale_item.created"
+  | "sale_item.updated"
   // Ruční sloučení id klubů (#104). `club.merge` přepisuje data (Q45), detail = stav před
   // sloučením (ClubMergeAuditDetail). `club.unmerged` jen ve starých záznamech (sloučení 1.4.0).
   | "club.merge"
   | "club.merge_rejected"
-  | "club.merge_restored";
+  | "club.merge_restored"
+  // Denní limit e-mailů v Nastavení (#190), detail = před / po.
+  | "settings.mail_limit";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

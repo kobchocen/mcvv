@@ -61,6 +61,23 @@ export function clubIdFromSlug(slug: string): string {
   }
 }
 
+/**
+ * Profile slug for a club link (#196): a resolved slug if the caller has one, otherwise
+ * "<id>-<name>" from the row's club id (a stale name part redirects to the profile of the id).
+ * The id in the data is already the main id after a merge (Q45). null = no link: no id, or a
+ * placeholder "no club" name (000 / "-" / neregistrovaný).
+ */
+export function clubLinkSlug(input: {
+  slug?: string | null;
+  id?: string | null;
+  name?: string | null;
+}): string | null {
+  if (isNoClub(input.name)) return null;
+  if (input.slug) return input.slug;
+  const id = clubKey(input.id);
+  return id ? clubIdSlug(id, input.name) : null;
+}
+
 /** One `cis_klub` row: name of the id in an edition. */
 export type ClubNameRow = { id: string; year: number; name: string };
 

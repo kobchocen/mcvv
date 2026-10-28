@@ -1,6 +1,6 @@
-import { ClubNameLink, RunnerNameLink } from "@/components/molecules";
+import { ClubLink, RunnerNameLink } from "@/components/molecules";
 import { shortBirthYear } from "@/lib/format/birth-year";
-import { detailLine, splitsLine, type SplitTimes } from "@/lib/results/table";
+import { splitsLine, type SplitTimes } from "@/lib/results/table";
 import { formatRaceTime } from "@/lib/utils";
 
 export type McvvResultsTableRow = SplitTimes & {
@@ -127,7 +127,8 @@ export function McvvResultsGroup({
                     <td className={`${nameClass} font-semibold`}>
                       <RunnerNameLink id={r.runnerId} name={r.runnerName} />
                       <span className="mt-px block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
-                        {detailLine(r.club, showCategory ? r.category : null)}
+                        <ClubLink slug={r.clubSlug} name={r.club} />
+                        {showCategory && r.category ? ` · ${r.category}` : null}
                       </span>
                       {splits ? (
                         <span className="block text-xs leading-[1.3] font-normal tabular-nums text-race-muted sm:hidden">
@@ -140,7 +141,7 @@ export function McvvResultsGroup({
                       <span className="sm:hidden">{shortBirthYear(r.birthYear)}</span>
                     </td>
                     <td className={`${cx.desktop} text-race-muted`}>
-                      <ClubNameLink slug={r.clubSlug} name={r.club} />
+                      <ClubLink slug={r.clubSlug} name={r.club} />
                     </td>
                     {showCategory ? (
                       <td className={`${cx.desktop} text-race-muted text-xs`}>{r.category}</td>

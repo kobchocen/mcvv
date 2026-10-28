@@ -230,3 +230,26 @@ test("drainQueue with ids only touches the given mail", async () => {
   assert.equal(rows[0].status, "pending");
   assert.equal(rows[1].status, "sent");
 });
+
+test("unlimited policy (#190) lifts the app cap but still stops on a Resend quota error", async () => {
+  const unlimited = { ...policy, unlimited: true };
+  const busy: DayState = { sentToday: 500, quotaExceeded: false };
+  assert.equal(remainingBudget(1, busy, unlimited), Number.POSITIVE_INFINITY);
+  assert.equal(remainingBudget(0, busy, unlimited, "alert"), Number.POSITIVE_INFINITY);
+  assert.equal(newsletterBudget(busy, unlimited, 10), Number.POSITIVE_INFINITY);
+  assert.equal(remainingBudget(1, { sentToday: 0, quotaExceeded: true }, unlimited), 0);
+
+  const rows = [row(1, 1), row(2, 1), row(3, 0)];
+  const { store } = memoryStore(rows, busy);
+  const outcome = await drainQueue({
+    store,
+    policy: unlimited,
+    claimToken: "t",
+    limit: 2,
+    now,
+    send: okSend,
+  });
+  assert.equal(outcome.sent, 2);
+  assert.equal(outcome.capReached, false);
+  assert.equal(rows[2].status, "sent");
+});

@@ -7,8 +7,13 @@ import {
   adminPathAllowed,
   canAccessRaceDay,
   canAccessSplits,
+  canChangeSaleStatus,
+  canManageSaleItems,
+  canMarkSalePaidBank,
   canMergeClubs,
   canManageLiveResults,
+  canUseCashDesk,
+  canViewSpeakerScreen,
   isStaffRole,
   requiresVerifiedEmail,
   USER_ROLES,
@@ -16,6 +21,34 @@ import {
 } from "./roles";
 
 describe("role permissions", () => {
+  it("speaker screen (#188): admin and organizer only", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(canViewSpeakerScreen(role), role === "admin" || role === "organizer", role);
+    }
+  });
+
+  it("race office (#207): cash desk for race_office and staff, price list and manual transfer admin only, no admin", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(
+        canUseCashDesk(role),
+        role === "race_office" || role === "organizer" || role === "admin",
+        role,
+      );
+      assert.equal(canManageSaleItems(role), role === "admin", role);
+      // Q66: manual "paid by transfer" is admin only, organizer has nothing to do with it.
+      assert.equal(canMarkSalePaidBank(role), role === "admin", role);
+      const desk = role === "race_office" || role === "organizer" || role === "admin";
+      assert.equal(canChangeSaleStatus(role, "paid_cash"), desk, role);
+      assert.equal(canChangeSaleStatus(role, "cancelled"), desk, role);
+      assert.equal(canChangeSaleStatus(role, "paid_bank"), role === "admin", role);
+    }
+    assert.equal(canMarkSalePaidBank("organizer"), false);
+    assert.equal(canChangeSaleStatus("race_office", "paid_bank"), false);
+    assert.equal(adminAccess("race_office"), "none");
+    assert.equal(isStaffRole("race_office"), false);
+    assert.equal(canAccessSplits("race_office"), false);
+    assert.equal(requiresVerifiedEmail("race_office"), true);
+  });
   it("club merge (preview and apply, Q47): admin only, not organizer", () => {
     for (const role of USER_ROLES) {
       assert.equal(canMergeClubs(role), role === "admin", role);
@@ -74,7 +107,7 @@ describe("role permissions", () => {
   it("new restricted roles need a verified e-mail like registrar", () => {
     assert.deepEqual(
       USER_ROLES.filter((role) => requiresVerifiedEmail(role)),
-      ["registrar", "timing", "splitmaker"],
+      ["registrar", "timing", "splitmaker", "race_office"],
     );
   });
 });

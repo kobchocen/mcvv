@@ -39,6 +39,7 @@ describe("renderStartListPdf", () => {
         name: `Žluťoučký Kůň ${i}`,
         birthYear: "1990",
         club: "Kob Choceň",
+        clubId: "CHC",
         categoryId: "A",
         categoryName: "muži",
       };

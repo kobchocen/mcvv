@@ -9,6 +9,14 @@ import { saveOrganizerRegistrationEmail } from "@/lib/entries/organizer-registra
 import { normalizeMoment, parseHttpUrl, saveSiteSettings } from "@/lib/settings/site";
 import { parseEmail, saveMessageSettings } from "@/lib/settings/messages";
 import { saveReceiptIssuer } from "@/lib/settings/receipt";
+import {
+  getMailSettings,
+  parseMailSettingsInput,
+  sameMailSettings,
+  saveMailSettings,
+} from "@/lib/settings/mail";
+import { writeAudit } from "@/lib/audit/log";
+import { env } from "@/lib/env";
 import { redirect } from "@/i18n/routing";
 
 /** Public pages that render site settings (hero phase, start list, instructions, stats). */
@@ -25,7 +33,7 @@ function revalidateSettingPages() {
 }
 
 export async function saveSettings(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const session = await requireAdmin();
   const locale = await getLocale();
   const url = parseHttpUrl(String(formData.get("onlineResultsUrl") ?? ""));
   if (!url.ok) {
@@ -44,6 +52,17 @@ export async function saveSettings(formData: FormData): Promise<void> {
       href: { pathname: "/admin/nastaveni", query: { error: "organizerRegistrationEmail" } },
       locale,
     });
+  }
+  const mail = parseMailSettingsInput(
+    {
+      dailyCap: String(formData.get("mailDailyCap") ?? ""),
+      priorityReserve: String(formData.get("mailPriorityReserve") ?? ""),
+      unlimited: formData.get("mailUnlimited") === "on",
+    },
+    env,
+  );
+  if (!mail.ok) {
+    redirect({ href: { pathname: "/admin/nastaveni", query: { error: mail.error } }, locale });
   }
   const emails = String(formData.get("emails") ?? "");
   await saveFreeEntryEmails(emails);
@@ -66,6 +85,19 @@ export async function saveSettings(formData: FormData): Promise<void> {
     ico: String(formData.get("receiptIssuerIco") ?? ""),
     vatNote: String(formData.get("receiptVatNote") ?? ""),
   });
+  if (mail.ok) {
+    const before = await getMailSettings();
+    if (!sameMailSettings(before, mail.value)) {
+      await saveMailSettings(mail.value);
+      await writeAudit({
+        actor: session,
+        action: "settings.mail_limit",
+        target: "mail",
+        detail: { before, after: mail.value },
+      });
+    }
+  }
   revalidateSettingPages();
+  revalidatePath("/[locale]/admin", "page");
   redirect({ href: { pathname: "/admin/nastaveni", query: { saved: "1" } }, locale });
 }

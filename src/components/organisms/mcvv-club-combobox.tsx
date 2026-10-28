@@ -15,6 +15,7 @@ export function McvvClubCombobox({
   required = false,
   listId,
   id,
+  describedBy,
   className,
   onBlurSubmit,
 }: {
@@ -25,6 +26,8 @@ export function McvvClubCombobox({
   required?: boolean;
   listId: string;
   id?: string;
+  /** Id nápovědy pod polem (`aria-describedby`). */
+  describedBy?: string;
   className?: string;
   onBlurSubmit?: boolean;
 }) {
@@ -34,6 +37,7 @@ export function McvvClubCombobox({
       id={id}
       name={controlled ? undefined : name}
       list={listId}
+      aria-describedby={describedBy}
       value={controlled ? value : undefined}
       defaultValue={controlled ? undefined : defaultValue}
       required={required}

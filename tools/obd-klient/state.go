@@ -15,8 +15,10 @@ import (
 //   - Acked: klíč `split:číslo:čas` → výsledek ze serveru (konflikty a odmítnutí se neposílají znovu);
 //   - Sent: `split:číslo` → čas, který na webu drží OBD (podle něj se pozná oprava a smazání);
 //   - Missing: `split:číslo` → v kolika po sobě jdoucích verzích souboru řádek chybí.
+//   - Epoch: epocha dat na serveru (testovací běh + nula, #186). Když se změní, stav se zahodí.
 type State struct {
 	path    string
+	Epoch   string            `json:"epoch,omitempty"`
 	Acked   map[string]string `json:"acked"`
 	Sent    map[string]int    `json:"sent"`
 	Missing map[string]int    `json:"missing"`
@@ -55,10 +57,11 @@ func LoadState(path string) (*State, error) {
 // encoding/json řadí klíče map sám, takže soubor je stabilní.
 func (s *State) Save() error {
 	data, err := json.MarshalIndent(struct {
+		Epoch   string            `json:"epoch,omitempty"`
 		Acked   map[string]string `json:"acked"`
 		Sent    map[string]int    `json:"sent"`
 		Missing map[string]int    `json:"missing,omitempty"`
-	}{s.Acked, s.Sent, s.Missing}, "", "  ")
+	}{s.Epoch, s.Acked, s.Sent, s.Missing}, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -70,6 +73,23 @@ func (s *State) Save() error {
 		return err
 	}
 	return os.Rename(tmp, s.path)
+}
+
+// SyncEpoch porovná epochu dat ze serveru (#186, Q72). Nový testovací běh nebo nová nula
+// znamená, že server testovací data uklidil: potvrzené řádky už neplatí, stav se zahodí a soubor
+// se pošle znovu (server je idempotentní). Prázdná epocha (starší server) nic nemění.
+// Vrací true, když se stav vynuloval.
+func (s *State) SyncEpoch(epoch string) bool {
+	if epoch == "" || epoch == s.Epoch {
+		return false
+	}
+	// stav bez epochy (starší verze klienta) se zahodí jen tehdy, když v něm něco je
+	hadData := len(s.Acked) > 0 || len(s.Sent) > 0 || len(s.Missing) > 0
+	s.Acked = map[string]string{}
+	s.Sent = map[string]int{}
+	s.Missing = map[string]int{}
+	s.Epoch = epoch
+	return hadData
 }
 
 func bibKey(split string, bib int) string { return split + ":" + strconv.Itoa(bib) }

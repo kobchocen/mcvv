@@ -37,8 +37,21 @@ import {
   parseClearFilter,
 } from "./clear-core";
 import { dismissConflict, resolveConflict } from "./ingest";
-import { getRaceContext, getStations, LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
-import { formatStations, LIVE_STATIONS_KEY, LIVE_STATIONS_MAX, parseStations } from "./stations";
+import {
+  getRaceContext,
+  getStations,
+  LIVE_START_OFFSET_LIMIT_KEY,
+  LIVE_ZERO_OVERRIDE_KEY,
+} from "./race-context";
+import { parseStartOffsetLimit } from "./splits-screen-core";
+import {
+  formatStations,
+  LIVE_STATIONS_KEY,
+  LIVE_STATIONS_MAX,
+  parseStations,
+  withStart,
+} from "./stations";
+import { getActiveTestRun, registerTestToken } from "./test-run";
 import { createDeviceToken, revokeDeviceToken } from "./tokens";
 import { normalizeAuthor, normalizeTokenSplits } from "./tokens-core";
 
@@ -97,6 +110,8 @@ export async function switchOfeedProfileAction(formData: FormData): Promise<void
   if (profile === "test" && !(await getOfeedSettings()).profiles.test.eventId) {
     await back({ error: "ofeedTestMissing" });
   }
+  // Pojistka testovacího běhu (#186): během testu nejde přepnout na ostrou akci.
+  if (profile === "live" && (await getActiveTestRun())) await back({ error: "ofeedTestRun" });
   await switchOfeedProfile(profile!, user);
   revalidatePath("/[locale]", "page");
   await back({ saved: "ofeedProfile" });
@@ -112,6 +127,19 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
   await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
+  // Práh odchylky na Startu (#187, Q80): prázdné = výchozí 2 min (klíč se smaže).
+  const startLimitRaw = String(formData.get("startLimit") ?? "")
+    .slice(0, 32)
+    .trim();
+  if (startLimitRaw) {
+    const startLimit = parseStartOffsetLimit(startLimitRaw);
+    if (startLimit === null) await back({ error: "startLimit" });
+    await put(LIVE_START_OFFSET_LIMIT_KEY, String(startLimit));
+  } else {
+    await prisma.setting.deleteMany({ where: { key: LIVE_START_OFFSET_LIMIT_KEY } });
+  }
+  // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
+  if (await getActiveTestRun()) await back({ saved: "setup" });
   const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();
   if (zeroRaw) {
     const zero = parsePragueLocal(zeroRaw);
@@ -123,7 +151,7 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
   await back({ saved: "setup" });
 }
 
-export type CreateTokenState = { token?: string; label?: string; error?: string };
+export type CreateTokenState = { token?: string; label?: string; error?: string; test?: boolean };
 
 export async function createTokenAction(
   _previous: CreateTokenState,
@@ -152,8 +180,10 @@ export async function createTokenAction(
     validUntil,
     createdBy: session.id,
   });
+  // Klíč vytvořený během testovacího běhu je testovací: při ukončení testu se zneplatní.
+  const test = await registerTestToken(created.id);
   revalidatePath("/[locale]/admin/den-zavodu/zive", "page");
-  return { token: created.token, label };
+  return { token: created.token, label, test };
 }
 
 export async function revokeTokenAction(formData: FormData): Promise<void> {
@@ -290,12 +320,15 @@ export async function deleteSplitAction(formData: FormData): Promise<void> {
   await back({ edit, saved: "delete" }, SPLITS_PAGE);
 }
 
-/** Přiřazení stanovišť splitmakerovi (jen admin). Prázdný výběr = splitmaker nezapisuje nic. */
+/**
+ * Přiřazení stanovišť splitmakerovi (jen admin), včetně stanoviště Start (#203).
+ * Prázdný výběr = splitmaker nezapisuje nic.
+ */
 export async function saveSplitmakerStationsAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId < 1) await back({ error: "assignment" });
-  const stations = await getStations();
+  const stations = withStart(await getStations());
   const value = assignmentFromForm(formData.getAll("stations").map(String), stations);
   const result = await saveAssignment(session, userId, value);
   if (result === "not_found") await back({ error: "assignment" });

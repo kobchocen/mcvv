@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
+import { getMailPolicy } from "@/lib/settings/mail";
 
 import {
   capAlertMail,
@@ -22,11 +23,9 @@ export type MailInput = {
   replyTo?: string;
 };
 
-export function mailPolicy(): MailPolicy {
-  return {
-    cap: Number(env.MAIL_DAILY_CAP ?? 90),
-    reserve: Number(env.MAIL_PRIORITY_RESERVE ?? 15),
-  };
+/** Denní limit a rezerva: nastavení v administraci → env → 90 / 15 (#190). */
+export async function mailPolicy(): Promise<MailPolicy> {
+  return getMailPolicy();
 }
 
 /** Mimo produkci se ve výchozím stavu nic neodesílá (jen zápis do fronty jako „sent“ + log). */
@@ -64,9 +63,10 @@ export async function enqueueMail(
 
 async function drain(ids?: number[], limit = 25): Promise<DrainOutcome> {
   const dryRun = mailDryRun();
+  const policy = await mailPolicy();
   const outcome = await drainQueue({
     store: prismaMailQueueStore,
-    policy: mailPolicy(),
+    policy,
     claimToken: randomUUID(),
     limit,
     ids,
@@ -82,17 +82,18 @@ async function drain(ids?: number[], limit = 25): Promise<DrainOutcome> {
         { dryRun, idempotencyKey: `mcvv-mail-${mail.id}` },
       ),
   });
-  if (outcome.capReached || outcome.quotaExceeded) await alertCapOnce(outcome.quotaExceeded);
+  if (outcome.capReached || outcome.quotaExceeded)
+    await alertCapOnce(outcome.quotaExceeded, policy);
   return outcome;
 }
 
-async function alertCapOnce(quota: boolean) {
+async function alertCapOnce(quota: boolean, policy: MailPolicy) {
   const now = new Date();
   if (!(await prismaMailQueueStore.claimCapAlert(now))) return;
   const day = await prismaMailQueueStore.dayState(now);
   const origin = env.AUTH_ORIGIN ?? "https://www.mcvv.org";
   const mail = capAlertMail({
-    cap: mailPolicy().cap,
+    cap: policy.cap,
     sentToday: day.sentToday,
     quota,
     adminUrl: `${origin}/cs/admin`,
@@ -101,7 +102,7 @@ async function alertCapOnce(quota: boolean) {
   if (!quota)
     await drainQueue({
       store: prismaMailQueueStore,
-      policy: mailPolicy(),
+      policy,
       claimToken: randomUUID(),
       limit: 1,
       ids: [id],

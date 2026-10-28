@@ -7,6 +7,9 @@ import { applyWebEntries, rejectWebEntries, type EntryResult } from "@/lib/live/
 import { sameOrigin, summarize, webBatchSchema } from "@/lib/live/ingest-core";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
 import { RateLimiter } from "@/lib/live/rate-limit";
+import { applyStartEntries, rejectStartEntries } from "@/lib/live/start-check";
+import { partitionStartEntries } from "@/lib/live/start-check-core";
+import { withStart } from "@/lib/live/stations";
 import { canAccessSplits } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +20,7 @@ const noStore = { "Cache-Control": "no-store" };
 /**
  * Dávka zápisů z webového klienta splitmakera (#121). Session cookie + kontrola role na serveru,
  * idempotentní podle `id` zápisu (offline fronta může poslat totéž víckrát).
+ * Zápisy ze stanoviště Start (kód "0", #203) jdou jen do evidence startu, nikdy do mcvv_split.
  */
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -48,7 +52,11 @@ export async function POST(request: NextRequest) {
       { status: 422, headers: noStore },
     );
   }
-  const [stations, assigned] = await Promise.all([getStations(), getAssignedStations(session.id)]);
+  const [splitStations, assigned] = await Promise.all([
+    getStations(),
+    getAssignedStations(session.id),
+  ]);
+  const stations = withStart(splitStations);
   const known = new Set(stations.map((station) => station.code));
   if (parsed.data.entries.some((entry) => !known.has(entry.split))) {
     return NextResponse.json({ error: "station" }, { status: 422, headers: noStore });
@@ -59,13 +67,27 @@ export async function POST(request: NextRequest) {
   );
   try {
     const ctx = await getRaceContext();
-    const permitted = parsed.data.entries.filter((entry) => allowed.has(entry.split));
-    const refused = parsed.data.entries.filter((entry) => !allowed.has(entry.split));
+    const { start, splits } = partitionStartEntries(parsed.data.entries);
+    const permitted = splits.filter((entry) => allowed.has(entry.split));
+    const refused = splits.filter((entry) => !allowed.has(entry.split));
+    const startPermitted = start.filter((entry) => allowed.has(entry.split));
+    const startRefused = start.filter((entry) => !allowed.has(entry.split));
     const byId = new Map<string, EntryResult>();
     for (const result of await applyWebEntries(permitted, ctx, session)) {
       byId.set(result.id, result);
     }
     for (const result of await rejectWebEntries(refused, ctx, session, "station-not-assigned")) {
+      byId.set(result.id, result);
+    }
+    for (const result of await applyStartEntries(startPermitted, ctx, session)) {
+      byId.set(result.id, result);
+    }
+    for (const result of await rejectStartEntries(
+      startRefused,
+      ctx,
+      session,
+      "station-not-assigned",
+    )) {
       byId.set(result.id, result);
     }
     const results = parsed.data.entries.map((entry) => byId.get(entry.id)!);

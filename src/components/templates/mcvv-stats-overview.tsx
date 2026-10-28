@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 
-import { ClubNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
+import { ClubLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 import { Link } from "@/i18n/routing";
@@ -160,7 +160,7 @@ function RankedList({
             {row.runnerId ? (
               <RunnerLink id={row.runnerId} name={row.name} className="font-medium" />
             ) : row.clubSlug ? (
-              <ClubNameLink
+              <ClubLink
                 slug={row.clubSlug}
                 name={row.name}
                 className="font-medium text-race-accent underline-offset-2 hover:underline"

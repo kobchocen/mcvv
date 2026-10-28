@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { ClubLink } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import {
@@ -834,7 +835,9 @@ function StartRow({
         ) : null}
       </td>
       <td className="py-1.5 pr-3 text-race-muted">{row.birthYear}</td>
-      <td className="py-1.5 pr-3 text-race-muted">{row.clubName}</td>
+      <td className="py-1.5 pr-3 text-race-muted">
+        <ClubLink id={row.clubId} name={row.clubName} />
+      </td>
       <td className="py-1.5 pr-3">
         <Link
           href={{

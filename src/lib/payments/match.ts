@@ -1,4 +1,5 @@
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
+import type { SaleMatchReason } from "@/lib/sales/core";
 
 export type MatchReason =
   | "currency"
@@ -82,7 +83,15 @@ export function autoConfirmAllowed(paymentDate: string, year: number): boolean {
   return paymentDate <= `${year}-12-03`;
 }
 
-export type BankTxReason = MatchReason | "interrupted" | "partial" | "late" | "already_confirmed";
+export type BankTxReason =
+  | MatchReason
+  | "interrupted"
+  | "partial"
+  | "late"
+  | "already_confirmed"
+  // Prodejky závodní kanceláře (#207): `sale` = spárováno na prodejku, ostatní k ruční kontrole.
+  | "sale"
+  | SaleMatchReason;
 
 export const REASON_LABELS: Record<BankTxReason, string> = {
   currency: "jiná měna",
@@ -96,4 +105,9 @@ export const REASON_LABELS: Record<BankTxReason, string> = {
   partial: "částečná platba",
   late: "platba po 3. 12. – potvrdit ručně",
   already_confirmed: "už potvrzená přihláška (možný duplikát)",
+  sale: "prodejka závodní kanceláře",
+  sale_not_found: "prodejka neexistuje",
+  sale_amount: "jiná částka než na prodejce",
+  sale_cancelled: "prodejka je stornovaná",
+  sale_paid: "prodejka už je zaplacená (možný duplikát)",
 };

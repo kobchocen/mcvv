@@ -207,3 +207,29 @@ Na stejné stránce `/admin/den-zavodu/zive/casy`, jen admin, **vždy** (i v den
 4. Po generálce: `/admin/den-zavodu/zive/casy` → „Vyčistit mezičasy ročníku“ (vše, zaškrtnout
    zneplatnění klíčů a smazání zkušební nuly), na cílovém PC smazat `state.json` klienta.
    OFeed „Přepnout na ostrou akci“ a zkontrolovat ID a heslo ostré akce.
+
+## Testovací běh na produkci (#186)
+
+Místo ruční generálky výše: `/admin/den-zavodu/zive` → „Testovací běh“ (jen admin).
+
+- **Předpoklad:** OFeed přepnutý na testovací akci (vyplněné ID). Bez toho test nejde spustit;
+  během testu nejde přepnout na ostrou akci.
+- **Nula:** za 5 minut, dnes 10:15, dnes 20:15 nebo přesný čas. Uloží se jako zkušební nula
+  (formulář nastavení ji během testu needituje); fiktivní start jede podle skutečné startovky.
+  Splitmakeři, Start, obd-klient i OFeed fungují jako v den závodu, na stránkách dne závodu
+  a na `/mezicasy` svítí banner TEST.
+- **Konec:** „Ukončit test“, nebo automaticky 3 h po nule (resp. po spuštění, je-li nula
+  v minulosti), nejpozději v den závodu 00:00. Vypršení hlídá tick plánovače OFeed i každé
+  načtení stránky dne závodu.
+- **Úklid (automaticky, bez potvrzení):** mezičasy a deník mezičasů, evidence startu vzniklé od
+  spuštění testu (nikdy po dni závodu 00:00), zkušební nula, klíče zařízení vytvořené během testu
+  (zneplatní se). Audit `raceday.test_started` / `raceday.test_ended` se snímkem smazaných řádků.
+  Stav testu je v `Setting` `live_test_run` (bez migrace).
+- **Den závodu:** od 00:00 test spustit nejde; když zůstala data z doby před dnem závodu,
+  zkušební nula nebo neukončený test, stránky dne závodu ukážou červené varování.
+- **obd-klient:** `GET`/`POST /api/race/{rok}/splits` vrací `epoch` (test + nula). Klient při
+  změně sám vynuluje `state.json` a pošle soubor znovu – mazat ho ručně není potřeba. Klíč pro
+  cílové PC vytvořte mimo test, jinak se po testu zneplatní.
+
+Data testu se na veřejné stránky nedostanou: veřejné výsledky se berou z tabulky výsledků
+(import po závodě), ne z mezičasů.

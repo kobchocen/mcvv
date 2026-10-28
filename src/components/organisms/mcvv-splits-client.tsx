@@ -18,9 +18,20 @@ import {
   type QueueState,
   type SplitRecord,
 } from "@/lib/live/queue-core";
+import { Link } from "@/i18n/routing";
 import { loadQueue, loadValue, queueKey, saveValue } from "@/lib/live/queue-store";
-import { formatRaceTime, secondsSinceStart } from "@/lib/live/start-time";
-import type { Station } from "@/lib/live/stations";
+import {
+  correctedNow,
+  countRecords,
+  DEFAULT_START_OFFSET_LIMIT_S,
+  formatStartOffsetLimit,
+  RECENT_LIMIT,
+  recentRecords,
+  relativeTime,
+} from "@/lib/live/splits-screen-core";
+import { formatOffset } from "@/lib/live/start-check-core";
+import { formatRaceTime } from "@/lib/live/start-time";
+import { isStartStation, type Station } from "@/lib/live/stations";
 
 type Props = {
   stations: Station[];
@@ -30,6 +41,8 @@ type Props = {
   zeroIso: string;
   intervalS: number;
   zeroOverridden: boolean;
+  /** Práh odchylky na Startu v sekundách (nastavení admina, výchozí 2 min). */
+  startLimitS?: number;
   locale: string;
 };
 
@@ -59,6 +72,7 @@ export function McvvSplitsClient({
   zeroIso,
   intervalS,
   zeroOverridden,
+  startLimitS = DEFAULT_START_OFFSET_LIMIT_S,
   locale,
 }: Props) {
   const t = useTranslations("Splits");
@@ -83,6 +97,8 @@ export function McvvSplitsClient({
   const inFlight = useRef<Set<string>>(new Set());
   const sending = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  /** Běžící hodiny (#187); null do prvního tiku, aby SSR a klient nerenderovaly jiný čas. */
+  const [now, setNow] = useState<number | null>(null);
 
   const setQueue = useCallback(
     (update: (state: QueueState) => QueueState) => {
@@ -184,6 +200,17 @@ export function McvvSplitsClient({
     void sync();
     const id = window.setInterval(sync, 60_000);
     return () => window.clearInterval(id);
+  }, []);
+
+  // běžící aktuální čas – tik zarovnaný na celou sekundu
+  useEffect(() => {
+    let id: number | undefined;
+    const tick = () => {
+      setNow(Date.now());
+      id = window.setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+    };
+    tick();
+    return () => window.clearTimeout(id);
   }, []);
 
   const flush = useCallback(async () => {
@@ -305,10 +332,39 @@ export function McvvSplitsClient({
     setEditing(null);
   };
 
-  const visible = queue.records.filter((r) => r.split === station).slice(0, 60);
+  const visible = recentRecords(queue.records, station);
+  const counts = countRecords(queue.records, station);
+  const stationRows = queue.records.filter((r) => r.split === station).length;
   const pending = queue.outbox.length;
   const drafts = queue.records.filter((r) => r.state === "draft" && r.split === station).length;
   const stationLabel = stations.find((s) => s.code === station)?.label ?? station;
+  const atStart = isStartStation(station);
+  /** Start (#203): odchylka od plánovaného startu; mezičas: čas od startu. */
+  const showTime = (seconds: number) => (atStart ? formatOffset(seconds) : formatRaceTime(seconds));
+  /** Čas u zápisu (#187): před startem / jiný den se nesmyslné číslo nezobrazí. */
+  const relativeFor = (r: SplitRecord & { bib: number }) => {
+    const rel = relativeTime({
+      atStart,
+      zero,
+      intervalS,
+      bib: r.bib,
+      punchedAt: r.punchedAt,
+      serverTime: r.time,
+      startLimitS,
+    });
+    if (rel.kind === "time") return rel.estimate ? `≈ ${rel.text}` : rel.text;
+    if (rel.kind === "before-start") {
+      // „odmítnuto: před startem“ už říká štítek – druhý text by byl navíc
+      return r.state === "rejected" && r.note?.startsWith("before-start") ? null : t("beforeStart");
+    }
+    if (rel.kind === "too-long") {
+      return r.state === "rejected" && r.note?.startsWith("too-long") ? null : t("outsideRace");
+    }
+    const limit = formatStartOffsetLimit(startLimitS);
+    return rel.kind === "start-far-early"
+      ? t("startFarEarly", { limit })
+      : t("startFarLate", { limit });
+  };
 
   const stateLabel = (r: SplitRecord) => {
     if (r.state === "applied" && r.note?.includes("unknown-bib")) return t("state.unknownBib");
@@ -331,9 +387,14 @@ export function McvvSplitsClient({
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
       <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="font-display text-2xl font-bold text-foreground dark:text-white">
-            {t("title", { year })}
-          </h1>
+          <Link
+            href="/"
+            data-testid="back-link"
+            aria-label={t("backAria")}
+            className="inline-flex h-9 items-center text-sm font-semibold text-race-accent hover:underline"
+          >
+            ← mcvv.org
+          </Link>
           <span
             data-testid="sync-status"
             className={`rounded-full border px-3 py-1 text-xs font-semibold ${
@@ -346,6 +407,24 @@ export function McvvSplitsClient({
           >
             {online ? t("online") : t("offline")} · {t("queued", { count: pending })}
           </span>
+        </div>
+        <div className="flex items-end justify-between gap-2">
+          <h1 className="font-display text-2xl font-bold text-foreground dark:text-white">
+            {t("title", { year })}
+          </h1>
+          <div className="text-right" data-testid="clock">
+            <p
+              aria-label={t("now")}
+              className="font-display text-3xl font-bold leading-none tabular-nums text-foreground dark:text-white"
+            >
+              <time suppressHydrationWarning>
+                {now === null ? "--:--:--" : clock(correctedNow(now, offset))}
+              </time>
+            </p>
+            <p className="mt-1 text-[11px] text-race-muted">
+              {offset === null ? t("clockDevice") : t("clockCorrected")}
+            </p>
+          </div>
         </div>
         <div role="radiogroup" aria-label={t("station")} className="grid grid-cols-2 gap-2">
           {stations.map((s) => (
@@ -361,16 +440,48 @@ export function McvvSplitsClient({
                   : "border-race-line/60 bg-race-surface text-foreground"
               }`}
             >
-              {t("stationLabel", { label: s.label, code: s.code })}
+              {isStartStation(s.code)
+                ? t("startStation")
+                : t("stationLabel", { label: s.label, code: s.code })}
             </button>
           ))}
         </div>
+        <p
+          data-testid="counts"
+          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border border-race-line/50 bg-race-surface px-3 py-2 text-sm"
+        >
+          <span>
+            {atStart ? t("startStation") : stationLabel}:{" "}
+            <strong className="font-display text-lg tabular-nums">{counts.station}</strong>{" "}
+            {t("countRecorded", { count: counts.station })}
+            {counts.stationSent !== counts.station
+              ? ` (${t("countSaved", { count: counts.stationSent })})`
+              : ""}
+          </span>
+          <span className="text-race-muted">
+            {t("countTotalSent")}:{" "}
+            <strong className="font-display text-lg tabular-nums text-foreground">
+              {counts.totalSent}
+            </strong>
+          </span>
+        </p>
         <p className="text-xs text-race-muted">
           {t("operator", { name: userName })} ·{" "}
           {offset === null ? t("clockUnknown") : t("clockOffset", { ms: offset })}
           {lastSyncAt ? ` · ${t("lastSync", { time: clock(lastSyncAt) })}` : ""}
           {zeroOverridden ? ` · ${t("testZero", { time: clock(zero.getTime()) })}` : ""}
         </p>
+        {atStart ? (
+          <p
+            data-testid="start-hint"
+            className="border border-sky-500/50 bg-sky-500/10 p-2 text-xs text-foreground"
+          >
+            {t("startHint")}{" "}
+            <span data-testid="start-limit">
+              {t("startLimit", { limit: formatStartOffsetLimit(startLimitS) })}
+            </span>
+          </p>
+        ) : null}
         {problem ? (
           <p
             role="alert"
@@ -484,14 +595,16 @@ export function McvvSplitsClient({
       <section aria-label={t("recent")} className="grid gap-1">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-race-muted">
           {t("recent")} – {stationLabel}
+          {stationRows > RECENT_LIMIT ? (
+            <span className="ml-1 normal-case tracking-normal">
+              ({t("recentLimit", { limit: RECENT_LIMIT, count: stationRows })})
+            </span>
+          ) : null}
         </h2>
         {visible.length === 0 ? <p className="text-sm text-race-muted">{t("empty")}</p> : null}
         <ul className="grid gap-1" data-testid="records">
           {visible.map((r) => {
-            const estimate =
-              r.bib !== null
-                ? formatRaceTime(secondsSinceStart(zero, r.bib, new Date(r.punchedAt), intervalS))
-                : "";
+            const relative = r.bib !== null ? relativeFor({ ...r, bib: r.bib }) : null;
             return (
               <li key={r.id} className="border border-race-line/50 bg-race-surface">
                 <button
@@ -508,13 +621,11 @@ export function McvvSplitsClient({
                   </span>
                   <span className="text-xs text-race-muted">
                     {clock(r.punchedAt)}
-                    {r.bib !== null ? (
-                      <span className="ml-2 font-semibold text-foreground">
-                        {typeof r.time === "number" ? formatRaceTime(r.time) : `≈ ${estimate}`}
-                      </span>
+                    {relative ? (
+                      <span className="ml-2 font-semibold text-foreground">{relative}</span>
                     ) : null}
                     {r.state === "duplicate" && typeof r.existingTime === "number"
-                      ? ` · ${t("existing", { time: formatRaceTime(r.existingTime) })}`
+                      ? ` · ${t("existing", { time: showTime(r.existingTime) })}`
                       : ""}
                   </span>
                   <span

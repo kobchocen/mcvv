@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminTokenForm } from "@/components/organisms/mcvv-admin-token-form";
+import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,8 +26,19 @@ import { parseAssignment } from "@/lib/live/assignment-core";
 import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
+import {
+  DEFAULT_START_OFFSET_LIMIT_S,
+  formatStartOffsetLimit,
+} from "@/lib/live/splits-screen-core";
 import { formatRaceTime } from "@/lib/live/start-time";
-import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX } from "@/lib/live/stations";
+import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX, withStart } from "@/lib/live/stations";
+import {
+  getActiveTestRun,
+  getTestCutoff,
+  testRunBlocked,
+  TEST_ZERO_CHOICES,
+} from "@/lib/live/test-run";
+import { endTestRunAction, startTestRunAction } from "@/lib/live/test-run-actions";
 import { listDeviceTokens } from "@/lib/live/tokens";
 import { tokenState } from "@/lib/live/tokens-core";
 import { ofeedStatus } from "@/lib/ofeed/publisher";
@@ -41,7 +53,13 @@ import { getSiteSettings } from "@/lib/settings/site";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; error?: string; published?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    error?: string;
+    published?: string;
+    test?: string;
+    testError?: string;
+  }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -55,12 +73,15 @@ const legend = "px-1 font-display text-lg font-semibold";
 
 export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
-  const { saved, error, published } = await searchParams;
+  const { saved, error, published, test, testError } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireAdmin();
   const t = await getTranslations({ locale, namespace: "LiveResults" });
+  const tt = await getTranslations({ locale, namespace: "TestRun" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
+  // Test nejdřív: vypršelý se tady ukončí a uklidí, zbytek stránky pak čte čistý stav.
+  const [testRun, testCutoff] = await Promise.all([getActiveTestRun(), getTestCutoff()]);
   const ctx = await getRaceContext();
   const [stations, ofeed, status, tokens, overview, site, splitmakers] = await Promise.all([
     getStations(),
@@ -72,6 +93,8 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
     listSplitmakers(),
   ]);
   const now = new Date();
+  const testBlocked = testRunBlocked(now, testCutoff);
+  const testOfeedReady = ofeed.profile === "test" && Boolean(ofeed.profiles.test.eventId);
   const window = defaultTokenWindow(ctx.zero);
   const publicOnlineUrl = resolveOnlineResultsUrl(site.onlineResultsUrl, ofeed);
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
@@ -83,6 +106,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
       <div className="mx-auto grid max-w-4xl gap-8">
         <div>
           <McvvAdminHomeLink label={admin("title")} />
+          <McvvTestRunBanner locale={locale} leftovers className="mb-4" />
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {t("title")} {ctx.year}
           </h1>
@@ -100,6 +124,13 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               data-testid="open-splits-admin"
             >
               {t("openSplitsAdmin")}
+            </Link>
+            <Link
+              href="/admin/den-zavodu/start"
+              className="font-medium text-race-accent hover:underline"
+              data-testid="open-start-check"
+            >
+              {t("openStartCheck")}
             </Link>
             <a
               href={OFEED_BOARD_URL}
@@ -134,6 +165,79 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             </p>
           ) : null}
         </div>
+
+        <fieldset className={`${box} ${testRun ? "border-amber-500" : ""}`} data-testid="test-run">
+          <legend className={legend}>{tt("title")}</legend>
+          <p className="text-sm text-race-muted">{tt("intro", { cutoff: fmt(testCutoff) })}</p>
+          {testError ? (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {tt(`error.${testError}` as never)}
+            </p>
+          ) : test ? (
+            <p role="status" className="text-sm text-race-accent" data-testid="test-run-result">
+              {tt(`done.${test}` as never)}
+            </p>
+          ) : null}
+          {testRun ? (
+            <div className="grid gap-3">
+              <p className="font-semibold" data-testid="test-run-active">
+                {tt("active", { zero: fmt(testRun.zero), expires: fmt(testRun.expiresAt) })}
+              </p>
+              <p className="text-xs text-race-muted">{tt("tokenHint")}</p>
+              <form action={endTestRunAction} className="flex flex-wrap items-center gap-3">
+                <Button type="submit" variant="destructive" className="h-10 font-semibold">
+                  {tt("end")}
+                </Button>
+                <span className="text-xs text-race-muted">{tt("endHint")}</span>
+              </form>
+            </div>
+          ) : testBlocked ? (
+            <p className="text-sm font-semibold">{tt("blocked", { cutoff: fmt(testCutoff) })}</p>
+          ) : (
+            <form action={startTestRunAction} className="grid gap-3">
+              {!testOfeedReady ? (
+                <p className="text-sm text-amber-700 dark:text-amber-300">{tt("requiresOfeed")}</p>
+              ) : null}
+              <fieldset className="flex flex-wrap items-center gap-4 text-sm">
+                <legend className="mb-2 text-sm font-medium">{tt("zeroLabel")}</legend>
+                {TEST_ZERO_CHOICES.map((choice, index) => (
+                  <label key={choice} className="flex items-center gap-1.5">
+                    <input
+                      type="radio"
+                      name="zeroChoice"
+                      value={choice}
+                      defaultChecked={index === 0}
+                      className="size-4"
+                    />
+                    {tt(
+                      choice === "in5"
+                        ? "zeroIn5"
+                        : choice === "at1015"
+                          ? "zeroAt1015"
+                          : choice === "at2015"
+                            ? "zeroAt2015"
+                            : "zeroCustom",
+                    )}
+                  </label>
+                ))}
+                <Input
+                  name="zeroCustom"
+                  type="datetime-local"
+                  step={1}
+                  aria-label={tt("zeroCustom")}
+                  className="h-9 w-fit bg-race-surface"
+                />
+              </fieldset>
+              <Button
+                type="submit"
+                disabled={!testOfeedReady}
+                className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
+              >
+                {tt("start")}
+              </Button>
+            </form>
+          )}
+        </fieldset>
 
         <fieldset className={box}>
           <legend className={legend}>{t("splitsTitle")}</legend>
@@ -266,6 +370,10 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 variant="outline"
                 className="h-9"
                 data-testid="ofeed-profile-switch"
+                disabled={testRun !== null && ofeed.profile === "test"}
+                title={
+                  testRun !== null && ofeed.profile === "test" ? t("error.ofeedTestRun") : undefined
+                }
               >
                 {t(ofeed.profile === "test" ? "ofeedSwitchToLive" : "ofeedSwitchToTest")}
               </Button>
@@ -470,7 +578,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                         <strong>{user.name}</strong>{" "}
                         <span className="text-xs text-race-muted">{user.email}</span>
                       </span>
-                      {stations.map((station) => (
+                      {withStart(stations).map((station) => (
                         <label key={station.code} className="flex items-center gap-1.5">
                           <input
                             type="checkbox"
@@ -520,9 +628,27 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 type="datetime-local"
                 step={1}
                 defaultValue={ctx.zeroOverridden ? toPragueLocalInput(ctx.zero) : ""}
+                disabled={testRun !== null}
                 className="h-10 w-fit bg-race-surface"
               />
-              <p className="text-xs text-race-muted">{t("zeroOverrideHint")}</p>
+              <p className="text-xs text-race-muted">
+                {testRun ? tt("zeroLocked") : t("zeroOverrideHint")}
+              </p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="startLimit">{t("startLimit")}</Label>
+              <Input
+                id="startLimit"
+                name="startLimit"
+                type="text"
+                inputMode="text"
+                maxLength={32}
+                placeholder={formatStartOffsetLimit(DEFAULT_START_OFFSET_LIMIT_S)}
+                defaultValue={formatStartOffsetLimit(ctx.startLimitS)}
+                data-testid="start-limit-input"
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("startLimitHint")}</p>
             </div>
             <Button
               type="submit"

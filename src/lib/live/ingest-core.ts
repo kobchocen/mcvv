@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { FINISH_SPLIT, isSplitCode } from "./stations";
+import { FINISH_SPLIT, isSplitCode, isStationCode } from "./stations";
 
 /**
  * Čistá logika příjmu mezičasů (bez DB): validace dávek, výpočet času a rozhodnutí,
@@ -23,12 +23,14 @@ const entryId = z
 
 const bib = z.number().int().min(1).max(MAX_BIB);
 const split = z.string().refine(isSplitCode, "invalid split");
+/** Webový klient: split 1–9 nebo start "0" (#203, zápis jde do evidence startu). */
+const webStation = z.string().refine(isStationCode, "invalid station");
 
 export const webEntrySchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
     id: entryId,
-    split,
+    split: webStation,
     bib,
     punchedAt: z.number().int().positive(),
   }),
@@ -36,7 +38,7 @@ export const webEntrySchema = z.discriminatedUnion("action", [
     action: z.literal("correct"),
     id: entryId,
     replaces: entryId,
-    split,
+    split: webStation,
     bib,
     punchedAt: z.number().int().positive(),
   }),
@@ -44,7 +46,7 @@ export const webEntrySchema = z.discriminatedUnion("action", [
     action: z.literal("delete"),
     id: entryId,
     replaces: entryId,
-    split,
+    split: webStation,
   }),
 ]);
 

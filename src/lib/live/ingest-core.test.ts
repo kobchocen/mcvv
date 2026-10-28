@@ -79,6 +79,12 @@ test("web batch schema", () => {
   );
   assert.ok(
     !webBatchSchema.safeParse({
+      entries: [{ action: "create", id: "abcdefgh-1", split: "x", bib: 1, punchedAt: 1 }],
+    }).success,
+  );
+  // start "0" (#203) je pro webového klienta platný kód stanoviště
+  assert.ok(
+    webBatchSchema.safeParse({
       entries: [{ action: "create", id: "abcdefgh-1", split: "0", bib: 1, punchedAt: 1 }],
     }).success,
   );

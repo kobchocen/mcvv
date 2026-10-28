@@ -57,11 +57,19 @@ export default defineRouting({
     "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",
     // po závodě: tombola (#128)
     "/admin/po-zavode": "/admin/po-zavode",
+    // závodní kancelář: pokladna a prodejky (#207)
+    "/kancelar": "/kancelar",
+    "/kancelar/prodejky": "/kancelar/prodejky",
+    "/kancelar/prodejky/[id]": "/kancelar/prodejky/[id]",
+    "/kancelar/polozky": "/kancelar/polozky",
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
     // den závodu: živé mezičasy a OFeed (#120–#122)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
+    // evidence startu (#203)
+    "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
+    "/mezicasy/speaker": "/mezicasy/speaker",
   },
 });

@@ -5,7 +5,7 @@ import { cache } from "react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import {
-  ClubNameLink,
+  ClubLink,
   RunnerPerfBar,
   RunnerPhotoGrid,
   RunnerPodiumBadges,
@@ -218,7 +218,7 @@ export default async function RunnerPage({ params }: PageProps) {
             <article className="min-w-0 flex-1 self-stretch border border-race-line/55 bg-race-surface p-5">
               {lastClub ? (
                 <h2 className="font-display text-xl font-semibold text-foreground dark:text-white">
-                  <ClubNameLink slug={lastClubResolved?.slug} name={lastClub} />
+                  <ClubLink slug={lastClubResolved?.slug} name={lastClub} />
                 </h2>
               ) : null}
               {summary.length > 0 ? (
@@ -326,7 +326,7 @@ export default async function RunnerPage({ params }: PageProps) {
                           )}
                         </td>
                         <td className="py-2.5 pr-4 text-race-muted">
-                          <ClubNameLink
+                          <ClubLink
                             slug={
                               clubs.resolve(row.clubId, row.year, row.club?.name || row.clubName)
                                 ?.slug

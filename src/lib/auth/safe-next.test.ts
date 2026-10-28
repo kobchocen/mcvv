@@ -80,6 +80,14 @@ describe("mezičasy", () => {
       query: "",
     });
   });
+  it("/mezicasy/speaker is an allowed target after login (#188)", () => {
+    assert.equal(safeNext("/cs/mezicasy/speaker"), "/mezicasy/speaker");
+    assert.deepEqual(loginTarget("/mezicasy/speaker", "full", "organizer"), {
+      kind: "user",
+      path: "/mezicasy/speaker",
+      query: "",
+    });
+  });
 });
 
 describe("loginTarget – Časomíra (raceday access)", () => {
@@ -115,6 +123,19 @@ describe("loginTarget – default target by role (no next)", () => {
     assert.deepEqual(loginTarget(null, "none", "splitmaker"), {
       kind: "user",
       path: "/mezicasy",
+      query: "",
+    });
+  });
+  it("sends the race office to the cash desk (#207)", () => {
+    assert.deepEqual(loginTarget(null, "none", "race_office"), {
+      kind: "user",
+      path: "/kancelar",
+      query: "",
+    });
+    assert.equal(safeNext("/cs/kancelar/prodejky"), "/kancelar/prodejky");
+    assert.deepEqual(loginTarget("/kancelar/polozky", "full", "admin"), {
+      kind: "user",
+      path: "/kancelar/polozky",
       query: "",
     });
   });

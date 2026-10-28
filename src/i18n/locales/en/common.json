@@ -1173,7 +1173,6 @@
     "clubMergeReason_prefix_missing": "club type missing",
     "clubMergeReason_prefix_conflict": "different club type",
     "clubMergeReason_spelling": "similar spelling",
-    "clubMergeReason_subset": "one name contains the other",
     "clubMergeMatched": "“{a}” ≈ “{b}”",
     "clubMergeSameYears": "Both ids exist in the same edition: {years}. After the merge the main id's name stays in these editions and the merged id's name disappears (kept only in the audit log).",
     "clubMergeChooseMain": "Which id stays the main one?",

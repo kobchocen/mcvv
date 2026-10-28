@@ -7,6 +7,7 @@ import { applySexChange, previewSexChange, SexChangeError } from "@/lib/admin/ru
 import type { SexChangePlan } from "@/lib/admin/runner-sex-core";
 import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
+import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -78,12 +79,12 @@ export async function changeRunnerSex(
     await recalculateRegistrationStatus(currentYear, id);
   }
 
-  // Audit trail (no audit table exists yet): one structured log line per change.
-  console.info(
-    JSON.stringify({
-      event: "admin.runner_sex_changed",
-      by: session.email,
-      at: new Date().toISOString(),
+  // Audit (#107): staré → nové id a dotčené řádky přihlášek (kategorie, startovné).
+  await writeAudit({
+    actor: session,
+    action: "runner.sex_changed",
+    target: `runner:${outcome.oldId}`,
+    detail: {
       oldId: outcome.oldId,
       newId: outcome.newId,
       newSex: outcome.newSex,
@@ -94,8 +95,8 @@ export async function changeRunnerSex(
         category: [line.oldCategory.id, line.newCategory?.id ?? line.oldCategory.id],
         fee: [line.oldFee, line.newFee],
       })),
-    }),
-  );
+    },
+  });
 
   revalidatePath("/[locale]/admin/prihlasky", "layout");
   revalidatePath("/[locale]/prihlasky", "page");

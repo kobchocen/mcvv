@@ -11,11 +11,14 @@ import { parseEmail, saveMessageSettings } from "@/lib/settings/messages";
 import { saveReceiptIssuer } from "@/lib/settings/receipt";
 import {
   getMailSettings,
+  MAIL_SETTING_KEYS,
   parseMailSettingsInput,
   sameMailSettings,
   saveMailSettings,
 } from "@/lib/settings/mail";
 import { writeAudit } from "@/lib/audit/log";
+import { diffFields, settingsSnapshot } from "@/lib/audit/diff";
+import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
 import { redirect } from "@/i18n/routing";
 
@@ -30,6 +33,14 @@ function revalidateSettingPages() {
   revalidatePath("/[locale]/kontakt", "page");
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/zpravy", "page");
+}
+
+async function loadSettingsForAudit(): Promise<Record<string, string>> {
+  const rows = await prisma.setting.findMany({
+    where: { key: { notIn: [...MAIL_SETTING_KEYS] } },
+    select: { key: true, text: true },
+  });
+  return settingsSnapshot(rows);
 }
 
 export async function saveSettings(formData: FormData): Promise<void> {
@@ -64,6 +75,9 @@ export async function saveSettings(formData: FormData): Promise<void> {
   if (!mail.ok) {
     redirect({ href: { pathname: "/admin/nastaveni", query: { error: mail.error } }, locale });
   }
+  // Audit (#107): snímek mcvv_setting před uložením, po uložení jen změněné klíče.
+  // Klíče limitu e-mailů má vlastní akci `settings.mail_limit`.
+  const settingsBefore = await loadSettingsForAudit();
   const emails = String(formData.get("emails") ?? "");
   await saveFreeEntryEmails(emails);
   await saveOrganizerRegistrationEmail(organizerRegEmail ?? "");
@@ -96,6 +110,15 @@ export async function saveSettings(formData: FormData): Promise<void> {
         detail: { before, after: mail.value },
       });
     }
+  }
+  const changes = diffFields(settingsBefore, await loadSettingsForAudit());
+  if (Object.keys(changes).length > 0) {
+    await writeAudit({
+      actor: session,
+      action: "settings.changed",
+      target: "settings",
+      detail: { changes },
+    });
   }
   revalidateSettingPages();
   revalidatePath("/[locale]/admin", "page");

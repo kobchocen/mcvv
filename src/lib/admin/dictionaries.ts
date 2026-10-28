@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
+import { diffFields } from "@/lib/audit/diff";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
 import { recalculateCategoryRecords } from "@/lib/stats/records";
@@ -17,7 +18,7 @@ function revalidateDicts() {
 }
 
 export async function saveCategory(formData: FormData): Promise<void> {
-  await requireStaff();
+  const session = await requireStaff();
   const id = formString(formData, "id").slice(0, 1);
   if (!id) {
     return;
@@ -32,11 +33,33 @@ export async function saveCategory(formData: FormData): Promise<void> {
     bibFrom: formInt(formData, "bibFrom") ?? 0,
     bibTo: formInt(formData, "bibTo") ?? 0,
   };
+  const before = await prisma.category.findUnique({
+    where: { id },
+    select: {
+      name: true,
+      age: true,
+      sort: true,
+      sex: true,
+      record: true,
+      entryFee: true,
+      bibFrom: true,
+      bibTo: true,
+    },
+  });
   await prisma.category.upsert({
     where: { id },
     update: data,
     create: { id, ...data },
   });
+  const changes = diffFields(before, data);
+  if (Object.keys(changes).length > 0) {
+    await writeAudit({
+      actor: session,
+      action: "category.updated",
+      target: `category:${id}`,
+      detail: { created: before === null, changes },
+    });
+  }
   revalidateDicts();
 }
 
@@ -68,18 +91,30 @@ export async function recalculateRecords(): Promise<void> {
 }
 
 export async function saveClub(formData: FormData): Promise<void> {
-  await requireStaff();
+  const session = await requireStaff();
   const id = formString(formData, "id").slice(0, CLUB_ID_MAX_LENGTH).toUpperCase();
   const year = formInt(formData, "year");
   const name = formString(formData, "name").slice(0, 50);
   if (!id || !year || !name) {
     return;
   }
+  const before = await prisma.club.findUnique({
+    where: { id_year: { id, year } },
+    select: { name: true },
+  });
   await prisma.club.upsert({
     where: { id_year: { id, year } },
     update: { name },
     create: { id, year, name },
   });
+  if (before?.name !== name) {
+    await writeAudit({
+      actor: session,
+      action: "club.updated",
+      target: `club:${id}/${year}`,
+      detail: { created: before === null, changes: diffFields(before, { name }) },
+    });
+  }
   revalidateDicts();
   // Club names are shown on the public club list and profiles (cached under "stats").
   revalidatePath("/[locale]/kluby", "layout");

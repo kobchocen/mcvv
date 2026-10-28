@@ -232,6 +232,8 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
                         currentRole={user.role}
                         roles={roles}
                         confirmTemplate={copy.raw("confirm") as string}
+                        confirmTitle={copy("confirmTitle")}
+                        confirmButton={copy("confirmButton")}
                         submitLabel={copy("change")}
                         selectLabel={copy("colRole")}
                         back={back}

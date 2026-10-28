@@ -1141,7 +1141,9 @@
     "clubMergeIdA": "První id",
     "clubMergeIdB": "Druhé id",
     "clubMergeRejected": "Zamítnuté návrhy ({count})",
-    "clubMergeRestore": "Vrátit mezi návrhy"
+    "clubMergeRestore": "Vrátit mezi návrhy",
+    "regsDeletePaymentTitle": "Smazat platbu?",
+    "regsDeletePaymentConfirm": "Platba {amount} Kč ({date}) se z přihlášky odstraní a přepočítá se stav úhrady."
   },
   "Stats": {
     "overview": {
@@ -1714,7 +1716,9 @@
     "tableEmpty": "Žádné mezičasy.",
     "colName": "Jméno",
     "notInStart": "není ve startovce",
-    "editLink": "Upravit"
+    "editLink": "Upravit",
+    "deleteTitle": "Smazat mezičas?",
+    "deleteConfirm": "Mezičas čísla {bib} na kontrole {split} se smaže (důvod se uloží do deníku)."
   },
   "TestRun": {
     "title": "Testovací běh",
@@ -1886,7 +1890,9 @@
     "error_not_found": "Účet nebyl nalezen.",
     "auditTitle": "Poslední změny rolí",
     "auditEmpty": "Zatím žádné změny.",
-    "auditLine": "{actor}: {email} {from} → {to}"
+    "auditLine": "{actor}: {email} {from} → {to}",
+    "confirmTitle": "Změnit roli?",
+    "confirmButton": "Změnit roli"
   },
   "RaceDay": {
     "title": "Den závodu",
@@ -2016,7 +2022,8 @@
     "donePresentation": "Import po prezentaci je zapsaný.",
     "doneResults": "Výsledky jsou zapsané (počet řádků: {count}).",
     "doneRecords": "Rekordy kategorií přepočítány: {list}.",
-    "doneRecordsUnchanged": "Rekordy kategorií beze změny."
+    "doneRecordsUnchanged": "Rekordy kategorií beze změny.",
+    "confirmTitle": "Zapsat import?"
   },
   "AfterRace": {
     "title": "Po závodě – tombola",
@@ -2169,7 +2176,9 @@
     "issue_rangeSeries": "Kategorie {category}: rozsah musí ležet celý v jednom startu.",
     "issue_rangeOverlap": "Rozsahy kategorií {category} a {other} se překrývají.",
     "issue_championInRange": "Číslo obhájce {other} leží v rozsahu kategorie {category}.",
-    "issue_championSame": "Čísla obhájců mužů a žen musí být různá."
+    "issue_championSame": "Čísla obhájců mužů a žen musí být různá.",
+    "groupDeleteTitle": "Zrušit skupinu?",
+    "groupDeleteConfirm": "Skupina {group} se zruší, běžci zůstanou ve startovce samostatně."
   },
   "PrintReports": {
     "heading": "Sestavy pro prezentaci",
@@ -2287,7 +2296,9 @@
       "blocked": "Hromadné mazání je od oficiální nuly zablokované.",
       "changed": "Záznam mezitím změnil někdo jiný – zkontrolujte a zkuste znovu.",
       "time": "Neplatný čas – zadejte hh:mm nebo hh:mm:ss."
-    }
+    },
+    "deleteTitle": "Smazat záznam startu?",
+    "deleteConfirm": "Záznam startu čísla {bib} se smaže (důvod se uloží do deníku)."
   },
   "Speaker": {
     "metaTitle": "Speaker – průběžné výsledky",
@@ -2358,5 +2369,11 @@
     "home": "Zpět na web",
     "cardPlaceWord": "místo",
     "legendOnWord": "bez pořadí"
+  },
+  "ConfirmDialog": {
+    "cancel": "Zrušit",
+    "confirm": "Potvrdit",
+    "working": "Pracuji…",
+    "srDescription": "Potvrďte, nebo zrušte akci."
   }
 }

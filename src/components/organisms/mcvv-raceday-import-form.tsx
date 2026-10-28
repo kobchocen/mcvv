@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState } from "react";
 
+import { ConfirmSubmitButton } from "@/components/molecules/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import type { ImportState, ImportView } from "@/lib/raceday/import-view";
 
@@ -12,6 +13,7 @@ export type McvvRacedayImportFormProps = {
     preview: string;
     commit: string;
     confirm: string;
+    confirmTitle: string;
     errors: string;
     warnings: string;
     more: string;
@@ -120,9 +122,6 @@ export function McvvRacedayImportForm({ action, files, labels }: McvvRacedayImpo
         // potvrzení ale musí poslat stejné soubory jako náhled.
         event.preventDefault();
         const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
-        if (submitter?.value === "commit" && !window.confirm(labels.confirm)) {
-          return;
-        }
         const formData = new FormData(event.currentTarget, submitter);
         startTransition(() => formAction(formData));
       }}
@@ -153,16 +152,19 @@ export function McvvRacedayImportForm({ action, files, labels }: McvvRacedayImpo
         >
           {labels.preview}
         </Button>
-        <Button
-          type="submit"
+        {/* Potvrzení v dialogu (#185); po potvrzení se formulář odešle s intent=commit. */}
+        <ConfirmSubmitButton
           name="intent"
           value="commit"
           disabled={pending || state.status !== "preview" || state.view.unchanged}
+          title={labels.confirmTitle}
+          description={labels.confirm}
+          confirmLabel={labels.commit}
           className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
           data-testid="import-commit"
         >
           {labels.commit}
-        </Button>
+        </ConfirmSubmitButton>
         {pending ? <span className="text-sm text-race-muted">{labels.working}</span> : null}
       </div>
       {state.status === "error" ? (

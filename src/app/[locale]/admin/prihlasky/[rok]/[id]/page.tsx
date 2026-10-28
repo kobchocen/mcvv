@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { FileDown } from "lucide-react";
 
-import { ClubLink } from "@/components/molecules";
+import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
 import {
   cancelRegistration,
   confirmRegistration,
@@ -404,12 +404,19 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                           <input type="hidden" name="year" value={year} />
                           <input type="hidden" name="registrationId" value={id} />
                           <input type="hidden" name="paymentId" value={payment.id} />
-                          <button
-                            type="submit"
-                            className="h-9 text-sm text-race-muted hover:underline"
+                          <ConfirmSubmitButton
+                            variant="link"
+                            destructive
+                            title={copy("regsDeletePaymentTitle")}
+                            description={copy("regsDeletePaymentConfirm", {
+                              amount: payment.amount ?? 0,
+                              date: dateInputValue(payment.date) || "—",
+                            })}
+                            confirmLabel={copy("regsDeletePayment")}
+                            className="h-9 px-0 text-sm font-normal text-race-muted"
                           >
                             {copy("regsDeletePayment")}
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       </div>
                     </td>

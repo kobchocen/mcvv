@@ -81,6 +81,7 @@ export default async function SplitsPage({ params }: PageProps) {
         zeroIso={ctx.zero.toISOString()}
         intervalS={ctx.intervalS}
         zeroOverridden={ctx.zeroOverridden}
+        startLimitS={ctx.startLimitS}
         locale={locale}
       />
     </main>

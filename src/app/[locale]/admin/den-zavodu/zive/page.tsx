@@ -26,6 +26,10 @@ import { parseAssignment } from "@/lib/live/assignment-core";
 import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
+import {
+  DEFAULT_START_OFFSET_LIMIT_S,
+  formatStartOffsetLimit,
+} from "@/lib/live/splits-screen-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX, withStart } from "@/lib/live/stations";
 import {
@@ -630,6 +634,21 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               <p className="text-xs text-race-muted">
                 {testRun ? tt("zeroLocked") : t("zeroOverrideHint")}
               </p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="startLimit">{t("startLimit")}</Label>
+              <Input
+                id="startLimit"
+                name="startLimit"
+                type="text"
+                inputMode="text"
+                maxLength={32}
+                placeholder={formatStartOffsetLimit(DEFAULT_START_OFFSET_LIMIT_S)}
+                defaultValue={formatStartOffsetLimit(ctx.startLimitS)}
+                data-testid="start-limit-input"
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("startLimitHint")}</p>
             </div>
             <Button
               type="submit"

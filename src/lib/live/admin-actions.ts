@@ -37,7 +37,13 @@ import {
   parseClearFilter,
 } from "./clear-core";
 import { dismissConflict, resolveConflict } from "./ingest";
-import { getRaceContext, getStations, LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
+import {
+  getRaceContext,
+  getStations,
+  LIVE_START_OFFSET_LIMIT_KEY,
+  LIVE_ZERO_OVERRIDE_KEY,
+} from "./race-context";
+import { parseStartOffsetLimit } from "./splits-screen-core";
 import {
   formatStations,
   LIVE_STATIONS_KEY,
@@ -121,6 +127,17 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
   await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
+  // Práh odchylky na Startu (#187, Q80): prázdné = výchozí 2 min (klíč se smaže).
+  const startLimitRaw = String(formData.get("startLimit") ?? "")
+    .slice(0, 32)
+    .trim();
+  if (startLimitRaw) {
+    const startLimit = parseStartOffsetLimit(startLimitRaw);
+    if (startLimit === null) await back({ error: "startLimit" });
+    await put(LIVE_START_OFFSET_LIMIT_KEY, String(startLimit));
+  } else {
+    await prisma.setting.deleteMany({ where: { key: LIVE_START_OFFSET_LIMIT_KEY } });
+  }
   // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
   if (await getActiveTestRun()) await back({ saved: "setup" });
   const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();

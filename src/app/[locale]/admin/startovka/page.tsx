@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ClubLink } from "@/components/molecules";
+import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import {
@@ -589,12 +589,18 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                     <form action={deleteStartGroup}>
                       <input type="hidden" name="year" value={year} />
                       <input type="hidden" name="groupId" value={group.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-red-700 hover:underline dark:text-red-400"
+                      <ConfirmSubmitButton
+                        variant="link"
+                        destructive
+                        title={t("groupDeleteTitle")}
+                        description={t("groupDeleteConfirm", {
+                          group: t("groupLabel", { id: group.id }),
+                        })}
+                        confirmLabel={t("groupDelete")}
+                        className="h-auto p-0 text-xs font-normal text-red-700 dark:text-red-400"
                       >
                         {t("groupDelete")}
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
                   </li>
                 ))}

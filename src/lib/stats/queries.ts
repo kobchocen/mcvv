@@ -5,6 +5,8 @@ import { formatRaceTime } from "@/lib/utils";
 
 import { personalRecordsByYear, runnerBirthYear, runnerSex, type RawResult } from "./core";
 import { recordEvolution } from "./records-core";
+import { computeNationalityStats, type NationalityStats } from "@/lib/runner/nationality";
+import { loadNationalityMap } from "@/lib/runner/nationality-query";
 
 export * from "./core";
 
@@ -280,4 +282,18 @@ export async function getAttendance(): Promise<AttendanceRow[]> {
       women,
     };
   });
+}
+
+/** Statistika států (#200): podle uvedené státní příslušnosti běžců s výsledkem. */
+export async function getNationalityStats(): Promise<
+  NationalityStats & { names: Map<string, string> }
+> {
+  const [results, nationalities] = await Promise.all([loadAllResults(), loadNationalityMap()]);
+  const names = new Map<string, string>();
+  for (const row of results) {
+    if (row.runnerName) {
+      names.set(row.runnerId, row.runnerName);
+    }
+  }
+  return { ...computeNationalityStats(results, nationalities), names };
 }

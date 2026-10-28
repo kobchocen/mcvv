@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ClubLink } from "@/components/molecules";
+import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
@@ -254,9 +254,16 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
                   placeholder={t("deleteReason")}
                   className="h-9 w-64 bg-race-surface"
                 />
-                <Button type="submit" variant="outline" className="h-9 px-3 text-red-700">
+                <ConfirmSubmitButton
+                  variant="outline"
+                  destructive
+                  title={t("deleteTitle")}
+                  description={t("deleteConfirm", { bib: editBib })}
+                  confirmLabel={t("delete")}
+                  className="h-9 px-3 text-red-700"
+                >
                   {t("delete")}
-                </Button>
+                </ConfirmSubmitButton>
               </form>
             ) : null}
             {history.length > 0 ? (

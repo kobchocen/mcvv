@@ -38,7 +38,7 @@ export type MergeSuggestion = {
 };
 
 export type SuggestionReason =
-  "same_core" | "abbreviation" | "prefix_missing" | "prefix_conflict" | "spelling" | "subset";
+  "same_core" | "abbreviation" | "prefix_missing" | "prefix_conflict" | "spelling";
 
 /** Club-type words and abbreviations that do not identify a club on their own. */
 export const CLUB_TYPE_WORDS = new Set([
@@ -169,7 +169,27 @@ function dice(a: Set<string>, b: Set<string>): number {
   return (2 * shared) / (a.size + b.size);
 }
 
-/** Similarity of two written names (0–1) with the reasons behind it. */
+/**
+ * One name is a strict subset of the other (#194): all identifying words of one name (club-type
+ * prefixes and small words left out, abbreviations expanded) occur in the other, which has more.
+ * "Česká Třebová" vs "NOTABLE Česká Třebová" are usually different clubs from one town. Same
+ * words with a different or missing club type ("OK Lokomotiva Pardubice" vs "Lokomotiva
+ * Pardubice") and typos ("eská Třebová" vs "Česká Třebová") are not a subset.
+ */
+export function isClubNameSubset(a: string, b: string): boolean {
+  return coreSubset(parseClubName(a), parseClubName(b));
+}
+
+function coreSubset(pa: Parsed, pb: Parsed): boolean {
+  if (pa.core.size === 0 || pb.core.size === 0 || pa.core.size === pb.core.size) return false;
+  const [small, large] = pa.core.size < pb.core.size ? [pa.core, pb.core] : [pb.core, pa.core];
+  return [...small].every((word) => large.has(word));
+}
+
+/**
+ * Similarity of two written names (0–1) with the reasons behind it. A name that is a subset of
+ * the other scores 0 – such pairs are never suggested (#194), merging them stays manual.
+ */
 export function clubNameSimilarity(
   a: string,
   b: string,
@@ -180,6 +200,7 @@ export function clubNameSimilarity(
   if (normalizeClubName(a) === normalizeClubName(b)) {
     return { score: 1, reasons: ["spelling"] };
   }
+  if (coreSubset(pa, pb)) return { score: 0, reasons: [] };
   // Word-level match, softened by trigram similarity for typos / short forms.
   const wordScore = jaccard(pa.core, pb.core);
   const charScore = dice(trigrams(pa.coreText), trigrams(pb.coreText));
@@ -187,13 +208,6 @@ export function clubNameSimilarity(
   if (pa.coreText && pa.coreText === pb.coreText) {
     reasons.push("same_core");
     score = 1;
-  } else if (
-    pa.core.size > 0 &&
-    pb.core.size > 0 &&
-    ([...pa.core].every((w) => pb.core.has(w)) || [...pb.core].every((w) => pa.core.has(w)))
-  ) {
-    reasons.push("subset");
-    score = Math.max(score, 0.7);
   } else if (charScore >= 0.75) {
     reasons.push("spelling");
   }

@@ -49,8 +49,44 @@ export type AuditAction =
   | "club.merge"
   | "club.merge_rejected"
   | "club.merge_restored"
+  // Úklid sirotků v číselníku klubů (#193), detail = smazané řádky cis_klub
+  // (OrphanCleanupAuditDetail) pro ruční obnovení.
+  | "club.orphan_cleanup"
   // Denní limit e-mailů v Nastavení (#190), detail = před / po.
-  | "settings.mail_limit";
+  | "settings.mail_limit"
+  // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).
+  // Změna pohlaví běžce = změna id v cis_bezec (#103), detail = staré / nové id a dotčené řádky.
+  | "runner.sex_changed"
+  // Státní příslušnost běžce (#200) změněná pořadatelem, detail = `diffFields` (nationality).
+  | "runner.nationality_changed"
+  | "registration.updated"
+  | "registration.confirmed"
+  | "payment.created"
+  | "payment.updated"
+  | "payment.deleted"
+  // Bankovní pohyby (Fio) vyřízené ručně: označení bez platby a vrácení přeplatku.
+  | "bank_tx.ignored"
+  | "bank_tx.refunded"
+  | "edition.created"
+  | "edition.updated"
+  // Kategorie včetně startovného a rekordu; klub = název v číselníku pro (id, rok).
+  | "category.updated"
+  | "club.updated"
+  // Uložení Nastavení: změněné klíče mcvv_setting (zveřejnění startovky, URL výsledků…).
+  | "settings.changed"
+  // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu, skupiny startu.
+  // Cíl `startlist:<rok>/<bezec>`, `startlist:<rok>`, `start_group:<id>`; detail `changes`
+  // (u více řádků klíče `<bezec>.bib` / `.locked` / `.group`).
+  | "startlist.bib_set"
+  | "startlist.bibs_swapped"
+  | "startlist.lock_changed"
+  | "startlist.proposal_applied"
+  | "startlist.group_created"
+  | "startlist.group_deleted"
+  // Partneři (#107), cíl `partner:<id>`. Smazání = deaktivace (řádek zůstává).
+  | "partner.created"
+  | "partner.updated"
+  | "partner.deactivated";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

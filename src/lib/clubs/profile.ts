@@ -39,7 +39,17 @@ export type ClubProfile = {
   }[];
   /** Best time of each runner, fastest first (per sex); `[0]` is the club record. */
   best: Record<"M" | "F", ClubPerformance[]>;
+  /**
+   * Fastest results of the club across editions, not unique per runner (#197): one runner
+   * may appear several times.
+   */
+  topResults: Record<"M" | "F", ClubPerformance[]>;
+  /** Member(s) with the most starts for the club (#197); ties list several runners. */
+  mostStarts: { starts: number; runners: ClubProfile["members"] } | null;
 };
+
+/** At most this many runners shown for a tie in "most starts". */
+export const MOST_STARTS_TIES = 3;
 
 export function computeClubProfile(
   results: readonly RawResult[],
@@ -120,6 +130,32 @@ export function computeClubProfile(
       .slice(0, bestLimit);
   };
 
+  const topOf = (sex: "M" | "F"): ClubPerformance[] =>
+    rows
+      .filter((row) => runnerSex(row.runnerId) === sex)
+      .map((row) => ({
+        runnerId: row.runnerId,
+        name: row.runnerName || "—",
+        year: row.year,
+        time: row.time,
+      }))
+      .sort((a, b) => a.time - b.time || a.year - b.year || a.runnerId.localeCompare(b.runnerId))
+      .slice(0, bestLimit);
+
+  const sortedMembers = [...members.values()].sort(
+    (a, b) => b.starts - a.starts || b.lastYear - a.lastYear || a.name.localeCompare(b.name, "cs"),
+  );
+  const maxStarts = sortedMembers[0]?.starts ?? 0;
+  const mostStarts =
+    maxStarts > 0
+      ? {
+          starts: maxStarts,
+          runners: sortedMembers
+            .filter((member) => member.starts === maxStarts)
+            .slice(0, MOST_STARTS_TIES),
+        }
+      : null;
+
   const years = [...perYear.keys()].sort((a, b) => a - b);
   const historyYears = history.flatMap((row) => [row.firstYear, row.lastYear]);
   return {
@@ -136,11 +172,10 @@ export function computeClubProfile(
       starts: perYear.get(year) ?? 0,
       best: yearBest.get(year) ?? {},
     })),
-    members: [...members.values()].sort(
-      (a, b) =>
-        b.starts - a.starts || b.lastYear - a.lastYear || a.name.localeCompare(b.name, "cs"),
-    ),
+    members: sortedMembers,
     best: { M: bestOf("M"), F: bestOf("F") },
+    topResults: { M: topOf("M"), F: topOf("F") },
+    mostStarts,
   };
 }
 

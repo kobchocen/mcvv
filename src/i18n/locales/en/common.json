@@ -671,6 +671,13 @@
     "registeredFirstStart": "Registered for {year} – first start",
     "back": "Results archive"
   },
+  "Nationality": {
+    "label": "Nationality",
+    "unknown": "— not stated —",
+    "hint": "Runners from abroad get a flag in the results. An entry does not overwrite a nationality the runner already has.",
+    "save": "Save",
+    "saveError": "The nationality could not be saved (invalid country or runner)."
+  },
   "Club": {
     "eyebrow": "Club",
     "starts": "Starts",
@@ -695,7 +702,21 @@
     "next": "Next",
     "page": "Page {page}",
     "recordMen": "Club record – men",
-    "recordWomen": "Club record – women"
+    "recordWomen": "Club record – women",
+    "topRunners": "Top 10 runners of the club",
+    "topRunnersHint": "Each runner's personal best for the club – everyone listed once.",
+    "bestHint": "The club's fastest times across editions; a runner may appear more than once.",
+    "perYearHint": "Click a year to see the club's results in that edition.",
+    "mostStarts": "Most starts",
+    "mostStartsCount": "{count, plural, one {# start} other {# starts}}",
+    "yearResults": "Club results {year}",
+    "yearResultsLink": "Club results {year}",
+    "yearResultsClose": "Hide",
+    "yearResultsAll": "Full results of {year}",
+    "yearResultsEmpty": "The club has no result in this edition.",
+    "overallRank": "Overall",
+    "category": "Category",
+    "categoryRank": "In category"
   },
   "Clubs": {
     "metaTitle": "Clubs",
@@ -718,6 +739,32 @@
     "previous": "Previous",
     "next": "Next",
     "page": "Page {page}"
+  },
+  "ClubCleanup": {
+    "title": "Clean up orphan clubs",
+    "intro": "An orphan is a club registry row (id, year) that no entry, start or result of the same year refers to. The cleanup never runs on its own: below is a preview of what would be deleted, and nothing is deleted until you confirm. Rows of the current edition {year} (and later) are kept – the club may still enter and OBD / OFeed offers them at registration. Deleted rows stay in the audit log (club.orphan_cleanup) so they can be restored.",
+    "scope": "Cleanup scope",
+    "scope_ids": "Whole ids without data only",
+    "scope_rows": "Also single years without data",
+    "scopeHint_ids": "Deletes all rows of a club whose id has no entry, start or result in any year (and no row in the current edition).",
+    "scopeHint_rows": "Also deletes single older years without data of clubs that have data elsewhere (e.g. a club listed in the registry for a year nobody ran).",
+    "previewTitle": "Preview (nothing deleted yet)",
+    "summary": "To delete: {rows, plural, one {# row} other {# rows}} of {ids, plural, one {# club id} other {# club ids}}, of which {removedIds, plural, one {# id disappears} other {# ids disappear}} completely.",
+    "keptCurrent": "Kept: {count, plural, one {# row} other {# rows}} without data from edition {year} and later.",
+    "empty": "No orphans – nothing to delete.",
+    "colId": "Id",
+    "colYear": "Year",
+    "colName": "Name",
+    "colCreated": "Created",
+    "truncated": "Showing the first {shown} of {total} rows; the whole list will be deleted.",
+    "irreversible": "Deleting cannot be undone (restore only by hand from the audit log).",
+    "acknowledge": "I understand that {count, plural, one {# row} other {# rows}} listed in the preview will be deleted from the club registry.",
+    "execute": "Delete {count, plural, one {# row} other {# rows}}",
+    "executing": "Deleting…",
+    "done": "Done: {count, plural, =0 {nothing was deleted} one {# row deleted} other {# rows deleted}}. Logged in the audit log.",
+    "error_rozsah": "Invalid cleanup scope.",
+    "error_potvrzeni": "Please tick the confirmation to delete.",
+    "error_zmena": "The orphan list has changed in the meantime (e.g. a new entry). Nothing was deleted – check the new preview and confirm again."
   },
   "Messages": {
     "title": "Messages",
@@ -1126,7 +1173,6 @@
     "clubMergeReason_prefix_missing": "club type missing",
     "clubMergeReason_prefix_conflict": "different club type",
     "clubMergeReason_spelling": "similar spelling",
-    "clubMergeReason_subset": "one name contains the other",
     "clubMergeMatched": "“{a}” ≈ “{b}”",
     "clubMergeSameYears": "Both ids exist in the same edition: {years}. After the merge the main id's name stays in these editions and the merged id's name disappears (kept only in the audit log).",
     "clubMergeChooseMain": "Which id stays the main one?",
@@ -1141,7 +1187,9 @@
     "clubMergeIdA": "First id",
     "clubMergeIdB": "Second id",
     "clubMergeRejected": "Rejected suggestions ({count})",
-    "clubMergeRestore": "Restore to suggestions"
+    "clubMergeRestore": "Restore to suggestions",
+    "regsDeletePaymentTitle": "Delete payment?",
+    "regsDeletePaymentConfirm": "Payment of CZK {amount} ({date}) will be removed from the entry and the payment status recalculated."
   },
   "Stats": {
     "overview": {
@@ -1253,6 +1301,20 @@
       "nav": "Attendance",
       "title": "Overall attendance",
       "intro": "Participants, newcomers, and personal records in each year."
+    },
+    "staty": {
+      "nav": "Countries",
+      "title": "Runners by country",
+      "intro": "Nationality of runners with a result. For older editions it is mostly unknown – we collect it from the 2026 entries on, so the numbers will grow over time.",
+      "byCountry": "By country",
+      "byYear": "By edition",
+      "colCountry": "Country",
+      "colRunners": "Runners",
+      "colYears": "Editions",
+      "colCountries": "Countries",
+      "colForeign": "Runners from abroad",
+      "colUnknown": "Not stated",
+      "unknown": "Not stated"
     }
   },
   "LanguageSwitcher": {
@@ -1714,7 +1776,9 @@
     "tableEmpty": "No splits.",
     "colName": "Name",
     "notInStart": "not in start list",
-    "editLink": "Edit"
+    "editLink": "Edit",
+    "deleteTitle": "Delete split?",
+    "deleteConfirm": "The split of bib {bib} at {split} will be deleted (the reason is kept in the journal)."
   },
   "TestRun": {
     "title": "Test run",
@@ -1874,7 +1938,7 @@
     "colRegistrations": "Entries",
     "colRole": "Role",
     "change": "Change",
-    "confirm": "Really change the role of {name} to “{role}”?",
+    "confirm": "Really change the role of {name} to “{role}”? The user will get an e-mail about the change.",
     "you": "you",
     "selfHint": "You cannot change your own role.",
     "saved": "Role changed.",
@@ -1886,7 +1950,79 @@
     "error_not_found": "Account not found.",
     "auditTitle": "Recent role changes",
     "auditEmpty": "No changes yet.",
-    "auditLine": "{actor}: {email} {from} → {to}"
+    "auditLine": "{actor}: {email} {from} → {to}",
+    "confirmTitle": "Change role?",
+    "confirmButton": "Change role",
+    "mail_sent": "The user was sent an e-mail about the role change.",
+    "mail_queued": "The role change e-mail is queued and will be sent later (daily e-mail limit).",
+    "mail_failed": "The role change e-mail could not be sent; the role has been changed anyway.",
+    "mail_skipped": "No role change e-mail was sent."
+  },
+  "RoleChangeMail": {
+    "subject": "MCVV: your role on the website is now “{role}”",
+    "greeting": "Hello {name},",
+    "changed": "an administrator of the Malá cena Velké Verandy website changed the role of your account {email} from “{from}” to “{to}”.",
+    "effect": "The change applies immediately. If you are signed in, just reload the page.",
+    "after": "If you do not understand the change or did not expect it, contact the organizer via the contact form on mcvv.org.",
+    "role_registrar": "Registrant",
+    "role_organizer": "Organizer",
+    "role_admin": "Administrator",
+    "role_timing": "Timing",
+    "role_splitmaker": "Split times",
+    "role_race_office": "Race office",
+    "about_registrar": "With a regular account you can register runners, manage your entries and send messages to the organizer. You have no access to the administration.",
+    "about_organizer": "As an organizer you have full access to the race administration (entries, start list, payments, results…) except settings and user management.",
+    "about_admin": "As an administrator you have access to the whole administration including settings and management of users and their roles.",
+    "about_timing": "The Timing role opens the “Race day” section of the administration: export for OBD and imports from OBD.",
+    "about_splitmaker": "The Split times role lets you enter split times at controls on the split times page.",
+    "about_race_office": "The Race office role opens the cash desk and the list of sales on the Race office page.",
+    "action_registrar": "My entries",
+    "action_organizer": "Open administration",
+    "action_admin": "Open administration",
+    "action_timing": "Race day",
+    "action_splitmaker": "Split times",
+    "action_race_office": "Race office"
+  },
+  "AdminAudit": {
+    "title": "Audit log",
+    "nav": "Audit log",
+    "intro": "Who changed what and when in the administration – sensitive operations (runner sex, club merges, entries, payments, entry fees, settings, start list, partners) with the state before and after. Records are never deleted.",
+    "filterGroup": "Area",
+    "filterAction": "Action",
+    "filterActor": "Who (e-mail)",
+    "filterTarget": "Target",
+    "filterFrom": "From",
+    "filterTo": "To",
+    "filter": "Filter",
+    "reset": "Clear filter",
+    "all": "All",
+    "total": "{count, plural, one {# record} other {# records}}",
+    "empty": "No records match the filter.",
+    "colTime": "When",
+    "colActor": "Who",
+    "colAction": "Action",
+    "colTarget": "Target",
+    "colDetail": "Change",
+    "detailJson": "Detail (JSON)",
+    "pagination": "Pagination",
+    "newer": "Newer",
+    "older": "Older",
+    "page": "Page {page} of {pages}",
+    "group_runner": "Runners",
+    "group_club": "Clubs",
+    "group_entry": "Entries (by entrants)",
+    "group_registration": "Entries (administration)",
+    "group_payment": "Payments",
+    "group_bank_tx": "Bank transactions",
+    "group_edition": "Editions and entry fees",
+    "group_category": "Categories",
+    "group_settings": "Settings",
+    "group_user": "Users and roles",
+    "group_raceday": "Race day",
+    "group_sale": "Race office – sales",
+    "group_sale_item": "Race office – price list",
+    "group_startlist": "Start list (bibs, locks, groups)",
+    "group_partner": "Partners"
   },
   "RaceDay": {
     "title": "Race day",
@@ -2016,7 +2152,8 @@
     "donePresentation": "The presentation import has been written.",
     "doneResults": "Results have been written ({count, plural, one {# row} other {# rows}}).",
     "doneRecords": "Category records recalculated: {list}.",
-    "doneRecordsUnchanged": "Category records unchanged."
+    "doneRecordsUnchanged": "Category records unchanged.",
+    "confirmTitle": "Write the import?"
   },
   "AfterRace": {
     "title": "After the race – raffle",
@@ -2169,7 +2306,9 @@
     "issue_rangeSeries": "Category {category}: the range must lie within one start.",
     "issue_rangeOverlap": "The ranges of categories {category} and {other} overlap.",
     "issue_championInRange": "Champion bib {other} lies in the range of category {category}.",
-    "issue_championSame": "The men's and women's champion bibs must differ."
+    "issue_championSame": "The men's and women's champion bibs must differ.",
+    "groupDeleteTitle": "Cancel group?",
+    "groupDeleteConfirm": "Group {group} will be cancelled; the runners stay in the start list individually."
   },
   "PrintReports": {
     "heading": "Check-in reports",
@@ -2287,7 +2426,9 @@
       "blocked": "Bulk clear is blocked from the official zero.",
       "changed": "Someone changed the record meanwhile – check and try again.",
       "time": "Invalid time – use hh:mm or hh:mm:ss."
-    }
+    },
+    "deleteTitle": "Delete start record?",
+    "deleteConfirm": "The start record of bib {bib} will be deleted (the reason is kept in the journal)."
   },
   "Speaker": {
     "metaTitle": "Speaker – live results",
@@ -2358,5 +2499,11 @@
     "home": "Back to the website",
     "cardPlaceWord": "place",
     "legendOnWord": "no rank"
+  },
+  "ConfirmDialog": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "working": "Working…",
+    "srDescription": "Confirm or cancel the action."
   }
 }

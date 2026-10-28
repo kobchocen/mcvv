@@ -33,7 +33,7 @@ export default async function StatsSlugPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const stats = await getTranslations({ locale, namespace: "Stats" });
-  const { tables, chart, chartCaption } = await loadStatsSlug(slug, stats);
+  const { tables, chart, chartCaption } = await loadStatsSlug(slug, stats, locale);
   const session = await getSession();
   const print =
     session && isStaffRole(session.role)

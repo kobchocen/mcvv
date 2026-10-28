@@ -227,7 +227,8 @@ export async function addNewRunner(
   if (!parsed.ok) {
     return { error: parsed.error };
   }
-  const { year, registrationId, birthYear, firstName, lastName, sex, categoryId } = parsed.data;
+  const { year, registrationId, birthYear, firstName, lastName, sex, categoryId, nationality } =
+    parsed.data;
   if (!entryWritable(await currentRaceYear(), year)) {
     return { error: "invalid" };
   }
@@ -240,7 +241,13 @@ export async function addNewRunner(
   if (!category) {
     return { error: "invalid" };
   }
-  const resolved = await resolveRunner({ firstName, lastName, birthYear, sex });
+  const resolved = await resolveRunner({
+    firstName,
+    lastName,
+    birthYear,
+    sex,
+    nationality: nationality || null,
+  });
   if ("error" in resolved) {
     return { error: "ambiguous" };
   }

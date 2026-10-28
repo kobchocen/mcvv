@@ -9,6 +9,7 @@ export async function importFormLabels(locale: Locale) {
     preview: t("preview"),
     commit: t("commit"),
     confirm: t("confirm"),
+    confirmTitle: t("confirmTitle"),
     errors: t("errorsTitle"),
     warnings: t("warningsTitle"),
     more: t.raw("more") as string,

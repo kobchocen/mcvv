@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FileDown, PlayCircle, Trash2 } from "lucide-react";
 
 import { McvvPublicNavbar } from "@/components/organisms";
+import { nationalityField } from "@/lib/runner/nationality-field";
 import { McvvAccountPromotionForm } from "@/components/organisms/mcvv-account-promotion-form";
 import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-form";
 import { McvvClubDatalist } from "@/components/organisms/mcvv-club-datalist";
@@ -151,10 +152,11 @@ async function EntryBody({
     </section>
   );
   const lineRunnerIds = registration ? registration.lines.map((line) => line.runnerId) : [];
-  const [account, startsById, startsCopy] = await Promise.all([
+  const [account, startsById, startsCopy, nationality] = await Promise.all([
     registration ? null : prisma.user.findUnique({ where: { email }, select: { clubName: true } }),
     countPastStarts(lineRunnerIds, year),
     getTranslations({ locale, namespace: "Entrants" }),
+    nationalityField(locale),
   ]);
   const defaultClubName = (registration?.name ?? account?.clubName ?? "").trim();
   const feeReasons = new Map<string, string | null>();
@@ -277,6 +279,7 @@ async function EntryBody({
                 categories={categories}
                 clubListId={CLUB_LIST_ID}
                 defaultClubName={defaultClubName}
+                nationality={nationality}
                 copy={newRunnerCopy(copy)}
               />
             </div>
@@ -512,6 +515,7 @@ async function EntryBody({
               categories={categories}
               clubListId={CLUB_LIST_ID}
               defaultClubName={defaultClubName}
+              nationality={nationality}
               copy={newRunnerCopy(copy)}
             />
           </div>

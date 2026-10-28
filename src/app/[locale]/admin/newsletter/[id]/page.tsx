@@ -24,6 +24,7 @@ import {
   McvvNewsletterEmailPreview,
 } from "@/components/organisms/mcvv-admin-newsletter-banner";
 import { type Locale } from "@/i18n/routing";
+import { ConfirmSubmitButton } from "@/components/molecules";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; id: string }>;
@@ -153,9 +154,16 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
                 />
                 <form action={deleteNewsletterDraft} className="mt-4">
                   <input type="hidden" name="id" value={campaign.id} />
-                  <button type="submit" className="text-sm text-race-muted hover:underline">
+                  <ConfirmSubmitButton
+                    variant="link"
+                    destructive
+                    title="Smazat koncept?"
+                    description="Koncept newsletteru se nevratně smaže."
+                    confirmLabel="Smazat koncept"
+                    className="h-auto p-0 text-sm font-normal text-race-muted"
+                  >
                     Smazat koncept
-                  </button>
+                  </ConfirmSubmitButton>
                 </form>
               </Section>
               <Section title="2. Testovací e-mail">

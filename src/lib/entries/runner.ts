@@ -27,22 +27,34 @@ export async function resolveRunner(input: {
   lastName: string;
   birthYear: number;
   sex: "M" | "F";
+  /** ISO kód státu (#200); null = neuvedeno. */
+  nationality?: string | null;
 }): Promise<ResolveRunnerResult> {
   const name = normalizeRunnerName(input.firstName, input.lastName);
   const yearPrefix = String(input.birthYear);
   const sex = sexDigit(input.sex);
   const yearMates = await prisma.runner.findMany({
     where: { id: { startsWith: yearPrefix } },
-    select: { id: true, name: true },
+    select: { id: true, name: true, nationality: true },
   });
+  const nationality = input.nationality ?? null;
+  // Existující běžec: příslušnost jen doplníme, pokud chybí – přihlašující nepřepíše
+  // údaj, který už je v číselníku (opravu dělá pořadatel v administraci).
+  const fillNationality = async (runner: { id: string; nationality: string | null }) => {
+    if (nationality && !runner.nationality) {
+      await prisma.runner.update({ where: { id: runner.id }, data: { nationality } });
+    }
+  };
   const wanted = name.toLowerCase();
   const matches = yearMates.filter((row) => row.name.trim().toLowerCase() === wanted);
   if (matches.length === 1) {
+    await fillNationality(matches[0]);
     return { id: matches[0].id, name: matches[0].name, created: false };
   }
   if (matches.length > 1) {
     const sexMatches = matches.filter((row) => row.id.charAt(4) === sex);
     if (sexMatches.length === 1) {
+      await fillNationality(sexMatches[0]);
       return { id: sexMatches[0].id, name: sexMatches[0].name, created: false };
     }
     return { error: "ambiguous" };
@@ -54,7 +66,7 @@ export async function resolveRunner(input: {
     input.sex,
   );
   await prisma.runner.create({
-    data: { id, name, author: "web" },
+    data: { id, name, author: "web", nationality },
   });
   return { id, name, created: true };
 }

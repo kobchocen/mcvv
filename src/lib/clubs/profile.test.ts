@@ -154,3 +154,50 @@ describe("clubUsage", () => {
     ]);
   });
 });
+
+describe("club profile: top results and most starts (#197)", () => {
+  it("top results are not unique per runner; best is one row per runner", () => {
+    const clubs = createClubResolver({ names: NAMES });
+    const profile = computeClubProfile(RESULTS, clubs, "CHC");
+    assert.ok(profile);
+    // Rychlý Petr ran for CHC three times: all three are among the top results.
+    assert.deepEqual(
+      profile.topResults.M.map((row) => [row.runnerId, row.year, row.time]),
+      [
+        ["19800001", 2003, 870],
+        ["19800001", 2002, 880],
+        ["19800001", 2001, 900],
+      ],
+    );
+    assert.equal(profile.best.M.length, 1);
+    assert.deepEqual(
+      profile.topResults.F.map((row) => row.time),
+      [1100],
+    );
+  });
+
+  it("most starts lists the member(s) with the highest count, ties included", () => {
+    const clubs = createClubResolver({ names: NAMES });
+    const chc = computeClubProfile(RESULTS, clubs, "CHC");
+    assert.equal(chc?.mostStarts?.starts, 3);
+    assert.deepEqual(
+      chc?.mostStarts?.runners.map((row) => [row.name, row.firstYear, row.lastYear]),
+      [["Rychlý Petr", 2001, 2003]],
+    );
+    const tie = computeClubProfile(
+      [
+        ...RESULTS,
+        r(2004, "19800001", 860, "Rychlý Petr", "216", "KOB Choceń"),
+        r(2003, "19830001", 990, "Nový Tomáš", "216", "KOB Choceń"),
+        r(2004, "19830001", 980, "Nový Tomáš", "216", "KOB Choceń"),
+      ],
+      clubs,
+      "216",
+    );
+    assert.equal(tie?.mostStarts?.starts, 2);
+    assert.deepEqual(
+      tie?.mostStarts?.runners.map((row) => row.name),
+      ["Nový Tomáš", "Svižná Eva"],
+    );
+  });
+});

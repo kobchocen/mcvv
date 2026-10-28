@@ -15,6 +15,19 @@ const valid = {
 };
 
 describe("parseNewRunner", () => {
+  it("accepts an optional nationality code (#200)", () => {
+    const none = parseNewRunner(valid);
+    assert.ok(none.ok);
+    assert.equal(none.data.nationality, "");
+    const sk = parseNewRunner({ ...valid, nationality: " sk " });
+    assert.ok(sk.ok);
+    assert.equal(sk.data.nationality, "SK");
+    assert.deepEqual(parseNewRunner({ ...valid, nationality: "XX" }), {
+      ok: false,
+      error: "invalid",
+    });
+  });
+
   it("accepts a complete form", () => {
     const parsed = parseNewRunner(valid);
     assert.ok(parsed.ok);

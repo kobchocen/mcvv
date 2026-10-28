@@ -7,6 +7,8 @@ export type McvvResultsTableRow = SplitTimes & {
   key: string;
   runnerId: string;
   runnerName: string | null;
+  /** Státní příslušnost (#200, ISO kód); vlaječka jen u jiného než domácího státu. */
+  nationality?: string | null;
   rank: number | undefined;
   /** Four-digit birth year (or "—"). */
   birthYear: string;
@@ -125,7 +127,11 @@ export function McvvResultsGroup({
                   >
                     <td className={`${cx.rank} font-mono text-xs text-race-dim`}>{r.rank}</td>
                     <td className={`${nameClass} font-semibold`}>
-                      <RunnerNameLink id={r.runnerId} name={r.runnerName} />
+                      <RunnerNameLink
+                        id={r.runnerId}
+                        name={r.runnerName}
+                        nationality={r.nationality}
+                      />
                       <span className="mt-px block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
                         <ClubLink slug={r.clubSlug} name={r.club} />
                         {showCategory && r.category ? ` · ${r.category}` : null}

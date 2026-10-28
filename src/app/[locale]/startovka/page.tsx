@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink, RunnerNameLink } from "@/components/molecules";
+import { loadNationalityMap } from "@/lib/runner/nationality-query";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvPlaceholderPage, type McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,8 @@ export default async function StartListPage({ params, searchParams }: PageProps)
   const settings = await loadStartSettings(raceYear.year);
   const { model } = settings;
   const { rows } = await loadPublicStartList(raceYear.year, model);
+  // Státní příslušnost (#200): vlaječka u zahraničních běžců.
+  const nationalities = await loadNationalityMap(rows.map((row) => row.runnerId));
   const { kat, q } = await searchParams;
   const categories = settings.categories.filter((c) => rows.some((r) => r.categoryId === c.id));
   const category = categories.some((c) => c.id === kat) ? kat! : "";
@@ -182,7 +185,11 @@ export default async function StartListPage({ params, searchParams }: PageProps)
                           {row.bib}
                         </td>
                         <td className={`${cx.name} font-semibold`}>
-                          <RunnerNameLink id={row.runnerId} name={row.name} />
+                          <RunnerNameLink
+                            id={row.runnerId}
+                            name={row.name}
+                            nationality={nationalities.get(row.runnerId)}
+                          />
                           <span className="mt-px block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
                             <ClubLink id={row.clubId} name={row.club} />
                             {row.categoryName ? ` · ${row.categoryName}` : null}

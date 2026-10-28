@@ -671,6 +671,13 @@
     "registeredFirstStart": "Registered for {year} – first start",
     "back": "Results archive"
   },
+  "Nationality": {
+    "label": "Nationality",
+    "unknown": "— not stated —",
+    "hint": "Runners from abroad get a flag in the results. An entry does not overwrite a nationality the runner already has.",
+    "save": "Save",
+    "saveError": "The nationality could not be saved (invalid country or runner)."
+  },
   "Club": {
     "eyebrow": "Club",
     "starts": "Starts",
@@ -1295,6 +1302,20 @@
       "nav": "Attendance",
       "title": "Overall attendance",
       "intro": "Participants, newcomers, and personal records in each year."
+    },
+    "staty": {
+      "nav": "Countries",
+      "title": "Runners by country",
+      "intro": "Nationality of runners with a result. For older editions it is mostly unknown – we collect it from the 2026 entries on, so the numbers will grow over time.",
+      "byCountry": "By country",
+      "byYear": "By edition",
+      "colCountry": "Country",
+      "colRunners": "Runners",
+      "colYears": "Editions",
+      "colCountries": "Countries",
+      "colForeign": "Runners from abroad",
+      "colUnknown": "Not stated",
+      "unknown": "Not stated"
     }
   },
   "LanguageSwitcher": {

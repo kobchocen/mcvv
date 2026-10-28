@@ -1,6 +1,7 @@
 import { McvvPublicNavbar } from "@/components/organisms";
 import { ClubLink, RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
+import { flagEmoji } from "@/lib/runner/nationality";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type StatsCell = {
@@ -8,6 +9,8 @@ export type StatsCell = {
   runnerId?: string;
   /** Club profile slug (#196). */
   clubSlug?: string;
+  /** ISO kód státu (#200): vlaječka před textem. */
+  flag?: string;
 };
 
 export type StatsTable = {
@@ -153,6 +156,13 @@ export function McvvStatsPage({
                                 <RunnerNameLink id={cell.runnerId} name={cell.text} />
                               ) : cell.clubSlug ? (
                                 <ClubLink slug={cell.clubSlug} name={cell.text} />
+                              ) : cell.flag ? (
+                                <span className="whitespace-nowrap text-foreground">
+                                  <span role="img" aria-hidden="true" className="mr-1.5">
+                                    {flagEmoji(cell.flag)}
+                                  </span>
+                                  {cell.text}
+                                </span>
                               ) : (
                                 cell.text
                               )}

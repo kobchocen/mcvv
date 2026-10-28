@@ -671,6 +671,13 @@
     "registeredFirstStart": "{sex, select, F {Přihlášena} other {Přihlášen}} na ročník {year} – první start",
     "back": "Archiv výsledků"
   },
+  "Nationality": {
+    "label": "Státní příslušnost",
+    "unknown": "— neuvedeno —",
+    "hint": "Podle ní ukážeme u zahraničních běžců ve výsledcích vlaječku. Údaj u běžce, který už ho má, přihláška nepřepíše.",
+    "save": "Uložit",
+    "saveError": "Státní příslušnost se nepodařilo uložit (neplatný stát nebo běžec)."
+  },
   "Club": {
     "eyebrow": "Klub",
     "starts": "Startů",
@@ -1295,6 +1302,20 @@
       "nav": "Účast",
       "title": "Celková účast",
       "intro": "Počet účastníků, nováčků a osobních rekordů v jednotlivých letech."
+    },
+    "staty": {
+      "nav": "Státy",
+      "title": "Běžci podle států",
+      "intro": "Státní příslušnost běžců s výsledkem. U starších ročníků příslušnost většinou neznáme – sbíráme ji od přihlášek 2026, takže čísla budou postupně přibývat.",
+      "byCountry": "Podle států",
+      "byYear": "Podle ročníků",
+      "colCountry": "Stát",
+      "colRunners": "Běžců",
+      "colYears": "Ročníky",
+      "colCountries": "Států",
+      "colForeign": "Zahraničních běžců",
+      "colUnknown": "Bez údaje",
+      "unknown": "Neuvedeno"
     }
   },
   "LanguageSwitcher": {

@@ -1,6 +1,14 @@
 /** Pure statistics helpers (no DB access) shared by queries, pages and tests. */
 
-export const STAT_SLUGS = ["rekordy", "vitezove", "casy", "vek", "veterani", "ucast"] as const;
+export const STAT_SLUGS = [
+  "rekordy",
+  "vitezove",
+  "casy",
+  "vek",
+  "veterani",
+  "ucast",
+  "staty",
+] as const;
 export type StatSlug = (typeof STAT_SLUGS)[number];
 
 export function isStatSlug(value: string): value is StatSlug {

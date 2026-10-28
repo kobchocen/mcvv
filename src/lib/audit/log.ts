@@ -57,6 +57,8 @@ export type AuditAction =
   // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).
   // Změna pohlaví běžce = změna id v cis_bezec (#103), detail = staré / nové id a dotčené řádky.
   | "runner.sex_changed"
+  // Státní příslušnost běžce (#200) změněná pořadatelem, detail = `diffFields` (nationality).
+  | "runner.nationality_changed"
   | "registration.updated"
   | "registration.confirmed"
   | "payment.created"

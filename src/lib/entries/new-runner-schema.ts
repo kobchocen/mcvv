@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isCountryCode } from "@/lib/runner/nationality";
+
 /**
  * Server-side validation of the "new runner" entry form. Sex has no default: the runner id
  * encodes it (5th digit 0 = male, 5 = female), so a missing choice must be rejected rather
@@ -14,6 +16,14 @@ export const newRunnerSchema = z.object({
   sex: z.enum(["M", "F"]),
   categoryId: z.string().trim().length(1),
   clubName: z.string().trim().optional().default(""),
+  /** Státní příslušnost (#200): ISO kód, prázdné = neuvedeno, neznámý kód = chyba. */
+  nationality: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .optional()
+    .default("")
+    .refine((value) => value === "" || isCountryCode(value)),
 });
 
 export type NewRunnerInput = z.infer<typeof newRunnerSchema>;

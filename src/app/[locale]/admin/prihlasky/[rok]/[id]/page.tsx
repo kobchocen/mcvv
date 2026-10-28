@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { FileDown } from "lucide-react";
 
-import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
+import { ClubLink, ConfirmSubmitButton, NationalitySelect } from "@/components/molecules";
 import {
   cancelRegistration,
   confirmRegistration,
@@ -37,10 +37,12 @@ import { loadRegistrationThread } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { Link } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
+import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
+import { nationalityField } from "@/lib/runner/nationality-field";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
-  searchParams: Promise<{ mail?: string; sex?: string }>;
+  searchParams: Promise<{ mail?: string; sex?: string; stat?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -51,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AdminRegistrationDetailPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale, rok, id: rawId } = await params;
-  const { mail, sex: sexChanged } = await searchParams;
+  const { mail, sex: sexChanged, stat: nationalityStatus } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireStaff();
@@ -67,7 +69,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       include: {
         lines: {
           include: {
-            runner: { select: { name: true } },
+            runner: { select: { name: true, nationality: true } },
             club: { select: { name: true } },
             category: { select: { name: true, entryFee: true } },
           },
@@ -85,6 +87,8 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   }
 
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const nationality = await getTranslations({ locale, namespace: "Nationality" });
+  const nationalityOptions = await nationalityField(locale);
   const relatedPayments = payments.filter(
     (payment) => paymentRegistrationId(payment.registrationId) === id,
   );
@@ -181,6 +185,11 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           {sexChange ? (
             <p role="status" className="mt-3 text-sm font-medium text-race-accent">
               {copy("sexChangeDone", { oldId: sexChange[1], newId: sexChange[2] })}
+            </p>
+          ) : null}
+          {nationalityStatus === "chyba" ? (
+            <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+              {nationality("saveError")}
             </p>
           ) : null}
           {mail === "0" ? (
@@ -317,7 +326,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
         <section>
           <h2 className="font-display text-xl font-semibold">{copy("regsRunners")}</h2>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+            <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                   <th className="py-2 pr-3">{copy("regsName")}</th>
@@ -327,6 +336,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                   <th className="py-2 pr-3">{copy("regsFee")}</th>
                   <th className="py-2 pr-3">{copy("regsBib")}</th>
                   <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
+                  <th className="py-2 pr-3">{nationalityOptions.label}</th>
                 </tr>
               </thead>
               <tbody>
@@ -352,6 +362,26 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                         hasResults={runnersWithResults.has(line.runnerId)}
                         copy={sexCopy}
                       />
+                    </td>
+                    <td className="py-2.5 pr-3">
+                      <form
+                        action={saveRunnerNationality}
+                        className="flex items-center gap-2"
+                        data-testid={`nationality-form-${line.runnerId}`}
+                      >
+                        <input type="hidden" name="runnerId" value={line.runnerId} />
+                        <input type="hidden" name="year" value={year} />
+                        <input type="hidden" name="registrationId" value={id} />
+                        <NationalitySelect
+                          id={`nationality-${line.runnerId}`}
+                          field={nationalityOptions}
+                          defaultValue={line.runner.nationality ?? ""}
+                          className="h-8 max-w-[11rem] border border-race-line bg-race-surface px-2 text-sm"
+                        />
+                        <Button type="submit" size="sm" variant="outline">
+                          {nationality("save")}
+                        </Button>
+                      </form>
                     </td>
                   </tr>
                 ))}

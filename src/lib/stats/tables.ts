@@ -2,11 +2,14 @@ import {
   getAbsoluteWinners,
   getAgeRecords,
   getAttendance,
+  getNationalityStats,
   getRecordEvolution,
   getTopTimesBySex,
   getVeteranClub,
   type StatSlug,
 } from "./queries";
+import { countryName } from "@/lib/runner/nationality";
+import { formatRaceTime } from "@/lib/utils";
 
 /** Data jedné statistické stránky – sdílí je web (`/statistiky/[slug]`) i tiskové PDF. */
 export type StatsCellData = {
@@ -14,6 +17,8 @@ export type StatsCellData = {
   runnerId?: string;
   /** Club profile slug (#196): the web shows the club as a link, the PDF as text. */
   clubSlug?: string;
+  /** ISO kód státu (#200): web před text přidá vlaječku, PDF jen text. */
+  flag?: string;
 };
 
 export type StatsTableData = {
@@ -41,7 +46,11 @@ function clubCell(text: string, clubSlug: string | null): StatsCellData {
   return clubSlug ? { text, clubSlug } : { text };
 }
 
-export async function loadStatsSlug(slug: StatSlug, t: StatsT): Promise<StatsSlugData> {
+export async function loadStatsSlug(
+  slug: StatSlug,
+  t: StatsT,
+  locale = "cs",
+): Promise<StatsSlugData> {
   switch (slug) {
     case "rekordy": {
       const groups = await getRecordEvolution();
@@ -152,6 +161,60 @@ export async function loadStatsSlug(slug: StatSlug, t: StatsT): Promise<StatsSlu
         tables: [
           { title: t("men"), columns, rows: toRows(men) },
           { title: t("women"), columns, rows: toRows(women) },
+        ],
+      };
+    }
+    case "staty": {
+      const stats = await getNationalityStats();
+      if (stats.countries.length === 0) {
+        return { tables: [] };
+      }
+      const countryRows: StatsCellData[][] = stats.countries.map((row) => [
+        { text: `${countryName(row.code, locale)} (${row.code})`, flag: row.code },
+        cell(String(row.runners)),
+        cell(String(row.starts)),
+        cell(
+          row.firstYear === row.lastYear
+            ? String(row.firstYear)
+            : `${row.firstYear}–${row.lastYear}`,
+        ),
+        cell(row.best.time > 0 ? formatRaceTime(row.best.time) : ""),
+        cell(stats.names.get(row.best.runnerId) ?? row.best.runnerId, row.best.runnerId),
+      ]);
+      if (stats.unknownRunners > 0) {
+        countryRows.push([cell(t("staty.unknown")), cell(String(stats.unknownRunners))]);
+      }
+      return {
+        tables: [
+          {
+            title: t("staty.byCountry"),
+            columns: [
+              t("staty.colCountry"),
+              t("staty.colRunners"),
+              t("colStarts"),
+              t("staty.colYears"),
+              t("colBest"),
+              t("colName"),
+            ],
+            rows: countryRows,
+          },
+          {
+            title: t("staty.byYear"),
+            columns: [
+              t("colYear"),
+              t("staty.colCountries"),
+              t("staty.colForeign"),
+              t("staty.colUnknown"),
+            ],
+            rows: stats.years
+              .filter((row) => row.countries > 0)
+              .map((row) => [
+                cell(String(row.year)),
+                cell(String(row.countries)),
+                cell(String(row.foreign)),
+                cell(String(row.unknown)),
+              ]),
+          },
         ],
       };
     }

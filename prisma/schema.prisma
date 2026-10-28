@@ -45,6 +45,8 @@ model Runner {
   name    String    @map("jmeno") @db.VarChar(50)
   created DateTime? @map("created")
   author  String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
+  /// Státní příslušnost (#200): ISO 3166-1 alpha-2 (CZ, SK…), NULL = neuvedeno.
+  nationality String? @map("statni_prislusnost") @db.Char(2)
 
   // Relations
   runnerPhotos      RunnerPhoto[]

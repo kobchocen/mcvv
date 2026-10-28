@@ -1141,7 +1141,9 @@
     "clubMergeIdA": "First id",
     "clubMergeIdB": "Second id",
     "clubMergeRejected": "Rejected suggestions ({count})",
-    "clubMergeRestore": "Restore to suggestions"
+    "clubMergeRestore": "Restore to suggestions",
+    "regsDeletePaymentTitle": "Delete payment?",
+    "regsDeletePaymentConfirm": "Payment of CZK {amount} ({date}) will be removed from the entry and the payment status recalculated."
   },
   "Stats": {
     "overview": {
@@ -1714,7 +1716,9 @@
     "tableEmpty": "No splits.",
     "colName": "Name",
     "notInStart": "not in start list",
-    "editLink": "Edit"
+    "editLink": "Edit",
+    "deleteTitle": "Delete split?",
+    "deleteConfirm": "The split of bib {bib} at {split} will be deleted (the reason is kept in the journal)."
   },
   "TestRun": {
     "title": "Test run",
@@ -1886,7 +1890,9 @@
     "error_not_found": "Account not found.",
     "auditTitle": "Recent role changes",
     "auditEmpty": "No changes yet.",
-    "auditLine": "{actor}: {email} {from} → {to}"
+    "auditLine": "{actor}: {email} {from} → {to}",
+    "confirmTitle": "Change role?",
+    "confirmButton": "Change role"
   },
   "RaceDay": {
     "title": "Race day",
@@ -2016,7 +2022,8 @@
     "donePresentation": "The presentation import has been written.",
     "doneResults": "Results have been written ({count, plural, one {# row} other {# rows}}).",
     "doneRecords": "Category records recalculated: {list}.",
-    "doneRecordsUnchanged": "Category records unchanged."
+    "doneRecordsUnchanged": "Category records unchanged.",
+    "confirmTitle": "Write the import?"
   },
   "AfterRace": {
     "title": "After the race – raffle",
@@ -2169,7 +2176,9 @@
     "issue_rangeSeries": "Category {category}: the range must lie within one start.",
     "issue_rangeOverlap": "The ranges of categories {category} and {other} overlap.",
     "issue_championInRange": "Champion bib {other} lies in the range of category {category}.",
-    "issue_championSame": "The men's and women's champion bibs must differ."
+    "issue_championSame": "The men's and women's champion bibs must differ.",
+    "groupDeleteTitle": "Cancel group?",
+    "groupDeleteConfirm": "Group {group} will be cancelled; the runners stay in the start list individually."
   },
   "PrintReports": {
     "heading": "Check-in reports",
@@ -2287,7 +2296,9 @@
       "blocked": "Bulk clear is blocked from the official zero.",
       "changed": "Someone changed the record meanwhile – check and try again.",
       "time": "Invalid time – use hh:mm or hh:mm:ss."
-    }
+    },
+    "deleteTitle": "Delete start record?",
+    "deleteConfirm": "The start record of bib {bib} will be deleted (the reason is kept in the journal)."
   },
   "Speaker": {
     "metaTitle": "Speaker – live results",
@@ -2358,5 +2369,11 @@
     "home": "Back to the website",
     "cardPlaceWord": "place",
     "legendOnWord": "no rank"
+  },
+  "ConfirmDialog": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "working": "Working…",
+    "srDescription": "Confirm or cancel the action."
   }
 }

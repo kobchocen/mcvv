@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
+import { ConfirmSubmitButton } from "@/components/molecules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -295,9 +296,19 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
                         placeholder={t("deleteReason")}
                         className="h-9 w-64 bg-race-surface"
                       />
-                      <Button type="submit" variant="outline" className="h-9 px-3 text-red-700">
+                      <ConfirmSubmitButton
+                        variant="outline"
+                        destructive
+                        title={t("deleteTitle")}
+                        description={t("deleteConfirm", {
+                          bib: editRow.bib,
+                          split: stationName(code),
+                        })}
+                        confirmLabel={t("delete")}
+                        className="h-9 px-3 text-red-700"
+                      >
                         {t("delete")}
-                      </Button>
+                      </ConfirmSubmitButton>
                     </form>
                   ) : null}
                 </div>

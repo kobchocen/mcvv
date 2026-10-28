@@ -6,6 +6,7 @@ import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/staff";
+import { isRoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/format/date";
@@ -20,6 +21,8 @@ type SearchParams = {
   strana?: string;
   saved?: string;
   error?: string;
+  /** Výsledek e-mailu o změně role (#191). */
+  mail?: string;
 };
 
 type PageProps = Readonly<{
@@ -115,6 +118,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
     )
       ? (`error_${sp.error}` as const)
       : null;
+  const mailKey = isRoleChangeMailOutcome(sp.mail) ? (`mail_${sp.mail}` as const) : null;
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
@@ -142,6 +146,16 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
         ) : Number.isFinite(savedId) ? (
           <p role="status" className="mt-4 text-sm text-race-accent">
             {copy("saved")}
+            {mailKey ? (
+              <span
+                className={
+                  sp.mail === "failed" ? "text-red-600 dark:text-red-400" : "text-race-muted"
+                }
+              >
+                {" "}
+                {copy(mailKey)}
+              </span>
+            ) : null}
           </p>
         ) : null}
 

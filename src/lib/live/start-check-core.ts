@@ -88,6 +88,8 @@ export type StartListRow = {
   bib: number;
   name: string | null;
   club: string | null;
+  /** Id klubu pro odkaz na profil (#196). */
+  clubId?: string | null;
   categoryId: string | null;
 };
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ClubNameLink, PaginationLinks } from "@/components/molecules";
+import { ClubLink, PaginationLinks } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Link, type Locale } from "@/i18n/routing";
@@ -160,7 +160,7 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
                   {slice.items.map((row) => (
                     <tr key={row.id} className="border-b border-race-line/40">
                       <td className="py-2 pr-4">
-                        <ClubNameLink
+                        <ClubLink
                           slug={row.slug}
                           name={row.name}
                           className="font-semibold text-race-accent underline-offset-2 hover:underline"

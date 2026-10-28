@@ -38,6 +38,8 @@ export type RecordEvolutionGroup = {
     name: string;
     birthYear: string;
     club: string;
+    /** Club profile slug (#196); null = no club. */
+    clubSlug: string | null;
     time: string;
     runnerId: string;
   }[];
@@ -58,6 +60,7 @@ export async function getRecordEvolution(): Promise<RecordEvolutionGroup[]> {
       name: winner.runnerName || "—",
       birthYear: String(runnerBirthYear(winner.runnerId)),
       club: clubs.display(winner.clubId, winner.year, winner.clubName),
+      clubSlug: clubs.resolve(winner.clubId, winner.year, winner.clubName)?.slug ?? null,
       time: formatRaceTime(winner.time),
       runnerId: winner.runnerId,
     }));
@@ -106,6 +109,8 @@ export type TopTimeRow = {
   name: string;
   birthYear: string;
   club: string;
+  /** Club profile slug (#196); null = no club. */
+  clubSlug: string | null;
   time: string;
   runnerId: string;
 };
@@ -125,6 +130,7 @@ export async function getTopTimesBySex(
         name: row.runnerName || "—",
         birthYear: String(runnerBirthYear(row.runnerId)),
         club: clubs.display(row.clubId, row.year, row.clubName),
+        clubSlug: clubs.resolve(row.clubId, row.year, row.clubName)?.slug ?? null,
         time: formatRaceTime(row.time),
         runnerId: row.runnerId,
       }));

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { ClubLink } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { saveClub } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
@@ -97,6 +98,13 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
                       >
                         {copy("save")}
                       </Button>
+                      <ClubLink
+                        id={row.id}
+                        name={row.name}
+                        className="inline-flex h-9 items-center text-sm font-medium text-race-accent hover:underline"
+                      >
+                        {copy("dictsClubProfile")} →
+                      </ClubLink>
                     </form>
                   </td>
                 </tr>

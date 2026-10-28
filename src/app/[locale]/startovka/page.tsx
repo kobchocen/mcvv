@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { RunnerNameLink } from "@/components/molecules";
+import { ClubLink, RunnerNameLink } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { McvvPlaceholderPage, type McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
 import { shortBirthYear } from "@/lib/format/birth-year";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
-import { detailLine } from "@/lib/results/table";
 import { formatClock, startSeriesForBib } from "@/lib/race/start-time";
 import { loadPublicStartList, loadStartSettings } from "@/lib/race/startlist-load";
 import { getSiteSettings } from "@/lib/settings/site";
@@ -185,14 +184,17 @@ export default async function StartListPage({ params, searchParams }: PageProps)
                         <td className={`${cx.name} font-semibold`}>
                           <RunnerNameLink id={row.runnerId} name={row.name} />
                           <span className="mt-px block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
-                            {detailLine(row.club, row.categoryName)}
+                            <ClubLink id={row.clubId} name={row.club} />
+                            {row.categoryName ? ` · ${row.categoryName}` : null}
                           </span>
                         </td>
                         <td className={`${cx.birth} text-xs text-race-muted`}>
                           <span className="hidden sm:inline">{row.birthYear}</span>
                           <span className="sm:hidden">{shortBirthYear(row.birthYear)}</span>
                         </td>
-                        <td className={`${cx.desktop} text-race-muted`}>{row.club}</td>
+                        <td className={`${cx.desktop} text-race-muted`}>
+                          <ClubLink id={row.clubId} name={row.club} />
+                        </td>
                         <td className={`${cx.desktop} text-xs text-race-muted`}>
                           {row.categoryName}
                         </td>

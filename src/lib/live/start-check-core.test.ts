@@ -179,3 +179,14 @@ test("parseStartClock reads Prague wall-clock on the race day", () => {
   assert.equal(parseStartClock("10:15", "bad"), null);
   assert.equal(pragueClock(new Date("2026-12-06T09:15:05Z")), "10:15:05");
 });
+
+test("buildStartOverview keeps the club id for the club link (#196)", () => {
+  const { rows } = buildStartOverview(
+    [{ bib: 3, name: "Cyril", club: "K.O.B. Choceň", clubId: "CHC", categoryId: "H21" }],
+    [{ bib: 9, startedAt: ZERO, source: "web", userId: null }],
+    ctx,
+  );
+  assert.equal(rows[0].clubId, "CHC");
+  assert.equal(rows[1].clubId, undefined);
+  assert.equal(rows[1].club, null);
+});

@@ -1,11 +1,13 @@
 import { McvvPublicNavbar } from "@/components/organisms";
-import { RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
+import { ClubLink, RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type StatsCell = {
   text: string;
   runnerId?: string;
+  /** Club profile slug (#196). */
+  clubSlug?: string;
 };
 
 export type StatsTable = {
@@ -149,6 +151,8 @@ export function McvvStatsPage({
                             <td key={cellIndex} className="py-2.5 pr-4 text-race-muted">
                               {cell.runnerId ? (
                                 <RunnerNameLink id={cell.runnerId} name={cell.text} />
+                              ) : cell.clubSlug ? (
+                                <ClubLink slug={cell.clubSlug} name={cell.text} />
                               ) : (
                                 cell.text
                               )}

@@ -12,6 +12,8 @@ import {
 export type StatsCellData = {
   text: string;
   runnerId?: string;
+  /** Club profile slug (#196): the web shows the club as a link, the PDF as text. */
+  clubSlug?: string;
 };
 
 export type StatsTableData = {
@@ -35,6 +37,10 @@ function cell(text: string, runnerId?: string): StatsCellData {
   return runnerId ? { text, runnerId } : { text };
 }
 
+function clubCell(text: string, clubSlug: string | null): StatsCellData {
+  return clubSlug ? { text, clubSlug } : { text };
+}
+
 export async function loadStatsSlug(slug: StatSlug, t: StatsT): Promise<StatsSlugData> {
   switch (slug) {
     case "rekordy": {
@@ -47,7 +53,7 @@ export async function loadStatsSlug(slug: StatSlug, t: StatsT): Promise<StatsSlu
             cell(String(row.year)),
             cell(row.name, row.runnerId),
             cell(row.birthYear),
-            cell(row.club),
+            clubCell(row.club, row.clubSlug),
             cell(row.time),
           ]),
         })),
@@ -86,7 +92,7 @@ export async function loadStatsSlug(slug: StatSlug, t: StatsT): Promise<StatsSlu
           cell(String(row.year)),
           cell(row.name, row.runnerId),
           cell(row.birthYear),
-          cell(row.club),
+          clubCell(row.club, row.clubSlug),
           cell(row.time),
         ]);
       return {

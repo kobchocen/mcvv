@@ -17,6 +17,8 @@ export const AUDIT_GROUPS = [
   "raceday",
   "sale",
   "sale_item",
+  "startlist",
+  "partner",
 ] as const;
 
 export type AuditGroup = (typeof AUDIT_GROUPS)[number];

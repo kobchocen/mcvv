@@ -1958,7 +1958,7 @@
   "AdminAudit": {
     "title": "Auditní log",
     "nav": "Auditní log",
-    "intro": "Kdo, kdy a co změnil v administraci – citlivé zásahy (pohlaví běžce, slučování klubů, přihlášky, platby, startovné, nastavení) se stavem před a po. Záznamy se nemažou.",
+    "intro": "Kdo, kdy a co změnil v administraci – citlivé zásahy (pohlaví běžce, slučování klubů, přihlášky, platby, startovné, nastavení, startovka, partneři) se stavem před a po. Záznamy se nemažou.",
     "filterGroup": "Oblast",
     "filterAction": "Akce",
     "filterActor": "Kdo (e-mail)",
@@ -1992,7 +1992,9 @@
     "group_user": "Uživatelé a role",
     "group_raceday": "Den závodu",
     "group_sale": "Závodní kancelář – prodejky",
-    "group_sale_item": "Závodní kancelář – ceník"
+    "group_sale_item": "Závodní kancelář – ceník",
+    "group_startlist": "Startovka (čísla, zámky, skupiny)",
+    "group_partner": "Partneři"
   },
   "RaceDay": {
     "title": "Den závodu",

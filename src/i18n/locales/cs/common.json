@@ -1173,7 +1173,6 @@
     "clubMergeReason_prefix_missing": "chybí typ klubu",
     "clubMergeReason_prefix_conflict": "jiný typ klubu",
     "clubMergeReason_spelling": "podobný zápis",
-    "clubMergeReason_subset": "jeden název obsahuje druhý",
     "clubMergeMatched": "„{a}“ ≈ „{b}“",
     "clubMergeSameYears": "Obě id existují ve stejném ročníku: {years}. Po sloučení v těchto ročnících zůstane název hlavního id a název slučovaného id zmizí (zůstane jen v auditu).",
     "clubMergeChooseMain": "Které id zůstává hlavní?",

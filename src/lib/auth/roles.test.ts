@@ -13,6 +13,7 @@ import {
   canMergeClubs,
   canManageLiveResults,
   canUseCashDesk,
+  canViewSpeakerScreen,
   isStaffRole,
   requiresVerifiedEmail,
   USER_ROLES,
@@ -20,6 +21,12 @@ import {
 } from "./roles";
 
 describe("role permissions", () => {
+  it("speaker screen (#188): admin and organizer only", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(canViewSpeakerScreen(role), role === "admin" || role === "organizer", role);
+    }
+  });
+
   it("race office (#207): cash desk for race_office and staff, price list and manual transfer admin only, no admin", () => {
     for (const role of USER_ROLES) {
       assert.equal(

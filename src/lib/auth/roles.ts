@@ -44,6 +44,11 @@ export function canAccessSplits(role: UserRole): boolean {
   return role === "splitmaker" || isStaffRole(role);
 }
 
+/** Obrazovka pro speakera s průběžnými výsledky (#188, Q73): jen admin nebo pořadatel. */
+export function canViewSpeakerScreen(role: UserRole): boolean {
+  return isStaffRole(role);
+}
+
 /** Pokladna závodní kanceláře (#207): prodejky, „zaplaceno hotově“, storno nezaplacené. */
 export function canUseCashDesk(role: UserRole): boolean {
   return role === "race_office" || isStaffRole(role);

@@ -1,0 +1,727 @@
+/* Obrazovka speakera (#188) – převzato ze schváleného mockupu v4. Velikosti jsou
+   v jednotkách --u = 1/120 šířky okna (16 px @1920, 32 px @3840), aby se 4K a 1080p
+   zobrazily stejně, jen v jiném měřítku. Barvy z tmavého tématu webu. */
+.root {
+  --u: calc(100vw / 120);
+  --deep: oklch(0.13 0.03 150);
+  --forest: oklch(0.19 0.042 150);
+  --forest2: oklch(0.25 0.055 150);
+  --line: oklch(0.36 0.06 150);
+  --muted: oklch(0.8 0.035 145);
+  --dim: oklch(0.62 0.035 145);
+  --fg: oklch(0.98 0.008 145);
+  --accent: oklch(0.68 0.205 39);
+  --accent-hi: oklch(0.78 0.17 55);
+  --test: oklch(0.58 0.22 27);
+  --ok: oklch(0.78 0.19 145);
+  --run: oklch(0.82 0.11 225);
+  --gold: oklch(0.84 0.16 88);
+  --silver: oklch(0.85 0.01 250);
+  --bronze: oklch(0.68 0.12 55);
+  --fo: var(--font-oswald), "Oswald", sans-serif;
+  --frc: var(--font-roboto-condensed), "Roboto Condensed", var(--font-inter), system-ui, sans-serif;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--deep);
+  color: var(--fg);
+  font-family: var(--frc);
+  font-size: calc(1 * var(--u));
+  line-height: normal;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: calc(0.45 * var(--u)) calc(0.5 * var(--u)) calc(0.5 * var(--u));
+  gap: calc(0.45 * var(--u));
+  color-scheme: dark;
+}
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.root b {
+  font-weight: 700;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.hdr {
+  display: flex;
+  align-items: center;
+  gap: calc(1 * var(--u));
+  height: calc(3 * var(--u));
+  flex: none;
+  padding: 0 calc(0.25 * var(--u));
+  border-bottom: calc(0.08 * var(--u)) solid var(--line);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: calc(0.55 * var(--u));
+  flex: none;
+  white-space: nowrap;
+}
+.mark {
+  width: calc(2.2 * var(--u));
+  height: calc(2.2 * var(--u));
+  border-radius: calc(0.5 * var(--u));
+  background: var(--accent);
+  color: #fff;
+  font: 700 calc(1.35 * var(--u))/1 var(--fo);
+  display: grid;
+  place-items: center;
+}
+.bt {
+  font: 600 calc(0.95 * var(--u))/1.02 var(--fo);
+  letter-spacing: 0.04em;
+}
+.bt span {
+  display: block;
+  color: var(--accent);
+}
+.title {
+  font: 600 calc(1.35 * var(--u))/1 var(--fo);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: calc(0.9 * var(--u));
+  font-size: calc(0.92 * var(--u));
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.legend > span {
+  display: flex;
+  align-items: center;
+  gap: calc(0.3 * var(--u));
+}
+.legend .lgB {
+  font-family: var(--fo);
+  color: var(--fg);
+}
+.legend .lgMuted {
+  color: var(--muted);
+}
+.legend .lgOk {
+  color: var(--ok);
+  font-family: var(--fo);
+}
+.lgNew {
+  display: inline-block;
+  width: calc(1.5 * var(--u));
+  height: calc(0.95 * var(--u));
+  border-radius: calc(0.2 * var(--u));
+  background: color-mix(in oklch, var(--accent) 38%, transparent);
+  border-left: calc(0.25 * var(--u)) solid var(--accent);
+}
+.spacer {
+  flex: 1;
+}
+.upd {
+  font-size: calc(0.95 * var(--u));
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.upd b {
+  color: var(--fg);
+}
+.upd .sub {
+  color: var(--dim);
+}
+.dot {
+  display: inline-block;
+  width: calc(0.6 * var(--u));
+  height: calc(0.6 * var(--u));
+  border-radius: 50%;
+  background: var(--ok);
+  margin-right: calc(0.3 * var(--u));
+  vertical-align: calc(0.05 * var(--u));
+}
+.stale .dot {
+  background: var(--test);
+}
+.stale .sub {
+  color: var(--accent-hi);
+}
+.clock {
+  font: 600 calc(2.4 * var(--u))/1 var(--fo);
+  letter-spacing: 0.02em;
+}
+.testbadge {
+  display: none;
+}
+.test .hdr {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--test) 30%, transparent) 0 calc(1.2 * var(--u)),
+    transparent calc(1.2 * var(--u)) calc(2.4 * var(--u))
+  );
+  border-bottom: calc(0.2 * var(--u)) solid var(--test);
+}
+.test .testbadge {
+  display: flex;
+  align-items: center;
+  gap: calc(0.7 * var(--u));
+  background: var(--test);
+  color: #fff;
+  font: 700 calc(2.3 * var(--u))/1 var(--fo);
+  letter-spacing: 0.14em;
+  padding: calc(0.25 * var(--u)) calc(1.2 * var(--u));
+  border-radius: calc(0.35 * var(--u));
+  box-shadow: 0 0 0 calc(0.15 * var(--u)) #fff3;
+}
+.test .testbadge small {
+  font: 500 calc(0.9 * var(--u))/1.1 var(--frc);
+  letter-spacing: 0.02em;
+  max-width: calc(9 * var(--u));
+}
+.root.test {
+  box-shadow: inset 0 0 0 calc(0.3 * var(--u)) var(--test);
+}
+.grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: calc(0.5 * var(--u)) calc(0.45 * var(--u));
+}
+.cat {
+  background: var(--forest);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: calc(0.45 * var(--u));
+  padding: calc(0.3 * var(--u)) calc(0.3 * var(--u)) calc(0.25 * var(--u));
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.ch {
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.4 * var(--u));
+  padding: 0 calc(0.15 * var(--u)) calc(0.15 * var(--u));
+  border-bottom: calc(0.1 * var(--u)) solid var(--accent);
+}
+.ch.f {
+  border-bottom-color: oklch(0.72 0.12 95);
+}
+.ch h2 {
+  font: 600 calc(1.45 * var(--u))/1.1 var(--fo);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.cnt {
+  margin-left: auto;
+  font-size: calc(0.86 * var(--u));
+  color: var(--muted);
+  white-space: nowrap;
+}
+.cnt b {
+  color: var(--fg);
+}
+.root table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.root th {
+  font: 500 calc(0.74 * var(--u))/1 var(--frc);
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: right;
+  padding: calc(0.25 * var(--u)) calc(0.12 * var(--u)) calc(0.15 * var(--u));
+}
+.root th.l {
+  text-align: left;
+}
+.root th.nmh {
+  text-align: left;
+  padding-left: calc(0.3 * var(--u));
+}
+.root td {
+  font-size: calc(1.08 * var(--u));
+  line-height: calc(1.55 * var(--u));
+  padding: 0 calc(0.1 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+.root td.rk,
+.root td.bib,
+.root td.t,
+.root td.fin,
+.root td.na,
+.root td.run {
+  font-family: var(--fo);
+  font-size: calc(1.12 * var(--u));
+  letter-spacing: 0.01em;
+}
+.grid td.t,
+.grid td.na,
+.grid td.run {
+  font-size: calc(1.02 * var(--u));
+}
+.root tbody tr.r:nth-child(even) td {
+  background: color-mix(in oklch, var(--forest2) 55%, transparent);
+}
+.root td.rk {
+  font-weight: 700;
+  color: var(--fg);
+}
+.root td.bib {
+  color: var(--muted);
+}
+.root td.nm {
+  text-align: left;
+  font-weight: 600;
+  padding-left: calc(0.3 * var(--u));
+}
+.root td.t {
+  color: var(--muted);
+}
+.root td.t.cur {
+  color: var(--fg);
+  font-weight: 600;
+}
+.root td.fin {
+  color: var(--fg);
+  font-weight: 700;
+}
+.root td.na {
+  color: var(--line);
+}
+.root td.lt {
+  text-align: left;
+  color: var(--muted);
+}
+.runv {
+  display: inline-block;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--run);
+  border: calc(0.07 * var(--u)) dashed color-mix(in oklch, var(--run) 70%, transparent);
+  border-radius: calc(0.25 * var(--u));
+  padding: 0 calc(0.1 * var(--u));
+  line-height: calc(1.2 * var(--u));
+  font-size: calc(0.97 * var(--u));
+  font-family: var(--fo);
+}
+.okc {
+  color: var(--ok);
+  font-size: 0.9em;
+  margin-right: calc(0.08 * var(--u));
+}
+.root tr.final td.rk {
+  color: var(--ok);
+}
+.root tr.on td.nm {
+  font-weight: 500;
+  color: color-mix(in oklch, var(--fg) 88%, var(--muted));
+}
+.root tr.new td {
+  background: color-mix(in oklch, var(--accent) 34%, transparent) !important;
+  color: #fff;
+}
+.root tr.new td:first-child {
+  box-shadow: inset calc(0.28 * var(--u)) 0 0 var(--accent-hi);
+}
+.root tr.new td.hit {
+  color: var(--accent-hi) !important;
+}
+.cRk {
+  width: calc(2.85 * var(--u));
+}
+.cBib {
+  width: calc(1.95 * var(--u));
+}
+.cT {
+  width: calc(2.62 * var(--u));
+}
+.cF {
+  width: calc(3.05 * var(--u));
+}
+.empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+  font-style: italic;
+}
+.last {
+  grid-column: span 2;
+  position: relative;
+  background: var(--forest);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: calc(0.45 * var(--u));
+  padding: calc(0.3 * var(--u)) calc(0.5 * var(--u)) calc(0.4 * var(--u));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.cat.done {
+  border-color: var(--ok);
+  box-shadow: inset 0 0 0 calc(0.06 * var(--u)) var(--ok);
+}
+.ch.done {
+  background: oklch(0.42 0.11 145 / 0.55);
+  border-bottom-color: var(--ok);
+  margin: -0.3rem -0.3rem 0;
+  padding: calc(0.3 * var(--u)) calc(0.45 * var(--u)) calc(0.15 * var(--u));
+  border-radius: calc(0.4 * var(--u)) calc(0.4 * var(--u)) 0 0;
+}
+.kbadge {
+  font: 600 calc(0.82 * var(--u))/1 var(--fo);
+  letter-spacing: 0.06em;
+  color: oklch(0.2 0.05 145);
+  background: var(--ok);
+  border-radius: calc(0.25 * var(--u));
+  padding: calc(0.16 * var(--u)) calc(0.35 * var(--u));
+  align-self: center;
+  white-space: nowrap;
+}
+.last .ch {
+  border-bottom-color: var(--muted);
+}
+.last .cnt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.last td {
+  font-size: calc(1.2 * var(--u));
+  line-height: calc(1.85 * var(--u));
+}
+.last td.rk,
+.last td.bib,
+.last td.t,
+.last td.fin {
+  font-size: calc(1.2 * var(--u));
+}
+.pt {
+  display: inline-block;
+  min-width: calc(2.3 * var(--u));
+  text-align: center;
+  border-radius: calc(0.2 * var(--u));
+  font-weight: 700;
+  font-size: calc(0.9 * var(--u));
+  line-height: calc(1.12 * var(--u));
+  padding: 0 calc(0.2 * var(--u));
+  background: var(--forest2);
+  color: var(--fg);
+}
+.pt.ptFin {
+  background: var(--accent);
+  color: #fff;
+}
+.medal {
+  display: inline-block;
+  min-width: calc(2.1 * var(--u));
+  text-align: center;
+  border-radius: calc(1 * var(--u));
+  font: 700 calc(1 * var(--u))/calc(1.25 * var(--u)) var(--fo);
+  padding: 0 calc(0.35 * var(--u));
+}
+.m1c {
+  background: var(--gold);
+  color: #2a2000;
+}
+.m2c {
+  background: var(--silver);
+  color: #1d2228;
+}
+.m3c {
+  background: var(--bronze);
+  color: #2a1600;
+}
+.mx {
+  color: var(--fg);
+  font-weight: 600;
+}
+.recentBox {
+  flex: none;
+}
+.recentEmpty {
+  padding: calc(0.6 * var(--u)) calc(0.2 * var(--u));
+  color: var(--dim);
+  font-style: italic;
+}
+.search {
+  margin-top: auto;
+  position: relative;
+}
+.sbox {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5 * var(--u));
+  height: calc(2.8 * var(--u));
+  border: calc(0.12 * var(--u)) solid var(--accent);
+  border-radius: calc(0.4 * var(--u));
+  background: var(--deep);
+  padding: 0 calc(0.6 * var(--u));
+  box-shadow: 0 0 0 calc(0.2 * var(--u)) color-mix(in oklch, var(--accent) 25%, transparent);
+}
+.sbox svg {
+  width: calc(1.2 * var(--u));
+  height: calc(1.2 * var(--u));
+  flex: none;
+  stroke: var(--accent);
+}
+.q {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: var(--fg);
+  font: 500 calc(1.25 * var(--u)) var(--frc);
+  caret-color: var(--accent-hi);
+}
+.q::placeholder {
+  color: var(--dim);
+}
+.hint {
+  font-size: calc(0.8 * var(--u));
+  color: var(--dim);
+  white-space: nowrap;
+}
+.root kbd {
+  font: 600 calc(0.75 * var(--u)) var(--frc);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: calc(0.2 * var(--u));
+  padding: 0 calc(0.25 * var(--u));
+  color: var(--muted);
+}
+.ac {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + calc(0.25 * var(--u)));
+  background: var(--forest2);
+  border: calc(0.08 * var(--u)) solid var(--accent);
+  border-radius: calc(0.4 * var(--u));
+  overflow: hidden;
+  z-index: 5;
+  box-shadow: 0 -0.4rem calc(1.2 * var(--u)) #0008;
+}
+.it {
+  display: grid;
+  grid-template-columns: calc(3 * var(--u)) 1fr calc(9 * var(--u)) calc(7.5 * var(--u));
+  gap: calc(0.5 * var(--u));
+  align-items: center;
+  padding: calc(0.1 * var(--u)) calc(0.6 * var(--u));
+  font-size: calc(1.08 * var(--u));
+  line-height: calc(1.55 * var(--u));
+  cursor: pointer;
+}
+.it.sel {
+  background: color-mix(in oklch, var(--accent) 40%, transparent);
+}
+.it .b {
+  font-family: var(--fo);
+  color: var(--muted);
+  text-align: right;
+}
+.it .n {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.it .c,
+.it .s {
+  color: var(--muted);
+  font-size: calc(0.92 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.it .s {
+  text-align: right;
+}
+.it mark {
+  background: none;
+  color: var(--accent-hi);
+}
+.none {
+  padding: calc(0.35 * var(--u)) calc(0.6 * var(--u));
+  color: var(--dim);
+  font-style: italic;
+}
+.card {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  background: var(--forest2);
+  border: calc(0.14 * var(--u)) solid var(--accent);
+  border-radius: calc(0.45 * var(--u));
+  padding: calc(0.6 * var(--u)) calc(0.8 * var(--u));
+  flex-direction: column;
+  gap: calc(0.45 * var(--u));
+  outline: 0;
+}
+.cTop {
+  display: flex;
+  align-items: center;
+  gap: calc(0.6 * var(--u));
+}
+.cBibb {
+  font: 600 calc(1.5 * var(--u))/1 var(--fo);
+  background: var(--fg);
+  color: var(--deep);
+  border-radius: calc(0.3 * var(--u));
+  padding: calc(0.2 * var(--u)) calc(0.5 * var(--u));
+}
+.cName {
+  font: 600 calc(2 * var(--u))/1.05 var(--fo);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.cSt {
+  font: 700 calc(1 * var(--u))/1 var(--fo);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: calc(0.3 * var(--u)) calc(0.55 * var(--u));
+  border-radius: calc(0.25 * var(--u));
+  white-space: nowrap;
+}
+.cSt.stFin {
+  background: var(--accent);
+  color: #fff;
+}
+.cSt.stOn {
+  background: color-mix(in oklch, var(--run) 25%, transparent);
+  color: var(--run);
+  border: calc(0.08 * var(--u)) dashed var(--run);
+}
+.cSt.stNs {
+  background: var(--line);
+  color: var(--fg);
+}
+.cCat {
+  font-size: calc(1.15 * var(--u));
+  color: var(--muted);
+}
+.cCat b {
+  color: var(--fg);
+  font-weight: 600;
+}
+.cMain {
+  display: flex;
+  gap: calc(0.6 * var(--u));
+  flex: 1;
+  min-height: 0;
+}
+.cBig {
+  flex: 1.25;
+  background: var(--deep);
+  border-radius: calc(0.4 * var(--u));
+  padding: calc(0.4 * var(--u)) calc(0.7 * var(--u));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.cBig .lbl {
+  font-size: calc(0.95 * var(--u));
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cBig .val {
+  font: 600 calc(3.1 * var(--u))/1.05 var(--fo);
+}
+.cBig .val small {
+  font: 500 calc(1.2 * var(--u)) var(--fo);
+  color: var(--muted);
+  margin-left: calc(0.4 * var(--u));
+}
+.cBig .val.runc {
+  color: var(--run);
+  font-style: italic;
+}
+.cBig .sub {
+  font-size: calc(1 * var(--u));
+  color: var(--muted);
+}
+.cBig .sub b {
+  color: var(--fg);
+}
+.cBig .sub .okc {
+  font-size: 1em;
+}
+.cBig .virt {
+  margin-top: calc(0.3 * var(--u));
+  font-size: calc(1.15 * var(--u));
+  color: var(--run);
+}
+.cBig .virt b {
+  font: 600 calc(1.45 * var(--u)) var(--fo);
+  color: var(--fg);
+}
+.cPts {
+  flex: 1;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: calc(0.3 * var(--u));
+  min-width: 0;
+}
+.cPt {
+  background: var(--deep);
+  border-radius: calc(0.35 * var(--u));
+  display: grid;
+  grid-template-columns: calc(2.6 * var(--u)) 1fr auto;
+  align-items: center;
+  padding: 0 calc(0.6 * var(--u));
+  font-size: calc(1.1 * var(--u));
+}
+.cPt .k {
+  font: 600 calc(1 * var(--u)) var(--fo);
+  color: var(--muted);
+}
+.cPt .v {
+  font: 600 calc(1.45 * var(--u)) var(--fo);
+}
+.cPt .r {
+  color: var(--muted);
+}
+.cPt .r b {
+  color: var(--fg);
+  font-family: var(--fo);
+  font-size: calc(1.2 * var(--u));
+}
+.cPt.ptNone .v {
+  color: var(--line);
+}
+.cPt .v .runv {
+  font-size: calc(1.2 * var(--u));
+  line-height: calc(1.5 * var(--u));
+}
+.cFoot {
+  font-size: calc(0.85 * var(--u));
+  color: var(--dim);
+}

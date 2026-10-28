@@ -49,6 +49,9 @@ export type AuditAction =
   | "club.merge"
   | "club.merge_rejected"
   | "club.merge_restored"
+  // Úklid sirotků v číselníku klubů (#193), detail = smazané řádky cis_klub
+  // (OrphanCleanupAuditDetail) pro ruční obnovení.
+  | "club.orphan_cleanup"
   // Denní limit e-mailů v Nastavení (#190), detail = před / po.
   | "settings.mail_limit"
   // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).

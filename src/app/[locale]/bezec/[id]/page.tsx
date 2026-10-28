@@ -18,6 +18,7 @@ import { clubKey, createClubResolver } from "@/lib/clubs";
 import { getClubIndex } from "@/lib/clubs/cached";
 import { getClubResolver } from "@/lib/clubs/queries";
 import { displayRunnerName } from "@/lib/format/runner-name";
+import { countryName, flagEmoji, isCountryCode } from "@/lib/runner/nationality";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { getRunnerPeerIndex, runnerProfileDb } from "@/lib/runner/cached";
@@ -38,7 +39,9 @@ type PageProps = Readonly<{
  * queries go through `runnerProfileDb` (max 3 of the 5 pool connections).
  */
 const loadRunner = cache((id: string) =>
-  runnerProfileDb(() => prisma.runner.findUnique({ where: { id }, select: { name: true } })),
+  runnerProfileDb(() =>
+    prisma.runner.findUnique({ where: { id }, select: { name: true, nationality: true } }),
+  ),
 );
 
 /**
@@ -142,6 +145,7 @@ export default async function RunnerPage({ params }: PageProps) {
   ]);
 
   const home = await getTranslations({ locale, namespace: "Home" });
+  const nationalityCopy = await getTranslations({ locale, namespace: "Nationality" });
   const copy = await getTranslations({ locale, namespace: "Runner" });
   // Older results may carry a former (e.g. maiden) name; show it alongside the current one.
   const formerName = [...results]
@@ -212,6 +216,15 @@ export default async function RunnerPage({ params }: PageProps) {
               * {birthYear}
             </span>
           </h1>
+          {runner?.nationality && isCountryCode(runner.nationality) ? (
+            <p className="mt-2 text-base text-race-muted" data-testid="runner-nationality">
+              <span className="sr-only">{nationalityCopy("label")}: </span>
+              <span role="img" aria-hidden="true" className="mr-1.5">
+                {flagEmoji(runner.nationality)}
+              </span>
+              {countryName(runner.nationality, locale)}
+            </p>
+          ) : null}
 
           <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start">
             {portrait ? <RunnerPortrait id={id} name={name} /> : null}

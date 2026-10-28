@@ -44,6 +44,8 @@ export type AuditAction =
   | "sale.cancelled"
   | "sale_item.created"
   | "sale_item.updated"
+  // Státní příslušnost běžce (#200) změněná pořadatelem, detail = před / po.
+  | "runner.nationality_changed"
   // Ruční sloučení id klubů (#104). `club.merge` přepisuje data (Q45), detail = stav před
   // sloučením (ClubMergeAuditDetail). `club.unmerged` jen ve starých záznamech (sloučení 1.4.0).
   | "club.merge"

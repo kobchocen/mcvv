@@ -65,7 +65,7 @@ export default async function EntrantsPage({ params }: PageProps) {
   const lines = await prisma.registrationLine.findMany({
     where: { year, registrationId: { in: [...validIds] } },
     include: {
-      runner: { select: { name: true } },
+      runner: { select: { name: true, nationality: true } },
       club: { select: { name: true } },
       category: { select: { name: true, sort: true } },
     },
@@ -83,6 +83,7 @@ export default async function EntrantsPage({ params }: PageProps) {
       runners: {
         id: string;
         name: string;
+        nationality: string | null;
         birth: string;
         club: string;
         clubId: string;
@@ -101,6 +102,7 @@ export default async function EntrantsPage({ params }: PageProps) {
     group.runners.push({
       id: line.runnerId,
       name: line.runner.name,
+      nationality: line.runner.nationality,
       birth: line.runnerId.slice(0, 4),
       club: line.club.name,
       clubId: line.clubId,
@@ -191,7 +193,11 @@ export default async function EntrantsPage({ params }: PageProps) {
                         {group.runners.map((runner) => (
                           <tr key={runner.id} className="border-b border-race-line/40">
                             <td className={`${cx.nameCell} font-medium`}>
-                              <RunnerNameLink id={runner.id} name={runner.name} />
+                              <RunnerNameLink
+                                id={runner.id}
+                                name={runner.name}
+                                nationality={runner.nationality}
+                              />
                               <span className="mt-0.5 block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
                                 {runner.club.trim() ? (
                                   <>

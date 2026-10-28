@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
 import { RunnerNameLink } from "@/components/molecules";
+import { loadNationalityMap } from "@/lib/runner/nationality-query";
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import {
   McvvResultsGroup,
@@ -231,10 +232,13 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   };
   // Club by id (#104): name of the edition; a merged id shows the main id's name.
   const clubs = await getClubResolver();
+  // Státní příslušnost (#200): vlaječka u zahraničních běžců.
+  const nationalities = await loadNationalityMap(fullResults.map((r) => r.runnerId));
   const toRow = (r: ResultRow, rank: number | undefined, withCategory: boolean) => ({
     key: r.runnerId,
     runnerId: r.runnerId,
     runnerName: r.runnerName,
+    nationality: nationalities.get(r.runnerId) ?? null,
     rank,
     birthYear: r.runnerId ? r.runnerId.substring(0, 4) : "—",
     club: clubs.display(r.clubId, r.year, r.club?.name || r.clubName),
@@ -354,7 +358,11 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                             {t("men")}
                           </p>
                           <p className="mt-0.5 text-base font-semibold text-foreground">
-                            <RunnerNameLink id={topMale.runnerId} name={topMale.runnerName} />
+                            <RunnerNameLink
+                              id={topMale.runnerId}
+                              name={topMale.runnerName}
+                              nationality={nationalities.get(topMale.runnerId)}
+                            />
                           </p>
                         </div>
                         <p className="font-display text-lg font-semibold text-race-accent">
@@ -369,7 +377,11 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                             {t("women")}
                           </p>
                           <p className="mt-0.5 text-base font-semibold text-foreground">
-                            <RunnerNameLink id={topFemale.runnerId} name={topFemale.runnerName} />
+                            <RunnerNameLink
+                              id={topFemale.runnerId}
+                              name={topFemale.runnerName}
+                              nationality={nationalities.get(topFemale.runnerId)}
+                            />
                           </p>
                         </div>
                         <p className="font-display text-lg font-semibold text-race-accent">

@@ -5,6 +5,11 @@ import { useActionState, useMemo, useState } from "react";
 import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { addNewRunner, type AddRunnerState } from "@/lib/entries/actions";
 import { McvvClubCombobox } from "@/components/organisms/mcvv-club-combobox";
+import {
+  NationalitySelect,
+  type NationalityField,
+} from "@/components/molecules/nationality-select";
+import { HOME_COUNTRY } from "@/lib/runner/nationality";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +22,7 @@ export function McvvNewRunnerForm({
   categories,
   clubListId,
   defaultClubName,
+  nationality: nationalityField,
   copy,
 }: {
   year: number;
@@ -26,6 +32,8 @@ export function McvvNewRunnerForm({
   /** Id společné nabídky klubů (`McvvClubDatalist`). */
   clubListId: string;
   defaultClubName: string;
+  /** Státní příslušnost (#200); výchozí domácí stát, lze zvolit „neuvedeno“. */
+  nationality: NationalityField;
   copy: {
     firstName: string;
     lastName: string;
@@ -54,6 +62,7 @@ export function McvvNewRunnerForm({
   const [sex, setSex] = useState<"" | "M" | "F">("");
   const [birthYear, setBirthYear] = useState("");
   const [categoryChoice, setCategoryChoice] = useState("");
+  const [nationality, setNationality] = useState<string>(HOME_COUNTRY);
   const [state, action] = useActionState(
     async (prev: AddRunnerState, formData: FormData): Promise<AddRunnerState> => {
       const result = await addNewRunner(prev, formData);
@@ -63,6 +72,7 @@ export function McvvNewRunnerForm({
         setBirthYear("");
         setSex("");
         setCategoryChoice("");
+        setNationality(HOME_COUNTRY);
       }
       return result;
     },
@@ -172,6 +182,21 @@ export function McvvNewRunnerForm({
             </option>
           ))}
         </select>
+      </div>
+      <div className="grid gap-1.5 sm:col-span-2">
+        <Label htmlFor="nationality">{nationalityField.label}</Label>
+        <NationalitySelect
+          id="nationality"
+          field={nationalityField}
+          value={nationality}
+          onChange={setNationality}
+          describedBy="nationality-hint"
+        />
+        {nationalityField.hint ? (
+          <p id="nationality-hint" className="text-xs text-race-muted">
+            {nationalityField.hint}
+          </p>
+        ) : null}
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
         {/* Klub je nepovinný (#204): štítek i nápověda to říkají výslovně. */}

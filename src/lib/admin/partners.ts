@@ -7,6 +7,9 @@ import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
 import { formChecked, formInt, formString } from "@/lib/admin/parse";
+import { diffFields } from "@/lib/audit/diff";
+import { writeAudit } from "@/lib/audit/log";
+import { partnerSnapshot, partnerTarget } from "@/lib/audit/startlist";
 import { prisma } from "@/lib/db/client";
 import { validateLogo } from "@/lib/partners/logo-file";
 import { redirect } from "@/i18n/routing";
@@ -43,8 +46,26 @@ async function readLogo(file: File | null): Promise<LogoUpload> {
   };
 }
 
+/** Pole partnera pro audit (bez binárních dat loga). */
+const PARTNER_AUDIT_SELECT = {
+  name: true,
+  link: true,
+  image: true,
+  category: true,
+  order: true,
+  active: true,
+  description: true,
+  logoType: true,
+  logoHash: true,
+} as const;
+
+/** Bez nového loga se typ / otisk nemění – do porovnání jen pole, která formulář ukládá. */
+function withoutLogo<T extends { logoType: string | null; logoHash: string | null }>(row: T) {
+  return { ...row, logoType: undefined, logoHash: undefined };
+}
+
 export async function savePartner(formData: FormData): Promise<void> {
-  await requireStaff();
+  const session = await requireStaff();
   const id = formInt(formData, "id");
   const name = formString(formData, "name") || null;
   const link = formString(formData, "link") || null;
@@ -76,14 +97,38 @@ export async function savePartner(formData: FormData): Promise<void> {
       ? { logo: upload.logo, logoType: upload.logoType, logoHash: upload.logoHash }
       : {};
 
+  const fields = { name, link, image, category, order, active, description };
+  const logoAudit =
+    upload.kind === "ok" ? { logoType: upload.logoType, logoHash: upload.logoHash } : {};
+
   if (id) {
-    await prisma.sponsor.update({
+    const before = await prisma.sponsor.findUnique({
       where: { id },
-      data: { name, link, image, category, order, active, description, ...logoData },
+      select: PARTNER_AUDIT_SELECT,
     });
+    await prisma.sponsor.update({ where: { id }, data: { ...fields, ...logoData } });
+    const changes = diffFields(
+      before ? partnerSnapshot(upload.kind === "ok" ? before : withoutLogo(before)) : null,
+      partnerSnapshot({ ...fields, ...logoAudit }),
+    );
+    if (Object.keys(changes).length > 0) {
+      await writeAudit({
+        actor: session,
+        action: "partner.updated",
+        target: partnerTarget(id),
+        detail: { changes },
+      });
+    }
   } else {
-    await prisma.sponsor.create({
-      data: { name, link, image, category, order, active, description, ...logoData },
+    const created = await prisma.sponsor.create({
+      data: { ...fields, ...logoData },
+      select: { id: true },
+    });
+    await writeAudit({
+      actor: session,
+      action: "partner.created",
+      target: partnerTarget(created.id),
+      detail: { changes: diffFields(null, partnerSnapshot({ ...fields, ...logoAudit })) },
     });
   }
 
@@ -92,12 +137,22 @@ export async function savePartner(formData: FormData): Promise<void> {
   redirect({ href: "/admin/partneri", locale });
 }
 
+/** „Smazání“ partnera = deaktivace (řádek v `sponsors` zůstává). */
 export async function deactivatePartner(formData: FormData): Promise<void> {
-  await requireStaff();
+  const session = await requireStaff();
   const id = formInt(formData, "id");
   if (!id) {
     return;
   }
+  const before = await prisma.sponsor.findUnique({ where: { id }, select: { active: true } });
   await prisma.sponsor.update({ where: { id }, data: { active: false } });
+  if (before && before.active !== false) {
+    await writeAudit({
+      actor: session,
+      action: "partner.deactivated",
+      target: partnerTarget(id),
+      detail: { changes: diffFields({ active: before.active }, { active: false }) },
+    });
+  }
   revalidatePartners();
 }

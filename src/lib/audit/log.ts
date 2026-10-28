@@ -71,7 +71,20 @@ export type AuditAction =
   | "category.updated"
   | "club.updated"
   // Uložení Nastavení: změněné klíče mcvv_setting (zveřejnění startovky, URL výsledků…).
-  | "settings.changed";
+  | "settings.changed"
+  // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu, skupiny startu.
+  // Cíl `startlist:<rok>/<bezec>`, `startlist:<rok>`, `start_group:<id>`; detail `changes`
+  // (u více řádků klíče `<bezec>.bib` / `.locked` / `.group`).
+  | "startlist.bib_set"
+  | "startlist.bibs_swapped"
+  | "startlist.lock_changed"
+  | "startlist.proposal_applied"
+  | "startlist.group_created"
+  | "startlist.group_deleted"
+  // Partneři (#107), cíl `partner:<id>`. Smazání = deaktivace (řádek zůstává).
+  | "partner.created"
+  | "partner.updated"
+  | "partner.deactivated";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

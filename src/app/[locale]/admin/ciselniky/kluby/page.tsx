@@ -9,6 +9,7 @@ import { Link, type Locale } from "@/i18n/routing";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/admin/staff";
+import { canMergeClubs } from "@/lib/auth/roles";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -25,8 +26,9 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  const session = await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const cleanup = await getTranslations({ locale, namespace: "ClubCleanup" });
   const { rok } = await searchParams;
 
   const [yearsRaw, latestEdition] = await Promise.all([
@@ -54,6 +56,15 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
         >
           {copy("clubMergeTitle")} →
         </Link>
+        {/* Úklid sirotků (#193) smí jen admin – stejně jako sloučení. */}
+        {canMergeClubs(session.role) ? (
+          <Link
+            href="/admin/ciselniky/kluby/sirotci"
+            className="ml-4 mt-2 inline-block text-sm font-semibold text-race-accent hover:underline"
+          >
+            {cleanup("title")} →
+          </Link>
+        ) : null}
         <form className="mt-4 flex flex-wrap items-end gap-3" method="get">
           <AdminField
             name="rok"

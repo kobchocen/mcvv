@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server";
 
 import { formInt, formString } from "@/lib/admin/parse";
 import { requireStaff } from "@/lib/admin/staff";
+import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { normalizeNationality } from "@/lib/runner/nationality";
@@ -13,7 +14,7 @@ import { redirect } from "@/i18n/routing";
 
 /**
  * Pořadatel nastaví / opraví státní příslušnost běžce (#200). Prázdná volba = neuvedeno.
- * Změna se zapíše do auditu (před / po).
+ * Změna se zapíše do auditu (#107: cíl `runner:<id>`, detail `changes` = před / po).
  */
 export async function saveRunnerNationality(formData: FormData): Promise<void> {
   const session = await requireStaff();
@@ -45,7 +46,9 @@ export async function saveRunnerNationality(formData: FormData): Promise<void> {
           actor: session,
           action: "runner.nationality_changed",
           target: `runner:${runnerId}`,
-          detail: { from: runner.nationality ?? null, to: nationality },
+          detail: {
+            changes: diffFields({ nationality: runner.nationality ?? null }, { nationality }),
+          },
         },
         tx,
       );

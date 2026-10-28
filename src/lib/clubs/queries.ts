@@ -4,6 +4,7 @@ import type { RawResult } from "@/lib/stats/core";
 
 import { createClubResolver, type ClubNameRow, type ClubResolver } from "./core";
 import type { ClubDirectoryInput } from "./directory";
+import type { EditionResultRow } from "./year-results";
 
 /** All cis_klub rows (id, year, name): a few thousand short rows, read per request. */
 export async function loadClubNames(): Promise<ClubNameRow[]> {
@@ -68,6 +69,43 @@ export async function loadClubDirectoryInput(): Promise<ClubDirectoryInput[]> {
   return rows.map((row) => ({
     year: Number(row.year),
     runnerId: row.runnerId,
+    clubId: row.clubId,
+    clubName: row.clubRegistryName || row.clubName || null,
+  }));
+}
+
+type EditionSqlRow = {
+  runnerId: string;
+  runnerName: string | null;
+  runnerRegistryName: string | null;
+  time: number | bigint;
+  categoryId: string;
+  categoryName: string | null;
+  clubId: string;
+  clubName: string | null;
+  clubRegistryName: string | null;
+};
+
+/**
+ * All results of one edition (a few hundred rows, primary key `rok, bezec_id`) for the club
+ * profile's year view (#197): the ranks need the whole edition, the page keeps the club's rows.
+ */
+export async function loadEditionResults(year: number): Promise<EditionResultRow[]> {
+  const rows = await prisma.$queryRaw<EditionSqlRow[]>`
+    SELECT t.bezec_id AS runnerId, t.bezec_name AS runnerName, b.jmeno AS runnerRegistryName,
+           t.time AS time, t.kateg_id AS categoryId, c.jmeno AS categoryName,
+           t.klub_id AS clubId, t.klub_name AS clubName, k.jmeno AS clubRegistryName
+    FROM mcvv_time t
+    LEFT JOIN cis_klub k ON k.id = t.klub_id AND k.rok = t.rok
+    LEFT JOIN cis_bezec b ON b.id = t.bezec_id
+    LEFT JOIN cis_mcvv_kateg c ON c.id = t.kateg_id
+    WHERE t.rok = ${year}`;
+  return rows.map((row) => ({
+    runnerId: row.runnerId,
+    runnerName: runnerNameFor("results", row.runnerName, row.runnerRegistryName),
+    time: Number(row.time),
+    categoryId: row.categoryId,
+    categoryName: row.categoryName,
     clubId: row.clubId,
     clubName: row.clubRegistryName || row.clubName || null,
   }));

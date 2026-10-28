@@ -702,7 +702,21 @@
     "next": "Další",
     "page": "Stránka {page}",
     "recordMen": "Klubový rekord – muži",
-    "recordWomen": "Klubový rekord – ženy"
+    "recordWomen": "Klubový rekord – ženy",
+    "topRunners": "Top 10 běžci / běžkyně klubu",
+    "topRunnersHint": "Osobní rekord každého běžce za klub – každý jen jednou.",
+    "bestHint": "Nejrychlejší časy klubu napříč ročníky; jeden běžec se může objevit vícekrát.",
+    "perYearHint": "Klikněte na rok pro výsledky klubu v daném ročníku.",
+    "mostStarts": "Nejvíc startů",
+    "mostStartsCount": "{count, plural, one {# start} few {# starty} other {# startů}}",
+    "yearResults": "Výsledky klubu v roce {year}",
+    "yearResultsLink": "Výsledky klubu v roce {year}",
+    "yearResultsClose": "Skrýt",
+    "yearResultsAll": "Kompletní výsledky ročníku {year}",
+    "yearResultsEmpty": "V tomto ročníku klub nemá žádný výsledek.",
+    "overallRank": "Celkově",
+    "category": "Kategorie",
+    "categoryRank": "V kategorii"
   },
   "Clubs": {
     "metaTitle": "Kluby",
@@ -725,6 +739,32 @@
     "previous": "Předchozí",
     "next": "Další",
     "page": "Stránka {page}"
+  },
+  "ClubCleanup": {
+    "title": "Úklid sirotků v číselníku klubů",
+    "intro": "Sirotek je řádek číselníku klubů (id, rok), na který neodkazuje žádná přihláška, start ani výsledek téhož roku. Úklid se nikdy nespouští sám: níže je náhled toho, co se smaže, a smazání proběhne až po potvrzení. Řádky aktuálního ročníku {year} (a pozdějších) se nemažou – klub se může ještě přihlásit a OBD / OFeed je při prezentaci nabízí. Smazané řádky zůstávají v auditu (club.orphan_cleanup), aby šly obnovit.",
+    "scope": "Rozsah úklidu",
+    "scope_ids": "Jen celá id bez dat",
+    "scope_rows": "I jednotlivé roky bez dat",
+    "scopeHint_ids": "Smaže všechny řádky klubu, jehož id nemá v žádném roce přihlášku, start ani výsledek (a nemá řádek v aktuálním ročníku).",
+    "scopeHint_rows": "Navíc smaže i jednotlivé starší roky bez dat u klubů, které jinde data mají (např. klub zapsaný v číselníku, ale v tom roce nikdo neběžel).",
+    "previewTitle": "Náhled (nic se zatím nemaže)",
+    "summary": "Ke smazání: {rows, plural, one {# řádek} few {# řádky} other {# řádků}} u {ids, plural, one {# id} few {# id} other {# id}} klubů, z toho {removedIds, plural, one {# id zmizí} few {# id zmizí} other {# id zmizí}} úplně.",
+    "keptCurrent": "Ponecháno: {count, plural, one {# řádek} few {# řádky} other {# řádků}} bez dat z ročníku {year} a pozdějších.",
+    "empty": "Žádní sirotci – není co mazat.",
+    "colId": "Id",
+    "colYear": "Rok",
+    "colName": "Název",
+    "colCreated": "Založeno",
+    "truncated": "Zobrazeno prvních {shown} z {total} řádků; smaže se celý seznam.",
+    "irreversible": "Smazání je nevratné (obnova jen ručně z auditu).",
+    "acknowledge": "Rozumím, že se z číselníku klubů smaže {count, plural, one {# řádek} few {# řádky} other {# řádků}} uvedených v náhledu.",
+    "execute": "Smazat {count, plural, one {# řádek} few {# řádky} other {# řádků}}",
+    "executing": "Mažu…",
+    "done": "Hotovo: {count, plural, =0 {nic se nesmazalo} one {smazán # řádek} few {smazány # řádky} other {smazáno # řádků}}. Záznam je v auditu.",
+    "error_rozsah": "Neplatný rozsah úklidu.",
+    "error_potvrzeni": "Pro smazání je potřeba zaškrtnout potvrzení.",
+    "error_zmena": "Seznam sirotků se mezitím změnil (např. nová přihláška). Nic se nesmazalo – zkontrolujte nový náhled a potvrďte znovu."
   },
   "Messages": {
     "title": "Zprávy",
@@ -1148,7 +1188,9 @@
     "clubMergeIdA": "První id",
     "clubMergeIdB": "Druhé id",
     "clubMergeRejected": "Zamítnuté návrhy ({count})",
-    "clubMergeRestore": "Vrátit mezi návrhy"
+    "clubMergeRestore": "Vrátit mezi návrhy",
+    "regsDeletePaymentTitle": "Smazat platbu?",
+    "regsDeletePaymentConfirm": "Platba {amount} Kč ({date}) se z přihlášky odstraní a přepočítá se stav úhrady."
   },
   "Stats": {
     "overview": {
@@ -1735,7 +1777,9 @@
     "tableEmpty": "Žádné mezičasy.",
     "colName": "Jméno",
     "notInStart": "není ve startovce",
-    "editLink": "Upravit"
+    "editLink": "Upravit",
+    "deleteTitle": "Smazat mezičas?",
+    "deleteConfirm": "Mezičas čísla {bib} na kontrole {split} se smaže (důvod se uloží do deníku)."
   },
   "TestRun": {
     "title": "Testovací běh",
@@ -1907,7 +1951,48 @@
     "error_not_found": "Účet nebyl nalezen.",
     "auditTitle": "Poslední změny rolí",
     "auditEmpty": "Zatím žádné změny.",
-    "auditLine": "{actor}: {email} {from} → {to}"
+    "auditLine": "{actor}: {email} {from} → {to}",
+    "confirmTitle": "Změnit roli?",
+    "confirmButton": "Změnit roli"
+  },
+  "AdminAudit": {
+    "title": "Auditní log",
+    "nav": "Auditní log",
+    "intro": "Kdo, kdy a co změnil v administraci – citlivé zásahy (pohlaví běžce, slučování klubů, přihlášky, platby, startovné, nastavení) se stavem před a po. Záznamy se nemažou.",
+    "filterGroup": "Oblast",
+    "filterAction": "Akce",
+    "filterActor": "Kdo (e-mail)",
+    "filterTarget": "Cíl",
+    "filterFrom": "Od",
+    "filterTo": "Do",
+    "filter": "Filtrovat",
+    "reset": "Zrušit filtr",
+    "all": "Vše",
+    "total": "{count, plural, one {# záznam} few {# záznamy} other {# záznamů}}",
+    "empty": "Žádné záznamy neodpovídají filtru.",
+    "colTime": "Kdy",
+    "colActor": "Kdo",
+    "colAction": "Akce",
+    "colTarget": "Cíl",
+    "colDetail": "Změna",
+    "detailJson": "Detail (JSON)",
+    "pagination": "Stránkování",
+    "newer": "Novější",
+    "older": "Starší",
+    "page": "Strana {page} z {pages}",
+    "group_runner": "Běžci",
+    "group_club": "Kluby",
+    "group_entry": "Přihlášky (přihlašující)",
+    "group_registration": "Přihlášky (administrace)",
+    "group_payment": "Platby",
+    "group_bank_tx": "Bankovní pohyby",
+    "group_edition": "Ročníky a startovné",
+    "group_category": "Kategorie",
+    "group_settings": "Nastavení",
+    "group_user": "Uživatelé a role",
+    "group_raceday": "Den závodu",
+    "group_sale": "Závodní kancelář – prodejky",
+    "group_sale_item": "Závodní kancelář – ceník"
   },
   "RaceDay": {
     "title": "Den závodu",
@@ -2037,7 +2122,8 @@
     "donePresentation": "Import po prezentaci je zapsaný.",
     "doneResults": "Výsledky jsou zapsané (počet řádků: {count}).",
     "doneRecords": "Rekordy kategorií přepočítány: {list}.",
-    "doneRecordsUnchanged": "Rekordy kategorií beze změny."
+    "doneRecordsUnchanged": "Rekordy kategorií beze změny.",
+    "confirmTitle": "Zapsat import?"
   },
   "AfterRace": {
     "title": "Po závodě – tombola",
@@ -2190,7 +2276,9 @@
     "issue_rangeSeries": "Kategorie {category}: rozsah musí ležet celý v jednom startu.",
     "issue_rangeOverlap": "Rozsahy kategorií {category} a {other} se překrývají.",
     "issue_championInRange": "Číslo obhájce {other} leží v rozsahu kategorie {category}.",
-    "issue_championSame": "Čísla obhájců mužů a žen musí být různá."
+    "issue_championSame": "Čísla obhájců mužů a žen musí být různá.",
+    "groupDeleteTitle": "Zrušit skupinu?",
+    "groupDeleteConfirm": "Skupina {group} se zruší, běžci zůstanou ve startovce samostatně."
   },
   "PrintReports": {
     "heading": "Sestavy pro prezentaci",
@@ -2308,7 +2396,9 @@
       "blocked": "Hromadné mazání je od oficiální nuly zablokované.",
       "changed": "Záznam mezitím změnil někdo jiný – zkontrolujte a zkuste znovu.",
       "time": "Neplatný čas – zadejte hh:mm nebo hh:mm:ss."
-    }
+    },
+    "deleteTitle": "Smazat záznam startu?",
+    "deleteConfirm": "Záznam startu čísla {bib} se smaže (důvod se uloží do deníku)."
   },
   "Speaker": {
     "metaTitle": "Speaker – průběžné výsledky",
@@ -2379,5 +2469,11 @@
     "home": "Zpět na web",
     "cardPlaceWord": "místo",
     "legendOnWord": "bez pořadí"
+  },
+  "ConfirmDialog": {
+    "cancel": "Zrušit",
+    "confirm": "Potvrdit",
+    "working": "Pracuji…",
+    "srDescription": "Potvrďte, nebo zrušte akci."
   }
 }

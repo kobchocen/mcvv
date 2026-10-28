@@ -107,6 +107,14 @@ const eslintConfig = defineConfig([
   ...fixupConfigRules(nextVitals),
   ...fixupConfigRules(nextTs),
 
+  // #185: nativní alert()/confirm()/prompt() nahrazuje ConfirmDialog v designu webu.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-alert": "error",
+    },
+  },
+
   // Shadcn/ui generated components intentionally use `any` for complex integrations
   // (recharts, radix, etc.). Do not edit the primitives; relax the rule for this folder.
   {

@@ -19,3 +19,4 @@ export * from "./section-header";
 export * from "./photo-tile";
 export * from "./pagination-links";
 export * from "./nationality-select";
+export * from "./confirm-dialog";

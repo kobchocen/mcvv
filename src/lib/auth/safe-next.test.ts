@@ -80,6 +80,14 @@ describe("mezičasy", () => {
       query: "",
     });
   });
+  it("/mezicasy/speaker is an allowed target after login (#188)", () => {
+    assert.equal(safeNext("/cs/mezicasy/speaker"), "/mezicasy/speaker");
+    assert.deepEqual(loginTarget("/mezicasy/speaker", "full", "organizer"), {
+      kind: "user",
+      path: "/mezicasy/speaker",
+      query: "",
+    });
+  });
 });
 
 describe("loginTarget – Časomíra (raceday access)", () => {

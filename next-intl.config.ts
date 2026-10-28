@@ -70,5 +70,6 @@ export default defineRouting({
     // evidence startu (#203)
     "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
+    "/mezicasy/speaker": "/mezicasy/speaker",
   },
 });

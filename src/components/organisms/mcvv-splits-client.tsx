@@ -23,6 +23,8 @@ import { loadQueue, loadValue, queueKey, saveValue } from "@/lib/live/queue-stor
 import {
   correctedNow,
   countRecords,
+  DEFAULT_START_OFFSET_LIMIT_S,
+  formatStartOffsetLimit,
   RECENT_LIMIT,
   recentRecords,
   relativeTime,
@@ -39,6 +41,8 @@ type Props = {
   zeroIso: string;
   intervalS: number;
   zeroOverridden: boolean;
+  /** Práh odchylky na Startu v sekundách (nastavení admina, výchozí 2 min). */
+  startLimitS?: number;
   locale: string;
 };
 
@@ -68,6 +72,7 @@ export function McvvSplitsClient({
   zeroIso,
   intervalS,
   zeroOverridden,
+  startLimitS = DEFAULT_START_OFFSET_LIMIT_S,
   locale,
 }: Props) {
   const t = useTranslations("Splits");
@@ -345,6 +350,7 @@ export function McvvSplitsClient({
       bib: r.bib,
       punchedAt: r.punchedAt,
       serverTime: r.time,
+      startLimitS,
     });
     if (rel.kind === "time") return rel.estimate ? `≈ ${rel.text}` : rel.text;
     if (rel.kind === "before-start") {
@@ -354,7 +360,10 @@ export function McvvSplitsClient({
     if (rel.kind === "too-long") {
       return r.state === "rejected" && r.note?.startsWith("too-long") ? null : t("outsideRace");
     }
-    return rel.kind === "start-far-early" ? t("startFarEarly") : t("startFarLate");
+    const limit = formatStartOffsetLimit(startLimitS);
+    return rel.kind === "start-far-early"
+      ? t("startFarEarly", { limit })
+      : t("startFarLate", { limit });
   };
 
   const stateLabel = (r: SplitRecord) => {
@@ -467,7 +476,10 @@ export function McvvSplitsClient({
             data-testid="start-hint"
             className="border border-sky-500/50 bg-sky-500/10 p-2 text-xs text-foreground"
           >
-            {t("startHint")}
+            {t("startHint")}{" "}
+            <span data-testid="start-limit">
+              {t("startLimit", { limit: formatStartOffsetLimit(startLimitS) })}
+            </span>
           </p>
         ) : null}
         {problem ? (

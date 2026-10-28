@@ -29,6 +29,7 @@ function adminHref(next: string) {
   if (path === "/admin") return "/admin" as const;
   if (path === "/admin/nastaveni") return "/admin/nastaveni" as const;
   if (path === "/admin/uzivatele") return "/admin/uzivatele" as const;
+  if (path === "/admin/audit") return "/admin/audit" as const;
   if (path === "/admin/den-zavodu") return "/admin/den-zavodu" as const;
   if (path === "/admin/den-zavodu/prezentace") return "/admin/den-zavodu/prezentace" as const;
   if (path === "/admin/den-zavodu/vysledky") return "/admin/den-zavodu/vysledky" as const;

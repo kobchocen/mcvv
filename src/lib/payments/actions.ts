@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { requireStaff } from "@/lib/admin/staff";
+import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
+import { entryTarget } from "@/lib/entries/changes-core";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 
 function revalidate() {
@@ -17,14 +19,19 @@ export async function ignoreBankTx(formData: FormData): Promise<void> {
   const session = await requireStaff();
   const id = formInt(formData, "id");
   if (!id) return;
-  await prisma.bankTx.updateMany({
+  const note = formString(formData, "note")?.slice(0, 500) ?? null;
+  const ignored = await prisma.bankTx.updateMany({
     where: { id, status: "unmatched" },
-    data: {
-      status: "ignored",
-      note: formString(formData, "note")?.slice(0, 500) ?? null,
-      resolvedBy: session.email.slice(0, 64),
-    },
+    data: { status: "ignored", note, resolvedBy: session.email.slice(0, 64) },
   });
+  if (ignored.count === 1) {
+    await writeAudit({
+      actor: session,
+      action: "bank_tx.ignored",
+      target: `bank_tx:${id}`,
+      detail: { note },
+    });
+  }
   revalidate();
 }
 
@@ -67,6 +74,17 @@ export async function assignBankTx(formData: FormData): Promise<void> {
       resolvedBy: session.email.slice(0, 64),
     },
   });
+  await writeAudit({
+    actor: session,
+    action: "payment.created",
+    target: entryTarget(year, registrationId),
+    detail: {
+      paymentId: payment.id,
+      bankTxId: id,
+      amount: Math.round(Number(tx.amount)),
+      date: tx.date.toISOString(),
+    },
+  });
   await recalculateRegistrationStatus(year, registrationId);
   revalidate();
 }
@@ -76,9 +94,27 @@ export async function markRefunded(formData: FormData): Promise<void> {
   const session = await requireStaff();
   const id = formInt(formData, "id");
   if (!id) return;
-  await prisma.bankTx.updateMany({
+  const refunded = await prisma.bankTx.updateMany({
     where: { id, overpaid: { gt: 0 }, refundedAt: null },
     data: { refundedAt: new Date(), resolvedBy: session.email.slice(0, 64) },
   });
+  if (refunded.count === 1) {
+    const row = await prisma.bankTx.findUnique({
+      where: { id },
+      select: { overpaid: true, year: true, registrationId: true },
+    });
+    await writeAudit({
+      actor: session,
+      action: "bank_tx.refunded",
+      target: `bank_tx:${id}`,
+      detail: {
+        overpaid: row?.overpaid ?? null,
+        registration:
+          row?.year && row.registrationId !== null
+            ? entryTarget(row.year, row.registrationId)
+            : null,
+      },
+    });
+  }
   revalidate();
 }

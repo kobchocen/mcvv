@@ -33,6 +33,9 @@ describe("admin guards", () => {
     assert.match(raceDay, /await requireRaceDay\(\)/);
     const users = readFileSync(join(ROOT, "app/[locale]/admin/uzivatele/page.tsx"), "utf8");
     assert.match(users, /await requireAdmin\(\)/);
+    // Auditní log (#107) obsahuje e-maily a stavy před / po – jen admin.
+    const audit = readFileSync(join(ROOT, "app/[locale]/admin/audit/page.tsx"), "utf8");
+    assert.match(audit, /await requireAdmin\(\)/);
     for (const sub of ["prezentace", "vysledky"]) {
       const page = readFileSync(
         join(ROOT, `app/[locale]/admin/den-zavodu/${sub}/page.tsx`),

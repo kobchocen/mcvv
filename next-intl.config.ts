@@ -52,6 +52,7 @@ export default defineRouting({
     "/admin/zpravy": "/admin/zpravy",
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
     "/admin/uzivatele": "/admin/uzivatele",
+    "/admin/audit": "/admin/audit",
     "/admin/den-zavodu": "/admin/den-zavodu",
     "/admin/den-zavodu/prezentace": "/admin/den-zavodu/prezentace",
     "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",

@@ -31,6 +31,7 @@ export default async function AdminPage({ params }: PageProps) {
   }
   const session = await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const audit = await getTranslations({ locale, namespace: "AdminAudit" });
   const [mail, policy] = await Promise.all([mailStats().catch(() => null), mailPolicy()]);
   const unreadThreads = await staffUnreadCount().catch(() => null);
 
@@ -49,6 +50,7 @@ export default async function AdminPage({ params }: PageProps) {
       | "/admin/den-zavodu"
       | "/admin/po-zavode"
       | "/admin/uzivatele"
+      | "/admin/audit"
       | "/kancelar";
     title: string;
     detail?: string;
@@ -75,6 +77,7 @@ export default async function AdminPage({ params }: PageProps) {
   if (session.role === "admin") {
     tiles.push({ href: "/admin/uzivatele", title: copy("navUsers") });
     tiles.push({ href: "/admin/nastaveni", title: copy("navSettings") });
+    tiles.push({ href: "/admin/audit", title: audit("nav") });
   }
 
   return (

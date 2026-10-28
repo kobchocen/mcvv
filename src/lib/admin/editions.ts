@@ -1,10 +1,13 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
 import { formDate, formInt, formString } from "@/lib/admin/parse";
+import { diffFields } from "@/lib/audit/diff";
+import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { ensureOrganizerRegistration } from "@/lib/entries/organizer-registration";
 import { loadBibRanges } from "@/lib/race/startlist-load";
@@ -119,10 +122,28 @@ export async function saveEdition(formData: FormData): Promise<void> {
     championBibWomen: champions.women,
   };
 
+  // Audit (#107): stav před / po (datum, uzávěrka, startovné, startovní model).
+  const before = id
+    ? await prisma.edition.findUnique({
+        where: { id },
+        select: Object.fromEntries(
+          Object.keys(payload).map((key) => [key, true]),
+        ) as Prisma.EditionSelect,
+      })
+    : null;
   if (id) {
     await prisma.edition.update({ where: { id }, data: payload });
   } else {
     await prisma.edition.create({ data: payload });
+  }
+  const changes = diffFields(before, payload);
+  if (Object.keys(changes).length > 0) {
+    await writeAudit({
+      actor,
+      action: id ? "edition.updated" : "edition.created",
+      target: `edition:${year}`,
+      detail: { id, changes },
+    });
   }
   if (ranges) {
     await prisma.$transaction(

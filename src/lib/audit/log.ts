@@ -50,7 +50,25 @@ export type AuditAction =
   | "club.merge_rejected"
   | "club.merge_restored"
   // Denní limit e-mailů v Nastavení (#190), detail = před / po.
-  | "settings.mail_limit";
+  | "settings.mail_limit"
+  // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).
+  // Změna pohlaví běžce = změna id v cis_bezec (#103), detail = staré / nové id a dotčené řádky.
+  | "runner.sex_changed"
+  | "registration.updated"
+  | "registration.confirmed"
+  | "payment.created"
+  | "payment.updated"
+  | "payment.deleted"
+  // Bankovní pohyby (Fio) vyřízené ručně: označení bez platby a vrácení přeplatku.
+  | "bank_tx.ignored"
+  | "bank_tx.refunded"
+  | "edition.created"
+  | "edition.updated"
+  // Kategorie včetně startovného a rekordu; klub = název v číselníku pro (id, rok).
+  | "category.updated"
+  | "club.updated"
+  // Uložení Nastavení: změněné klíče mcvv_setting (zveřejnění startovky, URL výsledků…).
+  | "settings.changed";
 
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };

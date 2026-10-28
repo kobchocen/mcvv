@@ -42,6 +42,7 @@ export default defineRouting({
     "/admin/ciselniky/kategorie": "/admin/ciselniky/kategorie",
     "/admin/ciselniky/kluby": "/admin/ciselniky/kluby",
     "/admin/ciselniky/kluby/slouceni": "/admin/ciselniky/kluby/slouceni",
+    "/admin/ciselniky/kluby/sirotci": "/admin/ciselniky/kluby/sirotci",
     "/admin/prihlasky": "/admin/prihlasky",
     "/admin/startovka": "/admin/startovka",
     "/admin/newsletter": "/admin/newsletter",

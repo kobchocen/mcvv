@@ -695,7 +695,21 @@
     "next": "Další",
     "page": "Stránka {page}",
     "recordMen": "Klubový rekord – muži",
-    "recordWomen": "Klubový rekord – ženy"
+    "recordWomen": "Klubový rekord – ženy",
+    "topRunners": "Top 10 běžci / běžkyně klubu",
+    "topRunnersHint": "Osobní rekord každého běžce za klub – každý jen jednou.",
+    "bestHint": "Nejrychlejší časy klubu napříč ročníky; jeden běžec se může objevit vícekrát.",
+    "perYearHint": "Klikněte na rok pro výsledky klubu v daném ročníku.",
+    "mostStarts": "Nejvíc startů",
+    "mostStartsCount": "{count, plural, one {# start} few {# starty} other {# startů}}",
+    "yearResults": "Výsledky klubu v roce {year}",
+    "yearResultsLink": "Výsledky klubu v roce {year}",
+    "yearResultsClose": "Skrýt",
+    "yearResultsAll": "Kompletní výsledky ročníku {year}",
+    "yearResultsEmpty": "V tomto ročníku klub nemá žádný výsledek.",
+    "overallRank": "Celkově",
+    "category": "Kategorie",
+    "categoryRank": "V kategorii"
   },
   "Clubs": {
     "metaTitle": "Kluby",

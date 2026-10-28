@@ -35,7 +35,7 @@ export async function loadClubProfile(id: string, index: ClubIndex): Promise<Clu
 export const getClubProfile = unstable_cache(
   async (mainId: string): Promise<ClubProfile | null> =>
     loadClubProfile(mainId, await getClubIndex()),
-  ["club-profile-v3"],
+  ["club-profile-v4"],
   CLUB_CACHE,
 );
 

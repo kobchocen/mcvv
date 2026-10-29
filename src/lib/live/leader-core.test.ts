@@ -142,7 +142,7 @@ test("applyLeaderEvents: časy, priorita cíle a restart animace", () => {
   assert.equal(a.until, 3000 + LEADER_HOLD_MS);
 
   // další cíl: animace znovu (nový seq), řádek M1 zůstane pod ním
-  ({ alerts, seq } = applyLeaderEvents(alerts, [ev("fin", 7)], 4000, seq));
+  ({ alerts } = applyLeaderEvents(alerts, [ev("fin", 7)], 4000, seq));
   a = alerts.get("A")!;
   assert.equal(a.seq, 2);
   assert.equal(a.bib, 7);

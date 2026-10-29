@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  clubDictionary,
   categoryShort,
   categorySlugs,
   DEFAULT_DNS_GRACE_FALLBACK_S,
@@ -39,6 +40,7 @@ function runner(
     fin: times.fin ?? null,
     started: times.started ?? false,
     late: times.late ?? null,
+    club: null,
   };
 }
 
@@ -224,6 +226,7 @@ test("encodeOnline/decodeOnline round-trip the compact wire format", () => {
         fin: null,
         started: true,
         late: 150,
+        club: 0,
       },
       {
         bib: 2,
@@ -235,12 +238,39 @@ test("encodeOnline/decodeOnline round-trip the compact wire format", () => {
         fin: null,
         started: false,
         late: null,
+        club: null,
       },
     ],
     tr: [],
+    clubs: [{ id: "CHC", name: "K.O.B. Choceň", slug: "chc-k-o-b-chocen" }],
   };
   const wire = encodeOnline(snapshot);
-  assert.deepEqual(wire.r[0], [1, "Nováček Jan", "A", 1000, 300, null, null, 1, 150]);
+  assert.deepEqual(wire.r[0], [1, "Nováček Jan", "A", 1000, 300, null, null, 1, 150, 0]);
+  assert.deepEqual(wire.k, [["CHC", "K.O.B. Choceň"]]);
   assert.ok(JSON.stringify(wire).length < JSON.stringify(snapshot).length * 0.75);
   assert.deepEqual(decodeOnline(JSON.parse(JSON.stringify(wire))), snapshot);
+});
+
+test("clubDictionary groups clubs by id and skips runners without a club", () => {
+  const { clubs, indexOf } = clubDictionary([
+    { id: "CHC", name: "K.O.B. Choceň" },
+    { id: "chc", name: "KOB Choceň" },
+    { id: "000", name: "neregistrovaný" },
+    { id: "UOS", name: "Orientační běh Ústí n. O." },
+    { id: "CHC2", name: "K.O.B. Choceň" },
+    undefined,
+    { id: "-", name: "-" },
+  ]);
+  assert.deepEqual(
+    clubs.map((c) => [c.id, c.slug]),
+    [
+      ["CHC", "chc-k-o-b-chocen"],
+      ["UOS", "uos-orientacni-beh-usti-n-o"],
+      ["CHC2", "chc2-k-o-b-chocen"],
+    ],
+  );
+  assert.equal(indexOf({ id: "chc", name: "x" }), 0);
+  assert.equal(indexOf({ id: "CHC2", name: "K.O.B. Choceň" }), 2);
+  assert.equal(indexOf({ id: "000", name: "neregistrovaný" }), null);
+  assert.equal(indexOf(undefined), null);
 });

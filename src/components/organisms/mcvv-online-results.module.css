@@ -1105,3 +1105,738 @@
   color: var(--dim);
   padding: calc(1 * var(--u)) calc(0.6 * var(--u));
 }
+
+/* ---------- sledovaní běžci a kluby (#206, mockup follow-v2) ---------- */
+.root {
+  --star: oklch(0.86 0.17 90);
+}
+.root .fst {
+  display: inline-grid;
+  place-items: center;
+  width: calc(1.5 * var(--u));
+  height: calc(1.5 * var(--u));
+  margin: 0 calc(0.3 * var(--u)) 0 calc(-0.2 * var(--u));
+  border-radius: calc(0.3 * var(--u));
+  color: var(--dim);
+  font-size: calc(1.05 * var(--u));
+  line-height: 1;
+  vertical-align: calc(-0.15 * var(--u));
+  flex: none;
+}
+.root .fst:hover {
+  background: #fff1;
+  color: var(--star);
+}
+.root .fst.on {
+  color: var(--star);
+  text-shadow: 0 0 calc(0.5 * var(--u)) color-mix(in oklch, var(--star) 60%, transparent);
+}
+.root tr.r {
+  cursor: pointer;
+}
+.root tr.r.fol td {
+  background-color: color-mix(in oklch, var(--star) 9%, transparent);
+}
+.root tr.r.fol td.rk {
+  box-shadow: inset calc(0.22 * var(--u)) 0 0 var(--star);
+}
+.root .ac .it.star {
+  grid-template-columns: calc(1.6 * var(--u)) calc(2.8 * var(--u)) 1fr auto;
+  cursor: default;
+}
+.root .ac .it.star .fst {
+  margin: 0;
+}
+.root .ac .itb {
+  display: contents;
+  text-align: left;
+}
+.root .ac .it.clubhit .ci {
+  color: var(--run);
+  font-size: calc(1.1 * var(--u));
+  text-align: center;
+}
+.root .ac .it.clubhit .s {
+  color: var(--run);
+}
+.root .ac .it.clubhit {
+  grid-template-columns: calc(1.6 * var(--u)) calc(2.8 * var(--u)) 1fr auto;
+}
+.root .fcount {
+  color: var(--star);
+}
+.root .fl {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.15 * var(--u));
+}
+.root .fi {
+  display: grid;
+  grid-template-columns: calc(1.5 * var(--u)) calc(2.7 * var(--u)) 1fr auto calc(1.4 * var(--u));
+  gap: calc(0.35 * var(--u));
+  align-items: center;
+  padding: calc(0.22 * var(--u)) calc(0.3 * var(--u));
+  border-radius: calc(0.3 * var(--u));
+  font-size: calc(1 * var(--u));
+}
+.root .fi:hover {
+  background: #ffffff10;
+}
+.root .fi .fst {
+  margin: 0;
+}
+.root .fgo {
+  display: contents;
+  text-align: left;
+}
+.root .fib {
+  font-family: var(--fo);
+  color: var(--muted);
+  text-align: right;
+}
+.root .fin2 {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.root .fin2 small {
+  display: block;
+  font-weight: 400;
+  color: var(--dim);
+  font-size: calc(0.82 * var(--u));
+  line-height: calc(1 * var(--u));
+}
+.root .fis {
+  font-size: calc(0.92 * var(--u));
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+.root .fis b {
+  color: var(--fg);
+  font-family: var(--fo);
+  font-weight: 600;
+}
+.root .fis .fok {
+  color: var(--ok);
+}
+.root .fis .frun {
+  font-style: italic;
+  color: var(--run);
+}
+.root .fix {
+  color: var(--dim);
+  font-size: calc(1.1 * var(--u));
+  text-align: center;
+}
+.root .fix:hover {
+  color: var(--fg);
+}
+.root .fempty {
+  color: var(--dim);
+  font-size: calc(0.95 * var(--u));
+  line-height: 1.35;
+  padding: calc(0.2 * var(--u)) calc(0.1 * var(--u));
+}
+.root .fopt {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5 * var(--u));
+  margin-top: calc(0.55 * var(--u));
+  padding-top: calc(0.5 * var(--u));
+  border-top: calc(0.06 * var(--u)) solid var(--line);
+  font-size: calc(0.92 * var(--u));
+  color: var(--muted);
+  text-align: left;
+}
+.root .fsw {
+  width: calc(2.3 * var(--u));
+  height: calc(1.3 * var(--u));
+  border-radius: calc(1 * var(--u));
+  background: var(--forest2);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  position: relative;
+  flex: none;
+}
+.root .fsw::after {
+  content: "";
+  position: absolute;
+  top: calc(0.12 * var(--u));
+  left: calc(0.15 * var(--u));
+  width: calc(0.95 * var(--u));
+  height: calc(0.95 * var(--u));
+  border-radius: 50%;
+  background: var(--muted);
+  transition: left 0.15s;
+}
+.root .fsw.on {
+  background: color-mix(in oklch, var(--star) 55%, var(--forest2));
+}
+.root .fsw.on::after {
+  left: calc(1.15 * var(--u));
+  background: #fff;
+}
+.root .fopt small {
+  display: block;
+  color: var(--dim);
+  font-size: calc(0.8 * var(--u));
+}
+.root .ftoasts {
+  position: fixed;
+  right: calc(2.4 * var(--u));
+  bottom: calc(3.2 * var(--u));
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.6 * var(--u));
+  width: calc(25 * var(--u));
+  pointer-events: none;
+}
+.root .ft {
+  pointer-events: auto;
+  position: relative;
+  background: color-mix(in oklch, var(--forest) 92%, black);
+  border: calc(0.08 * var(--u)) solid var(--line);
+  border-left: calc(0.35 * var(--u)) solid var(--star);
+  border-radius: calc(0.55 * var(--u));
+  padding: calc(0.65 * var(--u)) calc(0.9 * var(--u)) calc(0.7 * var(--u)) calc(1 * var(--u));
+  box-shadow: 0 calc(0.8 * var(--u)) calc(2.2 * var(--u)) #000c;
+  animation: ftin 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  overflow: hidden;
+}
+.root .ft.ftFin {
+  border-left-color: var(--accent-hi);
+}
+.root .ft.ftFinal {
+  border-left-color: var(--ok);
+  background: color-mix(in oklch, var(--ok) 14%, var(--forest));
+}
+.root .ft.ftInfo {
+  border-left-color: var(--muted);
+}
+.root .ftk {
+  font: 600 calc(0.8 * var(--u)) var(--fo);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--star);
+  display: flex;
+  gap: calc(0.4 * var(--u));
+  align-items: center;
+  padding-right: calc(1.2 * var(--u));
+}
+.root .ftFin .ftk {
+  color: var(--accent-hi);
+}
+.root .ftFinal .ftk {
+  color: var(--ok);
+}
+.root .ftInfo .ftk {
+  color: var(--fg);
+}
+.root .fttm {
+  margin-left: auto;
+  color: var(--dim);
+  letter-spacing: 0;
+  font: 400 calc(0.8 * var(--u)) var(--frc);
+}
+.root .ftwho {
+  font-size: calc(1.15 * var(--u));
+  font-weight: 700;
+  margin-top: calc(0.15 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.root .ftb {
+  font-family: var(--fo);
+  color: var(--star);
+  margin-right: calc(0.35 * var(--u));
+}
+.root .ftwho small {
+  font-weight: 400;
+  color: var(--dim);
+  font-size: calc(0.9 * var(--u));
+  margin-left: calc(0.35 * var(--u));
+}
+.root .ftbig {
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.6 * var(--u));
+  margin-top: calc(0.2 * var(--u));
+}
+.root .ftpt {
+  font: 600 calc(0.9 * var(--u)) var(--fo);
+  padding: calc(0.05 * var(--u)) calc(0.4 * var(--u));
+  border-radius: calc(0.25 * var(--u));
+  background: var(--forest2);
+  color: var(--muted);
+}
+.root .ftt {
+  font: 700 calc(2 * var(--u))/1 var(--fo);
+  font-variant-numeric: tabular-nums;
+}
+.root .ftt.small {
+  font-size: calc(1.4 * var(--u));
+  color: var(--muted);
+}
+.root .ftrk {
+  font: 700 calc(1.5 * var(--u))/1 var(--fo);
+  color: var(--fg);
+}
+.root .ftrk small {
+  font: 400 calc(0.85 * var(--u)) var(--frc);
+  color: var(--dim);
+  margin-left: calc(0.2 * var(--u));
+}
+.root .ftFinal .ftrk {
+  color: var(--ok);
+}
+.root .ftsub {
+  color: var(--muted);
+  font-size: calc(0.9 * var(--u));
+  margin-top: calc(0.25 * var(--u));
+}
+.root .ftsub .ftb {
+  margin-right: calc(0.25 * var(--u));
+}
+.root .ftx {
+  position: absolute;
+  top: calc(0.35 * var(--u));
+  right: calc(0.5 * var(--u));
+  color: var(--dim);
+  font-size: calc(1.1 * var(--u));
+}
+.root .ftbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(0.18 * var(--u));
+  background: var(--star);
+  opacity: 0.7;
+  transform-origin: left;
+  animation: ftbar linear forwards;
+}
+.root .ftFinal .ftbar {
+  background: var(--ok);
+}
+.root .ftFin .ftbar {
+  background: var(--accent-hi);
+}
+.root .ftInfo .ftbar {
+  background: var(--muted);
+}
+.root .frozen .ft {
+  animation: none;
+}
+.root .frozen .ftbar {
+  animation: none;
+  transform: scaleX(0.62);
+}
+.root .fbtn {
+  position: relative;
+}
+.root .fbtnStar {
+  color: var(--star);
+  font-size: calc(1.15 * var(--u));
+  line-height: 1;
+}
+.root .fcnt {
+  position: absolute;
+  top: calc(-0.35 * var(--u));
+  right: calc(-0.35 * var(--u));
+  min-width: calc(1.1 * var(--u));
+  height: calc(1.1 * var(--u));
+  border-radius: calc(0.6 * var(--u));
+  background: var(--star);
+  color: #1a1400;
+  font: 700 calc(0.7 * var(--u))/calc(1.1 * var(--u)) var(--fo);
+  text-align: center;
+  padding: 0 calc(0.2 * var(--u));
+}
+.root .fsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  background: #000a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.root .fpanel {
+  width: calc(34 * var(--u));
+  max-width: calc(100% - calc(2 * var(--u)));
+  background: var(--forest);
+  border: calc(0.08 * var(--u)) solid var(--line);
+  border-top: calc(0.2 * var(--u)) solid var(--star);
+  border-radius: calc(0.8 * var(--u));
+  padding: calc(1 * var(--u)) calc(1.2 * var(--u)) calc(1.3 * var(--u));
+  box-shadow: 0 calc(1.5 * var(--u)) calc(4 * var(--u)) #000c;
+  max-height: 85vh;
+  overflow: auto;
+}
+.root .fpanel h4 {
+  font: 600 calc(1.1 * var(--u)) var(--fo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: calc(0.6 * var(--u));
+  display: flex;
+  align-items: center;
+  gap: calc(0.4 * var(--u));
+}
+.root .fpanel h4 button {
+  margin-left: auto;
+  color: var(--muted);
+  font: 500 calc(1 * var(--u)) var(--frc);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.root .fpanel .fi {
+  grid-template-columns: calc(1.5 * var(--u)) calc(2.6 * var(--u)) 1fr auto calc(1.6 * var(--u));
+  padding: calc(0.45 * var(--u)) calc(0.2 * var(--u));
+  border-bottom: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: 0;
+}
+.root .fpanel .fib {
+  color: var(--star);
+}
+.root .rdhd {
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.5 * var(--u));
+}
+.root .rdb {
+  font: 700 calc(1.6 * var(--u)) var(--fo);
+  color: var(--muted);
+}
+.root .rdn {
+  font: 700 calc(1.4 * var(--u)) var(--frc);
+}
+.root .rclub {
+  display: flex;
+  align-items: center;
+  gap: calc(0.45 * var(--u));
+  width: 100%;
+  margin: calc(0.35 * var(--u)) 0 calc(0.1 * var(--u));
+  padding: calc(0.4 * var(--u)) calc(0.55 * var(--u));
+  border-radius: calc(0.4 * var(--u));
+  background: var(--forest2) !important;
+  border: calc(0.06 * var(--u)) solid var(--line) !important;
+  color: var(--fg);
+  text-align: left;
+}
+.root .rclub:hover {
+  border-color: var(--muted) !important;
+}
+.root .rcI {
+  color: var(--run);
+  font-size: calc(1.15 * var(--u));
+  line-height: 1;
+}
+.root .rcN {
+  font-weight: 700;
+  font-size: calc(1.05 * var(--u));
+}
+.root .rclub small {
+  margin-left: auto;
+  color: var(--run);
+  font-size: calc(0.85 * var(--u));
+  white-space: nowrap;
+}
+.root .rdcat {
+  color: var(--dim);
+  margin: calc(0.3 * var(--u)) 0 calc(0.6 * var(--u));
+}
+.root .rdpts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(0.4 * var(--u));
+  margin-bottom: calc(0.7 * var(--u));
+}
+.root .rdpts > div {
+  background: var(--forest2);
+  border-radius: calc(0.4 * var(--u));
+  padding: calc(0.4 * var(--u));
+  text-align: center;
+  font-size: calc(0.8 * var(--u));
+  color: var(--dim);
+}
+.root .rdpts b {
+  display: block;
+  font: 700 calc(1.35 * var(--u)) var(--fo);
+  color: var(--fg);
+}
+.root .rdpts .rdrun {
+  display: block;
+  font: italic 600 calc(1.35 * var(--u)) var(--fo);
+  color: var(--run);
+}
+.root .rdpts small {
+  display: block;
+  color: var(--muted);
+}
+.root .rdfollow {
+  width: 100%;
+  height: calc(3 * var(--u));
+  border-radius: calc(0.5 * var(--u));
+  font: 700 calc(1.1 * var(--u)) var(--frc) !important;
+  background: var(--star) !important;
+  color: #1a1400 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.5 * var(--u));
+}
+.root .rdfollow.on {
+  background: transparent !important;
+  color: var(--star) !important;
+  border: calc(0.1 * var(--u)) solid var(--star) !important;
+}
+.root .rdhint {
+  color: var(--dim);
+  font-size: calc(0.85 * var(--u));
+  margin-top: calc(0.5 * var(--u));
+  text-align: center;
+}
+.root .ftab {
+  border-color: color-mix(in oklch, var(--star) 55%, var(--line));
+}
+.root .vs {
+  color: var(--star);
+}
+.root .ftab.on {
+  background: color-mix(in oklch, var(--star) 80%, black);
+  border-color: var(--star);
+  color: #1a1400;
+}
+.root .ftab.on .vs {
+  color: #1a1400;
+}
+.root .ftab.on .tc {
+  color: #1a1400cc;
+}
+.root .ctab .vs {
+  color: var(--run);
+}
+.root .ctab.on {
+  background: color-mix(in oklch, var(--run) 45%, var(--forest2));
+  border-color: var(--run);
+}
+.root .ctab.on .vs {
+  color: #fff;
+}
+.root .vx {
+  margin-left: calc(0.2 * var(--u));
+  padding: 0 calc(0.2 * var(--u));
+  font-size: calc(1.1 * var(--u));
+  opacity: 0.8;
+}
+.root .vview.vclub h2 .vs {
+  color: var(--run);
+}
+.root .vbar {
+  display: flex;
+  align-items: center;
+  gap: calc(0.6 * var(--u));
+  flex-wrap: wrap;
+  padding: calc(0.45 * var(--u)) calc(0.2 * var(--u)) calc(0.2 * var(--u));
+}
+.root .vsub {
+  color: var(--dim);
+  font-size: calc(0.95 * var(--u));
+}
+.root .vacts {
+  margin-left: auto;
+  display: flex;
+  gap: calc(0.45 * var(--u));
+  flex-wrap: wrap;
+}
+.root .vbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(0.4 * var(--u));
+  height: calc(2.3 * var(--u));
+  padding: 0 calc(0.9 * var(--u));
+  border-radius: calc(0.45 * var(--u));
+  background: var(--star) !important;
+  color: #1a1400 !important;
+  font: 700 calc(1 * var(--u)) var(--frc) !important;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.root .vbtn small {
+  font: 400 calc(0.78 * var(--u)) var(--frc);
+  opacity: 0.75;
+  margin-left: calc(0.2 * var(--u));
+}
+.root .vbtn.on {
+  background: transparent !important;
+  color: var(--star) !important;
+  border: calc(0.1 * var(--u)) solid var(--star) !important;
+}
+.root .vbtn:disabled {
+  background: var(--forest2) !important;
+  color: var(--dim) !important;
+  cursor: not-allowed;
+}
+.root .vbtn.ghost {
+  background: transparent !important;
+  color: var(--muted) !important;
+  border: calc(0.08 * var(--u)) solid var(--line) !important;
+}
+.root tr.vcat .vk {
+  color: var(--fg) !important;
+  font-family: var(--fo) !important;
+  letter-spacing: 0.04em;
+}
+.root tr.vcat .vk:hover {
+  color: var(--accent-hi) !important;
+}
+.root tr.vcat .okc {
+  letter-spacing: 0.04em;
+  margin-left: calc(0.3 * var(--u));
+}
+.root .vview th small {
+  display: block;
+  font-size: calc(0.65 * var(--u));
+  color: var(--dim);
+  text-transform: none;
+}
+.root .vview td.vst {
+  text-align: left;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.root .vview td.vst .fok {
+  color: var(--ok);
+}
+.root td.vempty {
+  color: var(--dim);
+  text-align: left !important;
+  padding: calc(1.2 * var(--u)) calc(0.6 * var(--u)) !important;
+  font-size: calc(1 * var(--u));
+  line-height: 1.4;
+  white-space: normal;
+}
+@keyframes ftin {
+  from {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+}
+@keyframes ftdown {
+  from {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+}
+@keyframes ftbar {
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (max-width: 700px) {
+  .root .fst {
+    width: calc(1.3 * var(--u));
+    margin: 0 calc(0.15 * var(--u)) 0 calc(-0.25 * var(--u));
+    font-size: calc(1 * var(--u));
+  }
+  .root .ftoasts {
+    left: calc(0.5 * var(--u));
+    right: calc(0.5 * var(--u));
+    top: calc(0.5 * var(--u));
+    bottom: auto;
+    width: auto;
+  }
+  .root .ft {
+    padding: calc(0.5 * var(--u)) calc(0.7 * var(--u)) calc(0.55 * var(--u)) calc(0.8 * var(--u));
+    animation-name: ftdown;
+  }
+  .root .ftwho {
+    font-size: calc(1.02 * var(--u));
+  }
+  .root .ftt {
+    font-size: calc(1.55 * var(--u));
+  }
+  .root .ftrk {
+    font-size: calc(1.25 * var(--u));
+  }
+  .root .ftsub {
+    font-size: calc(0.82 * var(--u));
+  }
+  .root .ft + .ft {
+    display: none;
+  }
+  .root .fsheet {
+    align-items: flex-end;
+  }
+  .root .fpanel {
+    width: 100%;
+    max-width: none;
+    border: 0;
+    border-top: calc(0.15 * var(--u)) solid var(--star);
+    border-radius: calc(0.8 * var(--u)) calc(0.8 * var(--u)) 0 0;
+    padding: calc(0.8 * var(--u)) calc(0.9 * var(--u)) calc(1.4 * var(--u));
+    max-height: 80vh;
+  }
+  .root .fpanel .fi {
+    grid-template-columns: calc(1.4 * var(--u)) calc(2.4 * var(--u)) 1fr auto calc(1.6 * var(--u));
+  }
+  .root .vbar {
+    padding: calc(0.35 * var(--u)) calc(0.1 * var(--u)) calc(0.1 * var(--u));
+  }
+  .root .vsub {
+    font-size: calc(0.82 * var(--u));
+    width: 100%;
+  }
+  .root .vacts {
+    margin-left: 0;
+    width: 100%;
+  }
+  .root .vbtn {
+    height: calc(2.5 * var(--u));
+    flex: 1;
+    justify-content: center;
+    font-size: calc(0.95 * var(--u)) !important;
+    padding: 0 calc(0.6 * var(--u));
+  }
+  .root .vbtn small {
+    display: none;
+  }
+  .root .vbtn.ghost {
+    flex: none;
+  }
+  .root .ftab {
+    padding: 0 calc(0.6 * var(--u));
+  }
+}
+/* úzké telefony: hlavička s ★ a lupou se musí vejít (#206) */
+@media (max-width: 430px) {
+  .root .top {
+    gap: calc(0.4 * var(--u));
+    padding: 0 calc(0.5 * var(--u));
+  }
+  .root .title {
+    font-size: calc(1.1 * var(--u));
+  }
+  .root .clock {
+    font-size: calc(1.45 * var(--u));
+  }
+  .root .iconbtn {
+    width: calc(2.2 * var(--u));
+    height: calc(2.2 * var(--u));
+  }
+}
+@media (max-width: 380px) {
+  .root .title {
+    font-size: calc(0.98 * var(--u));
+  }
+  .root .clock {
+    font-size: calc(1.3 * var(--u));
+  }
+  .root .mark {
+    width: calc(1.9 * var(--u));
+    height: calc(1.9 * var(--u));
+  }
+}

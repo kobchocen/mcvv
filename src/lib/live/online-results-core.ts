@@ -8,6 +8,9 @@
  * sekundu. Časy jsou vždy od plánovaného startu ze startovky (Q115), i u pozdního startu.
  */
 
+import { clubIdSlug, clubKey, isNoClub } from "@/lib/clubs/core";
+
+import type { OnlineClub } from "./follow-core";
 import type { TrMark } from "./records-live-core";
 import {
   categoryState,
@@ -34,6 +37,8 @@ export type OnlineRunner = SpeakerRunner & {
    * prahem odchylky na Startu (#228); jinak null. Čas se přesto počítá od plánu (Q115).
    */
   late: number | null;
+  /** Index do `OnlineSnapshot.clubs`; null = bez klubu (000 / „-“ / neregistrovaný). */
+  club: number | null;
 };
 
 export type OnlineCategory = SpeakerCategory & {
@@ -55,13 +60,15 @@ export type OnlineSnapshot = {
   runners: OnlineRunner[];
   /** Kdo dnes drží / vyrovnal traťový rekord (jen cíl, viz `records-live-core.ts`). */
   tr: TrMark[];
+  /** Číselník klubů startovky (podle id, Q178); závodník na něj odkazuje indexem. */
+  clubs: OnlineClub[];
 };
 
 /**
  * Kompaktní podoba snímku na drátě (`/api/live/results`): závodník jako n-tice
  * `[číslo, jméno, kategorie, plánovaný start (epoch s), M1, M2, cíl, start potvrzen 0/1,
- * pozdní start s | null]`. Proti objektům zhruba poloviční payload; běžící časy si počítá
- * klient z plánovaného startu a mezičasů.
+ * pozdní start s | null, index klubu | null]` a číselník klubů `k: [id, název][]`. Proti objektům
+ * zhruba poloviční payload; běžící časy si počítá klient z plánovaného startu a mezičasů.
  */
 export type OnlineWireRunner = [
   number,
@@ -73,13 +80,18 @@ export type OnlineWireRunner = [
   number | null,
   0 | 1,
   number | null,
+  number | null,
 ];
 
-export type OnlineWire = Omit<OnlineSnapshot, "runners"> & { r: OnlineWireRunner[] };
+export type OnlineWire = Omit<OnlineSnapshot, "runners" | "clubs"> & {
+  r: OnlineWireRunner[];
+  k: [string, string][];
+};
 
-export function encodeOnline({ runners, ...rest }: OnlineSnapshot): OnlineWire {
+export function encodeOnline({ runners, clubs, ...rest }: OnlineSnapshot): OnlineWire {
   return {
     ...rest,
+    k: clubs.map((c) => [c.id, c.name]),
     r: runners.map((x) => [
       x.bib,
       x.name,
@@ -90,14 +102,16 @@ export function encodeOnline({ runners, ...rest }: OnlineSnapshot): OnlineWire {
       x.fin,
       x.started ? 1 : 0,
       x.late,
+      x.club,
     ]),
   };
 }
 
-export function decodeOnline({ r, ...rest }: OnlineWire): OnlineSnapshot {
+export function decodeOnline({ r, k, ...rest }: OnlineWire): OnlineSnapshot {
   return {
     ...rest,
-    runners: r.map(([bib, name, cat, start, m1, m2, fin, started, late]) => ({
+    clubs: (k ?? []).map(([id, name]) => ({ id, name, slug: clubIdSlug(id, name) })),
+    runners: r.map(([bib, name, cat, start, m1, m2, fin, started, late, club]) => ({
       bib,
       name,
       cat,
@@ -107,6 +121,7 @@ export function decodeOnline({ r, ...rest }: OnlineWire): OnlineSnapshot {
       fin,
       started: started === 1,
       late,
+      club: club ?? null,
     })),
   };
 }
@@ -275,4 +290,30 @@ export function findCategoryBySlug<T extends { slug: string }>(
   if (!slug) return null;
   const s = slug.toLowerCase();
   return categories.find((c) => c.slug === s) ?? null;
+}
+
+/**
+ * Číselník klubů podle id (Q178: dva kódy = dva kluby, dokud je admin nesloučí). Název je ze
+ * startovky ročníku; „bez klubu“ (000 / „-“ / neregistrovaný) do číselníku nepatří.
+ */
+export function clubDictionary(
+  entries: readonly ({ id: string; name: string | null } | undefined)[],
+): {
+  clubs: OnlineClub[];
+  indexOf: (e: { id: string; name: string | null } | undefined) => number | null;
+} {
+  const clubs: OnlineClub[] = [];
+  const index = new Map<string, number>();
+  for (const e of entries) {
+    if (!e || isNoClub(e.name)) continue;
+    const id = clubKey(e.id);
+    if (!id || index.has(id)) continue;
+    const name = (e.name ?? "").trim();
+    index.set(id, clubs.length);
+    clubs.push({ id, name, slug: clubIdSlug(id, name) });
+  }
+  return {
+    clubs,
+    indexOf: (e) => (e && !isNoClub(e.name) ? (index.get(clubKey(e.id)) ?? null) : null),
+  };
 }

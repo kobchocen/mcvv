@@ -30,6 +30,7 @@ function runner(
     fin: times.fin ?? null,
     started: times.started ?? false,
     late: null,
+    club: null,
   };
 }
 

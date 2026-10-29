@@ -12,7 +12,7 @@ import { getRaceContext, getStations } from "./race-context";
 import { createBodyCache } from "./speaker-cache";
 import { loadRaceRunners } from "./speaker";
 import { startOffsetSeconds } from "./start-check-core";
-import { peekActiveTestRun } from "./test-run";
+import { inHiddenWindow, peekStoredTestRun, publicHiddenWindow, publicZero } from "./test-run";
 
 /**
  * Jak dlouho sdílí všichni diváci jeden snímek z DB (polling klienta je 5 s): na repliku
@@ -26,26 +26,32 @@ export const ONLINE_RESULTS_CACHE_CONTROL =
 /**
  * Snímek veřejných online výsledků: stejná data jako speaker (#188) + jestli číslo má
  * záznam stanice Start a štítek pozdního startu nad prahem #228. Jen data pro zobrazení –
- * žádné kluby, e-maily ani ID účtů. Jen čtení (test se tu neukončuje, viz `peekActiveTestRun`).
+ * žádné kluby, e-maily ani ID účtů. Jen čtení (test se tu neukončuje, viz `peekStoredTestRun`).
+ *
+ * Testovací běh (#186) se veřejně neukazuje vůbec (Q117): mezičasy, cíle a záznamy Startu
+ * zapsané během testu se do snímku nedostanou a plánované starty jsou od ostré nuly, ne od
+ * zkušební. Speaker a interní obrazovky test dál vidí (se štítkem TEST).
  */
 export async function loadOnlineSnapshot(now = new Date()): Promise<OnlineSnapshot> {
-  const [ctx, stations, testRun] = await Promise.all([
+  const [rawCtx, stations, { run, cutoff }] = await Promise.all([
     getRaceContext(),
     getStations(),
-    peekActiveTestRun(now),
+    peekStoredTestRun(now),
   ]);
-  const [{ categories, runners }, startChecks] = await Promise.all([
-    loadRaceRunners(ctx, stations),
+  const hidden = publicHiddenWindow(run, cutoff);
+  const ctx = { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
+  const [{ categories, runners }, allStartChecks] = await Promise.all([
+    loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
-      select: { bib: true, startedAt: true },
+      select: { bib: true, startedAt: true, createdAt: true },
     }),
   ]);
+  const startChecks = allStartChecks.filter((s) => !inHiddenWindow(s.createdAt, hidden));
   const startedAt = new Map(startChecks.map((s) => [s.bib, s.startedAt]));
   const slugs = categorySlugs(categories);
   return {
     year: ctx.year,
-    test: testRun !== null,
     dnsGraceS: effectiveDnsGrace(startChecks.length > 0, ctx.dnsGraceS, ctx.dnsGraceFallbackS),
     categories: categories.map((c, i) => ({
       id: c.id,

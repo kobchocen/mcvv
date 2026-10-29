@@ -42,11 +42,12 @@ export type OnlineCategory = SpeakerCategory & {
   short: string;
 };
 
-/** Odpověď veřejného `/api/live/results` – jen data pro zobrazení, bez „teď“. */
+/**
+ * Odpověď veřejného `/api/live/results` – jen data pro zobrazení, bez „teď“. Testovací běh
+ * (#186) v ní není vůbec (Q117), proto ani žádný příznak testu.
+ */
 export type OnlineSnapshot = {
   year: number;
-  /** Běží testovací běh (#186) – stránka ukáže TEST. */
-  test: boolean;
   /** Platná lhůta DNS v sekundách (podle toho, zda ročník / test má záznam startu). */
   dnsGraceS: number;
   categories: OnlineCategory[];

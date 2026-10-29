@@ -37,6 +37,8 @@ export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnap
 export async function loadRaceRunners(
   ctx: RaceContext,
   stations: readonly Station[],
+  /** Vynechat mezičas podle okamžiku zápisu (veřejné výsledky skrývají test #186). */
+  skipSplit?: (created: Date | null) => boolean,
 ): Promise<{ categories: SpeakerCategory[]; runners: SpeakerRunner[] }> {
   const [categories, starts, splits] = await Promise.all([
     prisma.category.findMany({
@@ -49,7 +51,7 @@ export async function loadRaceRunners(
     }),
     prisma.split.findMany({
       where: { year: ctx.year },
-      select: { bib: true, split: true, time: true },
+      select: { bib: true, split: true, time: true, created: true },
     }),
   ]);
   // M1 / M2 = první dvě stanoviště z nastavení (výchozí 1 = 1,3 km, 3 = 2,7 km), Cíl = 9.
@@ -59,7 +61,7 @@ export async function loadRaceRunners(
   for (const s of splits) {
     const key =
       s.split === m1 ? "m1" : s.split === m2 ? "m2" : s.split === FINISH_SPLIT ? "fin" : null;
-    if (!key || s.time < 0) continue;
+    if (!key || s.time < 0 || skipSplit?.(s.created)) continue;
     const row = times.get(s.bib) ?? { m1: null, m2: null, fin: null };
     row[key] = s.time;
     times.set(s.bib, row);

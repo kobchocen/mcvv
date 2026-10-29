@@ -549,7 +549,6 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
           {t("title")}
           <small>{t("subtitle", { year: snapshot.year })}</small>
         </h1>
-        {snapshot.test ? <span className={s.testb}>{t("testBadge")}</span> : null}
         <div className={s.legend}>
           <span>
             <i className={s["lg-new"]} />
@@ -585,7 +584,6 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
           <SearchIcon />
         </button>
       </header>
-      {snapshot.test ? <div className={s.testnote}>{t("testNote")}</div> : null}
       <nav className={s.tabs} aria-label={t("categories")} ref={tabsRef}>
         {categories.map((c) => tab(c))}
         <button

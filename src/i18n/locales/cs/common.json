@@ -2529,8 +2529,6 @@
     "updated": "aktualizace <b>{time}</b>",
     "live": "živě, bez obnovování",
     "stale": "bez spojení – zkouším znovu",
-    "testBadge": "TEST",
-    "testNote": "Zkušební režim – data nejsou ostrá.",
     "searchOpen": "Hledat běžce",
     "categories": "Kategorie",
     "allCategories": "Všechny kategorie",

@@ -211,7 +211,6 @@ test("category slugs and short labels", () => {
 test("encodeOnline/decodeOnline round-trip the compact wire format", () => {
   const snapshot = {
     year: 2026,
-    test: false,
     dnsGraceS: 300,
     categories: [{ id: "A", name: "muži", sex: "M", slug: "muzi", short: "Muži" }],
     runners: [

@@ -446,6 +446,8 @@ model Sponsor {
   logo        Bytes?   @map("logo") @db.MediumBlob
   logoType    String?  @map("logo_type") @db.VarChar(32)
   logoHash    String?  @map("logo_hash") @db.Char(16)
+  /// Generální partner (Q153): pevné logo na resultboardu; nejvýš jeden (hlídá uložení v adminu).
+  general     Boolean  @default(false) @map("generalni")
 
   @@map("sponsors")
 }

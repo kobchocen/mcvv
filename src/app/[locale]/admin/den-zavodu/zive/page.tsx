@@ -790,7 +790,7 @@ async function ResultboardSection({ locale }: Readonly<{ locale: Locale }>) {
       <McvvResultboardSettings
         initial={config}
         categories={categories}
-        partners={partners.map((p) => ({ id: p.id, name: p.name }))}
+        partners={partners.map((p) => ({ id: p.id, name: p.name, general: p.general }))}
       />
     </fieldset>
   );

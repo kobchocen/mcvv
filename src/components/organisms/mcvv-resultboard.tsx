@@ -23,11 +23,13 @@ import {
 import type { ResultboardInfo } from "@/lib/live/resultboard";
 import {
   RESULTBOARD_AUTO_COLUMNS,
+  boardItems,
   layoutColumns,
   monitorCategories,
   partnerGroups,
   shouldReload,
   stepScroll,
+  type BoardItem,
   type ResultboardConfig,
   type ScrollState,
 } from "@/lib/live/resultboard-core";
@@ -38,7 +40,6 @@ import {
   lastPoint,
   nextPoint,
   POINTS,
-  type ShownRow,
 } from "@/lib/live/speaker-core";
 
 import s from "./mcvv-resultboard.module.css";
@@ -59,11 +60,7 @@ type Props = Readonly<{
 
 const cx = (...names: (string | false | null | undefined)[]) => names.filter(Boolean).join(" ");
 
-type Item =
-  | { kind: "res"; row: ShownRow & { runner: OnlineRunner } }
-  | { kind: "div"; variant: "run" | "wait" | "dns"; n: number }
-  | { kind: "wait"; runner: OnlineRunner }
-  | { kind: "dns"; runner: OnlineRunner };
+type Item = BoardItem;
 
 /**
  * Resultboard `/resultboard/<n>` (Q144) – kompletní průběžné výsledky kategorií jedné TV
@@ -244,21 +241,7 @@ function CategoryBox({
 }>) {
   const t = useTranslations("Resultboard");
   const state = onlineCategoryState(runners, now, graceS);
-  const items: Item[] = state.rows.map((row) => ({ kind: "res", row }));
-  if (config.showRunning && state.running.length) {
-    items.push({ kind: "div", variant: "run", n: state.running.length });
-    for (const r of state.running) {
-      items.push({ kind: "res", row: { runner: r, rank: null, final: false, recent: false } });
-    }
-  }
-  if (config.showWaiting && state.waiting.length) {
-    items.push({ kind: "div", variant: "wait", n: state.waiting.length });
-    for (const r of state.waiting) items.push({ kind: "wait", runner: r });
-  }
-  if (config.showDns && state.dns.length) {
-    items.push({ kind: "div", variant: "dns", n: state.dns.length });
-    for (const r of state.dns) items.push({ kind: "dns", runner: r });
-  }
+  const items = boardItems(state, config);
   // pevně nahoře prvních N řádků výsledků (bez oddělovačů), zbytek do posuvného okna
   let cut = items.length;
   let n = 0;
@@ -531,10 +514,7 @@ function PartnerBar({
   qrLabel,
 }: Readonly<{ info: ResultboardInfo; qrSvg: string; qrLabel: string }>) {
   const t = useTranslations("Resultboard");
-  const { fixed, groups } = useMemo(
-    () => partnerGroups(info.partners, info.config.partners.fixedId),
-    [info.partners, info.config.partners.fixedId],
-  );
+  const { fixed, groups } = useMemo(() => partnerGroups(info.partners), [info.partners]);
   const [page, setPage] = useState(0);
   const rotateMs = info.config.partners.rotateS * 1000;
   useEffect(() => {

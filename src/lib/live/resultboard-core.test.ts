@@ -39,7 +39,7 @@ test("parseResultboardConfig: výchozí hodnoty a ořezání", () => {
       fixedTop: 40,
       scrollRowsPerS: "1,5",
       leader: { speaker: false, points: ["fin", "x"] },
-      partners: { rotateS: 1, fixedId: 9 },
+      partners: { rotateS: 1, fixedId: 9 }, // fixedId ze starší verze se ignoruje (Q153)
     }),
   );
   assert.equal(c.monitors.length, 4);
@@ -50,7 +50,7 @@ test("parseResultboardConfig: výchozí hodnoty a ořezání", () => {
   assert.equal(c.fixedTop, 10);
   assert.equal(c.scrollRowsPerS, 1.5);
   assert.deepEqual(c.leader, { speaker: false, resultboard: true, points: ["fin"] });
-  assert.deepEqual(c.partners, { show: true, rotateS: 3, qr: true, fixedId: 9 });
+  assert.deepEqual(c.partners, { show: true, rotateS: 3, qr: true });
 });
 
 test("výchozí rozdělení: veteráni na TV 2, ostatní TV 1", () => {
@@ -130,28 +130,33 @@ test("autoAssign: vyrovná počty běžců, skryté nechá", () => {
   assert.equal(assign.G, 2);
 });
 
-test("partnerGroups: pevný partner a skupiny po 5", () => {
-  const ps: BoardPartner[] = Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    name: `P${i + 1}`,
-    category: i < 3 ? 1 : 2,
-    logoSrc: null,
-  }));
-  const a = partnerGroups(ps, null);
-  assert.equal(a.fixed?.id, 1);
+test("partnerGroups: generální partner pevně, ostatní ve skupinách po 5 (Q153)", () => {
+  const ps = (generalId: number | null): BoardPartner[] =>
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i + 1,
+      name: `P${i + 1}`,
+      category: i < 3 ? 1 : 2,
+      logoSrc: null,
+      general: i + 1 === generalId,
+    }));
+  const b = partnerGroups(ps(5));
+  assert.equal(b.fixed?.id, 5);
   assert.deepEqual(
-    a.groups.map((g) => g.length),
+    b.groups.map((g) => g.length),
     [5, 5, 1],
   );
-  const b = partnerGroups(ps, 5);
-  assert.equal(b.fixed?.id, 5);
   assert.equal(
     b.groups.flat().some((p) => p.id === 5),
     false,
   );
-  const c = partnerGroups(ps, 0);
+  // bez generálního partnera žádné pevné logo – střídají se všechna (ne „první v pořadí“)
+  const c = partnerGroups(ps(null));
   assert.equal(c.fixed, null);
   assert.equal(c.groups.flat().length, 12);
+  assert.deepEqual(
+    c.groups.flat().map((p) => p.id),
+    ps(null).map((p) => p.id),
+  );
 });
 
 test("parseMonitorParam", () => {

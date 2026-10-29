@@ -26,7 +26,7 @@ export type SettingsCategory = { id: string; name: string; entries: number };
 type Props = Readonly<{
   initial: ResultboardConfig;
   categories: SettingsCategory[];
-  partners: { id: number; name: string }[];
+  partners: { id: number; name: string; general: boolean }[];
 }>;
 
 const seg =
@@ -412,30 +412,14 @@ export function McvvResultboardSettings({ initial, categories, partners }: Props
               }
             />
           </label>
-          <label className={field}>
-            <span>{t("partnersFixed")}</span>
-            <select
-              className="h-9 rounded-md border border-race-line bg-transparent px-2"
-              value={cfg.partners.fixedId === null ? "" : String(cfg.partners.fixedId)}
-              onChange={(e) =>
-                set({
-                  partners: {
-                    ...cfg.partners,
-                    fixedId: e.target.value === "" ? null : Number(e.target.value),
-                  },
-                })
-              }
-            >
-              <option value="">{t("partnersFixedAuto", { name: partners[0]?.name ?? "–" })}</option>
-              <option value="0">{t("partnersFixedNone")}</option>
-              {partners.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
+        <p className="text-sm" data-testid="resultboard-general-partner">
+          {t("partnersFixed")}:{" "}
+          <b>{partners.find((p) => p.general)?.name ?? t("partnersFixedNone")}</b> –{" "}
+          <Link href="/admin/partneri" className="font-semibold text-race-accent hover:underline">
+            {t("partnersFixedLink")}
+          </Link>
+        </p>
         <p className={small}>{t("partnersHint")}</p>
       </div>
 

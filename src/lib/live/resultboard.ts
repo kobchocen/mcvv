@@ -37,7 +37,15 @@ export async function loadBoardPartners(): Promise<BoardPartner[]> {
     const rows = await prisma.sponsor.findMany({
       where: { active: true },
       orderBy: [{ category: "asc" }, { order: "asc" }, { id: "asc" }],
-      select: { id: true, name: true, image: true, category: true, logoType: true, logoHash: true },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        category: true,
+        logoType: true,
+        logoHash: true,
+        general: true,
+      },
     });
     const seen = new Set<string>();
     const out: BoardPartner[] = [];
@@ -50,6 +58,7 @@ export async function loadBoardPartners(): Promise<BoardPartner[]> {
         name,
         category: row.category,
         logoSrc: partnerLogo(row)?.src ?? null,
+        general: row.general,
       });
     }
     return out;

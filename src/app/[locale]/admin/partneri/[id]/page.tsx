@@ -51,6 +51,7 @@ export default async function AdminEditPartnerPage({ params, searchParams }: Pag
             category: row.category,
             order: row.order,
             active: row.active !== false,
+            general: row.general,
             description: row.description,
             logoType: row.logoType,
             logoHash: row.logoHash,
@@ -65,6 +66,8 @@ export default async function AdminEditPartnerPage({ params, searchParams }: Pag
             category: copy("partnersCategory"),
             order: copy("partnersOrder"),
             active: copy("active"),
+            general: copy("partnersGeneral"),
+            generalHint: copy("partnersGeneralHint"),
             description: copy("partnersDescription"),
             save: copy("save"),
           }}

@@ -4,7 +4,8 @@
  * a skupiny log partnerů. Data výsledků jsou stejný snímek jako `/vysledky/online`.
  */
 
-import type { PointKey } from "./speaker-core";
+import type { OnlineCategoryState, OnlineRunner } from "./online-results-core";
+import type { PointKey, ShownRow } from "./speaker-core";
 
 export const RESULTBOARD_CONFIG_KEY = "resultboard_config";
 export const RESULTBOARD_MAX_MONITORS = 4;
@@ -38,8 +39,8 @@ export type ResultboardConfig = {
   showWaiting: boolean;
   showDns: boolean;
   leader: { speaker: boolean; resultboard: boolean; points: PointKey[] };
-  /** `fixedId`: partner stále v pruhu; null = první aktivní podle pořadí na webu, 0 = žádný. */
-  partners: { show: boolean; rotateS: number; qr: boolean; fixedId: number | null };
+  /** Pevné logo = generální partner z administrace partnerů (Q153), tady se nenastavuje. */
+  partners: { show: boolean; rotateS: number; qr: boolean };
 };
 
 export const DEFAULT_MONITOR_NAMES = ["Cíl – vlevo", "Cíl – vpravo", "TV 3", "TV 4"];
@@ -58,7 +59,7 @@ export const DEFAULT_RESULTBOARD_CONFIG: ResultboardConfig = {
   showWaiting: true,
   showDns: true,
   leader: { speaker: true, resultboard: true, points: ["m1", "m2", "fin"] },
-  partners: { show: true, rotateS: 8, qr: true, fixedId: null },
+  partners: { show: true, rotateS: 8, qr: true },
 };
 
 const num = (value: unknown, min: number, max: number, fallback: number) => {
@@ -126,10 +127,6 @@ export function parseResultboardConfig(raw: unknown): ResultboardConfig {
       show: bool(partners.show, d.partners.show),
       rotateS: Math.round(num(partners.rotateS, 3, 60, d.partners.rotateS)),
       qr: bool(partners.qr, d.partners.qr),
-      fixedId:
-        Number.isInteger(partners.fixedId) && (partners.fixedId as number) >= 0
-          ? (partners.fixedId as number)
-          : null,
     },
   };
 }
@@ -258,26 +255,58 @@ export function autoAssign<T extends BoardCategory>(
   return assign;
 }
 
+export type BoardItem =
+  | { kind: "res"; row: ShownRow & { runner: OnlineRunner } }
+  | { kind: "div"; variant: "run" | "wait" | "dns"; n: number }
+  | { kind: "wait"; runner: OnlineRunner }
+  | { kind: "dns"; runner: OnlineRunner };
+
+/**
+ * Řádky kategorie na resultboardu (Q155): výsledky přesně v pořadí speakeru
+ * (`onlineCategoryState` → `categoryState` → `combinedOrder`, cíl i jen mezičasy v jednom
+ * seznamu), pak volitelně odstartovaní bez mezičasu, čekající na start a DNS.
+ */
+export function boardItems(
+  state: OnlineCategoryState,
+  config: Pick<ResultboardConfig, "showRunning" | "showWaiting" | "showDns">,
+): BoardItem[] {
+  const items: BoardItem[] = state.rows.map((row) => ({ kind: "res", row }));
+  if (config.showRunning && state.running.length) {
+    items.push({ kind: "div", variant: "run", n: state.running.length });
+    for (const r of state.running) {
+      items.push({ kind: "res", row: { runner: r, rank: null, final: false, recent: false } });
+    }
+  }
+  if (config.showWaiting && state.waiting.length) {
+    items.push({ kind: "div", variant: "wait", n: state.waiting.length });
+    for (const r of state.waiting) items.push({ kind: "wait", runner: r });
+  }
+  if (config.showDns && state.dns.length) {
+    items.push({ kind: "div", variant: "dns", n: state.dns.length });
+    for (const r of state.dns) items.push({ kind: "dns", runner: r });
+  }
+  return items;
+}
+
 export type BoardPartner = {
   id: number;
   name: string;
   category: number;
   logoSrc: string | null;
+  /** Generální partner (Q153) – pevné logo vlevo. */
+  general: boolean;
 };
 
 /**
- * Pruh partnerů (Q141): generální partner stále, ostatní (všechny kategorie, v pořadí webu)
- * se střídají ve skupinách po 5. `fixedId` null = první partner v pořadí, 0 = žádný pevný.
+ * Pruh partnerů (Q141, Q153): generální partner (příznak v administraci partnerů) stále,
+ * ostatní (všechny kategorie, v pořadí webu) se střídají ve skupinách po 5. Bez generálního
+ * partnera pevné logo není a střídají se všechna.
  */
-export function partnerGroups(
-  partners: readonly BoardPartner[],
-  fixedId: number | null,
-): {
+export function partnerGroups(partners: readonly BoardPartner[]): {
   fixed: BoardPartner | null;
   groups: BoardPartner[][];
 } {
-  const fixed =
-    fixedId === 0 ? null : (partners.find((p) => fixedId == null || p.id === fixedId) ?? null);
+  const fixed = partners.find((p) => p.general) ?? null;
   const rest = partners.filter((p) => p !== fixed);
   const groups: BoardPartner[][] = [];
   for (let i = 0; i < rest.length; i += PARTNER_GROUP_SIZE) {

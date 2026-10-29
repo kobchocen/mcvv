@@ -67,6 +67,17 @@ export function mergeFollow(
   return out;
 }
 
+/**
+ * Sledovaná čísla, která v letošních datech nejsou (jiný ročník, opravená startovka, překlep
+ * v ?f=). Zůstávají v seznamu a počítají se do limitu – UI je ukáže šedě s ×, aby šla smazat.
+ */
+export function unknownFollowed(
+  list: readonly number[],
+  known: { has(bib: number): boolean },
+): number[] {
+  return list.filter((b) => !known.has(b));
+}
+
 /* ---------- kluby ---------- */
 
 export type OnlineClub = {

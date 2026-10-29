@@ -2671,7 +2671,11 @@
     "sumFollowCount": "{count}/{limit}",
     "sumFollowNote": "Pořadí je vždy v rámci kategorie.",
     "clubHit": "klub · v závodě {count}",
-    "clubHitGo": "přehled ›"
+    "clubHitGo": "přehled ›",
+    "unknownRunner": "Neznámý běžec (č. {bib})",
+    "unknownSub": "není v letošních datech",
+    "unknownGroup": "Mimo letošní data",
+    "unknownRemove": "Odebrat"
   },
   "Leader": {
     "m1": "M1",

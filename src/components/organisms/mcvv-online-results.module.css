@@ -1840,3 +1840,30 @@
     height: calc(1.9 * var(--u));
   }
 }
+/* sledovaný běžec, který v letošních datech není (#206, Q187) */
+.root .funk {
+  color: var(--dim);
+}
+.root .funk .fst {
+  opacity: 0.45;
+}
+.root .funk .fib {
+  color: var(--dim);
+}
+.root .funk .fin2,
+.root tr.funk .nm {
+  font-style: italic;
+  color: var(--dim);
+}
+.root .funkSub {
+  color: var(--dim);
+  font-size: calc(0.85 * var(--u));
+  margin-right: calc(0.8 * var(--u));
+}
+.root .funkX {
+  display: inline-flex;
+  height: calc(1.9 * var(--u));
+  padding: 0 calc(0.7 * var(--u));
+  font-size: calc(0.85 * var(--u));
+  vertical-align: middle;
+}

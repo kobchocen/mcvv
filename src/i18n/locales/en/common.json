@@ -2671,7 +2671,11 @@
     "sumFollowCount": "{count}/{limit}",
     "sumFollowNote": "Rank is always within the category.",
     "clubHit": "club · {count} in the race",
-    "clubHitGo": "overview ›"
+    "clubHitGo": "overview ›",
+    "unknownRunner": "Unknown runner (no. {bib})",
+    "unknownSub": "not in this year's data",
+    "unknownGroup": "Not in this year's data",
+    "unknownRemove": "Remove"
   },
   "Leader": {
     "m1": "S1",

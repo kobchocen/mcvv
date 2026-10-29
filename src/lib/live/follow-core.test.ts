@@ -13,6 +13,7 @@ import {
   parseFollowed,
   searchClubs,
   toggleFollow,
+  unknownFollowed,
   type FollowSnap,
 } from "./follow-core";
 import type { OnlineRunner } from "./online-results-core";
@@ -139,4 +140,19 @@ test("followEvents reports new splits, finish and final rank, never on first loa
     ["split", "split", "fin"],
   );
   assert.notEqual(followSignature(prev), followSignature(next));
+});
+
+test("unknownFollowed keeps order and lists only bibs missing from this year's data", () => {
+  const known = new Map([
+    [1, "A"],
+    [3, "C"],
+  ]);
+  assert.deepEqual(unknownFollowed([5, 1, 9, 3], known), [5, 9]);
+  assert.deepEqual(unknownFollowed([1, 3], known), []);
+  assert.deepEqual(unknownFollowed([], known), []);
+  // neznámí se dál počítají do limitu – smazáním se místo uvolní
+  const full = Array.from({ length: FOLLOW_LIMIT }, (_, i) => 100 + i);
+  assert.equal(toggleFollow(full, 1).full, true);
+  const freed = toggleFollow(full, 100).list;
+  assert.equal(toggleFollow(freed, 1).full, false);
 });

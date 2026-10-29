@@ -26,6 +26,7 @@ import {
   clubFollowState,
   parseBibList,
   searchClubs,
+  unknownFollowed,
   type ClubFollowState,
   type FollowEvent,
   type FollowSnap,
@@ -964,6 +965,42 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
         );
       }
     }
+    const unknown = v.t === "fol" ? unknownFollowed(followed.list, runnerByBib) : [];
+    if (unknown.length) {
+      body.push(
+        <tr key="c-unknown" className={cx(s.div, s.vcat)}>
+          <td colSpan={cols}>
+            <div>
+              {t("unknownGroup")} <b>{unknown.length}</b>
+            </div>
+          </td>
+        </tr>,
+      );
+      for (const bib of unknown) {
+        body.push(
+          <tr key={`u-${bib}`} className={cx(s.r, s.funk)} data-online-unknown={bib}>
+            <td className={s.rk} />
+            <td className={cx(s.bib, s.num)}>{bib}</td>
+            <td className={s.nm}>
+              {t("unknownRunner", { bib })}
+              {mobile ? <span className={s.m2l}>{t("unknownSub")}</span> : null}
+            </td>
+            {mobile ? null : <td className={s.st} />}
+            <td className={s.ws} colSpan={mobile ? 3 : 5}>
+              {mobile ? null : <span className={s.funkSub}>{t("unknownSub")}</span>}
+              <button
+                type="button"
+                className={cx(s.vbtn, s.ghost, s.funkX)}
+                data-testid="online-unknown-remove"
+                onClick={() => toggleFollow(bib)}
+              >
+                × {t("unknownRemove")}
+              </button>
+            </td>
+          </tr>,
+        );
+      }
+    }
     const section = (
       <section
         className={cx(s.cat, s.vview, club && s.vclub)}
@@ -1130,7 +1167,38 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
       <div className={s.fl}>
         {followed.list.map((bib) => {
           const r = runnerByBib.get(bib);
-          if (!r) return null;
+          if (!r) {
+            return (
+              <div
+                className={cx(s.fi, s.funk)}
+                key={bib}
+                data-testid="online-follow-item"
+                data-unknown=""
+              >
+                <span className={s.fst} aria-hidden="true">
+                  ★
+                </span>
+                <span className={s.fgo}>
+                  <span className={cx(s.fib, s.num)}>{bib}</span>
+                  <span className={s.fin2}>
+                    {t("unknownRunner", { bib })}
+                    <small>{t("unknownSub")}</small>
+                  </span>
+                  <span className={s.fis} />
+                </span>
+                <button
+                  type="button"
+                  className={s.fix}
+                  title={t("unknownRemove")}
+                  aria-label={t("unknownRemove")}
+                  data-testid="online-follow-remove"
+                  onClick={() => toggleFollow(bib)}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          }
           const c = catById.get(r.cat);
           return (
             <div className={s.fi} key={bib} data-testid="online-follow-item">

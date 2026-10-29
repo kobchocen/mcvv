@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextLink from "next/link";
 
-import { getClubResolver } from "@/lib/clubs/queries";
+import { getClubIndex } from "@/lib/clubs/cached";
+import { createClubResolver } from "@/lib/clubs/core";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { HighlightHashedRow } from "@/components/molecules";
@@ -62,7 +63,8 @@ export default async function ResultsYearPage({ params }: PageProps) {
   });
 
   // Club by id (#104): name of the edition; a merged id shows the main id's name.
-  const clubs = await getClubResolver();
+  // cached club names ("stats" tag, the same index as /kluby), not all of cis_klub per view
+  const clubs = createClubResolver(await getClubIndex());
   const results: ResultRow[] = rawResults.map(({ runner, ...r }) => ({
     ...r,
     runnerName: runnerNameFor("results", r.runnerName, runner?.name),

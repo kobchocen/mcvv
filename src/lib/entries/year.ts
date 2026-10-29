@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { zonedCivilToUtc } from "@/lib/date/race-schedule";
 import { prisma } from "@/lib/db/client";
 
@@ -15,7 +17,8 @@ export function registrationDeadlineEnd(deadline: Date | null | undefined): Date
   );
 }
 
-export async function currentRaceYear(): Promise<{
+/** Latest edition; memoised per request (homepage page + template both need it). */
+export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
   year: number;
   deadline: Date | null;
   open: boolean;
@@ -32,7 +35,7 @@ export async function currentRaceYear(): Promise<{
   const end = registrationDeadlineEnd(deadline);
   const open = !end || Date.now() <= end.getTime();
   return { year, deadline, open, raceDate: latest?.date ?? null, editionId: latest?.id ?? null };
-}
+});
 
 /** First edition was held in 1993 (edition 34 = 2026). */
 export const FIRST_EDITION_YEAR = 1993;

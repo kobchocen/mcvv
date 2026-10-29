@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { requireRaceDay } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
+import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 import { formatRaceTime } from "@/lib/utils";
 
@@ -249,6 +250,7 @@ export async function presentationImportAction(
   });
   revalidatePath("/[locale]/admin/den-zavodu", "layout");
   revalidatePath("/[locale]/startovka", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
   return { status: "done", message: t("donePresentation"), view };
 }
 

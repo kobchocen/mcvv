@@ -4,8 +4,11 @@ import { test } from "node:test";
 import {
   bezecRateLimit,
   bezecRateLimitKey,
+  clientIp,
   createRateLimiter,
   DEFAULT_BEZEC_RATE_LIMIT,
+  DEFAULT_LIVE_RESULTS_RATE_LIMIT,
+  liveResultsRateLimit,
 } from "./rate-limit";
 
 const headers = (values: Record<string, string>) => ({
@@ -39,7 +42,7 @@ test("BEZEC_RATE_LIMIT parsing", () => {
 });
 
 test("only runner profile page views with a client IP are counted", () => {
-  const ip = headers({ "cf-connecting-ip": "203.0.113.7", "x-forwarded-for": "10.0.0.1" });
+  const ip = headers({ "x-forwarded-for": "203.0.113.7" });
   assert.equal(
     bezecRateLimitKey({ pathname: "/cs/bezec/19750001", method: "GET", headers: ip }),
     "203.0.113.7",
@@ -54,7 +57,7 @@ test("only runner profile page views with a client IP are counted", () => {
       method: "GET",
       headers: headers({ "x-forwarded-for": "198.51.100.2, 10.0.0.1" }),
     }),
-    "198.51.100.2",
+    "10.0.0.1",
   );
   assert.equal(bezecRateLimitKey({ pathname: "/cs/kluby", method: "GET", headers: ip }), null);
   assert.equal(bezecRateLimitKey({ pathname: "/cs/bezecky", method: "GET", headers: ip }), null);
@@ -63,7 +66,7 @@ test("only runner profile page views with a client IP are counted", () => {
     bezecRateLimitKey({
       pathname: "/cs/bezec/19750001",
       method: "GET",
-      headers: headers({ "cf-connecting-ip": "203.0.113.7", "next-router-prefetch": "1" }),
+      headers: headers({ "x-forwarded-for": "203.0.113.7", "next-router-prefetch": "1" }),
     }),
     null,
   );
@@ -76,7 +79,7 @@ test("only runner profile page views with a client IP are counted", () => {
     bezecRateLimitKey({
       pathname: "/cs/bezec/19750001",
       method: "GET",
-      headers: headers({ "cf-connecting-ip": "203.0.113.7", "sec-fetch-dest": "empty" }),
+      headers: headers({ "x-forwarded-for": "203.0.113.7", "sec-fetch-dest": "empty" }),
     }),
     null,
   );
@@ -84,8 +87,55 @@ test("only runner profile page views with a client IP are counted", () => {
     bezecRateLimitKey({
       pathname: "/cs/bezec/19750001",
       method: "GET",
-      headers: headers({ "cf-connecting-ip": "203.0.113.7", "sec-fetch-dest": "document" }),
+      headers: headers({ "x-forwarded-for": "203.0.113.7", "sec-fetch-dest": "document" }),
     }),
     "203.0.113.7",
   );
+});
+
+test("client IP is the hop appended by the ingress, not what the client claims", () => {
+  // ACA ingress appends the address it saw: only the rightmost hop is trustworthy.
+  assert.equal(clientIp(headers({ "x-forwarded-for": "1.1.1.1, 203.0.113.7" })), "203.0.113.7");
+  assert.equal(clientIp(headers({ "x-forwarded-for": " 203.0.113.7 " })), "203.0.113.7");
+  assert.equal(clientIp(headers({ "x-forwarded-for": "203.0.113.7, " })), "203.0.113.7");
+  // Cloudflare does not proxy (DNS only), so a client-sent cf-connecting-ip is ignored ...
+  const spoofed = headers({ "cf-connecting-ip": "9.9.9.9", "x-forwarded-for": "203.0.113.7" });
+  assert.equal(clientIp(spoofed, { trustCloudflare: false }), "203.0.113.7");
+  // ... unless explicitly trusted (TRUST_CF_CONNECTING_IP=true behind the Cloudflare proxy).
+  assert.equal(clientIp(spoofed, { trustCloudflare: true }), "9.9.9.9");
+  assert.equal(
+    clientIp(headers({ "x-forwarded-for": "203.0.113.7" }), { trustCloudflare: true }),
+    "203.0.113.7",
+  );
+  assert.equal(clientIp(headers({ "x-real-ip": "198.51.100.4" })), "198.51.100.4");
+  // No header at all: no key, users are never lumped together.
+  assert.equal(clientIp(headers({})), null);
+  assert.equal(
+    clientIp(headers({ "cf-connecting-ip": "9.9.9.9" }), { trustCloudflare: false }),
+    null,
+  );
+});
+
+test("spoofed X-Forwarded-For prefixes do not give a client fresh rate-limit keys", () => {
+  const limiter = createRateLimiter({ limit: 2 });
+  const t0 = 2_000_000;
+  const results = [1, 2, 3].map((i) =>
+    limiter.hit(clientIp(headers({ "x-forwarded-for": `10.0.0.${i}, 203.0.113.7` }))!, t0 + i),
+  );
+  assert.deepEqual(
+    results.map((r) => r.limited),
+    [false, false, true],
+  );
+});
+
+test("online results limit: generous default for CGNAT, configurable, 0 = off", () => {
+  assert.equal(DEFAULT_LIVE_RESULTS_RATE_LIMIT, 12_000);
+  // A visible tab polls every 5 s: the default fits ~1000 tabs behind one address.
+  assert.equal(DEFAULT_LIVE_RESULTS_RATE_LIMIT / 12, 1000);
+  assert.equal(liveResultsRateLimit(undefined), DEFAULT_LIVE_RESULTS_RATE_LIMIT);
+  assert.equal(liveResultsRateLimit(""), DEFAULT_LIVE_RESULTS_RATE_LIMIT);
+  assert.equal(liveResultsRateLimit("0"), 0);
+  assert.equal(liveResultsRateLimit("30000"), 30_000);
+  assert.equal(liveResultsRateLimit("-5"), DEFAULT_LIVE_RESULTS_RATE_LIMIT);
+  assert.equal(liveResultsRateLimit("lots"), DEFAULT_LIVE_RESULTS_RATE_LIMIT);
 });

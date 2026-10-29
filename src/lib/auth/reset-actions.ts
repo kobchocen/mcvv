@@ -19,6 +19,7 @@ import {
   issueSignupInviteEmail,
 } from "@/lib/auth/tokens";
 import { mailConfigured } from "@/lib/mail/resend";
+import { clientIp as proxyClientIp } from "@/lib/security/rate-limit";
 import { redirect } from "@/i18n/routing";
 
 const WINDOW_MS = 15 * 60 * 1000;
@@ -29,9 +30,7 @@ export type ForgotState = { sent?: boolean; error?: "mail" };
 export type ResetState = { error?: "invalid" | "short" | "mismatch" };
 
 async function clientIp(): Promise<string> {
-  const list = await headers();
-  const forwarded = list.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || list.get("x-real-ip") || "unknown";
+  return proxyClientIp(await headers()) ?? "unknown";
 }
 
 export async function requestPasswordReset(

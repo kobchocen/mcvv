@@ -3,7 +3,10 @@ import { test } from "node:test";
 
 import {
   dataEpoch,
+  inHiddenWindow,
   parseTestRun,
+  publicHiddenWindow,
+  publicZero,
   raceDayCutoff,
   resolveTestZero,
   serializeTestRun,
@@ -174,4 +177,39 @@ test("dataEpoch changes with a new test run and with a new zero (Q72)", () => {
   assert.equal(dataEpoch(run(), zero), "test-abc123def0@2026-11-02T09:15:00.000Z");
   assert.notEqual(dataEpoch(run({ id: "other12345" }), zero), dataEpoch(run(), zero));
   assert.notEqual(dataEpoch(null, new Date(zero.getTime() + 1000)), dataEpoch(null, zero));
+});
+
+test("public online results hide everything written during a stored test (Q117)", () => {
+  assert.equal(publicHiddenWindow(null, CUTOFF_2026), null);
+  const w = publicHiddenWindow(run(), CUTOFF_2026);
+  assert.deepEqual(w, { from: run().startedAt, until: CUTOFF_2026 });
+  // před spuštěním testu (ostrá / starší data) zůstává
+  assert.equal(inHiddenWindow(new Date("2026-11-02T07:59:59.999Z"), w), false);
+  // od spuštění: běžící test i vypršelý, ještě neuklizený test (po expiresAt)
+  assert.equal(inHiddenWindow(new Date("2026-11-02T08:00:00.000Z"), w), true);
+  assert.equal(inHiddenWindow(new Date("2026-11-02T10:00:00.000Z"), w), true);
+  assert.equal(inHiddenWindow(new Date("2026-11-02T13:00:00.000Z"), w), true);
+  // den závodu 00:00 a dál je vždy ostré
+  assert.equal(inHiddenWindow(CUTOFF_2026, w), false);
+  assert.equal(inHiddenWindow(new Date("2026-12-06T09:30:00.000Z"), w), false);
+  // bez času zápisu (starý import) nebo bez testu nic neskrývá
+  assert.equal(inHiddenWindow(null, w), false);
+  assert.equal(inHiddenWindow(new Date("2026-11-02T10:00:00.000Z"), null), false);
+});
+
+test("public online results use the official zero instead of the test zero (Q117)", () => {
+  const official = new Date("2026-12-06T09:15:00.000Z");
+  const testZero = run().zero;
+  const now = new Date("2026-11-02T10:00:00.000Z");
+  const ctx = { zero: testZero, officialZero: official, zeroOverridden: true };
+  assert.equal(publicZero(ctx, run(), now, CUTOFF_2026), official);
+  // bez testu se nic nemění (ani ruční přepsání nuly mimo test)
+  assert.equal(publicZero(ctx, null, now, CUTOFF_2026), testZero);
+  const plain = { zero: official, officialZero: official, zeroOverridden: false };
+  assert.equal(publicZero(plain, run(), now, CUTOFF_2026), official);
+  // den závodu: neuklizená zkušební nula testu se nepoužije, jiné přepsání ano
+  const raceDay = new Date("2026-12-06T08:00:00.000Z");
+  assert.equal(publicZero(ctx, run(), raceDay, CUTOFF_2026), official);
+  const moved = new Date("2026-12-06T09:30:00.000Z");
+  assert.equal(publicZero({ ...ctx, zero: moved }, run(), raceDay, CUTOFF_2026), moved);
 });

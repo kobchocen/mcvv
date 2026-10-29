@@ -2529,8 +2529,6 @@
     "updated": "updated <b>{time}</b>",
     "live": "live, no reload needed",
     "stale": "offline – retrying",
-    "testBadge": "TEST",
-    "testNote": "Test mode – the data are not real.",
     "searchOpen": "Find a runner",
     "categories": "Categories",
     "allCategories": "All categories",

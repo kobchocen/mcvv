@@ -1063,23 +1063,6 @@
 }
 
 /* ---------- doplňky implementace (mimo mockup) ---------- */
-/* testovací běh (#186) – stejný štítek jako speaker */
-.root .testb {
-  font: 600 calc(0.85 * var(--u)) / 1 var(--fo);
-  letter-spacing: 0.08em;
-  color: #fff;
-  background: var(--test);
-  border-radius: calc(0.25 * var(--u));
-  padding: calc(0.25 * var(--u)) calc(0.45 * var(--u));
-  white-space: nowrap;
-}
-.root .testnote {
-  background: color-mix(in oklch, var(--test) 30%, var(--deep));
-  color: var(--fg);
-  text-align: center;
-  font-size: calc(0.9 * var(--u));
-  padding: calc(0.3 * var(--u)) calc(0.8 * var(--u));
-}
 /* bez spojení */
 .root .dot.off {
   background: var(--test);

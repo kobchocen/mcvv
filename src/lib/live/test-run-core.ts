@@ -188,3 +188,47 @@ export function testDataWindow(run: TestRun, now: Date, cutoff: Date): { from: D
 export function dataEpoch(run: TestRun | null, zero: Date): string {
   return `${run ? `test-${run.id}` : "live"}@${zero.toISOString()}`;
 }
+
+/**
+ * Testovací data skrytá na veřejných online výsledcích (Q117): dokud je test uložený
+ * (běžící, ale i vypršelý a ještě neuklizený), je vše od jeho spuštění do dne závodu 00:00
+ * testovací – stejné okno jako úklid (`testDataWindow`), jen bez závislosti na „teď“, aby
+ * se nic neobjevilo ani v mezeře mezi vypršením a úklidem. Bez testu null.
+ */
+export function publicHiddenWindow(
+  run: TestRun | null,
+  cutoff: Date,
+): { from: Date; until: Date } | null {
+  if (!run) return null;
+  return {
+    from: run.startedAt,
+    until: new Date(Math.max(cutoff.getTime(), run.startedAt.getTime())),
+  };
+}
+
+/** Záznam vznikl v okně testu (od spuštění včetně do dne závodu 00:00 bez něj). */
+export function inHiddenWindow(
+  at: Date | null | undefined,
+  window: { from: Date; until: Date } | null,
+): boolean {
+  if (!window || !at) return false;
+  const t = at.getTime();
+  return t >= window.from.getTime() && t < window.until.getTime();
+}
+
+/**
+ * Nula pro veřejné online výsledky: zkušební nula testu se veřejně nepoužije (plánované
+ * starty zůstanou podle ostré nuly ročníku). Jiné přepsání nuly (mimo test) platí dál.
+ */
+export function publicZero(
+  ctx: { zero: Date; officialZero: Date; zeroOverridden: boolean },
+  run: TestRun | null,
+  now: Date,
+  cutoff: Date,
+): Date {
+  if (!run || !ctx.zeroOverridden) return ctx.zero;
+  if (now.getTime() < cutoff.getTime() || ctx.zero.getTime() === run.zero.getTime()) {
+    return ctx.officialZero;
+  }
+  return ctx.zero;
+}

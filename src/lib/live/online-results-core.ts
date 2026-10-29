@@ -8,6 +8,7 @@
  * sekundu. Časy jsou vždy od plánovaného startu ze startovky (Q115), i u pozdního startu.
  */
 
+import type { TrMark } from "./records-live-core";
 import {
   categoryState,
   hasRecord,
@@ -52,6 +53,8 @@ export type OnlineSnapshot = {
   dnsGraceS: number;
   categories: OnlineCategory[];
   runners: OnlineRunner[];
+  /** Kdo dnes drží / vyrovnal traťový rekord (jen cíl, viz `records-live-core.ts`). */
+  tr: TrMark[];
 };
 
 /**

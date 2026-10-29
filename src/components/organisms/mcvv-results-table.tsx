@@ -18,6 +18,8 @@ export type McvvResultsTableRow = SplitTimes & {
   /** Overall view only: category with rank, e.g. "M40 (3.)". */
   category?: string;
   time: number;
+  /** Traťový rekord v tomto ročníku (Q165): popisek odznaku TR, jinak bez odznaku. */
+  record?: string | null;
 };
 
 export type McvvResultsTableLabels = {
@@ -132,6 +134,15 @@ export function McvvResultsGroup({
                         name={r.runnerName}
                         nationality={r.nationality}
                       />
+                      {r.record ? (
+                        <span
+                          title={r.record}
+                          className="ml-1.5 inline-block rounded bg-amber-300 px-1 align-[1px] font-display text-[10px] leading-[1.4] font-bold tracking-wide text-amber-950"
+                          data-testid="results-record"
+                        >
+                          TR
+                        </span>
+                      ) : null}
                       <span className="mt-px block text-xs leading-[1.3] font-normal text-race-muted sm:hidden">
                         <ClubLink slug={r.clubSlug} name={r.club} />
                         {showCategory && r.category ? ` · ${r.category}` : null}

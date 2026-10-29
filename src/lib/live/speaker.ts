@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/client";
 
 import { getRaceContext, getStations, type RaceContext } from "./race-context";
+import { getRecordBaselines } from "./records-live";
+import { liveRecordMarks, type TrMark } from "./records-live-core";
 import { createBodyCache } from "./speaker-cache";
 import type { SpeakerCategory, SpeakerRunner, SpeakerSnapshot } from "./speaker-core";
 import { startInstant } from "./start-time";
@@ -21,12 +23,13 @@ export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnap
     getStations(),
     getActiveTestRun(now),
   ]);
-  const { categories, runners } = await loadRaceRunners(ctx, stations);
+  const { categories, runners, tr } = await loadRaceRunners(ctx, stations);
   return {
     year: ctx.year,
     test: testRun !== null,
     categories: categories.map((c) => ({ id: c.id, name: c.name, sex: c.sex })),
     runners,
+    tr,
   };
 }
 
@@ -39,20 +42,32 @@ export async function loadRaceRunners(
   stations: readonly Station[],
   /** Vynechat mezičas podle okamžiku zápisu (veřejné výsledky skrývají test #186). */
   skipSplit?: (created: Date | null) => boolean,
-): Promise<{ categories: SpeakerCategory[]; runners: SpeakerRunner[] }> {
-  const [categories, starts, splits] = await Promise.all([
+): Promise<{
+  categories: (SpeakerCategory & { age: number })[];
+  runners: SpeakerRunner[];
+  /** Nový / vyrovnaný traťový rekord (jen cíl). */
+  tr: TrMark[];
+}> {
+  const [categories, starts, splits, baselines] = await Promise.all([
     prisma.category.findMany({
       orderBy: { sort: "asc" },
-      select: { id: true, name: true, sex: true },
+      select: { id: true, name: true, sex: true, age: true },
     }),
     prisma.startEntry.findMany({
       where: { year: ctx.year, bib: { gt: 0 } },
-      select: { bib: true, runnerName: true, categoryId: true, runner: { select: { name: true } } },
+      select: {
+        bib: true,
+        runnerId: true,
+        runnerName: true,
+        categoryId: true,
+        runner: { select: { name: true } },
+      },
     }),
     prisma.split.findMany({
       where: { year: ctx.year },
       select: { bib: true, split: true, time: true, created: true },
     }),
+    getRecordBaselines(ctx.year),
   ]);
   // M1 / M2 = první dvě stanoviště z nastavení (výchozí 1 = 1,3 km, 3 = 2,7 km), Cíl = 9.
   const m1 = stations[0]?.code ?? "1";
@@ -72,14 +87,26 @@ export async function loadRaceRunners(
   for (const s of [...starts].sort((a, b) => a.bib - b.bib)) {
     if (known.has(s.categoryId) && !byBib.has(s.bib)) byBib.set(s.bib, s);
   }
-  const runners = [...byBib.values()].map((s) => ({
+  const withIds = [...byBib.values()].map((s) => ({
     bib: s.bib,
     name: (s.runnerName || s.runner.name).trim(),
     cat: s.categoryId,
     start: Math.round(startInstant(ctx.zero, s.bib, ctx.intervalS).getTime() / 1000),
     ...(times.get(s.bib) ?? { m1: null, m2: null, fin: null }),
+    runnerId: s.runnerId,
   }));
-  return { categories, runners };
+  const tr = liveRecordMarks(withIds, categories, baselines, ctx.year);
+  // ID běžce (ročník narození, pohlaví) klientovi neposíláme
+  const runners: SpeakerRunner[] = withIds.map((r) => ({
+    bib: r.bib,
+    name: r.name,
+    cat: r.cat,
+    start: r.start,
+    m1: r.m1,
+    m2: r.m2,
+    fin: r.fin,
+  }));
+  return { categories, runners, tr };
 }
 
 /** Sdílená cache snímku na replice (viz `createBodyCache`). */

@@ -7,6 +7,8 @@
  * (epoch s), `m1`/`m2`/`fin` čas od startu (jako `mcvv_split.time`).
  */
 
+import type { TrMark } from "./records-live-core";
+
 export type PointKey = "m1" | "m2" | "fin";
 export const POINTS: readonly PointKey[] = ["m1", "m2", "fin"];
 
@@ -31,6 +33,8 @@ export type SpeakerSnapshot = {
   test: boolean;
   categories: SpeakerCategory[];
   runners: SpeakerRunner[];
+  /** Kdo dnes drží / vyrovnal traťový rekord (viz `records-live-core.ts`). */
+  tr: TrMark[];
 };
 
 export const TOP = 10;

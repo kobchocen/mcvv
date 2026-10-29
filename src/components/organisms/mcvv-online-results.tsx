@@ -12,7 +12,10 @@ import {
   type ReactNode,
 } from "react";
 
+import { RecordBadge, RecordOverlay } from "@/components/molecules/record-alert";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
+import { useRecordAlerts } from "@/hooks/use-record-alerts";
+import { useTrDemo } from "@/hooks/use-tr-demo";
 import { Link } from "@/i18n/routing";
 import {
   findCategoryBySlug,
@@ -102,6 +105,12 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
     stale,
   } = useLiveSnapshot<OnlineWire>("/api/live/results", initial, initialEtag, serverNowMs);
   const snapshot = useMemo(() => decodeOnline(wire), [wire]);
+  const records = useRecordAlerts({
+    marks: snapshot.tr,
+    updatedMs,
+    resetKey: String(snapshot.year),
+    demo: useTrDemo(),
+  });
   const mobile = useSyncExternalStore(
     subscribeMobile,
     () => window.matchMedia(MOBILE_QUERY).matches,
@@ -373,6 +382,7 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
           </td>
           <td className={cx(s.bib, s.num)}>{r.bib}</td>
           <td className={s.nm} title={r.name}>
+            <RecordBadge kind={records.badges.get(r.bib)} />
             {r.name}
             {!mobile && r.late != null ? (
               <span className={cx(s.chip, s.late)}>
@@ -557,6 +567,12 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
           <span>{t.rich("legendRank", { b: (c) => <b className={s.lgB}>{c}</b> })}</span>
           <span>{t.rich("legendFin", { b: (c) => <b className={s.lgB}>{c}</b> })}</span>
           <span>{t("legendOn")}</span>
+          {records.badges.size ? (
+            <span>
+              <RecordBadge kind="tr" />
+              {t("legendRecord")}
+            </span>
+          ) : null}
           <span>{t.rich("legendFinal", { ok: (c) => <b className={s.lgOk}>{c}</b> })}</span>
           <span>
             <span className={cx(s.runv, s.num)}>12:34</span> {t("legendRun")}
@@ -696,7 +712,12 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
                           </span>
                         </td>
                         <td className={cx(s.bib, s.num)}>{p.runner.bib}</td>
-                        <td className={s.nm}>{p.runner.name}</td>
+                        <td className={s.nm}>
+                          {p.point === "fin" ? (
+                            <RecordBadge kind={records.badges.get(p.runner.bib)} />
+                          ) : null}
+                          {p.runner.name}
+                        </td>
                         <td className={s.c}>
                           {c ? (
                             <button type="button" onClick={() => selectCategory(c.slug)}>
@@ -757,6 +778,12 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
           </div>
         </div>
       ) : null}
+      <RecordOverlay
+        batch={records.batch}
+        mode="online"
+        runner={(bib) => snapshot.runners.find((r) => r.bib === bib)}
+        catName={(id) => catById.get(id)?.name ?? id}
+      />
     </div>
   );
 }

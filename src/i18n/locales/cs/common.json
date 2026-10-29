@@ -2518,7 +2518,8 @@
     "cardPlaceWord": "místo",
     "legendOnWord": "bez pořadí",
     "legendLeader": "nový lídr kategorie",
-    "recentLeader": "★ = běžec se tím průchodem stal lídrem"
+    "recentLeader": "★ = běžec se tím průchodem stal lídrem",
+    "legendRecord": "traťový rekord (předběžně)"
   },
   "ConfirmDialog": {
     "cancel": "Zrušit",
@@ -2597,7 +2598,8 @@
     "note": "Průběžné výsledky se počítají živě z mezičasů (1,3 km, 2,7 km) a cíle. Oficiální výsledky budou po závodě na <link>Výsledky {year}</link>.",
     "footerStartlist": "Startovka",
     "footerInstructions": "Pokyny",
-    "copyright": "© Malá cena Velké Verandy"
+    "copyright": "© Malá cena Velké Verandy",
+    "legendRecord": "traťový rekord (předběžně)"
   },
   "Leader": {
     "m1": "M1",
@@ -2614,6 +2616,32 @@
     "faster": "o <b>{diff}</b> rychleji",
     "onlyTime": "zatím jediný čas {where}",
     "finLoc": "v cíli"
+  },
+  "Record": {
+    "newRecord": "NOVÝ TRAŤOVÝ REKORD",
+    "newAbs": "NOVÝ ABSOLUTNÍ TRAŤOVÝ REKORD",
+    "eqRecord": "VYROVNANÝ TRAŤOVÝ REKORD",
+    "eqAbs": "VYROVNANÝ ABSOLUTNÍ TRAŤOVÝ REKORD",
+    "prev": "dosavadní rekord <b>{time}</b> · {who} ({year})",
+    "prevUnknown": "dosavadní rekord <b>{time}</b>",
+    "faster": "o {diff} rychleji",
+    "same": "stejný čas",
+    "also": "+ zároveň rekord kategorie {cat} (dosavadní {time})",
+    "alsoEq": "+ zároveň vyrovnaný rekord kategorie {cat} ({time})",
+    "note": "předběžný čas · oficiálně po kontrole výsledků",
+    "notePlural": "předběžné časy · oficiálně po kontrole výsledků",
+    "summary": "{count, plural, few {# TRAŤOVÉ REKORDY NARÁZ} other {# TRAŤOVÝCH REKORDŮ NARÁZ}}",
+    "close": "klepnutím zavřít",
+    "closeAria": "Zavřít",
+    "toastFaster": "o {diff} lépe než {time}",
+    "toastEq": "vyrovnal {time}",
+    "prelim": "předběžně",
+    "more": "+ další {count}",
+    "badge": "TR",
+    "badgeEq": "= TR",
+    "badgeTitle": "traťový rekord (předběžně)",
+    "badgeEqTitle": "vyrovnaný traťový rekord (předběžně)",
+    "finalTitle": "traťový rekord: {cats}"
   },
   "Resultboard": {
     "brandMark": "V",
@@ -2660,7 +2688,8 @@
     "indexTitle": "Resultboard – obrazovky v cíli",
     "indexNote": "Otevřete na televizi v cíli a přepněte prohlížeč na celou obrazovku (F11). Obrazovka se obnovuje sama.",
     "indexTv": "TV {n}",
-    "indexHint": "Rozdělení kategorií a další nastavení: administrace → Den závodu → Živé výsledky."
+    "indexHint": "Rozdělení kategorií a další nastavení: administrace → Den závodu → Živé výsledky.",
+    "legendRecord": "traťový rekord (předběžně)"
   },
   "ResultboardSettings": {
     "title": "Resultboard – obrazovky v cíli",

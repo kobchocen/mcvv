@@ -1,0 +1,393 @@
+/*
+ * Nový traťový rekord (speaker, resultboard, online) – podle mockupu tr-v1.
+ * Překryv přes celou obrazovku: tmavé pozadí, pulzující zlatý rámeček, karta, konfety
+ * (vlastní canvas). Online desktop menší karta, online mobil jen pruh nahoře.
+ * Vyrovnaný rekord (Q157) = slabší verze: menší karta, bez pulzu, méně konfet.
+ */
+.overlay {
+  --trg: oklch(0.86 0.16 88);
+  --trdk: #231a00;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: trIn 0.2s ease-out both;
+}
+.board {
+  cursor: none;
+}
+.bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgb(20 14 0 / 0.72) 0%, rgb(4 10 6 / 0.9) 70%);
+}
+.online .bg {
+  background: radial-gradient(ellipse at center, rgb(20 14 0 / 0.55) 0%, rgb(4 10 6 / 0.78) 75%);
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+.frame {
+  position: absolute;
+  inset: 0.9vw;
+  z-index: 1;
+  border: 0.55vw solid var(--trg);
+  border-radius: 1.2vw;
+  box-shadow:
+    0 0 2.2vw var(--trg),
+    inset 0 0 2.2vw var(--trg);
+  animation: trFrame 1s ease-in-out infinite;
+}
+.eq .frame {
+  border-width: 0.3vw;
+  animation: none;
+  opacity: 0.7;
+}
+.card {
+  position: relative;
+  z-index: 2;
+  width: min(70vw, 1400px);
+  padding: 2.2vw 3vw 1.6vw;
+  border: 0.32vw solid var(--trg);
+  border-radius: 1.4vw;
+  background: linear-gradient(160deg, oklch(0.27 0.06 150) 0%, oklch(0.17 0.04 150) 100%);
+  box-shadow:
+    0 0 0 0.5vw rgb(0 0 0 / 0.35),
+    0 0 5vw oklch(0.86 0.16 88 / 0.55);
+  color: #fff;
+  font-family: "Roboto Condensed", Inter, system-ui, sans-serif;
+  text-align: center;
+  animation: trPop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.online .card {
+  width: min(56vw, 1100px);
+}
+.eq .card {
+  width: min(52vw, 1000px);
+  box-shadow: 0 0 0 0.5vw rgb(0 0 0 / 0.35);
+}
+.k {
+  color: var(--trg);
+  font:
+    700 4.6vw/1 Oswald,
+    "Roboto Condensed",
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 1.6vw oklch(0.86 0.16 88 / 0.8);
+  white-space: nowrap;
+}
+.k small {
+  display: block;
+  margin-bottom: 0.6vw;
+  color: #fff;
+  font-size: 0.34em;
+  letter-spacing: 0.3em;
+  opacity: 0.85;
+}
+.online .k,
+.eq .k {
+  font-size: 3.4vw;
+}
+.cat {
+  display: inline-block;
+  margin: 1.3vw 0 0.6vw;
+  padding: 0.35vw 1.4vw;
+  border-radius: 0.5vw;
+  background: var(--trg);
+  color: var(--trdk);
+  font:
+    700 2.2vw/1.1 Oswald,
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.run {
+  display: flex;
+  gap: 1.2vw;
+  align-items: baseline;
+  justify-content: center;
+  font:
+    600 3.1vw/1.15 "Roboto Condensed",
+    system-ui,
+    sans-serif;
+}
+.online .run {
+  font-size: 2.4vw;
+}
+.bib {
+  color: var(--trg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.time {
+  margin: 0.4vw 0 0.6vw;
+  color: #fff;
+  font:
+    700 9.5vw/1 Oswald,
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 2vw oklch(0.86 0.16 88 / 0.7);
+}
+.online .time,
+.eq .time {
+  font-size: 7.4vw;
+}
+.prev {
+  color: oklch(0.86 0.03 145);
+  font-size: 1.65vw;
+}
+.online .prev {
+  font-size: 1.35vw;
+}
+.prev b {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.diff {
+  display: inline-block;
+  margin-left: 0.8vw;
+  padding: 0.15vw 0.8vw;
+  border-radius: 0.4vw;
+  background: oklch(0.78 0.19 145);
+  color: #06210e;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.eq .diff {
+  background: var(--trg);
+  color: var(--trdk);
+}
+.extra {
+  margin-top: 0.9vw;
+  color: var(--trg);
+  font:
+    600 1.7vw/1.25 "Roboto Condensed",
+    system-ui,
+    sans-serif;
+}
+.note {
+  margin-top: 0.9vw;
+  color: oklch(0.72 0.03 145);
+  font-size: 1.05vw;
+  letter-spacing: 0.03em;
+}
+.bar {
+  overflow: hidden;
+  width: 60%;
+  height: 0.32vw;
+  margin: 1.1vw auto 0;
+  border-radius: 0.2vw;
+  background: rgb(255 255 255 / 0.15);
+}
+.bar i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--trg);
+  transform-origin: left;
+  animation: trBar var(--tr-dur, 7s) linear both;
+}
+.q {
+  position: absolute;
+  top: 1vw;
+  right: 1.4vw;
+  color: var(--trg);
+  font:
+    600 1.2vw Oswald,
+    system-ui,
+    sans-serif;
+}
+.close {
+  position: absolute;
+  right: 1.2vw;
+  bottom: 0.8vw;
+  color: oklch(0.72 0.03 145);
+  font-size: 0.95vw;
+}
+.list {
+  min-width: 70%;
+  margin: 1.4vw auto 0.4vw;
+  border-collapse: collapse;
+}
+.list td {
+  padding: 0.45vw 1vw;
+  border-bottom: 0.08vw solid rgb(255 255 255 / 0.15);
+  color: #fff;
+  font-size: 2vw;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+}
+.list td b {
+  margin-right: 0.5vw;
+  color: var(--trg);
+}
+.lc {
+  color: var(--trg) !important;
+  font-family: Oswald, system-ui, sans-serif;
+  font-size: 1.8vw !important;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.lt {
+  font:
+    700 2.6vw Oswald,
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: right !important;
+}
+.ld {
+  color: oklch(0.78 0.19 145) !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right !important;
+}
+
+/* odznak v tabulce (zůstává do konce závodu / do importu) */
+.badge {
+  display: inline-block;
+  margin-right: 0.35em;
+  padding: 0 0.3em;
+  border-radius: 0.25em;
+  background: oklch(0.86 0.16 88);
+  color: #231a00;
+  font:
+    700 0.78em/1.35 Oswald,
+    "Roboto Condensed",
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.04em;
+  vertical-align: 0.08em;
+  white-space: nowrap;
+}
+.badgeEq {
+  background: transparent;
+  box-shadow: inset 0 0 0 0.1em oklch(0.86 0.16 88);
+  color: inherit;
+}
+
+/* online mobil: pruh nahoře + malé konfety jen v něm */
+.toast {
+  --trg: oklch(0.86 0.16 88);
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  left: 8px;
+  z-index: 9999;
+  display: flex;
+  overflow: hidden;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 2px solid var(--trg);
+  border-radius: 14px;
+  background: linear-gradient(160deg, oklch(0.3 0.07 150), oklch(0.19 0.045 150));
+  box-shadow:
+    0 8px 28px rgb(0 0 0 / 0.55),
+    0 0 18px oklch(0.86 0.16 88 / 0.45);
+  color: #fff;
+  font:
+    14px/1.3 "Roboto Condensed",
+    Inter,
+    system-ui,
+    sans-serif;
+  animation: trSlide 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.tti {
+  flex: none;
+  font-size: 28px;
+  line-height: 1;
+}
+.tbody {
+  position: relative;
+  min-width: 0;
+}
+.th {
+  display: block;
+  color: var(--trg);
+  font:
+    700 16px/1.1 Oswald,
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.05em;
+}
+.tm {
+  font:
+    700 17px Oswald,
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.toast small {
+  display: block;
+  color: oklch(0.82 0.03 145);
+  font-size: 12px;
+}
+.toast button {
+  position: relative;
+  align-self: flex-start;
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: 20px/1 system-ui;
+  opacity: 0.7;
+}
+
+@keyframes trIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes trPop {
+  from {
+    transform: scale(0.6);
+  }
+}
+@keyframes trBar {
+  to {
+    transform: scaleX(0);
+  }
+}
+@keyframes trSlide {
+  from {
+    transform: translateY(-130%);
+  }
+}
+@keyframes trFrame {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 2.6vw var(--trg),
+      inset 0 0 2.6vw var(--trg);
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow:
+      0 0 0.8vw var(--trg),
+      inset 0 0 0.8vw var(--trg);
+  }
+}
+
+/* omezený pohyb: bez konfet (řeší JS), pulzu a vjezdu – karta zůstane */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .card,
+  .frame,
+  .toast {
+    animation: none;
+  }
+}

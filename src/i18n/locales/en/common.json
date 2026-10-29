@@ -2518,7 +2518,8 @@
     "cardPlaceWord": "place",
     "legendOnWord": "no rank",
     "legendLeader": "new category leader",
-    "recentLeader": "★ = this passage made the runner the leader"
+    "recentLeader": "★ = this passage made the runner the leader",
+    "legendRecord": "course record (provisional)"
   },
   "ConfirmDialog": {
     "cancel": "Cancel",
@@ -2597,7 +2598,8 @@
     "note": "Live results are computed from the splits (1.3 km, 2.7 km) and the finish. Official results will be published after the race at <link>Results {year}</link>.",
     "footerStartlist": "Start list",
     "footerInstructions": "Instructions",
-    "copyright": "© Malá cena Velké Verandy"
+    "copyright": "© Malá cena Velké Verandy",
+    "legendRecord": "course record (provisional)"
   },
   "Leader": {
     "m1": "S1",
@@ -2614,6 +2616,32 @@
     "faster": "<b>{diff}</b> faster",
     "onlyTime": "only time so far {where}",
     "finLoc": "at the finish"
+  },
+  "Record": {
+    "newRecord": "NEW COURSE RECORD",
+    "newAbs": "NEW OVERALL COURSE RECORD",
+    "eqRecord": "COURSE RECORD EQUALLED",
+    "eqAbs": "OVERALL COURSE RECORD EQUALLED",
+    "prev": "previous record <b>{time}</b> · {who} ({year})",
+    "prevUnknown": "previous record <b>{time}</b>",
+    "faster": "{diff} faster",
+    "same": "same time",
+    "also": "+ also the {cat} category record (previous {time})",
+    "alsoEq": "+ also equals the {cat} category record ({time})",
+    "note": "provisional time · official after results check",
+    "notePlural": "provisional times · official after results check",
+    "summary": "{count} COURSE RECORDS AT ONCE",
+    "close": "tap to close",
+    "closeAria": "Close",
+    "toastFaster": "{diff} better than {time}",
+    "toastEq": "equals {time}",
+    "prelim": "provisional",
+    "more": "+ {count} more",
+    "badge": "CR",
+    "badgeEq": "= CR",
+    "badgeTitle": "course record (provisional)",
+    "badgeEqTitle": "course record equalled (provisional)",
+    "finalTitle": "course record: {cats}"
   },
   "Resultboard": {
     "brandMark": "V",
@@ -2660,7 +2688,8 @@
     "indexTitle": "Resultboard – finish area screens",
     "indexNote": "Open on a TV at the finish and switch the browser to full screen (F11). The screen refreshes on its own.",
     "indexTv": "TV {n}",
-    "indexHint": "Category split and other settings: admin → Race day → Live results."
+    "indexHint": "Category split and other settings: admin → Race day → Live results.",
+    "legendRecord": "course record (provisional)"
   },
   "ResultboardSettings": {
     "title": "Resultboard – finish area screens",

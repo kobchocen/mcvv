@@ -9,7 +9,10 @@ import {
   leaderBoxClass,
   leaderStyles,
 } from "@/components/molecules/leader-alert";
+import { RecordBadge, RecordOverlay } from "@/components/molecules/record-alert";
 import { useLeaderAlerts } from "@/hooks/use-leader-alerts";
+import { useRecordAlerts } from "@/hooks/use-record-alerts";
+import { useTrDemo } from "@/hooks/use-tr-demo";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
 import { useResultboardInfo } from "@/hooks/use-resultboard-info";
 import type { LeaderAlert } from "@/lib/live/leader-core";
@@ -109,6 +112,17 @@ export function McvvResultboard(props: Props) {
     enabled: config.leader.resultboard,
   });
 
+  const records = useRecordAlerts({
+    marks: data.tr,
+    updatedMs,
+    resetKey: `${data.year}|${props.test}`,
+    demo: useTrDemo(),
+  });
+  const catName = useMemo(() => {
+    const names = new Map(data.categories.map((c) => [c.id, c.name]));
+    return (id: string) => names.get(id) ?? id;
+  }, [data.categories]);
+
   useAutoReload(info.build, props.initialInfo.build, stale);
 
   return (
@@ -142,6 +156,12 @@ export function McvvResultboard(props: Props) {
             <span>
               <i className={s.lgLead} />
               <b className={leaderStyles.star}>★</b> {t("legendLeader")}
+            </span>
+          ) : null}
+          {records.badges.size ? (
+            <span>
+              <RecordBadge kind="tr" />
+              {t("legendRecord")}
             </span>
           ) : null}
           <span>{t.rich("legendRank", { b: (c) => <b className={s.lgB}>{c}</b> })}</span>
@@ -209,6 +229,7 @@ export function McvvResultboard(props: Props) {
                   graceS={data.dnsGraceS}
                   config={config}
                   alert={alerts.get(c.id)}
+                  badges={records.badges}
                 />
               ))}
             </div>
@@ -218,6 +239,12 @@ export function McvvResultboard(props: Props) {
       {config.partners.show ? (
         <PartnerBar info={info} qrSvg={props.qrSvg} qrLabel={props.qrLabel} />
       ) : null}
+      <RecordOverlay
+        batch={records.batch}
+        mode="board"
+        runner={(bib) => data.runners.find((r) => r.bib === bib)}
+        catName={catName}
+      />
     </div>
   );
 }
@@ -230,6 +257,7 @@ function CategoryBox({
   graceS,
   config,
   alert,
+  badges,
 }: Readonly<{
   category: OnlineCategory;
   runners: OnlineRunner[];
@@ -238,6 +266,7 @@ function CategoryBox({
   graceS: number;
   config: ResultboardConfig;
   alert: LeaderAlert | undefined;
+  badges: ReadonlyMap<number, "tr" | "eq">;
 }>) {
   const t = useTranslations("Resultboard");
   const state = onlineCategoryState(runners, now, graceS);
@@ -321,7 +350,10 @@ function CategoryBox({
             ) : null}
           </td>
           <td className={cx(s.bib, s.num)}>{r.bib}</td>
-          <td className={s.nm}>{r.name}</td>
+          <td className={s.nm}>
+            <RecordBadge kind={badges.get(r.bib)} />
+            {r.name}
+          </td>
           {timeCells(r, row.recent || isLeader, now)}
         </tr>
       );

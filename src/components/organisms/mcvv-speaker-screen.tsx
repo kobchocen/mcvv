@@ -9,7 +9,10 @@ import {
   leaderBoxClass,
   leaderStyles,
 } from "@/components/molecules/leader-alert";
+import { RecordBadge, RecordOverlay } from "@/components/molecules/record-alert";
 import { useLeaderAlerts } from "@/hooks/use-leader-alerts";
+import { useRecordAlerts } from "@/hooks/use-record-alerts";
+import { useTrDemo } from "@/hooks/use-tr-demo";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
 import { useResultboardInfo } from "@/hooks/use-resultboard-info";
 import { leaderPassages } from "@/lib/live/leader-core";
@@ -76,6 +79,12 @@ export function McvvSpeakerScreen({
     resetKey: `${snapshot.year}|${snapshot.test}|${leaderPoints.join()}`,
     points: leaderPoints,
     enabled: config.leader.speaker,
+  });
+  const records = useRecordAlerts({
+    marks: snapshot.tr,
+    updatedMs,
+    resetKey: `${snapshot.year}|${snapshot.test}`,
+    demo: useTrDemo(),
   });
   const [query, setQuery] = useState("");
   const [sel, setSel] = useState(0);
@@ -302,7 +311,10 @@ export function McvvSpeakerScreen({
       >
         <div className={s.cTop}>
           <span className={cx(s.cBibb, s.num)}>{r.bib}</span>
-          <span className={s.cName}>{r.name}</span>
+          <span className={s.cName}>
+            <RecordBadge kind={records.badges.get(r.bib)} />
+            {r.name}
+          </span>
           {badge}
         </div>
         <div className={s.cCat}>
@@ -345,6 +357,12 @@ export function McvvSpeakerScreen({
             <span>
               <i className={s.lgLead} />
               <b className={leaderStyles.star}>★</b> {t("legendLeader")}
+            </span>
+          ) : null}
+          {records.badges.size ? (
+            <span>
+              <RecordBadge kind="tr" />
+              {t("legendRecord")}
             </span>
           ) : null}
           <span>{t.rich("legendRank", { b: (c) => <b className={s.lgB}>{c}</b> })}</span>
@@ -447,6 +465,7 @@ export function McvvSpeakerScreen({
                         </td>
                         <td className={cx(s.bib, s.num)}>{row.runner.bib}</td>
                         <td className={s.nm} title={row.runner.name}>
+                          <RecordBadge kind={records.badges.get(row.runner.bib)} />
                           {row.runner.name}
                         </td>
                         {timeCells(row.runner, row.recent)}
@@ -512,6 +531,9 @@ export function McvvSpeakerScreen({
                           <b className={leaderStyles.star} data-testid="speaker-recent-leader">
                             ★{" "}
                           </b>
+                        ) : null}
+                        {p.point === "fin" ? (
+                          <RecordBadge kind={records.badges.get(p.runner.bib)} />
                         ) : null}
                         {p.runner.name}
                       </td>
@@ -613,6 +635,12 @@ export function McvvSpeakerScreen({
           {card ? renderCard(card) : null}
         </section>
       </main>
+      <RecordOverlay
+        batch={records.batch}
+        mode="speaker"
+        runner={(bib) => snapshot.runners.find((r) => r.bib === bib)}
+        catName={(id) => catById.get(id)?.name ?? id}
+      />
     </div>
   );
 }

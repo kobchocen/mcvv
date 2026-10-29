@@ -237,6 +237,7 @@ test("encodeOnline/decodeOnline round-trip the compact wire format", () => {
         late: null,
       },
     ],
+    tr: [],
   };
   const wire = encodeOnline(snapshot);
   assert.deepEqual(wire.r[0], [1, "Nováček Jan", "A", 1000, 300, null, null, 1, 150]);

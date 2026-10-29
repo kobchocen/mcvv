@@ -26,7 +26,7 @@ export const ONLINE_RESULTS_CACHE_CONTROL =
 /**
  * Snímek veřejných online výsledků: stejná data jako speaker (#188) + jestli číslo má
  * záznam stanice Start a štítek pozdního startu nad prahem #228. Jen data pro zobrazení –
- * žádné kluby, e-maily ani ID účtů. Jen čtení (test se tu neukončuje, viz `peekStoredTestRun`).
+ * žádné kluby, e-maily ani ID účtů či běžců (traťové rekordy počítá server). Jen čtení (test se tu neukončuje, viz `peekStoredTestRun`).
  *
  * Testovací běh (#186) se veřejně neukazuje vůbec (Q117): mezičasy, cíle a záznamy Startu
  * zapsané během testu se do snímku nedostanou a plánované starty jsou od ostré nuly, ne od
@@ -46,7 +46,7 @@ export async function loadOnlineSnapshot(
   const ctx = options.includeTest
     ? rawCtx
     : { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
-  const [{ categories, runners }, allStartChecks] = await Promise.all([
+  const [{ categories, runners, tr }, allStartChecks] = await Promise.all([
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
@@ -76,6 +76,7 @@ export async function loadOnlineSnapshot(
           : null,
       };
     }),
+    tr,
   };
 }
 

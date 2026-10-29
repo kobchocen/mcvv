@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { categoryRecord, recordChanges, recordEvolution } from "./records-core";
+import { categoryRecord, recordChanges, recordEvolution, recordSetters } from "./records-core";
 
 // ID: RRRR + 5. znak pohlaví (0–4 muž, 5–9 žena) + pořadí.
 const results = [
@@ -51,5 +51,15 @@ describe("category records (#129, legacy setkatrek.php)", () => {
       ),
       [{ id: "H", from: 1220, to: 1190 }],
     );
+  });
+});
+
+describe("record setters for /results/[year] (Q165)", () => {
+  it("lists improvements per year, not the first entry of a category", () => {
+    const setters = recordSetters([C, A], results);
+    assert.deepEqual(setters, [
+      { year: 2021, runnerId: "19700001", category: "C", time: 1050 },
+      { year: 2021, runnerId: "19950002", category: "A", time: 900 },
+    ]);
   });
 });

@@ -78,3 +78,27 @@ export function recordChanges(
   }
   return changes;
 }
+
+export type RecordSetter = { year: number; runnerId: string; category: string; time: number };
+
+/**
+ * Kdo v kterém ročníku překonal traťový rekord kategorie (odznak TR v /results/[rok], Q165).
+ * První zápis kategorie se nepočítá – tehdy nebylo co překonat.
+ */
+export function recordSetters(
+  categories: readonly (RecordCategory & { name?: string })[],
+  results: readonly RecordResult[],
+): RecordSetter[] {
+  const out: RecordSetter[] = [];
+  for (const category of categories) {
+    for (const step of recordEvolution(category, results).slice(1)) {
+      out.push({
+        year: step.year,
+        runnerId: step.runnerId,
+        category: category.id,
+        time: step.time,
+      });
+    }
+  }
+  return out;
+}

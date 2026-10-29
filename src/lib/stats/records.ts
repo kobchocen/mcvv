@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
+import { clearRecordBaselines } from "@/lib/live/records-live";
 
 import { recordChanges, type RecordChange } from "./records-core";
 
@@ -19,5 +20,7 @@ export async function recalculateCategoryRecords(db: Db = prisma): Promise<Recor
   for (const change of changes) {
     await db.category.update({ where: { id: change.id }, data: { record: change.to } });
   }
+  // živé TR (držitel, rok) se na téhle replice načtou znovu; ostatní do 10 min
+  clearRecordBaselines();
   return changes;
 }

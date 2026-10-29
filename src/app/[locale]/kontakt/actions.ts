@@ -13,6 +13,7 @@ import {
 } from "@/lib/contact/guard";
 import { sendContactMessage } from "@/lib/contact/send";
 import { env } from "@/lib/env";
+import { clientIp as proxyClientIp } from "@/lib/security/rate-limit";
 import { redirect } from "@/i18n/routing";
 import { normalizeMessageBody, subjectFromBody } from "@/lib/messages/core";
 import { createGeneralThread } from "@/lib/messages/service";
@@ -25,9 +26,7 @@ export type ContactFormState = {
 };
 
 async function clientIp(): Promise<string> {
-  const list = await headers();
-  const forwarded = list.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || list.get("x-real-ip") || "unknown";
+  return proxyClientIp(await headers()) ?? "unknown";
 }
 
 export async function submitContact(

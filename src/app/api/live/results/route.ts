@@ -3,16 +3,18 @@ import type { NextRequest } from "next/server";
 import { NO_STORE } from "@/lib/http/no-store";
 import { ONLINE_RESULTS_CACHE_CONTROL, onlineResultsCache } from "@/lib/live/online-results";
 import { etagMatches } from "@/lib/live/speaker-cache";
-import { clientIp, createRateLimiter } from "@/lib/security/rate-limit";
+import { env } from "@/lib/env";
+import { clientIp, createRateLimiter, liveResultsRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Veřejný backstop proti jednomu agresivnímu klientovi (v paměti repliky, pevné okno 1 min).
- * Záložka se ptá nejvýš jednou za 5 s (12 / min), takže 3000 / min nechá projít ~250 diváků
- * za jednou NAT (Wi-Fi v cíli, CGNAT operátora). Odpověď jde z paměti, DB tím nezatíží.
+ * Záložka se ptá nejvýš jednou za 5 s (12 / min), takže výchozích 12000 / min nechá projít
+ * ~1000 diváků za jednou NAT (mobilní CGNAT operátora, Wi-Fi zázemí). Odpověď jde z paměti
+ * (většinou 304), DB tím nezatíží. LIVE_RESULTS_RATE_LIMIT mění limit (0 = vypnuto).
  */
-const limiter = createRateLimiter({ limit: 3000 });
+const limiter = createRateLimiter({ limit: liveResultsRateLimit(env.LIVE_RESULTS_RATE_LIMIT) });
 
 /**
  * Data veřejných online výsledků (náhrada OFeed): stejný mechanismus jako speaker (#188) –

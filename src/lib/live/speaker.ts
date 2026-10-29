@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db/client";
 
-import { getRaceContext, getStations } from "./race-context";
+import { getRaceContext, getStations, type RaceContext } from "./race-context";
 import { createBodyCache } from "./speaker-cache";
-import type { SpeakerSnapshot } from "./speaker-core";
+import type { SpeakerCategory, SpeakerRunner, SpeakerSnapshot } from "./speaker-core";
 import { startInstant } from "./start-time";
-import { FINISH_SPLIT } from "./stations";
+import { FINISH_SPLIT, type Station } from "./stations";
 import { getActiveTestRun } from "./test-run";
 
 /** Jak dlouho sdílí všechny obrazovky jeden snímek z DB (polling klienta je 5 s). */
@@ -21,6 +21,23 @@ export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnap
     getStations(),
     getActiveTestRun(now),
   ]);
+  const { categories, runners } = await loadRaceRunners(ctx, stations);
+  return {
+    year: ctx.year,
+    test: testRun !== null,
+    categories: categories.map((c) => ({ id: c.id, name: c.name, sex: c.sex })),
+    runners,
+  };
+}
+
+/**
+ * Kategorie (pořadí webu) a startovka ročníku s plánovaným startem a časy M1 / M2 / Cíl –
+ * společný základ speakera (#188) a veřejných online výsledků. Jen čtení.
+ */
+export async function loadRaceRunners(
+  ctx: RaceContext,
+  stations: readonly Station[],
+): Promise<{ categories: SpeakerCategory[]; runners: SpeakerRunner[] }> {
   const [categories, starts, splits] = await Promise.all([
     prisma.category.findMany({
       orderBy: { sort: "asc" },
@@ -60,12 +77,7 @@ export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnap
     start: Math.round(startInstant(ctx.zero, s.bib, ctx.intervalS).getTime() / 1000),
     ...(times.get(s.bib) ?? { m1: null, m2: null, fin: null }),
   }));
-  return {
-    year: ctx.year,
-    test: testRun !== null,
-    categories: categories.map((c) => ({ id: c.id, name: c.name, sex: c.sex })),
-    runners,
-  };
+  return { categories, runners };
 }
 
 /** Sdílená cache snímku na replice (viz `createBodyCache`). */

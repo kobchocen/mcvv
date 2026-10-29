@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import { clockSample, pickOffset } from "@/lib/live/queue-core";
+import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
 import {
   buildSearchIndex,
   byCategory,
@@ -25,12 +25,6 @@ import {
 
 import s from "./mcvv-speaker-screen.module.css";
 
-/** Interval dotazu na data (Q73: polling s ETag/304, bez SSE). */
-const POLL_MS = 5000;
-/** Bez úspěšné odpovědi déle než tohle → červená tečka „bez spojení“. */
-const STALE_MS = 15_000;
-const CLOCK_SYNC_MS = 60_000;
-
 type Props = Readonly<{
   initial: SpeakerSnapshot;
   initialEtag: string;
@@ -48,91 +42,19 @@ const u = (rem: number) => `calc(${rem} * var(--u))`;
  */
 export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) {
   const t = useTranslations("Speaker");
-  const [snapshot, setSnapshot] = useState(initial);
-  const [offset, setOffset] = useState<number | null>(null);
-  const [nowMs, setNowMs] = useState(serverNowMs);
-  const [updatedMs, setUpdatedMs] = useState(serverNowMs);
+  const { snapshot, nowMs, updatedMs, stale } = useLiveSnapshot(
+    "/api/live/speaker",
+    initial,
+    initialEtag,
+    serverNowMs,
+  );
   const [query, setQuery] = useState("");
   const [sel, setSel] = useState(0);
   const [cardBib, setCardBib] = useState<number | null>(null);
-  const etagRef = useRef(initialEtag);
-  const offsetRef = useRef<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const correctedNow = useCallback(() => Date.now() + offsetRef.current, []);
-
-  // korekce hodin televize/notebooku proti serveru (#187)
-  useEffect(() => {
-    // do první synchronizace odhad podle času vykreslení na serveru
-    offsetRef.current = serverNowMs - Date.now();
-    const samples: { offset: number; rtt: number }[] = [];
-    const sync = async () => {
-      try {
-        const sentAt = Date.now();
-        const response = await fetch("/api/live/clock", { cache: "no-store" });
-        const receivedAt = Date.now();
-        const body = (await response.json()) as { now: number };
-        samples.push(clockSample(sentAt, receivedAt, body.now));
-        if (samples.length > 5) samples.shift();
-        const best = pickOffset(samples);
-        if (best !== null) {
-          offsetRef.current = best;
-          setOffset(best);
-        }
-      } catch {
-        // bez spojení – zůstává poslední offset
-      }
-    };
-    void sync();
-    const id = window.setInterval(sync, CLOCK_SYNC_MS);
-    return () => window.clearInterval(id);
-  }, [serverNowMs]);
-
-  // tik hodin zarovnaný na celé sekundy
-  useEffect(() => {
-    let timer = 0;
-    const tick = () => {
-      const now = correctedNow();
-      setNowMs(now);
-      timer = window.setTimeout(tick, 1000 - (now % 1000) + 5);
-    };
-    tick();
-    return () => window.clearTimeout(timer);
-  }, [correctedNow, offset]);
-
-  // polling dat s If-None-Match
-  useEffect(() => {
-    let timer = 0;
-    let stopped = false;
-    const poll = async () => {
-      try {
-        const response = await fetch("/api/live/speaker", {
-          cache: "no-store",
-          headers: { "If-None-Match": etagRef.current },
-        });
-        if (response.status === 200) {
-          const body = (await response.json()) as SpeakerSnapshot;
-          etagRef.current = response.headers.get("ETag") ?? "";
-          setSnapshot(body);
-          setUpdatedMs(correctedNow());
-        } else if (response.status === 304) {
-          setUpdatedMs(correctedNow());
-        }
-      } catch {
-        // bez spojení – zkusí to znovu za 5 s
-      }
-      if (!stopped) timer = window.setTimeout(poll, POLL_MS);
-    };
-    timer = window.setTimeout(poll, POLL_MS);
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
-  }, [correctedNow]);
-
   const now = Math.floor(nowMs / 1000);
-  const stale = nowMs - updatedMs > STALE_MS;
   const grouped = useMemo(() => byCategory(snapshot.runners), [snapshot]);
   const catById = useMemo(
     () => new Map(snapshot.categories.map((c) => [c.id, c])),

@@ -3,8 +3,12 @@ import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPlaceholderPage, type McvvHomepageContent } from "@/components/templates";
+import { withOnlineResultsLink } from "@/components/templates/mcvv-homepage-template";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
+import { getOfeedSettings, onlineResultsOverrideUrl } from "@/lib/ofeed/settings";
+import { raceStartFor, resolveHeroPhase } from "@/lib/race/phase";
+import { getSiteSettings } from "@/lib/settings/site";
 import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -37,11 +41,40 @@ export default async function CurrentResultsPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const copy = await getTranslations({ locale, namespace: "ResultsCurrent" });
+  const brand = home.raw("brand") as McvvHomepageContent["brand"];
+  let nav = home.raw("nav") as McvvHomepageContent["nav"];
+
+  // V den závodu (od startu do zveřejnění výsledků) banner na online výsledky (Q116).
+  const raceDay =
+    resolveHeroPhase({
+      now: new Date(),
+      raceStart: raceStartFor(raceYear.raceDate, raceYear.year),
+      startlistPublished: true,
+      resultsCount: count,
+    }) === "C";
+  let banner = null;
+  if (raceDay) {
+    const [site, ofeed] = await Promise.all([
+      getSiteSettings(),
+      getOfeedSettings().catch(() => null),
+    ]);
+    const override = onlineResultsOverrideUrl(site.onlineResultsUrl, ofeed);
+    const label = home("hero.onlineResultsCta");
+    nav = withOnlineResultsLink(nav, label);
+    banner = {
+      title: copy("liveTitle"),
+      text: copy("liveText"),
+      label,
+      href: override ?? "/vysledky/online",
+      external: override !== null,
+    };
+  }
 
   return (
     <McvvPlaceholderPage
-      brand={home.raw("brand") as McvvHomepageContent["brand"]}
-      nav={home.raw("nav") as McvvHomepageContent["nav"]}
+      brand={brand}
+      nav={nav}
+      banner={banner}
       eyebrow={copy("eyebrow", { n: editionNumber(raceYear) })}
       title={copy("title")}
       status={copy("status")}

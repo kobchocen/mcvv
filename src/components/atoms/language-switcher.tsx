@@ -88,6 +88,13 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       router.replace({ pathname, params: { id: String(params.id ?? "") } }, { locale: nextLocale });
       return;
     }
+    if (pathname === "/vysledky/online/[kategorie]") {
+      router.replace(
+        { pathname, params: { kategorie: String(params.kategorie ?? "") } },
+        { locale: nextLocale },
+      );
+      return;
+    }
     if (pathname === "/admin/prihlasky/[rok]/[id]") {
       router.replace(
         {

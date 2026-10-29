@@ -10,6 +10,7 @@ import {
   parseEventId,
   parsePassword,
   passwordExpiresAt,
+  onlineResultsOverrideUrl,
   resolveOnlineResultsUrl,
   settingsFromRows,
 } from "./settings-core";
@@ -102,4 +103,19 @@ test("profile helpers", () => {
   assert.ok(isOfeedUrl("https://www.orienteerfeed.com/x"));
   assert.ok(!isOfeedUrl("https://orienteerfeed.com.evil.cz/"));
   assert.ok(!isOfeedUrl("nonsense"));
+});
+
+test("online results override: only a manual URL, OFeed URL hidden in the test profile", () => {
+  assert.equal(onlineResultsOverrideUrl(null, { profile: "live" }), null);
+  assert.equal(onlineResultsOverrideUrl("https://x.cz/", { profile: "live" }), "https://x.cz/");
+  assert.equal(onlineResultsOverrideUrl("https://x.cz/", { profile: "test" }), "https://x.cz/");
+  assert.equal(
+    onlineResultsOverrideUrl("https://orienteerfeed.com/events/abc", { profile: "test" }),
+    null,
+  );
+  assert.equal(
+    onlineResultsOverrideUrl("https://orienteerfeed.com/events/abc", { profile: "live" }),
+    "https://orienteerfeed.com/events/abc",
+  );
+  assert.equal(onlineResultsOverrideUrl("https://x.cz/", null), "https://x.cz/");
 });

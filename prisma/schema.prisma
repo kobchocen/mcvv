@@ -335,6 +335,8 @@ model Split {
   author  String?   @map("autor") @db.VarChar(8)
 
   @@id([bib, year, split])
+  /// Živé výstupy (speaker, online výsledky, OFeed) čtou mezičasy celého ročníku.
+  @@index([year])
   @@map("mcvv_split")
 }
 

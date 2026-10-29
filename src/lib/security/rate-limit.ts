@@ -82,9 +82,17 @@ export function bezecRateLimitKey(request: {
   if (dest && dest !== "document") return null;
   if (request.headers.get("next-router-prefetch") || request.headers.get("purpose") === "prefetch")
     return null;
+  return clientIp(request.headers);
+}
+
+/**
+ * Client IP from proxy headers, or null when there is none (never lump users together).
+ * Behind Cloudflare `cf-connecting-ip` is the visitor; else the first X-Forwarded-For hop.
+ */
+export function clientIp(headers: { get(name: string): string | null }): string | null {
   const ip =
-    request.headers.get("cf-connecting-ip")?.trim() ||
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip")?.trim();
+    headers.get("cf-connecting-ip")?.trim() ||
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headers.get("x-real-ip")?.trim();
   return ip || null;
 }

@@ -69,6 +69,9 @@ export type HeroButton =
       count?: number;
       external?: false;
     }
+  /** Vlastní veřejné online výsledky (Q116). */
+  | { kind: "onlineResults"; href: "/vysledky/online"; external?: false; count?: undefined }
+  /** Nouzová ručně zadaná URL (Q116). */
   | { kind: "onlineResults"; href: string; external: true; count?: undefined };
 
 export type HeroButtons = {
@@ -82,6 +85,7 @@ export type HeroButtonsInput = {
   entriesCount: number;
   startlistCount: number;
   resultsCount: number;
+  /** Nouzová ručně zadaná URL online výsledků; null = vlastní `/vysledky/online`. */
   onlineResultsUrl: string | null;
 };
 
@@ -105,7 +109,7 @@ export function heroButtons({
       return {
         primary: onlineResultsUrl
           ? { kind: "onlineResults", href: onlineResultsUrl, external: true }
-          : { kind: "results", href: "/vysledky" },
+          : { kind: "onlineResults", href: "/vysledky/online" },
         secondary: instructions,
         showCountdown: false,
       };

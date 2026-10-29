@@ -40,6 +40,8 @@ import { dismissConflict, resolveConflict } from "./ingest";
 import {
   getRaceContext,
   getStations,
+  LIVE_DNS_GRACE_FALLBACK_KEY,
+  LIVE_DNS_GRACE_KEY,
   LIVE_START_OFFSET_LIMIT_KEY,
   LIVE_ZERO_OVERRIDE_KEY,
 } from "./race-context";
@@ -123,21 +125,29 @@ export async function publishNowAction(): Promise<void> {
   await back({ published: result.status });
 }
 
+/** Doba z formuláře (90, 2 min, 1:30 …) → sekundy do nastavení; prázdné pole klíč smaže. */
+async function saveDuration(formData: FormData, field: string, key: string): Promise<void> {
+  const raw = String(formData.get(field) ?? "")
+    .slice(0, 32)
+    .trim();
+  if (!raw) {
+    await prisma.setting.deleteMany({ where: { key } });
+    return;
+  }
+  const seconds = parseStartOffsetLimit(raw);
+  if (seconds === null) await back({ error: field });
+  await put(key, String(seconds));
+}
+
 export async function saveRaceSetupAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
   await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
-  // Práh odchylky na Startu (#187, Q80): prázdné = výchozí 2 min (klíč se smaže).
-  const startLimitRaw = String(formData.get("startLimit") ?? "")
-    .slice(0, 32)
-    .trim();
-  if (startLimitRaw) {
-    const startLimit = parseStartOffsetLimit(startLimitRaw);
-    if (startLimit === null) await back({ error: "startLimit" });
-    await put(LIVE_START_OFFSET_LIMIT_KEY, String(startLimit));
-  } else {
-    await prisma.setting.deleteMany({ where: { key: LIVE_START_OFFSET_LIMIT_KEY } });
-  }
+  // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
+  // prázdné = výchozí hodnota (klíč se smaže).
+  await saveDuration(formData, "startLimit", LIVE_START_OFFSET_LIMIT_KEY);
+  await saveDuration(formData, "dnsGrace", LIVE_DNS_GRACE_KEY);
+  await saveDuration(formData, "dnsGraceFallback", LIVE_DNS_GRACE_FALLBACK_KEY);
   // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
   if (await getActiveTestRun()) await back({ saved: "setup" });
   const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();

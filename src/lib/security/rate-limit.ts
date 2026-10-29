@@ -68,8 +68,7 @@ export function isBezecPath(pathname: string): boolean {
  * (`Sec-Fetch-Dest` other than "document" – Next.js link prefetches and client-side
  * navigations; a results page prefetches hundreds of profile links, and Next.js strips the
  * RSC/prefetch headers before the proxy sees them) or no client IP header (never lump users
- * together). Crawlers load documents, which count. Behind Cloudflare `cf-connecting-ip` is
- * the visitor; else the first X-Forwarded-For hop.
+ * together). Crawlers load documents, which count. The IP comes from `clientIp`.
  */
 export function bezecRateLimitKey(request: {
   pathname: string;
@@ -82,9 +81,48 @@ export function bezecRateLimitKey(request: {
   if (dest && dest !== "document") return null;
   if (request.headers.get("next-router-prefetch") || request.headers.get("purpose") === "prefetch")
     return null;
-  const ip =
-    request.headers.get("cf-connecting-ip")?.trim() ||
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip")?.trim();
+  return clientIp(request.headers);
+}
+
+/**
+ * Client IP from proxy headers, or null when there is none (never lump users together).
+ *
+ * The app sits directly behind Azure Container Apps ingress (Cloudflare only serves DNS,
+ * `proxied = false`), which appends the address it saw to X-Forwarded-For: only the
+ * rightmost hop comes from the ingress, anything to the left is whatever the client sent
+ * (https://learn.microsoft.com/azure/container-apps/ingress-overview#http-headers). Taking
+ * the first hop, or `cf-connecting-ip` that no proxy sets, let one client pick its own
+ * rate-limit key (bypass, or flood the key map until it is cleared). `cf-connecting-ip` is
+ * trusted only with `trustCloudflare` (TRUST_CF_CONNECTING_IP=true, once the Cloudflare
+ * proxy is on and the origin accepts traffic only from Cloudflare).
+ */
+export function clientIp(
+  headers: { get(name: string): string | null },
+  options: { trustCloudflare?: boolean } = {},
+): string | null {
+  const trustCloudflare = options.trustCloudflare ?? process.env.TRUST_CF_CONNECTING_IP === "true";
+  if (trustCloudflare) {
+    const cf = headers.get("cf-connecting-ip")?.trim();
+    if (cf) return cf;
+  }
+  const hops = (headers.get("x-forwarded-for") ?? "")
+    .split(",")
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  const ip = hops.at(-1) || headers.get("x-real-ip")?.trim();
   return ip || null;
+}
+
+/**
+ * Public online results /api/live/results: requests per minute per IP and replica from
+ * LIVE_RESULTS_RATE_LIMIT ("0" = off), default 12000. A visible tab polls every 5 s
+ * (12 / min), so the default lets ~1000 tabs through one NAT / mobile CGNAT address; the
+ * answer comes from the in-memory snapshot (mostly 304), so this only stops a runaway client.
+ */
+export const DEFAULT_LIVE_RESULTS_RATE_LIMIT = 12_000;
+
+export function liveResultsRateLimit(value: string | undefined): number {
+  if (value === undefined || value === "") return DEFAULT_LIVE_RESULTS_RATE_LIMIT;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : DEFAULT_LIVE_RESULTS_RATE_LIMIT;
 }

@@ -7,6 +7,8 @@
  * (epoch s), `m1`/`m2`/`fin` čas od startu (jako `mcvv_split.time`).
  */
 
+import type { TrMark } from "./records-live-core";
+
 export type PointKey = "m1" | "m2" | "fin";
 export const POINTS: readonly PointKey[] = ["m1", "m2", "fin"];
 
@@ -31,6 +33,8 @@ export type SpeakerSnapshot = {
   test: boolean;
   categories: SpeakerCategory[];
   runners: SpeakerRunner[];
+  /** Kdo dnes drží / vyrovnal traťový rekord (viz `records-live-core.ts`). */
+  tr: TrMark[];
 };
 
 export const TOP = 10;
@@ -72,19 +76,27 @@ export function elapsed(r: SpeakerRunner, now: number): number {
 }
 
 /**
- * Půjde vkládaný běžec `a` (úroveň ≤ úroveň `x`) nad `x`? Porovnání na nejvzdálenějším
- * SPOLEČNÉM bodu; při shodě zůstane výš ten, kdo je dál (tj. `x`). Kdo je na trati a jeho
- * živý čas už přesáhl čas soupeře na soupeřově nejdál dosaženém bodu, ho už nedožene → pod něj.
- * Když `x` na společném bodu záznam nemá (vynechaný mezičas), zůstává výš, protože je dál.
+ * Půjde vkládaný běžec `a` (úroveň ≤ úroveň `x`) nad `x`?
+ *
+ * 1. Na každém bodu, který `x` už má a `a` ještě ne (od dalšího bodu `a` až po nejdál dosažený
+ *    bod `x` – M1, M2 i cíl), má `a` čas nejméně svůj živý čas (teď − start). Jakmile živý čas
+ *    `a` přesáhl skutečný čas `x` na kterémkoli z těch bodů, `a` už `x` nedožene → zůstane pod
+ *    ním (Q155/t555u: Kapradina na M1 s živým 9:20 jde pod Bukvici s M2 9:07, i když má lepší M1
+ *    a Bukvice v cíli 13:33). Vynechaný mezičas `x` se přeskočí.
+ * 2. Jinak rozhoduje nejvzdálenější SPOLEČNÝ bod; při shodě zůstane výš ten, kdo je dál (`x`).
+ *    Když `x` na společném bodu záznam nemá (vynechaný mezičas), zůstává výš, protože je dál.
+ *
+ * Živý čas jen roste, takže každá dvojice se přehodí nejvýš jednou na bod – řádky neblikají.
  */
 export function beats(a: SpeakerRunner, x: SpeakerRunner, now: number): boolean {
   const la = level(a);
   const lx = level(x);
   const k = KEY_AT[Math.min(la, lx)];
   if (!k) return false;
-  if (lx > la) {
-    const xFurthest = x[KEY_AT[lx] as PointKey] as number;
-    if (elapsed(a, now) > xFurthest) return false;
+  const live = elapsed(a, now);
+  for (let l = la + 1; l <= lx; l += 1) {
+    const xv = x[KEY_AT[l] as PointKey];
+    if (xv != null && live > xv) return false;
   }
   const av = a[k];
   const xv = x[k];
@@ -376,8 +388,8 @@ export function formatDayTime(epochS: number): string {
 }
 
 /** Seskupí běžce podle kategorie. */
-export function byCategory(runners: readonly SpeakerRunner[]): Map<string, SpeakerRunner[]> {
-  const map = new Map<string, SpeakerRunner[]>();
+export function byCategory<T extends SpeakerRunner>(runners: readonly T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>();
   for (const r of runners) {
     const list = map.get(r.cat) ?? [];
     list.push(r);

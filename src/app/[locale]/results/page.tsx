@@ -10,7 +10,9 @@ import {
 } from "@/components/organisms/mcvv-results-table";
 import { pickSplits, yearHasSplits } from "@/lib/results/table";
 import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
-import { getClubResolver } from "@/lib/clubs/queries";
+import { getClubIndex } from "@/lib/clubs/cached";
+import { createClubResolver } from "@/lib/clubs/core";
+import { getResultYearCounts } from "@/lib/results/cached";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
@@ -50,14 +52,10 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   const isCs = locale === "cs";
 
   // All years with participant counts + basic top info for summary cards
-  const yearData = await prisma.result.groupBy({
-    by: ["year"],
-    _count: { runnerId: true },
-    orderBy: { year: "desc" },
-  });
+  const yearData = await getResultYearCounts();
 
   const years = yearData.map((y) => y.year);
-  const countMap = Object.fromEntries(yearData.map((y) => [y.year, y._count.runnerId]));
+  const countMap = Object.fromEntries(yearData.map((y) => [y.year, y.count]));
 
   // Default to latest or selected
   const defaultYear =
@@ -231,7 +229,8 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     empty: t("empty"),
   };
   // Club by id (#104): name of the edition; a merged id shows the main id's name.
-  const clubs = await getClubResolver();
+  // cached club names ("stats" tag, the same index as /kluby), not all of cis_klub per view
+  const clubs = createClubResolver(await getClubIndex());
   // Státní příslušnost (#200): vlaječka u zahraničních běžců.
   const nationalities = await loadNationalityMap(fullResults.map((r) => r.runnerId));
   const toRow = (r: ResultRow, rank: number | undefined, withCategory: boolean) => ({

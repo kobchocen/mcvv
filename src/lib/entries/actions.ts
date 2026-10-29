@@ -1,9 +1,10 @@
 "use server";
 
 import { touchRegistration } from "@/lib/entries/touch";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { formInt, formString } from "@/lib/admin/parse";
+import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { getSession } from "@/lib/auth/session";
 import { resolveClub } from "@/lib/entries/club";
 import { recordEntryChange } from "@/lib/entries/changes";
@@ -208,6 +209,7 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
 }
 
 export type AddRunnerState = {
@@ -296,6 +298,7 @@ export async function addNewRunner(
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
   return { ok: true };
 }
 
@@ -387,4 +390,5 @@ export async function removeRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
 }

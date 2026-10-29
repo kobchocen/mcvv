@@ -71,6 +71,17 @@ export async function getActiveTestRun(now = new Date()): Promise<TestRun | null
   return run;
 }
 
+/**
+ * Uložený testovací běh jen pro čtení (veřejné stránky) – i vypršelý, dokud ho plánovač nebo
+ * stránka pořadatele neuklidí (jeho data v DB ještě jsou) – a hranice dne závodu. Nic nemaže.
+ */
+export async function peekStoredTestRun(
+  now = new Date(),
+): Promise<{ run: TestRun | null; cutoff: Date }> {
+  const [run, { cutoff }] = await Promise.all([readStored(), cutoffFor(now)]);
+  return { run, cutoff };
+}
+
 /** Tick plánovače (OFeed, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
 export async function expireTestRunIfDue(now = new Date()): Promise<void> {
   await getActiveTestRun(now);

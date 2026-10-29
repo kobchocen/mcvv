@@ -12,6 +12,8 @@ export type PartnerFormValues = {
   category: number;
   order: number;
   active: boolean;
+  /** Q153: generální partner – pevné logo na resultboardu. */
+  general: boolean;
   description: string;
   logoType?: string | null;
   logoHash?: string | null;
@@ -30,6 +32,8 @@ export function McvvAdminPartnerForm({
     category: string;
     order: string;
     active: string;
+    general: string;
+    generalHint: string;
     description: string;
     save: string;
     uploadHint: string;
@@ -83,6 +87,18 @@ export function McvvAdminPartnerForm({
         <input type="checkbox" name="active" defaultChecked={values.active} className="size-4" />
         {copy.active}
       </label>
+      <div className="-mt-2 grid gap-1">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            name="general"
+            defaultChecked={values.general}
+            className="size-4"
+          />
+          {copy.general}
+        </label>
+        <p className="text-xs text-race-muted">{copy.generalHint}</p>
+      </div>
       <AdminField name="description" label={copy.description}>
         <Textarea
           id="description"

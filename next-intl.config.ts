@@ -17,6 +17,9 @@ export default defineRouting({
     "/zpravy/[id]": "/zpravy/[id]",
     "/results": "/results",
     "/vysledky": "/vysledky",
+    // veřejné online výsledky v den závodu (náhrada OFeed, Q116)
+    "/vysledky/online": "/vysledky/online",
+    "/vysledky/online/[kategorie]": "/vysledky/online/[kategorie]",
     "/statistiky": "/statistiky",
     "/statistiky/[slug]": "/statistiky/[slug]",
     "/bezec/[id]": "/bezec/[id]",
@@ -73,5 +76,8 @@ export default defineRouting({
     "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
     "/mezicasy/speaker": "/mezicasy/speaker",
+    // velké obrazovky v cíli – náhrada OFB (veřejné, bez přihlášení, Q134 / Q144)
+    "/resultboard": "/resultboard",
+    "/resultboard/[tv]": "/resultboard/[tv]",
   },
 });

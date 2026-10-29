@@ -6,6 +6,7 @@ import { McvvSpeakerScreen } from "@/components/organisms/mcvv-speaker-screen";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { canViewSpeakerScreen } from "@/lib/auth/roles";
 import { getSession } from "@/lib/auth/session";
+import { resultboardInfoCache, type ResultboardInfo } from "@/lib/live/resultboard";
 import { speakerCache } from "@/lib/live/speaker";
 import type { SpeakerSnapshot } from "@/lib/live/speaker-core";
 
@@ -51,13 +52,15 @@ export default async function SpeakerPage({ params }: PageProps) {
       </main>
     );
   }
-  const cached = await speakerCache.get();
+  const [cached, info] = await Promise.all([speakerCache.get(), resultboardInfoCache.get()]);
   return (
     <div className={robotoCondensed.variable}>
       <McvvSpeakerScreen
         initial={JSON.parse(cached.body) as SpeakerSnapshot}
         initialEtag={cached.etag}
         serverNowMs={new Date().getTime()}
+        initialInfo={JSON.parse(info.body) as ResultboardInfo}
+        initialInfoEtag={info.etag}
       />
     </div>
   );

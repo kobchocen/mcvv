@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
+import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { computeLineFee, paidAmount } from "@/lib/entries/fee";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
@@ -23,6 +24,7 @@ function revalidateRegistrations() {
   revalidatePath("/[locale]/prihlasky", "page");
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
 }
 
 async function refreshLineFees(year: number, id: number, email: string): Promise<void> {

@@ -208,6 +208,7 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 .ch {
   display: flex;
@@ -724,4 +725,31 @@
 .cFoot {
   font-size: calc(0.85 * var(--u));
   color: var(--dim);
+}
+
+/* upozornění „nový lídr“ (animace a banner viz molecules/leader-alert.module.css) */
+.cat[data-lead] .ch {
+  background: var(--gold);
+  color: #241a00;
+  border-bottom-color: var(--gold);
+  margin: calc(-0.3 * var(--u)) calc(-0.3 * var(--u)) 0;
+  padding: calc(0.3 * var(--u)) calc(0.45 * var(--u)) calc(0.15 * var(--u));
+  border-radius: calc(0.4 * var(--u)) calc(0.4 * var(--u)) 0 0;
+}
+.cat[data-lead] .ch .cnt,
+.cat[data-lead] .ch .cnt b {
+  color: #3a2c00;
+}
+.lgLead {
+  display: inline-block;
+  width: calc(0.9 * var(--u));
+  height: calc(0.9 * var(--u));
+  border: calc(0.16 * var(--u)) solid var(--gold);
+  border-radius: calc(0.2 * var(--u));
+  vertical-align: middle;
+  margin-right: calc(0.3 * var(--u));
+}
+.cat[data-lead] {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 calc(0.16 * var(--u)) var(--gold);
 }

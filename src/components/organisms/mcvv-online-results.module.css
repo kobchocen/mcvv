@@ -1,0 +1,1869 @@
+/* Veřejné online výsledky (náhrada OFeed) – port schváleného mockupu
+   ~/Downloads/mcvv-online-vysledky-mockup/v1. Barvy, písma a řádky jako speaker (#188).
+   Jednotka --u: 1rem na desktopu, 15/16 na mobilu (mockup mění velikost písma html). */
+.root {
+  --deep: oklch(0.13 0.03 150);
+  --forest: oklch(0.19 0.042 150);
+  --forest2: oklch(0.25 0.055 150);
+  --line: oklch(0.36 0.06 150);
+  --muted: oklch(0.8 0.035 145);
+  --dim: oklch(0.62 0.035 145);
+  --fg: oklch(0.98 0.008 145);
+  --accent: oklch(0.68 0.205 39);
+  --accent-hi: oklch(0.78 0.17 55);
+  --test: oklch(0.58 0.22 27);
+  --ok: oklch(0.78 0.19 145);
+  --run: oklch(0.82 0.11 225);
+  --gold: oklch(0.84 0.16 88);
+  --silver: oklch(0.85 0.01 250);
+  --bronze: oklch(0.68 0.12 55);
+  --grey: oklch(0.52 0.02 150);
+  --fo: var(--font-oswald), "Oswald", sans-serif;
+  --frc: var(--font-roboto-condensed), "Roboto Condensed", "Inter", system-ui, sans-serif;
+  color-scheme: dark;
+}
+.root * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.root {
+  --u: 1rem;
+  font-size: var(--u);
+  background: var(--deep);
+}
+.root {
+  background: var(--deep);
+  color: var(--fg);
+  font-family: var(--frc);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+.root b {
+  font-weight: 700;
+}
+.root button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.root .num {
+  font-variant-numeric: tabular-nums;
+}
+.root .top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--deep);
+  display: flex;
+  align-items: center;
+  gap: calc(1 * var(--u));
+  height: calc(3.6 * var(--u));
+  padding: 0 calc(1.2 * var(--u));
+  border-bottom: calc(0.08 * var(--u)) solid var(--line);
+}
+.root .brand {
+  display: flex;
+  align-items: center;
+  gap: calc(0.55 * var(--u));
+  flex: none;
+  white-space: nowrap;
+  text-decoration: none;
+  color: inherit;
+}
+.root .mark {
+  width: calc(2.3 * var(--u));
+  height: calc(2.3 * var(--u));
+  border-radius: calc(0.5 * var(--u));
+  background: var(--accent);
+  color: #fff;
+  font: 700 calc(1.4 * var(--u))/1 var(--fo);
+  display: grid;
+  place-items: center;
+}
+.root .bt {
+  font: 600 calc(0.95 * var(--u))/1.02 var(--fo);
+  letter-spacing: 0.04em;
+}
+.root .bt span {
+  display: block;
+  color: var(--accent);
+}
+.root .title {
+  font: 600 calc(1.45 * var(--u))/1 var(--fo);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.root .title small {
+  font: 500 calc(0.9 * var(--u)) var(--frc);
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-transform: none;
+  margin-left: calc(0.5 * var(--u));
+}
+.root .legend {
+  display: flex;
+  align-items: center;
+  gap: calc(0.9 * var(--u));
+  font-size: calc(0.88 * var(--u));
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.root .legend span {
+  display: flex;
+  align-items: center;
+  gap: calc(0.3 * var(--u));
+}
+.root .legend .lgB {
+  font-family: var(--fo);
+  color: var(--fg);
+}
+.root .legend .lgOk {
+  color: var(--ok);
+  font-family: var(--fo);
+}
+.root .lg-new {
+  display: inline-block;
+  width: calc(1.5 * var(--u));
+  height: calc(0.95 * var(--u));
+  border-radius: calc(0.2 * var(--u));
+  background: color-mix(in oklch, var(--accent) 38%, transparent);
+  border-left: calc(0.25 * var(--u)) solid var(--accent);
+}
+.root .spacer {
+  flex: 1;
+}
+.root .upd {
+  font-size: calc(0.9 * var(--u));
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.root .upd b {
+  color: var(--fg);
+}
+.root .upd .sub {
+  color: var(--dim);
+}
+.root .dot {
+  display: inline-block;
+  width: calc(0.6 * var(--u));
+  height: calc(0.6 * var(--u));
+  border-radius: 50%;
+  background: var(--ok);
+  margin-right: calc(0.3 * var(--u));
+  vertical-align: calc(0.05 * var(--u));
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.root .clock {
+  font: 600 calc(2.3 * var(--u))/1 var(--fo);
+  letter-spacing: 0.02em;
+}
+.root .iconbtn {
+  display: none;
+}
+.root .tabs {
+  position: sticky;
+  top: calc(3.6 * var(--u));
+  z-index: 25;
+  background: var(--deep);
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: calc(0.3 * var(--u));
+  padding: calc(0.55 * var(--u)) calc(1.2 * var(--u)) calc(0.55 * var(--u));
+  border-bottom: calc(0.08 * var(--u)) solid var(--line);
+}
+.root .tab {
+  display: flex;
+  align-items: center;
+  gap: calc(0.35 * var(--u));
+  height: calc(2.3 * var(--u));
+  padding: 0 calc(0.55 * var(--u));
+  flex: none;
+  border: calc(0.08 * var(--u)) solid var(--line);
+  border-radius: calc(0.4 * var(--u));
+  background: var(--forest);
+  color: var(--muted);
+  font: 500 calc(0.95 * var(--u))/1 var(--fo);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: relative;
+}
+.root .tab:hover {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+.root .tab .tc {
+  font: 500 calc(0.78 * var(--u))/1 var(--frc);
+  color: var(--dim);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.root .tab.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.root .tab.on .tc {
+  color: #fffc;
+}
+.root .tab.done:not(.on) {
+  border-color: color-mix(in oklch, var(--ok) 65%, transparent);
+}
+.root .tab .tok {
+  margin-right: calc(0.35 * var(--u));
+  color: var(--ok);
+  font-size: calc(0.85 * var(--u));
+}
+.root .tab.on .tok {
+  color: #fff;
+}
+.root .tab .tnew {
+  width: calc(0.5 * var(--u));
+  height: calc(0.5 * var(--u));
+  border-radius: 50%;
+  background: var(--accent-hi);
+  box-shadow: 0 0 0 calc(0.15 * var(--u)) color-mix(in oklch, var(--accent-hi) 35%, transparent);
+}
+.root .tab.on .tnew {
+  background: #fff;
+}
+.root .tabs .all {
+  display: none;
+}
+.root .msearch {
+  display: none;
+}
+.root .wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(28 * var(--u));
+  gap: calc(1 * var(--u));
+  padding: calc(1 * var(--u)) calc(1.2 * var(--u)) calc(1.5 * var(--u));
+  max-width: calc(120 * var(--u));
+  margin: 0 auto;
+  align-items: start;
+}
+.root .cat {
+  background: var(--forest);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: calc(0.5 * var(--u));
+  padding: calc(0.5 * var(--u)) calc(0.6 * var(--u)) calc(0.6 * var(--u));
+  min-width: 0;
+}
+.root .cat.done {
+  border-color: var(--ok);
+  box-shadow: inset 0 0 0 calc(0.06 * var(--u)) var(--ok);
+}
+.root .ch {
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.7 * var(--u));
+  padding: calc(0.1 * var(--u)) calc(0.3 * var(--u)) calc(0.35 * var(--u));
+  border-bottom: calc(0.12 * var(--u)) solid var(--accent);
+}
+.root .ch.f {
+  border-bottom-color: oklch(0.72 0.12 95);
+}
+.root .cat.done .ch {
+  background: oklch(0.42 0.11 145 / 0.55);
+  border-bottom-color: var(--ok);
+  margin: calc(-0.5 * var(--u)) calc(-0.6 * var(--u)) 0;
+  padding: calc(0.5 * var(--u)) calc(0.9 * var(--u)) calc(0.35 * var(--u));
+  border-radius: calc(0.45 * var(--u)) calc(0.45 * var(--u)) 0 0;
+}
+.root .ch h2 {
+  font: 600 calc(1.9 * var(--u))/1.1 var(--fo);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.root .cnt {
+  margin-left: auto;
+  font-size: calc(0.98 * var(--u));
+  color: var(--muted);
+  white-space: nowrap;
+}
+.root .cnt b {
+  color: var(--fg);
+  font-family: var(--fo);
+  font-weight: 600;
+}
+.root .cnt i {
+  font-style: normal;
+  color: var(--line);
+  margin: 0 calc(0.35 * var(--u));
+}
+.root .kbadge {
+  font: 600 calc(0.9 * var(--u))/1 var(--fo);
+  letter-spacing: 0.06em;
+  color: oklch(0.2 0.05 145);
+  background: var(--ok);
+  border-radius: calc(0.25 * var(--u));
+  padding: calc(0.2 * var(--u)) calc(0.4 * var(--u));
+  align-self: center;
+  white-space: nowrap;
+}
+.root .table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.root th {
+  font: 500 calc(0.8 * var(--u))/1 var(--frc);
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: right;
+  padding: calc(0.45 * var(--u)) calc(0.35 * var(--u)) calc(0.3 * var(--u));
+  white-space: nowrap;
+}
+.root th.l {
+  text-align: left;
+}
+.root th small {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--dim);
+  opacity: 0.8;
+  margin-left: calc(0.2 * var(--u));
+}
+.root td {
+  font-size: calc(1.12 * var(--u));
+  line-height: calc(2.05 * var(--u));
+  padding: 0 calc(0.35 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+.root td.rk,
+.root td.bib,
+.root td.t,
+.root td.fin,
+.root td.na,
+.root td.run,
+.root td.st,
+.root td.loss,
+.root td.vr {
+  font-family: var(--fo);
+  font-size: calc(1.15 * var(--u));
+  letter-spacing: 0.01em;
+}
+.root tbody tr.r:nth-child(even) td {
+  background: color-mix(in oklch, var(--forest2) 55%, transparent);
+}
+.root td.rk {
+  font-weight: 700;
+  color: var(--fg);
+}
+.root td.bib {
+  color: var(--muted);
+}
+.root td.nm {
+  text-align: left;
+  font-weight: 600;
+  padding-left: calc(0.6 * var(--u));
+}
+.root td.st {
+  color: var(--dim);
+  font-weight: 400;
+}
+.root td.t {
+  color: var(--muted);
+}
+.root td.t.cur {
+  color: var(--fg);
+  font-weight: 600;
+}
+.root td.fin {
+  color: var(--fg);
+  font-weight: 700;
+  font-size: calc(1.25 * var(--u));
+}
+.root td.na {
+  color: var(--line);
+}
+.root td.loss {
+  color: var(--dim);
+  font-weight: 400;
+}
+.root .runv {
+  display: inline-block;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--run);
+  border: calc(0.07 * var(--u)) dashed color-mix(in oklch, var(--run) 70%, transparent);
+  border-radius: calc(0.25 * var(--u));
+  padding: 0 calc(0.25 * var(--u));
+  line-height: calc(1.45 * var(--u));
+  font-size: calc(1.05 * var(--u));
+}
+.root .vrk {
+  display: inline-block;
+  min-width: calc(2.6 * var(--u));
+  text-align: center;
+  font: 500 calc(1.02 * var(--u))/calc(1.4 * var(--u)) var(--fo);
+  color: var(--run);
+  border: calc(0.08 * var(--u)) dashed color-mix(in oklch, var(--run) 55%, transparent);
+  border-radius: calc(0.3 * var(--u));
+  padding: 0 calc(0.3 * var(--u));
+}
+.root .vrk small {
+  font: 400 calc(0.72 * var(--u)) var(--frc);
+  color: var(--dim);
+  margin-right: calc(0.2 * var(--u));
+}
+.root .okc {
+  color: var(--ok);
+  font-size: 0.9em;
+  margin-right: calc(0.15 * var(--u));
+}
+.root tr.final td.rk {
+  color: var(--ok);
+}
+.root tr.on td.nm {
+  font-weight: 500;
+  color: color-mix(in oklch, var(--fg) 88%, var(--muted));
+}
+.root tr.new td {
+  background: color-mix(in oklch, var(--accent) 34%, transparent) !important;
+  color: #fff;
+}
+.root tr.new td:first-child {
+  box-shadow: inset calc(0.3 * var(--u)) 0 0 var(--accent-hi);
+}
+.root tr.new td.hit {
+  color: var(--accent-hi) !important;
+}
+.root tr.flash td {
+  animation: flash 1.2s ease-in-out 3;
+}
+@keyframes flash {
+  50% {
+    background: color-mix(in oklch, var(--run) 35%, transparent);
+  }
+}
+.root .chip {
+  display: inline-block;
+  font: 600 calc(0.72 * var(--u))/calc(1.15 * var(--u)) var(--frc);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: calc(0.22 * var(--u));
+  padding: 0 calc(0.32 * var(--u));
+  margin-left: calc(0.45 * var(--u));
+  vertical-align: calc(0.08 * var(--u));
+  white-space: nowrap;
+}
+.root .chip.late {
+  color: var(--accent-hi);
+  border: calc(0.07 * var(--u)) solid color-mix(in oklch, var(--accent-hi) 60%, transparent);
+}
+.root .chip.dnsc {
+  display: inline-block;
+  margin: 0;
+  color: var(--deep);
+  background: var(--grey);
+}
+.root tr.div td {
+  padding: calc(0.9 * var(--u)) calc(0.35 * var(--u)) calc(0.25 * var(--u));
+  line-height: calc(1 * var(--u));
+  background: none !important;
+}
+.root tr.div td div {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5 * var(--u));
+  font: 600 calc(0.8 * var(--u))/1 var(--frc);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--run);
+}
+.root tr.div td div::before {
+  content: "";
+  width: calc(0.8 * var(--u));
+  border-top: calc(0.08 * var(--u)) dashed currentColor;
+}
+.root tr.div td div::after {
+  content: "";
+  flex: 1;
+  border-top: calc(0.08 * var(--u)) dashed color-mix(in oklch, currentColor 55%, transparent);
+}
+.root tr.div td div b {
+  font-family: var(--fo);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+}
+.root tr.div.sm td {
+  padding-top: calc(0.35 * var(--u));
+}
+.root tr.div.wait td div {
+  color: var(--muted);
+}
+.root tr.div.dns td div {
+  color: var(--grey);
+}
+.root tr.w td.st {
+  color: var(--fg);
+  font-weight: 600;
+}
+.root tr.w td.nm {
+  font-weight: 500;
+  color: var(--muted);
+}
+.root td.ws {
+  text-align: left;
+  font-family: var(--frc);
+  font-size: calc(1 * var(--u));
+  color: var(--dim);
+}
+.root td.ws b {
+  font-family: var(--fo);
+  font-weight: 500;
+  color: var(--muted);
+  font-size: calc(1.08 * var(--u));
+}
+.root td.ws .pend {
+  color: var(--accent-hi);
+}
+.root tr.dnsr td {
+  color: var(--grey) !important;
+  font-weight: 400 !important;
+  background: none !important;
+}
+.root tr.dnsr td.nm {
+  text-decoration: none;
+}
+.root col.c-rk {
+  width: calc(4.2 * var(--u));
+}
+.root col.c-bib {
+  width: calc(3.4 * var(--u));
+}
+.root col.c-st {
+  width: calc(6.4 * var(--u));
+}
+.root col.c-t {
+  width: calc(5.4 * var(--u));
+}
+.root col.c-f {
+  width: calc(6.2 * var(--u));
+}
+.root col.c-l {
+  width: calc(5.4 * var(--u));
+}
+.root col.c-v {
+  width: calc(7.2 * var(--u));
+}
+.root .m2l {
+  display: none;
+}
+.root .aside {
+  display: flex;
+  flex-direction: column;
+  gap: calc(1 * var(--u));
+  position: sticky;
+  top: calc(7.4 * var(--u));
+}
+.root .box {
+  background: var(--forest);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: calc(0.5 * var(--u));
+  padding: calc(0.6 * var(--u)) calc(0.8 * var(--u)) calc(0.7 * var(--u));
+}
+.root .box h3 {
+  font: 600 calc(1.15 * var(--u))/1.1 var(--fo);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: calc(0.35 * var(--u));
+  border-bottom: calc(0.1 * var(--u)) solid var(--muted);
+  margin-bottom: calc(0.45 * var(--u));
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.5 * var(--u));
+}
+.root .box h3 small {
+  margin-left: auto;
+  font: 400 calc(0.8 * var(--u)) var(--frc);
+  color: var(--dim);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.root .sbox {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5 * var(--u));
+  height: calc(2.8 * var(--u));
+  border: calc(0.12 * var(--u)) solid var(--accent);
+  border-radius: calc(0.4 * var(--u));
+  background: var(--deep);
+  padding: 0 calc(0.7 * var(--u));
+  box-shadow: 0 0 0 calc(0.2 * var(--u)) color-mix(in oklch, var(--accent) 25%, transparent);
+}
+.root .sbox svg {
+  width: calc(1.2 * var(--u));
+  height: calc(1.2 * var(--u));
+  flex: none;
+  stroke: var(--accent);
+}
+.root .sbox input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: var(--fg);
+  font: 500 calc(1.15 * var(--u)) var(--frc);
+  caret-color: var(--accent-hi);
+}
+.root .sbox input::placeholder {
+  color: var(--dim);
+}
+.root .ac {
+  margin-top: calc(0.4 * var(--u));
+}
+.root .ac .it {
+  display: grid;
+  grid-template-columns: calc(2.8 * var(--u)) 1fr auto;
+  gap: calc(0.5 * var(--u));
+  align-items: center;
+  padding: calc(0.25 * var(--u)) calc(0.4 * var(--u));
+  border-radius: calc(0.3 * var(--u));
+  font-size: calc(1.02 * var(--u));
+  line-height: calc(1.5 * var(--u));
+  cursor: pointer;
+}
+.root .ac .it:hover {
+  background: color-mix(in oklch, var(--accent) 30%, transparent);
+}
+.root .ac .b {
+  font-family: var(--fo);
+  color: var(--muted);
+  text-align: right;
+}
+.root .ac .n {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.root .ac .n small {
+  display: block;
+  font-weight: 400;
+  color: var(--dim);
+  font-size: calc(0.85 * var(--u));
+  line-height: calc(1.1 * var(--u));
+}
+.root .ac .s {
+  color: var(--muted);
+  font-size: calc(0.9 * var(--u));
+  white-space: nowrap;
+  text-align: right;
+}
+.root .ac mark {
+  background: none;
+  color: var(--accent-hi);
+}
+.root .ac .none {
+  padding: calc(0.3 * var(--u)) calc(0.4 * var(--u));
+  color: var(--dim);
+  font-style: italic;
+}
+.root .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(0.45 * var(--u));
+}
+.root .stat {
+  background: var(--deep);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: calc(0.35 * var(--u));
+  padding: calc(0.35 * var(--u)) calc(0.55 * var(--u));
+}
+.root .stat b {
+  display: block;
+  font: 600 calc(1.7 * var(--u))/1.1 var(--fo);
+}
+.root .stat span {
+  font-size: calc(0.82 * var(--u));
+  color: var(--muted);
+}
+.root .stat.ok b {
+  color: var(--ok);
+}
+.root .stat.run b {
+  color: var(--run);
+}
+.root .stat.gr b {
+  color: var(--grey);
+}
+.root .meta {
+  margin-top: calc(0.5 * var(--u));
+  font-size: calc(0.85 * var(--u));
+  color: var(--dim);
+  line-height: 1.35;
+}
+.root .meta b {
+  color: var(--muted);
+  font-family: var(--fo);
+  font-weight: 500;
+}
+.root .lp td {
+  font-size: calc(1 * var(--u));
+  line-height: calc(1.75 * var(--u));
+  padding: 0 calc(0.2 * var(--u));
+}
+.root .lp td.lt {
+  color: var(--dim);
+  font-family: var(--fo);
+  text-align: left;
+  font-size: calc(0.95 * var(--u));
+}
+.root .lp td.nm {
+  padding-left: calc(0.3 * var(--u));
+}
+.root .lp td.c {
+  color: var(--muted);
+  text-align: left;
+  font-size: calc(0.9 * var(--u));
+  cursor: pointer;
+}
+.root .lp td.c:hover {
+  color: var(--accent-hi);
+}
+.root .pt {
+  display: inline-block;
+  min-width: calc(2.2 * var(--u));
+  text-align: center;
+  border-radius: calc(0.2 * var(--u));
+  font: 700 calc(0.82 * var(--u))/calc(1.1 * var(--u)) var(--fo);
+  padding: 0 calc(0.2 * var(--u));
+  background: var(--forest2);
+  color: var(--fg);
+}
+.root .pt.fin {
+  background: var(--accent);
+  color: #fff;
+}
+.root .medal {
+  display: inline-block;
+  min-width: calc(1.9 * var(--u));
+  text-align: center;
+  border-radius: calc(1 * var(--u));
+  font: 700 calc(0.95 * var(--u))/calc(1.2 * var(--u)) var(--fo);
+  padding: 0 calc(0.3 * var(--u));
+}
+.root .m1c {
+  background: var(--gold);
+  color: #2a2000;
+}
+.root .m2c {
+  background: var(--silver);
+  color: #1d2228;
+}
+.root .m3c {
+  background: var(--bronze);
+  color: #2a1600;
+}
+.root .mx {
+  color: var(--fg);
+  font-weight: 600;
+  font-family: var(--fo);
+}
+.root .note {
+  font-size: calc(0.82 * var(--u));
+  color: var(--dim);
+  line-height: 1.4;
+}
+.root .note a {
+  color: var(--accent-hi);
+}
+.root .footer {
+  padding: 0 calc(1.2 * var(--u)) calc(2 * var(--u));
+  max-width: calc(120 * var(--u));
+  margin: 0 auto;
+  font-size: calc(0.85 * var(--u));
+  color: var(--dim);
+}
+.root .footer a {
+  color: var(--muted);
+}
+.root .sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: #000a;
+  display: none;
+  align-items: flex-end;
+}
+.root .sheet.open {
+  display: flex;
+}
+.root .sheet .in {
+  width: 100%;
+  background: var(--forest);
+  border-top: calc(0.15 * var(--u)) solid var(--accent);
+  border-radius: calc(0.8 * var(--u)) calc(0.8 * var(--u)) 0 0;
+  padding: calc(0.8 * var(--u)) calc(0.8 * var(--u)) calc(1.4 * var(--u));
+}
+.root .sheet h4 {
+  font: 600 calc(1.1 * var(--u)) var(--fo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: calc(0.6 * var(--u));
+  display: flex;
+}
+.root .sheet h4 button {
+  margin-left: auto;
+  color: var(--muted);
+  font: 500 calc(1 * var(--u)) var(--frc);
+}
+.root .sheet .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(0.45 * var(--u));
+}
+.root .sheet .tab {
+  height: calc(2.9 * var(--u));
+  justify-content: space-between;
+  font-size: calc(0.98 * var(--u));
+}
+@media (max-width: 700px) {
+  .root {
+    --u: 0.9375rem;
+  }
+  .root .top {
+    height: calc(3.3 * var(--u));
+    padding: 0 calc(0.7 * var(--u));
+    gap: calc(0.55 * var(--u));
+  }
+  .root .bt,
+  .root .legend {
+    display: none;
+  }
+  .root .mark {
+    width: calc(2.1 * var(--u));
+    height: calc(2.1 * var(--u));
+    font-size: calc(1.25 * var(--u));
+  }
+  .root .title {
+    font-size: calc(1.25 * var(--u));
+  }
+  .root .title small {
+    display: block;
+    margin: calc(0.15 * var(--u)) 0 0;
+    font-size: calc(0.78 * var(--u));
+  }
+  .root .upd {
+    display: none;
+  }
+  .root .clock {
+    font-size: calc(1.75 * var(--u));
+    display: flex;
+    align-items: center;
+    gap: calc(0.35 * var(--u));
+  }
+  .root .clock .dot {
+    width: calc(0.5 * var(--u));
+    height: calc(0.5 * var(--u));
+  }
+  .root .iconbtn {
+    display: grid;
+    place-items: center;
+    width: calc(2.4 * var(--u));
+    height: calc(2.4 * var(--u));
+    border: calc(0.08 * var(--u)) solid var(--line);
+    border-radius: calc(0.4 * var(--u));
+    flex: none;
+  }
+  .root .iconbtn svg {
+    width: calc(1.15 * var(--u));
+    height: calc(1.15 * var(--u));
+    stroke: var(--fg);
+  }
+  .root .tabs {
+    top: calc(3.3 * var(--u));
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: calc(0.5 * var(--u)) calc(0.7 * var(--u));
+    gap: calc(0.35 * var(--u));
+    scroll-padding: 0 calc(3 * var(--u));
+  }
+  .root .tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .root .tab {
+    height: calc(2.25 * var(--u));
+    padding: 0 calc(0.65 * var(--u));
+    border-radius: calc(1.2 * var(--u));
+    font-size: calc(0.95 * var(--u));
+    flex: none;
+  }
+  .root .tabs .all {
+    display: grid;
+    position: sticky;
+    right: calc(-0.7 * var(--u));
+    margin-left: auto;
+    flex: none;
+    place-items: center;
+    width: calc(2.6 * var(--u));
+    height: calc(2.25 * var(--u));
+    border-radius: calc(1.2 * var(--u));
+    background: var(--forest2);
+    border: calc(0.08 * var(--u)) solid var(--muted);
+    box-shadow: calc(-0.8 * var(--u)) 0 calc(0.8 * var(--u)) var(--deep);
+  }
+  .root .tabs .all svg {
+    width: calc(1.1 * var(--u));
+    height: calc(1.1 * var(--u));
+    stroke: var(--fg);
+  }
+  .root .msearch {
+    display: none;
+    padding: calc(0.5 * var(--u)) calc(0.7 * var(--u)) 0;
+  }
+  .root .msearch.open {
+    display: block;
+  }
+  .root .wrap {
+    display: block;
+    padding: calc(0.6 * var(--u)) calc(0.35 * var(--u)) calc(1 * var(--u));
+  }
+  .root .aside {
+    display: none;
+  }
+  .root .cat {
+    padding: calc(0.35 * var(--u)) calc(0.25 * var(--u)) calc(0.4 * var(--u));
+    border-radius: calc(0.45 * var(--u));
+  }
+  .root .ch {
+    flex-wrap: wrap;
+    row-gap: calc(0.1 * var(--u));
+    padding: calc(0.1 * var(--u)) calc(0.3 * var(--u)) calc(0.3 * var(--u));
+  }
+  .root .ch h2 {
+    font-size: calc(1.45 * var(--u));
+    flex: 1 1 100%;
+  }
+  .root .cnt {
+    margin-left: 0;
+    font-size: calc(0.85 * var(--u));
+  }
+  .root .cat.done .ch {
+    margin: calc(-0.35 * var(--u)) calc(-0.25 * var(--u)) 0;
+    padding: calc(0.4 * var(--u)) calc(0.5 * var(--u)) calc(0.3 * var(--u));
+  }
+  .root .kbadge {
+    margin-left: auto;
+  }
+  .root th {
+    font-size: calc(0.68 * var(--u));
+    padding: calc(0.35 * var(--u)) calc(0.15 * var(--u)) calc(0.2 * var(--u));
+  }
+  .root td {
+    font-size: calc(1 * var(--u));
+    line-height: calc(1.3 * var(--u));
+    padding: calc(0.2 * var(--u)) calc(0.15 * var(--u));
+  }
+  .root td.rk,
+  .root td.bib,
+  .root td.t,
+  .root td.fin,
+  .root td.na,
+  .root td.run {
+    font-size: calc(1.02 * var(--u));
+  }
+  .root td.t,
+  .root td.run {
+    font-size: calc(0.95 * var(--u));
+  }
+  .root td.fin {
+    font-size: calc(1.08 * var(--u));
+  }
+  .root td.nm {
+    padding-left: calc(0.35 * var(--u));
+  }
+  .root .m2l {
+    display: block;
+    font: 400 calc(0.78 * var(--u))/calc(1.05 * var(--u)) var(--frc);
+    color: var(--dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .root .m2l b {
+    font-family: var(--fo);
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .root .m2l .vrk {
+    font-size: calc(0.8 * var(--u));
+    line-height: calc(0.95 * var(--u));
+    min-width: 0;
+    padding: 0 calc(0.2 * var(--u));
+  }
+  .root .m2l .late {
+    color: var(--accent-hi);
+  }
+  .root .runv {
+    font-size: calc(0.88 * var(--u));
+    line-height: calc(1.2 * var(--u));
+    padding: 0 calc(0.12 * var(--u));
+  }
+  .root .chip {
+    display: none;
+  }
+  .root .hide-m {
+    display: none;
+  }
+  .root col.c-rk {
+    width: calc(2.7 * var(--u));
+  }
+  .root col.c-bib {
+    width: calc(2.35 * var(--u));
+  }
+  .root col.c-t {
+    width: calc(3.05 * var(--u));
+  }
+  .root col.c-f {
+    width: calc(3.5 * var(--u));
+  }
+  .root tr.div td {
+    padding: calc(0.75 * var(--u)) calc(0.2 * var(--u)) calc(0.2 * var(--u));
+  }
+  .root tr.div td div {
+    font-size: calc(0.72 * var(--u));
+  }
+  .root td.ws {
+    font-size: calc(0.9 * var(--u));
+  }
+  .root tr.new td:first-child {
+    box-shadow: inset calc(0.22 * var(--u)) 0 0 var(--accent-hi);
+  }
+  .root .footer {
+    padding: 0 calc(0.8 * var(--u)) calc(2 * var(--u));
+  }
+}
+
+/* ---------- doplňky implementace (mimo mockup) ---------- */
+/* bez spojení */
+.root .dot.off {
+  background: var(--test);
+  animation: none;
+}
+.root .upd.off .sub {
+  color: var(--test);
+}
+.root a {
+  color: inherit;
+}
+.root .note a,
+.root .footer a {
+  text-decoration: none;
+}
+.root .note a {
+  color: var(--accent-hi);
+}
+.root .footer a {
+  color: var(--muted);
+}
+.root .sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.root .ac .it {
+  width: 100%;
+  text-align: left;
+}
+.root .lp td.c button {
+  color: inherit;
+  font: inherit;
+}
+.root td.empty {
+  text-align: left;
+  color: var(--dim);
+  padding: calc(1 * var(--u)) calc(0.6 * var(--u));
+}
+
+/* ---------- sledovaní běžci a kluby (#206, mockup follow-v2) ---------- */
+.root {
+  --star: oklch(0.86 0.17 90);
+}
+.root .fst {
+  display: inline-grid;
+  place-items: center;
+  width: calc(1.5 * var(--u));
+  height: calc(1.5 * var(--u));
+  margin: 0 calc(0.3 * var(--u)) 0 calc(-0.2 * var(--u));
+  border-radius: calc(0.3 * var(--u));
+  color: var(--dim);
+  font-size: calc(1.05 * var(--u));
+  line-height: 1;
+  vertical-align: calc(-0.15 * var(--u));
+  flex: none;
+}
+.root .fst:hover {
+  background: #fff1;
+  color: var(--star);
+}
+.root .fst.on {
+  color: var(--star);
+  text-shadow: 0 0 calc(0.5 * var(--u)) color-mix(in oklch, var(--star) 60%, transparent);
+}
+.root tr.r {
+  cursor: pointer;
+}
+.root tr.r.fol td {
+  background-color: color-mix(in oklch, var(--star) 9%, transparent);
+}
+.root tr.r.fol td.rk {
+  box-shadow: inset calc(0.22 * var(--u)) 0 0 var(--star);
+}
+.root .ac .it.star {
+  grid-template-columns: calc(1.6 * var(--u)) calc(2.8 * var(--u)) 1fr auto;
+  cursor: default;
+}
+.root .ac .it.star .fst {
+  margin: 0;
+}
+.root .ac .itb {
+  display: contents;
+  text-align: left;
+}
+.root .ac .it.clubhit .ci {
+  color: var(--run);
+  font-size: calc(1.1 * var(--u));
+  text-align: center;
+}
+.root .ac .it.clubhit .s {
+  color: var(--run);
+}
+.root .ac .it.clubhit {
+  grid-template-columns: calc(1.6 * var(--u)) calc(2.8 * var(--u)) 1fr auto;
+}
+.root .fcount {
+  color: var(--star);
+}
+.root .fl {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.15 * var(--u));
+}
+.root .fi {
+  display: grid;
+  grid-template-columns: calc(1.5 * var(--u)) calc(2.7 * var(--u)) 1fr auto calc(1.4 * var(--u));
+  gap: calc(0.35 * var(--u));
+  align-items: center;
+  padding: calc(0.22 * var(--u)) calc(0.3 * var(--u));
+  border-radius: calc(0.3 * var(--u));
+  font-size: calc(1 * var(--u));
+}
+.root .fi:hover {
+  background: #ffffff10;
+}
+.root .fi .fst {
+  margin: 0;
+}
+.root .fgo {
+  display: contents;
+  text-align: left;
+}
+.root .fib {
+  font-family: var(--fo);
+  color: var(--muted);
+  text-align: right;
+}
+.root .fin2 {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.root .fin2 small {
+  display: block;
+  font-weight: 400;
+  color: var(--dim);
+  font-size: calc(0.82 * var(--u));
+  line-height: calc(1 * var(--u));
+}
+.root .fis {
+  font-size: calc(0.92 * var(--u));
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+.root .fis b {
+  color: var(--fg);
+  font-family: var(--fo);
+  font-weight: 600;
+}
+.root .fis .fok {
+  color: var(--ok);
+}
+.root .fis .frun {
+  font-style: italic;
+  color: var(--run);
+}
+.root .fix {
+  color: var(--dim);
+  font-size: calc(1.1 * var(--u));
+  text-align: center;
+}
+.root .fix:hover {
+  color: var(--fg);
+}
+.root .fempty {
+  color: var(--dim);
+  font-size: calc(0.95 * var(--u));
+  line-height: 1.35;
+  padding: calc(0.2 * var(--u)) calc(0.1 * var(--u));
+}
+.root .fopt {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5 * var(--u));
+  margin-top: calc(0.55 * var(--u));
+  padding-top: calc(0.5 * var(--u));
+  border-top: calc(0.06 * var(--u)) solid var(--line);
+  font-size: calc(0.92 * var(--u));
+  color: var(--muted);
+  text-align: left;
+}
+.root .fsw {
+  width: calc(2.3 * var(--u));
+  height: calc(1.3 * var(--u));
+  border-radius: calc(1 * var(--u));
+  background: var(--forest2);
+  border: calc(0.06 * var(--u)) solid var(--line);
+  position: relative;
+  flex: none;
+}
+.root .fsw::after {
+  content: "";
+  position: absolute;
+  top: calc(0.12 * var(--u));
+  left: calc(0.15 * var(--u));
+  width: calc(0.95 * var(--u));
+  height: calc(0.95 * var(--u));
+  border-radius: 50%;
+  background: var(--muted);
+  transition: left 0.15s;
+}
+.root .fsw.on {
+  background: color-mix(in oklch, var(--star) 55%, var(--forest2));
+}
+.root .fsw.on::after {
+  left: calc(1.15 * var(--u));
+  background: #fff;
+}
+.root .fopt small {
+  display: block;
+  color: var(--dim);
+  font-size: calc(0.8 * var(--u));
+}
+.root .ftoasts {
+  position: fixed;
+  right: calc(2.4 * var(--u));
+  bottom: calc(3.2 * var(--u));
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.6 * var(--u));
+  width: calc(25 * var(--u));
+  pointer-events: none;
+}
+.root .ft {
+  pointer-events: auto;
+  position: relative;
+  background: color-mix(in oklch, var(--forest) 92%, black);
+  border: calc(0.08 * var(--u)) solid var(--line);
+  border-left: calc(0.35 * var(--u)) solid var(--star);
+  border-radius: calc(0.55 * var(--u));
+  padding: calc(0.65 * var(--u)) calc(0.9 * var(--u)) calc(0.7 * var(--u)) calc(1 * var(--u));
+  box-shadow: 0 calc(0.8 * var(--u)) calc(2.2 * var(--u)) #000c;
+  animation: ftin 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  overflow: hidden;
+}
+.root .ft.ftFin {
+  border-left-color: var(--accent-hi);
+}
+.root .ft.ftFinal {
+  border-left-color: var(--ok);
+  background: color-mix(in oklch, var(--ok) 14%, var(--forest));
+}
+.root .ft.ftInfo {
+  border-left-color: var(--muted);
+}
+.root .ftk {
+  font: 600 calc(0.8 * var(--u)) var(--fo);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--star);
+  display: flex;
+  gap: calc(0.4 * var(--u));
+  align-items: center;
+  padding-right: calc(1.2 * var(--u));
+}
+.root .ftFin .ftk {
+  color: var(--accent-hi);
+}
+.root .ftFinal .ftk {
+  color: var(--ok);
+}
+.root .ftInfo .ftk {
+  color: var(--fg);
+}
+.root .fttm {
+  margin-left: auto;
+  color: var(--dim);
+  letter-spacing: 0;
+  font: 400 calc(0.8 * var(--u)) var(--frc);
+}
+.root .ftwho {
+  font-size: calc(1.15 * var(--u));
+  font-weight: 700;
+  margin-top: calc(0.15 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.root .ftb {
+  font-family: var(--fo);
+  color: var(--star);
+  margin-right: calc(0.35 * var(--u));
+}
+.root .ftwho small {
+  font-weight: 400;
+  color: var(--dim);
+  font-size: calc(0.9 * var(--u));
+  margin-left: calc(0.35 * var(--u));
+}
+.root .ftbig {
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.6 * var(--u));
+  margin-top: calc(0.2 * var(--u));
+}
+.root .ftpt {
+  font: 600 calc(0.9 * var(--u)) var(--fo);
+  padding: calc(0.05 * var(--u)) calc(0.4 * var(--u));
+  border-radius: calc(0.25 * var(--u));
+  background: var(--forest2);
+  color: var(--muted);
+}
+.root .ftt {
+  font: 700 calc(2 * var(--u))/1 var(--fo);
+  font-variant-numeric: tabular-nums;
+}
+.root .ftt.small {
+  font-size: calc(1.4 * var(--u));
+  color: var(--muted);
+}
+.root .ftrk {
+  font: 700 calc(1.5 * var(--u))/1 var(--fo);
+  color: var(--fg);
+}
+.root .ftrk small {
+  font: 400 calc(0.85 * var(--u)) var(--frc);
+  color: var(--dim);
+  margin-left: calc(0.2 * var(--u));
+}
+.root .ftFinal .ftrk {
+  color: var(--ok);
+}
+.root .ftsub {
+  color: var(--muted);
+  font-size: calc(0.9 * var(--u));
+  margin-top: calc(0.25 * var(--u));
+}
+.root .ftsub .ftb {
+  margin-right: calc(0.25 * var(--u));
+}
+.root .ftx {
+  position: absolute;
+  top: calc(0.35 * var(--u));
+  right: calc(0.5 * var(--u));
+  color: var(--dim);
+  font-size: calc(1.1 * var(--u));
+}
+.root .ftbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(0.18 * var(--u));
+  background: var(--star);
+  opacity: 0.7;
+  transform-origin: left;
+  animation: ftbar linear forwards;
+}
+.root .ftFinal .ftbar {
+  background: var(--ok);
+}
+.root .ftFin .ftbar {
+  background: var(--accent-hi);
+}
+.root .ftInfo .ftbar {
+  background: var(--muted);
+}
+.root .frozen .ft {
+  animation: none;
+}
+.root .frozen .ftbar {
+  animation: none;
+  transform: scaleX(0.62);
+}
+.root .fbtn {
+  position: relative;
+}
+.root .fbtnStar {
+  color: var(--star);
+  font-size: calc(1.15 * var(--u));
+  line-height: 1;
+}
+.root .fcnt {
+  position: absolute;
+  top: calc(-0.35 * var(--u));
+  right: calc(-0.35 * var(--u));
+  min-width: calc(1.1 * var(--u));
+  height: calc(1.1 * var(--u));
+  border-radius: calc(0.6 * var(--u));
+  background: var(--star);
+  color: #1a1400;
+  font: 700 calc(0.7 * var(--u))/calc(1.1 * var(--u)) var(--fo);
+  text-align: center;
+  padding: 0 calc(0.2 * var(--u));
+}
+.root .fsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  background: #000a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.root .fpanel {
+  width: calc(34 * var(--u));
+  max-width: calc(100% - calc(2 * var(--u)));
+  background: var(--forest);
+  border: calc(0.08 * var(--u)) solid var(--line);
+  border-top: calc(0.2 * var(--u)) solid var(--star);
+  border-radius: calc(0.8 * var(--u));
+  padding: calc(1 * var(--u)) calc(1.2 * var(--u)) calc(1.3 * var(--u));
+  box-shadow: 0 calc(1.5 * var(--u)) calc(4 * var(--u)) #000c;
+  max-height: 85vh;
+  overflow: auto;
+}
+.root .fpanel h4 {
+  font: 600 calc(1.1 * var(--u)) var(--fo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: calc(0.6 * var(--u));
+  display: flex;
+  align-items: center;
+  gap: calc(0.4 * var(--u));
+}
+.root .fpanel h4 button {
+  margin-left: auto;
+  color: var(--muted);
+  font: 500 calc(1 * var(--u)) var(--frc);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.root .fpanel .fi {
+  grid-template-columns: calc(1.5 * var(--u)) calc(2.6 * var(--u)) 1fr auto calc(1.6 * var(--u));
+  padding: calc(0.45 * var(--u)) calc(0.2 * var(--u));
+  border-bottom: calc(0.06 * var(--u)) solid var(--line);
+  border-radius: 0;
+}
+.root .fpanel .fib {
+  color: var(--star);
+}
+.root .rdhd {
+  display: flex;
+  align-items: baseline;
+  gap: calc(0.5 * var(--u));
+}
+.root .rdb {
+  font: 700 calc(1.6 * var(--u)) var(--fo);
+  color: var(--muted);
+}
+.root .rdn {
+  font: 700 calc(1.4 * var(--u)) var(--frc);
+}
+.root .rclub {
+  display: flex;
+  align-items: center;
+  gap: calc(0.45 * var(--u));
+  width: 100%;
+  margin: calc(0.35 * var(--u)) 0 calc(0.1 * var(--u));
+  padding: calc(0.4 * var(--u)) calc(0.55 * var(--u));
+  border-radius: calc(0.4 * var(--u));
+  background: var(--forest2) !important;
+  border: calc(0.06 * var(--u)) solid var(--line) !important;
+  color: var(--fg);
+  text-align: left;
+}
+.root .rclub:hover {
+  border-color: var(--muted) !important;
+}
+.root .rcI {
+  color: var(--run);
+  font-size: calc(1.15 * var(--u));
+  line-height: 1;
+}
+.root .rcN {
+  font-weight: 700;
+  font-size: calc(1.05 * var(--u));
+}
+.root .rclub small {
+  margin-left: auto;
+  color: var(--run);
+  font-size: calc(0.85 * var(--u));
+  white-space: nowrap;
+}
+.root .rdcat {
+  color: var(--dim);
+  margin: calc(0.3 * var(--u)) 0 calc(0.6 * var(--u));
+}
+.root .rdpts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(0.4 * var(--u));
+  margin-bottom: calc(0.7 * var(--u));
+}
+.root .rdpts > div {
+  background: var(--forest2);
+  border-radius: calc(0.4 * var(--u));
+  padding: calc(0.4 * var(--u));
+  text-align: center;
+  font-size: calc(0.8 * var(--u));
+  color: var(--dim);
+}
+.root .rdpts b {
+  display: block;
+  font: 700 calc(1.35 * var(--u)) var(--fo);
+  color: var(--fg);
+}
+.root .rdpts .rdrun {
+  display: block;
+  font: italic 600 calc(1.35 * var(--u)) var(--fo);
+  color: var(--run);
+}
+.root .rdpts small {
+  display: block;
+  color: var(--muted);
+}
+.root .rdfollow {
+  width: 100%;
+  height: calc(3 * var(--u));
+  border-radius: calc(0.5 * var(--u));
+  font: 700 calc(1.1 * var(--u)) var(--frc) !important;
+  background: var(--star) !important;
+  color: #1a1400 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.5 * var(--u));
+}
+.root .rdfollow.on {
+  background: transparent !important;
+  color: var(--star) !important;
+  border: calc(0.1 * var(--u)) solid var(--star) !important;
+}
+.root .rdhint {
+  color: var(--dim);
+  font-size: calc(0.85 * var(--u));
+  margin-top: calc(0.5 * var(--u));
+  text-align: center;
+}
+.root .ftab {
+  border-color: color-mix(in oklch, var(--star) 55%, var(--line));
+}
+.root .vs {
+  color: var(--star);
+}
+.root .ftab.on {
+  background: color-mix(in oklch, var(--star) 80%, black);
+  border-color: var(--star);
+  color: #1a1400;
+}
+.root .ftab.on .vs {
+  color: #1a1400;
+}
+.root .ftab.on .tc {
+  color: #1a1400cc;
+}
+.root .ctab .vs {
+  color: var(--run);
+}
+.root .ctab.on {
+  background: color-mix(in oklch, var(--run) 45%, var(--forest2));
+  border-color: var(--run);
+}
+.root .ctab.on .vs {
+  color: #fff;
+}
+.root .vx {
+  margin-left: calc(0.2 * var(--u));
+  padding: 0 calc(0.2 * var(--u));
+  font-size: calc(1.1 * var(--u));
+  opacity: 0.8;
+}
+.root .vview.vclub h2 .vs {
+  color: var(--run);
+}
+.root .vbar {
+  display: flex;
+  align-items: center;
+  gap: calc(0.6 * var(--u));
+  flex-wrap: wrap;
+  padding: calc(0.45 * var(--u)) calc(0.2 * var(--u)) calc(0.2 * var(--u));
+}
+.root .vsub {
+  color: var(--dim);
+  font-size: calc(0.95 * var(--u));
+}
+.root .vacts {
+  margin-left: auto;
+  display: flex;
+  gap: calc(0.45 * var(--u));
+  flex-wrap: wrap;
+}
+.root .vbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(0.4 * var(--u));
+  height: calc(2.3 * var(--u));
+  padding: 0 calc(0.9 * var(--u));
+  border-radius: calc(0.45 * var(--u));
+  background: var(--star) !important;
+  color: #1a1400 !important;
+  font: 700 calc(1 * var(--u)) var(--frc) !important;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.root .vbtn small {
+  font: 400 calc(0.78 * var(--u)) var(--frc);
+  opacity: 0.75;
+  margin-left: calc(0.2 * var(--u));
+}
+.root .vbtn.on {
+  background: transparent !important;
+  color: var(--star) !important;
+  border: calc(0.1 * var(--u)) solid var(--star) !important;
+}
+.root .vbtn:disabled {
+  background: var(--forest2) !important;
+  color: var(--dim) !important;
+  cursor: not-allowed;
+}
+.root .vbtn.ghost {
+  background: transparent !important;
+  color: var(--muted) !important;
+  border: calc(0.08 * var(--u)) solid var(--line) !important;
+}
+.root tr.vcat .vk {
+  color: var(--fg) !important;
+  font-family: var(--fo) !important;
+  letter-spacing: 0.04em;
+}
+.root tr.vcat .vk:hover {
+  color: var(--accent-hi) !important;
+}
+.root tr.vcat .okc {
+  letter-spacing: 0.04em;
+  margin-left: calc(0.3 * var(--u));
+}
+.root .vview th small {
+  display: block;
+  font-size: calc(0.65 * var(--u));
+  color: var(--dim);
+  text-transform: none;
+}
+.root .vview td.vst {
+  text-align: left;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.root .vview td.vst .fok {
+  color: var(--ok);
+}
+.root td.vempty {
+  color: var(--dim);
+  text-align: left !important;
+  padding: calc(1.2 * var(--u)) calc(0.6 * var(--u)) !important;
+  font-size: calc(1 * var(--u));
+  line-height: 1.4;
+  white-space: normal;
+}
+@keyframes ftin {
+  from {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+}
+@keyframes ftdown {
+  from {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+}
+@keyframes ftbar {
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (max-width: 700px) {
+  .root .fst {
+    width: calc(1.3 * var(--u));
+    margin: 0 calc(0.15 * var(--u)) 0 calc(-0.25 * var(--u));
+    font-size: calc(1 * var(--u));
+  }
+  .root .ftoasts {
+    left: calc(0.5 * var(--u));
+    right: calc(0.5 * var(--u));
+    top: calc(0.5 * var(--u));
+    bottom: auto;
+    width: auto;
+  }
+  .root .ft {
+    padding: calc(0.5 * var(--u)) calc(0.7 * var(--u)) calc(0.55 * var(--u)) calc(0.8 * var(--u));
+    animation-name: ftdown;
+  }
+  .root .ftwho {
+    font-size: calc(1.02 * var(--u));
+  }
+  .root .ftt {
+    font-size: calc(1.55 * var(--u));
+  }
+  .root .ftrk {
+    font-size: calc(1.25 * var(--u));
+  }
+  .root .ftsub {
+    font-size: calc(0.82 * var(--u));
+  }
+  .root .ft + .ft {
+    display: none;
+  }
+  .root .fsheet {
+    align-items: flex-end;
+  }
+  .root .fpanel {
+    width: 100%;
+    max-width: none;
+    border: 0;
+    border-top: calc(0.15 * var(--u)) solid var(--star);
+    border-radius: calc(0.8 * var(--u)) calc(0.8 * var(--u)) 0 0;
+    padding: calc(0.8 * var(--u)) calc(0.9 * var(--u)) calc(1.4 * var(--u));
+    max-height: 80vh;
+  }
+  .root .fpanel .fi {
+    grid-template-columns: calc(1.4 * var(--u)) calc(2.4 * var(--u)) 1fr auto calc(1.6 * var(--u));
+  }
+  .root .vbar {
+    padding: calc(0.35 * var(--u)) calc(0.1 * var(--u)) calc(0.1 * var(--u));
+  }
+  .root .vsub {
+    font-size: calc(0.82 * var(--u));
+    width: 100%;
+  }
+  .root .vacts {
+    margin-left: 0;
+    width: 100%;
+  }
+  .root .vbtn {
+    height: calc(2.5 * var(--u));
+    flex: 1;
+    justify-content: center;
+    font-size: calc(0.95 * var(--u)) !important;
+    padding: 0 calc(0.6 * var(--u));
+  }
+  .root .vbtn small {
+    display: none;
+  }
+  .root .vbtn.ghost {
+    flex: none;
+  }
+  .root .ftab {
+    padding: 0 calc(0.6 * var(--u));
+  }
+}
+/* úzké telefony: hlavička s ★ a lupou se musí vejít (#206) */
+@media (max-width: 430px) {
+  .root .top {
+    gap: calc(0.4 * var(--u));
+    padding: 0 calc(0.5 * var(--u));
+  }
+  .root .title {
+    font-size: calc(1.1 * var(--u));
+  }
+  .root .clock {
+    font-size: calc(1.45 * var(--u));
+  }
+  .root .iconbtn {
+    width: calc(2.2 * var(--u));
+    height: calc(2.2 * var(--u));
+  }
+}
+@media (max-width: 380px) {
+  .root .title {
+    font-size: calc(0.98 * var(--u));
+  }
+  .root .clock {
+    font-size: calc(1.3 * var(--u));
+  }
+  .root .mark {
+    width: calc(1.9 * var(--u));
+    height: calc(1.9 * var(--u));
+  }
+}
+/* sledovaný běžec, který v letošních datech není (#206, Q187) */
+.root .funk {
+  color: var(--dim);
+}
+.root .funk .fst {
+  opacity: 0.45;
+}
+.root .funk .fib {
+  color: var(--dim);
+}
+.root .funk .fin2,
+.root tr.funk .nm {
+  font-style: italic;
+  color: var(--dim);
+}
+.root .funkSub {
+  color: var(--dim);
+  font-size: calc(0.85 * var(--u));
+  margin-right: calc(0.8 * var(--u));
+}
+.root .funkX {
+  display: inline-flex;
+  height: calc(1.9 * var(--u));
+  padding: 0 calc(0.7 * var(--u));
+  font-size: calc(0.85 * var(--u));
+  vertical-align: middle;
+}

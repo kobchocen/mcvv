@@ -3,13 +3,15 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminTokenForm } from "@/components/organisms/mcvv-admin-token-form";
+import { McvvResultboardSettings } from "@/components/organisms/mcvv-resultboard-settings";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireStaff } from "@/lib/admin/staff";
+import { canManageLiveResults } from "@/lib/auth/roles";
 import { formatDateTime } from "@/lib/format/date";
 import {
   createTokenAction,
@@ -25,7 +27,10 @@ import { listSplitmakers } from "@/lib/live/assignment";
 import { parseAssignment } from "@/lib/live/assignment-core";
 import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
+import { loadOnlineSnapshot } from "@/lib/live/online-results";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { loadBoardPartners, loadResultboardConfig } from "@/lib/live/resultboard";
+import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "@/lib/live/online-results-core";
 import {
   DEFAULT_START_OFFSET_LIMIT_S,
   formatStartOffsetLimit,
@@ -47,7 +52,7 @@ import {
   OFEED_BOARD_URL,
   ofeedPublicUrl,
   passwordExpiresAt,
-  resolveOnlineResultsUrl,
+  onlineResultsOverrideUrl,
 } from "@/lib/ofeed/settings";
 import { getSiteSettings } from "@/lib/settings/site";
 
@@ -76,10 +81,35 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const { saved, error, published, test, testError } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  const session = await requireStaff();
   const t = await getTranslations({ locale, namespace: "LiveResults" });
-  const tt = await getTranslations({ locale, namespace: "TestRun" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
+  // Q143: nastavení resultboardu smí i pořadatel – ten vidí jen tuto sekci.
+  if (!canManageLiveResults(session.role)) {
+    return (
+      <main className="px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-4xl gap-8">
+          <div>
+            <McvvAdminHomeLink label={admin("title")} />
+            <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
+              {t("title")}
+            </h1>
+            {error === "resultboard" ? (
+              <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+                {t("error.resultboard")}
+              </p>
+            ) : saved === "resultboard" ? (
+              <p role="status" className="mt-4 text-sm text-race-accent">
+                {t("resultboardSaved")}
+              </p>
+            ) : null}
+          </div>
+          <ResultboardSection locale={locale} />
+        </div>
+      </main>
+    );
+  }
+  const tt = await getTranslations({ locale, namespace: "TestRun" });
   // Test nejdřív: vypršelý se tady ukončí a uklidí, zbytek stránky pak čte čistý stav.
   const [testRun, testCutoff] = await Promise.all([getActiveTestRun(), getTestCutoff()]);
   const ctx = await getRaceContext();
@@ -96,7 +126,8 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const testBlocked = testRunBlocked(now, testCutoff);
   const testOfeedReady = ofeed.profile === "test" && Boolean(ofeed.profiles.test.eventId);
   const window = defaultTokenWindow(ctx.zero);
-  const publicOnlineUrl = resolveOnlineResultsUrl(site.onlineResultsUrl, ofeed);
+  // Q116: web vede na vlastní /vysledky/online, ručně zadaná URL je nouzové přebití
+  const onlineOverride = onlineResultsOverrideUrl(site.onlineResultsUrl, ofeed);
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
   const stationName = (code: string) =>
     code === FINISH_SPLIT ? t("finish") : (stations.find((s) => s.code === code)?.label ?? code);
@@ -132,6 +163,13 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             >
               {t("openStartCheck")}
             </Link>
+            <Link
+              href="/resultboard"
+              className="font-medium text-race-accent hover:underline"
+              data-testid="open-resultboard"
+            >
+              {t("openResultboard")}
+            </Link>
             <a
               href={OFEED_BOARD_URL}
               target="_blank"
@@ -157,7 +195,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             </p>
           ) : saved ? (
             <p role="status" className="mt-4 text-sm text-race-accent">
-              {t("saved")}
+              {t(saved === "resultboard" ? "resultboardSaved" : "saved")}
             </p>
           ) : published ? (
             <p role="status" className="mt-4 text-sm text-race-accent" data-testid="publish-result">
@@ -334,6 +372,8 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
           </details>
         </fieldset>
 
+        <ResultboardSection locale={locale} />
+
         <fieldset className={box}>
           <legend className={legend}>{t("ofeedTitle")}</legend>
           <p className="text-sm text-race-muted">{t("ofeedIntro")}</p>
@@ -469,12 +509,24 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             ) : null}
             <p className="text-race-muted">
               {t("onlineLink")}:{" "}
-              {publicOnlineUrl
-                ? publicOnlineUrl === site.onlineResultsUrl
-                  ? publicOnlineUrl
-                  : `${publicOnlineUrl} (${t("onlineLinkAuto")})`
-                : t("onlineLinkNone")}
-              {ofeed.profile === "test" ? ` ${t("onlineLinkHiddenTest")}` : ""}
+              {onlineOverride ? (
+                `${onlineOverride} (${t("onlineLinkOverride")})`
+              ) : (
+                <>
+                  <a
+                    href={`/${locale}/vysledky/online`}
+                    target="_blank"
+                    rel="noopener"
+                    className="underline underline-offset-2"
+                  >
+                    /{locale}/vysledky/online
+                  </a>{" "}
+                  ({t("onlineLinkOwn")})
+                </>
+              )}
+              {ofeed.profile === "test" && site.onlineResultsUrl && !onlineOverride
+                ? ` ${t("onlineLinkHiddenTest")}`
+                : ""}
             </p>
             <div className="flex flex-wrap gap-2">
               <form action={publishNowAction}>
@@ -650,6 +702,36 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               />
               <p className="text-xs text-race-muted">{t("startLimitHint")}</p>
             </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dnsGrace">{t("dnsGrace")}</Label>
+              <Input
+                id="dnsGrace"
+                name="dnsGrace"
+                type="text"
+                inputMode="text"
+                maxLength={32}
+                placeholder={formatStartOffsetLimit(DEFAULT_DNS_GRACE_S)}
+                defaultValue={formatStartOffsetLimit(ctx.dnsGraceS)}
+                data-testid="dns-grace-input"
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("dnsGraceHint")}</p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dnsGraceFallback">{t("dnsGraceFallback")}</Label>
+              <Input
+                id="dnsGraceFallback"
+                name="dnsGraceFallback"
+                type="text"
+                inputMode="text"
+                maxLength={32}
+                placeholder={formatStartOffsetLimit(DEFAULT_DNS_GRACE_FALLBACK_S)}
+                defaultValue={formatStartOffsetLimit(ctx.dnsGraceFallbackS)}
+                data-testid="dns-grace-fallback-input"
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("dnsGraceFallbackHint")}</p>
+            </div>
             <Button
               type="submit"
               className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
@@ -660,6 +742,57 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
         </fieldset>
       </div>
     </main>
+  );
+}
+
+/**
+ * Sekce „Resultboard – obrazovky v cíli“ (#188, Q143): odkazy na TV a nastavení. Počty
+ * běžců bere ze stejného snímku jako obrazovky (vč. testovacího běhu, ať náhled sedí).
+ */
+async function ResultboardSection({ locale }: Readonly<{ locale: Locale }>) {
+  const t = await getTranslations({ locale, namespace: "ResultboardSettings" });
+  const [config, partners, snapshot] = await Promise.all([
+    loadResultboardConfig(),
+    loadBoardPartners(),
+    loadOnlineSnapshot(new Date(), { includeTest: true }),
+  ]);
+  const counts = new Map<string, number>();
+  for (const r of snapshot.runners) counts.set(r.cat, (counts.get(r.cat) ?? 0) + 1);
+  const categories = snapshot.categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    entries: counts.get(c.id) ?? 0,
+  }));
+  return (
+    <fieldset className={box} id="resultboard" data-testid="resultboard-section">
+      <legend className={legend}>{t("title")}</legend>
+      <p className="text-sm leading-6 text-race-muted">{t("intro")}</p>
+      <p className="flex flex-wrap gap-4 text-sm">
+        <Link href="/resultboard" className="font-medium text-race-accent hover:underline">
+          {t("openIndex")}
+        </Link>
+        {config.monitors.map((m, i) => (
+          <Link
+            key={i}
+            href={{ pathname: "/resultboard/[tv]", params: { tv: String(i + 1) } }}
+            className="font-medium text-race-accent hover:underline"
+          >
+            {t("openTv", { n: i + 1, name: m.name })}
+          </Link>
+        ))}
+        <Link
+          href={{ pathname: "/resultboard/[tv]", params: { tv: "1" }, query: { test: "1" } }}
+          className="font-medium text-race-accent hover:underline"
+        >
+          {t("openTest")}
+        </Link>
+      </p>
+      <McvvResultboardSettings
+        initial={config}
+        categories={categories}
+        partners={partners.map((p) => ({ id: p.id, name: p.name, general: p.general }))}
+      />
+    </fieldset>
   );
 }
 

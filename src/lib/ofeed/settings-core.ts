@@ -111,6 +111,20 @@ export function resolveOnlineResultsUrl(
   return ofeed?.publicEventId ? ofeedPublicUrl(ofeed.publicEventId) : null;
 }
 
+/**
+ * Nouzový odkaz „Online výsledky“ (Q116): od #230 vede web na vlastní `/vysledky/online`;
+ * ručně zadaná URL v nastavení ho přebije (výpadek, jiný systém). Automatický odkaz na akci
+ * v OFeed se už nepoužívá – export do OFeed běží dál jako záloha. Při testovací akci OFeed
+ * se ručně zadaná URL na orienteerfeed.com skryje stejně jako v `resolveOnlineResultsUrl`.
+ */
+export function onlineResultsOverrideUrl(
+  manualUrl: string | null,
+  ofeed: Pick<OfeedSettings, "profile"> | null,
+): string | null {
+  if (!manualUrl) return null;
+  return ofeed?.profile === "test" && isOfeedUrl(manualUrl) ? null : manualUrl;
+}
+
 export function settingsFromRows(rows: { key: string; text: string }[]): OfeedSettings {
   const map = new Map(rows.map((row) => [row.key, row.text]));
   const read = (profile: OfeedProfile): OfeedProfileSettings => {

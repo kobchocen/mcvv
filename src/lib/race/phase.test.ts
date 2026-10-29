@@ -105,7 +105,7 @@ describe("heroButtons", () => {
     assert.equal(b.showCountdown, false);
   });
 
-  it("C: external online results link when the URL is set, else /vysledky", () => {
+  it("C: emergency external online results URL when set, else own /vysledky/online", () => {
     const withUrl = heroButtons({
       phase: "C",
       onlineResultsUrl: "https://live.example/mcvv",
@@ -118,7 +118,7 @@ describe("heroButtons", () => {
     });
     assert.deepEqual(withUrl.secondary, { kind: "instructions", href: "/pokyny" });
     const without = heroButtons({ phase: "C", onlineResultsUrl: null, ...counts });
-    assert.deepEqual(without.primary, { kind: "results", href: "/vysledky" });
+    assert.deepEqual(without.primary, { kind: "onlineResults", href: "/vysledky/online" });
     assert.equal(without.showCountdown, false);
   });
 

@@ -21,9 +21,17 @@ import { countValidRunners } from "@/lib/entries/status";
 import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
-import { getOfeedSettings, resolveOnlineResultsUrl } from "@/lib/ofeed/settings";
+import { getOfeedSettings, onlineResultsOverrideUrl } from "@/lib/ofeed/settings";
 import { getUnreadCount } from "@/lib/messages/store";
 import type { McvvHeroCta } from "@/components/organisms/mcvv-hero-section";
+
+/** V den závodu (fáze C) přidá do menu odkaz na online výsledky (Q116). */
+export function withOnlineResultsLink(
+  nav: McvvHomepageContent["nav"],
+  label: string,
+): McvvHomepageContent["nav"] {
+  return { ...nav, links: [{ label, href: "/vysledky/online" }, ...nav.links] };
+}
 
 export type McvvHomepageTemplateProps = {
   content: McvvHomepageContent;
@@ -58,9 +66,9 @@ export async function McvvHomepageTemplate({
     entriesCount,
     startlistCount,
     resultsCount,
-    // ručně zadaná URL má přednost, jinak veřejná stránka akce v OFeed (#127);
-    // při testovací akci OFeed web na OFeed neodkazuje (Q33)
-    onlineResultsUrl: resolveOnlineResultsUrl(settings.onlineResultsUrl, ofeed),
+    // vlastní /vysledky/online (Q116); ručně zadaná URL je nouzové přebití, při testovací
+    // akci OFeed web na OFeed neodkazuje (Q33)
+    onlineResultsUrl: onlineResultsOverrideUrl(settings.onlineResultsUrl, ofeed),
   });
   const deadlineEnd = registrationDeadlineEnd(deadline);
   const t = await getTranslations({ locale, namespace: "Home.hero" });
@@ -95,15 +103,21 @@ export async function McvvHomepageTemplate({
         return {
           label: t("onlineResultsCta"),
           href: button.href,
-          external: true,
-          ariaLabel: t("onlineResultsAria", { cta: t("onlineResultsCta") }),
+          external: button.external,
+          ariaLabel: button.external
+            ? t("onlineResultsAria", { cta: t("onlineResultsCta") })
+            : undefined,
         };
     }
   };
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <McvvNavbar
-        content={content}
+        content={
+          phase === "C"
+            ? { ...content, nav: withOnlineResultsLink(content.nav, t("onlineResultsCta")) }
+            : content
+        }
         variant="solid"
         account={
           session

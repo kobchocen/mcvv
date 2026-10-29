@@ -26,6 +26,7 @@ import { parseAssignment } from "@/lib/live/assignment-core";
 import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "@/lib/live/online-results-core";
 import {
   DEFAULT_START_OFFSET_LIMIT_S,
   formatStartOffsetLimit,
@@ -47,7 +48,7 @@ import {
   OFEED_BOARD_URL,
   ofeedPublicUrl,
   passwordExpiresAt,
-  resolveOnlineResultsUrl,
+  onlineResultsOverrideUrl,
 } from "@/lib/ofeed/settings";
 import { getSiteSettings } from "@/lib/settings/site";
 
@@ -96,7 +97,8 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const testBlocked = testRunBlocked(now, testCutoff);
   const testOfeedReady = ofeed.profile === "test" && Boolean(ofeed.profiles.test.eventId);
   const window = defaultTokenWindow(ctx.zero);
-  const publicOnlineUrl = resolveOnlineResultsUrl(site.onlineResultsUrl, ofeed);
+  // Q116: web vede na vlastní /vysledky/online, ručně zadaná URL je nouzové přebití
+  const onlineOverride = onlineResultsOverrideUrl(site.onlineResultsUrl, ofeed);
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
   const stationName = (code: string) =>
     code === FINISH_SPLIT ? t("finish") : (stations.find((s) => s.code === code)?.label ?? code);
@@ -469,12 +471,24 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             ) : null}
             <p className="text-race-muted">
               {t("onlineLink")}:{" "}
-              {publicOnlineUrl
-                ? publicOnlineUrl === site.onlineResultsUrl
-                  ? publicOnlineUrl
-                  : `${publicOnlineUrl} (${t("onlineLinkAuto")})`
-                : t("onlineLinkNone")}
-              {ofeed.profile === "test" ? ` ${t("onlineLinkHiddenTest")}` : ""}
+              {onlineOverride ? (
+                `${onlineOverride} (${t("onlineLinkOverride")})`
+              ) : (
+                <>
+                  <a
+                    href={`/${locale}/vysledky/online`}
+                    target="_blank"
+                    rel="noopener"
+                    className="underline underline-offset-2"
+                  >
+                    /{locale}/vysledky/online
+                  </a>{" "}
+                  ({t("onlineLinkOwn")})
+                </>
+              )}
+              {ofeed.profile === "test" && site.onlineResultsUrl && !onlineOverride
+                ? ` ${t("onlineLinkHiddenTest")}`
+                : ""}
             </p>
             <div className="flex flex-wrap gap-2">
               <form action={publishNowAction}>
@@ -649,6 +663,36 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 className="h-10 w-40 bg-race-surface"
               />
               <p className="text-xs text-race-muted">{t("startLimitHint")}</p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dnsGrace">{t("dnsGrace")}</Label>
+              <Input
+                id="dnsGrace"
+                name="dnsGrace"
+                type="text"
+                inputMode="text"
+                maxLength={32}
+                placeholder={formatStartOffsetLimit(DEFAULT_DNS_GRACE_S)}
+                defaultValue={formatStartOffsetLimit(ctx.dnsGraceS)}
+                data-testid="dns-grace-input"
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("dnsGraceHint")}</p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dnsGraceFallback">{t("dnsGraceFallback")}</Label>
+              <Input
+                id="dnsGraceFallback"
+                name="dnsGraceFallback"
+                type="text"
+                inputMode="text"
+                maxLength={32}
+                placeholder={formatStartOffsetLimit(DEFAULT_DNS_GRACE_FALLBACK_S)}
+                defaultValue={formatStartOffsetLimit(ctx.dnsGraceFallbackS)}
+                data-testid="dns-grace-fallback-input"
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("dnsGraceFallbackHint")}</p>
             </div>
             <Button
               type="submit"

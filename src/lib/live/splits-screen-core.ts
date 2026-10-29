@@ -58,14 +58,23 @@ export function parseStartOffsetLimit(raw: string | null | undefined): number | 
   return seconds;
 }
 
-/** Uložená hodnota (sekundy) → práh; chybí / nesmysl → výchozí 2 min. */
-export function startOffsetLimitFromSetting(raw: string | null | undefined): number {
+/**
+ * Uložená doba v sekundách (klíč v `mcvv_setting`, zapsaný přes `parseStartOffsetLimit`)
+ * → sekundy; chybí / nesmysl / mimo 1 s – 6 h → `fallback`. Stejně se čtou i lhůty DNS
+ * online výsledků.
+ */
+export function durationFromSetting(raw: string | null | undefined, fallback: number): number {
   const value = (raw ?? "").trim();
-  if (!/^\d+$/.test(value)) return DEFAULT_START_OFFSET_LIMIT_S;
+  if (!/^\d+$/.test(value)) return fallback;
   const seconds = Number(value);
   return seconds >= START_OFFSET_LIMIT_MIN_S && seconds <= START_OFFSET_LIMIT_MAX_S
     ? seconds
-    : DEFAULT_START_OFFSET_LIMIT_S;
+    : fallback;
+}
+
+/** Uložená hodnota (sekundy) → práh; chybí / nesmysl → výchozí 2 min. */
+export function startOffsetLimitFromSetting(raw: string | null | undefined): number {
+  return durationFromSetting(raw, DEFAULT_START_OFFSET_LIMIT_S);
 }
 
 /** Čitelný práh pro obrazovku i formulář: `45 s`, `2 min`, `1:30 min`, `1:00:00 h`. */

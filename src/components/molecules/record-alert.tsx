@@ -247,7 +247,7 @@ export function RecordOverlay({
             {item.idx + 1} / {item.total}
           </div>
         ) : null}
-        <div className={s.k}>
+        <div className={c.main.abs ? `${s.k} ${s.long}` : s.k}>
           <small>{c.main.eq ? "=" : "★ ★ ★"}</small>
           {title(c.main)}
         </div>

@@ -1,9 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
-import { runnerNameFor } from "@/lib/format/runner-name";
 import { formatRaceDay } from "@/lib/format/date";
+import { getHomeResultsSummary } from "@/lib/home/cached";
 import { loadPartners } from "@/lib/partners/logos";
 import { pickGalleryPhotoIds } from "@/lib/photos/gallery";
 import { getHomepagePhotoCandidates } from "@/lib/photos/queries";
@@ -33,43 +32,19 @@ export default async function Home({ params }: PageProps) {
 
   const rawResults = t.raw("results") as McvvHomepageContent["results"];
   const isCs = locale === "cs";
-  const latestYearRow = await prisma.result.findFirst({
-    orderBy: { year: "desc" },
-    select: { year: true },
-  });
-  const latestYear = latestYearRow?.year ?? null;
+  // Cached (DB load on race day): latest results year, its count and the overall winners change only
+  // with a result import or a runner/club fix, all of which revalidate the "stats" tag.
+  const summary = await getHomeResultsSummary();
+  const latestYear = summary?.year ?? null;
 
   let dynamicYears: McvvHomepageContent["results"]["years"] = [];
-  if (latestYear) {
-    const [count, topMen, topWomen] = await Promise.all([
-      prisma.result.count({ where: { year: latestYear } }),
-      prisma.result.findFirst({
-        where: { year: latestYear, categoryId: "A" },
-        orderBy: { time: "asc" },
-        select: {
-          runnerName: true,
-          time: true,
-          runnerId: true,
-          runner: { select: { name: true } },
-        },
-      }),
-      prisma.result.findFirst({
-        where: { year: latestYear, categoryId: "F" },
-        orderBy: { time: "asc" },
-        select: {
-          runnerName: true,
-          time: true,
-          runnerId: true,
-          runner: { select: { name: true } },
-        },
-      }),
-    ]);
-
+  if (summary) {
+    const { count, men: topMen, women: topWomen } = summary;
     const winners: { category: string; name: string; time: string; runnerId?: string }[] = [];
     if (topMen) {
       winners.push({
         category: isCs ? "Muži" : "Men",
-        name: runnerNameFor("results", topMen.runnerName, topMen.runner?.name) || "—",
+        name: topMen.name || "—",
         time: formatRaceTime(topMen.time),
         runnerId: topMen.runnerId,
       });
@@ -77,7 +52,7 @@ export default async function Home({ params }: PageProps) {
     if (topWomen) {
       winners.push({
         category: isCs ? "Ženy" : "Women",
-        name: runnerNameFor("results", topWomen.runnerName, topWomen.runner?.name) || "—",
+        name: topWomen.name || "—",
         time: formatRaceTime(topWomen.time),
         runnerId: topWomen.runnerId,
       });
@@ -90,7 +65,7 @@ export default async function Home({ params }: PageProps) {
         label: rawResults.yearLabel,
         winners,
         linkLabel: rawResults.linkLabel,
-        href: `/results/${latestYear}`,
+        href: `/results/${summary.year}`,
         count,
       },
     ];

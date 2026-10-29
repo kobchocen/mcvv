@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { requireStaff } from "@/lib/admin/staff";
+import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { entryTarget } from "@/lib/entries/changes-core";
@@ -12,6 +13,8 @@ import { recalculateRegistrationStatus } from "@/lib/entries/status";
 function revalidate() {
   revalidatePath("/[locale]/admin/platby", "page");
   revalidatePath("/[locale]/admin/prihlasky", "layout");
+  // valid (paid) registrations drive the homepage runner count
+  revalidateTag(HOME_COUNTS_TAG, "max");
 }
 
 /** Označit nespárovaný pohyb jako vyřízený bez platby (např. jiný příjem klubu, vráceno). */

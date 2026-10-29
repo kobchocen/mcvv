@@ -376,8 +376,8 @@ export function formatDayTime(epochS: number): string {
 }
 
 /** Seskupí běžce podle kategorie. */
-export function byCategory(runners: readonly SpeakerRunner[]): Map<string, SpeakerRunner[]> {
-  const map = new Map<string, SpeakerRunner[]>();
+export function byCategory<T extends SpeakerRunner>(runners: readonly T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>();
   for (const r of runners) {
     const list = map.get(r.cat) ?? [];
     list.push(r);

@@ -252,6 +252,24 @@ export default async function RaceDayPage({ params }: PageProps) {
           </section>
         ) : null}
 
+        {canViewSpeakerScreen(session.role) ? (
+          <section
+            className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
+            data-testid="resultboard-link"
+          >
+            <h2 className="font-display text-xl font-semibold">{copy("resultboardTitle")}</h2>
+            <p className="text-sm leading-6 text-race-muted">{copy("resultboardIntro")}</p>
+            <div className="flex flex-wrap gap-3">
+              <Link className={buttonClass} href="/resultboard">
+                {copy("resultboardOpen")}
+              </Link>
+              <Link className={buttonClass} href="/admin/den-zavodu/zive">
+                {copy("resultboardSettings")}
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
         <section className="mt-10">
           <h2 className="font-display text-xl font-semibold">{copy("historyTitle")}</h2>
           {history.length === 0 ? (

@@ -1,0 +1,190 @@
+/*
+ * Upozornění „NOVÝ LÍDR“ (speaker #188 i resultboard) – podle mockupu v1.
+ * Cíl = 4 silné pulzy (zlatý rámeček + záře + podbarvení boxu), mezičas = 3 slabší pulzy
+ * (jen rámeček). Potom drží tenký zlatý rámeček, zlatý nadpis a banner dole (12 s).
+ * Dvě varianty názvu animace (A/B) = nová událost animaci spustí znovu, nevrství se.
+ * Rozměry v `--u` (1/120 šířky obrazovky) – stejně jako obrazovky, které to používají.
+ */
+.lead {
+  border-color: var(--gold) !important;
+  box-shadow: inset 0 0 0 calc(0.16 * var(--u)) var(--gold);
+  z-index: 2;
+}
+.finA {
+  animation: leadFinA 1.2s ease-in-out 4;
+}
+.finB {
+  animation: leadFinB 1.2s ease-in-out 4;
+}
+.splitA {
+  animation: leadSplitA 1.2s ease-in-out 3;
+}
+.splitB {
+  animation: leadSplitB 1.2s ease-in-out 3;
+}
+@keyframes leadFinA {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 calc(0.16 * var(--u)) var(--gold),
+      0 0 0 0 transparent;
+  }
+  45% {
+    box-shadow:
+      inset 0 0 0 calc(0.32 * var(--u)) var(--gold),
+      0 0 calc(1.6 * var(--u)) calc(0.45 * var(--u))
+        color-mix(in oklch, var(--gold) 75%, transparent);
+    background: color-mix(in oklch, var(--gold) 32%, var(--forest));
+  }
+}
+@keyframes leadFinB {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 calc(0.16 * var(--u)) var(--gold),
+      0 0 0 0 transparent;
+  }
+  45% {
+    box-shadow:
+      inset 0 0 0 calc(0.32 * var(--u)) var(--gold),
+      0 0 calc(1.6 * var(--u)) calc(0.45 * var(--u))
+        color-mix(in oklch, var(--gold) 75%, transparent);
+    background: color-mix(in oklch, var(--gold) 32%, var(--forest));
+  }
+}
+@keyframes leadSplitA {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 calc(0.16 * var(--u)) var(--gold),
+      0 0 0 0 transparent;
+  }
+  45% {
+    box-shadow:
+      inset 0 0 0 calc(0.26 * var(--u)) var(--gold),
+      0 0 var(--u) calc(0.2 * var(--u)) color-mix(in oklch, var(--gold) 55%, transparent);
+  }
+}
+@keyframes leadSplitB {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 calc(0.16 * var(--u)) var(--gold),
+      0 0 0 0 transparent;
+  }
+  45% {
+    box-shadow:
+      inset 0 0 0 calc(0.26 * var(--u)) var(--gold),
+      0 0 var(--u) calc(0.2 * var(--u)) color-mix(in oklch, var(--gold) 55%, transparent);
+  }
+}
+/* bez pulzování: rovnou statický stav (rámeček, zlatý nadpis, banner) */
+@media (prefers-reduced-motion: reduce) {
+  .finA,
+  .finB,
+  .splitA,
+  .splitB {
+    animation: none;
+  }
+}
+
+.chip {
+  font: 700 calc(0.82 * var(--u)) / 1 var(--fo);
+  letter-spacing: 0.08em;
+  background: #241a00;
+  color: var(--gold);
+  border-radius: calc(0.25 * var(--u));
+  padding: calc(0.18 * var(--u)) calc(0.4 * var(--u));
+  align-self: center;
+  white-space: nowrap;
+}
+
+.row td {
+  background: color-mix(in oklch, var(--gold) 30%, transparent) !important;
+  color: #fff;
+}
+.row td:first-child {
+  box-shadow: inset calc(0.32 * var(--u)) 0 0 var(--gold);
+}
+
+.banner {
+  position: absolute;
+  left: calc(0.3 * var(--u));
+  right: calc(0.3 * var(--u));
+  bottom: calc(0.3 * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.25 * var(--u));
+  z-index: 3;
+  pointer-events: none;
+}
+.line {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: calc(0.4 * var(--u));
+  align-items: baseline;
+  background: #1b1400f2;
+  border: calc(0.14 * var(--u)) solid var(--gold);
+  border-radius: calc(0.35 * var(--u));
+  padding: calc(0.25 * var(--u)) calc(0.45 * var(--u)) calc(0.3 * var(--u));
+  box-shadow: 0 calc(0.3 * var(--u)) var(--u) #000a;
+  color: var(--fg);
+}
+.split {
+  border-style: dashed;
+}
+.lchip {
+  font: 700 calc(0.8 * var(--u)) / 1 var(--fo);
+  letter-spacing: 0.07em;
+  background: var(--gold);
+  color: #241a00;
+  border-radius: calc(0.2 * var(--u));
+  padding: calc(0.16 * var(--u)) calc(0.35 * var(--u));
+  white-space: nowrap;
+  align-self: center;
+}
+.split .lchip {
+  background: none;
+  color: var(--gold);
+  border: calc(0.08 * var(--u)) solid var(--gold);
+}
+.bib {
+  font: 500 calc(1.15 * var(--u)) var(--fo);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.name {
+  font: 600 calc(1.3 * var(--u)) / 1.15 var(--fo);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.time {
+  font: 700 calc(1.45 * var(--u)) / 1 var(--fo);
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.sub {
+  grid-column: 1 / -1;
+  font-size: calc(0.82 * var(--u));
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub b {
+  font-family: var(--fo);
+  font-weight: 500;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.late {
+  font-style: italic;
+  color: var(--gold);
+}
+.star {
+  color: var(--gold);
+  font-weight: 700;
+}

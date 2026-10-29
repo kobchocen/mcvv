@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/client";
 
 import {
   categoryShort,
+  clubDictionary,
   categorySlugs,
   effectiveDnsGrace,
   encodeOnline,
@@ -25,8 +26,9 @@ export const ONLINE_RESULTS_CACHE_CONTROL =
 
 /**
  * Snímek veřejných online výsledků: stejná data jako speaker (#188) + jestli číslo má
- * záznam stanice Start a štítek pozdního startu nad prahem #228. Jen data pro zobrazení –
- * žádné kluby, e-maily ani ID účtů či běžců (traťové rekordy počítá server). Jen čtení (test se tu neukončuje, viz `peekStoredTestRun`).
+ * záznam stanice Start, štítek pozdního startu nad prahem #228 a klub ze startovky (id + název,
+ * číselník + index, #206). Jen data pro zobrazení – žádné e-maily ani ID účtů či běžců (traťové
+ * rekordy počítá server). Jen čtení (test se tu neukončuje, viz `peekStoredTestRun`).
  *
  * Testovací běh (#186) se veřejně neukazuje vůbec (Q117): mezičasy, cíle a záznamy Startu
  * zapsané během testu se do snímku nedostanou a plánované starty jsou od ostré nuly, ne od
@@ -46,7 +48,7 @@ export async function loadOnlineSnapshot(
   const ctx = options.includeTest
     ? rawCtx
     : { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
-  const [{ categories, runners, tr }, allStartChecks] = await Promise.all([
+  const [{ categories, runners, tr, clubs: clubOf }, allStartChecks] = await Promise.all([
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
@@ -56,6 +58,7 @@ export async function loadOnlineSnapshot(
   const startChecks = allStartChecks.filter((s) => !inHiddenWindow(s.createdAt, hidden));
   const startedAt = new Map(startChecks.map((s) => [s.bib, s.startedAt]));
   const slugs = categorySlugs(categories);
+  const { clubs, indexOf } = clubDictionary(runners.map((r) => clubOf.get(r.bib)));
   return {
     year: ctx.year,
     dnsGraceS: effectiveDnsGrace(startChecks.length > 0, ctx.dnsGraceS, ctx.dnsGraceFallbackS),
@@ -74,9 +77,11 @@ export async function loadOnlineSnapshot(
         late: at
           ? lateStart(startOffsetSeconds(at, ctx.zero, r.bib, ctx.intervalS), ctx.startLimitS)
           : null,
+        club: indexOf(clubOf.get(r.bib)),
       };
     }),
     tr,
+    clubs,
   };
 }
 

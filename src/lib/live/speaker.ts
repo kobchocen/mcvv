@@ -47,6 +47,8 @@ export async function loadRaceRunners(
   runners: SpeakerRunner[];
   /** Nový / vyrovnaný traťový rekord (jen cíl). */
   tr: TrMark[];
+  /** Klub podle čísla ze startovky (id + název ročníku) – jen pro online výsledky, ne speaker. */
+  clubs: Map<number, { id: string; name: string | null }>;
 }> {
   const [categories, starts, splits, baselines] = await Promise.all([
     prisma.category.findMany({
@@ -59,6 +61,8 @@ export async function loadRaceRunners(
         bib: true,
         runnerId: true,
         runnerName: true,
+        clubId: true,
+        clubName: true,
         categoryId: true,
         runner: { select: { name: true } },
       },
@@ -106,7 +110,10 @@ export async function loadRaceRunners(
     m2: r.m2,
     fin: r.fin,
   }));
-  return { categories, runners, tr };
+  const clubs = new Map(
+    [...byBib.values()].map((s) => [s.bib, { id: s.clubId, name: s.clubName }]),
+  );
+  return { categories, runners, tr, clubs };
 }
 
 /** Sdílená cache snímku na replice (viz `createBodyCache`). */

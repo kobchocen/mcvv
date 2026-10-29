@@ -61,7 +61,14 @@ export default async function AdminPartnersPage({ params }: PageProps) {
                 <tr key={row.id} className="border-b border-race-line/40">
                   <td className="py-2.5 pr-4">{row.category}</td>
                   <td className="py-2.5 pr-4">{row.order}</td>
-                  <td className="py-2.5 pr-4 font-medium">{row.name}</td>
+                  <td className="py-2.5 pr-4 font-medium">
+                    {row.name}
+                    {row.general ? (
+                      <span className="ml-2 rounded bg-race-accent-solid px-1.5 py-0.5 text-xs font-semibold text-white">
+                        {copy("partnersGeneralBadge")}
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="py-2.5 pr-4">{row.active === false ? "—" : "✓"}</td>
                   <td className="py-2.5">
                     <div className="flex flex-wrap gap-3">

@@ -32,14 +32,20 @@ export const ONLINE_RESULTS_CACHE_CONTROL =
  * zapsané během testu se do snímku nedostanou a plánované starty jsou od ostré nuly, ne od
  * zkušební. Speaker a interní obrazovky test dál vidí (se štítkem TEST).
  */
-export async function loadOnlineSnapshot(now = new Date()): Promise<OnlineSnapshot> {
+export async function loadOnlineSnapshot(
+  now = new Date(),
+  /** Resultboard `?test=1` pro přihlášené: test i jeho nula jako na speakerovi (Q135). */
+  options: { includeTest?: boolean } = {},
+): Promise<OnlineSnapshot> {
   const [rawCtx, stations, { run, cutoff }] = await Promise.all([
     getRaceContext(),
     getStations(),
     peekStoredTestRun(now),
   ]);
-  const hidden = publicHiddenWindow(run, cutoff);
-  const ctx = { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
+  const hidden = options.includeTest ? null : publicHiddenWindow(run, cutoff);
+  const ctx = options.includeTest
+    ? rawCtx
+    : { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
   const [{ categories, runners }, allStartChecks] = await Promise.all([
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({

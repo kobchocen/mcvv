@@ -3,7 +3,17 @@
 import { useTranslations } from "next-intl";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import {
+  LeaderBanner,
+  LeaderChip,
+  leaderBoxClass,
+  leaderStyles,
+} from "@/components/molecules/leader-alert";
+import { useLeaderAlerts } from "@/hooks/use-leader-alerts";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
+import { useResultboardInfo } from "@/hooks/use-resultboard-info";
+import { leaderPassages } from "@/lib/live/leader-core";
+import type { ResultboardInfo } from "@/lib/live/resultboard";
 import {
   buildSearchIndex,
   byCategory,
@@ -30,6 +40,9 @@ type Props = Readonly<{
   initialEtag: string;
   /** Čas serveru při vykreslení – první render klienta je tak shodný se serverem. */
   serverNowMs: number;
+  /** Nastavení upozornění „nový lídr“ (sdílené s resultboardem, obnovuje se po 30 s). */
+  initialInfo: ResultboardInfo;
+  initialInfoEtag: string;
 }>;
 
 const cx = (...names: (string | false | null | undefined)[]) => names.filter(Boolean).join(" ");
@@ -40,7 +53,13 @@ const u = (rem: number) => `calc(${rem} * var(--u))`;
  * poslední průchody a vyhledání běžce. Data chodí jednou za 5 s (304, když se nic nezměnilo);
  * pořadí, ✓, běžící časy a virtuální pořadí se přepočítávají každou sekundu na klientu.
  */
-export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) {
+export function McvvSpeakerScreen({
+  initial,
+  initialEtag,
+  serverNowMs,
+  initialInfo,
+  initialInfoEtag,
+}: Props) {
   const t = useTranslations("Speaker");
   const { snapshot, nowMs, updatedMs, stale } = useLiveSnapshot(
     "/api/live/speaker",
@@ -48,6 +67,16 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
     initialEtag,
     serverNowMs,
   );
+  const { config } = useResultboardInfo(initialInfo, initialInfoEtag);
+  const leaderPoints = config.leader.points;
+  const alerts = useLeaderAlerts({
+    runners: snapshot.runners,
+    updatedMs,
+    nowMs,
+    resetKey: `${snapshot.year}|${snapshot.test}|${leaderPoints.join()}`,
+    points: leaderPoints,
+    enabled: config.leader.speaker,
+  });
   const [query, setQuery] = useState("");
   const [sel, setSel] = useState(0);
   const [cardBib, setCardBib] = useState<number | null>(null);
@@ -294,6 +323,7 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
   };
 
   const passages = recentPassages(snapshot.runners, now);
+  const stars = leaderPassages(passages, snapshot.runners);
 
   return (
     <div className={cx(s.root, snapshot.test && s.test)} data-testid="speaker-screen">
@@ -311,6 +341,12 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
             <i className={s.lgNew} />
             {t("legendNew")}
           </span>
+          {config.leader.speaker ? (
+            <span>
+              <i className={s.lgLead} />
+              <b className={leaderStyles.star}>★</b> {t("legendLeader")}
+            </span>
+          ) : null}
           <span>{t.rich("legendRank", { b: (c) => <b className={s.lgB}>{c}</b> })}</span>
           <span>
             <b className={s.lgMuted}>{t("legendOnWord")}</b>
@@ -352,16 +388,22 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
             state.done && state.onCourse === 0
               ? t.rich("countDone", { ...tags, fin: state.finished })
               : t.rich("count", { ...tags, fin: state.finished, on: state.onCourse });
+          const alert = alerts.get(c.id);
           return (
             <section
               key={c.id}
-              className={cx(s.cat, state.done && s.done)}
+              className={cx(s.cat, state.done && s.done, leaderBoxClass(alert, nowMs))}
               data-testid={`speaker-cat-${c.id}`}
+              data-lead={alert ? alert.point : undefined}
             >
               <div className={cx(s.ch, c.sex === "F" && s.f, state.done && s.done)}>
                 <h2>{c.name}</h2>
                 <span className={s.cnt}>{count}</span>
-                {state.done ? <span className={s.kbadge}>{t("catFinal")}</span> : null}
+                {alert ? (
+                  <LeaderChip alert={alert} />
+                ) : state.done ? (
+                  <span className={s.kbadge}>{t("catFinal")}</span>
+                ) : null}
               </div>
               {state.shown.length ? (
                 <table>
@@ -392,6 +434,7 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
                           row.recent && s.new,
                           row.final && s.final,
                           row.rank === null && s.on,
+                          alert?.bib === row.runner.bib && leaderStyles.row,
                         )}
                       >
                         <td className={cx(s.rk, s.num)}>
@@ -414,13 +457,22 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
               ) : (
                 <div className={s.empty}>{t("catEmpty")}</div>
               )}
+              {alert ? <LeaderBanner alert={alert} /> : null}
             </section>
           );
         })}
         <section className={s.last}>
           <div className={s.ch}>
             <h2>{t("recentTitle")}</h2>
-            <span className={s.cnt}>{t("recentNote")}</span>
+            <span className={s.cnt}>
+              {t("recentNote")}
+              {config.leader.speaker ? (
+                <>
+                  {" · "}
+                  <b className={leaderStyles.star}>★</b> {t("recentLeader")}
+                </>
+              ) : null}
+            </span>
           </div>
           <div className={s.recentBox} data-testid="speaker-recent">
             {passages.length ? (
@@ -455,7 +507,14 @@ export function McvvSpeakerScreen({ initial, initialEtag, serverNowMs }: Props) 
                         </span>
                       </td>
                       <td className={cx(s.bib, s.num)}>{p.runner.bib}</td>
-                      <td className={s.nm}>{p.runner.name}</td>
+                      <td className={s.nm}>
+                        {config.leader.speaker && stars.has(`${p.runner.bib}|${p.point}`) ? (
+                          <b className={leaderStyles.star} data-testid="speaker-recent-leader">
+                            ★{" "}
+                          </b>
+                        ) : null}
+                        {p.runner.name}
+                      </td>
                       <td className={s.lt}>{catById.get(p.runner.cat)?.name ?? p.runner.cat}</td>
                       <td className={cx(p.point === "fin" ? s.fin : cx(s.t, s.cur), s.num)}>
                         {formatMinutes(p.time)}

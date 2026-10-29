@@ -62,6 +62,7 @@ export type PartnerAuditFields = {
   order: number;
   active: boolean | null;
   description: string;
+  general?: boolean;
   logoType?: string | null;
   logoHash?: string | null;
 };

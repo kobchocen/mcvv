@@ -55,6 +55,7 @@ const PARTNER_AUDIT_SELECT = {
   order: true,
   active: true,
   description: true,
+  general: true,
   logoType: true,
   logoHash: true,
 } as const;
@@ -62,6 +63,32 @@ const PARTNER_AUDIT_SELECT = {
 /** Bez nového loga se typ / otisk nemění – do porovnání jen pole, která formulář ukládá. */
 function withoutLogo<T extends { logoType: string | null; logoHash: string | null }>(row: T) {
   return { ...row, logoType: undefined, logoHash: undefined };
+}
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+/** Generální partner je nejvýš jeden: ostatním příznak zruší (s auditem). */
+async function clearOtherGeneral(
+  tx: Tx,
+  keepId: number | null,
+  session: Awaited<ReturnType<typeof requireStaff>>,
+): Promise<void> {
+  const others = await tx.sponsor.findMany({
+    where: { general: true, ...(keepId ? { NOT: { id: keepId } } : {}) },
+    select: { id: true },
+  });
+  for (const other of others) {
+    await tx.sponsor.update({ where: { id: other.id }, data: { general: false } });
+    await writeAudit(
+      {
+        actor: session,
+        action: "partner.updated",
+        target: partnerTarget(other.id),
+        detail: { changes: diffFields({ general: true }, { general: false }) },
+      },
+      tx,
+    );
+  }
 }
 
 export async function savePartner(formData: FormData): Promise<void> {
@@ -74,6 +101,8 @@ export async function savePartner(formData: FormData): Promise<void> {
   const order = formInt(formData, "order") ?? 0;
   const active = formChecked(formData, "active");
   const description = formString(formData, "description");
+  /** Q153: generální partner – pevné logo na resultboardu; jen aktivní, nejvýš jeden. */
+  const general = active && formChecked(formData, "general");
   const file = formData.get("logo");
   const upload = await readLogo(file instanceof File ? file : null);
   const locale = await getLocale();
@@ -97,7 +126,7 @@ export async function savePartner(formData: FormData): Promise<void> {
       ? { logo: upload.logo, logoType: upload.logoType, logoHash: upload.logoHash }
       : {};
 
-  const fields = { name, link, image, category, order, active, description };
+  const fields = { name, link, image, category, order, active, description, general };
   const logoAudit =
     upload.kind === "ok" ? { logoType: upload.logoType, logoHash: upload.logoHash } : {};
 
@@ -106,7 +135,10 @@ export async function savePartner(formData: FormData): Promise<void> {
       where: { id },
       select: PARTNER_AUDIT_SELECT,
     });
-    await prisma.sponsor.update({ where: { id }, data: { ...fields, ...logoData } });
+    await prisma.$transaction(async (tx) => {
+      if (general) await clearOtherGeneral(tx, id, session);
+      await tx.sponsor.update({ where: { id }, data: { ...fields, ...logoData } });
+    });
     const changes = diffFields(
       before ? partnerSnapshot(upload.kind === "ok" ? before : withoutLogo(before)) : null,
       partnerSnapshot({ ...fields, ...logoAudit }),
@@ -120,9 +152,9 @@ export async function savePartner(formData: FormData): Promise<void> {
       });
     }
   } else {
-    const created = await prisma.sponsor.create({
-      data: { ...fields, ...logoData },
-      select: { id: true },
+    const created = await prisma.$transaction(async (tx) => {
+      if (general) await clearOtherGeneral(tx, null, session);
+      return tx.sponsor.create({ data: { ...fields, ...logoData }, select: { id: true } });
     });
     await writeAudit({
       actor: session,
@@ -144,14 +176,18 @@ export async function deactivatePartner(formData: FormData): Promise<void> {
   if (!id) {
     return;
   }
-  const before = await prisma.sponsor.findUnique({ where: { id }, select: { active: true } });
-  await prisma.sponsor.update({ where: { id }, data: { active: false } });
-  if (before && before.active !== false) {
+  const before = await prisma.sponsor.findUnique({
+    where: { id },
+    select: { active: true, general: true },
+  });
+  // neaktivní partner nemůže být generální (pevné logo by na resultboardu zmizelo potichu)
+  await prisma.sponsor.update({ where: { id }, data: { active: false, general: false } });
+  if (before && (before.active !== false || before.general)) {
     await writeAudit({
       actor: session,
       action: "partner.deactivated",
       target: partnerTarget(id),
-      detail: { changes: diffFields({ active: before.active }, { active: false }) },
+      detail: { changes: diffFields(before, { active: false, general: false }) },
     });
   }
   revalidatePartners();

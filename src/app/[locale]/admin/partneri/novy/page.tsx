@@ -40,6 +40,7 @@ export default async function AdminNewPartnerPage({ params, searchParams }: Page
             category: 0,
             order: 0,
             active: true,
+            general: false,
             description: "",
           }}
           copy={{
@@ -52,6 +53,8 @@ export default async function AdminNewPartnerPage({ params, searchParams }: Page
             category: copy("partnersCategory"),
             order: copy("partnersOrder"),
             active: copy("active"),
+            general: copy("partnersGeneral"),
+            generalHint: copy("partnersGeneralHint"),
             description: copy("partnersDescription"),
             save: copy("create"),
           }}

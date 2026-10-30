@@ -854,6 +854,7 @@
     "verifyAction": "Verify email",
     "verifyTitle": "Email verification",
     "verifyError": "The link is invalid or has expired.",
+    "rateLimited": "Too many sign-in attempts, please try again in a while.",
     "unverified": "This email is not verified yet. You can request a new link.",
     "resend": "Send verification link",
     "google": "Continue with Google",

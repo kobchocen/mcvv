@@ -130,20 +130,26 @@ test("autoAssign: vyrovná počty běžců, skryté nechá", () => {
   assert.equal(assign.G, 2);
 });
 
-test("partnerGroups: generální partner pevně, ostatní ve skupinách po 5 (Q153)", () => {
+test("partnerGroups: generální partner pevně, ostatní ve skupinách po 5, poslední doplněná (Q153, Q214)", () => {
   const ps = (generalId: number | null): BoardPartner[] =>
     Array.from({ length: 12 }, (_, i) => ({
       id: i + 1,
       name: `P${i + 1}`,
       category: i < 3 ? 1 : 2,
       logoSrc: null,
+      href: null,
       general: i + 1 === generalId,
     }));
   const b = partnerGroups(ps(5));
   assert.equal(b.fixed?.id, 5);
   assert.deepEqual(
     b.groups.map((g) => g.length),
-    [5, 5, 1],
+    [5, 5, 5],
+  );
+  // poslední skupina (P12) doplněná od začátku seznamu → lišta vždy plná
+  assert.deepEqual(
+    b.groups[2].map((p) => p.id),
+    [12, 1, 2, 3, 4],
   );
   assert.equal(
     b.groups.flat().some((p) => p.id === 5),
@@ -152,9 +158,12 @@ test("partnerGroups: generální partner pevně, ostatní ve skupinách po 5 (Q1
   // bez generálního partnera žádné pevné logo – střídají se všechna (ne „první v pořadí“)
   const c = partnerGroups(ps(null));
   assert.equal(c.fixed, null);
-  assert.equal(c.groups.flat().length, 12);
+  assert.equal(c.groups.flat().length, 15);
   assert.deepEqual(
-    c.groups.flat().map((p) => p.id),
+    c.groups
+      .flat()
+      .slice(0, 12)
+      .map((p) => p.id),
     ps(null).map((p) => p.id),
   );
 });

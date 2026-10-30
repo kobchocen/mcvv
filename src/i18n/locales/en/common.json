@@ -2540,6 +2540,7 @@
     "srDescription": "Confirm or cancel the action."
   },
   "OnlineResults": {
+    "partners": "Race partners",
     "metaTitle": "Online results {year}",
     "metaDescription": "Live unofficial results of Malá cena Velké Verandy – splits, finish and ranking in all categories.",
     "title": "Online results",

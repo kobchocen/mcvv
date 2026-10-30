@@ -13,6 +13,7 @@ export type McvvLoginFormCopy = {
   password: string;
   submit: string;
   error: string;
+  rateLimited: string;
   unverified: string;
   resend: string;
   sent: string;
@@ -77,7 +78,11 @@ export function McvvLoginForm({ copy, next }: McvvLoginFormProps) {
           className="h-11 bg-race-surface"
         />
       </div>
-      {state.error ? <p className="text-sm text-destructive">{copy.error}</p> : null}
+      {state.error ? (
+        <p className="text-sm text-destructive">
+          {state.error === "limited" ? copy.rateLimited : copy.error}
+        </p>
+      ) : null}
       <Button
         type="submit"
         disabled={pending}

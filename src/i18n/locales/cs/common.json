@@ -854,6 +854,7 @@
     "verifyAction": "Ověřit e-mail",
     "verifyTitle": "Ověření e-mailu",
     "verifyError": "Odkaz je neplatný nebo vypršel.",
+    "rateLimited": "Příliš mnoho pokusů o přihlášení, zkuste to prosím za chvíli.",
     "unverified": "E-mail ještě není ověřený. Můžete si nechat poslat odkaz znovu.",
     "resend": "Poslat ověřovací odkaz",
     "google": "Pokračovat přes Google",

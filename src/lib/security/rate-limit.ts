@@ -12,7 +12,11 @@ const MAX_TRACKED_IPS = 10_000;
 
 export type RateLimitDecision = { limited: false } | { limited: true; retryAfterSeconds: number };
 
-export type RateLimiter = { hit(key: string, now?: number): RateLimitDecision };
+export type RateLimiter = {
+  hit(key: string, now?: number): RateLimitDecision;
+  /** Forget the key's window (e.g. a successful login clears its failed attempts). */
+  reset(key: string): void;
+};
 
 export function createRateLimiter(options: {
   limit: number;
@@ -44,6 +48,9 @@ export function createRateLimiter(options: {
         limited: true,
         retryAfterSeconds: Math.max(1, Math.ceil((window.start + windowMs - now) / 1000)),
       };
+    },
+    reset(key) {
+      windows.delete(key);
     },
   };
 }

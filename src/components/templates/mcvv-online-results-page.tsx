@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvOnlineResults } from "@/components/organisms/mcvv-online-results";
 import type { Locale } from "@/i18n/routing";
 import { onlineResultsCache } from "@/lib/live/online-results";
+import { resultboardInfoCache, type ResultboardInfo } from "@/lib/live/resultboard";
 import { decodeOnline, findCategoryBySlug, type OnlineWire } from "@/lib/live/online-results-core";
 
 // Písmo tabulek (úzké, jako speaker #188); jen pro tuto stránku.
@@ -14,6 +15,17 @@ const robotoCondensed = Roboto_Condensed({
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
+
+/** Partneři pro pruh dole – ze sdílené 30s cache resultboardu (bez dotazu do DB na každý request). */
+async function partners() {
+  try {
+    const cached = await resultboardInfoCache.get();
+    return (JSON.parse(cached.body) as ResultboardInfo).partners;
+  } catch (error) {
+    console.error("[online-results] partners load failed", error);
+    return [];
+  }
+}
 
 async function snapshot() {
   const cached = await onlineResultsCache.get();
@@ -49,7 +61,7 @@ export async function McvvOnlineResultsPage({
   slug: string | null;
 }) {
   setRequestLocale(locale as Locale);
-  const { wire, data, etag } = await snapshot();
+  const [{ wire, data, etag }, partnerList] = await Promise.all([snapshot(), partners()]);
   if (slug !== null && !findCategoryBySlug(data.categories, slug)) notFound();
   return (
     <div className={robotoCondensed.variable}>
@@ -58,6 +70,7 @@ export async function McvvOnlineResultsPage({
         initialEtag={etag}
         serverNowMs={new Date().getTime()}
         initialSlug={slug}
+        partners={partnerList}
       />
     </div>
   );

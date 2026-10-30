@@ -13,6 +13,10 @@ import {
 } from "react";
 
 import { ClubLink } from "@/components/molecules/club-link";
+import {
+  McvvPartnerStripBar,
+  McvvPartnerStripSingle,
+} from "@/components/organisms/mcvv-partner-strip";
 import { RecordBadge, RecordOverlay } from "@/components/molecules/record-alert";
 import { FOLLOW_TOAST_MS, useFollowAlerts, type FollowToast } from "@/hooks/use-follow-alerts";
 import { useFollowed } from "@/hooks/use-followed";
@@ -43,6 +47,8 @@ import {
   decodeOnline,
   type OnlineWire,
 } from "@/lib/live/online-results-core";
+import { stripIsEmpty, stripPartners } from "@/lib/live/partner-strip-core";
+import type { BoardPartner } from "@/lib/live/resultboard-core";
 import {
   buildSearchIndex,
   byCategory,
@@ -75,7 +81,11 @@ type Props = Readonly<{
   serverNowMs: number;
   /** Kategorie z URL (`/vysledky/online/<slug>`), jinak null. */
   initialSlug: string | null;
+  /** Aktivní partneři (sdílená cache resultboardu) pro pruh dole (Q210–Q215). */
+  partners?: BoardPartner[];
 }>;
+
+const NO_PARTNERS: BoardPartner[] = [];
 
 const cx = (...names: (string | false | null | undefined)[]) => names.filter(Boolean).join(" ");
 const cap = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
@@ -133,7 +143,13 @@ function readRemembered(): string | null {
   }
 }
 
-export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSlug }: Props) {
+export function McvvOnlineResults({
+  initial,
+  initialEtag,
+  serverNowMs,
+  initialSlug,
+  partners = NO_PARTNERS,
+}: Props) {
   const t = useTranslations("OnlineResults");
   const locale = useLocale();
   const {
@@ -1438,7 +1454,10 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
   const passages = recentPassages(snapshot.runners, now, RECENT_LIMIT);
 
   return (
-    <div className={s.root} data-testid="online-results">
+    <div
+      className={cx(s.root, !stripIsEmpty(stripPartners(partners)) && s.withBar)}
+      data-testid="online-results"
+    >
       <header className={s.top}>
         <Link href="/" className={s.brand} title={t("homeTitle")}>
           <div className={s.mark}>V</div>
@@ -1699,11 +1718,13 @@ export function McvvOnlineResults({ initial, initialEtag, serverNowMs, initialSl
           </p>
         </aside>
       </div>
+      <McvvPartnerStripSingle partners={partners} />
       <footer className={s.footer}>
         {t("copyright")} · <Link href="/">mcvv.org</Link> ·{" "}
         <Link href="/startovka">{t("footerStartlist")}</Link> ·{" "}
         <Link href="/pokyny">{t("footerInstructions")}</Link>
       </footer>
+      <McvvPartnerStripBar partners={partners} />
       {sheetOpen ? (
         <div
           className={cx(s.sheet, s.open)}

@@ -293,14 +293,31 @@ export type BoardPartner = {
   name: string;
   category: number;
   logoSrc: string | null;
+  /** Web partnera (normalizovaný na http/https), jinak null – logo pak není odkaz. */
+  href: string | null;
   /** Generální partner (Q153) – pevné logo vlevo. */
   general: boolean;
 };
 
 /**
+ * Rozdělí položky do skupin po `size`. Poslední kratší skupinu doplní od začátku seznamu
+ * (Q214), aby byl pruh vždy plný; když se vše vejde do jedné skupiny, nic se neopakuje.
+ */
+export function fillGroups<T>(items: readonly T[], size: number): T[][] {
+  const n = Math.max(1, Math.floor(size));
+  if (!items.length) return [];
+  if (items.length <= n) return [items.slice()];
+  const groups: T[][] = [];
+  for (let i = 0; i < items.length; i += n) groups.push(items.slice(i, i + n));
+  const last = groups[groups.length - 1];
+  for (let k = 0; last.length < n; k++) last.push(items[k]);
+  return groups;
+}
+
+/**
  * Pruh partnerů (Q141, Q153): generální partner (příznak v administraci partnerů) stále,
- * ostatní (všechny kategorie, v pořadí webu) se střídají ve skupinách po 5. Bez generálního
- * partnera pevné logo není a střídají se všechna.
+ * ostatní (všechny kategorie, v pořadí webu) se střídají ve skupinách po 5; poslední skupina
+ * se doplní od začátku (Q214). Bez generálního partnera pevné logo není a střídají se všechna.
  */
 export function partnerGroups(partners: readonly BoardPartner[]): {
   fixed: BoardPartner | null;
@@ -308,11 +325,7 @@ export function partnerGroups(partners: readonly BoardPartner[]): {
 } {
   const fixed = partners.find((p) => p.general) ?? null;
   const rest = partners.filter((p) => p !== fixed);
-  const groups: BoardPartner[][] = [];
-  for (let i = 0; i < rest.length; i += PARTNER_GROUP_SIZE) {
-    groups.push(rest.slice(i, i + PARTNER_GROUP_SIZE));
-  }
-  return { fixed, groups };
+  return { fixed, groups: fillGroups(rest, PARTNER_GROUP_SIZE) };
 }
 
 /** Číslo TV z URL (`/resultboard/2`) → 1…4, jinak null. */

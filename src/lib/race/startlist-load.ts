@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { ENTRY_STATUS, validRegistrationIds } from "@/lib/entries/status";
 
+import type { SpecialStartSpec } from "./special-start";
 import type { BibRange, ChampionBibs } from "./start-settings";
 import {
   compareByStart,
@@ -128,7 +129,42 @@ export type AdminStartRow = {
   personalBest: number | null;
   note: string | null;
   registrationNote: string | null;
+  /** Spec. start z administrace přihlášek. */
+  special: SpecialStartRow | null;
+  /** Vlákno zpráv přihlášky, když v něm přihlašující něco napsal („má zprávu“). */
+  messageThreadId: number | null;
 };
+
+export type SpecialStartRow = SpecialStartSpec & { note: string | null; updatedAt: Date };
+
+/** Spec. starty ročníku podle běžce. */
+export async function loadSpecialStarts(year: number): Promise<Map<string, SpecialStartRow>> {
+  const rows = await prisma.specialStart.findMany({ where: { year } });
+  return new Map(
+    rows.map((row) => [
+      row.runnerId,
+      {
+        kind: row.kind,
+        partnerId: row.kind === "with" ? row.partnerId : null,
+        offsetSeconds: row.kind === "with" ? row.offsetSeconds : 0,
+        note: row.note,
+        updatedAt: row.updatedAt,
+      },
+    ]),
+  );
+}
+
+/**
+ * Přihlášky ročníku, kde přihlašující napsal zprávu (Q216: jen indikátor, spec. start se
+ * nenastavuje automaticky). Vrací id vlákna podle čísla přihlášky.
+ */
+export async function registrationMessageThreads(year: number): Promise<Map<number, number>> {
+  const threads = await prisma.messageThread.findMany({
+    where: { year, registrationId: { not: null }, lastUserMessageAt: { not: null } },
+    select: { id: true, registrationId: true },
+  });
+  return new Map(threads.map((thread) => [thread.registrationId!, thread.id]));
+}
 
 export type StartGroupRow = {
   id: number;
@@ -138,7 +174,7 @@ export type StartGroupRow = {
 };
 
 export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]> {
-  const [lines, validIds, metas] = await Promise.all([
+  const [lines, validIds, metas, specials, threads] = await Promise.all([
     prisma.registrationLine.findMany({
       where: { year },
       include: {
@@ -150,6 +186,8 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
     }),
     validRegistrationIds(year),
     prisma.startLineMeta.findMany({ where: { year } }),
+    loadSpecialStarts(year),
+    registrationMessageThreads(year),
   ]);
   const runnerIds = lines.map((line) => line.runnerId);
   const [lastYear, best] = await Promise.all([
@@ -189,6 +227,8 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       personalBest: bestById.get(line.runnerId) ?? null,
       note: line.note,
       registrationNote: line.registration.note,
+      special: specials.get(line.runnerId) ?? null,
+      messageThreadId: threads.get(line.registrationId) ?? null,
     };
   });
 }
@@ -238,6 +278,13 @@ export async function buildGeneratorInput(
       lastYearTime: row.lastYearTime,
       groupId: row.groupId,
       groupOrder: row.groupOrder,
+      special: row.special
+        ? {
+            kind: row.special.kind,
+            partnerId: row.special.partnerId,
+            offsetSeconds: row.special.offsetSeconds,
+          }
+        : null,
     })),
   };
 }
@@ -256,6 +303,7 @@ export function inputFingerprint(input: GeneratorInput): string {
       e.lastYearTime,
       e.groupId,
       e.groupOrder,
+      e.special ? [e.special.kind, e.special.partnerId, e.special.offsetSeconds] : null,
     ]);
   const payload = JSON.stringify([
     input.model,

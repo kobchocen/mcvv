@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
@@ -13,6 +14,19 @@ import {
   toggleStartLock,
 } from "@/lib/admin/startlist";
 import { requireStaff } from "@/lib/admin/staff";
+import { McvvAdminPartnerDatalist } from "@/components/organisms/mcvv-admin-partner-datalist";
+import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
+import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
+import {
+  partnerOptions,
+  specialCheckState,
+  specialCheckText,
+  specialStartChecks,
+  specialStartCopy,
+  specialStartFlash,
+  specialStartPartnerText,
+  specialStartValue,
+} from "@/lib/admin/special-start-view";
 import { getSiteSettings } from "@/lib/settings/site";
 import { formatInterval } from "@/lib/race/start-settings";
 import {
@@ -49,6 +63,8 @@ type SearchParams = {
   bezec?: string;
   cislo?: string;
   drzi?: string;
+  spec?: string;
+  duvod?: string;
 };
 
 type PageProps = Readonly<{
@@ -83,6 +99,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   await requireStaff();
   const t = await getTranslations({ locale, namespace: "StartAdmin" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
+  const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
   const query = await searchParams;
   const parsedYear = Number.parseInt(query.rok ?? "", 10);
   const year =
@@ -105,6 +122,12 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const championBibs = new Set([champions.men, champions.women].filter((b) => b != null));
 
   const issues = checkStartList(model, allRows, groups);
+  const specialChecks = specialStartChecks(model, ranges, champions, allRows);
+  const specialOptions = partnerOptions(allRows);
+  const specialOptionById = new Map(specialOptions.map((o) => [o.runnerId, o.value]));
+  const specialCopy = specialStartCopy(specialT);
+  const specialFlash = specialStartFlash(specialT, query.spec, query.duvod);
+  const specialCount = allRows.filter((row) => row.special).length;
   const reserve = reserveSummary(
     model,
     ranges,
@@ -181,6 +204,19 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("warnGroupApprox", { id: warning.groupId, deviation: warning.deviation });
       case "groupLockedConflict":
         return t("warnGroupLockedConflict", { id: warning.groupId });
+      case "specOverflow":
+        return t("warnSpecOverflow", {
+          kind: specialT(`kind_${warning.kind}`),
+          names: warning.runnerIds.map(nameOf).join(", "),
+        });
+      case "specPartnerMissing":
+        return t("warnSpecPartnerMissing", { name: nameOf(warning.runnerId) });
+      case "specApprox":
+        return warning.deviation < 0
+          ? t("warnSpecNotPlaced", { name: nameOf(warning.runnerId) })
+          : t("warnSpecApprox", { name: nameOf(warning.runnerId), deviation: warning.deviation });
+      case "specCycle":
+        return t("warnSpecCycle", { names: warning.runnerIds.map(nameOf).join(", ") });
     }
   };
 
@@ -298,9 +334,28 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
           </Link>
         </p>
         <p className="mt-1 text-sm text-race-muted">
-          {t("stats", { valid: valid.length, withBib, withoutBib: valid.length - withBib })}
+          {t("stats", { valid: valid.length, withBib, withoutBib: valid.length - withBib })} ·{" "}
+          <Link
+            href={{ pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year) } }}
+            className="font-medium text-race-accent hover:underline"
+          >
+            {specialT("overviewLink", { count: specialCount })}
+          </Link>
         </p>
 
+        {specialFlash ? (
+          <p
+            role={specialFlash.ok ? "status" : "alert"}
+            className={cn(
+              "mt-6 border-l-4 px-3 py-2 text-sm",
+              specialFlash.ok
+                ? "border-emerald-600 bg-emerald-600/10"
+                : "border-red-600 bg-red-600/10",
+            )}
+          >
+            {specialFlash.text}
+          </p>
+        ) : null}
         {flash ? (
           <p
             role="status"
@@ -674,12 +729,13 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
           </span>
         </form>
 
+        <McvvAdminPartnerDatalist id="spec-start-partners" options={specialOptions} />
         {rows.length === 0 ? (
           <p className="mt-6 text-sm text-race-muted">{t("empty")}</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table
-              className="w-full min-w-[72rem] border-collapse text-left text-sm"
+              className="w-full min-w-[80rem] border-collapse text-left text-sm"
               data-testid="startlist-admin-table"
             >
               <thead>
@@ -694,6 +750,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                   <th className="py-2 pr-3">{t("colClub")}</th>
                   <th className="py-2 pr-3">{t("colRegistration")}</th>
                   <th className="py-2 pr-3">{t("colCategory")}</th>
+                  <th className="py-2 pr-3">{t("colSpecial")}</th>
                   <th className="py-2 pr-3">{t("colLastYear")}</th>
                   <th className="py-2 pr-3">{t("colBest")}</th>
                   <th className="py-2 pr-3">{t("colLock")}</th>
@@ -710,7 +767,70 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                     highlighted={query.bezec === row.runnerId}
                     groupId={groupOf.get(row.runnerId) ?? null}
                     champion={row.bib != null && championBibs.has(row.bib)}
-                    outside={!row.cancelled && outsideCategory(model, ranges, champions, row)}
+                    outside={
+                      !row.cancelled &&
+                      outsideCategory(model, ranges, champions, {
+                        ...row,
+                        specialKind: row.special?.kind ?? null,
+                      })
+                    }
+                    special={(() => {
+                      const check = row.special ? specialChecks.get(row.runnerId) : undefined;
+                      const partnerText = row.special
+                        ? specialStartPartnerText(specialT, row.special, (id) =>
+                            byId.has(id) ? nameOf(id) : null,
+                          )
+                        : null;
+                      return (
+                        <div className="grid justify-items-start gap-0.5">
+                          {row.special ? (
+                            <McvvAdminSpecialStartBadge
+                              label={specialT(`kind_${row.special.kind}`)}
+                              state={check ? specialCheckState(check) : undefined}
+                              title={[
+                                check ? specialCheckText(specialT, check, row.special) : null,
+                                partnerText,
+                                row.special.note,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            />
+                          ) : null}
+                          {partnerText ? (
+                            <span className="max-w-[10rem] truncate text-[0.6875rem] text-race-muted">
+                              {partnerText}
+                            </span>
+                          ) : null}
+                          <span className="flex items-center gap-2">
+                            <McvvAdminSpecialStart
+                              year={year}
+                              runnerId={row.runnerId}
+                              runnerName={row.name}
+                              registrationId={row.registrationId}
+                              from="startovka"
+                              value={specialStartValue(row.special, specialOptionById)}
+                              partnerListId="spec-start-partners"
+                              copy={specialCopy}
+                              compact
+                            />
+                            {row.messageThreadId != null ? (
+                              <Link
+                                href={{
+                                  pathname: "/admin/zpravy/[id]",
+                                  params: { id: String(row.messageThreadId) },
+                                }}
+                                title={specialT("hasMessageTitle")}
+                                aria-label={specialT("hasMessage")}
+                                className="text-xs text-race-accent hover:opacity-80"
+                                data-testid={`has-message-${row.runnerId}`}
+                              >
+                                ✉
+                              </Link>
+                            ) : null}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     labels={{
                       save: t("save"),
                       lock: t("lock"),
@@ -747,6 +867,7 @@ function StartRow({
   groupId,
   champion,
   outside,
+  special,
   labels,
 }: {
   row: AdminStartRow;
@@ -756,6 +877,7 @@ function StartRow({
   groupId: number | null;
   champion: boolean;
   outside: boolean;
+  special: ReactNode;
   labels: {
     save: string;
     lock: string;
@@ -856,6 +978,9 @@ function StartRow({
         </Link>
       </td>
       <td className="py-1.5 pr-3">{row.categoryId}</td>
+      <td className="py-1.5 pr-3" data-testid={`spec-start-${row.runnerId}`}>
+        {special}
+      </td>
       <td className="py-1.5 pr-3 tabular-nums text-race-muted">
         {row.lastYearTime != null ? formatRaceTime(row.lastYearTime) : ""}
       </td>

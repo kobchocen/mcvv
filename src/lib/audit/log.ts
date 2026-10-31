@@ -83,6 +83,9 @@ export type AuditAction =
   | "startlist.proposal_applied"
   | "startlist.group_created"
   | "startlist.group_deleted"
+  // Spec. start běžce (pořadatel / brzy / pozdě / spolu s), cíl `startlist:<rok>/<bezec>`.
+  | "startlist.special_set"
+  | "startlist.special_cleared"
   // Partneři (#107), cíl `partner:<id>`. Smazání = deaktivace (řádek zůstává).
   | "partner.created"
   | "partner.updated"

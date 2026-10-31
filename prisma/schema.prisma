@@ -41,12 +41,12 @@ model Category {
 
 /// Číselník běžců (master data)
 model Runner {
-  id      String    @id @map("id") @db.Char(8)
-  name    String    @map("jmeno") @db.VarChar(50)
-  created DateTime? @map("created")
-  author  String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
+  id          String    @id @map("id") @db.Char(8)
+  name        String    @map("jmeno") @db.VarChar(50)
+  created     DateTime? @map("created")
+  author      String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
   /// Státní příslušnost (#200): ISO 3166-1 alpha-2 (CZ, SK…), NULL = neuvedeno.
-  nationality String? @map("statni_prislusnost") @db.Char(2)
+  nationality String?   @map("statni_prislusnost") @db.Char(2)
 
   // Relations
   runnerPhotos      RunnerPhoto[]
@@ -55,6 +55,8 @@ model Runner {
   startEntries      StartEntry[]
   results           Result[]
   startLineMetas    StartLineMeta[]
+  specialStarts     SpecialStart[]     @relation("SpecialStartRunner")
+  specialPartners   SpecialStart[]     @relation("SpecialStartPartner")
 
   @@map("cis_bezec")
 }
@@ -899,6 +901,38 @@ model StartLineMeta {
   @@id([year, runnerId])
   @@index([groupId])
   @@map("mcvv_start_radek")
+}
+
+/// Typ speciálního startu (jen administrace): pořadatel, start brzy, start pozdě, spolu s.
+enum SpecialStartKind {
+  organizer
+  early
+  late
+  with
+}
+
+/// Speciální start běžce v ročníku (Pavel, 30. 10. 2026). Nastavuje jen pořadatel v administraci,
+/// ve veřejné části se nikde neukazuje. Návrh startovky ho zohlední (organizer → blok pořadatelů,
+/// early → nejdřívější volná čísla, late → nejpozdější, with → posun vůči partnerovi).
+model SpecialStart {
+  year          Int              @map("rok") @db.SmallInt
+  runnerId      String           @map("bezec_id") @db.Char(8)
+  kind          SpecialStartKind @map("typ")
+  /// Jen u `with`: běžec, ke kterému se start váže (přihlášený ve stejném ročníku).
+  partnerId     String?          @map("partner_bezec_id") @db.Char(8)
+  /// Jen u `with`: posun startu vůči partnerovi v sekundách (0 = stejný čas, 120 = o 2 min později).
+  offsetSeconds Int              @default(0) @map("posun_s") @db.SmallInt
+  /// Interní poznámka pořadatele (krátká).
+  note          String?          @map("poznamka") @db.VarChar(200)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  runner  Runner  @relation("SpecialStartRunner", fields: [runnerId], references: [id], onDelete: Cascade)
+  partner Runner? @relation("SpecialStartPartner", fields: [partnerId], references: [id], onDelete: SetNull)
+
+  @@id([year, runnerId])
+  @@index([year, partnerId])
+  @@map("mcvv_spec_start")
 }
 
 /// Prodejní položka závodní kanceláře pro ročník (#207): dohláška na místě, merch apod.

@@ -39,10 +39,26 @@ import { Link } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
 import { nationalityField } from "@/lib/runner/nationality-field";
+import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
+import { McvvAdminPartnerDatalist } from "@/components/organisms/mcvv-admin-partner-datalist";
+import {
+  loadPartnerOptions,
+  specialStartCopy,
+  specialStartFlash,
+  specialStartPartnerText,
+  specialStartValue,
+} from "@/lib/admin/special-start-view";
+import { loadSpecialStarts } from "@/lib/race/startlist-load";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
-  searchParams: Promise<{ mail?: string; sex?: string; stat?: string }>;
+  searchParams: Promise<{
+    mail?: string;
+    sex?: string;
+    stat?: string;
+    spec?: string;
+    duvod?: string;
+  }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -53,7 +69,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AdminRegistrationDetailPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale, rok, id: rawId } = await params;
-  const { mail, sex: sexChanged, stat: nationalityStatus } = await searchParams;
+  const {
+    mail,
+    sex: sexChanged,
+    stat: nationalityStatus,
+    spec: specStatus,
+    duvod: specReason,
+  } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireStaff();
@@ -131,11 +153,19 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       })
     ).map((row) => row.runnerId),
   );
-  const [thread, messageSettings, autoConfirmed] = await Promise.all([
-    loadRegistrationThread(year, id),
-    getMessageSettings(),
-    freeAutoConfirmedIds(year),
-  ]);
+  const [thread, messageSettings, autoConfirmed, specialStarts, partnerOptions, specialT] =
+    await Promise.all([
+      loadRegistrationThread(year, id),
+      getMessageSettings(),
+      freeAutoConfirmedIds(year),
+      loadSpecialStarts(year),
+      loadPartnerOptions(year),
+      getTranslations({ locale, namespace: "SpecialStart" }),
+    ]);
+  const partnerLabel = new Map(partnerOptions.map((option) => [option.runnerId, option.value]));
+  const partnerName = (runnerId: string) => partnerLabel.get(runnerId)?.split(" · ")[0] ?? null;
+  const specialCopy = specialStartCopy(specialT);
+  const specialFlash = specialStartFlash(specialT, specStatus, specReason);
   // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
   // jen ke čtení jako interní poznámka.
   const internalNote = showInternalNote(registration.note, year, !!thread);
@@ -185,6 +215,18 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           {sexChange ? (
             <p role="status" className="mt-3 text-sm font-medium text-race-accent">
               {copy("sexChangeDone", { oldId: sexChange[1], newId: sexChange[2] })}
+            </p>
+          ) : null}
+          {specialFlash ? (
+            <p
+              role={specialFlash.ok ? "status" : "alert"}
+              className={
+                specialFlash.ok
+                  ? "mt-3 text-sm font-medium text-race-accent"
+                  : "mt-3 text-sm text-red-600 dark:text-red-400"
+              }
+            >
+              {specialFlash.text}
             </p>
           ) : null}
           {nationalityStatus === "chyba" ? (
@@ -324,9 +366,18 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
         </section>
 
         <section>
-          <h2 className="font-display text-xl font-semibold">{copy("regsRunners")}</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">{copy("regsRunners")}</h2>
+            <Link
+              href={{ pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year) } }}
+              className="text-sm font-medium text-race-accent hover:underline"
+            >
+              {specialT("overviewLink", { count: specialStarts.size })}
+            </Link>
+          </div>
+          <McvvAdminPartnerDatalist id="spec-start-partners" options={partnerOptions} />
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
+            <table className="w-full min-w-[60rem] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                   <th className="py-2 pr-3">{copy("regsName")}</th>
@@ -337,6 +388,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                   <th className="py-2 pr-3">{copy("regsBib")}</th>
                   <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
                   <th className="py-2 pr-3">{nationalityOptions.label}</th>
+                  <th className="py-2 pr-3">{specialT("column")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -382,6 +434,32 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                           {nationality("save")}
                         </Button>
                       </form>
+                    </td>
+                    <td className="py-2.5 pr-3" data-testid={`spec-start-${line.runnerId}`}>
+                      {(() => {
+                        const special = specialStarts.get(line.runnerId) ?? null;
+                        return (
+                          <div className="grid gap-1">
+                            <McvvAdminSpecialStart
+                              year={year}
+                              runnerId={line.runnerId}
+                              runnerName={line.runner.name}
+                              registrationId={id}
+                              from="detail"
+                              value={specialStartValue(special, partnerLabel)}
+                              partnerListId="spec-start-partners"
+                              copy={specialCopy}
+                            />
+                            {special && (special.kind === "with" || special.note) ? (
+                              <span className="max-w-[16rem] text-xs text-race-muted">
+                                {specialStartPartnerText(specialT, special, partnerName)}
+                                {special.kind === "with" && special.note ? " · " : null}
+                                {special.note}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

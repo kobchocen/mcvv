@@ -30,14 +30,17 @@ export function bibInRange(ranges: BibRange[], categoryId: string, bib: number):
 
 /**
  * Číslo mimo okno vlastní kategorie (kategorie není dogma – všichni běží stejnou trať). Není to
- * chyba, jen informativní štítek „mimo kategorii“. Čísla obhájců a pořadatel v bloku
- * pořadatelů se nepočítají.
+ * chyba, jen informativní štítek „mimo kategorii“. Čísla obhájců a pořadatel / spec. start v
+ * bloku pořadatelů se nepočítají.
  */
 export function outsideCategory(
   model: StartModel,
   ranges: BibRange[],
   champions: ChampionBibs,
-  row: Pick<CheckRow, "categoryId" | "bib" | "organizer">,
+  row: Pick<CheckRow, "categoryId" | "bib" | "organizer"> & {
+    /** Spec. start (pořadatel / brzy / spolu s pořadatelem) smí ležet v bloku pořadatelů. */
+    specialKind?: string | null;
+  },
 ): boolean {
   if (row.bib == null) {
     return false;
@@ -46,7 +49,7 @@ export function outsideCategory(
     bibInRange(ranges, row.categoryId, row.bib) ||
     row.bib === champions.men ||
     row.bib === champions.women ||
-    (row.organizer && inOrganizerBlock(model, ranges, row.bib))
+    ((row.organizer || row.specialKind != null) && inOrganizerBlock(model, ranges, row.bib))
   );
 }
 

@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { adminAccess, getSession } from "@/lib/auth/session";
 import { adminHomeHref } from "@/lib/auth/roles";
 import { getUnreadCount } from "@/lib/messages/store";
@@ -12,6 +14,10 @@ export async function McvvPublicNavbar({
   const session = await getSession();
   // Anonymní návštěvník: žádný dotaz do DB (getUnreadCount vrací null bez sessionu).
   const messages = session ? await getUnreadCount() : null;
+  const starter =
+    session?.role === "starter"
+      ? { href: "/start" as const, label: (await getTranslations("Starter"))("navLink") }
+      : null;
   return (
     <McvvNavbar
       content={content}
@@ -24,6 +30,7 @@ export async function McvvPublicNavbar({
               email: session.email,
               staff: adminAccess(session.role) !== "none",
               adminHref: adminHomeHref(session.role),
+              starter,
               messages,
             }
           : null

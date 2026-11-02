@@ -107,7 +107,7 @@ describe("role permissions", () => {
   it("new restricted roles need a verified e-mail like registrar", () => {
     assert.deepEqual(
       USER_ROLES.filter((role) => requiresVerifiedEmail(role)),
-      ["registrar", "timing", "splitmaker", "race_office"],
+      ["registrar", "timing", "splitmaker", "race_office", "starter"],
     );
   });
 });

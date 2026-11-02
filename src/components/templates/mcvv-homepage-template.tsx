@@ -124,6 +124,13 @@ export async function McvvHomepageTemplate({
                 email: session.email,
                 staff: adminAccess(session.role) !== "none",
                 adminHref: adminHomeHref(session.role),
+                starter:
+                  session.role === "starter"
+                    ? {
+                        href: "/start",
+                        label: (await getTranslations({ locale, namespace: "Starter" }))("navLink"),
+                      }
+                    : null,
                 messages: await getUnreadCount(),
               }
             : null

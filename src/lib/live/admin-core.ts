@@ -34,4 +34,6 @@ export const OUTCOME_LABELS_CS: Record<string, string> = {
   rejected: "odmítnuto",
   replaced: "opraveno",
   deleted: "smazáno",
+  unknown: "neznámé číslo",
+  ignored: "ignorováno",
 };

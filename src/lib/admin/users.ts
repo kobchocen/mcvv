@@ -9,6 +9,7 @@ import { requireAdmin } from "@/lib/admin/staff";
 import { writeAudit } from "@/lib/audit/log";
 import { isUserRole, validateRoleChange, type RoleChangeError } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
+import { parseCorridor } from "@/lib/live/starter-core";
 import { redirect } from "@/i18n/routing";
 
 type Outcome =
@@ -87,5 +88,57 @@ export async function changeUserRole(formData: FormData): Promise<void> {
   } else {
     query.error = outcome.error;
   }
+  redirect({ href: { pathname: "/admin/uzivatele", query }, locale });
+}
+
+function backQuery(back: string): Record<string, string> {
+  const query: Record<string, string> = Object.fromEntries(
+    new URLSearchParams(/^[\w%=&+.@-]*$/.test(back) ? back : ""),
+  );
+  delete query.saved;
+  delete query.error;
+  delete query.mail;
+  delete query.corridor;
+  return query;
+}
+
+/**
+ * Přiřazení startovního koridoru účtu s rolí Startér (jen admin). Prázdná hodnota koridor
+ * odebere (startér pak obrazovku /start neotevře). Změna se zapíše do auditu.
+ */
+export async function changeStartCorridor(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const locale = await getLocale();
+  const userId = Number.parseInt(String(formData.get("userId") ?? ""), 10);
+  const raw = String(formData.get("corridor") ?? "");
+  const corridor = raw === "" ? null : parseCorridor(raw);
+  const query = backQuery(String(formData.get("back") ?? ""));
+
+  let ok = false;
+  if (Number.isSafeInteger(userId) && userId > 0 && (raw === "" || corridor !== null)) {
+    ok = await prisma.$transaction(async (tx) => {
+      const target = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, role: true, startCorridor: true },
+      });
+      if (!target || target.role !== "starter") return false;
+      if (target.startCorridor === corridor) return true;
+      await tx.user.update({ where: { id: target.id }, data: { startCorridor: corridor } });
+      await writeAudit(
+        {
+          actor,
+          action: "user.start_corridor_change",
+          target: `user:${target.id}`,
+          detail: { email: target.email, from: target.startCorridor, to: corridor },
+        },
+        tx,
+      );
+      return true;
+    });
+  }
+
+  revalidatePath("/[locale]/admin/uzivatele", "page");
+  if (ok) query.corridor = String(userId);
+  else query.error = "not_found";
   redirect({ href: { pathname: "/admin/uzivatele", query }, locale });
 }

@@ -29,6 +29,7 @@ export const USER_NEXT_PATHS = [
   "/zpravy",
   "/mezicasy",
   "/mezicasy/speaker",
+  "/start",
   "/kancelar",
   "/kancelar/prodejky",
   "/kancelar/polozky",
@@ -116,6 +117,7 @@ export type LoginTarget =
  * - race-day-only account (Časomíra) → race-day section,
  * - split-time operator (splitmaker) → split entry page,
  * - race office (race_office) → cash desk (`/kancelar`),
+ * - starter (starter) → start screen (`/start`),
  * - everybody else → the application page (`/prihlasky`).
  * `access` accepts the legacy boolean (`true` = full staff); `role` is needed only to
  * tell the splitmaker and the race office apart (they have no admin access).
@@ -153,6 +155,9 @@ export function loginTarget(
   }
   if (role === "race_office") {
     return { kind: "user", path: "/kancelar", query: "" };
+  }
+  if (role === "starter") {
+    return { kind: "user", path: "/start", query: "" };
   }
   return { kind: "default" };
 }

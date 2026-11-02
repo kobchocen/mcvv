@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hookform/resolvers':
-        specifier: 6.0.0
-        version: 6.0.0(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.3.1))(valibot@1.4.2(typescript@6.0.3))(zod@4.6.7)
+        specifier: 6.0.2
+        version: 6.0.2(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.3.1))(valibot@1.4.2(typescript@6.0.3))(zod@4.6.7)
       '@prisma/adapter-mariadb':
         specifier: ^7.10.1
         version: 7.10.1
@@ -114,8 +114,8 @@ importers:
         specifier: ^5.0.9
         version: 5.0.9(jspdf@4.2.1)
       lucide-react:
-        specifier: ^1.61.0
-        version: 1.61.0(@types/react@19.3.0)(react@19.3.1)
+        specifier: ^1.65.0
+        version: 1.65.0(@types/react@19.3.0)(react@19.3.1)
       mariadb:
         specifier: ^3.5.4
         version: 3.5.4
@@ -129,8 +129,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       nodemailer:
-        specifier: ^10.2.1
-        version: 10.2.1
+        specifier: ^10.3.1
+        version: 10.3.1
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -147,8 +147,8 @@ importers:
         specifier: 7.91.0
         version: 7.91.0(@types/react@19.3.0)(react@19.3.1)
       react-resizable-panels:
-        specifier: 4.14.8
-        version: 4.14.8(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 4.15.2
+        version: 4.15.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       recharts:
         specifier: 3.10.1
         version: 3.10.1(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react-is@18.3.1)(react@19.3.1)(redux@5.0.1)
@@ -694,12 +694,11 @@ packages:
   '@formatjs/intl-localematcher@0.8.14':
     resolution: {integrity: sha512-8O7V38QmbB11+ryJ3KM/znrzXtiqgpXzqNoqDsndHZZ5/zDKTTL+cf5F0mzXkQEwhx8IlWnqYvEovf2S5EwLTw==}
 
-  '@hookform/resolvers@6.0.0':
-    resolution: {integrity: sha512-6iBzQnB+YwAveVc8HUi6QYLITn5X+xNKRMFIcNXHZlvp2aTI7yWbj4n/JodXxirMCcBc4VCjb2aYAJh4x07mVw==}
+  '@hookform/resolvers@6.0.2':
+    resolution: {integrity: sha512-e2dqUOlaGuirKVOd/iZWk/Yg5zeaGw7t0hSc3LzxL3o7eZGwZkTyEbBL8H52m0wRKEsNLWoMGOiXGHbPHTXlEQ==}
     peerDependencies:
       '@sinclair/typebox': '>=0.25.24'
       '@standard-schema/spec': ^1.0.0
-      '@typeschema/main': '>=0.13.7'
       '@vinejs/vine': ^2.0.0 || ^3.0.0 || ^4.0.0
       ajv: ^8.12.0
       ajv-errors: ^3.0.0
@@ -726,8 +725,6 @@ packages:
       '@sinclair/typebox':
         optional: true
       '@standard-schema/spec':
-        optional: true
-      '@typeschema/main':
         optional: true
       '@vinejs/vine':
         optional: true
@@ -4157,8 +4154,8 @@ packages:
     resolution: {integrity: sha512-DqC6n3QQ77zdFpCMASA1a3Jlb64Hv2N2DciFGkO/4L9+q/IpIAuRlKOvCXabtRW6cQf8usbmM6BE/TOPysCdIA==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
 
-  lucide-react@1.61.0:
-    resolution: {integrity: sha512-v2SQPPPNjnr+BlhL9Spuzmo5yR+hLkftfuE4E3jaxdNPgSH0hJKPcLJBP7yAta87jQNPsSERS59PJjCJ/CorBA==}
+  lucide-react@1.65.0:
+    resolution: {integrity: sha512-roSdtzudEY39i2hn5LLjA8toYfhF2z4S10WSqZF4ubXpHlOmNTvaxMxZLdJfQDi6pEifQWX+cRmYihKSsvAxfA==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -4324,8 +4321,8 @@ packages:
     resolution: {integrity: sha512-OmO8+GM1JUZqXET720VrJCwkjUCXmCMQm0Z3UDDRbfNLHS4NEAvY60j5jiFv0tkKw2PNNlqOLhahVmwJIOLDIQ==}
     engines: {node: '>=18'}
 
-  nodemailer@10.2.1:
-    resolution: {integrity: sha512-ZrDNsPFoDMwefNs7sJwrYiEJ/CG4ClJWDZv05iNJsEBWa8GRDry1QJHTJxsuTAY9eDDKjX4k+q3SxslXJOao7w==}
+  nodemailer@10.3.1:
+    resolution: {integrity: sha512-uF0AFsJC07Y1vdW7p580DKAnh7rAO+4UPSSB3mDCPNDufoiaOebV6JmrzpxB14OjEEEiBsNdYoM2Y+fN8M7BBA==}
     engines: {node: '>=20.0.0'}
 
   normalize-package-data@6.0.2:
@@ -4770,11 +4767,15 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.14.8:
-    resolution: {integrity: sha512-kVot7JCIZct85ZY87vww95R7tI25VSTjHpEAIIy2YcsOtbtwG6l1+vDD6TCYgmgE/JSp0ADqNooHn97Y6dMOFw==}
+  react-resizable-panels@4.15.2:
+    resolution: {integrity: sha512-DbG1jkgGxkt8FVLL9/yr2Zgc2s3pF7iHDWccLEILLq9FT3VSYJqBha8yOALKeeMpV595MnvNBQvdMJLpi1spYA==}
     peerDependencies:
+      '@types/react': ^18.2.6 || ^19.0.0
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
@@ -5989,7 +5990,7 @@ snapshots:
     dependencies:
       '@formatjs/fast-memoize': 3.1.7
 
-  '@hookform/resolvers@6.0.0(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.3.1))(valibot@1.4.2(typescript@6.0.3))(zod@4.6.7)':
+  '@hookform/resolvers@6.0.2(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.3.1))(valibot@1.4.2(typescript@6.0.3))(zod@4.6.7)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.91.0(@types/react@19.3.0)(react@19.3.1)
@@ -9511,7 +9512,7 @@ snapshots:
 
   lru.min@1.1.4: {}
 
-  lucide-react@1.61.0(@types/react@19.3.0)(react@19.3.1):
+  lucide-react@1.65.0(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       react: 19.3.1
     optionalDependencies:
@@ -9685,7 +9686,7 @@ snapshots:
 
   node-releases@2.0.60: {}
 
-  nodemailer@10.2.1: {}
+  nodemailer@10.3.1: {}
 
   normalize-package-data@6.0.2:
     dependencies:
@@ -10040,10 +10041,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  react-resizable-panels@4.14.8(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  react-resizable-panels@4.15.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
+    optionalDependencies:
+      '@types/react': 19.3.0
 
   react-style-singleton@2.2.3(@types/react@19.3.0)(react@19.3.1):
     dependencies:

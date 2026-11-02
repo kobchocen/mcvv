@@ -79,7 +79,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  const session = await requireStaff();
   const year = Number.parseInt(rok, 10);
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(year) || !Number.isFinite(id)) {
@@ -111,6 +111,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
 
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const nationality = await getTranslations({ locale, namespace: "Nationality" });
+  const runnersCopy = await getTranslations({ locale, namespace: "AdminRunners" });
   const nationalityOptions = await nationalityField(locale);
   const relatedPayments = payments.filter(
     (payment) => paymentRegistrationId(payment.registrationId) === id,
@@ -417,6 +418,20 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                           hasResults={runnersWithResults.has(line.runnerId)}
                           copy={sexCopy}
                         />
+                        {/* Změna jména (#198, Q249) – jen admin, v Číselníky → Běžci. */}
+                        {session.role === "admin" ? (
+                          <Link
+                            href={{
+                              pathname: "/admin/ciselniky/bezci/[id]",
+                              params: { id: line.runnerId },
+                              query: { z: `${year}-${id}` },
+                            }}
+                            className="ml-2 text-xs font-semibold text-race-accent hover:underline"
+                            data-testid={`runner-rename-link-${line.runnerId}`}
+                          >
+                            {runnersCopy("renameShortcut")}
+                          </Link>
+                        ) : null}
                       </td>
                       <td className="py-2.5 pr-3">
                         <form

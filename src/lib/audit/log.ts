@@ -59,6 +59,9 @@ export type AuditAction =
   | "runner.sex_changed"
   // Státní příslušnost běžce (#200) změněná pořadatelem, detail = `diffFields` (nationality).
   | "runner.nationality_changed"
+  // Změna jména běžce (#198), detail = staré / nové jméno, režim a přepsané řádky ročníků
+  // (rok, tabulka, původní bezec_name) pro ruční vrácení.
+  | "runner.name_changed"
   | "registration.updated"
   | "registration.confirmed"
   | "payment.created"

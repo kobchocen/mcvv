@@ -1,5 +1,6 @@
 import { allocateRunnerId } from "@/lib/admin/runner-sex-core";
 import { prisma } from "@/lib/db/client";
+import { matchRunnerByPreviousName } from "@/lib/entries/runner-match";
 import {
   defaultCategory,
   eligibleCategoriesFor,
@@ -59,6 +60,13 @@ export async function resolveRunner(input: {
     }
     return { error: "ambiguous" };
   }
+  // Dřívější jméno (#198, Q252): po přejmenování (svatba / oprava) drží staré jméno jen
+  // ročníky ve výsledcích a startovkách. Jednoznačná shoda jméno + rok + pohlaví = týž běžec.
+  const previous = await findRunnerByPreviousName(name, input.birthYear, sex, yearMates);
+  if (previous) {
+    await fillNationality(previous);
+    return { id: previous.id, name: previous.name, created: false };
+  }
   // Same allocation as the admin sex change: YYYY + 0/5 + next sequence of that prefix.
   const id = allocateRunnerId(
     yearMates.map((row) => row.id),
@@ -69,6 +77,29 @@ export async function resolveRunner(input: {
     data: { id, name, author: "web", nationality },
   });
   return { id, name, created: true };
+}
+
+async function findRunnerByPreviousName<T extends { id: string }>(
+  name: string,
+  birthYear: number,
+  sex: string,
+  yearMates: readonly T[],
+): Promise<T | null> {
+  const prefix = `${birthYear}${sex}`;
+  const where = { runnerId: { startsWith: prefix }, runnerName: name };
+  // Kolace sloupce je case/accent-insensitive; přesné porovnání dělá matchRunnerByPreviousName.
+  const [results, starts] = await Promise.all([
+    prisma.result.findMany({ where, select: { runnerId: true, runnerName: true } }),
+    prisma.startEntry.findMany({ where, select: { runnerId: true, runnerName: true } }),
+  ]);
+  const id = matchRunnerByPreviousName({
+    wanted: name,
+    birthYear,
+    sexDigit: sex,
+    rows: [...results, ...starts].map((row) => ({ runnerId: row.runnerId, name: row.runnerName })),
+    existingIds: new Set(yearMates.map((row) => row.id)),
+  });
+  return yearMates.find((row) => row.id === id) ?? null;
 }
 
 export function eligibleCategories<T extends { sex: string; age: number }>(

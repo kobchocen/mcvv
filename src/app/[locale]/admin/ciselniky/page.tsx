@@ -36,6 +36,15 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
       title: copy("dictsClubs"),
       hint: copy("dictsClubsHint"),
     },
+    ...(isAdmin
+      ? [
+          {
+            href: "/admin/ciselniky/bezci/slouceni" as const,
+            title: copy("runnerMergeTitle"),
+            hint: copy("runnerMergeHint"),
+          },
+        ]
+      : []),
     {
       href: "/admin/ciselniky/kluby/slouceni" as const,
       title: copy("clubMergeTitle"),

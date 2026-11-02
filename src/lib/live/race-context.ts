@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { raceStartFor } from "@/lib/race/phase";
-import { startModelFromEdition } from "@/lib/race/start-time";
 
 import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "./online-results-core";
 import { durationFromSetting, startOffsetLimitFromSetting } from "./splits-screen-core";
-import { DEFAULT_START_INTERVAL_S } from "./start-time";
 import { LIVE_STATIONS_KEY, parseStations, type Station } from "./stations";
 
 export const LIVE_ZERO_OVERRIDE_KEY = "live_zero_override";
@@ -18,14 +16,15 @@ export const LIVE_DNS_GRACE_FALLBACK_KEY = "live_dns_grace_fallback";
 
 export type RaceContext = {
   year: number;
-  /** Nula závodu (start čísla 1 a 601). */
+  /** Nula závodu (start čísla 1 a prvního čísla 2. startu, `secondStartFrom`). */
   zero: Date;
+  /** Interval mezi čísly z modelu ročníku (st_interval, výchozí 15 s). */
   intervalS: number;
-  /** První číslo 2. startu z modelu ročníku (st_druhy_od, výchozí 601) – hranice koridorů startéra. */
+  /** První číslo 2. startu z modelu ročníku (st_druhy_od, výchozí 601) – hranice koridorů a výpočet startovních časů ve všech živých modulech. */
   secondStartFrom: number;
   /** Nula je přepsaná pro zkoušku nanečisto. */
   zeroOverridden: boolean;
-  /** Skutečná nula ročníku (den závodu 10:15) bez ohledu na zkušební nulu. */
+  /** Skutečná nula ročníku (den závodu v nulový čas ročníku st_nula_s, výchozí 10:15) bez ohledu na zkušební nulu. */
   officialZero: Date;
   raceDate: Date | null;
   /** Práh „víc než … před / po plánu“ na Startu (sekundy). */
@@ -46,36 +45,29 @@ export function parseZeroOverride(raw: string | null | undefined): Date | null {
 
 export async function getRaceContext(): Promise<RaceContext> {
   const current = await currentRaceYear();
-  const [edition, settings] = await Promise.all([
-    current.editionId
-      ? prisma.edition.findUnique({
-          where: { id: current.editionId },
-          select: { startInterval: true, secondStartFrom: true },
-        })
-      : null,
-    prisma.setting.findMany({
-      where: {
-        key: {
-          in: [
-            LIVE_ZERO_OVERRIDE_KEY,
-            LIVE_START_OFFSET_LIMIT_KEY,
-            LIVE_DNS_GRACE_KEY,
-            LIVE_DNS_GRACE_FALLBACK_KEY,
-          ],
-        },
+  const model = current.startModel;
+  const settings = await prisma.setting.findMany({
+    where: {
+      key: {
+        in: [
+          LIVE_ZERO_OVERRIDE_KEY,
+          LIVE_START_OFFSET_LIMIT_KEY,
+          LIVE_DNS_GRACE_KEY,
+          LIVE_DNS_GRACE_FALLBACK_KEY,
+        ],
       },
-      select: { key: true, text: true },
-    }),
-  ]);
+    },
+    select: { key: true, text: true },
+  });
   const setting = (key: string) => settings.find((row) => row.key === key)?.text;
   const overrideZero = parseZeroOverride(setting(LIVE_ZERO_OVERRIDE_KEY));
-  const officialZero = raceStartFor(current.raceDate, current.year);
+  const officialZero = raceStartFor(current.raceDate, current.year, model.zeroSeconds);
   return {
     year: current.year,
     zero: overrideZero ?? officialZero,
     officialZero,
-    intervalS: edition?.startInterval || DEFAULT_START_INTERVAL_S,
-    secondStartFrom: startModelFromEdition(edition).secondStartFrom,
+    intervalS: model.intervalSeconds,
+    secondStartFrom: model.secondStartFrom,
     zeroOverridden: overrideZero !== null,
     raceDate: current.raceDate,
     startLimitS: startOffsetLimitFromSetting(setting(LIVE_START_OFFSET_LIMIT_KEY)),

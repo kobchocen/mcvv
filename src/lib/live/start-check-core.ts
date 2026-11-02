@@ -49,8 +49,10 @@ export function startOffsetSeconds(
   zero: Date,
   bib: number,
   intervalS: number,
+  secondStartFrom: number,
 ): number {
-  return Math.round((startedAt.getTime() - startInstant(zero, bib, intervalS).getTime()) / 1000);
+  const planned = startInstant(zero, bib, intervalS, secondStartFrom);
+  return Math.round((startedAt.getTime() - planned.getTime()) / 1000);
 }
 
 /** `+0:05`, `-1:10`, `0:00` – odchylka pro přehled a klienta. */
@@ -144,7 +146,7 @@ export type StartSummary = {
   unknown: number;
   /** Start doplněný ze splitu – startér závodníka neoznačil. */
   notMarked: number;
-  /** „Odstartovat teď“ víc než 15 s po plánu. */
+  /** „Odstartovat teď“ víc než jeden interval ročníku po plánu. */
   late: number;
 };
 
@@ -155,7 +157,7 @@ export type StartSummary = {
 export function buildStartOverview(
   startList: readonly StartListRow[],
   records: readonly StartRecord[],
-  ctx: { zero: Date; intervalS: number },
+  ctx: { zero: Date; intervalS: number; secondStartFrom: number },
 ): { rows: StartOverviewRow[]; summary: StartSummary } {
   const byBib = new Map(records.map((record) => [record.bib, record]));
   const seen = new Set<number>();
@@ -165,7 +167,7 @@ export function buildStartOverview(
     return {
       ...base,
       known,
-      planned: startInstant(ctx.zero, base.bib, ctx.intervalS),
+      planned: startInstant(ctx.zero, base.bib, ctx.intervalS, ctx.secondStartFrom),
       record,
       offsetS: record
         ? startOffsetSeconds(
@@ -173,6 +175,7 @@ export function buildStartOverview(
             ctx.zero,
             base.bib,
             ctx.intervalS,
+            ctx.secondStartFrom,
           )
         : null,
     };

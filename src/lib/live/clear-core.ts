@@ -2,7 +2,7 @@ import { FINISH_SPLIT, isSplitCode, type Station } from "./stations";
 
 /**
  * „Vyčistit mezičasy ročníku“ (Q31, Q32) – čistá logika bez DB: filtr, potvrzení a ochrana
- * v den závodu. Hromadné mazání je zakázané od skutečné nuly ročníku (den závodu 10:15,
+ * v den závodu. Hromadné mazání je zakázané od skutečné nuly ročníku (den závodu v nulu ročníku,
  * zkušební nula se nebere v úvahu); jednotlivé opravy jdou vždy (editace mezičasů).
  */
 
@@ -65,7 +65,7 @@ export function confirmationMatches(typed: string | null | undefined, year: numb
   return (typed ?? "").trim() === String(year);
 }
 
-/** Q32: hromadné vyčištění je zakázané od skutečné nuly ročníku (10:15 v den závodu) dál. */
+/** Q32: hromadné vyčištění je zakázané od skutečné nuly ročníku (nula ročníku v den závodu) dál. */
 export function clearBlocked(now: Date, officialZero: Date): boolean {
   return now.getTime() >= officialZero.getTime();
 }

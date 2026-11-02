@@ -10,6 +10,7 @@ import {
 import { formatRaceDate } from "@/lib/format/date";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
+import { fillPlaceholders, startTextParams } from "@/lib/race/start-text";
 import {
   categoryBirthYearBound,
   FALLBACK_ROZPIS_EDITION_ID,
@@ -91,8 +92,12 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   const editionId = edition?.id ?? editionNumber(raceYear);
   const rozpisYear = edition?.date ? edition.date.getUTCFullYear() : raceYear.year;
 
-  const intervalSeconds = String(edition?.startInterval ?? 15);
-  const rawSections = program.raw("sections") as McvvProgramContent["sections"];
+  // Čas startu a interval podle modelu aktuálního ročníku (st_nula_s, st_interval).
+  const startText = startTextParams(raceYear.startModel);
+  const rawSections = fillPlaceholders(
+    program.raw("sections") as McvvProgramContent["sections"],
+    startText,
+  );
   const sections: McvvProgramContent["sections"] = {
     ...rawSections,
     date: edition?.date
@@ -100,7 +105,10 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
       : rawSections.date,
     start: {
       ...rawSections.start,
-      body: program("sections.start.body", { seconds: intervalSeconds }),
+      body: program("sections.start.body", {
+        seconds: startText.interval,
+        startTime: startText.startTime,
+      }),
     },
     categories: {
       ...rawSections.categories,
@@ -126,7 +134,10 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
     fees: program.raw("fees") as McvvProgramContent["fees"],
     prizes: program.raw("prizes") as McvvProgramContent["prizes"],
     categories: program.raw("categories") as McvvProgramContent["categories"],
-    timetable: program.raw("timetable") as McvvProgramContent["timetable"],
+    timetable: fillPlaceholders(
+      program.raw("timetable") as McvvProgramContent["timetable"],
+      startText,
+    ),
   };
 
   const dash = content.dash;

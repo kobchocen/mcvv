@@ -44,14 +44,14 @@ export async function McvvHomepageTemplate({
   locale,
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
-  const { year, deadline, open, raceDate } = await currentRaceYear();
+  const { year, deadline, open, raceDate, startModel } = await currentRaceYear();
   const [settings, ofeed, { resultsCount, startlistCount, entriesCount }] = await Promise.all([
     getSiteSettings(),
     getOfeedSettings().catch(() => null),
     // cached per replica for a minute, revalidated by registrations and imports (DB load)
     getHomeCounts(year),
   ]);
-  const raceStart = raceStartFor(raceDate, year);
+  const raceStart = raceStartFor(raceDate, year, startModel.zeroSeconds);
   const now = new Date();
   const phase = resolveHeroPhase({
     now,

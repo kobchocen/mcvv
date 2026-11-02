@@ -101,6 +101,17 @@ describe("spec. start ranges (Q236, Q221, Q222)", () => {
     assert.ok(inAnySpecialRange(MODEL, 620));
     assert.ok(!inAnySpecialRange(MODEL, 150));
   });
+  it("derives the second-line ranges from the edition boundary (st_druhy_od = 501)", () => {
+    const m501 = { ...MODEL, secondStartFrom: 501 };
+    assert.deepEqual(specialBibRange(m501, "organizer", 2), { from: 501, to: 540 });
+    assert.deepEqual(specialBibRange(m501, "early", 2), { from: 541, to: 599 });
+    assert.deepEqual(specialBibRange(m501, "late", 2), { from: 761, to: 799 });
+    assert.deepEqual(specialBibRange(m501, "late", 1), { from: 261, to: 299 });
+    assert.equal(specialRangeText(m501, "organizer"), "1–40 / 501–540");
+    assert.ok(inSpecialRange(m501, "organizer", 520));
+    assert.ok(!inSpecialRange(m501, "organizer", 620), "601+ is not 1–40 of line 2 any more");
+    assert.ok(inSpecialRange(m501, "early", 599));
+  });
 });
 
 describe("parseOffset / formatOffset (Q224, Q235)", () => {
@@ -152,6 +163,20 @@ describe("generateStartList – organizer / early / late", () => {
     assert.equal(line(j).reason, "organizer");
     assert.equal(line(j).outsideCategory, false);
     assert.deepEqual(result.warnings, []);
+  });
+
+  it("numbers organizers from the edition boundary (501), not a fixed 601", () => {
+    const m501 = { ...MODEL, secondStartFrom: 501 };
+    const k501: BibRange[] = RANGES.map((r) =>
+      r.bibFrom > 600 ? { ...r, bibFrom: r.bibFrom - 100, bibTo: r.bibTo - 100 } : r,
+    );
+    const j = entry({ categoryId: "J", special: organizer });
+    const k = entry({ categoryId: "K", special: organizer });
+    const ke = entry({ categoryId: "K", special: early });
+    const { bib } = run([j, k, ke, ...filler("K", 3)], { model: m501, ranges: k501 });
+    assert.equal(bib(j), 1);
+    assert.equal(bib(k), 501);
+    assert.equal(bib(ke), 541);
   });
 
   it("puts early runners on 41+ / 641+", () => {

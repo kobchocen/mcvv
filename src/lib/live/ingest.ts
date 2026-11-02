@@ -161,7 +161,11 @@ async function applyWebEntry(
 
   // create / correct: spočítat čas od startu daného čísla
   const punchedAt = entry.punchedAt;
-  const check = checkPunch(punchedAt, startInstant(ctx.zero, entry.bib, ctx.intervalS), now);
+  const check = checkPunch(
+    punchedAt,
+    startInstant(ctx.zero, entry.bib, ctx.intervalS, ctx.secondStartFrom),
+    now,
+  );
   if (!check.ok) {
     const row = await tx.splitEntry.create({
       data: {

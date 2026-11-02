@@ -1,25 +1,39 @@
-/**
- * Startovní čas z čísla – legacy pravidlo 1:1 (revize kap. 3.2), bez DB.
- *
- *   nula = 10:15:00 Europe/Prague v den závodu, interval 15 s,
- *   n' = číslo > 600 ? číslo − 600 : číslo, start = nula + interval · (n' − 1).
- *
- * Čísla 1 a 601 startují současně (dva paralelní starty). Až vznikne společný modul
- * startovních časů (#114), nahradí tenhle helper; vstupy i výstupy jsou stejné.
- */
-export const SECOND_WAVE_AFTER = 600;
-export const DEFAULT_START_INTERVAL_S = 15;
+import { DEFAULT_START_MODEL, startSlot } from "@/lib/race/start-time";
 
-export function startOffsetSeconds(bib: number, intervalS = DEFAULT_START_INTERVAL_S): number {
+/**
+ * Startovní čas z čísla pro živé moduly (ingest, online výsledky, mezičasy, speaker, start,
+ * OFeed) – bez DB. Pravidlo i hranici bere ze společného modelu startu ročníku (#114,
+ * `src/lib/race/start-time.ts`):
+ *
+ *   n' = číslo >= první číslo 2. startu ? číslo − (první číslo 2. startu − 1) : číslo
+ *   start = nula + interval · (n' − 1)
+ *
+ * První číslo 2. startu je `st_druhy_od` ročníku (`RaceContext.secondStartFrom`), výchozí 601.
+ * Čísla 1 a `secondStartFrom` startují současně (dva paralelní starty).
+ */
+export const DEFAULT_START_INTERVAL_S = DEFAULT_START_MODEL.intervalSeconds;
+/** Výchozí první číslo 2. startu, když ročník nemá model (`DEFAULT_START_MODEL`). */
+export const DEFAULT_SECOND_START_FROM = DEFAULT_START_MODEL.secondStartFrom;
+
+export function startOffsetSeconds(
+  bib: number,
+  intervalS: number,
+  secondStartFrom: number,
+): number {
   if (!Number.isInteger(bib) || bib < 1) {
     throw new RangeError(`Invalid bib ${bib}`);
   }
-  const n = bib > SECOND_WAVE_AFTER ? bib - SECOND_WAVE_AFTER : bib;
-  return intervalS * (n - 1);
+  const slot = startSlot({ ...DEFAULT_START_MODEL, secondStartFrom }, bib);
+  return intervalS * (slot - 1);
 }
 
-export function startInstant(zero: Date, bib: number, intervalS = DEFAULT_START_INTERVAL_S): Date {
-  return new Date(zero.getTime() + startOffsetSeconds(bib, intervalS) * 1000);
+export function startInstant(
+  zero: Date,
+  bib: number,
+  intervalS: number,
+  secondStartFrom: number,
+): Date {
+  return new Date(zero.getTime() + startOffsetSeconds(bib, intervalS, secondStartFrom) * 1000);
 }
 
 /** Celé sekundy od individuálního startu (zaokrouhleno dolů jako legacy `time() − start`). */
@@ -27,9 +41,12 @@ export function secondsSinceStart(
   zero: Date,
   bib: number,
   at: Date,
-  intervalS = DEFAULT_START_INTERVAL_S,
+  intervalS: number,
+  secondStartFrom: number,
 ): number {
-  return Math.floor((at.getTime() - startInstant(zero, bib, intervalS).getTime()) / 1000);
+  return Math.floor(
+    (at.getTime() - startInstant(zero, bib, intervalS, secondStartFrom).getTime()) / 1000,
+  );
 }
 
 /** `m:ss` jako legacy zobrazení mezičasu. */

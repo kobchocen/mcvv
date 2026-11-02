@@ -15,7 +15,8 @@ import { bibForSlot, startSeriesForBib, startSlot, type StartModel } from "./sta
  *
  * a) spec. starty s rozsahem (viz `special-start.ts`) dostanou čísla ve svém rozsahu ve startu
  *    své kategorie, postupně podle pořadí kategorií a jména: pořadatel 1–40 / 601–640,
- *    brzy 41–99 / 641–699, pozdě 261–299 / 861–899 (pozdě plní rozsah od konce). Pořadatel
+ *    brzy 41–99 / 641–699, pozdě 261–299 / 861–899 (sloty startu, 2. řada podle hranice
+ *    ročníku – příklad pro 601; pozdě plní rozsah od konce). Pořadatel
  *    je jen běžec se spec. startem „pořadatel“ (přihláška č. 1 už nic neurčuje). Když rozsah
  *    nestačí, zbytek dostane nejbližší volná čísla mimo rozsah a generátor upozorní (Q237).
  *    Běžci „spolu s“, kteří se k nim (i přes další běžce) váží, jdou s nimi (Q227);

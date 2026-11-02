@@ -40,6 +40,8 @@ type Props = {
   userName: string;
   zeroIso: string;
   intervalS: number;
+  /** První číslo 2. startu (hranice koridorů z modelu ročníku). */
+  secondStartFrom: number;
   zeroOverridden: boolean;
   /** Práh odchylky na Startu v sekundách (nastavení admina, výchozí 2 min). */
   startLimitS?: number;
@@ -71,6 +73,7 @@ export function McvvSplitsClient({
   userName,
   zeroIso,
   intervalS,
+  secondStartFrom,
   zeroOverridden,
   startLimitS = DEFAULT_START_OFFSET_LIMIT_S,
   locale,
@@ -347,6 +350,7 @@ export function McvvSplitsClient({
       atStart,
       zero,
       intervalS,
+      secondStartFrom,
       bib: r.bib,
       punchedAt: r.punchedAt,
       serverTime: r.time,

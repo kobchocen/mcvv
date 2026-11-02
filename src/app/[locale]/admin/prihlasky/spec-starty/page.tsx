@@ -68,7 +68,7 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
   const byId = new Map(rows.map((row) => [row.runnerId, row]));
   const options = partnerOptions(rows);
   const checks = specialStartChecks(model, rows);
-  const copy = specialStartCopy(t);
+  const copy = specialStartCopy(t, model);
   const flash = specialStartFlash(t, query.spec, query.duvod, model.intervalSeconds);
 
   const special = rows

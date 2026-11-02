@@ -27,6 +27,7 @@ import {
   type StarterMark,
   type StarterRunner,
 } from "@/lib/live/starter-core";
+import { DEFAULT_START_INTERVAL_S } from "@/lib/live/start-time";
 import { loadValue, saveValue } from "@/lib/live/queue-store";
 
 import styles from "./mcvv-starter-client.module.css";
@@ -350,6 +351,8 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
   }, [flush]);
 
   // --- odvozený stav ---
+  /** Interval ročníku (st_interval) – zóny fronty a práh pozdního startu. */
+  const intervalS = snapshot?.intervalS ?? DEFAULT_START_INTERVAL_S;
   const runners = useMemo<StarterRunner[]>(() => {
     if (!snapshot) return [];
     return snapshot.runners.map((runner) => ({
@@ -367,8 +370,13 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
     const server = new Map<number, StarterMark>(
       (snapshot?.marks ?? []).map((mark) => [mark.bib, mark]),
     );
-    return mergePending(server, [...acked, ...pending], (bib) => byBib.get(bib)?.plannedMs);
-  }, [snapshot, acked, pending, byBib]);
+    return mergePending(
+      server,
+      [...acked, ...pending],
+      (bib) => byBib.get(bib)?.plannedMs,
+      intervalS,
+    );
+  }, [snapshot, acked, pending, byBib, intervalS]);
   const settings = snapshot?.settings;
   const redPhaseS = settings?.redPhaseS ?? 5;
   const view$ = useMemo(
@@ -376,8 +384,9 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
       buildStarterView(runners, marks, now, {
         redPhaseS,
         dnsWindowS: settings?.dnsWindowS ?? 300,
+        intervalS,
       }),
-    [runners, marks, now, redPhaseS, settings?.dnsWindowS],
+    [runners, marks, now, redPhaseS, settings?.dnsWindowS, intervalS],
   );
   const quality = clockQuality({
     uncertaintyMs: clock?.uncertainty ?? null,
@@ -773,7 +782,9 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
     if (row.state === "missing") return { className: styles.liDns, label: t("stMissing") };
     if (row.state === "red") return { className: styles.liDns, label: t("stNotMarked") };
     const remaining = row.plannedMs - now;
-    const zone = remaining <= 15_000 ? styles.liNow : remaining <= 30_000 ? styles.liNext : "";
+    const intervalMs = intervalS * 1000;
+    const zone =
+      remaining <= intervalMs ? styles.liNow : remaining <= 2 * intervalMs ? styles.liNext : "";
     if (row.state === "marked") return { className: `${styles.liMk} ${zone}`, label: t("atStart") };
     return { className: `${styles.liUp} ${zone}`, label: t("stIn", { time: mmss(remaining) }) };
   };
@@ -1006,7 +1017,7 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
     const runner = byBib.get(sheet.bib);
     const planned = runner?.plannedMs ?? now;
     const offset = offsetSeconds(now, planned);
-    const late = runner ? isLateStart(now, planned) : false;
+    const late = runner ? isLateStart(now, planned, intervalS) : false;
     return (
       <div className={styles.sheet} data-testid="starter-late">
         <div className={styles.grab} />
@@ -1045,7 +1056,7 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
             </tr>
           </tbody>
         </table>
-        <div className={styles.ltNote}>{t("lateNote")}</div>
+        <div className={styles.ltNote}>{t("lateNote", { seconds: intervalS })}</div>
         <button
           type="button"
           className={styles.ltBtn}

@@ -165,10 +165,11 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       getTranslations({ locale, namespace: "SpecialStart" }),
       editionForYear(year),
     ]);
-  const intervalSeconds = startModelFromEdition(edition).intervalSeconds;
+  const startModel = startModelFromEdition(edition);
+  const intervalSeconds = startModel.intervalSeconds;
   const partnerNames = new Map(partnerOptions.map((option) => [option.runnerId, option.name]));
   const partnerName = (runnerId: string) => partnerNames.get(runnerId) ?? null;
-  const specialCopy = specialStartCopy(specialT);
+  const specialCopy = specialStartCopy(specialT, startModel);
   const specialFlash = specialStartFlash(specialT, specStatus, specReason, intervalSeconds);
   // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
   // jen ke čtení jako interní poznámka.

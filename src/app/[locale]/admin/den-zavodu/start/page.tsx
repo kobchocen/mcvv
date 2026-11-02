@@ -235,7 +235,7 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
                   name="value"
                   required
                   autoComplete="off"
-                  placeholder="10:15:00"
+                  placeholder={pragueClock(ctx.officialZero)}
                   defaultValue={pragueClock(editRecord?.startedAt ?? editRow?.planned ?? ctx.zero)}
                   className="h-9 w-28 bg-race-surface font-mono"
                 />

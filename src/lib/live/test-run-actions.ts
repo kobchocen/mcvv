@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server";
 
 import { redirect } from "@/i18n/routing";
 import { requireAdmin } from "@/lib/admin/staff";
+import { currentRaceYear } from "@/lib/entries/year";
 import { getOfeedSettings } from "@/lib/ofeed/settings";
 
 import {
@@ -44,6 +45,7 @@ export async function startTestRunAction(formData: FormData): Promise<void> {
     String(formData.get("zeroChoice") ?? ""),
     String(formData.get("zeroCustom") ?? ""),
     now,
+    (await currentRaceYear()).startModel.zeroSeconds,
   );
   const error = validateTestStart({
     now,

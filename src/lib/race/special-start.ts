@@ -1,4 +1,4 @@
-import { bibForSlot, startSlot, type StartModel } from "./start-time";
+import { bibForSlot, DEFAULT_START_MODEL, startSlot, type StartModel } from "./start-time";
 
 /**
  * Speciální start běžce – jen administrace, nic ve veřejné části (rozhodnutí Pavla 30. 10.
@@ -89,7 +89,7 @@ export type ParsedOffset =
  */
 export function parseOffset(
   raw: string | null | undefined,
-  intervalSeconds: number = 15,
+  intervalSeconds: number = DEFAULT_START_MODEL.intervalSeconds,
 ): ParsedOffset {
   const value = (raw ?? "")
     .trim()

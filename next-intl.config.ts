@@ -42,6 +42,8 @@ export default defineRouting({
     "/admin/rocniky/novy": "/admin/rocniky/novy",
     "/admin/rocniky/[id]": "/admin/rocniky/[id]",
     "/admin/ciselniky": "/admin/ciselniky",
+    "/admin/ciselniky/bezci": "/admin/ciselniky/bezci",
+    "/admin/ciselniky/bezci/[id]": "/admin/ciselniky/bezci/[id]",
     "/admin/ciselniky/kategorie": "/admin/ciselniky/kategorie",
     "/admin/ciselniky/kluby": "/admin/ciselniky/kluby",
     "/admin/ciselniky/kluby/slouceni": "/admin/ciselniky/kluby/slouceni",

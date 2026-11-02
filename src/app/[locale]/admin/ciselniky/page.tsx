@@ -20,7 +20,9 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  const session = await requireStaff();
+  // Úpravy běžců (přejmenování #198, slučování) smí jen admin.
+  const isAdmin = session.role === "admin";
   const copy = await getTranslations({ locale, namespace: "Admin" });
 
   const cards = [
@@ -34,6 +36,15 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
       title: copy("dictsClubs"),
       hint: copy("dictsClubsHint"),
     },
+    ...(isAdmin
+      ? [
+          {
+            href: "/admin/ciselniky/bezci/slouceni" as const,
+            title: copy("runnerMergeTitle"),
+            hint: copy("runnerMergeHint"),
+          },
+        ]
+      : []),
     {
       href: "/admin/ciselniky/kluby/slouceni" as const,
       title: copy("clubMergeTitle"),

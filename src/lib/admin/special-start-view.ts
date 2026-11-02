@@ -8,16 +8,22 @@ import {
   checkSpecialStarts,
   formatOffset,
   SPECIAL_START_KINDS,
+  specialRangeText,
   type SpecialCheck,
   type SpecialStartKind,
 } from "@/lib/race/special-start";
 import { prisma } from "@/lib/db/client";
-import { partnerOptionValue } from "@/lib/race/special-start-input";
-import type { BibRange, ChampionBibs } from "@/lib/race/start-settings";
+import { ENTRY_STATUS } from "@/lib/entries/status";
+import type { PartnerOption } from "@/lib/race/special-start-input";
 import type { StartModel } from "@/lib/race/start-time";
 import type { AdminStartRow, SpecialStartRow } from "@/lib/race/startlist-load";
 
 type Translate = Awaited<ReturnType<typeof getTranslations<"SpecialStart">>>;
+
+/** Šablona s `{proměnnými}` nevyplněná – doplní ji až klientská komponenta. */
+function template(t: Translate, key: Parameters<Translate["raw"]>[0]): string {
+  return String(t.raw(key));
+}
 
 /** Texty dialogu spec. startu (předávají se do klientské komponenty). */
 export function specialStartCopy(t: Translate): McvvAdminSpecialStartCopy {
@@ -34,10 +40,22 @@ export function specialStartCopy(t: Translate): McvvAdminSpecialStartCopy {
     description: t("description"),
     kinds,
     kindHints,
-    partner: t("partner"),
-    partnerHint: t("partnerHint"),
+    partner: {
+      label: t("partner"),
+      hint: t("partnerHint"),
+      minChars: t("partnerMinChars"),
+      noResults: t("partnerNoResults"),
+      bib: template(t, "partnerBib"),
+    },
     offset: t("offset"),
-    offsetHint: t("offsetHint"),
+    offsetHint: template(t, "offsetHint"),
+    offsetEarlier: template(t, "offsetEarlier"),
+    offsetLater: template(t, "offsetLater"),
+    offsetSteps: template(t, "offsetSteps"),
+    offsetSame: t("offsetSame"),
+    offsetErrFormat: t("err_offset"),
+    offsetErrStep: template(t, "err_offsetStep"),
+    offsetErrRange: t("err_offsetRange"),
     note: t("note"),
     noteHint: t("noteHint"),
     save: t("save"),
@@ -46,30 +64,34 @@ export function specialStartCopy(t: Translate): McvvAdminSpecialStartCopy {
   };
 }
 
-export type PartnerOption = { runnerId: string; value: string };
+function byName(a: PartnerOption, b: PartnerOption) {
+  return a.name.localeCompare(b.name, "cs") || a.runnerId.localeCompare(b.runnerId);
+}
 
-/** Nabídka našeptávače „spolu s“: všichni přihlášení běžci ročníku (bez zrušených), podle jména. */
+/** Nabídka našeptávače „spolu s“: přihlášení běžci ročníku (bez zrušených), podle jména. */
 export function partnerOptions(rows: AdminStartRow[]): PartnerOption[] {
   return rows
     .filter((row) => !row.cancelled)
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name, "cs"))
-    .map((row) => ({ runnerId: row.runnerId, value: partnerOptionValue(row) }));
+    .map((row) => ({
+      runnerId: row.runnerId,
+      name: row.name,
+      birthYear: row.birthYear,
+      clubName: row.clubName,
+      bib: row.bib,
+    }))
+    .sort(byName);
 }
 
 /** Hodnota pro dialog z uloženého spec. startu. */
 export function specialStartValue(
   special: SpecialStartRow | null,
-  optionById: Map<string, string>,
 ): McvvAdminSpecialStartValue | null {
   if (!special) {
     return null;
   }
   return {
     kind: special.kind,
-    partnerLabel: special.partnerId
-      ? (optionById.get(special.partnerId) ?? `[${special.partnerId}]`)
-      : "",
+    partnerId: special.kind === "with" ? special.partnerId : null,
     offset: special.kind === "with" ? formatOffset(special.offsetSeconds) : "0",
     note: special.note ?? "",
   };
@@ -78,19 +100,14 @@ export function specialStartValue(
 /** Splněno / porušeno pro aktuální čísla ročníku (startovka, přehled spec. startů). */
 export function specialStartChecks(
   model: StartModel,
-  ranges: BibRange[],
-  champions: ChampionBibs,
   rows: AdminStartRow[],
 ): Map<string, SpecialCheck> {
-  const championBibs = new Set([champions.men, champions.women].filter((bib) => bib != null));
   return checkSpecialStarts(
     model,
-    ranges,
     rows.map((row) => ({
       runnerId: row.runnerId,
       bib: row.bib,
       active: row.valid && !row.cancelled,
-      exempt: row.organizer || (row.bib != null && championBibs.has(row.bib)),
       special: row.special,
     })),
   );
@@ -99,11 +116,15 @@ export function specialStartChecks(
 /** Text tooltipu ke stavu (✓ / ✗). */
 export function specialCheckText(
   t: Translate,
+  model: StartModel,
   check: SpecialCheck,
   special: SpecialStartRow,
 ): string {
   if (check.ok) {
     return t("check_ok");
+  }
+  if (check.reason === "range" && special.kind !== "with") {
+    return t("check_range", { range: specialRangeText(model, special.kind) });
   }
   if (check.reason === "offset") {
     return t("check_offset", {
@@ -132,17 +153,26 @@ export function specialStartPartnerText(
 /** Nabídka našeptávače bez celé startovky (detail přihlášky): přihlášení běžci ročníku. */
 export async function loadPartnerOptions(year: number): Promise<PartnerOption[]> {
   const lines = await prisma.registrationLine.findMany({
-    where: { year },
+    where: {
+      year,
+      registration: { OR: [{ status: { not: ENTRY_STATUS.cancelled } }, { status: null }] },
+    },
     select: {
       runnerId: true,
+      bib: true,
       runner: { select: { name: true } },
       club: { select: { name: true } },
     },
   });
   return lines
-    .map((line) => ({ runnerId: line.runnerId, name: line.runner.name, clubName: line.club.name }))
-    .sort((a, b) => a.name.localeCompare(b.name, "cs"))
-    .map((row) => ({ runnerId: row.runnerId, value: partnerOptionValue(row) }));
+    .map((line) => ({
+      runnerId: line.runnerId,
+      name: line.runner.name,
+      birthYear: line.runnerId.slice(0, 4),
+      clubName: line.club.name,
+      bib: line.bib,
+    }))
+    .sort(byName);
 }
 
 /** Hláška po uložení dialogu (`?spec=ulozeno|zruseno|chyba&duvod=…`). */
@@ -150,6 +180,7 @@ export function specialStartFlash(
   t: Translate,
   spec: string | undefined,
   reason: string | undefined,
+  intervalSeconds = 15,
 ): { ok: boolean; text: string } | null {
   if (spec === "ulozeno") {
     return { ok: true, text: t("saved") };
@@ -158,9 +189,22 @@ export function specialStartFlash(
     return { ok: true, text: t("cleared") };
   }
   if (spec === "chyba") {
-    const known = ["kind", "partner", "self", "offset", "note", "line"] as const;
+    const known = [
+      "kind",
+      "partner",
+      "self",
+      "offset",
+      "offsetStep",
+      "offsetRange",
+      "note",
+      "line",
+    ] as const;
     const key = known.find((item) => item === reason) ?? "kind";
-    return { ok: false, text: t(`err_${key}`) };
+    return {
+      ok: false,
+      text:
+        key === "offsetStep" ? t("err_offsetStep", { interval: intervalSeconds }) : t(`err_${key}`),
+    };
   }
   return null;
 }

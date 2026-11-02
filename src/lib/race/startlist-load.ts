@@ -13,10 +13,7 @@ import {
   startTimeForBib,
   type StartModel,
 } from "./start-time";
-import type { GeneratorInput, StartGroupKind } from "./startlist-generator";
-
-/** Číslo přihlášky pořadatelů (přihláška č. 1 ročníku). */
-export const ORGANIZER_REGISTRATION_ID = 1;
+import type { GeneratorInput } from "./startlist-generator";
 
 export type CategoryInfo = { id: string; name: string; sort: number; sex: string };
 
@@ -120,11 +117,8 @@ export type AdminStartRow = {
   status: number | null;
   valid: boolean;
   cancelled: boolean;
-  organizer: boolean;
   bib: number | null;
   locked: boolean;
-  groupId: number | null;
-  groupOrder: number;
   lastYearTime: number | null;
   personalBest: number | null;
   note: string | null;
@@ -165,13 +159,6 @@ export async function registrationMessageThreads(year: number): Promise<Map<numb
   });
   return new Map(threads.map((thread) => [thread.registrationId!, thread.id]));
 }
-
-export type StartGroupRow = {
-  id: number;
-  kind: StartGroupKind;
-  note: string | null;
-  memberIds: string[];
-};
 
 export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]> {
   const [lines, validIds, metas, specials, threads] = await Promise.all([
@@ -218,11 +205,8 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       status: line.registration.status,
       valid: validIds.has(line.registrationId),
       cancelled: line.registration.status === ENTRY_STATUS.cancelled,
-      organizer: line.registrationId === ORGANIZER_REGISTRATION_ID,
       bib: line.bib && line.bib > 0 ? line.bib : null,
       locked: meta?.locked ?? false,
-      groupId: meta?.groupId ?? null,
-      groupOrder: meta?.groupOrder ?? 0,
       lastYearTime: lastById.get(line.runnerId) ?? null,
       personalBest: bestById.get(line.runnerId) ?? null,
       note: line.note,
@@ -233,25 +217,10 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
   });
 }
 
-export async function loadStartGroups(year: number): Promise<StartGroupRow[]> {
-  const groups = await prisma.startGroup.findMany({
-    where: { year },
-    include: { members: { orderBy: [{ groupOrder: "asc" }, { runnerId: "asc" }] } },
-    orderBy: { id: "asc" },
-  });
-  return groups.map((group) => ({
-    id: group.id,
-    kind: group.kind,
-    note: group.note,
-    memberIds: group.members.map((member) => member.runnerId),
-  }));
-}
-
 export async function buildGeneratorInput(
   year: number,
   settings: StartSettings,
   rows: AdminStartRow[],
-  groups: StartGroupRow[],
 ): Promise<GeneratorInput> {
   const winners = await absoluteWinners(year - 1);
   const champions: GeneratorInput["champions"] = [];
@@ -266,7 +235,6 @@ export async function buildGeneratorInput(
     ranges: settings.ranges,
     categorySort: Object.fromEntries(settings.categories.map((c) => [c.id, c.sort])),
     champions,
-    groups: groups.map((group) => ({ id: group.id, kind: group.kind })),
     entries: rows.map((row) => ({
       runnerId: row.runnerId,
       name: row.name,
@@ -274,10 +242,7 @@ export async function buildGeneratorInput(
       currentBib: row.bib,
       locked: row.locked,
       eligible: row.valid,
-      organizer: row.organizer,
       lastYearTime: row.lastYearTime,
-      groupId: row.groupId,
-      groupOrder: row.groupOrder,
       special: row.special
         ? {
             kind: row.special.kind,
@@ -299,19 +264,10 @@ export function inputFingerprint(input: GeneratorInput): string {
       e.currentBib,
       e.locked,
       e.eligible,
-      e.organizer,
       e.lastYearTime,
-      e.groupId,
-      e.groupOrder,
       e.special ? [e.special.kind, e.special.partnerId, e.special.offsetSeconds] : null,
     ]);
-  const payload = JSON.stringify([
-    input.model,
-    input.ranges,
-    input.champions,
-    input.groups,
-    entries,
-  ]);
+  const payload = JSON.stringify([input.model, input.ranges, input.champions, entries]);
   return createHash("sha256").update(payload).digest("hex").slice(0, 32);
 }
 

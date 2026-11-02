@@ -40,7 +40,7 @@ import { requireStaff } from "@/lib/admin/staff";
 import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
 import { nationalityField } from "@/lib/runner/nationality-field";
 import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
-import { McvvAdminPartnerDatalist } from "@/components/organisms/mcvv-admin-partner-datalist";
+import { McvvAdminPartnerOptions } from "@/components/organisms/mcvv-admin-partner-combobox";
 import {
   loadPartnerOptions,
   specialStartCopy,
@@ -48,7 +48,8 @@ import {
   specialStartPartnerText,
   specialStartValue,
 } from "@/lib/admin/special-start-view";
-import { loadSpecialStarts } from "@/lib/race/startlist-load";
+import { startModelFromEdition } from "@/lib/race/start-time";
+import { editionForYear, loadSpecialStarts } from "@/lib/race/startlist-load";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
@@ -153,7 +154,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       })
     ).map((row) => row.runnerId),
   );
-  const [thread, messageSettings, autoConfirmed, specialStarts, partnerOptions, specialT] =
+  const [thread, messageSettings, autoConfirmed, specialStarts, partnerOptions, specialT, edition] =
     await Promise.all([
       loadRegistrationThread(year, id),
       getMessageSettings(),
@@ -161,11 +162,13 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       loadSpecialStarts(year),
       loadPartnerOptions(year),
       getTranslations({ locale, namespace: "SpecialStart" }),
+      editionForYear(year),
     ]);
-  const partnerLabel = new Map(partnerOptions.map((option) => [option.runnerId, option.value]));
-  const partnerName = (runnerId: string) => partnerLabel.get(runnerId)?.split(" · ")[0] ?? null;
+  const intervalSeconds = startModelFromEdition(edition).intervalSeconds;
+  const partnerNames = new Map(partnerOptions.map((option) => [option.runnerId, option.name]));
+  const partnerName = (runnerId: string) => partnerNames.get(runnerId) ?? null;
   const specialCopy = specialStartCopy(specialT);
-  const specialFlash = specialStartFlash(specialT, specStatus, specReason);
+  const specialFlash = specialStartFlash(specialT, specStatus, specReason, intervalSeconds);
   // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
   // jen ke čtení jako interní poznámka.
   const internalNote = showInternalNote(registration.note, year, !!thread);
@@ -375,97 +378,98 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
               {specialT("overviewLink", { count: specialStarts.size })}
             </Link>
           </div>
-          <McvvAdminPartnerDatalist id="spec-start-partners" options={partnerOptions} />
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[60rem] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                  <th className="py-2 pr-3">{copy("regsName")}</th>
-                  <th className="py-2 pr-3">{copy("regsBirth")}</th>
-                  <th className="py-2 pr-3">{copy("regsClub")}</th>
-                  <th className="py-2 pr-3">{copy("regsCategory")}</th>
-                  <th className="py-2 pr-3">{copy("regsFee")}</th>
-                  <th className="py-2 pr-3">{copy("regsBib")}</th>
-                  <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
-                  <th className="py-2 pr-3">{nationalityOptions.label}</th>
-                  <th className="py-2 pr-3">{specialT("column")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {registration.lines.map((line) => (
-                  <tr key={line.runnerId} className="border-b border-race-line/40">
-                    <td className="py-2.5 pr-3">{line.runner.name}</td>
-                    <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
-                    <td className="py-2.5 pr-3">
-                      <ClubLink id={line.clubId} name={line.club.name} />
-                    </td>
-                    <td className="py-2.5 pr-3">{line.category.name}</td>
-                    <td className="py-2.5 pr-3">{line.entryFee ?? ""}</td>
-                    <td className="py-2.5 pr-3">{line.bib ?? ""}</td>
-                    <td className="py-2.5 pr-3">
-                      <span className="mr-2">
-                        {runnerSexOf(line.runnerId) === "F" ? copy("sexFemale") : copy("sexMale")}
-                      </span>
-                      <McvvAdminSexChange
-                        runnerId={line.runnerId}
-                        runnerName={line.runner.name}
-                        year={year}
-                        registrationId={id}
-                        hasResults={runnersWithResults.has(line.runnerId)}
-                        copy={sexCopy}
-                      />
-                    </td>
-                    <td className="py-2.5 pr-3">
-                      <form
-                        action={saveRunnerNationality}
-                        className="flex items-center gap-2"
-                        data-testid={`nationality-form-${line.runnerId}`}
-                      >
-                        <input type="hidden" name="runnerId" value={line.runnerId} />
-                        <input type="hidden" name="year" value={year} />
-                        <input type="hidden" name="registrationId" value={id} />
-                        <NationalitySelect
-                          id={`nationality-${line.runnerId}`}
-                          field={nationalityOptions}
-                          defaultValue={line.runner.nationality ?? ""}
-                          className="h-8 max-w-[11rem] border border-race-line bg-race-surface px-2 text-sm"
-                        />
-                        <Button type="submit" size="sm" variant="outline">
-                          {nationality("save")}
-                        </Button>
-                      </form>
-                    </td>
-                    <td className="py-2.5 pr-3" data-testid={`spec-start-${line.runnerId}`}>
-                      {(() => {
-                        const special = specialStarts.get(line.runnerId) ?? null;
-                        return (
-                          <div className="grid gap-1">
-                            <McvvAdminSpecialStart
-                              year={year}
-                              runnerId={line.runnerId}
-                              runnerName={line.runner.name}
-                              registrationId={id}
-                              from="detail"
-                              value={specialStartValue(special, partnerLabel)}
-                              partnerListId="spec-start-partners"
-                              copy={specialCopy}
-                            />
-                            {special && (special.kind === "with" || special.note) ? (
-                              <span className="max-w-[16rem] text-xs text-race-muted">
-                                {specialStartPartnerText(specialT, special, partnerName)}
-                                {special.kind === "with" && special.note ? " · " : null}
-                                {special.note}
-                              </span>
-                            ) : null}
-                          </div>
-                        );
-                      })()}
-                    </td>
+          <McvvAdminPartnerOptions options={partnerOptions}>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[60rem] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                    <th className="py-2 pr-3">{copy("regsName")}</th>
+                    <th className="py-2 pr-3">{copy("regsBirth")}</th>
+                    <th className="py-2 pr-3">{copy("regsClub")}</th>
+                    <th className="py-2 pr-3">{copy("regsCategory")}</th>
+                    <th className="py-2 pr-3">{copy("regsFee")}</th>
+                    <th className="py-2 pr-3">{copy("regsBib")}</th>
+                    <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
+                    <th className="py-2 pr-3">{nationalityOptions.label}</th>
+                    <th className="py-2 pr-3">{specialT("column")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {registration.lines.map((line) => (
+                    <tr key={line.runnerId} className="border-b border-race-line/40">
+                      <td className="py-2.5 pr-3">{line.runner.name}</td>
+                      <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
+                      <td className="py-2.5 pr-3">
+                        <ClubLink id={line.clubId} name={line.club.name} />
+                      </td>
+                      <td className="py-2.5 pr-3">{line.category.name}</td>
+                      <td className="py-2.5 pr-3">{line.entryFee ?? ""}</td>
+                      <td className="py-2.5 pr-3">{line.bib ?? ""}</td>
+                      <td className="py-2.5 pr-3">
+                        <span className="mr-2">
+                          {runnerSexOf(line.runnerId) === "F" ? copy("sexFemale") : copy("sexMale")}
+                        </span>
+                        <McvvAdminSexChange
+                          runnerId={line.runnerId}
+                          runnerName={line.runner.name}
+                          year={year}
+                          registrationId={id}
+                          hasResults={runnersWithResults.has(line.runnerId)}
+                          copy={sexCopy}
+                        />
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <form
+                          action={saveRunnerNationality}
+                          className="flex items-center gap-2"
+                          data-testid={`nationality-form-${line.runnerId}`}
+                        >
+                          <input type="hidden" name="runnerId" value={line.runnerId} />
+                          <input type="hidden" name="year" value={year} />
+                          <input type="hidden" name="registrationId" value={id} />
+                          <NationalitySelect
+                            id={`nationality-${line.runnerId}`}
+                            field={nationalityOptions}
+                            defaultValue={line.runner.nationality ?? ""}
+                            className="h-8 max-w-[11rem] border border-race-line bg-race-surface px-2 text-sm"
+                          />
+                          <Button type="submit" size="sm" variant="outline">
+                            {nationality("save")}
+                          </Button>
+                        </form>
+                      </td>
+                      <td className="py-2.5 pr-3" data-testid={`spec-start-${line.runnerId}`}>
+                        {(() => {
+                          const special = specialStarts.get(line.runnerId) ?? null;
+                          return (
+                            <div className="grid gap-1">
+                              <McvvAdminSpecialStart
+                                year={year}
+                                runnerId={line.runnerId}
+                                runnerName={line.runner.name}
+                                registrationId={id}
+                                from="detail"
+                                value={specialStartValue(special)}
+                                intervalSeconds={intervalSeconds}
+                                copy={specialCopy}
+                              />
+                              {special && (special.kind === "with" || special.note) ? (
+                                <span className="max-w-[16rem] text-xs text-race-muted">
+                                  {specialStartPartnerText(specialT, special, partnerName)}
+                                  {special.kind === "with" && special.note ? " · " : null}
+                                  {special.note}
+                                </span>
+                              ) : null}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </McvvAdminPartnerOptions>
         </section>
 
         <section>

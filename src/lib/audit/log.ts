@@ -74,15 +74,14 @@ export type AuditAction =
   | "club.updated"
   // Uložení Nastavení: změněné klíče mcvv_setting (zveřejnění startovky, URL výsledků…).
   | "settings.changed"
-  // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu, skupiny startu.
-  // Cíl `startlist:<rok>/<bezec>`, `startlist:<rok>`, `start_group:<id>`; detail `changes`
-  // (u více řádků klíče `<bezec>.bib` / `.locked` / `.group`).
+  // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu. Cíl
+  // `startlist:<rok>/<bezec>` nebo `startlist:<rok>`; detail `changes` (u více řádků klíče
+  // `<bezec>.bib` / `.locked`). Skupiny startu nahradil spec. start „spolu s“ (Q225) – starší
+  // záznamy `startlist.group_created` / `group_deleted` v logu zůstávají jen pro historii.
   | "startlist.bib_set"
   | "startlist.bibs_swapped"
   | "startlist.lock_changed"
   | "startlist.proposal_applied"
-  | "startlist.group_created"
-  | "startlist.group_deleted"
   // Spec. start běžce (pořadatel / brzy / pozdě / spolu s), cíl `startlist:<rok>/<bezec>`.
   | "startlist.special_set"
   | "startlist.special_cleared"

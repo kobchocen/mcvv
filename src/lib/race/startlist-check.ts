@@ -1,11 +1,18 @@
 import {
+  inAnySpecialRange,
+  inSpecialRange,
+  isRangedSpecialKind,
+  RANGED_SPECIAL_KINDS,
+  type RangedSpecialKind,
+  type SpecialStartKind,
+} from "./special-start";
+import {
   reserveIntervals,
   type BibInterval,
   type BibRange,
   type ChampionBibs,
 } from "./start-settings";
-import { startSeriesForBib, startSlot, type StartModel } from "./start-time";
-import type { StartGroupKind } from "./startlist-generator";
+import { startSeriesForBib, type StartModel } from "./start-time";
 
 /** Řádek startovky pro kontrolu konfliktů (#116). */
 export type CheckRow = {
@@ -14,14 +21,16 @@ export type CheckRow = {
   bib: number | null;
   valid: boolean;
   cancelled: boolean;
-  organizer: boolean;
+  /** Typ spec. startu (jen administrace), null = žádný. */
+  specialKind: SpecialStartKind | null;
 };
 
 export type StartListIssue =
   | { code: "duplicate"; bib: number; runnerIds: string[] }
   | { code: "invalidWithBib"; bib: number; runnerId: string }
   | { code: "missingBib"; runnerId: string }
-  | { code: "groupSplit"; groupId: number; kind: StartGroupKind };
+  /** Spec. start s rozsahem má číslo mimo svůj rozsah (rozsah je plný nebo ruční úprava, Q237). */
+  | { code: "specOutsideRange"; kind: RangedSpecialKind; runnerIds: string[] };
 
 export function bibInRange(ranges: BibRange[], categoryId: string, bib: number): boolean {
   const range = ranges.find((r) => r.categoryId === categoryId);
@@ -30,17 +39,14 @@ export function bibInRange(ranges: BibRange[], categoryId: string, bib: number):
 
 /**
  * Číslo mimo okno vlastní kategorie (kategorie není dogma – všichni běží stejnou trať). Není to
- * chyba, jen informativní štítek „mimo kategorii“. Čísla obhájců a pořadatel / spec. start v
- * bloku pořadatelů se nepočítají.
+ * chyba, jen informativní štítek „mimo kategorii“. Čísla obhájců, spec. starty s rozsahem
+ * (pořadatel, brzy, pozdě) a „spolu s“ v rozsahu spec. startů se nepočítají.
  */
 export function outsideCategory(
   model: StartModel,
   ranges: BibRange[],
   champions: ChampionBibs,
-  row: Pick<CheckRow, "categoryId" | "bib" | "organizer"> & {
-    /** Spec. start (pořadatel / brzy / spolu s pořadatelem) smí ležet v bloku pořadatelů. */
-    specialKind?: string | null;
-  },
+  row: Pick<CheckRow, "categoryId" | "bib"> & { specialKind?: SpecialStartKind | null },
 ): boolean {
   if (row.bib == null) {
     return false;
@@ -49,25 +55,12 @@ export function outsideCategory(
     bibInRange(ranges, row.categoryId, row.bib) ||
     row.bib === champions.men ||
     row.bib === champions.women ||
-    ((row.organizer || row.specialKind != null) && inOrganizerBlock(model, ranges, row.bib))
+    isRangedSpecialKind(row.specialKind) ||
+    (row.specialKind === "with" && inAnySpecialRange(model, row.bib))
   );
 }
 
-/** Číslo leží v bloku pořadatelů (před prvním rozsahem kategorie svého startu). */
-export function inOrganizerBlock(model: StartModel, ranges: BibRange[], bib: number): boolean {
-  const series = startSeriesForBib(model, bib);
-  const starts = ranges
-    .filter((r) => startSeriesForBib(model, r.bibFrom) === series)
-    .map((r) => r.bibFrom);
-  const first = series === 1 ? 1 : model.secondStartFrom;
-  return starts.length > 0 && bib >= first && bib < Math.min(...starts);
-}
-
-export function checkStartList(
-  model: StartModel,
-  rows: CheckRow[],
-  groups: { id: number; kind: StartGroupKind; memberIds: string[] }[],
-): StartListIssue[] {
+export function checkStartList(model: StartModel, rows: CheckRow[]): StartListIssue[] {
   const issues: StartListIssue[] = [];
   const active = rows.filter((row) => !row.cancelled);
   const byBib = new Map<number, string[]>();
@@ -92,23 +85,19 @@ export function checkStartList(
       issues.push({ code: "invalidWithBib", bib: row.bib, runnerId: row.runnerId });
     }
   }
-  const bibById = new Map(active.map((row) => [row.runnerId, row.bib]));
-  for (const group of groups) {
-    const slots = group.memberIds
-      .map((id) => bibById.get(id))
-      .filter((bib): bib is number => bib != null)
-      .map((bib) => startSlot(model, bib));
-    if (slots.length < 2) {
-      continue;
-    }
-    // Společný start: dva paralelní starty → nejvýš dva na jeden čas, další po dvojicích hned
-    // za nimi (3 členové = časy t, t, t+1). Navazující: časy hned po sobě v pořadí skupiny.
-    const ok =
-      group.kind === "joint"
-        ? Math.max(...slots) - Math.min(...slots) <= Math.ceil(slots.length / 2) - 1
-        : slots.every((slot, i) => i === 0 || slot === slots[i - 1] + 1);
-    if (!ok) {
-      issues.push({ code: "groupSplit", groupId: group.id, kind: group.kind });
+  for (const kind of RANGED_SPECIAL_KINDS) {
+    const outside = active
+      .filter(
+        (row) =>
+          row.valid &&
+          row.specialKind === kind &&
+          row.bib != null &&
+          !inSpecialRange(model, kind, row.bib),
+      )
+      .sort((a, b) => a.bib! - b.bib!)
+      .map((row) => row.runnerId);
+    if (outside.length > 0) {
+      issues.push({ code: "specOutsideRange", kind, runnerIds: outside });
     }
   }
   return issues;

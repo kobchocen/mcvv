@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
-import { McvvAdminPartnerDatalist } from "@/components/organisms/mcvv-admin-partner-datalist";
+import { McvvAdminPartnerOptions } from "@/components/organisms/mcvv-admin-partner-combobox";
 import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,12 @@ import {
 } from "@/lib/admin/special-start-view";
 import { requireStaff } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
-import { formatOffset, isSpecialStartKind, SPECIAL_START_KINDS } from "@/lib/race/special-start";
+import {
+  formatOffset,
+  isSpecialStartKind,
+  SPECIAL_START_KINDS,
+  specialRangeText,
+} from "@/lib/race/special-start";
 import { startTimeForBib } from "@/lib/race/start-time";
 import {
   latestEditionYear,
@@ -59,13 +64,12 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
   const kindFilter = isSpecialStartKind(query.typ) ? query.typ : null;
 
   const [settings, rows] = await Promise.all([loadStartSettings(year), loadAdminStartRows(year)]);
-  const { model, ranges, champions } = settings;
+  const { model } = settings;
   const byId = new Map(rows.map((row) => [row.runnerId, row]));
   const options = partnerOptions(rows);
-  const optionById = new Map(options.map((option) => [option.runnerId, option.value]));
-  const checks = specialStartChecks(model, ranges, champions, rows);
+  const checks = specialStartChecks(model, rows);
   const copy = specialStartCopy(t);
-  const flash = specialStartFlash(t, query.spec, query.duvod);
+  const flash = specialStartFlash(t, query.spec, query.duvod, model.intervalSeconds);
 
   const special = rows
     .filter((row) => row.special && (!kindFilter || row.special.kind === kindFilter))
@@ -114,6 +118,13 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
             {t("overviewTitle", { year })}
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-race-muted">{t("overviewIntro")}</p>
+          <p className="mt-1 max-w-3xl text-sm text-race-muted" data-testid="spec-start-ranges">
+            {t("overviewRanges", {
+              organizer: specialRangeText(model, "organizer"),
+              early: specialRangeText(model, "early"),
+              late: specialRangeText(model, "late"),
+            })}
+          </p>
           <p className="mt-3 flex flex-wrap gap-4 text-sm">
             <Link
               href={{ pathname: "/admin/prihlasky", query: { rok: String(year) } }}
@@ -167,172 +178,167 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
           </form>
         </div>
 
-        <McvvAdminPartnerDatalist id="spec-start-partners" options={options} />
-
-        <section>
-          {special.length === 0 ? (
-            <p className="text-sm text-race-muted">{t("overviewEmpty")}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[64rem] border-collapse text-left text-sm"
-                data-testid="spec-start-overview"
-              >
-                <thead>
-                  <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                    <th className="py-2 pr-3">{t("colRunner")}</th>
-                    <th className="py-2 pr-3">{t("colCategory")}</th>
-                    <th className="py-2 pr-3">{t("colRegistration")}</th>
-                    <th className="py-2 pr-3">{t("colKind")}</th>
-                    <th className="py-2 pr-3">{t("colPartner")}</th>
-                    <th className="py-2 pr-3">{t("colOffset")}</th>
-                    <th className="py-2 pr-3">{t("colNote")}</th>
-                    <th className="py-2 pr-3">{t("colBib")}</th>
-                    <th className="py-2 pr-3">{t("colState")}</th>
-                    <th className="py-2 pr-3">{t("colMessages")}</th>
-                    <th className="py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {special.map((row) => {
-                    const spec = row.special!;
-                    const check = checks.get(row.runnerId);
-                    const partner = spec.partnerId ? byId.get(spec.partnerId) : undefined;
-                    return (
-                      <tr key={row.runnerId} className="border-b border-race-line/40 align-top">
-                        <td className="py-2.5 pr-3 font-medium">
-                          {row.name}
-                          {row.cancelled ? (
-                            <span className="ml-1 text-xs text-race-dim">✕</span>
-                          ) : null}
-                        </td>
-                        <td className="py-2.5 pr-3">{row.categoryName}</td>
-                        <td className="py-2.5 pr-3">
-                          <Link
-                            href={detailHref(row.registrationId)}
-                            className="text-race-accent hover:underline"
-                          >
-                            {row.registrationId}
-                          </Link>
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          <McvvAdminSpecialStartBadge label={t(`kind_${spec.kind}`)} />
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          {spec.kind === "with"
-                            ? partner
-                              ? `${partner.name}${partner.bib != null ? ` (${partner.bib})` : ""}`
-                              : spec.partnerId
-                                ? `${nameOf(spec.partnerId)} – ${t("withMissing")}`
-                                : t("withMissing")
-                            : ""}
-                        </td>
-                        <td className="py-2.5 pr-3 tabular-nums">
-                          {spec.kind === "with" ? formatOffset(spec.offsetSeconds) : ""}
-                        </td>
-                        <td className="max-w-[16rem] py-2.5 pr-3 text-xs">{spec.note ?? ""}</td>
-                        <td className="py-2.5 pr-3 tabular-nums">
-                          {row.bib ?? "—"}
-                          {row.bib != null ? (
-                            <span className="ml-1 text-xs text-race-muted">
-                              {startTimeForBib(model, row.bib)}
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          {check ? (
-                            <McvvAdminSpecialStartBadge
-                              state={specialCheckState(check)}
-                              label={specialCheckText(t, check, spec)}
-                            />
-                          ) : null}
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          {row.messageThreadId != null ? (
+        <McvvAdminPartnerOptions options={options}>
+          <section>
+            {special.length === 0 ? (
+              <p className="text-sm text-race-muted">{t("overviewEmpty")}</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full min-w-[64rem] border-collapse text-left text-sm"
+                  data-testid="spec-start-overview"
+                >
+                  <thead>
+                    <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                      <th className="py-2 pr-3">{t("colRunner")}</th>
+                      <th className="py-2 pr-3">{t("colCategory")}</th>
+                      <th className="py-2 pr-3">{t("colRegistration")}</th>
+                      <th className="py-2 pr-3">{t("colKind")}</th>
+                      <th className="py-2 pr-3">{t("colPartner")}</th>
+                      <th className="py-2 pr-3">{t("colOffset")}</th>
+                      <th className="py-2 pr-3">{t("colNote")}</th>
+                      <th className="py-2 pr-3">{t("colBib")}</th>
+                      <th className="py-2 pr-3">{t("colState")}</th>
+                      <th className="py-2">{t("colMessages")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {special.map((row) => {
+                      const spec = row.special!;
+                      const check = checks.get(row.runnerId);
+                      const partner = spec.partnerId ? byId.get(spec.partnerId) : undefined;
+                      return (
+                        <tr key={row.runnerId} className="border-b border-race-line/40 align-top">
+                          <td className="py-2.5 pr-3 font-medium">
+                            {row.name}
+                            {row.cancelled ? (
+                              <span className="ml-1 text-xs text-race-dim">✕</span>
+                            ) : null}
+                          </td>
+                          <td className="py-2.5 pr-3">{row.categoryName}</td>
+                          <td className="py-2.5 pr-3">
                             <Link
-                              href={threadHref(row.messageThreadId)}
-                              title={t("hasMessageTitle")}
-                              className="whitespace-nowrap text-xs font-semibold text-race-accent hover:underline"
+                              href={detailHref(row.registrationId)}
+                              className="text-race-accent hover:underline"
                             >
-                              ✉ {t("hasMessage")}
+                              {row.registrationId}
                             </Link>
-                          ) : null}
-                        </td>
-                        <td className="py-2.5">
+                          </td>
+                          <td className="py-2.5 pr-3">
+                            <McvvAdminSpecialStart
+                              year={year}
+                              runnerId={row.runnerId}
+                              runnerName={row.name}
+                              registrationId={row.registrationId}
+                              from="prehled"
+                              value={specialStartValue(spec)}
+                              intervalSeconds={model.intervalSeconds}
+                              copy={copy}
+                            />
+                          </td>
+                          <td className="py-2.5 pr-3">
+                            {spec.kind === "with"
+                              ? partner
+                                ? `${partner.name}${partner.bib != null ? ` (${partner.bib})` : ""}`
+                                : spec.partnerId
+                                  ? `${nameOf(spec.partnerId)} – ${t("withMissing")}`
+                                  : t("withMissing")
+                              : ""}
+                          </td>
+                          <td className="py-2.5 pr-3 tabular-nums">
+                            {spec.kind === "with" ? formatOffset(spec.offsetSeconds) : ""}
+                          </td>
+                          <td className="max-w-[16rem] py-2.5 pr-3 text-xs">{spec.note ?? ""}</td>
+                          <td className="py-2.5 pr-3 tabular-nums">
+                            {row.bib ?? "—"}
+                            {row.bib != null ? (
+                              <span className="ml-1 text-xs text-race-muted">
+                                {startTimeForBib(model, row.bib)}
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="py-2.5 pr-3">
+                            {check ? (
+                              <McvvAdminSpecialStartBadge
+                                state={specialCheckState(check)}
+                                label={specialCheckText(t, model, check, spec)}
+                              />
+                            ) : null}
+                          </td>
+                          <td className="py-2.5">
+                            {row.messageThreadId != null ? (
+                              <Link
+                                href={threadHref(row.messageThreadId)}
+                                title={t("hasMessageTitle")}
+                                className="whitespace-nowrap text-xs font-semibold text-race-accent hover:underline"
+                              >
+                                ✉ {t("hasMessage")}
+                              </Link>
+                            ) : null}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2 className="font-display text-xl font-semibold">
+              {t("messagesHeading", { count: withMessages.length })}
+            </h2>
+            <p className="mt-1 max-w-3xl text-sm text-race-muted">{t("messagesHint")}</p>
+            {withMessages.length === 0 ? (
+              <p className="mt-3 text-sm text-race-muted">{t("messagesEmpty")}</p>
+            ) : (
+              <ul className="mt-4 grid gap-3" data-testid="spec-start-messages">
+                {withMessages.map(([registrationId, members]) => (
+                  <li
+                    key={registrationId}
+                    className="rounded-[12px] border border-race-line bg-race-surface p-3 text-sm"
+                  >
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                      <span className="font-semibold">
+                        {registrationId} · {registrationNames.get(registrationId) ?? ""}
+                      </span>
+                      <Link
+                        href={threadHref(members[0].messageThreadId!)}
+                        className="text-xs font-semibold text-race-accent hover:underline"
+                      >
+                        ✉ {t("openThread")}
+                      </Link>
+                      <Link
+                        href={detailHref(registrationId)}
+                        className="text-xs text-race-muted hover:underline"
+                      >
+                        {t("openRegistration")}
+                      </Link>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+                      {members.map((member) => (
+                        <span key={member.runnerId} className="inline-flex items-center gap-2">
+                          <span>{member.name}</span>
                           <McvvAdminSpecialStart
                             year={year}
-                            runnerId={row.runnerId}
-                            runnerName={row.name}
-                            registrationId={row.registrationId}
+                            runnerId={member.runnerId}
+                            runnerName={member.name}
+                            registrationId={registrationId}
                             from="prehled"
-                            value={specialStartValue(spec, optionById)}
-                            partnerListId="spec-start-partners"
+                            value={specialStartValue(member.special)}
+                            intervalSeconds={model.intervalSeconds}
                             copy={copy}
-                            compact
                           />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section>
-          <h2 className="font-display text-xl font-semibold">
-            {t("messagesHeading", { count: withMessages.length })}
-          </h2>
-          <p className="mt-1 max-w-3xl text-sm text-race-muted">{t("messagesHint")}</p>
-          {withMessages.length === 0 ? (
-            <p className="mt-3 text-sm text-race-muted">{t("messagesEmpty")}</p>
-          ) : (
-            <ul className="mt-4 grid gap-3" data-testid="spec-start-messages">
-              {withMessages.map(([registrationId, members]) => (
-                <li
-                  key={registrationId}
-                  className="rounded-[12px] border border-race-line bg-race-surface p-3 text-sm"
-                >
-                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <span className="font-semibold">
-                      {registrationId} · {registrationNames.get(registrationId) ?? ""}
-                    </span>
-                    <Link
-                      href={threadHref(members[0].messageThreadId!)}
-                      className="text-xs font-semibold text-race-accent hover:underline"
-                    >
-                      ✉ {t("openThread")}
-                    </Link>
-                    <Link
-                      href={detailHref(registrationId)}
-                      className="text-xs text-race-muted hover:underline"
-                    >
-                      {t("openRegistration")}
-                    </Link>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
-                    {members.map((member) => (
-                      <span key={member.runnerId} className="inline-flex items-center gap-2">
-                        <span>{member.name}</span>
-                        <McvvAdminSpecialStart
-                          year={year}
-                          runnerId={member.runnerId}
-                          runnerName={member.name}
-                          registrationId={registrationId}
-                          from="prehled"
-                          value={specialStartValue(member.special, optionById)}
-                          partnerListId="spec-start-partners"
-                          copy={copy}
-                        />
-                      </span>
-                    ))}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </McvvAdminPartnerOptions>
       </div>
     </main>
   );

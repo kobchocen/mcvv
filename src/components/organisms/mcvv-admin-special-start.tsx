@@ -13,9 +13,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { saveSpecialStart } from "@/lib/admin/special-start";
-import { SPECIAL_START_KINDS, type SpecialStartKind } from "@/lib/race/special-start";
+import {
+  formatOffset,
+  MAX_OFFSET_SECONDS,
+  parseOffset,
+  SPECIAL_START_KINDS,
+  type SpecialStartKind,
+} from "@/lib/race/special-start";
 import { cn } from "@/lib/utils";
 
+import {
+  McvvAdminPartnerCombobox,
+  type McvvAdminPartnerComboboxCopy,
+} from "./mcvv-admin-partner-combobox";
 import { McvvAdminSpecialStartBadge } from "./mcvv-admin-special-start-badge";
 
 export type McvvAdminSpecialStartCopy = {
@@ -27,10 +37,18 @@ export type McvvAdminSpecialStartCopy = {
   description: string;
   kinds: Record<SpecialStartKind, string>;
   kindHints: Record<SpecialStartKind, string>;
-  partner: string;
-  partnerHint: string;
+  partner: McvvAdminPartnerComboboxCopy;
   offset: string;
   offsetHint: string;
+  /** „Dřív o {interval} s“ / „Později o {interval} s“ (tlačítka ±). */
+  offsetEarlier: string;
+  offsetLater: string;
+  /** „= {steps} × {interval} s“. */
+  offsetSteps: string;
+  offsetSame: string;
+  offsetErrFormat: string;
+  offsetErrStep: string;
+  offsetErrRange: string;
   note: string;
   noteHint: string;
   save: string;
@@ -40,16 +58,21 @@ export type McvvAdminSpecialStartCopy = {
 
 export type McvvAdminSpecialStartValue = {
   kind: SpecialStartKind;
-  /** Hodnota pro našeptávač („Jméno · rok · klub [id]“). */
-  partnerLabel: string;
+  /** Jen u „spolu s“. */
+  partnerId: string | null;
   /** Posun ve tvaru pro formulář („+2:00“). */
   offset: string;
   note: string;
 };
 
+function fill(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
+}
+
 /**
- * Dialog „Spec. start“ u běžce v administraci přihlášek / startovky (jen pořadatelé).
- * Našeptávač partnera je nativní `<datalist>` s id `partnerListId` (jeden na stránku).
+ * Dialog „Spec. start“ u běžce v administraci přihlášek (jen pořadatelé; Q229 – jinde se
+ * spec. start nenastavuje). Nabídku partnerů dává `McvvAdminPartnerOptions` na stránce.
+ * Posun „spolu s“ je `m:ss` nebo kroky ± interval; musí být násobkem intervalu (Q235).
  */
 export function McvvAdminSpecialStart({
   year,
@@ -58,35 +81,54 @@ export function McvvAdminSpecialStart({
   registrationId,
   from,
   value,
-  partnerListId,
+  intervalSeconds,
   copy,
-  compact = false,
 }: {
   year: number;
   runnerId: string;
   runnerName: string;
   registrationId: number;
-  from: "detail" | "prehled" | "startovka";
+  from: "detail" | "prehled";
   value: McvvAdminSpecialStartValue | null;
-  partnerListId: string;
+  intervalSeconds: number;
   copy: McvvAdminSpecialStartCopy;
-  /** Na startovce jen odkaz bez odznaku (odznak je ve vlastním sloupci). */
-  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<SpecialStartKind>(value?.kind ?? "early");
+  const [offset, setOffset] = useState(value?.offset ?? "0");
+  const [listOpen, setListOpen] = useState(false);
   const onOpenChange = (next: boolean) => {
     setOpen(next);
     if (next) {
       setKind(value?.kind ?? "early");
+      setOffset(value?.offset ?? "0");
+      setListOpen(false);
     }
+  };
+  const parsed = parseOffset(offset, intervalSeconds);
+  const offsetError = parsed.ok
+    ? null
+    : parsed.reason === "step"
+      ? fill(copy.offsetErrStep, { interval: intervalSeconds })
+      : parsed.reason === "range"
+        ? copy.offsetErrRange
+        : copy.offsetErrFormat;
+  const step = (direction: 1 | -1) => {
+    const base = parsed.ok ? parsed.seconds : 0;
+    // Nejdřív zarovnat na interval, pak o jeden krok.
+    const aligned = Math.round(base / intervalSeconds) * intervalSeconds;
+    const next = Math.max(
+      -MAX_OFFSET_SECONDS,
+      Math.min(MAX_OFFSET_SECONDS, aligned + direction * intervalSeconds),
+    );
+    setOffset(formatOffset(next).replace("\u2212", "-"));
   };
   const fieldClass = "h-9 w-full border border-race-line bg-race-surface px-2 text-sm";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        {value && !compact ? (
+        {value ? (
           <button
             type="button"
             title={copy.edit}
@@ -99,16 +141,21 @@ export function McvvAdminSpecialStart({
           <button
             type="button"
             data-testid={`spec-start-edit-${runnerId}`}
-            className={cn(
-              "whitespace-nowrap text-xs underline-offset-2 hover:underline",
-              value ? "font-semibold text-race-accent" : "text-race-muted",
-            )}
+            className="whitespace-nowrap text-xs text-race-muted underline-offset-2 hover:underline"
           >
-            {value ? copy.edit : copy.add}
+            {copy.add}
           </button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
+        // Esc s otevřenou nabídkou zavře jen nabídku.
+        onEscapeKeyDown={(event) => {
+          if (listOpen) {
+            event.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>
             {copy.title}: {runnerName}
@@ -140,31 +187,76 @@ export function McvvAdminSpecialStart({
           </fieldset>
           {kind === "with" ? (
             <div className="grid gap-3 border-l-2 border-race-accent/40 pl-3">
-              <label className="grid gap-1">
-                <span className="font-medium">{copy.partner}</span>
-                <input
-                  name="partner"
-                  list={partnerListId}
-                  required
-                  autoComplete="off"
-                  defaultValue={value?.partnerLabel ?? ""}
-                  className={fieldClass}
-                  data-testid="spec-start-partner"
-                />
-                <span className="text-xs text-race-muted">{copy.partnerHint}</span>
-              </label>
-              <label className="grid gap-1">
-                <span className="font-medium">{copy.offset}</span>
-                <input
-                  name="offset"
-                  inputMode="text"
-                  pattern="\s*[+\-−]?\d{1,2}(:[0-5]\d)?\s*"
-                  defaultValue={value?.offset ?? "0"}
-                  className={cn(fieldClass, "w-28")}
-                  data-testid="spec-start-offset"
-                />
-                <span className="text-xs text-race-muted">{copy.offsetHint}</span>
-              </label>
+              <McvvAdminPartnerCombobox
+                name="partner"
+                initialId={value?.partnerId ?? null}
+                exclude={runnerId}
+                copy={copy.partner}
+                onListOpenChange={setListOpen}
+                required
+                testId="spec-start-partner"
+              />
+              <div className="grid gap-1">
+                <label htmlFor={`spec-offset-${runnerId}`} className="font-medium">
+                  {copy.offset}
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label={fill(copy.offsetEarlier, { interval: intervalSeconds })}
+                    title={fill(copy.offsetEarlier, { interval: intervalSeconds })}
+                    onClick={() => step(-1)}
+                    data-testid="spec-start-offset-minus"
+                  >
+                    −{intervalSeconds} s
+                  </Button>
+                  <input
+                    id={`spec-offset-${runnerId}`}
+                    name="offset"
+                    inputMode="text"
+                    value={offset}
+                    onChange={(event) => setOffset(event.target.value)}
+                    aria-invalid={offsetError ? true : undefined}
+                    aria-describedby={`spec-offset-${runnerId}-hint`}
+                    className={cn(fieldClass, "w-24 text-center font-mono")}
+                    data-testid="spec-start-offset"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label={fill(copy.offsetLater, { interval: intervalSeconds })}
+                    title={fill(copy.offsetLater, { interval: intervalSeconds })}
+                    onClick={() => step(1)}
+                    data-testid="spec-start-offset-plus"
+                  >
+                    +{intervalSeconds} s
+                  </Button>
+                  <span className="text-xs tabular-nums text-race-muted" aria-live="polite">
+                    {parsed.ok
+                      ? parsed.seconds === 0
+                        ? copy.offsetSame
+                        : fill(copy.offsetSteps, {
+                            steps: `${parsed.seconds > 0 ? "+" : "\u2212"}${Math.abs(parsed.seconds / intervalSeconds)}`,
+                            interval: intervalSeconds,
+                          })
+                      : null}
+                  </span>
+                </div>
+                <span
+                  id={`spec-offset-${runnerId}-hint`}
+                  className={cn(
+                    "text-xs",
+                    offsetError
+                      ? "font-semibold text-red-700 dark:text-red-400"
+                      : "text-race-muted",
+                  )}
+                >
+                  {offsetError ?? fill(copy.offsetHint, { interval: intervalSeconds })}
+                </span>
+              </div>
             </div>
           ) : null}
           <label className="grid gap-1">
@@ -198,6 +290,7 @@ export function McvvAdminSpecialStart({
               </Button>
               <Button
                 type="submit"
+                disabled={kind === "with" && offsetError != null}
                 className="bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
                 data-testid="spec-start-save"
               >

@@ -1,55 +1,122 @@
-import type { BibRange } from "./start-settings";
-import { startSeriesForBib, startSlot, type StartModel } from "./start-time";
-import { inOrganizerBlock } from "./startlist-check";
+import { bibForSlot, startSlot, type StartModel } from "./start-time";
 
 /**
- * Speciální start běžce (Pavel, 30. 10. 2026) – jen administrace, nic ve veřejné části.
+ * Speciální start běžce – jen administrace, nic ve veřejné části (rozhodnutí Pavla 30. 10.
+ * a 2. 11. 2026, Q220–Q237).
  *
- * - `organizer`: pořadatel → blok pořadatelů (čísla před prvním oknem kategorie startu), stejně
- *   jako řádky přihlášky č. 1;
- * - `early`: start co nejdřív → první volná čísla za pořadateli ve vlastním startu;
- * - `late`: start co nejpozději → poslední volná čísla v oknech kategorií vlastního startu
- *   (rezervu generátor nepřiděluje);
- * - `with`: start spolu s jiným přihlášeným běžcem s časovým posunem (0 = stejný čas, tedy
- *   druhý start; +2:00 = o dvě minuty později…).
+ * - `organizer`: pořadatel → čísla 1–40 / 601–640 (Q236). Pořadatel je jen běžec s tímto
+ *   typem – přihláška č. 1 už pořadatele neurčuje (Q220, data převedla migrace);
+ * - `early`: start brzy → čísla 41–99 / 641–699 (Q221);
+ * - `late`: start pozdě → čísla 261–299 / 861–899 (Q222), rezervu generátor nepoužívá;
+ * - `with`: start „spolu s“ jiným přihlášeným běžcem: čas partnera + posun (Q224/Q235),
+ *   posun je libovolný násobek intervalu, kladný i záporný (0 = stejný čas → druhý start).
+ *
+ * Rozsahy jsou pořadí ve startu (sloty), takže platí stejně pro 1. i 2. start; číslo dává
+ * `bibForSlot` z modelu ročníku (601 = 1. slot 2. startu).
  */
 export const SPECIAL_START_KINDS = ["organizer", "early", "late", "with"] as const;
 export type SpecialStartKind = (typeof SPECIAL_START_KINDS)[number];
+
+/** Typy s pevným rozsahem čísel. */
+export type RangedSpecialKind = Exclude<SpecialStartKind, "with">;
+export const RANGED_SPECIAL_KINDS: readonly RangedSpecialKind[] = ["organizer", "early", "late"];
+
+/** Rozsahy spec. startů ve slotech startu (Q236, Q221, Q222). */
+export const SPECIAL_SLOT_RANGES: Record<RangedSpecialKind, { from: number; to: number }> = {
+  organizer: { from: 1, to: 40 },
+  early: { from: 41, to: 99 },
+  late: { from: 261, to: 299 },
+};
 
 export type SpecialStartSpec = {
   kind: SpecialStartKind;
   /** Jen u `with`. */
   partnerId: string | null;
-  /** Jen u `with`: posun vůči partnerovi v sekundách. */
+  /** Jen u `with`: posun vůči partnerovi v sekundách (násobek intervalu). */
   offsetSeconds: number;
 };
 
-/** Největší povolený posun (± 30 min) – víc nedává smysl a vejde se do SMALLINT. */
-export const MAX_OFFSET_SECONDS = 30 * 60;
+/** Největší povolený posun (± 60 min, Q235) – vejde se do SMALLINT. */
+export const MAX_OFFSET_SECONDS = 60 * 60;
 
 export function isSpecialStartKind(value: unknown): value is SpecialStartKind {
   return typeof value === "string" && (SPECIAL_START_KINDS as readonly string[]).includes(value);
 }
 
+export function isRangedSpecialKind(value: unknown): value is RangedSpecialKind {
+  return typeof value === "string" && (RANGED_SPECIAL_KINDS as readonly string[]).includes(value);
+}
+
+/** Rozsah čísel typu v daném startu: organizer v 2. startu = 601–640. */
+export function specialBibRange(
+  model: StartModel,
+  kind: RangedSpecialKind,
+  series: 1 | 2,
+): { from: number; to: number } {
+  const slots = SPECIAL_SLOT_RANGES[kind];
+  return { from: bibForSlot(model, series, slots.from), to: bibForSlot(model, series, slots.to) };
+}
+
+/** Číslo leží v rozsahu typu (v kterémkoli startu). */
+export function inSpecialRange(model: StartModel, kind: RangedSpecialKind, bib: number): boolean {
+  const slot = startSlot(model, bib);
+  const range = SPECIAL_SLOT_RANGES[kind];
+  return slot >= range.from && slot <= range.to;
+}
+
+/** Číslo leží v rozsahu některého spec. startu. */
+export function inAnySpecialRange(model: StartModel, bib: number): boolean {
+  return RANGED_SPECIAL_KINDS.some((kind) => inSpecialRange(model, kind, bib));
+}
+
+/** Text rozsahu pro hlášky: „41–99 / 641–699“. */
+export function specialRangeText(model: StartModel, kind: RangedSpecialKind): string {
+  return ([1, 2] as const)
+    .map((series) => {
+      const range = specialBibRange(model, kind, series);
+      return `${range.from}–${range.to}`;
+    })
+    .join(" / ");
+}
+
+export type ParsedOffset =
+  { ok: true; seconds: number } | { ok: false; reason: "format" | "range" | "step" };
+
 /**
- * Posun z formuláře: minuty, volitelně `:ss` a znaménko. „0“, „+2“, „-1“, „+1:30“, „-0:15“.
- * Vrací sekundy, nebo null pro neplatný / příliš velký vstup. Prázdný vstup = 0.
+ * Posun z formuláře (Q235): `m:ss` se znaménkem („+1:30“, „−0:15“, „0“), samotné minuty
+ * („+2“ = 2:00) nebo počet intervalů s „i“ („+6i“ = 6 × interval). Prázdný vstup = 0.
+ * Musí být násobkem intervalu startu a nejvýš ± 60 min.
  */
-export function parseOffset(raw: string | null | undefined): number | null {
+export function parseOffset(
+  raw: string | null | undefined,
+  intervalSeconds: number = 15,
+): ParsedOffset {
   const value = (raw ?? "")
     .trim()
     .replace(/\s+/g, "")
-    .replace(/^\u2212/, "-");
+    .replace(/^[\u2212\u2013]/, "-");
   if (value === "") {
-    return 0;
+    return { ok: true, seconds: 0 };
   }
-  const match = /^([+-])?(\d{1,2})(?::([0-5]\d))?$/.exec(value);
-  if (!match) {
-    return null;
+  let signed: number;
+  const steps = /^([+-])?(\d{1,3})[i×x]$/i.exec(value);
+  const clock = /^([+-])?(\d{1,2})(?::([0-5]\d))?$/.exec(value);
+  if (steps) {
+    const seconds = Number(steps[2]) * intervalSeconds;
+    signed = steps[1] === "-" ? -seconds : seconds;
+  } else if (clock) {
+    const seconds = Number(clock[2]) * 60 + Number(clock[3] ?? 0);
+    signed = clock[1] === "-" ? -seconds : seconds;
+  } else {
+    return { ok: false, reason: "format" };
   }
-  const seconds = Number(match[2]) * 60 + Number(match[3] ?? 0);
-  const signed = match[1] === "-" ? -seconds : seconds;
-  return Math.abs(signed) > MAX_OFFSET_SECONDS ? null : signed;
+  if (Math.abs(signed) > MAX_OFFSET_SECONDS) {
+    return { ok: false, reason: "range" };
+  }
+  if (intervalSeconds > 0 && signed % intervalSeconds !== 0) {
+    return { ok: false, reason: "step" };
+  }
+  return { ok: true, seconds: signed === 0 ? 0 : signed };
 }
 
 /** Zobrazení posunu: „0“, „+2:00“, „−1:30“. */
@@ -72,8 +139,6 @@ export type SpecialCheckRow = {
   bib: number | null;
   /** Řádek se počítá do startovky (platná, nezrušená přihláška). */
   active: boolean;
-  /** Pořadatel z přihlášky č. 1 nebo obhájce – nejsou „běžní“ pro brzy / pozdě. */
-  exempt: boolean;
   special: SpecialStartSpec | null;
 };
 
@@ -81,36 +146,22 @@ export type SpecialCheck =
   | { ok: true }
   | {
       ok: false;
-      reason: "noBib" | "partnerMissing" | "block" | "notEarliest" | "notLatest" | "offset";
+      reason: "noBib" | "partnerMissing" | "range" | "offset";
       /** U `offset`: skutečný posun v sekundách. */
       actualSeconds?: number;
     };
 
 /**
  * Splněno / porušeno pro aktuální čísla (zelená / červená na startovce):
- * - pořadatel: číslo v bloku pořadatelů;
- * - brzy: nikdo „běžný“ (bez spec. startu, ne pořadatel, ne obhájce) ve stejném startu
- *   nestartuje dřív;
- * - pozdě: nikdo běžný ve stejném startu nestartuje později;
- * - spolu s: oba mají číslo a rozdíl startovních časů = posun (zaokrouhlený na interval).
+ * - pořadatel / brzy / pozdě: číslo v rozsahu typu (1–40, 41–99, 261–299 a totéž od 601);
+ * - spolu s: oba mají číslo a rozdíl startovních časů = posun.
  */
 export function checkSpecialStarts(
   model: StartModel,
-  ranges: BibRange[],
   rows: SpecialCheckRow[],
 ): Map<string, SpecialCheck> {
   const result = new Map<string, SpecialCheck>();
-  const active = rows.filter((row) => row.active);
-  const byId = new Map(active.map((row) => [row.runnerId, row]));
-  const regular = active.filter((row) => row.bib != null && !row.exempt && !row.special);
-  const extreme = (series: 1 | 2, pick: (a: number, b: number) => number): number | null => {
-    const slots = regular
-      .filter((row) => startSeriesForBib(model, row.bib!) === series)
-      .map((row) => startSlot(model, row.bib!));
-    return slots.length > 0 ? slots.reduce((a, b) => pick(a, b)) : null;
-  };
-  const earliest = { 1: extreme(1, Math.min), 2: extreme(2, Math.min) } as const;
-  const latest = { 1: extreme(1, Math.max), 2: extreme(2, Math.max) } as const;
+  const byId = new Map(rows.filter((row) => row.active).map((row) => [row.runnerId, row]));
 
   for (const row of rows) {
     const special = row.special;
@@ -121,47 +172,27 @@ export function checkSpecialStarts(
       result.set(row.runnerId, { ok: false, reason: "noBib" });
       continue;
     }
-    const series = startSeriesForBib(model, row.bib);
-    const slot = startSlot(model, row.bib);
-    switch (special.kind) {
-      case "organizer":
-        result.set(
-          row.runnerId,
-          inOrganizerBlock(model, ranges, row.bib) ? { ok: true } : { ok: false, reason: "block" },
-        );
-        break;
-      case "early": {
-        const first = earliest[series];
-        result.set(
-          row.runnerId,
-          first == null || slot <= first ? { ok: true } : { ok: false, reason: "notEarliest" },
-        );
-        break;
-      }
-      case "late": {
-        const last = latest[series];
-        result.set(
-          row.runnerId,
-          last == null || slot >= last ? { ok: true } : { ok: false, reason: "notLatest" },
-        );
-        break;
-      }
-      case "with": {
-        const partner = special.partnerId ? byId.get(special.partnerId) : undefined;
-        if (!partner || partner.runnerId === row.runnerId || partner.bib == null) {
-          result.set(row.runnerId, { ok: false, reason: "partnerMissing" });
-          break;
-        }
-        const diff = slot - startSlot(model, partner.bib);
-        result.set(
-          row.runnerId,
-          diff === offsetSlots(model, special.offsetSeconds)
-            ? { ok: true }
-            : { ok: false, reason: "offset", actualSeconds: diff * model.intervalSeconds },
-        );
-        break;
-      }
+    if (special.kind !== "with") {
+      result.set(
+        row.runnerId,
+        inSpecialRange(model, special.kind, row.bib)
+          ? { ok: true }
+          : { ok: false, reason: "range" },
+      );
+      continue;
     }
+    const partner = special.partnerId ? byId.get(special.partnerId) : undefined;
+    if (!partner || partner.runnerId === row.runnerId || partner.bib == null) {
+      result.set(row.runnerId, { ok: false, reason: "partnerMissing" });
+      continue;
+    }
+    const diff = startSlot(model, row.bib) - startSlot(model, partner.bib);
+    result.set(
+      row.runnerId,
+      diff === offsetSlots(model, special.offsetSeconds)
+        ? { ok: true }
+        : { ok: false, reason: "offset", actualSeconds: diff * model.intervalSeconds },
+    );
   }
   return result;
 }

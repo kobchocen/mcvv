@@ -872,6 +872,8 @@ enum StartGroupKind {
 }
 
 /// Požadavek na společný (stejný čas) nebo navazující start skupiny běžců.
+/// Zastaralé (Q225, 2. 11. 2026): skupiny nahradil spec. start „spolu s“ (migrace
+/// 20261102120000_spec_start_data). Tabulka zůstává kvůli rollbacku a historii; aplikace ji nepoužívá.
 model StartGroup {
   id        Int            @id @default(autoincrement())
   year      Int            @map("rok") @db.SmallInt
@@ -891,7 +893,9 @@ model StartLineMeta {
   year       Int      @map("rok") @db.SmallInt
   runnerId   String   @map("bezec_id") @db.Char(8)
   locked     Boolean  @default(false) @map("zamceno")
+  /// Zastaralé (Q225) – viz StartGroup; aplikace nečte ani nezapisuje.
   groupId    Int?     @map("skupina_id")
+  /// Zastaralé (Q225).
   groupOrder Int      @default(0) @map("skupina_poradi") @db.SmallInt
   updatedAt  DateTime @updatedAt @map("updated_at")
 

@@ -11,26 +11,21 @@ import { startLineTarget } from "@/lib/audit/startlist";
 import { prisma } from "@/lib/db/client";
 import { isSpecialStartKind, parseOffset } from "@/lib/race/special-start";
 import { partnerIdFromInput } from "@/lib/race/special-start-input";
+import { startModelFromEdition } from "@/lib/race/start-time";
+import { editionForYear } from "@/lib/race/startlist-load";
 import { redirect } from "@/i18n/routing";
 
 const NOTE_MAX = 200;
 
-export type SpecialStartError = "kind" | "partner" | "self" | "offset" | "note" | "line";
+export type SpecialStartError =
+  "kind" | "partner" | "self" | "offset" | "offsetStep" | "offsetRange" | "note" | "line";
 
-/** Kam se po uložení vrátit: detail přihlášky, přehled spec. startů, nebo startovka. */
+/** Kam se po uložení vrátit: detail přihlášky, nebo přehled spec. startů (Q229). */
 async function back(data: FormData, year: number, query: Record<string, string>): Promise<never> {
   const locale = await getLocale();
   const from = formString(data, "from");
   const runnerId = formString(data, "runnerId");
-  if (from === "startovka") {
-    redirect({
-      href: {
-        pathname: "/admin/startovka",
-        query: { rok: String(year), bezec: runnerId, ...query },
-      },
-      locale,
-    });
-  } else if (from === "prehled") {
+  if (from === "prehled") {
     redirect({
       href: { pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year), ...query } },
       locale,
@@ -136,11 +131,18 @@ export async function saveSpecialStart(formData: FormData): Promise<void> {
     if (!partnerLine) {
       return back(formData, year, { spec: "chyba", duvod: "partner" });
     }
-    const offset = parseOffset(formString(formData, "offset"));
-    if (offset == null) {
-      return back(formData, year, { spec: "chyba", duvod: "offset" });
+    const { intervalSeconds } = startModelFromEdition(await editionForYear(year));
+    const offset = parseOffset(formString(formData, "offset"), intervalSeconds);
+    if (!offset.ok) {
+      const duvod: SpecialStartError =
+        offset.reason === "step"
+          ? "offsetStep"
+          : offset.reason === "range"
+            ? "offsetRange"
+            : "offset";
+      return back(formData, year, { spec: "chyba", duvod });
     }
-    offsetSeconds = offset;
+    offsetSeconds = offset.seconds;
   }
   const data = {
     kind,

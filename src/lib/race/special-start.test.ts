@@ -4,8 +4,12 @@ import { describe, it } from "node:test";
 import {
   checkSpecialStarts,
   formatOffset,
+  inAnySpecialRange,
+  inSpecialRange,
   offsetSlots,
   parseOffset,
+  specialBibRange,
+  specialRangeText,
   type SpecialCheckRow,
   type SpecialStartSpec,
 } from "./special-start";
@@ -13,14 +17,16 @@ import type { BibRange } from "./start-settings";
 import { DEFAULT_START_MODEL, startSeriesForBib, startSlot } from "./start-time";
 import { generateStartList, type GeneratorEntry, type GeneratorInput } from "./startlist-generator";
 
-const MODEL = DEFAULT_START_MODEL; // interval 15 s, 2. start od 601
+const MODEL = DEFAULT_START_MODEL; // interval 15 s, 2. řada od 601
+// Okna kategorií mimo rozsahy spec. startů (1–99, 261–299 a totéž od 601).
 const RANGES: BibRange[] = [
-  { categoryId: "J", bibFrom: 41, bibTo: 90 },
+  { categoryId: "J", bibFrom: 101, bibTo: 140 },
+  { categoryId: "B", bibFrom: 201, bibTo: 260 },
   { categoryId: "A", bibFrom: 301, bibTo: 380 },
-  { categoryId: "K", bibFrom: 641, bibTo: 680 },
+  { categoryId: "K", bibFrom: 701, bibTo: 740 },
   { categoryId: "F", bibFrom: 901, bibTo: 930 },
 ];
-const SORT = { J: 1, A: 3, K: 8, F: 10 };
+const SORT = { J: 1, B: 2, A: 3, K: 8, F: 10 };
 
 let seq = 0;
 function entry(partial: Partial<GeneratorEntry> & { categoryId: string }): GeneratorEntry {
@@ -31,10 +37,7 @@ function entry(partial: Partial<GeneratorEntry> & { categoryId: string }): Gener
     currentBib: null,
     locked: false,
     eligible: true,
-    organizer: false,
     lastYearTime: null,
-    groupId: null,
-    groupOrder: 0,
     ...partial,
   };
 }
@@ -49,15 +52,7 @@ const withRunner = (partnerId: string, offsetSeconds = 0): SpecialStartSpec => (
 });
 
 function input(entries: GeneratorEntry[], extra: Partial<GeneratorInput> = {}): GeneratorInput {
-  return {
-    model: MODEL,
-    ranges: RANGES,
-    categorySort: SORT,
-    champions: [],
-    groups: [],
-    entries,
-    ...extra,
-  };
+  return { model: MODEL, ranges: RANGES, categorySort: SORT, champions: [], entries, ...extra };
 }
 
 function run(entries: GeneratorEntry[], extra: Partial<GeneratorInput> = {}) {
@@ -77,195 +72,211 @@ function checkRows(
     runnerId: e.runnerId,
     bib: result.lines.find((l) => l.runnerId === e.runnerId)!.bib,
     active: e.eligible,
-    exempt: e.organizer,
     special: e.special ?? null,
   }));
 }
 
 const filler = (categoryId: string, count: number) =>
   Array.from({ length: count }, () => entry({ categoryId }));
+const slotDiff = (a: number | null, b: number | null) =>
+  startSlot(MODEL, a!) - startSlot(MODEL, b!);
 
-describe("parseOffset / formatOffset", () => {
-  it("parses minutes with an optional :ss and sign", () => {
-    assert.equal(parseOffset(""), 0);
-    assert.equal(parseOffset("0"), 0);
-    assert.equal(parseOffset("+2"), 120);
-    assert.equal(parseOffset("2"), 120);
-    assert.equal(parseOffset("-1"), -60);
-    assert.equal(parseOffset("−1:30"), -90);
-    assert.equal(parseOffset(" +0:15 "), 15);
-    assert.equal(parseOffset("30"), 1800);
+describe("spec. start ranges (Q236, Q221, Q222)", () => {
+  it("uses the same slots on both lines", () => {
+    assert.deepEqual(specialBibRange(MODEL, "organizer", 1), { from: 1, to: 40 });
+    assert.deepEqual(specialBibRange(MODEL, "organizer", 2), { from: 601, to: 640 });
+    assert.deepEqual(specialBibRange(MODEL, "early", 1), { from: 41, to: 99 });
+    assert.deepEqual(specialBibRange(MODEL, "early", 2), { from: 641, to: 699 });
+    assert.deepEqual(specialBibRange(MODEL, "late", 1), { from: 261, to: 299 });
+    assert.deepEqual(specialBibRange(MODEL, "late", 2), { from: 861, to: 899 });
+    assert.equal(specialRangeText(MODEL, "early"), "41–99 / 641–699");
   });
-  it("rejects garbage and offsets above 30 minutes", () => {
-    assert.equal(parseOffset("abc"), null);
-    assert.equal(parseOffset("1:75"), null);
-    assert.equal(parseOffset("31"), null);
-    assert.equal(parseOffset("1.5"), null);
+  it("tells whether a bib lies in a range on either line", () => {
+    assert.ok(inSpecialRange(MODEL, "organizer", 40));
+    assert.ok(!inSpecialRange(MODEL, "organizer", 41));
+    assert.ok(inSpecialRange(MODEL, "early", 699));
+    assert.ok(inSpecialRange(MODEL, "late", 861));
+    assert.ok(!inSpecialRange(MODEL, "late", 900), "no reserve numbers (Q222)");
+    assert.ok(!inSpecialRange(MODEL, "late", 300));
+    assert.ok(inAnySpecialRange(MODEL, 620));
+    assert.ok(!inAnySpecialRange(MODEL, 150));
   });
-  it("formats back", () => {
+});
+
+describe("parseOffset / formatOffset (Q224, Q235)", () => {
+  const ok = (seconds: number) => ({ ok: true, seconds });
+  it("parses m:ss, plain minutes and interval steps with a sign", () => {
+    assert.deepEqual(parseOffset(""), ok(0));
+    assert.deepEqual(parseOffset("0"), ok(0));
+    assert.deepEqual(parseOffset("+2"), ok(120));
+    assert.deepEqual(parseOffset("1:30"), ok(90), "several intervals (6 × 15 s)");
+    assert.deepEqual(parseOffset("−1:30"), ok(-90));
+    assert.deepEqual(parseOffset("–0:45"), ok(-45));
+    assert.deepEqual(parseOffset(" +0:15 "), ok(15));
+    assert.deepEqual(parseOffset("+6i"), ok(90));
+    assert.deepEqual(parseOffset("-3x"), ok(-45));
+    assert.deepEqual(parseOffset("60"), ok(3600));
+    assert.deepEqual(parseOffset("-60:00"), ok(-3600));
+  });
+  it("requires a multiple of the start interval", () => {
+    assert.deepEqual(parseOffset("0:20"), { ok: false, reason: "step" });
+    assert.deepEqual(parseOffset("0:20", 10), ok(20));
+    assert.deepEqual(parseOffset("+2i", 20), ok(40));
+  });
+  it("caps the offset at ± 60 min and rejects garbage", () => {
+    assert.deepEqual(parseOffset("60:15"), { ok: false, reason: "range" });
+    assert.deepEqual(parseOffset("-61"), { ok: false, reason: "range" });
+    assert.deepEqual(parseOffset("abc"), { ok: false, reason: "format" });
+    assert.deepEqual(parseOffset("1:75"), { ok: false, reason: "format" });
+    assert.deepEqual(parseOffset("1.5"), { ok: false, reason: "format" });
+  });
+  it("formats back and counts intervals", () => {
     assert.equal(formatOffset(0), "0");
     assert.equal(formatOffset(120), "+2:00");
     assert.equal(formatOffset(-90), "−1:30");
     assert.equal(formatOffset(15), "+0:15");
-  });
-  it("rounds the offset to start intervals", () => {
-    assert.equal(offsetSlots(MODEL, 120), 8);
-    assert.equal(offsetSlots(MODEL, 20), 1);
+    assert.equal(offsetSlots(MODEL, 90), 6);
     assert.equal(offsetSlots(MODEL, -15), -1);
   });
 });
 
-describe("generateStartList – spec. starty", () => {
-  it("treats the organizer flag like registration #1 (organizer block, category order)", () => {
-    const reg1 = entry({ categoryId: "A", organizer: true, name: "Adamec" });
-    const flagged = entry({ categoryId: "J", special: organizer, name: "Zelený" });
-    const woman = entry({ categoryId: "K", special: organizer });
-    const { bib, line } = run([reg1, flagged, woman, ...filler("A", 5)]);
-    // J má menší sort než A → pořadatel s příznakem jde první.
-    assert.equal(bib(flagged), 1);
-    assert.equal(bib(reg1), 2);
-    assert.equal(bib(woman), 601);
-    assert.equal(line(flagged).reason, "organizer");
-    assert.equal(line(flagged).outsideCategory, false);
-  });
-
-  it("puts early runners right after the organizers in their own start", () => {
-    const org = entry({ categoryId: "A", organizer: true });
-    const a = entry({ categoryId: "A", special: early, name: "Brzký A" });
-    const j = entry({ categoryId: "J", special: early, name: "Brzký J" });
-    const k = entry({ categoryId: "K", special: early });
-    const { bib, line, result } = run([org, a, j, k, ...filler("A", 10), ...filler("K", 4)]);
-    assert.equal(bib(org), 1);
-    assert.equal(bib(j), 2, "category order J before A");
-    assert.equal(bib(a), 3);
+describe("generateStartList – organizer / early / late", () => {
+  it("numbers flagged organizers from 1 and 601 in category order", () => {
+    const a = entry({ categoryId: "A", special: organizer, name: "Adamec" });
+    const j = entry({ categoryId: "J", special: organizer, name: "Zelený" });
+    const k = entry({ categoryId: "K", special: organizer });
+    const { bib, line, result } = run([a, j, k, ...filler("A", 5)]);
+    assert.equal(bib(j), 1, "J sorts before A");
+    assert.equal(bib(a), 2);
     assert.equal(bib(k), 601);
+    assert.equal(line(j).reason, "organizer");
+    assert.equal(line(j).outsideCategory, false);
+    assert.deepEqual(result.warnings, []);
+  });
+
+  it("puts early runners on 41+ / 641+", () => {
+    const a = entry({ categoryId: "A", special: early });
+    const j = entry({ categoryId: "J", special: early });
+    const k = entry({ categoryId: "K", special: early });
+    const org = entry({ categoryId: "A", special: organizer });
+    const { bib, line } = run([org, a, j, k, ...filler("A", 10), ...filler("K", 4)]);
+    assert.equal(bib(org), 1);
+    assert.equal(bib(j), 41);
+    assert.equal(bib(a), 42);
+    assert.equal(bib(k), 641);
     assert.equal(line(a).reason, "early");
-    assert.equal(line(a).outsideCategory, false, "organizer block is not 'outside category'");
-    assert.equal(result.warnings.length, 0);
+    assert.equal(line(a).outsideCategory, false);
   });
 
-  it("falls back to the earliest window numbers with spare capacity when the block is full", () => {
-    const ranges: BibRange[] = [
-      { categoryId: "J", bibFrom: 3, bibTo: 6 },
-      { categoryId: "A", bibFrom: 7, bibTo: 20 },
-    ];
-    const orgs = [
-      entry({ categoryId: "A", organizer: true }),
-      entry({ categoryId: "A", organizer: true }),
-    ];
-    const full = filler("J", 4); // J nemá žádné volné číslo navíc
-    const runner = entry({ categoryId: "A", special: early });
-    const { bib, result } = run([...orgs, ...full, runner, ...filler("A", 3)], { ranges });
-    assert.equal(bib(runner), 7, "skips the full J window, first A number");
-    assert.equal(result.blocking, false, "no shortage caused");
-    for (const j of full) {
-      assert.ok(bib(j)! >= 3 && bib(j)! <= 6);
-    }
-  });
-
-  it("puts late runners on the last window numbers of their start", () => {
+  it("fills late from the end (299 / 899) and keeps a stable order", () => {
     const j = entry({ categoryId: "J", special: late });
     const a = entry({ categoryId: "A", special: late });
     const k = entry({ categoryId: "K", special: late });
-    const { bib, line } = run([j, a, k, ...filler("A", 20), ...filler("F", 5), ...filler("J", 3)]);
-    assert.equal(bib(j), 379);
-    assert.equal(bib(a), 380);
-    assert.equal(bib(k), 930, "women start: last F number");
+    const { bib, line } = run([j, a, k, ...filler("A", 20), ...filler("F", 5)]);
+    assert.equal(bib(j), 298);
+    assert.equal(bib(a), 299);
+    assert.equal(bib(k), 899);
     assert.equal(line(a).reason, "late");
     assert.equal(line(a).outsideCategory, false);
-    assert.equal(line(j).outsideCategory, true, "J runner in A window is labelled");
   });
 
-  it("warns and places normally when no number is left for early / late", () => {
-    const ranges: BibRange[] = [
-      { categoryId: "J", bibFrom: 1, bibTo: 2 },
-      { categoryId: "A", bibFrom: 3, bibTo: 5 },
-    ];
-    // Žádné okno nemá volné číslo navíc → pozdě se nedá upřednostnit, běžec jde normálně
-    // do své kategorie (a tam chybí číslo – nedostatek ohlásí rozprostření kategorie).
-    const runner = entry({ categoryId: "J", special: late });
-    const { line, result } = run([runner, ...filler("J", 2), ...filler("A", 3)], { ranges });
-    assert.notEqual(line(runner).reason, "late");
-    assert.deepEqual(
-      result.warnings.map((w) => w.code),
-      ["specOverflow", "shortage"],
+  it("keeps a locked bib inside the range and skips it", () => {
+    const locked = entry({ categoryId: "A", locked: true, currentBib: 1 });
+    const org = entry({ categoryId: "A", special: organizer });
+    const { bib } = run([locked, org]);
+    assert.equal(bib(org), 2);
+  });
+
+  it("organizer overflow: nearest free bib outside 1–40 with a warning (Q237)", () => {
+    const orgs = Array.from({ length: 41 }, (_, i) =>
+      entry({ categoryId: "A", special: organizer, name: `Org ${String(i + 1).padStart(2, "0")}` }),
     );
+    const { bib, result } = run(orgs);
+    assert.deepEqual(
+      orgs.slice(0, 40).map(bib),
+      Array.from({ length: 40 }, (_, i) => i + 1),
+    );
+    assert.equal(bib(orgs[40]), 41, "first number after the range");
+    assert.deepEqual(result.warnings, [
+      { code: "specOverflow", kind: "organizer", series: 1, runnerIds: [orgs[40].runnerId] },
+    ]);
+    const checks = checkSpecialStarts(MODEL, checkRows(orgs, result));
+    assert.deepEqual(checks.get(orgs[40].runnerId), { ok: false, reason: "range" });
+    assert.deepEqual(checks.get(orgs[0].runnerId), { ok: true });
   });
 
-  it("starts 'with' at the same time in the other start for offset 0", () => {
-    const partner = entry({ categoryId: "J", name: "Táta", currentBib: 50, locked: true });
-    const kid = entry({ categoryId: "K", special: withRunner(partner.runnerId, 0) });
-    const { bib, line, result } = run([partner, kid, ...filler("J", 10), ...filler("K", 5)]);
+  it("late overflow: the earliest-sorted runner goes just outside, before 261", () => {
+    const lates = Array.from({ length: 40 }, (_, i) =>
+      entry({ categoryId: "A", special: late, name: `Late ${String(i + 1).padStart(2, "0")}` }),
+    );
+    const { bib, result } = run(lates);
+    // 39 čísel 261–299 od konce; 300 není v žádném okně → nejbližší volné 260 (okno B).
+    assert.equal(bib(lates[39]), 299);
+    assert.equal(bib(lates[1]), 261);
+    assert.equal(bib(lates[0]), 260);
+    assert.deepEqual(result.warnings, [
+      { code: "specOverflow", kind: "late", series: 1, runnerIds: [lates[0].runnerId] },
+    ]);
+  });
+
+  it("champions keep their bibs even inside a spec range", () => {
+    const champ = entry({ categoryId: "A", lastYearTime: 800 });
+    const e = entry({ categoryId: "A", special: early });
+    const { bib } = run([champ, e], { champions: [{ runnerId: champ.runnerId, bib: 41 }] });
+    assert.equal(bib(champ), 41);
+    assert.equal(bib(e), 42);
+  });
+});
+
+describe("generateStartList – „spolu s“ (Q224, Q235, Q226)", () => {
+  it("offset 0 = same time on the other line (cross-line)", () => {
+    const partner = entry({ categoryId: "J", currentBib: 120, locked: true });
+    const kid = entry({ categoryId: "A", special: withRunner(partner.runnerId, 0) });
+    const { bib, line, result } = run([partner, kid, ...filler("A", 10), ...filler("K", 5)]);
+    assert.equal(bib(kid), 720);
     assert.notEqual(startSeriesForBib(MODEL, bib(kid)!), startSeriesForBib(MODEL, bib(partner)!));
-    assert.equal(startSlot(MODEL, bib(kid)!), startSlot(MODEL, bib(partner)!));
     assert.equal(line(kid).reason, "with");
-    assert.equal(result.warnings.length, 0);
+    assert.equal(line(kid).outsideCategory, true);
+    assert.deepEqual(result.warnings, []);
   });
 
-  it("uses the nearest time and warns when the exact time has no number", () => {
-    // Slot 373 (A) nemá ve 2. startu žádné okno (F končí slotem 330) → nejbližší možné číslo.
-    const partner = entry({ categoryId: "A", currentBib: 373, locked: true });
-    const kid = entry({ categoryId: "F", special: withRunner(partner.runnerId, 0) });
-    const { bib, result } = run([partner, kid, ...filler("F", 3)]);
-    assert.equal(bib(kid), 374, "slot 374 in the men's start is closer than 330 in its own");
+  it("applies a multi-interval positive and negative offset (+1:30, −0:45)", () => {
+    const partner = entry({ categoryId: "A", currentBib: 340, locked: true });
+    const after = entry({ categoryId: "A", special: withRunner(partner.runnerId, 90) });
+    const before = entry({ categoryId: "A", special: withRunner(partner.runnerId, -45) });
+    const all = [partner, after, before, ...filler("A", 20)];
+    const { bib, result } = run(all);
+    assert.equal(bib(after), 346);
+    assert.equal(bib(before), 337);
+    assert.equal(slotDiff(bib(after), bib(partner)), 6);
+    const checks = checkSpecialStarts(MODEL, checkRows(all, result));
+    assert.deepEqual([...checks.values()], [{ ok: true }, { ok: true }]);
+  });
+
+  it("spans many intervals and lines: −60 min and a cross-line +0:30", () => {
+    const partner = entry({ categoryId: "A", currentBib: 360, locked: true });
+    const hourEarlier = entry({ categoryId: "A", special: withRunner(partner.runnerId, -3600) });
+    // Kategorie K (2. řada): slot 362 nemá ve 2. řadě okno → stejný čas v 1. řadě (okno A).
+    const woman = entry({ categoryId: "K", special: withRunner(partner.runnerId, 30) });
+    const { bib, line, result } = run([partner, hourEarlier, woman, ...filler("K", 3)]);
+    assert.equal(bib(hourEarlier), 120, "slot 360 − 240");
+    assert.equal(bib(woman), 362);
+    assert.equal(line(woman).outsideCategory, true);
+    assert.deepEqual(result.warnings, []);
+  });
+
+  it("uses the nearest free slot and warns when the exact one is taken", () => {
+    const partner = entry({ categoryId: "A", currentBib: 340, locked: true });
+    const blocker = entry({ categoryId: "A", currentBib: 346, locked: true });
+    const kid = entry({ categoryId: "A", special: withRunner(partner.runnerId, 90) });
+    const { bib, result } = run([partner, blocker, kid]);
+    assert.equal(bib(kid), 347);
     assert.deepEqual(result.warnings, [
       { code: "specApprox", runnerId: kid.runnerId, deviation: 1 },
     ]);
   });
 
-  it("applies a positive or negative offset relative to the partner", () => {
-    const partner = entry({ categoryId: "A", currentBib: 340, locked: true });
-    const after = entry({ categoryId: "A", special: withRunner(partner.runnerId, 120) });
-    const before = entry({ categoryId: "A", special: withRunner(partner.runnerId, -60) });
-    const all = [partner, after, before, ...filler("A", 20)];
-    const { bib, result } = run(all);
-    assert.equal(startSlot(MODEL, bib(after)!) - startSlot(MODEL, bib(partner)!), 8);
-    assert.equal(startSlot(MODEL, bib(before)!) - startSlot(MODEL, bib(partner)!), -4);
-    const checks = checkSpecialStarts(MODEL, RANGES, checkRows(all, result));
-    assert.deepEqual([...checks.values()], [{ ok: true }, { ok: true }]);
-  });
-
-  it("resolves chains (partner first) and relocates a regular runner inside its own window", () => {
-    const a = entry({ categoryId: "A", runnerId: "Z0000001" });
-    const b = entry({ categoryId: "A", runnerId: "A0000002", special: withRunner("Z0000001", 15) });
-    const c = entry({ categoryId: "A", runnerId: "A0000001", special: withRunner("A0000002", 15) });
-    // Plné okno (80 čísel, 78 běžců) → cílová čísla obsadí běžní běžci, ti se posunou.
-    const all = [a, b, c, ...filler("A", 75)];
-    const { bib, result } = run(all);
-    assert.equal(bib(b)! - bib(a)!, 1);
-    assert.equal(bib(c)! - bib(b)!, 1);
-    assert.equal(result.blocking, false);
-    for (const e of all) {
-      assert.ok(bib(e)! >= 301 && bib(e)! <= 380, "everyone stays in the A window");
-    }
-  });
-
-  it("accepts a mutual 'with' pair (cycle) when it is consistent", () => {
-    const a = entry({ categoryId: "A", runnerId: "A0000010" });
-    const b = entry({ categoryId: "K", runnerId: "B0000010" });
-    a.special = withRunner(b.runnerId, 0);
-    b.special = withRunner(a.runnerId, 0);
-    const { bib, result } = run([a, b, ...filler("A", 5), ...filler("K", 5)]);
-    assert.equal(startSlot(MODEL, bib(a)!), startSlot(MODEL, bib(b)!));
-    assert.equal(
-      result.warnings.some((w) => w.code === "specCycle"),
-      false,
-    );
-  });
-
-  it("warns about an inconsistent cycle", () => {
-    const a = entry({ categoryId: "A", runnerId: "A0000020" });
-    const b = entry({ categoryId: "A", runnerId: "B0000020" });
-    a.special = withRunner(b.runnerId, 15);
-    b.special = withRunner(a.runnerId, 15);
-    const { result } = run([a, b, ...filler("A", 5)]);
-    assert.deepEqual(
-      result.warnings.filter((w) => w.code === "specCycle"),
-      [{ code: "specCycle", runnerIds: ["A0000020", "B0000020"] }],
-    );
-  });
-
-  it("falls back to normal placement when the partner is missing or has no number", () => {
+  it("missing partner: warning and normal placement (Q226)", () => {
     const gone = entry({ categoryId: "A", special: withRunner("19990001", 0) });
     const unpaid = entry({ categoryId: "A", eligible: false });
     const waiting = entry({ categoryId: "A", special: withRunner(unpaid.runnerId, 0) });
@@ -278,7 +289,41 @@ describe("generateStartList – spec. starty", () => {
     );
   });
 
-  it("never moves a locked runner or a group member, only evaluates them", () => {
+  it("resolves chains (partner first) and relocates a regular runner in its window", () => {
+    const a = entry({ categoryId: "A", runnerId: "Z0000001" });
+    const b = entry({ categoryId: "A", runnerId: "A0000002", special: withRunner("Z0000001", 15) });
+    const c = entry({ categoryId: "A", runnerId: "A0000001", special: withRunner("A0000002", 15) });
+    const all = [a, b, c, ...filler("A", 75)];
+    const { bib, result } = run(all);
+    assert.equal(bib(b)! - bib(a)!, 1);
+    assert.equal(bib(c)! - bib(b)!, 1);
+    assert.equal(result.blocking, false);
+    for (const e of all) {
+      assert.ok(bib(e)! >= 301 && bib(e)! <= 380, "everyone stays in the A window");
+    }
+  });
+
+  it("accepts a consistent mutual pair and warns about an inconsistent cycle", () => {
+    const a = entry({ categoryId: "A", runnerId: "A0000010" });
+    const b = entry({ categoryId: "K", runnerId: "B0000010" });
+    a.special = withRunner(b.runnerId, 0);
+    b.special = withRunner(a.runnerId, 0);
+    const first = run([a, b, ...filler("A", 5), ...filler("K", 5)]);
+    assert.equal(startSlot(MODEL, first.bib(a)!), startSlot(MODEL, first.bib(b)!));
+    assert.ok(!first.result.warnings.some((w) => w.code === "specCycle"));
+
+    const c = entry({ categoryId: "A", runnerId: "A0000020" });
+    const d = entry({ categoryId: "A", runnerId: "B0000020" });
+    c.special = withRunner(d.runnerId, 15);
+    d.special = withRunner(c.runnerId, 15);
+    const second = run([c, d, ...filler("A", 5)]);
+    assert.deepEqual(
+      second.result.warnings.filter((w) => w.code === "specCycle"),
+      [{ code: "specCycle", runnerIds: ["A0000020", "B0000020"] }],
+    );
+  });
+
+  it("never moves a locked runner, only evaluates it", () => {
     const partner = entry({ categoryId: "A" });
     const locked = entry({
       categoryId: "A",
@@ -290,15 +335,42 @@ describe("generateStartList – spec. starty", () => {
     assert.equal(bib(locked), 350);
     assert.equal(line(locked).reason, "locked");
   });
+});
 
-  it("lets a group anchor to an early member", () => {
-    const lead = entry({ categoryId: "A", special: early, groupId: 1, groupOrder: 0 });
-    const follower = entry({ categoryId: "A", groupId: 1, groupOrder: 1 });
-    const { bib } = run([lead, follower, ...filler("A", 5)], {
-      groups: [{ id: 1, kind: "consecutive" }],
-    });
-    assert.equal(bib(lead), 1);
-    assert.ok(bib(follower) != null);
+describe("generateStartList – partners move with early / late runners (Q227)", () => {
+  it("an early runner takes the family along (other line, chained offset)", () => {
+    const mum = entry({ categoryId: "A", special: early, runnerId: "M0000001" });
+    const kid = entry({ categoryId: "K", special: withRunner(mum.runnerId, 0) });
+    const grandpa = entry({ categoryId: "A", special: withRunner(kid.runnerId, 15) });
+    const { bib, line, result } = run([mum, kid, grandpa, ...filler("A", 10), ...filler("K", 5)]);
+    assert.equal(bib(mum), 41);
+    assert.equal(bib(kid), 641, "same time, other line, still in the early range");
+    assert.equal(bib(grandpa), 42, "15 s after the kid, own line");
+    assert.equal(line(kid).reason, "with");
+    assert.equal(line(kid).outsideCategory, false, "spec range is not 'outside category'");
+    assert.deepEqual(result.warnings, []);
+  });
+
+  it("a late runner keeps a partner starting 15 s before", () => {
+    const dad = entry({ categoryId: "A", special: late });
+    const son = entry({ categoryId: "A", special: withRunner(dad.runnerId, -15) });
+    const { bib, result } = run([dad, son, ...filler("A", 10)]);
+    assert.equal(bib(dad), 299);
+    assert.equal(bib(son), 298);
+    assert.deepEqual(result.warnings, []);
+  });
+
+  it("skips anchor slots where the partner would not fit", () => {
+    const first = entry({ categoryId: "A", special: early, name: "A první" });
+    const second = entry({ categoryId: "A", special: early, name: "B druhý" });
+    // Partner druhého chce stejný čas ve 2. řadě; 642 drží zamčený běžec → druhý jde na 43.
+    const blocker = entry({ categoryId: "K", currentBib: 642, locked: true });
+    const partner = entry({ categoryId: "K", special: withRunner(second.runnerId, 0) });
+    const { bib, result } = run([first, second, blocker, partner]);
+    assert.equal(bib(first), 41);
+    assert.equal(bib(second), 43);
+    assert.equal(bib(partner), 643);
+    assert.deepEqual(result.warnings, []);
   });
 
   it("is stable: applying the proposal and re-running changes nothing", () => {
@@ -307,7 +379,9 @@ describe("generateStartList – spec. starty", () => {
       partner,
       entry({ categoryId: "J", special: early }),
       entry({ categoryId: "A", special: late }),
+      entry({ categoryId: "A", special: organizer }),
       entry({ categoryId: "K", special: withRunner(partner.runnerId, 0) }),
+      entry({ categoryId: "A", special: withRunner(partner.runnerId, 90) }),
       ...filler("A", 12),
       ...filler("K", 6),
     ];
@@ -326,46 +400,39 @@ describe("checkSpecialStarts", () => {
     bib: number | null,
     special: SpecialStartSpec | null = null,
     extra: Partial<SpecialCheckRow> = {},
-  ): SpecialCheckRow => ({ runnerId, bib, active: true, exempt: false, special, ...extra });
+  ): SpecialCheckRow => ({ runnerId, bib, active: true, special, ...extra });
 
-  it("flags early / late / organizer violations", () => {
-    const checks = checkSpecialStarts(MODEL, RANGES, [
-      row("r1", 301),
-      row("r2", 360),
-      row("early-ok", 3, early),
+  it("checks organizer / early / late against their ranges on both lines", () => {
+    const checks = checkSpecialStarts(MODEL, [
+      row("plain", 301),
+      row("org-ok", 640, organizer),
+      row("org-bad", 41, organizer),
+      row("early-ok", 99, early),
       row("early-bad", 320, early),
-      row("late-ok", 380, late),
-      row("late-bad", 330, late),
-      row("org-ok", 5, organizer),
-      row("org-bad", 310, organizer),
-      row("org-reg1", 400, null, { exempt: true }),
+      row("late-ok", 861, late),
+      row("late-bad", 900, late),
     ]);
-    assert.deepEqual(checks.get("early-ok"), { ok: true });
-    assert.deepEqual(checks.get("early-bad"), { ok: false, reason: "notEarliest" });
-    assert.deepEqual(checks.get("late-ok"), { ok: true });
-    assert.deepEqual(checks.get("late-bad"), { ok: false, reason: "notLatest" });
+    assert.equal(checks.has("plain"), false);
     assert.deepEqual(checks.get("org-ok"), { ok: true });
-    assert.deepEqual(checks.get("org-bad"), { ok: false, reason: "block" });
-    assert.equal(checks.has("org-reg1"), false, "exempt rows without a flag are not checked");
+    assert.deepEqual(checks.get("org-bad"), { ok: false, reason: "range" });
+    assert.deepEqual(checks.get("early-ok"), { ok: true });
+    assert.deepEqual(checks.get("early-bad"), { ok: false, reason: "range" });
+    assert.deepEqual(checks.get("late-ok"), { ok: true });
+    assert.deepEqual(checks.get("late-bad"), { ok: false, reason: "range" });
   });
 
-  it("compares early / late only within the same start", () => {
-    const checks = checkSpecialStarts(MODEL, RANGES, [
-      row("men", 301),
-      row("women-early", 641, early),
-      row("women", 650),
-    ]);
-    assert.deepEqual(checks.get("women-early"), { ok: true });
-  });
-
-  it("reports a wrong offset with the actual value, a missing partner and a missing bib", () => {
-    const checks = checkSpecialStarts(MODEL, RANGES, [
+  it("checks the offset across lines and reports missing partners / bibs", () => {
+    const checks = checkSpecialStarts(MODEL, [
       row("p", 310),
+      row("same", 910, withRunner("p", 0)),
+      row("plus", 316, withRunner("p", 90)),
       row("w", 312, withRunner("p", 15)),
       row("x", 320, withRunner("nobody", 0)),
       row("y", null, early),
       row("inactive", 50, withRunner("p", 0), { active: false }),
     ]);
+    assert.deepEqual(checks.get("same"), { ok: true });
+    assert.deepEqual(checks.get("plus"), { ok: true });
     assert.deepEqual(checks.get("w"), { ok: false, reason: "offset", actualSeconds: 30 });
     assert.deepEqual(checks.get("x"), { ok: false, reason: "partnerMissing" });
     assert.deepEqual(checks.get("y"), { ok: false, reason: "noBib" });

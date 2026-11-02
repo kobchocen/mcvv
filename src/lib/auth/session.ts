@@ -15,6 +15,7 @@ export {
   adminAccess,
   canAccessRaceDay,
   canAccessSplits,
+  canAccessStarter,
   isStaffRole,
   type AdminAccess,
   type UserRole,

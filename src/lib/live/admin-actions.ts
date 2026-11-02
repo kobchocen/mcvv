@@ -47,6 +47,13 @@ import {
 } from "./race-context";
 import { parseStartOffsetLimit } from "./splits-screen-core";
 import {
+  RED_PHASE_MAX_S,
+  STARTER_DNS_WINDOW_KEY,
+  STARTER_RED_PHASE_KEY,
+  STARTER_SOUND_KEY,
+  STARTER_SOUND_MODES,
+} from "./starter-core";
+import {
   formatStations,
   LIVE_STATIONS_KEY,
   LIVE_STATIONS_MAX,
@@ -310,6 +317,7 @@ export async function setSplitAction(formData: FormData): Promise<void> {
     expected,
     reason,
     actor: session,
+    plan: ctx,
   });
   if (!result.ok) await back({ edit, error: result.reason }, SPLITS_PAGE);
   await back({ edit, saved: result.ok ? result.action : "" }, SPLITS_PAGE);
@@ -343,4 +351,34 @@ export async function saveSplitmakerStationsAction(formData: FormData): Promise<
   const result = await saveAssignment(session, userId, value);
   if (result === "not_found") await back({ error: "assignment" });
   await back({ saved: "assignment" });
+}
+
+/**
+ * Nastavení obrazovky startéra (jen admin): režim zvuku pro všechna zařízení, délka červené
+ * fáze neoznačeného (0–120 s) a okno pruhu Nevyběhli (1 s – 6 h). Prázdné pole = výchozí.
+ */
+export async function saveStarterSettingsAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const sound = String(formData.get("starterSound") ?? "");
+  if (!(STARTER_SOUND_MODES as readonly string[]).includes(sound)) {
+    await back({ error: "starterSound" });
+  }
+  const redRaw = String(formData.get("starterRedPhase") ?? "").trim();
+  const red = redRaw === "" ? null : Number(redRaw);
+  if (red !== null && !(Number.isInteger(red) && red >= 0 && red <= RED_PHASE_MAX_S)) {
+    await back({ error: "starterRedPhase" });
+  }
+  const windowRaw = String(formData.get("starterDnsWindow") ?? "")
+    .slice(0, 32)
+    .trim();
+  const windowS = windowRaw === "" ? null : parseStartOffsetLimit(windowRaw);
+  if (windowRaw !== "" && windowS === null) await back({ error: "starterDnsWindow" });
+
+  await put(STARTER_SOUND_KEY, sound);
+  if (red === null) await prisma.setting.deleteMany({ where: { key: STARTER_RED_PHASE_KEY } });
+  else await put(STARTER_RED_PHASE_KEY, String(red));
+  if (windowS === null) {
+    await prisma.setting.deleteMany({ where: { key: STARTER_DNS_WINDOW_KEY } });
+  } else await put(STARTER_DNS_WINDOW_KEY, String(windowS));
+  await back({ saved: "starter" });
 }

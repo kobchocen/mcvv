@@ -6,13 +6,13 @@ import {
   categorySlugs,
   effectiveDnsGrace,
   encodeOnline,
-  lateStart,
   type OnlineSnapshot,
 } from "./online-results-core";
 import { getRaceContext, getStations } from "./race-context";
 import { createBodyCache } from "./speaker-cache";
 import { loadRaceRunners } from "./speaker";
 import { startOffsetSeconds } from "./start-check-core";
+import { countsAsStartRecord, publicLateOffset } from "./starter-core";
 import { inHiddenWindow, peekStoredTestRun, publicHiddenWindow, publicZero } from "./test-run";
 
 /**
@@ -52,16 +52,28 @@ export async function loadOnlineSnapshot(
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
-      select: { bib: true, startedAt: true, createdAt: true },
+      select: {
+        bib: true,
+        startedAt: true,
+        createdAt: true,
+        source: true,
+        late: true,
+        realStartAt: true,
+      },
     }),
   ]);
   const startChecks = allStartChecks.filter((s) => !inHiddenWindow(s.createdAt, hidden));
-  const startedAt = new Map(startChecks.map((s) => [s.bib, s.startedAt]));
+  const startOf = new Map(startChecks.map((s) => [s.bib, s]));
   const slugs = categorySlugs(categories);
   const { clubs, indexOf } = clubDictionary(runners.map((r) => clubOf.get(r.bib)));
   return {
     year: ctx.year,
-    dnsGraceS: effectiveDnsGrace(startChecks.length > 0, ctx.dnsGraceS, ctx.dnsGraceFallbackS),
+    // Doplnění startu ze splitu (startér neoznačil) lhůtu DNS nemění.
+    dnsGraceS: effectiveDnsGrace(
+      startChecks.some(countsAsStartRecord),
+      ctx.dnsGraceS,
+      ctx.dnsGraceFallbackS,
+    ),
     categories: categories.map((c, i) => ({
       id: c.id,
       name: c.name,
@@ -70,12 +82,21 @@ export async function loadOnlineSnapshot(
       short: categoryShort(c.name),
     })),
     runners: runners.map((r) => {
-      const at = startedAt.get(r.bib);
+      const start = startOf.get(r.bib);
       return {
         ...r,
-        started: at !== undefined,
-        late: at
-          ? lateStart(startOffsetSeconds(at, ctx.zero, r.bib, ctx.intervalS), ctx.startLimitS)
+        started: start !== undefined,
+        late: start
+          ? publicLateOffset(
+              start,
+              startOffsetSeconds(
+                start.realStartAt ?? start.startedAt,
+                ctx.zero,
+                r.bib,
+                ctx.intervalS,
+              ),
+              ctx.startLimitS,
+            )
           : null,
         club: indexOf(clubOf.get(r.bib)),
       };

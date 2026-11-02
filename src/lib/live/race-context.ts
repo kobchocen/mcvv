@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { raceStartFor } from "@/lib/race/phase";
+import { startModelFromEdition } from "@/lib/race/start-time";
 
 import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "./online-results-core";
 import { durationFromSetting, startOffsetLimitFromSetting } from "./splits-screen-core";
@@ -20,6 +21,8 @@ export type RaceContext = {
   /** Nula závodu (start čísla 1 a 601). */
   zero: Date;
   intervalS: number;
+  /** První číslo 2. startu z modelu ročníku (st_druhy_od, výchozí 601) – hranice koridorů startéra. */
+  secondStartFrom: number;
   /** Nula je přepsaná pro zkoušku nanečisto. */
   zeroOverridden: boolean;
   /** Skutečná nula ročníku (den závodu 10:15) bez ohledu na zkušební nulu. */
@@ -47,7 +50,7 @@ export async function getRaceContext(): Promise<RaceContext> {
     current.editionId
       ? prisma.edition.findUnique({
           where: { id: current.editionId },
-          select: { startInterval: true },
+          select: { startInterval: true, secondStartFrom: true },
         })
       : null,
     prisma.setting.findMany({
@@ -72,6 +75,7 @@ export async function getRaceContext(): Promise<RaceContext> {
     zero: overrideZero ?? officialZero,
     officialZero,
     intervalS: edition?.startInterval || DEFAULT_START_INTERVAL_S,
+    secondStartFrom: startModelFromEdition(edition).secondStartFrom,
     zeroOverridden: overrideZero !== null,
     raceDate: current.raceDate,
     startLimitS: startOffsetLimitFromSetting(setting(LIVE_START_OFFSET_LIMIT_KEY)),

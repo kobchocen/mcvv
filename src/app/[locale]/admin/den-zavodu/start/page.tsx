@@ -23,6 +23,7 @@ import {
   type StartFilter,
 } from "@/lib/live/start-check-core";
 import { pragueClock } from "@/lib/live/start-clock";
+import { FINISH_SPLIT } from "@/lib/live/stations";
 
 type SearchParams = {
   filter?: string;
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 const box = "grid gap-4 border border-race-line/60 bg-race-surface/40 p-4";
 const legend = "px-1 font-display text-lg font-semibold";
-const FILTERS: StartFilter[] = ["all", "started", "missing", "unknown"];
+const FILTERS: StartFilter[] = ["all", "started", "missing", "unknown", "notMarked", "late"];
 const MAX_ROWS = 400;
 
 /**
@@ -78,12 +79,22 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
   const now = new Date();
   const blocked = clearBlocked(now, ctx.officialZero);
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
-  const who = (userId: number | null, source: string) =>
+  const splitLabel = (code: string | null | undefined) =>
+    !code ? "?" : code === FINISH_SPLIT ? t("finishShort") : `M${code}`;
+  const userName = (userId: number | null) =>
+    userId && overview.userNames[userId] ? ` (${overview.userNames[userId]})` : "";
+  const who = (userId: number | null, source: string, splitCode?: string | null) =>
     source === "admin"
-      ? `${t("sourceAdmin")}${userId && overview.userNames[userId] ? ` (${overview.userNames[userId]})` : ""}`
-      : userId && overview.userNames[userId]
-        ? overview.userNames[userId]
-        : source;
+      ? `${t("sourceAdmin")}${userName(userId)}`
+      : source === "starter"
+        ? `${t("sourceStarter")}${userName(userId)}`
+        : source === "web"
+          ? `${t("sourceWeb")}${userName(userId)}`
+          : source === "split"
+            ? t("sourceSplit", { split: splitLabel(splitCode) })
+            : userId && overview.userNames[userId]
+              ? overview.userNames[userId]
+              : source;
   const editRow =
     editBib === null ? null : (overview.rows.find((row) => row.bib === editBib) ?? null);
   const editRecord = editRow?.record ?? null;
@@ -141,7 +152,7 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
         </div>
 
         <dl
-          className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4"
+          className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3 lg:grid-cols-6"
           data-testid="start-summary"
         >
           {(
@@ -150,6 +161,8 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
               ["started", overview.summary.started, "started"],
               ["missing", overview.summary.missing, "missing"],
               ["unknown", overview.summary.unknown, "unknown"],
+              ["notMarked", overview.summary.notMarked, "notMarked"],
+              ["late", overview.summary.late, "late"],
             ] as const
           ).map(([key, value, target]) => (
             <div
@@ -168,7 +181,11 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
               <dd
                 className={`font-display text-2xl font-bold ${
                   key === "missing" && value > 0 ? "text-amber-700 dark:text-amber-300" : ""
-                } ${key === "unknown" && value > 0 ? "text-red-600 dark:text-red-400" : ""}`}
+                } ${
+                  (key === "unknown" || key === "notMarked") && value > 0
+                    ? "text-red-600 dark:text-red-400"
+                    : ""
+                }`}
               >
                 {value}
               </dd>
@@ -372,6 +389,7 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
                     <th className="pr-2">{t("actual")}</th>
                     <th className="pr-2">{t("colOffset")}</th>
                     <th className="pr-2">{t("colBy")}</th>
+                    <th className="pr-2">{t("colNote")}</th>
                     {isAdmin ? <th /> : null}
                   </tr>
                 </thead>
@@ -397,13 +415,43 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
                       <td className="pr-2">{row.categoryId ?? "–"}</td>
                       <td className="pr-2 font-mono">{pragueClock(row.planned)}</td>
                       <td className="pr-2 font-mono">
-                        {row.record ? pragueClock(row.record.startedAt) : "–"}
+                        {row.record
+                          ? pragueClock(row.record.realStartAt ?? row.record.startedAt)
+                          : "–"}
                       </td>
                       <td className="pr-2 font-mono">
                         {row.offsetS !== null ? formatOffset(row.offsetS) : ""}
                       </td>
                       <td className="pr-2 text-xs">
-                        {row.record ? who(row.record.userId, row.record.source) : ""}
+                        {row.record
+                          ? who(row.record.userId, row.record.source, row.record.splitCode)
+                          : ""}
+                      </td>
+                      <td className="pr-2 text-xs" data-testid={`start-note-${row.bib}`}>
+                        {row.record?.notMarked ? (
+                          <span className="font-semibold text-red-600 dark:text-red-400">
+                            {t("notMarkedFlag", {
+                              split: splitLabel(row.record.splitCode),
+                              time: row.record.splitAt ? pragueClock(row.record.splitAt) : "–",
+                            })}
+                          </span>
+                        ) : null}
+                        {row.record?.late ? (
+                          <span className="font-semibold text-amber-700 dark:text-amber-300">
+                            {t("lateFlag")}
+                          </span>
+                        ) : null}
+                        {row.record?.markedAt && !row.record.late ? (
+                          <span className="text-race-muted">
+                            {t("tapAt", { time: pragueClock(row.record.markedAt) })}
+                          </span>
+                        ) : null}
+                        {row.record?.corridor ? (
+                          <span className="text-race-muted">
+                            {" · "}
+                            {t("corridorShort", { corridor: row.record.corridor })}
+                          </span>
+                        ) : null}
                       </td>
                       {isAdmin ? (
                         <td>

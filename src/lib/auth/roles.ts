@@ -9,7 +9,9 @@
  * - `splitmaker` – obsluha mezičasových kontrol: žádná administrace, jen stránka
  *   mezičasů (#121), kterou spouští podle role,
  * - `race_office` – „Závodní kancelář“ (#207): žádná administrace, jen pokladna
- *   a přehled prodejek na `/kancelar`.
+ *   a přehled prodejek na `/kancelar`,
+ * - `starter` – startér: žádná administrace, jen obrazovka startu `/start` pro přiřazený
+ *   koridor (`mcvv_user.start_corridor`).
  *
  * Oprávnění se vynucují na serveru (stránky, server actions, route handlery) přes
  * `src/lib/admin/staff.ts`; tady je jen jejich definice, aby šla testovat.
@@ -22,6 +24,7 @@ export const USER_ROLES = [
   "timing",
   "splitmaker",
   "race_office",
+  "starter",
 ] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
@@ -42,6 +45,11 @@ export function canAccessRaceDay(role: UserRole): boolean {
 /** Zadávání mezičasů na kontrolách (#121). */
 export function canAccessSplits(role: UserRole): boolean {
   return role === "splitmaker" || isStaffRole(role);
+}
+
+/** Obrazovka startéra `/start`: startér (svůj koridor), pořadatel a admin (přepínač koridoru). */
+export function canAccessStarter(role: UserRole): boolean {
+  return role === "starter" || isStaffRole(role);
 }
 
 /** Obrazovka pro speakera s průběžnými výsledky (#188, Q73): jen admin nebo pořadatel. */
@@ -110,7 +118,7 @@ export function adminPathAllowed(access: AdminAccess, path: string): boolean {
 
 /**
  * Přihlášení bez ověřeného e-mailu smí jen plný staff (účty zakládá seed).
- * Nové omezené role (`timing`, `splitmaker`, `race_office`) ověřený e-mail potřebují stejně jako `registrar`.
+ * Nové omezené role (`timing`, `splitmaker`, `race_office`, `starter`) ověřený e-mail potřebují stejně jako `registrar`.
  */
 export function requiresVerifiedEmail(role: UserRole): boolean {
   return !isStaffRole(role);

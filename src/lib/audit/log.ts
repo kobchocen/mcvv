@@ -9,6 +9,8 @@ export type AuditAction =
   | "user.role_change"
   // Přiřazení splitmakera ke stanovišti (mcvv_user.split_stations).
   | "user.split_stations_change"
+  // Přiřazení startéra ke startovnímu koridoru (mcvv_user.start_corridor).
+  | "user.start_corridor_change"
   | "raceday.obd_export"
   | "raceday.import_presentation"
   | "raceday.import_results"

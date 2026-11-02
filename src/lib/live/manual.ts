@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 
 import { OWNING_OUTCOMES } from "./ingest-core";
 import { MANUAL_AUTHOR, MANUAL_SOURCE, normalizeReason } from "./manual-core";
+import { autoMarkStart, type StarterPlan } from "./starter";
 
 export type SplitCell = {
   time: number;
@@ -93,6 +94,8 @@ type ManualInput = {
   reason: string;
   actor: SessionUser;
   now?: Date;
+  /** Kontext závodu pro doplnění startu (chybí → načte se). */
+  plan?: StarterPlan;
 };
 
 /**
@@ -122,6 +125,12 @@ export async function setManualSplit(
       await tx.split.create({
         data: { ...where, time: input.time, created: now, author: MANUAL_AUTHOR },
       });
+      // Ruční mezičas bez záznamu startu: doplnit start jako u ostatních splitů.
+      await autoMarkStart(
+        tx,
+        { year: input.year, bib: input.bib, split: input.split, splitAt: now },
+        input.plan,
+      );
     } else {
       await tx.split.update({
         where: key,

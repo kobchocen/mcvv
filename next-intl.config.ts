@@ -80,6 +80,7 @@ export default defineRouting({
     "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
     "/mezicasy/speaker": "/mezicasy/speaker",
+    "/start": "/start",
     // velké obrazovky v cíli – náhrada OFB (veřejné, bez přihlášení, Q134 / Q144)
     "/resultboard": "/resultboard",
     "/resultboard/[tv]": "/resultboard/[tv]",

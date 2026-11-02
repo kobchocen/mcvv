@@ -81,6 +81,9 @@ test("formatOffset prints signed m:ss", () => {
 test("first start record wins; later web entries are duplicates", () => {
   assert.equal(decideStartWrite(null), "insert");
   assert.equal(decideStartWrite({ startedAt: ZERO }), "duplicate");
+  assert.equal(decideStartWrite({ startedAt: ZERO, source: "starter" }), "duplicate");
+  // start doplněný ze splitu stanoviště Start přepíše
+  assert.equal(decideStartWrite({ startedAt: ZERO, source: "split" }), "replace");
 });
 
 test("ownsStart requires an applied entry with the same instant", () => {
@@ -104,7 +107,14 @@ test("buildStartOverview joins start list with records and counts DNS candidates
     ],
     ctx,
   );
-  assert.deepEqual(summary, { total: 2, started: 1, missing: 1, unknown: 1 });
+  assert.deepEqual(summary, {
+    total: 2,
+    started: 1,
+    missing: 1,
+    unknown: 1,
+    notMarked: 0,
+    late: 0,
+  });
   assert.deepEqual(
     rows.map((r) => [r.bib, r.known, r.offsetS]),
     [

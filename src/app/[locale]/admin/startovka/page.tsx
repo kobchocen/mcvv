@@ -1,18 +1,25 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
+import { ClubLink } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import {
   applyStartListProposal,
-  createStartGroup,
-  deleteStartGroup,
   setStartBib,
   swapStartBibs,
   toggleStartLock,
 } from "@/lib/admin/startlist";
 import { requireStaff } from "@/lib/admin/staff";
+import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
+import {
+  specialCheckState,
+  specialCheckText,
+  specialStartChecks,
+  specialStartPartnerText,
+} from "@/lib/admin/special-start-view";
+import { specialRangeText } from "@/lib/race/special-start";
 import { getSiteSettings } from "@/lib/settings/site";
 import { formatInterval } from "@/lib/race/start-settings";
 import {
@@ -28,7 +35,6 @@ import {
   inputFingerprint,
   latestEditionYear,
   loadAdminStartRows,
-  loadStartGroups,
   loadStartSettings,
   type AdminStartRow,
 } from "@/lib/race/startlist-load";
@@ -49,6 +55,8 @@ type SearchParams = {
   bezec?: string;
   cislo?: string;
   drzi?: string;
+  spec?: string;
+  duvod?: string;
 };
 
 type PageProps = Readonly<{
@@ -83,6 +91,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   await requireStaff();
   const t = await getTranslations({ locale, namespace: "StartAdmin" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
+  const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
   const query = await searchParams;
   const parsedYear = Number.parseInt(query.rok ?? "", 10);
   const year =
@@ -90,10 +99,9 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
       ? parsedYear
       : await latestEditionYear();
 
-  const [settings, allRows, groups, site] = await Promise.all([
+  const [settings, allRows, site] = await Promise.all([
     loadStartSettings(year),
     loadAdminStartRows(year),
-    loadStartGroups(year),
     getSiteSettings(),
   ]);
   const { model, champions, ranges } = settings;
@@ -104,7 +112,12 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const rangeOf = new Map(ranges.map((r) => [r.categoryId, r]));
   const championBibs = new Set([champions.men, champions.women].filter((b) => b != null));
 
-  const issues = checkStartList(model, allRows, groups);
+  const issues = checkStartList(
+    model,
+    allRows.map((row) => ({ ...row, specialKind: row.special?.kind ?? null })),
+  );
+  const specialChecks = specialStartChecks(model, allRows);
+  const specialCount = allRows.filter((row) => row.special).length;
   const reserve = reserveSummary(
     model,
     ranges,
@@ -117,7 +130,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   // Po zveřejnění je návrh zakázaný (UI i server action); náhled se ani nepočítá.
   const proposalLocked = startListProposalLock(site).locked;
   const showProposal = query.navrh === "1" && !proposalLocked;
-  const input = showProposal ? await buildGeneratorInput(year, settings, allRows, groups) : null;
+  const input = showProposal ? await buildGeneratorInput(year, settings, allRows) : null;
   const proposal = input ? generateStartList(input) : null;
   const fingerprint = input ? inputFingerprint(input) : "";
 
@@ -140,12 +153,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
       }
       return sortByTime ? compareByStart(model, a.bib, b.bib) : a.bib - b.bib;
     });
-  const groupOf = new Map<string, number>();
-  for (const group of groups) {
-    for (const id of group.memberIds) {
-      groupOf.set(id, group.id);
-    }
-  }
 
   const issueText = (issue: StartListIssue): string => {
     switch (issue.code) {
@@ -158,8 +165,14 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("issueInvalidWithBib", { bib: issue.bib, name: nameOf(issue.runnerId) });
       case "missingBib":
         return t("issueMissingBib", { name: nameOf(issue.runnerId) });
-      case "groupSplit":
-        return t("issueGroupSplit", { id: issue.groupId, kind: t(`kind_${issue.kind}`) });
+      case "specOutsideRange":
+        return t("issueSpecOutsideRange", {
+          kind: specialT(`kind_${issue.kind}`),
+          range: specialRangeText(model, issue.kind),
+          names: issue.runnerIds
+            .map((id) => `${nameOf(id)} (${byId.get(id)?.bib ?? "—"})`)
+            .join(", "),
+        });
     }
   };
   const warningText = (warning: GeneratorWarning): string => {
@@ -172,15 +185,25 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("warnLockedDuplicate", { bib: warning.bib });
       case "championTaken":
         return t("warnChampionTaken", { bib: warning.bib });
-      case "organizerBlockFull":
-        return t("warnOrganizerBlockFull", {
+      case "specOverflow":
+        return t("warnSpecOverflow", {
+          kind: specialT(`kind_${warning.kind}`),
+          range: specialRangeText(model, warning.kind),
           series: warning.series,
-          count: warning.runnerIds.length,
+          names: warning.runnerIds.map(nameOf).join(", "),
         });
-      case "groupApprox":
-        return t("warnGroupApprox", { id: warning.groupId, deviation: warning.deviation });
-      case "groupLockedConflict":
-        return t("warnGroupLockedConflict", { id: warning.groupId });
+      case "specPartnerMissing":
+        return t("warnSpecPartnerMissing", { name: nameOf(warning.runnerId) });
+      case "specApprox":
+        return warning.deviation < 0
+          ? t("warnSpecNotPlaced", { name: nameOf(warning.runnerId) })
+          : t("warnSpecApprox", {
+              name: nameOf(warning.runnerId),
+              deviation: warning.deviation,
+              cause: warning.cause,
+            });
+      case "specCycle":
+        return t("warnSpecCycle", { names: warning.runnerIds.map(nameOf).join(", ") });
     }
   };
 
@@ -194,10 +217,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("okLock");
       case "applied":
         return t("okApplied", { n: Number.parseInt(query.n ?? "0", 10) || 0 });
-      case "group":
-        return t("okGroup");
-      case "groupDeleted":
-        return t("okGroupDeleted");
       default:
         return null;
     }
@@ -218,8 +237,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("errStale");
       case "blocking":
         return t("errBlocking");
-      case "groupSize":
-        return t("errGroupSize");
       case "published":
         return t("proposeLockedPublished");
       default:
@@ -298,7 +315,13 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
           </Link>
         </p>
         <p className="mt-1 text-sm text-race-muted">
-          {t("stats", { valid: valid.length, withBib, withoutBib: valid.length - withBib })}
+          {t("stats", { valid: valid.length, withBib, withoutBib: valid.length - withBib })} ·{" "}
+          <Link
+            href={{ pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year) } }}
+            className="font-medium text-race-accent hover:underline"
+          >
+            {specialT("overviewLink", { count: specialCount })}
+          </Link>
         </p>
 
         {flash ? (
@@ -563,71 +586,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
             </form>
             <p className="mt-2 text-xs text-race-muted">{t("swapHint")}</p>
           </section>
-          <section className={card} data-testid="startlist-groups">
-            <h2 className={cardTitle}>{t("groupsHeading")}</h2>
-            <p className="mt-1 text-sm text-race-muted">{t("groupsHint")}</p>
-            {groups.length === 0 ? (
-              <p className="mt-2 text-sm text-race-muted">{t("groupsEmpty")}</p>
-            ) : (
-              <ul className="mt-3 grid gap-2 text-sm">
-                {groups.map((group) => (
-                  <li key={group.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="font-semibold">
-                      {t("groupLabel", { id: group.id })} · {t(`kind_${group.kind}`)}
-                    </span>
-                    <span>
-                      {group.memberIds
-                        .map((id) => {
-                          const row = byId.get(id);
-                          return row
-                            ? `${row.name} (${row.bib ?? "—"}${row.bib ? `, ${startTimeForBib(model, row.bib)}` : ""})`
-                            : id;
-                        })
-                        .join(" + ")}
-                    </span>
-                    {group.note ? <span className="text-race-muted">{group.note}</span> : null}
-                    <form action={deleteStartGroup}>
-                      <input type="hidden" name="year" value={year} />
-                      <input type="hidden" name="groupId" value={group.id} />
-                      <ConfirmSubmitButton
-                        variant="link"
-                        destructive
-                        title={t("groupDeleteTitle")}
-                        description={t("groupDeleteConfirm", {
-                          group: t("groupLabel", { id: group.id }),
-                        })}
-                        confirmLabel={t("groupDelete")}
-                        className="h-auto p-0 text-xs font-normal text-red-700 dark:text-red-400"
-                      >
-                        {t("groupDelete")}
-                      </ConfirmSubmitButton>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <form
-              id="group-form"
-              action={createStartGroup}
-              className="mt-3 flex flex-wrap items-end gap-2"
-            >
-              <input type="hidden" name="year" value={year} />
-              <label className="grid gap-1 text-sm">
-                <span className="text-race-muted">{t("groupKind")}</span>
-                <select name="kind" className={smallInput} defaultValue="joint">
-                  <option value="joint">{t("kind_joint")}</option>
-                  <option value="consecutive">{t("kind_consecutive")}</option>
-                </select>
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-race-muted">{t("groupNote")}</span>
-                <input name="note" maxLength={200} className={cn(smallInput, "w-48")} />
-              </label>
-              <Button type="submit" variant="outline" className="h-9 border-race-line">
-                {t("groupCreate")}
-              </Button>
-            </form>
-          </section>
         </div>
 
         <form method="get" className="mt-8 flex flex-wrap items-end gap-3">
@@ -679,14 +637,11 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table
-              className="w-full min-w-[72rem] border-collapse text-left text-sm"
+              className="w-full min-w-[80rem] border-collapse text-left text-sm"
               data-testid="startlist-admin-table"
             >
               <thead>
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                  <th className="py-2 pr-2" title={t("colSelect")}>
-                    ✓
-                  </th>
                   <th className="py-2 pr-3">{t("colBib")}</th>
                   <th className="py-2 pr-3">{t("colTime")}</th>
                   <th className="py-2 pr-3">{t("colName")}</th>
@@ -694,6 +649,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                   <th className="py-2 pr-3">{t("colClub")}</th>
                   <th className="py-2 pr-3">{t("colRegistration")}</th>
                   <th className="py-2 pr-3">{t("colCategory")}</th>
+                  <th className="py-2 pr-3">{t("colSpecial")}</th>
                   <th className="py-2 pr-3">{t("colLastYear")}</th>
                   <th className="py-2 pr-3">{t("colBest")}</th>
                   <th className="py-2 pr-3">{t("colLock")}</th>
@@ -708,16 +664,78 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                     year={year}
                     time={startTimeForBib(model, row.bib)}
                     highlighted={query.bezec === row.runnerId}
-                    groupId={groupOf.get(row.runnerId) ?? null}
                     champion={row.bib != null && championBibs.has(row.bib)}
-                    outside={!row.cancelled && outsideCategory(model, ranges, champions, row)}
+                    outside={
+                      !row.cancelled &&
+                      outsideCategory(model, ranges, champions, {
+                        ...row,
+                        specialKind: row.special?.kind ?? null,
+                      })
+                    }
+                    special={(() => {
+                      const check = row.special ? specialChecks.get(row.runnerId) : undefined;
+                      const partnerText = row.special
+                        ? specialStartPartnerText(specialT, row.special, (id) =>
+                            byId.has(id) ? nameOf(id) : null,
+                          )
+                        : null;
+                      return (
+                        <div className="grid justify-items-start gap-0.5">
+                          {row.special ? (
+                            // Nastavuje se jen v administraci přihlášek (Q229) – odkaz na detail.
+                            <Link
+                              href={{
+                                pathname: "/admin/prihlasky/[rok]/[id]",
+                                params: { rok: String(year), id: String(row.registrationId) },
+                                query: { bezec: row.runnerId },
+                              }}
+                              className="hover:opacity-80"
+                            >
+                              <McvvAdminSpecialStartBadge
+                                label={specialT(`kind_${row.special.kind}`)}
+                                state={check ? specialCheckState(check) : undefined}
+                                title={[
+                                  check
+                                    ? specialCheckText(specialT, model, check, row.special)
+                                    : null,
+                                  partnerText,
+                                  row.special.note,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              />
+                            </Link>
+                          ) : null}
+                          {partnerText ? (
+                            <span className="max-w-[10rem] truncate text-[0.6875rem] text-race-muted">
+                              {partnerText}
+                            </span>
+                          ) : null}
+                          {row.messageThreadId != null ? (
+                            <span className="flex items-center gap-2">
+                              <Link
+                                href={{
+                                  pathname: "/admin/zpravy/[id]",
+                                  params: { id: String(row.messageThreadId) },
+                                }}
+                                title={specialT("hasMessageTitle")}
+                                aria-label={specialT("hasMessage")}
+                                className="text-xs text-race-accent hover:opacity-80"
+                                data-testid={`has-message-${row.runnerId}`}
+                              >
+                                ✉
+                              </Link>
+                            </span>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
                     labels={{
                       save: t("save"),
                       lock: t("lock"),
                       unlock: t("unlock"),
                       lockedTitle: t("lockedTitle"),
                       invalidTitle: t("invalidTitle"),
-                      organizer: t("organizerBadge"),
                       champion: t("championBadge"),
                       outside: t("outsideBadge"),
                       outsideTitle: t("outsideTitle", {
@@ -725,8 +743,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                           ? `${rangeOf.get(row.categoryId)!.bibFrom}–${rangeOf.get(row.categoryId)!.bibTo}`
                           : "—",
                       }),
-                      group: (id) => t("groupLabel", { id }),
-                      select: t("colSelect"),
                     }}
                   />
                 ))}
@@ -744,30 +760,27 @@ function StartRow({
   year,
   time,
   highlighted,
-  groupId,
   champion,
   outside,
+  special,
   labels,
 }: {
   row: AdminStartRow;
   year: number;
   time: string;
   highlighted: boolean;
-  groupId: number | null;
   champion: boolean;
   outside: boolean;
+  special: ReactNode;
   labels: {
     save: string;
     lock: string;
     unlock: string;
     lockedTitle: string;
     invalidTitle: string;
-    organizer: string;
     champion: string;
     outside: string;
     outsideTitle: string;
-    group: (id: number) => string;
-    select: string;
   };
 }) {
   const note = [row.note, row.registrationNote].filter(Boolean).join(" · ");
@@ -780,15 +793,6 @@ function StartRow({
         row.cancelled && "opacity-60",
       )}
     >
-      <td className="py-1.5 pr-2">
-        <input
-          type="checkbox"
-          name="member"
-          value={row.runnerId}
-          form="group-form"
-          aria-label={`${labels.select} ${row.name}`}
-        />
-      </td>
       <td className="py-1.5 pr-3">
         <form action={setStartBib} className="flex items-center gap-1">
           <input type="hidden" name="year" value={year} />
@@ -819,11 +823,6 @@ function StartRow({
         title={!row.valid ? labels.invalidTitle : undefined}
       >
         {row.name}
-        {row.organizer ? (
-          <span className="ml-2 rounded-full border border-race-line px-1.5 text-[0.6875rem] font-normal text-race-muted">
-            {labels.organizer}
-          </span>
-        ) : null}
         {champion ? (
           <span className="ml-2 rounded-full bg-red-600/15 px-1.5 text-[0.6875rem] font-semibold text-red-700 dark:text-red-300">
             {labels.champion}
@@ -832,11 +831,6 @@ function StartRow({
         {outside ? (
           <span className={outsideBadge} title={labels.outsideTitle}>
             {labels.outside}
-          </span>
-        ) : null}
-        {groupId ? (
-          <span className="ml-2 rounded-full bg-race-accent/15 px-1.5 text-[0.6875rem] font-semibold text-race-accent">
-            {labels.group(groupId)}
           </span>
         ) : null}
       </td>
@@ -856,6 +850,9 @@ function StartRow({
         </Link>
       </td>
       <td className="py-1.5 pr-3">{row.categoryId}</td>
+      <td className="py-1.5 pr-3" data-testid={`spec-start-${row.runnerId}`}>
+        {special}
+      </td>
       <td className="py-1.5 pr-3 tabular-nums text-race-muted">
         {row.lastYearTime != null ? formatRaceTime(row.lastYearTime) : ""}
       </td>

@@ -15,17 +15,13 @@ export function startListTarget(year: number): string {
   return `startlist:${year}`;
 }
 
-export function startGroupTarget(id: number): string {
-  return `start_group:${id}`;
-}
-
 export function partnerTarget(id: number): string {
   return `partner:${id}`;
 }
 
 type Keyed = Record<string, unknown>;
 
-/** Klíče `<bezec>.<pole>` – víc řádků v jednom záznamu (prohození, návrh, skupina). */
+/** Klíče `<bezec>.<pole>` – víc řádků v jednom záznamu (prohození, návrh). */
 function keyed(rows: Record<string, Keyed>): Keyed {
   const out: Keyed = {};
   for (const [runnerId, fields] of Object.entries(rows)) {
@@ -42,15 +38,6 @@ export function lineChanges(
   after: Record<string, Keyed>,
 ): Record<string, AuditChange> {
   return diffFields(keyed(before), keyed(after));
-}
-
-/** Snímek skupiny startu pro audit (členové v pořadí). */
-export function startGroupSnapshot(group: {
-  kind: string;
-  note: string | null;
-  members: string[];
-}): Keyed {
-  return { kind: group.kind, note: group.note, members: group.members.join(", ") };
 }
 
 /** Pole partnera do auditu – bez binárních dat loga (jen typ a otisk). */

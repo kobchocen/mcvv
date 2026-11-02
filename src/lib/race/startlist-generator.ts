@@ -1,27 +1,38 @@
+import {
+  inAnySpecialRange,
+  offsetSlots,
+  RANGED_SPECIAL_KINDS,
+  SPECIAL_SLOT_RANGES,
+  type RangedSpecialKind,
+  type SpecialStartSpec,
+} from "./special-start";
 import type { BibRange } from "./start-settings";
-import { startSeriesForBib, startSlot, type StartModel } from "./start-time";
+import { bibForSlot, startSeriesForBib, startSlot, type StartModel } from "./start-time";
 
 /**
- * Návrh startovky (#115) – deterministický, žádné losování. Pravidla (Pavel, 20. 10. 2026):
+ * Návrh startovky (#115) – deterministický, žádné losování. Pravidla (Pavel, 20. 10. 2026,
+ * spec. starty 2. 11. 2026, Q220–Q237):
  *
- * a) pořadatelé z přihlášky č. 1 ročníku dostanou čísla od 1 (1. start) a od 601 (2. start)
- *    postupně, podle pořadí kategorií a jména;
- * b) v okně kategorie (rozsah čísel ročníku) se běžci rozprostřou rovnoměrně, bez velkých děr;
+ * a) spec. starty s rozsahem (viz `special-start.ts`) dostanou čísla ve svém rozsahu ve startu
+ *    své kategorie, postupně podle pořadí kategorií a jména: pořadatel 1–40 / 601–640,
+ *    brzy 41–99 / 641–699, pozdě 261–299 / 861–899 (pozdě plní rozsah od konce). Pořadatel
+ *    je jen běžec se spec. startem „pořadatel“ (přihláška č. 1 už nic neurčuje). Když rozsah
+ *    nestačí, zbytek dostane nejbližší volná čísla mimo rozsah a generátor upozorní (Q237).
+ *    Běžci „spolu s“, kteří se k nim (i přes další běžce) váží, jdou s nimi (Q227);
+ * b) v okně kategorie (rozsah čísel ročníku) se ostatní běžci rozprostřou rovnoměrně kolem
+ *    již obsazených čísel, bez velkých děr;
  * c) nejdřív nováčci a běžci bez loňského času (podle jména), pak vracející se podle loňského
  *    času od nejpomalejšího – nejrychlejší startují na konci, závod graduje;
- * d) skupiny „společný start“ (stejný čas, typicky každý v jiném startu; víc než dva členové
- *    jdou po dvojicích na časy hned po sobě) a „navazující start“ (časy hned po sobě) drží
- *    generátor u sebe. Kategorie není dogma (21. 10. 2026): skupina se umístí k „hostiteli“
- *    (kategorie většiny členů, při shodě nejlépe nasazený člen) a ostatní členové smí dostat
- *    číslo i v okně jiné kategorie nebo v druhém startu. Výsledková kategorie se nemění;
+ * d) „spolu s“ (náhrada dřívějších skupin, Q225): čas partnera + posun (libovolný násobek
+ *    intervalu, i záporný), ve vlastním nebo druhém startu (posun 0 = druhý start). Když je
+ *    přesný čas obsazený, nejbližší volné číslo a upozornění; běžce z kategorie smí posunout
+ *    v rámci jeho okna. Partner chybí / nemá číslo → běžné umístění a upozornění (Q226);
  * e) zamčená (ručně změněná) čísla zůstanou beze změny a nikdo jiný je nedostane;
  * f) generátor nic nezveřejňuje – vrací jen návrh, ukládá se samostatně.
  *
  * Obhájci (absolutní vítězové minulého ročníku) dostanou číslo obhájce z nastavení ročníku.
- * Čísla mimo okna kategorií (rezerva) generátor nepřiděluje.
+ * Čísla mimo okna kategorií a rozsahy spec. startů (rezerva) generátor nepřiděluje.
  */
-
-export type StartGroupKind = "joint" | "consecutive";
 
 export type GeneratorEntry = {
   runnerId: string;
@@ -32,45 +43,61 @@ export type GeneratorEntry = {
   locked: boolean;
   /** Platná (zaplacená / potvrzená, nezrušená) přihláška – jen ty dostanou číslo. */
   eligible: boolean;
-  /** Řádek přihlášky č. 1 (pořadatelé). */
-  organizer: boolean;
   /** Loňský čas v sekundách, null = nováček nebo loni neběžel. */
   lastYearTime: number | null;
-  groupId: number | null;
-  groupOrder: number;
+  /** Spec. start z administrace přihlášek (null / chybí = žádný). */
+  special?: SpecialStartSpec | null;
 };
 
 export type GeneratorInput = {
   model: StartModel;
   ranges: BibRange[];
-  /** Pořadí kategorií (cis_mcvv_kateg.sort) pro řazení pořadatelů. */
+  /** Pořadí kategorií (cis_mcvv_kateg.sort) pro řazení v rozsazích spec. startů. */
   categorySort: Record<string, number>;
   champions: { runnerId: string; bib: number }[];
-  groups: { id: number; kind: StartGroupKind }[];
   entries: GeneratorEntry[];
   locale?: string;
 };
 
 export type AssignmentReason =
-  "locked" | "champion" | "organizer" | "category" | "group" | "ineligible" | "unassigned";
+  | "locked"
+  | "champion"
+  | "organizer"
+  | "category"
+  | "early"
+  | "late"
+  | "with"
+  | "ineligible"
+  | "unassigned";
 
 export type ProposedLine = {
   runnerId: string;
   bib: number | null;
   previousBib: number | null;
   reason: AssignmentReason;
-  /** Číslo leží mimo okno vlastní kategorie (jen informace – skupina, ruční úprava). */
+  /** Číslo leží mimo okno vlastní kategorie (jen informace – spolu s, ruční úprava). */
   outsideCategory: boolean;
 };
+
+export type SpecApproxCause = "taken" | "champion" | "beforeStart";
 
 export type GeneratorWarning =
   | { code: "shortage"; categoryId: string; runners: number; slots: number }
   | { code: "noRange"; categoryId: string; runners: number }
   | { code: "lockedDuplicate"; bib: number; runnerIds: string[] }
   | { code: "championTaken"; runnerId: string; bib: number }
-  | { code: "organizerBlockFull"; series: 1 | 2; runnerIds: string[] }
-  | { code: "groupApprox"; groupId: number; deviation: number }
-  | { code: "groupLockedConflict"; groupId: number };
+  /** Rozsah spec. startu je plný → běžci dostali nejbližší volná čísla mimo rozsah (Q237). */
+  | { code: "specOverflow"; kind: RangedSpecialKind; series: 1 | 2; runnerIds: string[] }
+  /** Spolu s: partner chybí, nemá číslo nebo je to on sám → běžné umístění. */
+  | { code: "specPartnerMissing"; runnerId: string; partnerId: string | null }
+  /**
+   * Spolu s: přesný čas nešel použít, odchylka v počtu intervalů (-1 = žádné číslo). Důvod:
+   * `taken` = číslo má jiný (nepřesunutelný) běžec, `champion` = číslo obhájce, `beforeStart` =
+   * čas by byl před nulou startovky.
+   */
+  | { code: "specApprox"; runnerId: string; deviation: number; cause: SpecApproxCause }
+  /** Spolu s: kruh požadavků, který nejde splnit celý (první podle id slouží jako kotva). */
+  | { code: "specCycle"; runnerIds: string[] };
 
 export type CategorySummary = {
   categoryId: string;
@@ -116,6 +143,8 @@ function rangeSeries(model: StartModel, range: BibRange | undefined): 1 | 2 {
   return range ? startSeriesForBib(model, range.bibFrom) : 1;
 }
 
+const otherSeries = (series: 1 | 2): 1 | 2 => (series === 1 ? 2 : 1);
+
 export function generateStartList(input: GeneratorInput): StartListProposal {
   const { model, entries } = input;
   const locale = input.locale ?? "cs";
@@ -126,12 +155,36 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
   const occupied = new Map<number, string>();
   const byName = (a: GeneratorEntry, b: GeneratorEntry) =>
     a.name.localeCompare(b.name, locale) || a.runnerId.localeCompare(b.runnerId);
+  const orderBySort = (a: GeneratorEntry, b: GeneratorEntry) =>
+    (input.categorySort[a.categoryId] ?? 99) - (input.categorySort[b.categoryId] ?? 99) ||
+    byName(a, b);
 
   const assign = (entry: GeneratorEntry, value: number, why: AssignmentReason) => {
     bib.set(entry.runnerId, value);
     reason.set(entry.runnerId, why);
     occupied.set(value, entry.runnerId);
   };
+  const rangeOfBib = (value: number): BibRange | undefined =>
+    input.ranges.find((range) => value >= range.bibFrom && value <= range.bibTo);
+  const inOwnWindow = (entry: GeneratorEntry, value: number): boolean => {
+    const range = rangeByCategory.get(entry.categoryId);
+    return !!range && value >= range.bibFrom && value <= range.bibTo;
+  };
+  const ownSeries = (entry: GeneratorEntry) =>
+    rangeSeries(model, rangeByCategory.get(entry.categoryId));
+  const championBibs = new Set(input.champions.map((champion) => champion.bib));
+  /** Číslo, které generátor smí dát spec. startu: okno kategorie nebo rozsah spec. startu. */
+  const placeable = (value: number, series: 1 | 2): boolean =>
+    value >= 1 &&
+    startSeriesForBib(model, value) === series &&
+    !championBibs.has(value) &&
+    (rangeOfBib(value) !== undefined || inAnySpecialRange(model, value));
+  /**
+   * Přesný čas „spolu s“ (Q241): smí i na rezervní číslo (mimo okna i rozsahy), ne na číslo
+   * obhájce. Platí jen pro přesný slot, náhradní nejbližší volné bere jen `placeable`.
+   */
+  const exactWithBib = (value: number, series: 1 | 2): boolean =>
+    value >= 1 && startSeriesForBib(model, value) === series && !championBibs.has(value);
 
   // e) Zamčená čísla zůstávají (i u neplatných přihlášek).
   const lockedByBib = new Map<number, string[]>();
@@ -176,49 +229,147 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
     assign(entry, champion.bib, "champion");
   }
 
-  // a) Pořadatelé od 1 / 601 až po začátek prvního rozsahu kategorie ve startu.
-  for (const series of [1, 2] as const) {
-    const first = series === 1 ? 1 : model.secondStartFrom;
-    const seriesRanges = input.ranges.filter((range) => rangeSeries(model, range) === series);
-    const blockEnd =
-      seriesRanges.length > 0
-        ? Math.min(...seriesRanges.map((range) => range.bibFrom)) - 1
-        : series === 1
-          ? model.secondStartFrom - 1
-          : first + 999;
-    const organizers = entries
-      .filter(
-        (entry) =>
-          pending(entry) &&
-          entry.organizer &&
-          rangeSeries(model, rangeByCategory.get(entry.categoryId)) === series,
-      )
-      .sort(
-        (a, b) =>
-          (input.categorySort[a.categoryId] ?? 99) - (input.categorySort[b.categoryId] ?? 99) ||
-          byName(a, b),
-      );
-    let next = first;
-    const overflow: string[] = [];
-    for (const entry of organizers) {
-      while (next <= blockEnd && occupied.has(next)) {
-        next += 1;
+  // a) Spec. starty s rozsahem (pořadatel, brzy, pozdě) – před rozprostřením kategorií, aby se
+  //    okna rozprostřela kolem nich. Běžci „spolu s“ navázaní na kotvu jdou s ní (Q227).
+  const dependentsOf = (anchor: GeneratorEntry): GeneratorEntry[] => {
+    const result: GeneratorEntry[] = [];
+    const queue = [anchor.runnerId];
+    while (queue.length > 0) {
+      const partnerId = queue.shift()!;
+      const attached = entries
+        .filter(
+          (entry) =>
+            pending(entry) &&
+            entry.special?.kind === "with" &&
+            entry.special.partnerId === partnerId &&
+            entry.runnerId !== anchor.runnerId &&
+            !result.includes(entry),
+        )
+        .sort((a, b) => a.runnerId.localeCompare(b.runnerId));
+      for (const entry of attached) {
+        result.push(entry);
+        queue.push(entry.runnerId);
       }
-      if (next > blockEnd) {
-        overflow.push(entry.runnerId);
-        continue;
-      }
-      assign(entry, next, "organizer");
-      next += 1;
     }
-    if (overflow.length > 0) {
-      warnings.push({ code: "organizerBlockFull", series, runnerIds: overflow });
+    return result;
+  };
+  /** Startovní pořadí „spolu s“ vůči partnerovi: posun 0 = druhý start, jinak nejdřív vlastní. */
+  const withSeriesOrder = (entry: GeneratorEntry, partnerBib: number): (1 | 2)[] =>
+    offsetSlots(model, entry.special?.offsetSeconds ?? 0) === 0
+      ? [otherSeries(startSeriesForBib(model, partnerBib)), startSeriesForBib(model, partnerBib)]
+      : [ownSeries(entry), otherSeries(ownSeries(entry))];
+  /** Přesná čísla pro navázané běžce, nebo null, když některé není volné. */
+  const fitDependents = (
+    anchorId: string,
+    anchorBib: number,
+    dependents: GeneratorEntry[],
+  ): Map<string, number> | null => {
+    const planned = new Map<string, number>([[anchorId, anchorBib]]);
+    const used = new Set<number>([anchorBib]);
+    for (const entry of dependents) {
+      const partnerBib = planned.get(entry.special!.partnerId!)!;
+      const slot = startSlot(model, partnerBib) + offsetSlots(model, entry.special!.offsetSeconds);
+      const free = withSeriesOrder(entry, partnerBib)
+        .filter((series) => slot >= 1 && exactWithBib(bibForSlot(model, series, slot), series))
+        .map((series) => ({ series, value: bibForSlot(model, series, slot) }))
+        .filter(({ value }) => !occupied.has(value) && !used.has(value));
+      // Rezervní číslo (Q241) až když přesný čas v okně / rozsahu není ani v druhé řadě.
+      const value = (free.find(({ value, series }) => placeable(value, series)) ?? free[0])?.value;
+      if (value === undefined) {
+        return null;
+      }
+      planned.set(entry.runnerId, value);
+      used.add(value);
+    }
+    planned.delete(anchorId);
+    return planned;
+  };
+  const nearestOutside = (kind: RangedSpecialKind, series: 1 | 2): number | null => {
+    const range = SPECIAL_SLOT_RANGES[kind];
+    // Pozdě hledá při shodě vzdálenosti později, ostatní dřív.
+    for (let distance = 1; distance <= 2000; distance += 1) {
+      const slots =
+        kind === "late"
+          ? [range.to + distance, range.from - distance]
+          : [range.from - distance, range.to + distance];
+      for (const slot of slots) {
+        const value = bibForSlot(model, series, slot);
+        if (slot >= 1 && placeable(value, series) && !occupied.has(value)) {
+          return value;
+        }
+      }
+    }
+    return null;
+  };
+  for (const kind of RANGED_SPECIAL_KINDS) {
+    for (const series of [1, 2] as const) {
+      const anchors = entries
+        .filter(
+          (entry) =>
+            pending(entry) &&
+            entry.special?.kind === kind &&
+            rangeSeries(model, rangeByCategory.get(entry.categoryId)) === series,
+        )
+        .sort(orderBySort);
+      // Pozdě plní rozsah od konce (co nejpozději), v pořadí zůstává stabilní řazení.
+      const late = kind === "late";
+      if (late) {
+        anchors.reverse();
+      }
+      const range = SPECIAL_SLOT_RANGES[kind];
+      const slots = Array.from({ length: range.to - range.from + 1 }, (_, i) =>
+        late ? range.to - i : range.from + i,
+      );
+      const overflow: string[] = [];
+      for (const anchor of anchors) {
+        const dependents = dependentsOf(anchor);
+        let firstFree: number | null = null;
+        let placed: { value: number; dependents: Map<string, number> } | null = null;
+        for (const slot of slots) {
+          if (placed) {
+            break;
+          }
+          const value = bibForSlot(model, series, slot);
+          if (occupied.has(value) || championBibs.has(value)) {
+            continue;
+          }
+          firstFree ??= value;
+          const fit = fitDependents(anchor.runnerId, value, dependents);
+          if (fit) {
+            placed = { value, dependents: fit };
+          }
+        }
+        if (!placed && firstFree != null) {
+          // Kotva se vejde, navázaní ne celí → doplní je krok „spolu s“ (nejbližší volné).
+          placed = { value: firstFree, dependents: new Map() };
+        }
+        if (!placed) {
+          const value = nearestOutside(kind, series);
+          overflow.push(anchor.runnerId);
+          if (value == null) {
+            continue;
+          }
+          placed = {
+            value,
+            dependents: fitDependents(anchor.runnerId, value, dependents) ?? new Map(),
+          };
+        }
+        assign(anchor, placed.value, kind);
+        for (const [runnerId, value] of placed.dependents) {
+          assign(entryById.get(runnerId)!, value, "with");
+        }
+      }
+      if (overflow.length > 0) {
+        if (late) {
+          overflow.reverse();
+        }
+        warnings.push({ code: "specOverflow", kind, series, runnerIds: overflow });
+      }
     }
   }
 
   // b) + c) Okna kategorií.
   const categories: CategorySummary[] = [];
-  const freeByCategory = new Map<string, Set<number>>();
   const categoryIds = [...new Set(entries.map((entry) => entry.categoryId))];
   for (const categoryId of categoryIds) {
     if (!rangeByCategory.has(categoryId)) {
@@ -257,11 +408,6 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
         slots: free.length,
       });
     }
-    const left = new Set(free);
-    for (const index of indexes) {
-      left.delete(free[index]);
-    }
-    freeByCategory.set(range.categoryId, left);
     if (runners.length > 0 || free.length < range.bibTo - range.bibFrom + 1) {
       categories.push({
         categoryId: range.categoryId,
@@ -274,324 +420,179 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
     }
   }
 
-  // d) Skupiny (rodiny, kamarádi). Kategorie není dogma (Pavel, 21. 10. 2026): všichni běží
-  //    stejnou trať, takže člen skupiny smí dostat číslo v okně jiné kategorie, i v druhém
-  //    startu. Výsledková kategorie se nemění, mění se jen startovní pozice.
-  const rangeOfBib = (value: number): BibRange | undefined =>
-    input.ranges.find((range) => value >= range.bibFrom && value <= range.bibTo);
-  const inOwnWindow = (entry: GeneratorEntry, value: number): boolean => {
-    const range = rangeByCategory.get(entry.categoryId);
-    return !!range && value >= range.bibFrom && value <= range.bibTo;
-  };
-  const ownSeries = (entry: GeneratorEntry) =>
-    rangeSeries(model, rangeByCategory.get(entry.categoryId));
-  /** Lépe nasazený = rychlejší loňský čas; bez loňského času je až za všemi s časem. */
-  const compareSeed = (a: GeneratorEntry, b: GeneratorEntry): number => {
-    if (a.lastYearTime == null || b.lastYearTime == null) {
-      return (a.lastYearTime == null ? 1 : 0) - (b.lastYearTime == null ? 1 : 0);
+  // d) Spec. start „spolu s“ – v pořadí závislostí (nejdřív partner).
+  const withEntries = entries.filter(
+    (entry) => entry.special?.kind === "with" && entry.eligible && bib.get(entry.runnerId) != null,
+  );
+  const withById = new Map(withEntries.map((entry) => [entry.runnerId, entry]));
+  // Partnery nikdo neposouvá – jinak by se rozbil čas, ke kterému se jiný běžec váže.
+  const partnerIds = new Set(
+    withEntries.map((entry) => entry.special?.partnerId).filter((id): id is string => !!id),
+  );
+  const partnerIdOf = (entry: GeneratorEntry) => entry.special?.partnerId ?? null;
+  // Kruhy (A spolu s B, B spolu s A…): kotvou je první podle id, jeho požadavek se neuplatní.
+  const cycleAnchors = new Map<string, string[]>();
+  for (const start of withEntries) {
+    const path: string[] = [];
+    let current: GeneratorEntry | undefined = start;
+    while (current && !path.includes(current.runnerId)) {
+      path.push(current.runnerId);
+      const next = partnerIdOf(current);
+      current = next ? withById.get(next) : undefined;
     }
-    return a.lastYearTime - b.lastYearTime;
+    if (current) {
+      const loop = path.slice(path.indexOf(current.runnerId)).sort();
+      if (![...cycleAnchors.values()].some((members) => members.includes(loop[0]))) {
+        cycleAnchors.set(loop[0], loop);
+      }
+    }
+  }
+  const depth = new Map<string, number>();
+  const depthOf = (entry: GeneratorEntry, seen = new Set<string>()): number => {
+    const known = depth.get(entry.runnerId);
+    if (known !== undefined) {
+      return known;
+    }
+    const next = partnerIdOf(entry);
+    const partner = next ? withById.get(next) : undefined;
+    const value =
+      cycleAnchors.has(entry.runnerId) || !partner || seen.has(entry.runnerId)
+        ? 0
+        : depthOf(partner, new Set([...seen, entry.runnerId])) + 1;
+    depth.set(entry.runnerId, value);
+    return value;
   };
-  const pinned = new Set<string>();
-  for (const group of [...input.groups].sort((a, b) => a.id - b.id)) {
-    const members = entries
-      .filter((entry) => entry.groupId === group.id && bib.get(entry.runnerId) != null)
-      .sort((a, b) => a.groupOrder - b.groupOrder || byName(a, b));
-    if (members.length < 2) {
+  const withOrder = withEntries
+    .filter((entry) => !cycleAnchors.has(entry.runnerId))
+    .sort((a, b) => depthOf(a) - depthOf(b) || a.runnerId.localeCompare(b.runnerId));
+  const nearestFreeInOwnWindow = (entry: GeneratorEntry, target: number): number | null => {
+    const range = rangeByCategory.get(entry.categoryId);
+    if (!range) {
+      return null;
+    }
+    let spare: number | null = null;
+    for (let value = range.bibFrom; value <= range.bibTo; value += 1) {
+      if (
+        !occupied.has(value) &&
+        value !== target &&
+        (spare == null || Math.abs(value - target) < Math.abs(spare - target))
+      ) {
+        spare = value;
+      }
+    }
+    return spare;
+  };
+  for (const entry of withOrder) {
+    const partnerId = partnerIdOf(entry);
+    const partner = partnerId ? entryById.get(partnerId) : undefined;
+    const partnerBib = partner ? bib.get(partner.runnerId) : null;
+    if (!partner || partner.runnerId === entry.runnerId || partnerBib == null) {
+      warnings.push({ code: "specPartnerMissing", runnerId: entry.runnerId, partnerId });
       continue;
     }
-    const joint = group.kind === "joint";
-    const memberIds = new Set(members.map((entry) => entry.runnerId));
-    const movable = (entry: GeneratorEntry) =>
-      reason.get(entry.runnerId) === "category" && !pinned.has(entry.runnerId);
-    // Cílové časy (pořadí ve startu) pro kotvu: navazující start = kotva + k; společný start =
-    // stejný čas, ale na jeden čas se vejdou jen dva (dva paralelní starty), další jdou hned za ně.
-    const targetsFor = (anchor: number): number[] =>
-      members.map((_, k) => anchor + (joint ? Math.floor(k / 2) : k));
-
-    type Candidate = { value: number; range: BibRange; relocate: boolean };
-    /**
-     * Čísla, která člen může dostat: volné číslo v okně libovolné kategorie, vlastní číslo, nebo
-     * číslo běžce mimo skupinu, který se dá posunout – v rámci téhož okna výměnou, jinak na volné
-     * číslo v jeho vlastním okně (`relocate`). Běžec mimo skupinu tak nikdy neopustí svoje okno.
-     */
-    const candidates = (
-      entry: GeneratorEntry,
-      taken: Set<number>,
-      used: Map<string, number>,
-    ): Candidate[] => {
-      const currentRange = rangeOfBib(bib.get(entry.runnerId)!);
-      const out: Candidate[] = [];
-      for (const range of input.ranges) {
-        const free = freeByCategory.get(range.categoryId) ?? new Set<number>();
-        let spare: number | null = null;
-        for (let value = range.bibFrom; value <= range.bibTo; value += 1) {
-          if (taken.has(value)) {
-            continue;
+    // Zamčený, obhájce, spec. start s rozsahem ani už umístěný (Q227) se nehýbe.
+    if (reason.get(entry.runnerId) !== "category") {
+      continue;
+    }
+    const current = bib.get(entry.runnerId)!;
+    const desired =
+      startSlot(model, partnerBib) + offsetSlots(model, entry.special?.offsetSeconds ?? 0);
+    // Stejný čas ve stejném startu nejde – posun 0 = druhý start.
+    const seriesOrder = withSeriesOrder(entry, partnerBib);
+    type Spot = { value: number; relocate: string | null; deviation: number; rank: number };
+    let found: Spot | null = null;
+    const causes = new Set<SpecApproxCause>();
+    for (let deviation = 0; deviation <= 1000 && !found; deviation += 1) {
+      const slots = deviation === 0 ? [desired] : [desired + deviation, desired - deviation];
+      for (const slot of slots) {
+        if (slot < 1) {
+          if (deviation === 0) {
+            causes.add("beforeStart");
+          }
+          continue;
+        }
+        seriesOrder.forEach((series, seriesRank) => {
+          const value = bibForSlot(model, series, slot);
+          if (!(deviation === 0 ? exactWithBib(value, series) : placeable(value, series))) {
+            if (deviation === 0 && championBibs.has(value)) {
+              causes.add("champion");
+            }
+            return;
+          }
+          if (value === partnerBib) {
+            if (deviation === 0) {
+              causes.add("taken");
+            }
+            return;
           }
           const holder = occupied.get(value);
-          if (holder === undefined) {
-            if (free.has(value)) {
-              out.push({ value, range, relocate: false });
+          let relocate: string | null = null;
+          if (holder !== undefined && holder !== entry.runnerId) {
+            const holderEntry = entryById.get(holder);
+            if (
+              !holderEntry ||
+              reason.get(holder) !== "category" ||
+              partnerIds.has(holder) ||
+              nearestFreeInOwnWindow(holderEntry, value) == null
+            ) {
+              if (deviation === 0) {
+                causes.add("taken");
+              }
+              return;
             }
-            continue;
+            relocate = holder;
           }
-          if (holder === entry.runnerId) {
-            out.push({ value, range, relocate: false });
-            continue;
-          }
-          const other = entryById.get(holder);
-          if (!other || memberIds.has(holder) || !movable(other)) {
-            continue;
-          }
-          if (currentRange === range) {
-            out.push({ value, range, relocate: false });
-            continue;
-          }
-          spare ??=
-            [...free].filter((v) => !taken.has(v)).length - (used.get(range.categoryId) ?? 0);
-          if (spare > 0) {
-            out.push({ value, range, relocate: true });
-          }
-        }
-      }
-      return out;
-    };
-    /** 0 = vlastní okno, 1 = jiné okno ve stejném startu, 2 = druhý start. */
-    const placement = (entry: GeneratorEntry, value: number): number =>
-      inOwnWindow(entry, value) ? 0 : startSeriesForBib(model, value) === ownSeries(entry) ? 1 : 2;
-    const score = (entry: GeneratorEntry, candidate: Candidate, desired: number): number =>
-      Math.abs(startSlot(model, candidate.value) - desired) * 1e8 +
-      placement(entry, candidate.value) * 1e6 +
-      (candidate.relocate ? 1e5 : 0) +
-      Math.abs(candidate.value - bib.get(entry.runnerId)!);
-
-    type Plan = {
-      cost: number;
-      outside: number;
-      disruption: number;
-      picks: Map<string, Candidate>;
-    };
-    const plan = (anchor: number): Plan => {
-      const targets = targetsFor(anchor);
-      const pool = [...targets];
-      const taken = new Set<number>();
-      const used = new Map<string, number>();
-      const picks = new Map<string, Candidate>();
-      const result: Plan = { cost: 0, outside: 0, disruption: 0, picks };
-      const takeTarget = (slot: number, k: number): number => {
-        if (!joint) {
-          return targets[k];
-        }
-        let best = 0;
-        pool.forEach((value, i) => {
-          if (Math.abs(value - slot) < Math.abs(pool[best] - slot)) {
-            best = i;
+          // Rezervní číslo (Q241) jen když přesný čas jinde nejde – má přednost i jiná řada.
+          const rank =
+            (placeable(value, series) ? 0 : 8) +
+            seriesRank * 4 +
+            (inOwnWindow(entry, value) ? 0 : 2) +
+            (relocate ? 1 : 0);
+          if (!found || found.deviation > deviation || found.rank > rank) {
+            found = { value, relocate, deviation, rank };
           }
         });
-        return pool.splice(best, 1)[0] ?? slot;
-      };
-      const nearestTarget = (slot: number, k: number): number =>
-        joint
-          ? pool.reduce(
-              (best, value) => (Math.abs(value - slot) < Math.abs(best - slot) ? value : best),
-              pool[0] ?? slot,
-            )
-          : targets[k];
-      const commit = (entry: GeneratorEntry, k: number, candidate: Candidate) => {
-        const slot = startSlot(model, candidate.value);
-        const desired = takeTarget(slot, k);
-        taken.add(candidate.value);
-        if (candidate.relocate) {
-          used.set(candidate.range.categoryId, (used.get(candidate.range.categoryId) ?? 0) + 1);
-        }
-        picks.set(entry.runnerId, candidate);
-        result.cost += Math.abs(slot - desired);
-        result.outside += inOwnWindow(entry, candidate.value) ? 0 : 1;
-        result.disruption += Math.abs(candidate.value - bib.get(entry.runnerId)!);
-      };
-      const best = (
-        entry: GeneratorEntry,
-        k: number,
-        accept: (candidate: Candidate) => boolean,
-      ): Candidate | null => {
-        let chosen: Candidate | null = null;
-        let chosenScore = Number.POSITIVE_INFINITY;
-        for (const candidate of candidates(entry, taken, used)) {
-          if (!accept(candidate)) {
-            continue;
-          }
-          const value = score(
-            entry,
-            candidate,
-            nearestTarget(startSlot(model, candidate.value), k),
-          );
-          if (value < chosenScore) {
-            chosen = candidate;
-            chosenScore = value;
-          }
-        }
-        return chosen;
-      };
-      // Pevní členové (zamčení, obhájci, pořadatelé, už umístění v jiné skupině) se nehýbou.
-      members.forEach((entry, k) => {
-        if (!movable(entry)) {
-          const current = bib.get(entry.runnerId)!;
-          const slot = startSlot(model, current);
-          result.cost += Math.abs(slot - takeTarget(slot, k));
-          taken.add(current);
-        }
-      });
-      const movers = members.map((entry, k) => ({ entry, k })).filter((m) => movable(m.entry));
-      const rest: typeof movers = [];
-      if (joint) {
-        // Nejdřív ti, kdo se na cílový čas vejdou ve vlastním okně, pak ostatní kamkoli.
-        for (const mover of movers) {
-          const pick = best(
-            mover.entry,
-            mover.k,
-            (c) => inOwnWindow(mover.entry, c.value) && pool.includes(startSlot(model, c.value)),
-          );
-          if (pick) {
-            commit(mover.entry, mover.k, pick);
-          } else {
-            rest.push(mover);
-          }
-        }
-      } else {
-        rest.push(...movers);
-      }
-      for (const { entry, k } of rest) {
-        const pick = best(entry, k, () => true);
-        if (pick) {
-          commit(entry, k, pick);
-        } else {
-          takeTarget(Number.NaN, k);
-          result.cost += 1000;
-        }
-      }
-      return result;
-    };
-
-    // Kotva skupiny: podle pevných členů, jinak podle „hostitele“ – člena z kategorie, kam patří
-    // většina skupiny (při shodě kategorie nejlépe nasazeného člena). Hostitel zůstává ve svém
-    // okně, ostatní členové se k němu přesunou (případně do okna jiné kategorie).
-    const fixed = members.map((entry, k) => ({ entry, k })).filter(({ entry }) => !movable(entry));
-    let anchors: number[];
-    if (fixed.length > 0) {
-      const spread = joint ? Math.ceil(members.length / 2) - 1 : 0;
-      const options = fixed.map(({ entry, k }) => {
-        const slot = startSlot(model, bib.get(entry.runnerId)!);
-        return joint ? Array.from({ length: spread + 1 }, (_, j) => slot - j) : [slot - k];
-      });
-      const common = options[0].filter((anchor) => options.every((o) => o.includes(anchor)));
-      if (common.length === 0) {
-        warnings.push({ code: "groupLockedConflict", groupId: group.id });
-      }
-      anchors = common.length > 0 ? common : [...new Set(options.flat())];
-    } else {
-      const counts = new Map<string, number>();
-      for (const entry of members) {
-        counts.set(entry.categoryId, (counts.get(entry.categoryId) ?? 0) + 1);
-      }
-      const hostIndex = members
-        .map((entry, k) => ({ entry, k }))
-        .sort(
-          (a, b) =>
-            counts.get(b.entry.categoryId)! - counts.get(a.entry.categoryId)! ||
-            compareSeed(a.entry, b.entry) ||
-            a.k - b.k,
-        )[0].k;
-      const host = members[hostIndex];
-      const offset = joint ? 0 : hostIndex;
-      anchors = [
-        ...new Set(
-          candidates(host, new Set(), new Map())
-            .filter((c) => inOwnWindow(host, c.value))
-            .map((c) => startSlot(model, c.value) - offset),
-        ),
-      ];
-      if (anchors.length === 0) {
-        anchors = [
-          ...new Set(
-            members.flatMap((entry, k) =>
-              candidates(entry, new Set(), new Map()).map(
-                (c) => startSlot(model, c.value) - (joint ? 0 : k),
-              ),
-            ),
-          ),
-        ];
       }
     }
-    let chosen: Plan | null = null;
-    for (const anchor of anchors.sort((a, b) => a - b)) {
-      const candidate = plan(anchor);
-      if (
-        !chosen ||
-        candidate.cost < chosen.cost ||
-        (candidate.cost === chosen.cost &&
-          (candidate.outside < chosen.outside ||
-            (candidate.outside === chosen.outside && candidate.disruption < chosen.disruption)))
-      ) {
-        chosen = candidate;
-      }
-    }
-    if (!chosen) {
+    const spot = found as Spot | null;
+    // Důvod podle preferované řady (první zaznamenaný).
+    const cause: SpecApproxCause = causes.values().next().value ?? "taken";
+    if (!spot) {
+      warnings.push({ code: "specApprox", runnerId: entry.runnerId, deviation: -1, cause });
       continue;
     }
-    const release = (entry: GeneratorEntry, value: number) => {
-      if (occupied.get(value) === entry.runnerId) {
-        occupied.delete(value);
+    if (spot.value !== current) {
+      if (occupied.get(current) === entry.runnerId) {
+        occupied.delete(current);
       }
-      const range = rangeOfBib(value);
-      if (range) {
-        freeByCategory.get(range.categoryId)?.add(value);
-      }
-    };
-    for (const entry of members) {
-      const pick = chosen.picks.get(entry.runnerId);
-      const current = bib.get(entry.runnerId)!;
-      if (pick === undefined || pick.value === current) {
-        pinned.add(entry.runnerId);
-        continue;
-      }
-      const target = pick.value;
-      const free = freeByCategory.get(pick.range.categoryId)!;
-      const holder = occupied.get(target);
-      if (holder !== undefined && holder !== entry.runnerId) {
-        const other = entryById.get(holder)!;
-        if (rangeOfBib(current) === pick.range) {
-          assign(other, current, "category");
-        } else {
-          // Běžec mimo skupinu zůstane ve svém okně – na nejbližší volné číslo.
-          let spare: number | null = null;
-          for (const value of free) {
-            if (spare == null || Math.abs(value - target) < Math.abs(spare - target)) {
-              spare = value;
-            }
-          }
-          if (spare == null) {
-            pinned.add(entry.runnerId);
-            continue;
-          }
-          free.delete(spare);
-          assign(other, spare, "category");
-          release(entry, current);
-        }
-      } else {
-        free.delete(target);
-        release(entry, current);
-      }
-      assign(entry, target, "group");
-      pinned.add(entry.runnerId);
-    }
-    for (const entry of members) {
-      if (reason.get(entry.runnerId) === "category") {
-        reason.set(entry.runnerId, "group");
+      if (spot.relocate) {
+        const moved = entryById.get(spot.relocate)!;
+        assign(moved, nearestFreeInOwnWindow(moved, spot.value)!, "category");
       }
     }
-    if (chosen.cost > 0) {
-      warnings.push({ code: "groupApprox", groupId: group.id, deviation: chosen.cost });
+    assign(entry, spot.value, "with");
+    if (spot.deviation > 0) {
+      warnings.push({
+        code: "specApprox",
+        runnerId: entry.runnerId,
+        deviation: spot.deviation,
+        cause,
+      });
+    }
+  }
+  // Kotva kruhu: když po umístění ostatních její požadavek neplatí, upozorní se.
+  for (const [anchorId, members] of cycleAnchors) {
+    const anchor = entryById.get(anchorId)!;
+    const partnerId = partnerIdOf(anchor);
+    const own = bib.get(anchorId);
+    const other = partnerId ? bib.get(partnerId) : null;
+    const satisfied =
+      own != null &&
+      other != null &&
+      startSlot(model, own) - startSlot(model, other) ===
+        offsetSlots(model, anchor.special?.offsetSeconds ?? 0);
+    if (!satisfied) {
+      warnings.push({ code: "specCycle", runnerIds: members });
     }
   }
 
@@ -604,7 +605,14 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
       previousBib: entry.currentBib,
       reason: why,
       outsideCategory:
-        value != null && why !== "champion" && why !== "organizer" && !inOwnWindow(entry, value),
+        value != null &&
+        why !== "champion" &&
+        why !== "organizer" &&
+        why !== "early" &&
+        why !== "late" &&
+        !inOwnWindow(entry, value) &&
+        // „Spolu s“ v rozsahu spec. startů (u pořadatele, brzkého…) není „mimo kategorii“.
+        !(why === "with" && inAnySpecialRange(model, value)),
     };
   });
   const blocking = warnings.some(

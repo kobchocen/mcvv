@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { ENTRY_STATUS, validRegistrationIds } from "@/lib/entries/status";
 
+import type { SpecialStartSpec } from "./special-start";
 import type { BibRange, ChampionBibs } from "./start-settings";
 import {
   compareByStart,
@@ -12,10 +13,7 @@ import {
   startTimeForBib,
   type StartModel,
 } from "./start-time";
-import type { GeneratorInput, StartGroupKind } from "./startlist-generator";
-
-/** Číslo přihlášky pořadatelů (přihláška č. 1 ročníku). */
-export const ORGANIZER_REGISTRATION_ID = 1;
+import type { GeneratorInput } from "./startlist-generator";
 
 export type CategoryInfo = { id: string; name: string; sort: number; sex: string };
 
@@ -119,26 +117,51 @@ export type AdminStartRow = {
   status: number | null;
   valid: boolean;
   cancelled: boolean;
-  organizer: boolean;
   bib: number | null;
   locked: boolean;
-  groupId: number | null;
-  groupOrder: number;
   lastYearTime: number | null;
   personalBest: number | null;
   note: string | null;
   registrationNote: string | null;
+  /** Spec. start z administrace přihlášek. */
+  special: SpecialStartRow | null;
+  /** Vlákno zpráv přihlášky, když v něm přihlašující něco napsal („má zprávu“). */
+  messageThreadId: number | null;
 };
 
-export type StartGroupRow = {
-  id: number;
-  kind: StartGroupKind;
-  note: string | null;
-  memberIds: string[];
-};
+export type SpecialStartRow = SpecialStartSpec & { note: string | null; updatedAt: Date };
+
+/** Spec. starty ročníku podle běžce. */
+export async function loadSpecialStarts(year: number): Promise<Map<string, SpecialStartRow>> {
+  const rows = await prisma.specialStart.findMany({ where: { year } });
+  return new Map(
+    rows.map((row) => [
+      row.runnerId,
+      {
+        kind: row.kind,
+        partnerId: row.kind === "with" ? row.partnerId : null,
+        offsetSeconds: row.kind === "with" ? row.offsetSeconds : 0,
+        note: row.note,
+        updatedAt: row.updatedAt,
+      },
+    ]),
+  );
+}
+
+/**
+ * Přihlášky ročníku, kde přihlašující napsal zprávu (Q216: jen indikátor, spec. start se
+ * nenastavuje automaticky). Vrací id vlákna podle čísla přihlášky.
+ */
+export async function registrationMessageThreads(year: number): Promise<Map<number, number>> {
+  const threads = await prisma.messageThread.findMany({
+    where: { year, registrationId: { not: null }, lastUserMessageAt: { not: null } },
+    select: { id: true, registrationId: true },
+  });
+  return new Map(threads.map((thread) => [thread.registrationId!, thread.id]));
+}
 
 export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]> {
-  const [lines, validIds, metas] = await Promise.all([
+  const [lines, validIds, metas, specials, threads] = await Promise.all([
     prisma.registrationLine.findMany({
       where: { year },
       include: {
@@ -150,6 +173,8 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
     }),
     validRegistrationIds(year),
     prisma.startLineMeta.findMany({ where: { year } }),
+    loadSpecialStarts(year),
+    registrationMessageThreads(year),
   ]);
   const runnerIds = lines.map((line) => line.runnerId);
   const [lastYear, best] = await Promise.all([
@@ -180,38 +205,22 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       status: line.registration.status,
       valid: validIds.has(line.registrationId),
       cancelled: line.registration.status === ENTRY_STATUS.cancelled,
-      organizer: line.registrationId === ORGANIZER_REGISTRATION_ID,
       bib: line.bib && line.bib > 0 ? line.bib : null,
       locked: meta?.locked ?? false,
-      groupId: meta?.groupId ?? null,
-      groupOrder: meta?.groupOrder ?? 0,
       lastYearTime: lastById.get(line.runnerId) ?? null,
       personalBest: bestById.get(line.runnerId) ?? null,
       note: line.note,
       registrationNote: line.registration.note,
+      special: specials.get(line.runnerId) ?? null,
+      messageThreadId: threads.get(line.registrationId) ?? null,
     };
   });
-}
-
-export async function loadStartGroups(year: number): Promise<StartGroupRow[]> {
-  const groups = await prisma.startGroup.findMany({
-    where: { year },
-    include: { members: { orderBy: [{ groupOrder: "asc" }, { runnerId: "asc" }] } },
-    orderBy: { id: "asc" },
-  });
-  return groups.map((group) => ({
-    id: group.id,
-    kind: group.kind,
-    note: group.note,
-    memberIds: group.members.map((member) => member.runnerId),
-  }));
 }
 
 export async function buildGeneratorInput(
   year: number,
   settings: StartSettings,
   rows: AdminStartRow[],
-  groups: StartGroupRow[],
 ): Promise<GeneratorInput> {
   const winners = await absoluteWinners(year - 1);
   const champions: GeneratorInput["champions"] = [];
@@ -226,7 +235,6 @@ export async function buildGeneratorInput(
     ranges: settings.ranges,
     categorySort: Object.fromEntries(settings.categories.map((c) => [c.id, c.sort])),
     champions,
-    groups: groups.map((group) => ({ id: group.id, kind: group.kind })),
     entries: rows.map((row) => ({
       runnerId: row.runnerId,
       name: row.name,
@@ -234,10 +242,14 @@ export async function buildGeneratorInput(
       currentBib: row.bib,
       locked: row.locked,
       eligible: row.valid,
-      organizer: row.organizer,
       lastYearTime: row.lastYearTime,
-      groupId: row.groupId,
-      groupOrder: row.groupOrder,
+      special: row.special
+        ? {
+            kind: row.special.kind,
+            partnerId: row.special.partnerId,
+            offsetSeconds: row.special.offsetSeconds,
+          }
+        : null,
     })),
   };
 }
@@ -252,18 +264,10 @@ export function inputFingerprint(input: GeneratorInput): string {
       e.currentBib,
       e.locked,
       e.eligible,
-      e.organizer,
       e.lastYearTime,
-      e.groupId,
-      e.groupOrder,
+      e.special ? [e.special.kind, e.special.partnerId, e.special.offsetSeconds] : null,
     ]);
-  const payload = JSON.stringify([
-    input.model,
-    input.ranges,
-    input.champions,
-    input.groups,
-    entries,
-  ]);
+  const payload = JSON.stringify([input.model, input.ranges, input.champions, entries]);
   return createHash("sha256").update(payload).digest("hex").slice(0, 32);
 }
 

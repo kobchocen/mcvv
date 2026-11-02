@@ -3,7 +3,8 @@
  *
  * Startér obsluhuje jeden koridor (1 = čísla 1 … st_druhy_od − 1, 2 = od st_druhy_od podle
  * modelu startu ročníku). Vidí frontu nejbližších čísel podle plánovaného startu: zelená =
- * startuje teď (aktuální interval, ≤ 15 s), oranžová = další interval (16–30 s), šedá = později.
+ * startuje teď (aktuální interval ročníku, výchozí ≤ 15 s), oranžová = další interval
+ * (výchozí 16–30 s), šedá = později.
  * Ťuknutím označí závodníka „na startu“ (druhé ťuknutí před startem označení vrátí). Kdo není
  * v okamžiku startu označený, na chvíli zčervená a pak spadne mezi „Nevyběhli“.
  *
@@ -12,11 +13,13 @@
  * v mezičasech) > automatické doplnění z mezičasu / cíle.
  */
 
+import { DEFAULT_SECOND_START_FROM, startOffsetSeconds } from "./start-time";
+
 export type Corridor = 1 | 2;
 export const CORRIDORS: readonly Corridor[] = [1, 2];
 
-/** Výchozí první číslo 2. startu, když ročník nemá model (stejné jako `DEFAULT_START_MODEL`). */
-export const DEFAULT_SECOND_START_FROM = 601;
+/** Výchozí první číslo 2. startu, když ročník nemá model (`DEFAULT_START_MODEL`, 601). */
+export { DEFAULT_SECOND_START_FROM };
 
 export function parseCorridor(raw: unknown): Corridor | null {
   const value = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
@@ -48,8 +51,7 @@ export function plannedStartMs(
   intervalS: number,
   secondStartFrom: number,
 ): number {
-  const slot = bib >= secondStartFrom ? bib - (secondStartFrom - 1) : bib;
-  return zeroMs + intervalS * 1000 * (slot - 1);
+  return zeroMs + startOffsetSeconds(bib, intervalS, secondStartFrom) * 1000;
 }
 
 // --- nastavení (admin, `mcvv_setting`) ---
@@ -108,12 +110,9 @@ export const DEFAULT_STARTER_SETTINGS: StarterSettings = {
 
 // --- zóny fronty ---
 
-/** Zelená: startuje v aktuálním intervalu (≤ 15 s do startu). */
-export const ZONE_NOW_S = 15;
-/** Oranžová: další interval (16–30 s do startu). */
-export const ZONE_NEXT_S = 30;
-/** Pozdní start: víc než 15 s po plánu (jen informace). */
-export const LATE_AFTER_S = 15;
+// Zóny i práh pozdního startu se řídí intervalem ročníku (`st_interval`, výchozí 15 s):
+// zelená = aktuální interval (≤ 1 interval do startu), oranžová = další interval
+// (≤ 2 intervaly), pozdní start = víc než 1 interval po plánu (jen informace).
 /** Nejvýš tolik řádků ve frontě. */
 export const QUEUE_SIZE = 4;
 
@@ -128,17 +127,22 @@ export function secondsToStart(plannedMs: number, nowMs: number): number {
  * Zóna řádku podle času do plánovaného startu. Po startu je neoznačený `redPhaseS` sekund
  * červený („red“), pak „gone“ (patří mezi Nevyběhli).
  */
-export function zoneFor(plannedMs: number, nowMs: number, redPhaseS: number): Zone {
+export function zoneFor(
+  plannedMs: number,
+  nowMs: number,
+  redPhaseS: number,
+  intervalS: number,
+): Zone {
   const left = secondsToStart(plannedMs, nowMs);
-  if (left > ZONE_NEXT_S) return "later";
-  if (left > ZONE_NOW_S) return "next";
+  if (left > 2 * intervalS) return "later";
+  if (left > intervalS) return "next";
   if (nowMs < plannedMs) return "now";
   return nowMs < plannedMs + redPhaseS * 1000 ? "red" : "gone";
 }
 
-/** Pozdní start (víc než 15 s po plánu). */
-export function isLateStart(realMs: number, plannedMs: number): boolean {
-  return realMs - plannedMs > LATE_AFTER_S * 1000;
+/** Pozdní start (víc než jeden interval ročníku po plánu). */
+export function isLateStart(realMs: number, plannedMs: number, intervalS: number): boolean {
+  return realMs - plannedMs > intervalS * 1000;
 }
 
 /** Odchylka v celých sekundách (+ = později), pro list potvrzení. */
@@ -198,7 +202,7 @@ export function buildStarterView(
   runners: readonly StarterRunner[],
   marks: ReadonlyMap<number, StarterMark>,
   nowMs: number,
-  settings: Pick<StarterSettings, "redPhaseS" | "dnsWindowS">,
+  settings: Pick<StarterSettings, "redPhaseS" | "dnsWindowS"> & { intervalS: number },
 ): StarterView {
   const sorted = [...runners].sort((a, b) => a.plannedMs - b.plannedMs || a.bib - b.bib);
   const queue: QueueRow[] = [];
@@ -207,7 +211,7 @@ export function buildStarterView(
   let missingCount = 0;
   for (const runner of sorted) {
     const marked = marks.has(runner.bib);
-    const zone = zoneFor(runner.plannedMs, nowMs, settings.redPhaseS);
+    const zone = zoneFor(runner.plannedMs, nowMs, settings.redPhaseS, settings.intervalS);
     const started = nowMs >= runner.plannedMs;
     if (marked && started) continue; // odstartoval
     if (zone === "gone") {
@@ -244,14 +248,14 @@ export function buildStarterList(
     .map((runner): ListRow => {
       const mark = marks.get(runner.bib);
       const before = nowMs < runner.plannedMs;
-      const zone = zoneFor(runner.plannedMs, nowMs, redPhaseS);
+      const red = !before && nowMs < runner.plannedMs + redPhaseS * 1000;
       const state = mark
         ? before
           ? "marked"
           : "started"
         : before
           ? "pending"
-          : zone === "red"
+          : red
             ? "red"
             : "missing";
       return { ...runner, state, late: mark?.late ?? false };
@@ -349,6 +353,7 @@ export function mergePending(
   server: ReadonlyMap<number, StarterMark>,
   pending: readonly PendingAction[],
   plannedOf: (bib: number) => number | undefined,
+  intervalS: number,
 ): Map<number, StarterMark> {
   const marks = new Map(server);
   for (const op of [...pending].sort((a, b) => a.at - b.at)) {
@@ -370,7 +375,10 @@ export function mergePending(
       bib: op.bib,
       source: "starter",
       markedAt: op.at,
-      late: op.action === "late" && planned !== undefined ? isLateStart(op.at, planned) : false,
+      late:
+        op.action === "late" && planned !== undefined
+          ? isLateStart(op.at, planned, intervalS)
+          : false,
     });
   }
   return marks;
@@ -474,7 +482,7 @@ export function keypadLookup(input: {
 
 /**
  * Štítek „pozdní start“ v online výsledcích (offset v s nebo null): automatické doplnění ze
- * splitu nikdy, zápis startéra jen s příznakem pozdě („Odstartovat teď“ víc než 15 s po plánu),
+ * splitu nikdy, zápis startéra jen s příznakem pozdě („Odstartovat teď“ víc než 1 interval po plánu),
  * ostatní zdroje (stanoviště Start, admin) beze změny podle prahu #228.
  */
 export function publicLateOffset(

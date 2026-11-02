@@ -4,6 +4,7 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { formatRaceDay } from "@/lib/format/date";
 import { getHomeResultsSummary } from "@/lib/home/cached";
 import { loadPartners } from "@/lib/partners/logos";
+import { fillPlaceholders, startTextParams } from "@/lib/race/start-text";
 import { pickGalleryPhotoIds } from "@/lib/photos/gallery";
 import { getHomepagePhotoCandidates } from "@/lib/photos/queries";
 import { formatRaceTime } from "@/lib/utils";
@@ -71,8 +72,13 @@ export default async function Home({ params }: PageProps) {
     ];
   }
 
-  const { raceDate } = await currentRaceYear();
-  const rawSchedule = t.raw("schedule") as McvvHomepageContent["schedule"];
+  const { raceDate, startModel } = await currentRaceYear();
+  // Čas startu a interval v textech z modelu ročníku (st_nula_s, st_interval), ne natvrdo.
+  const startText = startTextParams(startModel);
+  const rawSchedule = {
+    ...fillPlaceholders(t.raw("schedule") as McvvHomepageContent["schedule"], startText),
+    zeroSeconds: startModel.zeroSeconds,
+  };
   const schedule: McvvHomepageContent["schedule"] = raceDate
     ? { ...rawSchedule, title: formatRaceDay(raceDate, locale) }
     : rawSchedule;
@@ -81,7 +87,7 @@ export default async function Home({ params }: PageProps) {
     brand: t.raw("brand") as McvvHomepageContent["brand"],
     nav: t.raw("nav") as McvvHomepageContent["nav"],
     hero: t.raw("hero") as McvvHomepageContent["hero"],
-    overview: t.raw("overview") as McvvHomepageContent["overview"],
+    overview: fillPlaceholders(t.raw("overview") as McvvHomepageContent["overview"], startText),
     profile: t.raw("profile") as McvvHomepageContent["profile"],
     schedule,
     results: {

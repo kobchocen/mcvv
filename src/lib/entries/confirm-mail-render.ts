@@ -1,4 +1,8 @@
-import { getEditionStart, RACE_START_HOUR, RACE_START_MINUTE } from "@/lib/date/race-schedule";
+import {
+  DEFAULT_RACE_ZERO_SECONDS,
+  formatStartClock,
+  getEditionStart,
+} from "@/lib/date/race-schedule";
 import { escapeHtml, renderBrandedEmail } from "@/lib/mail/layout";
 
 export type ConfirmationInput = {
@@ -10,6 +14,8 @@ export type ConfirmationInput = {
   fee: number;
   paid: number;
   site: string;
+  /** Nulový čas ročníku (st_nula_s); chybí → výchozí 10:15. */
+  startZeroSeconds?: number;
 };
 
 export const RACE_PLACE = "Velká Veranda, Choceň";
@@ -40,7 +46,7 @@ export function renderEntryConfirmation(input: ConfirmationInput) {
     ? `děkujeme za přihlášku. Vaše přihláška č. ${input.year}/${input.id} je potvrzená.`
     : `děkujeme za přihlášku a platbu. Vaše přihláška č. ${input.year}/${input.id} je potvrzená.`;
   const remaining = Math.max(0, input.fee - input.paid);
-  const start = `${RACE_START_HOUR}:${String(RACE_START_MINUTE).padStart(2, "0")}`;
+  const start = formatStartClock(input.startZeroSeconds ?? DEFAULT_RACE_ZERO_SECONDS);
   const date = raceDateLabel(input.year);
   const editUrl = `${input.site}/prihlasky`;
   const p = (v: string) => `<p style="margin:0 0 16px">${v}</p>`;

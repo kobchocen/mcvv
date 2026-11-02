@@ -2,6 +2,7 @@ import { appOrigin } from "@/lib/auth/tokens";
 import { mailConfigured, sendResendEmail } from "@/lib/mail/resend";
 
 import { renderEntryConfirmation } from "./confirm-mail-render";
+import { startModelForYear } from "./year";
 
 /** Sent only after the entry is paid (status paid/overpaid → confirmed). */
 export async function sendConfirmationEmail(input: {
@@ -19,6 +20,12 @@ export async function sendConfirmationEmail(input: {
     return false;
   }
   const site = input.site ?? (await appOrigin());
-  const { subject, html, text } = renderEntryConfirmation({ ...input, email: input.email, site });
+  const { zeroSeconds } = await startModelForYear(input.year);
+  const { subject, html, text } = renderEntryConfirmation({
+    ...input,
+    email: input.email,
+    site,
+    startZeroSeconds: zeroSeconds,
+  });
   return sendResendEmail({ to: input.email, subject, text, html, kind: "confirmation" });
 }

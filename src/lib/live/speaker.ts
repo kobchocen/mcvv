@@ -95,7 +95,9 @@ export async function loadRaceRunners(
     bib: s.bib,
     name: (s.runnerName || s.runner.name).trim(),
     cat: s.categoryId,
-    start: Math.round(startInstant(ctx.zero, s.bib, ctx.intervalS).getTime() / 1000),
+    start: Math.round(
+      startInstant(ctx.zero, s.bib, ctx.intervalS, ctx.secondStartFrom).getTime() / 1000,
+    ),
     ...(times.get(s.bib) ?? { m1: null, m2: null, fin: null }),
     runnerId: s.runnerId,
   }));

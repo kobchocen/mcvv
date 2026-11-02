@@ -75,3 +75,20 @@ test("reminder emails show the remaining amount, payment details, QR and the sig
     assert.ok(!mail.html.includes("<A>"));
   }
 });
+
+test("reminder start time follows the edition zero", () => {
+  const mail = renderReminder({
+    kind: 1,
+    year: Y,
+    id: 32,
+    name: null,
+    lines: [{ runner: "Jan Novák", club: "KOB", category: "H", fee: 300 }],
+    fee: 300,
+    paid: 0,
+    site: "https://www.mcvv.org",
+    deadline: "2026-12-02",
+    startZeroSeconds: 9 * 3600 + 30 * 60,
+  });
+  assert.match(mail.text, /Intervalový start od 9:30/);
+  assert.ok(!(mail.text + mail.html).includes("10:15"));
+});

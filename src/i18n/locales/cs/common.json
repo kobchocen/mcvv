@@ -142,7 +142,7 @@
         },
         {
           "title": "Start",
-          "description": "Intervalový ve dvojicích po 15 s od 10:15."
+          "description": "Intervalový ve dvojicích po {interval} s od {startTime}."
         },
         {
           "title": "Kategorie",
@@ -194,7 +194,7 @@
         },
         {
           "icon": "clock",
-          "text": "Intervalový start od 10:15"
+          "text": "Intervalový start od {startTime}"
         },
         {
           "icon": "pin",
@@ -416,7 +416,7 @@
     },
     "timetable": {
       "registration": "Do 9:45 — přihlášky na místě",
-      "start": "10:15 — start (interval 15 s)",
+      "start": "{startTime} — start (interval {interval} s)",
       "ceremony": "12:20 — vyhlášení výsledků"
     },
     "sections": {
@@ -467,13 +467,13 @@
       },
       "start": {
         "title": "Start",
-        "summary": "Interval 15 s od 10:15",
-        "body": "Startovní interval {seconds} s od 10:15. Intervalový start ve dvojicích, bez samostatného dětského startu."
+        "summary": "Interval {interval} s od {startTime}",
+        "body": "Startovní interval {seconds} s od {startTime}. Intervalový start ve dvojicích, bez samostatného dětského startu."
       },
       "timetable": {
         "title": "Časový harmonogram",
-        "summary": "9:45 · 10:15 · 12:20",
-        "body": "Přihlášky na místě končí v 9:45. Intervalový start od 10:15. Vyhlášení výsledků ve 12:20."
+        "summary": "9:45 · {startTime} · 12:20",
+        "body": "Přihlášky na místě končí v 9:45. Intervalový start od {startTime}. Vyhlášení výsledků ve 12:20."
       },
       "privacy": {
         "title": "Ochrana údajů",
@@ -1083,14 +1083,14 @@
     "settingsIntro": "Startovka, online výsledky, statistiky a přihlášky zdarma.",
     "settingsFreeEmails": "Přihláška zdarma (jeden e-mail na řádek)",
     "settingsOrganizerRegistrationEmail": "E-mail přihlášky pořadatelů (č. 1)",
-    "settingsOrganizerRegistrationEmailHint": "Při uložení ročníku se na tento e-mail založí přihláška č. 1 (pořadatelé dostanou čísla od 1 a od 601), pokud ještě neexistuje. Prázdné = {fallback}.",
+    "settingsOrganizerRegistrationEmailHint": "Při uložení ročníku se na tento e-mail založí přihláška č. 1 (pořadatelé dostanou první čísla obou startů), pokud ještě neexistuje. Prázdné = {fallback}.",
     "settingsOrganizerRegistrationEmailInvalid": "E-mail přihlášky pořadatelů není platný.",
     "settingsSaved": "Uloženo.",
     "settingsRaceDay": "Startovka a výsledky",
     "settingsStartlistPublished": "Zveřejnit startovku",
     "settingsStartlistPublishedHint": "Na úvodní stránce se místo Přihlášek ukáže Startovka a Pokyny (do startu závodu).",
     "settingsOnlineUrl": "URL online výsledků",
-    "settingsOnlineUrlHint": "Nouzové přebití odkazu „Online výsledky“: od startu závodu (10:15) do zveřejnění výsledků vedou tlačítko a menu na úvodní stránce na vlastní online výsledky (/vysledky/online). Vyplňte jen při výpadku – pak povedou sem. Prázdné = vlastní online výsledky.",
+    "settingsOnlineUrlHint": "Nouzové přebití odkazu „Online výsledky“: od startu závodu ({time}) do zveřejnění výsledků vedou tlačítko a menu na úvodní stránce na vlastní online výsledky (/vysledky/online). Vyplňte jen při výpadku – pak povedou sem. Prázdné = vlastní online výsledky.",
     "settingsOnlineUrlInvalid": "URL online výsledků musí začínat http:// nebo https://. Nic nebylo uloženo.",
     "settingsStats": "Statistiky",
     "settingsStatsMoment": "Moment ročníku",
@@ -1864,7 +1864,7 @@
     "stations": "Stanoviště splitmakerů",
     "stationsHint": "Řádky kód=popis, kód 1–8 (9 = cíl z OBD). Výchozí 1=1,3 km a 3=2,7 km.",
     "zeroOverride": "Zkušební nula (generálka)",
-    "zeroOverrideHint": "Prázdné = den závodu 10:15. Pro zkoušku nastavte např. dnešek a čas. Po zkoušce smažte!",
+    "zeroOverrideHint": "Prázdné = den závodu {time}. Pro zkoušku nastavte např. dnešek a čas. Po zkoušce smažte!",
     "startLimit": "Práh odchylky na Startu",
     "startLimitHint": "Nad jakou odchylkou od plánovaného startu ukáže splitmaker místo času „víc než … před / po plánu“. Sekundy nebo minuty: např. 90, 45 s, 2 min, 1:30 (mm:ss). Prázdné = výchozí 2 min. Stejný práh určuje štítek „pozdní start“ v online výsledcích.",
     "dnsGrace": "Lhůta DNS v online výsledcích",
@@ -1977,7 +1977,7 @@
     "intro": "Fiktivní start podle skutečné startovky: od zvolené nuly fungují splitmakeři, stanoviště Start, obd-klient i OFeed (jen testovací akce) jako v den závodu. Test se sám ukončí po 3 h, nejpozději {cutoff}. Při ukončení se automaticky smažou testovací mezičasy, starty, zkušební nula a klíče zařízení vytvořené během testu.",
     "zeroLabel": "Nula testu",
     "zeroIn5": "za 5 minut",
-    "zeroAt1015": "dnes 10:15",
+    "zeroAtStart": "dnes {time}",
     "zeroAt2015": "dnes 20:15",
     "zeroCustom": "přesný čas",
     "start": "Spustit test",
@@ -2401,7 +2401,7 @@
     "issueInvalidWithBib": "Číslo {bib} má neplatná (nezaplacená) přihláška: {name}",
     "issueMissingBib": "Bez čísla: {name}",
     "proposeButton": "Navrhnout startovku",
-    "proposeHint": "Spec. starty mají vlastní rozsahy v obou řadách: pořadatelé 1–40 / 601–640, brzy 41–99 / 641–699, pozdě 261–299 / 861–899 (když dojdou, nejbližší volné číslo mimo rozsah s varováním). „Spolu s“ = čas partnera + posun. Obhájci na čísla obhájců, ostatní v kategorii rovnoměrně: nejdřív nováčci a bez loňského času, pak podle loňského času (nejrychlejší na konci). Zamčená čísla se nemění.",
+    "proposeHint": "Spec. starty mají vlastní rozsahy v obou řadách: pořadatelé {organizer}, brzy {early}, pozdě {late} (když dojdou, nejbližší volné číslo mimo rozsah s varováním). „Spolu s“ = čas partnera + posun. Obhájci na čísla obhájců, ostatní v kategorii rovnoměrně: nejdřív nováčci a bez loňského času, pak podle loňského času (nejrychlejší na konci). Zamčená čísla se nemění.",
     "proposeLockedPublished": "Startovka je zveřejněna – návrh je zakázán; pro změny použij ruční úpravy nebo zruš zveřejnění.",
     "proposalHeading": "Návrh startovky",
     "proposalSummary": "{changed, plural, one {Změní se # řádek.} few {Změní se # řádky.} other {Změní se # řádků.}}",
@@ -2472,7 +2472,7 @@
     "errStale": "Data se od náhledu změnila. Vygenerujte návrh znovu.",
     "errBlocking": "Návrh nejde uložit – nedostatek čísel.",
     "editionHeading": "Model startu",
-    "editionHint": "Výpočet startovního času: číslo od 2. startu se počítá od začátku (601 = 1), čas = nula + interval × (pořadí − 1). Čísla obhájců dostanou loňští absolutní vítězové; čísla mimo rozsahy kategorií jsou rezerva.",
+    "editionHint": "Výpočet startovního času: číslo od 2. startu se počítá od začátku ({second} = 1), čas = nula + interval × (pořadí − 1). Čísla obhájců dostanou loňští absolutní vítězové; čísla mimo rozsahy kategorií jsou rezerva.",
     "editionZero": "Nulový čas (HH:MM:SS)",
     "editionInterval": "Interval (s)",
     "editionSecondStart": "2. start od čísla",
@@ -3021,9 +3021,9 @@
     "kind_early": "Start brzy",
     "kind_late": "Start pozdě",
     "kind_with": "Start spolu s",
-    "hint_organizer": "Čísla 1–40 / 601–640 (pořadatelé). Bez příznaku se z běžce pořadatel nestane – ani z přihlášky č. 1.",
-    "hint_early": "Čísla 41–99 / 641–699 v jeho startu; když dojdou, nejbližší volné číslo mimo rozsah (s varováním).",
-    "hint_late": "Čísla 261–299 / 861–899 v jeho startu, plní se od konce; když dojdou, nejbližší volné mimo rozsah (s varováním).",
+    "hint_organizer": "Čísla {range} (pořadatelé). Bez příznaku se z běžce pořadatel nestane – ani z přihlášky č. 1.",
+    "hint_early": "Čísla {range} v jeho startu; když dojdou, nejbližší volné číslo mimo rozsah (s varováním).",
+    "hint_late": "Čísla {range} v jeho startu, plní se od konce; když dojdou, nejbližší volné mimo rozsah (s varováním).",
     "hint_with": "Čas = čas partnera + posun (rodina, doprovod…). Posun 0 = stejný čas v druhé řadě; partneři brzy / pozdě berou běžce s sebou.",
     "partner": "Spolu s",
     "partnerHint": "Napište aspoň 2 znaky jména, klubu nebo čísla a vyberte běžce z nabídky (šipky + Enter).",
@@ -3155,7 +3155,7 @@
     "lateOffset": "Posun",
     "lateBadge": "POZDNÍ START",
     "onTime": "včas",
-    "lateNote": "Do výsledků se vždy počítá čas ze startovky. Skutečný čas a příznak „pozdní start“ (víc než 15 s po plánu) se uloží jen pro informaci.",
+    "lateNote": "Do výsledků se vždy počítá čas ze startovky. Skutečný čas a příznak „pozdní start“ (víc než {seconds} s po plánu) se uloží jen pro informaci.",
     "cancel": "Zrušit",
     "loading": "Načítám startovku…",
     "noCache": "Offline a startovka ještě není v zařízení. Připoj se k internetu.",

@@ -15,6 +15,8 @@ export type RaceCountdownProps = {
   label: string;
   units: RaceCountdownUnits;
   inProgressLabel: string;
+  /** Nulový čas ročníku v sekundách od půlnoci (st_nula_s); chybí → výchozí 10:15. */
+  zeroSeconds?: number;
 };
 
 function formatUnit(value: number | null, pad: boolean): string {
@@ -37,11 +39,11 @@ function getServerClockSnapshot() {
   return 0;
 }
 
-export function RaceCountdown({ label, units, inProgressLabel }: RaceCountdownProps) {
+export function RaceCountdown({ label, units, inProgressLabel, zeroSeconds }: RaceCountdownProps) {
   const epochSec = useSyncExternalStore(subscribeToClock, getClockSnapshot, getServerClockSnapshot);
   const now = epochSec > 0 ? new Date(epochSec * 1000) : null;
 
-  const resolved = now ? resolveRaceCountdown(now) : null;
+  const resolved = now ? resolveRaceCountdown(now, zeroSeconds) : null;
   const parts =
     now && resolved?.phase === "upcoming" && resolved.target
       ? remainingParts(resolved.target, now)

@@ -1,6 +1,6 @@
 import { raceDateLabel, RACE_PLACE, SIGNATURE } from "@/lib/entries/confirm-mail-render";
 import { BANK_ACCOUNT, BANK_IBAN, variableSymbol } from "@/lib/entries/spd";
-import { RACE_START_HOUR, RACE_START_MINUTE } from "@/lib/date/race-schedule";
+import { DEFAULT_RACE_ZERO_SECONDS, formatStartClock } from "@/lib/date/race-schedule";
 import { escapeHtml, renderBrandedEmail } from "@/lib/mail/layout";
 
 export type ReminderKind = 1 | 2;
@@ -16,6 +16,8 @@ export type ReminderInput = {
   site: string;
   /** Datum uzávěrky (YYYY-MM-DD) – pro text. */
   deadline: string | null;
+  /** Nulový čas ročníku (st_nula_s); chybí → výchozí 10:15. */
+  startZeroSeconds?: number;
 };
 
 const kc = (value: number) => `${value.toLocaleString("cs-CZ").replace(/\u00a0/g, " ")} Kč`;
@@ -38,7 +40,7 @@ export function renderReminder(input: ReminderInput) {
   const remaining = Math.max(0, input.fee - input.paid);
   const vs = variableSymbol(input.year, input.id);
   const message = paymentMessage(input.id);
-  const start = `${RACE_START_HOUR}:${String(RACE_START_MINUTE).padStart(2, "0")}`;
+  const start = formatStartClock(input.startZeroSeconds ?? DEFAULT_RACE_ZERO_SECONDS);
   const date = raceDateLabel(input.year);
   const editUrl = `${input.site}/prihlasky`;
   const deadline = deadlineLabel(input.deadline);

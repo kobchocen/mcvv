@@ -27,7 +27,7 @@ import {
  */
 
 type Tx = Prisma.TransactionClient;
-type Ctx = Pick<RaceContext, "year" | "zero" | "intervalS">;
+type Ctx = Pick<RaceContext, "year" | "zero" | "intervalS" | "secondStartFrom">;
 
 function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
@@ -137,7 +137,13 @@ async function applyStartEntry(
     });
     return storedResult(row);
   }
-  const offsetS = startOffsetSeconds(startedAt, ctx.zero, entry.bib, ctx.intervalS);
+  const offsetS = startOffsetSeconds(
+    startedAt,
+    ctx.zero,
+    entry.bib,
+    ctx.intervalS,
+    ctx.secondStartFrom,
+  );
   const existing = await tx.startCheck.findUnique({
     where: { year_bib: { year: ctx.year, bib: entry.bib } },
   });
@@ -178,7 +184,13 @@ async function applyStartEntry(
     outcome = "applied";
   } else {
     outcome = "duplicate";
-    existingOffset = startOffsetSeconds(existing!.startedAt, ctx.zero, entry.bib, ctx.intervalS);
+    existingOffset = startOffsetSeconds(
+      existing!.startedAt,
+      ctx.zero,
+      entry.bib,
+      ctx.intervalS,
+      ctx.secondStartFrom,
+    );
   }
   const notes = [
     (await knownBib(tx, ctx.year, entry.bib)) ? null : "unknown-bib",
@@ -378,7 +390,7 @@ export async function setManualStart(input: {
         year: ctx.year,
         bib,
         startedAt,
-        offsetS: startOffsetSeconds(startedAt, ctx.zero, bib, ctx.intervalS),
+        offsetS: startOffsetSeconds(startedAt, ctx.zero, bib, ctx.intervalS, ctx.secondStartFrom),
         source: START_MANUAL_SOURCE,
         action,
         outcome: "applied",

@@ -25,13 +25,19 @@ function template(t: Translate, key: Parameters<Translate["raw"]>[0]): string {
   return String(t.raw(key));
 }
 
-/** Texty dialogu spec. startu (předávají se do klientské komponenty). */
-export function specialStartCopy(t: Translate): McvvAdminSpecialStartCopy {
+/**
+ * Texty dialogu spec. startu (předávají se do klientské komponenty). Rozsahy čísel v nápovědě
+ * jsou z modelu ročníku (hranice 2. startu `st_druhy_od`), ne pevně 601.
+ */
+export function specialStartCopy(t: Translate, model: StartModel): McvvAdminSpecialStartCopy {
   const kinds = {} as Record<SpecialStartKind, string>;
   const kindHints = {} as Record<SpecialStartKind, string>;
   for (const kind of SPECIAL_START_KINDS) {
     kinds[kind] = t(`kind_${kind}`);
-    kindHints[kind] = t(`hint_${kind}`);
+    kindHints[kind] =
+      kind === "with"
+        ? t("hint_with")
+        : t(`hint_${kind}`, { range: specialRangeText(model, kind) });
   }
   return {
     add: t("add"),
@@ -180,7 +186,7 @@ export function specialStartFlash(
   t: Translate,
   spec: string | undefined,
   reason: string | undefined,
-  intervalSeconds = 15,
+  intervalSeconds: number,
 ): { ok: boolean; text: string } | null {
   if (spec === "ulozeno") {
     return { ok: true, text: t("saved") };

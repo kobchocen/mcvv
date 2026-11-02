@@ -1,5 +1,5 @@
 /**
- * Přihláška pořadatelů = přihláška č. 1 ročníku (startovka: čísla od 1 a od 601).
+ * Přihláška pořadatelů = přihláška č. 1 ročníku (startovka: čísla od 1 a od prvního čísla 2. startu, st_druhy_od).
  * Dřív ji dostal ten, kdo po založení ročníku první otevřel /prihlasky; teď ji zakládá
  * uložení ročníku v administraci na e-mail z nastavení (čisté funkce, bez DB).
  */

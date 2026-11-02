@@ -142,7 +142,7 @@
         },
         {
           "title": "Start",
-          "description": "Interval start in pairs every 15 s from 10:15."
+          "description": "Interval start in pairs every {interval} s from {startTime}."
         },
         {
           "title": "Categories",
@@ -194,7 +194,7 @@
         },
         {
           "icon": "clock",
-          "text": "Interval start from 10:15"
+          "text": "Interval start from {startTime}"
         },
         {
           "icon": "pin",
@@ -416,7 +416,7 @@
     },
     "timetable": {
       "registration": "Until 9:45 — on-site registration",
-      "start": "10:15 — start (15 s interval)",
+      "start": "{startTime} — start ({interval} s interval)",
       "ceremony": "12:20 — awards ceremony"
     },
     "sections": {
@@ -467,13 +467,13 @@
       },
       "start": {
         "title": "Start",
-        "summary": "15 s interval from 10:15",
-        "body": "Start interval {seconds} s from 10:15. Interval start in pairs, no separate kids' start."
+        "summary": "{interval} s interval from {startTime}",
+        "body": "Start interval {seconds} s from {startTime}. Interval start in pairs, no separate kids' start."
       },
       "timetable": {
         "title": "Timetable",
-        "summary": "9:45 · 10:15 · 12:20",
-        "body": "On-site registration closes at 9:45. Interval start from 10:15. Awards at 12:20."
+        "summary": "9:45 · {startTime} · 12:20",
+        "body": "On-site registration closes at 9:45. Interval start from {startTime}. Awards at 12:20."
       },
       "privacy": {
         "title": "Privacy",
@@ -1083,14 +1083,14 @@
     "settingsIntro": "Start list, online results, statistics and free entries.",
     "settingsFreeEmails": "Free entry (one email per line)",
     "settingsOrganizerRegistrationEmail": "Organizers' entry e-mail (no. 1)",
-    "settingsOrganizerRegistrationEmailHint": "Saving an edition creates entry no. 1 (organizers get bibs from 1 and 601) for this e-mail unless it already exists. Empty = {fallback}.",
+    "settingsOrganizerRegistrationEmailHint": "Saving an edition creates entry no. 1 (organizers get the first bibs of both starts) for this e-mail unless it already exists. Empty = {fallback}.",
     "settingsOrganizerRegistrationEmailInvalid": "The organizers' entry e-mail is not valid.",
     "settingsSaved": "Saved.",
     "settingsRaceDay": "Start list and results",
     "settingsStartlistPublished": "Publish start list",
     "settingsStartlistPublishedHint": "The homepage shows Start list and Instructions instead of Entries (until the race starts).",
     "settingsOnlineUrl": "Online results URL",
-    "settingsOnlineUrlHint": "Emergency override of the “Online results” link: from the race start (10:15) until results are published, the homepage button and menu lead to the own online results (/vysledky/online). Fill in only during an outage – they will then lead here. Empty = own online results.",
+    "settingsOnlineUrlHint": "Emergency override of the “Online results” link: from the race start ({time}) until results are published, the homepage button and menu lead to the own online results (/vysledky/online). Fill in only during an outage – they will then lead here. Empty = own online results.",
     "settingsOnlineUrlInvalid": "The online results URL must start with http:// or https://. Nothing was saved.",
     "settingsStats": "Statistics",
     "settingsStatsMoment": "Moment of the edition",
@@ -1864,7 +1864,7 @@
     "stations": "Split stations",
     "stationsHint": "Lines code=label, code 1–8 (9 = finish from OBD). Default 1=1,3 km and 3=2,7 km.",
     "zeroOverride": "Test zero time (rehearsal)",
-    "zeroOverrideHint": "Empty = race day 10:15. For a rehearsal set e.g. today and a time. Clear it afterwards!",
+    "zeroOverrideHint": "Empty = race day {time}. For a rehearsal set e.g. today and a time. Clear it afterwards!",
     "startLimit": "Start offset threshold",
     "startLimitHint": "Above which offset from the planned start the splitmaker sees “over … before / after plan” instead of the time. Seconds or minutes: e.g. 90, 45 s, 2 min, 1:30 (mm:ss). Empty = default 2 min. The same threshold marks a “late start” in the online results.",
     "dnsGrace": "DNS grace in online results",
@@ -1977,7 +1977,7 @@
     "intro": "Fictitious start using the real start list: from the chosen zero, split makers, the Start station, obd-klient and OFeed (test event only) work as on race day. The test ends by itself after 3 h, at the latest {cutoff}. On end, test splits, starts, the trial zero and device keys created during the test are deleted automatically.",
     "zeroLabel": "Test zero",
     "zeroIn5": "in 5 minutes",
-    "zeroAt1015": "today 10:15",
+    "zeroAtStart": "today {time}",
     "zeroAt2015": "today 20:15",
     "zeroCustom": "exact time",
     "start": "Start test",
@@ -2401,7 +2401,7 @@
     "issueInvalidWithBib": "Bib {bib} belongs to an invalid (unpaid) entry: {name}",
     "issueMissingBib": "No bib: {name}",
     "proposeButton": "Propose start list",
-    "proposeHint": "Special starts have their own ranges on both lines: organisers 1–40 / 601–640, early 41–99 / 641–699, late 261–299 / 861–899 (when full, the nearest free bib outside the range, with a warning). “Together with” = partner's time + offset. Champions get the champion bibs, everyone else is spread evenly within the category: newcomers and runners without last year's time first, then by last year's time (fastest last). Locked bibs never change.",
+    "proposeHint": "Special starts have their own ranges on both lines: organisers {organizer}, early {early}, late {late} (when full, the nearest free bib outside the range, with a warning). “Together with” = partner's time + offset. Champions get the champion bibs, everyone else is spread evenly within the category: newcomers and runners without last year's time first, then by last year's time (fastest last). Locked bibs never change.",
     "proposeLockedPublished": "The start list is published – proposing is disabled; use manual edits for changes or unpublish the start list.",
     "proposalHeading": "Start list proposal",
     "proposalSummary": "{changed, plural, one {# row will change.} other {# rows will change.}}",
@@ -2472,7 +2472,7 @@
     "errStale": "The data changed since the preview. Generate the proposal again.",
     "errBlocking": "The proposal cannot be saved – not enough numbers.",
     "editionHeading": "Start model",
-    "editionHint": "Start time: numbers of the 2nd start count from its beginning (601 = 1), time = zero + interval × (position − 1). Champion bibs go to last year's overall winners; numbers outside the category ranges are a reserve.",
+    "editionHint": "Start time: numbers of the 2nd start count from its beginning ({second} = 1), time = zero + interval × (position − 1). Champion bibs go to last year's overall winners; numbers outside the category ranges are a reserve.",
     "editionZero": "Zero time (HH:MM:SS)",
     "editionInterval": "Interval (s)",
     "editionSecondStart": "2nd start from number",
@@ -3021,9 +3021,9 @@
     "kind_early": "Start early",
     "kind_late": "Start late",
     "kind_with": "Start together with",
-    "hint_organizer": "Bibs 1–40 / 601–640 (organisers). Only this flag makes a runner an organiser – entry no. 1 no longer does.",
-    "hint_early": "Bibs 41–99 / 641–699 in the runner's start; when full, the nearest free bib outside the range (with a warning).",
-    "hint_late": "Bibs 261–299 / 861–899 in the runner's start, filled from the end; when full, the nearest free bib outside the range (with a warning).",
+    "hint_organizer": "Bibs {range} (organisers). Only this flag makes a runner an organiser – entry no. 1 no longer does.",
+    "hint_early": "Bibs {range} in the runner's start; when full, the nearest free bib outside the range (with a warning).",
+    "hint_late": "Bibs {range} in the runner's start, filled from the end; when full, the nearest free bib outside the range (with a warning).",
     "hint_with": "Time = partner's time + offset (family, escort…). Offset 0 = same time on the other line; early / late partners take the runner along.",
     "partner": "Together with",
     "partnerHint": "Type at least 2 characters of a name, club or bib and pick the runner (arrows + Enter).",
@@ -3155,7 +3155,7 @@
     "lateOffset": "Offset",
     "lateBadge": "LATE START",
     "onTime": "on time",
-    "lateNote": "Results always use the start-list time. The actual time and the late-start flag (more than 15 s after plan) are stored for information only.",
+    "lateNote": "Results always use the start-list time. The actual time and the late-start flag (more than {seconds} s after plan) are stored for information only.",
     "cancel": "Cancel",
     "loading": "Loading start list…",
     "noCache": "Offline and the start list is not on this device yet. Connect to the internet.",

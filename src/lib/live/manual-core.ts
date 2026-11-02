@@ -42,6 +42,7 @@ export function clockToRaceTime(
   zero: Date,
   bib: number,
   intervalS: number,
+  secondStartFrom: number,
 ): number | null {
   const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec((raw ?? "").trim());
   if (!match) return null;
@@ -50,7 +51,8 @@ export function clockToRaceTime(
     `${day}T${match[1].padStart(2, "0")}:${match[2]}${match[3] ? `:${match[3]}` : ""}`,
   );
   if (!at) return null;
-  const seconds = Math.floor((at.getTime() - startInstant(zero, bib, intervalS).getTime()) / 1000);
+  const planned = startInstant(zero, bib, intervalS, secondStartFrom);
+  const seconds = Math.floor((at.getTime() - planned.getTime()) / 1000);
   return seconds >= 0 && seconds <= MAX_RACE_SECONDS ? seconds : null;
 }
 

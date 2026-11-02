@@ -75,7 +75,7 @@ test("countRecords: station count, sent at station and total sent", () => {
 });
 
 test("relativeTime for a split: race time, before start, too long", () => {
-  const base = { atStart: false, zero, intervalS: 15 };
+  const base = { atStart: false, zero, intervalS: 15, secondStartFrom: 601 };
   // číslo 1 startuje v nule, 5:30 po startu
   assert.deepEqual(relativeTime({ ...base, bib: 1, punchedAt: zero.getTime() + 330_500 }), {
     kind: "time",
@@ -102,7 +102,7 @@ test("relativeTime for a split: race time, before start, too long", () => {
 });
 
 test("relativeTime for Start: offset from the planned start, far offsets hidden", () => {
-  const base = { atStart: true, zero, intervalS: 15 };
+  const base = { atStart: true, zero, intervalS: 15, secondStartFrom: 601 };
   // číslo 2 má start 10:15:15, zápis 10:15:20 = +0:05
   assert.deepEqual(relativeTime({ ...base, bib: 2, punchedAt: zero.getTime() + 20_000 }), {
     kind: "time",
@@ -135,7 +135,7 @@ test("correctedNow applies the clock offset when known", () => {
 
 test("relativeTime for Start: default threshold is 2 minutes (#187, Q80)", () => {
   assert.equal(DEFAULT_START_OFFSET_LIMIT_S, 120);
-  const base = { atStart: true, zero, intervalS: 15, bib: 1, punchedAt: 0 };
+  const base = { atStart: true, zero, intervalS: 15, secondStartFrom: 601, bib: 1, punchedAt: 0 };
   assert.deepEqual(relativeTime({ ...base, serverTime: 120 }), {
     kind: "time",
     text: "+2:00",
@@ -151,7 +151,7 @@ test("relativeTime for Start: default threshold is 2 minutes (#187, Q80)", () =>
 });
 
 test("relativeTime for Start: configurable threshold in seconds", () => {
-  const base = { atStart: true, zero, intervalS: 15, bib: 1, punchedAt: 0 };
+  const base = { atStart: true, zero, intervalS: 15, secondStartFrom: 601, bib: 1, punchedAt: 0 };
   assert.deepEqual(relativeTime({ ...base, serverTime: 31, startLimitS: 30 }), {
     kind: "start-far-late",
   });
@@ -171,6 +171,7 @@ test("relativeTime for Start: configurable threshold in seconds", () => {
       atStart: false,
       zero,
       intervalS: 15,
+      secondStartFrom: 601,
       bib: 1,
       punchedAt: 0,
       serverTime: 600,
@@ -230,4 +231,24 @@ test("startOffsetLimitFromSetting falls back to the 2-minute default", () => {
   assert.equal(startOffsetLimitFromSetting("999999"), 120);
   assert.equal(startOffsetLimitFromSetting("45"), 45);
   assert.equal(startOffsetLimitFromSetting(" 300 "), 300);
+});
+
+test("relativeTime uses the edition's second-start boundary (501)", () => {
+  const base = { atStart: false, zero, intervalS: 15, secondStartFrom: 501 };
+  // 501 = 1. číslo 2. startu → startuje v nule, 5:30 po startu
+  assert.deepEqual(relativeTime({ ...base, bib: 501, punchedAt: zero.getTime() + 330_500 }), {
+    kind: "time",
+    text: "5:30",
+    estimate: true,
+  });
+  // 541 = 41. slot 2. startu (10 min po nule) – zápis v 5:00 je před jeho startem
+  assert.deepEqual(relativeTime({ ...base, bib: 541, punchedAt: zero.getTime() + 300_000 }), {
+    kind: "before-start",
+  });
+  // 600 už patří do 2. startu (slot 100) → start 24:45 po nule
+  assert.deepEqual(relativeTime({ ...base, bib: 600, punchedAt: zero.getTime() + 1_500_000 }), {
+    kind: "time",
+    text: "0:15",
+    estimate: true,
+  });
 });

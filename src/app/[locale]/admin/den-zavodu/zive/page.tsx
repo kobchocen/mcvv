@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Link, type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 import { canManageLiveResults } from "@/lib/auth/roles";
+import { formatStartClock } from "@/lib/date/race-schedule";
+import { currentRaceYear } from "@/lib/entries/year";
 import { formatDateTime } from "@/lib/format/date";
 import {
   createTokenAction,
@@ -116,6 +118,8 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   // Test nejdřív: vypršelý se tady ukončí a uklidí, zbytek stránky pak čte čistý stav.
   const [testRun, testCutoff] = await Promise.all([getActiveTestRun(), getTestCutoff()]);
   const ctx = await getRaceContext();
+  // Nulový čas ročníku (st_nula_s) pro nápovědy a předvolbu testu.
+  const zeroClock = formatStartClock((await currentRaceYear()).startModel.zeroSeconds);
   const [stations, ofeed, status, tokens, overview, site, splitmakers, starter] = await Promise.all(
     [
       getStations(),
@@ -253,15 +257,15 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                       defaultChecked={index === 0}
                       className="size-4"
                     />
-                    {tt(
-                      choice === "in5"
-                        ? "zeroIn5"
-                        : choice === "at1015"
-                          ? "zeroAt1015"
-                          : choice === "at2015"
-                            ? "zeroAt2015"
-                            : "zeroCustom",
-                    )}
+                    {choice === "atZero"
+                      ? tt("zeroAtStart", { time: zeroClock })
+                      : tt(
+                          choice === "in5"
+                            ? "zeroIn5"
+                            : choice === "at2015"
+                              ? "zeroAt2015"
+                              : "zeroCustom",
+                        )}
                   </label>
                 ))}
                 <Input
@@ -690,7 +694,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 className="h-10 w-fit bg-race-surface"
               />
               <p className="text-xs text-race-muted">
-                {testRun ? tt("zeroLocked") : t("zeroOverrideHint")}
+                {testRun ? tt("zeroLocked") : t("zeroOverrideHint", { time: zeroClock })}
               </p>
             </div>
             <div className="grid gap-1.5">

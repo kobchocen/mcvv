@@ -436,7 +436,13 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
               </Link>
             </p>
           ) : null}
-          <p className="mt-1 max-w-4xl text-sm leading-6 text-race-muted">{t("proposeHint")}</p>
+          <p className="mt-1 max-w-4xl text-sm leading-6 text-race-muted">
+            {t("proposeHint", {
+              organizer: specialRangeText(model, "organizer"),
+              early: specialRangeText(model, "early"),
+              late: specialRangeText(model, "late"),
+            })}
+          </p>
           {proposal ? (
             <div className="mt-4 grid gap-4">
               {proposal.warnings.length > 0 ? (

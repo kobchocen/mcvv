@@ -21,10 +21,12 @@ export function startModelCopy(
   t: StartAdminT,
   rawIssues: string | undefined,
   rangesFromDictionary: boolean,
+  /** První číslo 2. startu z modelu ročníku (příklad v nápovědě). */
+  secondStartFrom: number,
 ): McvvAdminStartModelCopy {
   return {
     heading: t("editionHeading"),
-    hint: t("editionHint"),
+    hint: t("editionHint", { second: secondStartFrom }),
     zero: t("editionZero"),
     interval: t("editionInterval"),
     secondStart: t("editionSecondStart"),

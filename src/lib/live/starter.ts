@@ -195,7 +195,8 @@ async function applyStarterEntry(
     await tx.startCheck.deleteMany({ where: { year: plan.year, bib: entry.bib } });
     return journal("deleted");
   }
-  const late = entry.action === "late" && isLateStart(tapAt.getTime(), planned.getTime());
+  const late =
+    entry.action === "late" && isLateStart(tapAt.getTime(), planned.getTime(), plan.intervalS);
   const data = {
     startedAt: planned,
     source: STARTER_SOURCE,

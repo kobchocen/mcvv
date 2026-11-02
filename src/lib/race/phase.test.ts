@@ -15,6 +15,15 @@ describe("raceStartFor", () => {
     assert.equal(raceStartFor(undefined, 2027).toISOString(), "2027-12-05T09:15:00.000Z");
   });
 
+  it("uses the edition zero (st_nula_s) instead of a fixed 10:15", () => {
+    const zero930 = 9 * 3600 + 30 * 60;
+    assert.equal(
+      raceStartFor(new Date(Date.UTC(2026, 11, 6)), 2026, zero930).toISOString(),
+      "2026-12-06T08:30:00.000Z",
+    );
+    assert.equal(raceStartFor(null, 2026, zero930 + 15).toISOString(), "2026-12-06T08:30:15.000Z");
+  });
+
   it("respects daylight saving time (CEST = UTC+2) and the DST switch days", () => {
     assert.equal(
       raceStartFor(new Date(Date.UTC(2026, 5, 7)), 2026).toISOString(),

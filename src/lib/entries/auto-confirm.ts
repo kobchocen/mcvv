@@ -34,7 +34,7 @@ export type FreeAutoConfirmResult = { candidates: number; confirmed: number; mai
  * dvojímu odeslání.
  */
 export async function runFreeAutoConfirm(now = new Date()): Promise<FreeAutoConfirmResult> {
-  const { year } = await currentRaceYear();
+  const { year, startModel } = await currentRaceYear();
   const regs = await prisma.registration.findMany({
     where: { year, status: ENTRY_STATUS.paid },
     include: {
@@ -116,6 +116,7 @@ export async function runFreeAutoConfirm(now = new Date()): Promise<FreeAutoConf
       fee: 0,
       paid: 0,
       site,
+      startZeroSeconds: startModel.zeroSeconds,
     });
     const { created } = await enqueueMail({
       ...mail,

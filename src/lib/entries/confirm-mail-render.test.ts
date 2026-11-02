@@ -48,6 +48,16 @@ test("potvrzení má brandovaný layout, závodníky, součty a odkazy", () => {
   assert.doesNotMatch(html + text, /[Ss]tart v 10:15/);
 });
 
+test("čas startu v potvrzení se řídí nulou ročníku (st_nula_s)", () => {
+  const { html, text } = renderEntryConfirmation({
+    ...input,
+    startZeroSeconds: 9 * 3600 + 30 * 60,
+  });
+  assert.match(text, /intervalový start od 9:30/);
+  assert.match(html, /Intervalový start od 9:30/);
+  assert.doesNotMatch(html + text, /10:15/);
+});
+
 test("přihláška se startovným 0 Kč: „Startovné neplatíte“, bez součtů a dokladu", () => {
   const { html, text } = renderEntryConfirmation({
     ...input,

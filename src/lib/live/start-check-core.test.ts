@@ -19,7 +19,7 @@ import {
 import { parseStartClock, pragueClock } from "./start-clock";
 
 const ZERO = new Date("2026-12-06T09:15:00.000Z"); // 10:15 Europe/Prague
-const ctx = { zero: ZERO, intervalS: 15 };
+const ctx = { zero: ZERO, intervalS: 15, secondStartFrom: 601 };
 
 function entry(split: string, bib: number): WebEntry {
   return { action: "create", id: `id-${split}-${bib}`, split, bib, punchedAt: 1 } as WebEntry;
@@ -65,10 +65,13 @@ test("checkStartPunch rejects only future and stale punches", () => {
 
 test("startOffsetSeconds measures deviation from the planned start incl. second wave", () => {
   // číslo 3 → plánovaně 10:15:30
-  assert.equal(startOffsetSeconds(new Date("2026-12-06T09:15:35.400Z"), ZERO, 3, 15), 5);
-  assert.equal(startOffsetSeconds(new Date("2026-12-06T09:15:20Z"), ZERO, 3, 15), -10);
+  assert.equal(startOffsetSeconds(new Date("2026-12-06T09:15:35.400Z"), ZERO, 3, 15, 601), 5);
+  assert.equal(startOffsetSeconds(new Date("2026-12-06T09:15:20Z"), ZERO, 3, 15, 601), -10);
   // číslo 601 = první ve druhé vlně → plánovaně v nule
-  assert.equal(startOffsetSeconds(ZERO, ZERO, 601, 15), 0);
+  assert.equal(startOffsetSeconds(ZERO, ZERO, 601, 15, 601), 0);
+  // hranice 501: 501 startuje v nule, 601 je 101. slot (+25 min)
+  assert.equal(startOffsetSeconds(ZERO, ZERO, 501, 15, 501), 0);
+  assert.equal(startOffsetSeconds(ZERO, ZERO, 601, 15, 501), -1500);
 });
 
 test("formatOffset prints signed m:ss", () => {

@@ -67,29 +67,46 @@ test("planned start uses the slot within its start", () => {
 
 test("zones: green ≤15 s, orange 16–30 s, grey later, red after start, then gone", () => {
   const planned = ZERO + 60_000;
-  assert.equal(zoneFor(planned, planned - 31_000, 5), "later");
-  assert.equal(zoneFor(planned, planned - 30_000, 5), "next");
-  assert.equal(zoneFor(planned, planned - 16_000, 5), "next");
-  assert.equal(zoneFor(planned, planned - 15_500, 5), "next");
-  assert.equal(zoneFor(planned, planned - 15_000, 5), "now");
-  assert.equal(zoneFor(planned, planned - 1, 5), "now");
-  assert.equal(zoneFor(planned, planned, 5), "red");
-  assert.equal(zoneFor(planned, planned + 4_999, 5), "red");
-  assert.equal(zoneFor(planned, planned + 5_000, 5), "gone");
-  assert.equal(zoneFor(planned, planned, 0), "gone");
+  assert.equal(zoneFor(planned, planned - 31_000, 5, 15), "later");
+  assert.equal(zoneFor(planned, planned - 30_000, 5, 15), "next");
+  assert.equal(zoneFor(planned, planned - 16_000, 5, 15), "next");
+  assert.equal(zoneFor(planned, planned - 15_500, 5, 15), "next");
+  assert.equal(zoneFor(planned, planned - 15_000, 5, 15), "now");
+  assert.equal(zoneFor(planned, planned - 1, 5, 15), "now");
+  assert.equal(zoneFor(planned, planned, 5, 15), "red");
+  assert.equal(zoneFor(planned, planned + 4_999, 5, 15), "red");
+  assert.equal(zoneFor(planned, planned + 5_000, 5, 15), "gone");
+  assert.equal(zoneFor(planned, planned, 0, 15), "gone");
 });
 
 test("late start is more than 15 s after the plan", () => {
-  assert.equal(isLateStart(ZERO + 15_000, ZERO), false);
-  assert.equal(isLateStart(ZERO + 15_001, ZERO), true);
-  assert.equal(isLateStart(ZERO - 60_000, ZERO), false);
+  assert.equal(isLateStart(ZERO + 15_000, ZERO, 15), false);
+  assert.equal(isLateStart(ZERO + 15_001, ZERO, 15), true);
+  assert.equal(isLateStart(ZERO - 60_000, ZERO, 15), false);
+});
+
+test("zones and late threshold follow the edition interval (20 s)", () => {
+  const planned = ZERO + 60_000;
+  assert.equal(zoneFor(planned, planned - 41_000, 5, 20), "later");
+  assert.equal(zoneFor(planned, planned - 40_000, 5, 20), "next");
+  assert.equal(zoneFor(planned, planned - 21_000, 5, 20), "next");
+  assert.equal(zoneFor(planned, planned - 20_000, 5, 20), "now");
+  assert.equal(zoneFor(planned, planned - 16_000, 5, 20), "now");
+  assert.equal(isLateStart(ZERO + 20_000, ZERO, 20), false);
+  assert.equal(isLateStart(ZERO + 20_001, ZERO, 20), true);
+  // 20 s interval: číslo 3 startuje 40 s po nule
+  assert.equal(plannedStartMs(ZERO, 3, 20, 601), ZERO + 40_000);
 });
 
 test("queue: at most 4 rows, marked runners disappear at start, red phase, Nevyběhli window", () => {
   const runners = [1, 2, 3, 4, 5, 6, 7, 8].map((bib) => runner(bib));
   const now = ZERO + 2 * 15_000 + 2_000; // 2 s po startu čísla 3
   const marks = new Map([[1, mark(1)]]);
-  const view = buildStarterView(runners, marks, now, { redPhaseS: 5, dnsWindowS: 300 });
+  const view = buildStarterView(runners, marks, now, {
+    redPhaseS: 5,
+    dnsWindowS: 300,
+    intervalS: 15,
+  });
   // 1 odstartoval (označený), 2 nevyběhl (po červené fázi), 3 je červený
   assert.deepEqual(
     view.queue.map((row) => [row.bib, row.zone]),
@@ -110,10 +127,18 @@ test("queue: at most 4 rows, marked runners disappear at start, red phase, Nevyb
 test("Nevyběhli strip shows only the window; older ones stay in the count", () => {
   const runners = [1, 2, 3, 30].map((bib) => runner(bib));
   const now = ZERO + 29 * 15_000 - 20_000;
-  const view = buildStarterView(runners, new Map(), now, { redPhaseS: 5, dnsWindowS: 60 });
+  const view = buildStarterView(runners, new Map(), now, {
+    redPhaseS: 5,
+    dnsWindowS: 60,
+    intervalS: 15,
+  });
   assert.deepEqual(view.missing, []);
   assert.equal(view.counts.missing, 3);
-  const wide = buildStarterView(runners, new Map(), now, { redPhaseS: 5, dnsWindowS: 3600 });
+  const wide = buildStarterView(runners, new Map(), now, {
+    redPhaseS: 5,
+    dnsWindowS: 3600,
+    intervalS: 15,
+  });
   assert.deepEqual(
     wide.missing.map((r) => r.bib),
     [3, 2, 1],
@@ -125,6 +150,7 @@ test("marked runner before start stays in the queue with marked flag", () => {
   const view = buildStarterView(runners, new Map([[5, mark(5)]]), ZERO, {
     redPhaseS: 5,
     dnsWindowS: 300,
+    intervalS: 15,
   });
   assert.equal(view.queue[0]?.marked, true);
   assert.equal(view.queue[0]?.zone, "later");
@@ -194,6 +220,7 @@ test("pending device actions merge in tap order", () => {
       { id: "d", bib: 3, action: "late", at: plannedOf(3) + 40_000 },
     ],
     plannedOf,
+    15,
   );
   assert.equal(merged.has(1), false);
   assert.equal(merged.get(2)?.source, "admin");

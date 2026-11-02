@@ -265,14 +265,85 @@ describe("generateStartList – „spolu s“ (Q224, Q235, Q226)", () => {
     assert.deepEqual(result.warnings, []);
   });
 
-  it("uses the nearest free slot and warns when the exact one is taken", () => {
+  it("takes the exact time on the other line before falling back", () => {
     const partner = entry({ categoryId: "A", currentBib: 340, locked: true });
     const blocker = entry({ categoryId: "A", currentBib: 346, locked: true });
     const kid = entry({ categoryId: "A", special: withRunner(partner.runnerId, 90) });
     const { bib, result } = run([partner, blocker, kid]);
+    assert.equal(bib(kid), 946, "same time, line 2 (reserve number, Q241)");
+    assert.deepEqual(result.warnings, []);
+  });
+
+  it("uses the nearest free slot and says the exact one is taken", () => {
+    const partner = entry({ categoryId: "A", currentBib: 340, locked: true });
+    const blocker = entry({ categoryId: "A", currentBib: 346, locked: true });
+    const blocker2 = entry({ categoryId: "A", currentBib: 946, locked: true });
+    const kid = entry({ categoryId: "A", special: withRunner(partner.runnerId, 90) });
+    const { bib, result } = run([partner, blocker, blocker2, kid]);
     assert.equal(bib(kid), 347);
     assert.deepEqual(result.warnings, [
-      { code: "specApprox", runnerId: kid.runnerId, deviation: 1 },
+      { code: "specApprox", runnerId: kid.runnerId, deviation: 1, cause: "taken" },
+    ]);
+  });
+
+  it("Q241: the exact cross-line slot may be a reserve number (Vítek 711)", () => {
+    // Okna jako na lokální kopii 2026: ve 2. řadě nic nepokrývá slot 111 → 711 je rezerva.
+    const ranges: BibRange[] = [
+      { categoryId: "E", bibFrom: 111, bibTo: 120 },
+      { categoryId: "C", bibFrom: 131, bibTo: 190 },
+      { categoryId: "K", bibFrom: 641, bibTo: 699 },
+      { categoryId: "F", bibFrom: 901, bibTo: 930 },
+    ];
+    const safr = entry({ categoryId: "E", currentBib: 111, locked: true, name: "Šafr Martin" });
+    const vitek = entry({
+      categoryId: "C",
+      name: "Vítek Miroslav",
+      special: withRunner(safr.runnerId, 0),
+    });
+    const { bib, line, result } = run([safr, vitek, ...filler("C", 3)], {
+      ranges,
+      categorySort: { E: 5, C: 4, K: 8, F: 10 },
+    });
+    assert.equal(bib(vitek), 711, "not 710 / 712 any more");
+    assert.equal(line(vitek).reason, "with");
+    assert.equal(line(vitek).outsideCategory, true);
+    assert.deepEqual(result.warnings, []);
+    const checks = checkSpecialStarts(MODEL, checkRows([safr, vitek], result));
+    assert.deepEqual(checks.get(vitek.runnerId), { ok: true });
+  });
+
+  it("Q241: an exact reserve slot is used, the fallback never takes reserve numbers", () => {
+    const partner = entry({ categoryId: "A", currentBib: 380, locked: true });
+    const kid = entry({ categoryId: "A", special: withRunner(partner.runnerId, 15) });
+    assert.equal(run([partner, kid]).bib(kid), 381, "exact time = reserve 381");
+
+    const block1 = entry({ categoryId: "A", currentBib: 381, locked: true });
+    const block2 = entry({ categoryId: "A", currentBib: 981, locked: true });
+    const { bib, result } = run([partner, kid, block1, block2]);
+    assert.equal(bib(kid), 379, "382 / 982 are reserve → nearest window number");
+    assert.deepEqual(result.warnings, [
+      { code: "specApprox", runnerId: kid.runnerId, deviation: 2, cause: "taken" },
+    ]);
+  });
+
+  it("names a champion bib or a time before the start as the cause", () => {
+    const partner = entry({ categoryId: "A", currentBib: 399, locked: true });
+    const blocker = entry({ categoryId: "A", currentBib: 1000, locked: true });
+    const kid = entry({ categoryId: "A", special: withRunner(partner.runnerId, 15) });
+    const first = run([partner, blocker, kid], {
+      champions: [{ runnerId: "nobody00", bib: 400 }],
+    });
+    assert.equal(first.bib(kid), 380);
+    assert.deepEqual(first.result.warnings, [
+      { code: "specApprox", runnerId: kid.runnerId, deviation: 20, cause: "champion" },
+    ]);
+
+    const early = entry({ categoryId: "A", currentBib: 5, locked: true });
+    const tooEarly = entry({ categoryId: "A", special: withRunner(early.runnerId, -300) });
+    const second = run([early, tooEarly]);
+    assert.equal(second.bib(tooEarly), 1);
+    assert.deepEqual(second.result.warnings, [
+      { code: "specApprox", runnerId: tooEarly.runnerId, deviation: 16, cause: "beforeStart" },
     ]);
   });
 

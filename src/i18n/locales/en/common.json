@@ -2322,7 +2322,7 @@
     "reason_with": "special start: together with",
     "warnSpecOverflow": "Special start “{kind}” (line {series}): the range {range} is full – {names} got the nearest free bib outside the range.",
     "warnSpecPartnerMissing": "Special start “together with”: {name} – partner missing or without a bib, placed normally.",
-    "warnSpecApprox": "Special start “together with”: {name} – the exact time was not free, off by {deviation} × interval.",
+    "warnSpecApprox": "Special start “together with”: {name} – {cause, select, taken {the exact number belongs to another runner} champion {the exact number is a champion bib} beforeStart {the exact time would be before the start} other {the exact time cannot be used}}, off by {deviation} × interval.",
     "warnSpecNotPlaced": "Special start “together with”: {name} – no suitable bib found.",
     "warnSpecCycle": "Special start “together with”: a loop of requests ({names}) cannot all be met.",
     "colSpecial": "Special start",

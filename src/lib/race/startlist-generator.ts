@@ -79,6 +79,8 @@ export type ProposedLine = {
   outsideCategory: boolean;
 };
 
+export type SpecApproxCause = "taken" | "champion" | "beforeStart";
+
 export type GeneratorWarning =
   | { code: "shortage"; categoryId: string; runners: number; slots: number }
   | { code: "noRange"; categoryId: string; runners: number }
@@ -88,8 +90,12 @@ export type GeneratorWarning =
   | { code: "specOverflow"; kind: RangedSpecialKind; series: 1 | 2; runnerIds: string[] }
   /** Spolu s: partner chybí, nemá číslo nebo je to on sám → běžné umístění. */
   | { code: "specPartnerMissing"; runnerId: string; partnerId: string | null }
-  /** Spolu s: přesný čas nebyl volný, odchylka v počtu intervalů (-1 = žádné číslo). */
-  | { code: "specApprox"; runnerId: string; deviation: number }
+  /**
+   * Spolu s: přesný čas nešel použít, odchylka v počtu intervalů (-1 = žádné číslo). Důvod:
+   * `taken` = číslo má jiný (nepřesunutelný) běžec, `champion` = číslo obhájce, `beforeStart` =
+   * čas by byl před nulou startovky.
+   */
+  | { code: "specApprox"; runnerId: string; deviation: number; cause: SpecApproxCause }
   /** Spolu s: kruh požadavků, který nejde splnit celý (první podle id slouží jako kotva). */
   | { code: "specCycle"; runnerIds: string[] };
 
@@ -173,6 +179,12 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
     startSeriesForBib(model, value) === series &&
     !championBibs.has(value) &&
     (rangeOfBib(value) !== undefined || inAnySpecialRange(model, value));
+  /**
+   * Přesný čas „spolu s“ (Q241): smí i na rezervní číslo (mimo okna i rozsahy), ne na číslo
+   * obhájce. Platí jen pro přesný slot, náhradní nejbližší volné bere jen `placeable`.
+   */
+  const exactWithBib = (value: number, series: 1 | 2): boolean =>
+    value >= 1 && startSeriesForBib(model, value) === series && !championBibs.has(value);
 
   // e) Zamčená čísla zůstávají (i u neplatných přihlášek).
   const lockedByBib = new Map<number, string[]>();
@@ -257,10 +269,12 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
     for (const entry of dependents) {
       const partnerBib = planned.get(entry.special!.partnerId!)!;
       const slot = startSlot(model, partnerBib) + offsetSlots(model, entry.special!.offsetSeconds);
-      const value = withSeriesOrder(entry, partnerBib)
-        .filter((series) => slot >= 1 && placeable(bibForSlot(model, series, slot), series))
-        .map((series) => bibForSlot(model, series, slot))
-        .find((candidate) => !occupied.has(candidate) && !used.has(candidate));
+      const free = withSeriesOrder(entry, partnerBib)
+        .filter((series) => slot >= 1 && exactWithBib(bibForSlot(model, series, slot), series))
+        .map((series) => ({ series, value: bibForSlot(model, series, slot) }))
+        .filter(({ value }) => !occupied.has(value) && !used.has(value));
+      // Rezervní číslo (Q241) až když přesný čas v okně / rozsahu není ani v druhé řadě.
+      const value = (free.find(({ value, series }) => placeable(value, series)) ?? free[0])?.value;
       if (value === undefined) {
         return null;
       }
@@ -487,18 +501,28 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
     const seriesOrder = withSeriesOrder(entry, partnerBib);
     type Spot = { value: number; relocate: string | null; deviation: number; rank: number };
     let found: Spot | null = null;
+    const causes = new Set<SpecApproxCause>();
     for (let deviation = 0; deviation <= 1000 && !found; deviation += 1) {
       const slots = deviation === 0 ? [desired] : [desired + deviation, desired - deviation];
       for (const slot of slots) {
         if (slot < 1) {
+          if (deviation === 0) {
+            causes.add("beforeStart");
+          }
           continue;
         }
         seriesOrder.forEach((series, seriesRank) => {
           const value = bibForSlot(model, series, slot);
-          if (!placeable(value, series)) {
+          if (!(deviation === 0 ? exactWithBib(value, series) : placeable(value, series))) {
+            if (deviation === 0 && championBibs.has(value)) {
+              causes.add("champion");
+            }
             return;
           }
           if (value === partnerBib) {
+            if (deviation === 0) {
+              causes.add("taken");
+            }
             return;
           }
           const holder = occupied.get(value);
@@ -511,11 +535,19 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
               partnerIds.has(holder) ||
               nearestFreeInOwnWindow(holderEntry, value) == null
             ) {
+              if (deviation === 0) {
+                causes.add("taken");
+              }
               return;
             }
             relocate = holder;
           }
-          const rank = seriesRank * 4 + (inOwnWindow(entry, value) ? 0 : 2) + (relocate ? 1 : 0);
+          // Rezervní číslo (Q241) jen když přesný čas jinde nejde – má přednost i jiná řada.
+          const rank =
+            (placeable(value, series) ? 0 : 8) +
+            seriesRank * 4 +
+            (inOwnWindow(entry, value) ? 0 : 2) +
+            (relocate ? 1 : 0);
           if (!found || found.deviation > deviation || found.rank > rank) {
             found = { value, relocate, deviation, rank };
           }
@@ -523,8 +555,10 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
       }
     }
     const spot = found as Spot | null;
+    // Důvod podle preferované řady (první zaznamenaný).
+    const cause: SpecApproxCause = causes.values().next().value ?? "taken";
     if (!spot) {
-      warnings.push({ code: "specApprox", runnerId: entry.runnerId, deviation: -1 });
+      warnings.push({ code: "specApprox", runnerId: entry.runnerId, deviation: -1, cause });
       continue;
     }
     if (spot.value !== current) {
@@ -538,7 +572,12 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
     }
     assign(entry, spot.value, "with");
     if (spot.deviation > 0) {
-      warnings.push({ code: "specApprox", runnerId: entry.runnerId, deviation: spot.deviation });
+      warnings.push({
+        code: "specApprox",
+        runnerId: entry.runnerId,
+        deviation: spot.deviation,
+        cause,
+      });
     }
   }
   // Kotva kruhu: když po umístění ostatních její požadavek neplatí, upozorní se.

@@ -197,7 +197,11 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
       case "specApprox":
         return warning.deviation < 0
           ? t("warnSpecNotPlaced", { name: nameOf(warning.runnerId) })
-          : t("warnSpecApprox", { name: nameOf(warning.runnerId), deviation: warning.deviation });
+          : t("warnSpecApprox", {
+              name: nameOf(warning.runnerId),
+              deviation: warning.deviation,
+              cause: warning.cause,
+            });
       case "specCycle":
         return t("warnSpecCycle", { names: warning.runnerIds.map(nameOf).join(", ") });
     }

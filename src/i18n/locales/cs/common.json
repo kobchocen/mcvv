@@ -2322,7 +2322,7 @@
     "reason_with": "spec. start spolu s",
     "warnSpecOverflow": "Spec. start „{kind}“ ({series}. řada): rozsah {range} je plný – {names} dostali nejbližší volné číslo mimo rozsah.",
     "warnSpecPartnerMissing": "Spec. start „spolu s“: {name} – partner chybí nebo nemá číslo, umístěno běžně.",
-    "warnSpecApprox": "Spec. start „spolu s“: {name} – přesný čas nebyl volný, odchylka {deviation} × interval.",
+    "warnSpecApprox": "Spec. start „spolu s“: {name} – {cause, select, taken {přesné číslo má jiný běžec} champion {přesné číslo patří obhájci} beforeStart {přesný čas by byl před nulou startovky} other {přesný čas nejde použít}}, odchylka {deviation} × interval.",
     "warnSpecNotPlaced": "Spec. start „spolu s“: {name} – nenašlo se žádné vhodné číslo.",
     "warnSpecCycle": "Spec. start „spolu s“: kruh požadavků ({names}) nejde splnit celý.",
     "colSpecial": "Spec. start",

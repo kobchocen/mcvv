@@ -35,12 +35,15 @@
 .root * {
   box-sizing: border-box;
 }
-.root button {
-  font: inherit;
-  color: inherit;
-  border: 0;
-  background: none;
-  cursor: pointer;
+/* reset tlačítek ve vrstvě: třídy tlačítek (.corr, .key, …) ho vždy přebijí */
+@layer starter-reset {
+  .root button {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
 }
 .num {
   font-variant-numeric: tabular-nums;
@@ -68,6 +71,9 @@
   font-size: 15px;
   font-weight: 800;
   white-space: nowrap;
+}
+.corr:disabled {
+  cursor: default;
 }
 .corr small {
   color: #444;
@@ -134,6 +140,7 @@
 }
 .acc {
   display: flex;
+  white-space: nowrap;
   align-items: center;
   gap: 6px;
   max-width: 110px;

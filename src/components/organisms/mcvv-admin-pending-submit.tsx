@@ -1,13 +1,11 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
-
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { PendingSubmitButton } from "@/components/molecules/pending-submit-button";
 
 /**
  * Odesílací tlačítko serverového formuláře s indikací průběhu (spinner + text, zablokované
- * během odesílání), pro dlouhé nevratné akce v administraci (#192, #193).
+ * během odesílání), pro dlouhé nevratné akce v administraci (#192, #193). Tenký obal nad
+ * `PendingSubmitButton`.
  */
 export function McvvAdminPendingSubmit({
   label,
@@ -20,17 +18,14 @@ export function McvvAdminPendingSubmit({
   destructive?: boolean;
   disabled?: boolean;
 }) {
-  const { pending } = useFormStatus();
   return (
-    <Button
-      type="submit"
+    <PendingSubmitButton
       variant={destructive ? "destructive" : "default"}
-      disabled={pending || disabled}
-      aria-busy={pending}
+      disabled={disabled}
+      pendingLabel={pendingLabel}
       className="h-9"
     >
-      {pending ? <Spinner className="size-4" /> : null}
-      {pending ? pendingLabel : label}
-    </Button>
+      {label}
+    </PendingSubmitButton>
   );
 }

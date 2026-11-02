@@ -1,6 +1,6 @@
 import { getBuildInfo } from "@/lib/build-info";
 import { prisma } from "@/lib/db/client";
-import { partnerLogo } from "@/lib/partners/logos";
+import { partnerHref, partnerLogo } from "@/lib/partners/logos";
 
 import { encodeOnline } from "./online-results-core";
 import { ONLINE_RESULTS_CACHE_MS, loadOnlineSnapshot } from "./online-results";
@@ -40,6 +40,7 @@ export async function loadBoardPartners(): Promise<BoardPartner[]> {
       select: {
         id: true,
         name: true,
+        link: true,
         image: true,
         category: true,
         logoType: true,
@@ -58,6 +59,7 @@ export async function loadBoardPartners(): Promise<BoardPartner[]> {
         name,
         category: row.category,
         logoSrc: partnerLogo(row)?.src ?? null,
+        href: partnerHref(row.link),
         general: row.general,
       });
     }

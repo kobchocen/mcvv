@@ -27,7 +27,7 @@ import {
  */
 
 type Tx = Prisma.TransactionClient;
-type Ctx = Pick<RaceContext, "year" | "zero" | "intervalS">;
+type Ctx = Pick<RaceContext, "year" | "zero" | "intervalS" | "secondStartFrom">;
 
 function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
@@ -137,13 +137,20 @@ async function applyStartEntry(
     });
     return storedResult(row);
   }
-  const offsetS = startOffsetSeconds(startedAt, ctx.zero, entry.bib, ctx.intervalS);
+  const offsetS = startOffsetSeconds(
+    startedAt,
+    ctx.zero,
+    entry.bib,
+    ctx.intervalS,
+    ctx.secondStartFrom,
+  );
   const existing = await tx.startCheck.findUnique({
     where: { year_bib: { year: ctx.year, bib: entry.bib } },
   });
   let outcome: StartOutcome;
   let existingOffset: number | undefined;
-  if (decideStartWrite(existing) === "insert") {
+  const decision = decideStartWrite(existing);
+  if (decision === "insert") {
     await tx.startCheck.create({
       data: {
         year: ctx.year,
@@ -154,13 +161,41 @@ async function applyStartEntry(
       },
     });
     outcome = "applied";
+  } else if (decision === "replace") {
+    // Start doplněný ze splitu: zápis ze stanoviště Start má přednost.
+    await tx.startCheckEntry.updateMany({
+      where: { year: ctx.year, bib: entry.bib, outcome: { in: START_OWNING } },
+      data: { outcome: "replaced" },
+    });
+    await tx.startCheck.update({
+      where: { year_bib: { year: ctx.year, bib: entry.bib } },
+      data: {
+        startedAt,
+        source: START_WEB_SOURCE,
+        userId: user.id,
+        notMarked: false,
+        splitCode: null,
+        splitAt: null,
+        markedAt: null,
+        realStartAt: null,
+        late: false,
+      },
+    });
+    outcome = "applied";
   } else {
     outcome = "duplicate";
-    existingOffset = startOffsetSeconds(existing!.startedAt, ctx.zero, entry.bib, ctx.intervalS);
+    existingOffset = startOffsetSeconds(
+      existing!.startedAt,
+      ctx.zero,
+      entry.bib,
+      ctx.intervalS,
+      ctx.secondStartFrom,
+    );
   }
   const notes = [
     (await knownBib(tx, ctx.year, entry.bib)) ? null : "unknown-bib",
     existing ? `existing=${existing.startedAt.toISOString()}` : null,
+    decision === "replace" ? "replaced-split" : null,
   ].filter(Boolean);
   const row = await tx.startCheckEntry.create({
     data: {
@@ -317,13 +352,27 @@ export async function setManualStart(input: {
     });
     if (!expectedMatches(expected, current)) return { ok: false, reason: "changed" };
     if (current && !reason) return { ok: false, reason: "reason" };
-    if (current && current.startedAt.getTime() === startedAt.getTime()) {
+    if (
+      current &&
+      current.startedAt.getTime() === startedAt.getTime() &&
+      current.source === START_MANUAL_SOURCE
+    ) {
       return { ok: true, action: "unchanged" };
     }
     if (current) {
       await tx.startCheck.update({
         where: { year_bib: { year: ctx.year, bib } },
-        data: { startedAt, source: START_MANUAL_SOURCE, userId: actor.id },
+        data: {
+          startedAt,
+          source: START_MANUAL_SOURCE,
+          userId: actor.id,
+          notMarked: false,
+          splitCode: null,
+          splitAt: null,
+          markedAt: null,
+          realStartAt: null,
+          late: false,
+        },
       });
     } else {
       await tx.startCheck.create({
@@ -341,7 +390,7 @@ export async function setManualStart(input: {
         year: ctx.year,
         bib,
         startedAt,
-        offsetS: startOffsetSeconds(startedAt, ctx.zero, bib, ctx.intervalS),
+        offsetS: startOffsetSeconds(startedAt, ctx.zero, bib, ctx.intervalS, ctx.secondStartFrom),
         source: START_MANUAL_SOURCE,
         action,
         outcome: "applied",

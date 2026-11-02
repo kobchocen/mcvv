@@ -1,4 +1,6 @@
 import {
+  clockParts,
+  DEFAULT_RACE_ZERO_SECONDS,
   firstSundayOfDecember,
   pragueCalendarYear,
   zonedCivilToUtc,
@@ -11,7 +13,7 @@ import { parsePragueLocal } from "./admin-core";
  * Testovací běh nad produkcí (#186) – čistá logika bez DB.
  *
  * Admin v `/admin/den-zavodu/zive` spustí test a zvolí nulu (za 5 minut, přesný čas, dnes
- * 10:15 / 20:15). Po dobu testu je nula závodu přepsaná (zkušební nula), splitmakeři, Start,
+ * v nulový čas ročníku – st_nula_s, výchozí 10:15 – nebo večerní generálka 20:15). Po dobu testu je nula závodu přepsaná (zkušební nula), splitmakeři, Start,
  * obd-klient i OFeed (jen testovací profil) fungují jako v den závodu. Test se sám ukončí po
  * 3 h (`expiresAt`), nejpozději ale v den závodu 00:00 (Q70). Úklid je automatický (Q71).
  */
@@ -19,12 +21,12 @@ import { parsePragueLocal } from "./admin-core";
 export const TEST_RUN_KEY = "live_test_run";
 /** Délka testu od nuly (nebo od spuštění, je-li nula v minulosti). */
 export const TEST_RUN_DURATION_MS = 3 * 60 * 60 * 1000;
-/** Nula smí být nejvýš tolik v minulosti (např. předvolba 10:15 kliknutá v 10:16). */
+/** Nula smí být nejvýš tolik v minulosti (např. předvolba „dnes v nulu“ kliknutá minutu po ní). */
 export const TEST_ZERO_PAST_TOLERANCE_MS = 10 * 60 * 1000;
 /** Nula smí být nejvýš tolik dopředu. */
 export const TEST_ZERO_MAX_AHEAD_MS = 24 * 60 * 60 * 1000;
 
-export const TEST_ZERO_CHOICES = ["in5", "at1015", "at2015", "custom"] as const;
+export const TEST_ZERO_CHOICES = ["in5", "atZero", "at2015", "custom"] as const;
 export type TestZeroChoice = (typeof TEST_ZERO_CHOICES)[number];
 
 export type TestRun = {
@@ -118,18 +120,28 @@ export function testRunBlocked(now: Date, cutoff: Date): boolean {
   return now.getTime() >= cutoff.getTime();
 }
 
-/** Volba nuly z formuláře → instant. Neplatná volba / čas = null. */
-export function resolveTestZero(choice: string, custom: string, now: Date): Date | null {
+/**
+ * Volba nuly z formuláře → instant. Neplatná volba / čas = null. `atZero` = dnes v nulový čas
+ * ročníku (`zeroSeconds`, st_nula_s); `at2015` = pevná večerní generálka.
+ */
+export function resolveTestZero(
+  choice: string,
+  custom: string,
+  now: Date,
+  zeroSeconds = DEFAULT_RACE_ZERO_SECONDS,
+): Date | null {
   switch (choice) {
     case "in5": {
       const zero = new Date(now.getTime() + 5 * 60 * 1000);
       zero.setUTCMilliseconds(0);
       return zero;
     }
-    case "at1015":
+    case "atZero":
     case "at2015": {
       const day = isoWithOffset(now).slice(0, 10);
-      return parsePragueLocal(`${day}T${choice === "at1015" ? "10:15" : "20:15"}`);
+      const [h, m, s] = choice === "atZero" ? clockParts(zeroSeconds) : [20, 15, 0];
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return parsePragueLocal(`${day}T${pad(h)}:${pad(m)}:${pad(s)}`);
     }
     case "custom":
       return parsePragueLocal(custom);

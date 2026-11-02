@@ -60,7 +60,7 @@ export async function loadResultListInput(
       clubId: start.clubId,
       clubName: start.clubName || clubNames.get(start.clubId) || null,
       bib: start.bib,
-      startTime: startInstant(ctx.zero, start.bib, ctx.intervalS),
+      startTime: startInstant(ctx.zero, start.bib, ctx.intervalS, ctx.secondStartFrom),
       splits: timing.splits,
       finishS: timing.finishS,
     });

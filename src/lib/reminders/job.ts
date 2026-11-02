@@ -23,7 +23,7 @@ export async function runReminders(
 ): Promise<RemindersResult> {
   const now = options.now ?? new Date();
   const dryRun = options.dryRun ?? remindersDryRun();
-  const { year, deadline } = await currentRaceYear();
+  const { year, deadline, startModel } = await currentRaceYear();
   const deadlineEnd = registrationDeadlineEnd(deadline);
   const site = (env.AUTH_ORIGIN ?? "https://www.mcvv.org").replace(/\/$/, "");
   const [regs, payments, metas] = await Promise.all([
@@ -104,6 +104,7 @@ export async function runReminders(
       paid,
       site,
       deadline: deadline ? deadline.toISOString().slice(0, 10) : null,
+      startZeroSeconds: startModel.zeroSeconds,
     });
     await enqueueMail({
       ...mail,

@@ -2,13 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { BibRange } from "./start-settings";
-import {
-  checkStartList,
-  inOrganizerBlock,
-  outsideCategory,
-  reserveSummary,
-  type CheckRow,
-} from "./startlist-check";
+import { checkStartList, outsideCategory, reserveSummary, type CheckRow } from "./startlist-check";
 import { DEFAULT_START_MODEL } from "./start-time";
 
 const RANGES: BibRange[] = [
@@ -24,91 +18,67 @@ function row(partial: Partial<CheckRow> & { runnerId: string }): CheckRow {
     bib: null,
     valid: true,
     cancelled: false,
-    organizer: false,
+    specialKind: null,
     ...partial,
   };
 }
 
 describe("checkStartList", () => {
   it("finds duplicates, unpaid with bib and missing bibs; a bib outside the category is fine", () => {
-    const issues = checkStartList(
-      DEFAULT_START_MODEL,
-      [
-        row({ runnerId: "a", bib: 301 }),
-        row({ runnerId: "b", bib: 301 }),
-        row({ runnerId: "c", bib: 50 }),
-        row({ runnerId: "d", bib: 310, valid: false }),
-        row({ runnerId: "e" }),
-        row({ runnerId: "f", bib: 400 }),
-        row({ runnerId: "g", bib: 3, organizer: true }),
-        row({ runnerId: "h", bib: 320, cancelled: true }),
-      ],
-      [],
-    );
+    const issues = checkStartList(DEFAULT_START_MODEL, [
+      row({ runnerId: "a", bib: 301 }),
+      row({ runnerId: "b", bib: 301 }),
+      row({ runnerId: "c", bib: 50 }),
+      row({ runnerId: "d", bib: 310, valid: false }),
+      row({ runnerId: "e" }),
+      row({ runnerId: "f", bib: 400 }),
+      row({ runnerId: "g", bib: 3, specialKind: "organizer" }),
+      row({ runnerId: "h", bib: 320, cancelled: true }),
+    ]);
     assert.deepEqual(
       issues.map((i) => i.code),
       ["duplicate", "invalidWithBib", "missingBib"],
     );
   });
-  it("detects split groups", () => {
-    const issues = checkStartList(
-      DEFAULT_START_MODEL,
+  it("reports ranged spec. starts outside their range (Q236, Q221, Q222, Q237)", () => {
+    const issues = checkStartList(DEFAULT_START_MODEL, [
+      row({ runnerId: "o1", bib: 640, specialKind: "organizer" }),
+      row({ runnerId: "o2", bib: 41, specialKind: "organizer" }),
+      row({ runnerId: "e1", bib: 699, specialKind: "early" }),
+      row({ runnerId: "e2", bib: 320, specialKind: "early" }),
+      row({ runnerId: "e3", bib: 100, specialKind: "early" }),
+      row({ runnerId: "l1", bib: 861, specialKind: "late" }),
+      row({ runnerId: "l2", bib: 900, specialKind: "late" }),
+      row({ runnerId: "w", bib: 500, specialKind: "with" }),
+      row({ runnerId: "x", bib: 330, specialKind: "early", cancelled: true }),
+      row({ runnerId: "y", bib: 331, specialKind: "early", valid: false }),
+    ]);
+    assert.deepEqual(
+      issues.filter((i) => i.code === "specOutsideRange"),
       [
-        row({ runnerId: "a", bib: 310 }),
-        row({ runnerId: "b", bib: 910, categoryId: "F" }),
-        row({ runnerId: "c", bib: 311 }),
-        row({ runnerId: "d", bib: 313 }),
-      ],
-      [
-        { id: 1, kind: "joint", memberIds: ["a", "b"] },
-        { id: 2, kind: "consecutive", memberIds: ["c", "d"] },
-      ],
-    );
-    assert.deepEqual(issues, [{ code: "groupSplit", groupId: 2, kind: "consecutive" }]);
-  });
-  it("accepts mixed-category groups; a joint group of 3 may use two neighbouring times", () => {
-    const issues = checkStartList(
-      DEFAULT_START_MODEL,
-      [
-        row({ runnerId: "dad", bib: 310 }),
-        row({ runnerId: "mum", bib: 910, categoryId: "F" }),
-        row({ runnerId: "kid", bib: 311, categoryId: "J" }),
-        row({ runnerId: "x", bib: 320 }),
-        row({ runnerId: "y", bib: 921, categoryId: "F" }),
-        row({ runnerId: "z", bib: 323, categoryId: "J" }),
-        row({ runnerId: "p", bib: 50, categoryId: "J" }),
-        row({ runnerId: "q", bib: 51 }),
-      ],
-      [
-        { id: 1, kind: "joint", memberIds: ["dad", "mum", "kid"] },
-        { id: 2, kind: "joint", memberIds: ["x", "y", "z"] },
-        { id: 3, kind: "consecutive", memberIds: ["p", "q"] },
+        { code: "specOutsideRange", kind: "organizer", runnerIds: ["o2"] },
+        { code: "specOutsideRange", kind: "early", runnerIds: ["e3", "e2"] },
+        { code: "specOutsideRange", kind: "late", runnerIds: ["l2"] },
       ],
     );
-    assert.deepEqual(issues, [{ code: "groupSplit", groupId: 2, kind: "joint" }]);
   });
 });
 
 describe("outsideCategory", () => {
-  it("marks bibs outside the own window, except champions and organizers in their block", () => {
+  it("marks bibs outside the own window, except champions and spec. starts", () => {
     const check = (partial: Partial<CheckRow>) =>
       outsideCategory(DEFAULT_START_MODEL, RANGES, CHAMPS, row({ runnerId: "r", ...partial }));
     assert.equal(check({ bib: 310 }), false);
     assert.equal(check({ bib: 50 }), true, "A runner in the J window");
     assert.equal(check({ bib: 910 }), true, "A runner in the 2nd start");
     assert.equal(check({ bib: 400 }), false, "champion bib");
-    assert.equal(check({ bib: 3, organizer: true }), false);
-    assert.equal(check({ bib: 3 }), true);
+    assert.equal(check({ bib: 3, specialKind: "organizer" }), false);
+    assert.equal(check({ bib: 3 }), true, "no implicit organizer block (Q220)");
+    assert.equal(check({ bib: 650, specialKind: "early" }), false);
+    assert.equal(check({ bib: 290, specialKind: "late" }), false);
+    assert.equal(check({ bib: 645, specialKind: "with" }), false, "partner in a spec range");
+    assert.equal(check({ bib: 910, specialKind: "with" }), true, "partner elsewhere");
     assert.equal(check({ bib: null }), false);
-  });
-});
-
-describe("inOrganizerBlock", () => {
-  it("covers 1–40 and 601–900 before the first 2nd-start range", () => {
-    assert.equal(inOrganizerBlock(DEFAULT_START_MODEL, RANGES, 1), true);
-    assert.equal(inOrganizerBlock(DEFAULT_START_MODEL, RANGES, 40), true);
-    assert.equal(inOrganizerBlock(DEFAULT_START_MODEL, RANGES, 41), false);
-    assert.equal(inOrganizerBlock(DEFAULT_START_MODEL, RANGES, 601), true);
   });
 });
 

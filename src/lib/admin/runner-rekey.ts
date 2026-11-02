@@ -9,6 +9,7 @@ export const RUNNER_REKEYED_MODELS = [
   "RunnerPhoto",
   "WebImage",
   "StartLineMeta",
+  "SpecialStart",
 ] as const;
 
 /**
@@ -30,6 +31,10 @@ export type SexChangeCounts = {
   webImages: number;
   /** Zámek / skupina na startovce (mcvv_start_radek). */
   startLines: number;
+  /** Spec. start běžce (mcvv_spec_start.bezec_id). */
+  specialStarts: number;
+  /** Spec. starty „spolu s“, kde je běžec partnerem (mcvv_spec_start.partner_bezec_id). */
+  specialPartners: number;
 };
 
 export type SexChangeOutcome = SexChangePlan & { counts: SexChangeCounts };
@@ -153,7 +158,7 @@ export async function previewSexChange(
 /**
  * Flips the runner's sex in ONE transaction: creates the runner under a new id (next free id
  * of the birth year for the other sex), re-points registration lines, start list (incl. lock /
- * group meta), photo tags and web images, recalculates categories (and the fee of the current year's lines) and
+ * group meta, spec. start incl. partner references), photo tags and web images, recalculates categories (and the fee of the current year's lines) and
  * deletes the old id. Only for newcomers: rejected with `has_results` when the runner has any
  * result; mcvv_time is never written.
  */
@@ -178,6 +183,13 @@ export async function applySexChange(
         runnerPhotos: (await tx.runnerPhoto.updateMany(from)).count,
         webImages: (await tx.webImage.updateMany(from)).count,
         startLines: (await tx.startLineMeta.updateMany(from)).count,
+        specialStarts: (await tx.specialStart.updateMany(from)).count,
+        specialPartners: (
+          await tx.specialStart.updateMany({
+            where: { partnerId: oldId },
+            data: { partnerId: newId },
+          })
+        ).count,
       };
       for (const line of plan.lines) {
         if (!line.newCategory) continue;

@@ -145,6 +145,8 @@ export type McvvHomepageContent = {
     countdownLabel: string;
     countdownUnits: CountdownUnits;
     raceInProgress: string;
+    /** Nulový čas ročníku (st_nula_s) pro odpočet; chybí → výchozí 10:15. */
+    zeroSeconds?: number;
     travel: TextBlock[];
     arrivalMap?: ArrivalMapContent;
   };

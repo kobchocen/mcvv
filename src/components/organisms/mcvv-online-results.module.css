@@ -1293,6 +1293,12 @@
   width: calc(25 * var(--u));
   pointer-events: none;
 }
+/* nad přilepenou lištou partnerů (desktop, 60 px) */
+@media (min-width: 701px) {
+  .root.withBar .ftoasts {
+    bottom: calc(3.2 * var(--u) + 60px);
+  }
+}
 .root .ft {
   pointer-events: auto;
   position: relative;

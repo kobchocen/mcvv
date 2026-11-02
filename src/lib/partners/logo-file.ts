@@ -72,10 +72,18 @@ const ALLOWED_ELEMENTS = new Set([
 ]);
 
 /** Elements that are dropped but whose children are kept (e.g. links around shapes). */
-const UNWRAP_ELEMENTS = new Set(["a", "switch", "metadata"]);
+const UNWRAP_ELEMENTS = new Set(["a", "switch"]);
 
 /** Elements whose raw text content must never be parsed as markup. */
 const RAW_TEXT_ELEMENTS = new Set(["script", "style"]);
+
+/**
+ * Harmless editor DOCTYPE (CorelDRAW, Illustrator, Inkscape): `<!DOCTYPE svg>` optionally with a
+ * PUBLIC/SYSTEM identifier, but without an internal subset (`[...]`), so no entities can be
+ * declared. Such a DOCTYPE is dropped; anything else starting with `<!` is rejected.
+ */
+const EDITOR_DOCTYPE_RE =
+  /^<!DOCTYPE\s+svg(?:\s+PUBLIC\s+(?:"[^"<>[\]]*"|'[^'<>[\]]*')(?:\s+(?:"[^"<>[\]]*"|'[^'<>[\]]*'))?|\s+SYSTEM\s+(?:"[^"<>[\]]*"|'[^'<>[\]]*'))?\s*>/i;
 
 const TAG_RE =
   /^<(\/?)([A-Za-z_][\w:.-]*)((?:\s+[^\s=/>"'<]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'<>=`]+))?)*)\s*(\/?)>/;
@@ -175,14 +183,40 @@ function findCloseTag(
   return null;
 }
 
+/** Why an SVG upload was rejected (shown to the admin as a specific reason). */
+export type SvgRejectReason =
+  | "svg-entities" // DOCTYPE with an internal subset / ENTITY declarations (XXE, billion laughs)
+  | "svg-external" // CSS that cannot be made safe (obfuscated @import/url(), behavior, -moz-binding)
+  | "svg-not-svg" // root element is not <svg> or there is content outside of it
+  | "svg-malformed"; // cannot be tokenized (unclosed tags, mismatched nesting, ...)
+
+export type SvgAnalysis = { ok: true; svg: string } | { ok: false; reason: SvgRejectReason };
+
 /**
  * Sanitize an SVG document by tokenizing it and rebuilding only allowlisted elements and
  * attributes (no regex removal on the markup itself). Comments, processing instructions,
- * scripts, foreignObject, event handlers and javascript:/external references are dropped.
- * Returns null when the input is not an SVG, contains a DTD or cannot be tokenized.
- * The result is additionally served with a sandboxing CSP and only rendered via <img>.
+ * harmless editor DOCTYPEs (without internal subset), metadata, scripts, foreignObject,
+ * event handlers and javascript:/external references are dropped. Rejects (with a reason)
+ * DOCTYPEs with entities, external CSS, non-SVG roots and markup that cannot be tokenized.
+ * Never throws. The result is additionally served with a sandboxing CSP and only rendered
+ * via <img>.
  */
+export function analyzeSvg(input: string): SvgAnalysis {
+  try {
+    return analyzeSvgUnsafe(input);
+  } catch {
+    return { ok: false, reason: "svg-malformed" };
+  }
+}
+
+/** Sanitized SVG or null (see {@link analyzeSvg} for the reason). */
 export function sanitizeSvg(input: string): string | null {
+  const result = analyzeSvg(input);
+  return result.ok ? result.svg : null;
+}
+
+function analyzeSvgUnsafe(input: string): SvgAnalysis {
+  const fail = (reason: SvgRejectReason): SvgAnalysis => ({ ok: false, reason });
   const src = input.replace(/^\uFEFF/, "");
   let i = 0;
   let out = "";
@@ -190,6 +224,7 @@ export function sanitizeSvg(input: string): string | null {
   let skipDepth = 0; // >0 while inside a dropped subtree
   let sawRoot = false;
   let closedRoot = false;
+  let sawDoctype = false;
 
   while (i < src.length) {
     const rest = src.slice(i);
@@ -198,7 +233,7 @@ export function sanitizeSvg(input: string): string | null {
       const text = next < 0 ? rest : src.slice(i, next);
       i += text.length;
       if (closedRoot || !sawRoot) {
-        if (text.trim() !== "") return null;
+        if (text.trim() !== "") return fail("svg-not-svg");
         continue;
       }
       if (skipDepth === 0) out += escapeText(text);
@@ -206,35 +241,42 @@ export function sanitizeSvg(input: string): string | null {
     }
     if (rest.startsWith("<!--")) {
       const end = src.indexOf("-->", i + 4);
-      if (end < 0) return null;
+      if (end < 0) return fail("svg-malformed");
       i = end + 3;
       continue;
     }
     if (rest.startsWith("<![CDATA[")) {
       const end = src.indexOf("]]>", i + 9);
-      if (end < 0 || !sawRoot) return null;
+      if (end < 0 || !sawRoot) return fail("svg-malformed");
       if (skipDepth === 0) out += escapeText(src.slice(i + 9, end));
       i = end + 3;
       continue;
     }
     if (rest.startsWith("<?")) {
       const end = src.indexOf("?>", i + 2);
-      if (end < 0) return null;
+      if (end < 0) return fail("svg-malformed");
       i = end + 2;
       continue;
     }
     if (rest.startsWith("<!")) {
-      return null; // DOCTYPE, ENTITY and other declarations
+      const doctype = sawRoot || sawDoctype ? null : EDITOR_DOCTYPE_RE.exec(rest);
+      if (doctype) {
+        sawDoctype = true;
+        i += doctype[0].length;
+        continue;
+      }
+      // DOCTYPE with internal subset, ENTITY and other declarations
+      return fail(/^<!(?:DOCTYPE|ENTITY)/i.test(rest) ? "svg-entities" : "svg-malformed");
     }
     const m = TAG_RE.exec(rest);
-    if (!m) return null;
+    if (!m) return fail("svg-malformed");
     i += m[0].length;
     const [, closing, name, attrs, selfClosing] = m;
     const local = localName(name);
 
     if (closing) {
       const top = stack.pop();
-      if (!top || top.name.toLowerCase() !== name.toLowerCase()) return null;
+      if (!top || top.name.toLowerCase() !== name.toLowerCase()) return fail("svg-malformed");
       if (top.skipped) {
         skipDepth--;
       } else if (top.emit) {
@@ -245,10 +287,10 @@ export function sanitizeSvg(input: string): string | null {
     }
 
     if (!sawRoot) {
-      if (local !== "svg") return null;
+      if (local !== "svg") return fail("svg-not-svg");
       sawRoot = true;
     } else if (closedRoot || stack.length === 0) {
-      return null;
+      return fail("svg-not-svg");
     }
 
     const allowed = skipDepth === 0 && ALLOWED_ELEMENTS.has(local);
@@ -257,12 +299,12 @@ export function sanitizeSvg(input: string): string | null {
     // Raw text elements: consume content up to the matching close tag without parsing it.
     if (!selfClosing && RAW_TEXT_ELEMENTS.has(local)) {
       const close = findCloseTag(src, i, name);
-      if (!close) return null;
+      if (!close) return fail("svg-malformed");
       const content = src.slice(i, close.start);
       i = close.end;
       if (allowed && local === "style") {
         const css = sanitizeCss(content.replace(/<!\[CDATA\[|\]\]>/g, ""));
-        if (css === null) return null;
+        if (css === null) return fail("svg-external");
         out += `<${name}${sanitizeAttributes(attrs)}>${escapeText(css)}</${name}>`;
       }
       continue;
@@ -278,13 +320,15 @@ export function sanitizeSvg(input: string): string | null {
     }
   }
 
-  if (!sawRoot || !closedRoot || stack.length > 0) return null;
-  return out.trim();
+  if (!sawRoot) return fail("svg-not-svg");
+  if (!closedRoot || stack.length > 0) return fail("svg-malformed");
+  return { ok: true, svg: out.trim() };
 }
 
+export type LogoRejectReason = "empty" | "too-large" | "unsupported" | SvgRejectReason;
+
 export type LogoValidation =
-  | { ok: true; type: LogoType; data: Buffer }
-  | { ok: false; reason: "empty" | "too-large" | "unsupported" };
+  { ok: true; type: LogoType; data: Buffer } | { ok: false; reason: LogoRejectReason };
 
 export function validateLogo(buffer: Buffer, filename: string): LogoValidation {
   if (buffer.length === 0) {
@@ -299,10 +343,12 @@ export function validateLogo(buffer: Buffer, filename: string): LogoValidation {
   }
   const text = buffer.toString("utf8");
   if (/\.svg$/i.test(filename) || /<svg[\s>]/i.test(text.slice(0, 2048))) {
-    const clean = sanitizeSvg(text);
-    if (clean) {
-      return { ok: true, type: "image/svg+xml", data: Buffer.from(clean, "utf8") };
+    const svg = analyzeSvg(text);
+    if (!svg.ok) {
+      return { ok: false, reason: svg.reason };
     }
+    // the sanitized document is what gets stored and served
+    return { ok: true, type: "image/svg+xml", data: Buffer.from(svg.svg, "utf8") };
   }
   return { ok: false, reason: "unsupported" };
 }

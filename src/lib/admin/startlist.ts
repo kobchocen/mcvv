@@ -7,13 +7,7 @@ import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
 import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
-import {
-  lineChanges,
-  startGroupSnapshot,
-  startGroupTarget,
-  startLineTarget,
-  startListTarget,
-} from "@/lib/audit/startlist";
+import { lineChanges, startLineTarget, startListTarget } from "@/lib/audit/startlist";
 import { prisma } from "@/lib/db/client";
 import { outsideCategory } from "@/lib/race/startlist-check";
 import { startListProposalLock } from "@/lib/race/startlist-proposal-lock";
@@ -22,9 +16,7 @@ import {
   buildGeneratorInput,
   inputFingerprint,
   loadAdminStartRows,
-  loadStartGroups,
   loadStartSettings,
-  ORGANIZER_REGISTRATION_ID,
 } from "@/lib/race/startlist-load";
 import { getSiteSettings } from "@/lib/settings/site";
 import { redirect } from "@/i18n/routing";
@@ -127,13 +119,22 @@ export async function setStartBib(formData: FormData): Promise<void> {
     });
   }
   revalidateStartList();
-  const settings = value != null ? await loadStartSettings(year) : null;
+  const [settings, special] =
+    value != null
+      ? await Promise.all([
+          loadStartSettings(year),
+          prisma.specialStart.findUnique({
+            where: { year_runnerId: { year, runnerId } },
+            select: { kind: true },
+          }),
+        ])
+      : [null, null];
   const outside =
     settings != null &&
     outsideCategory(settings.model, settings.ranges, settings.champions, {
       categoryId: line!.categoryId,
       bib: value,
-      organizer: line!.registrationId === ORGANIZER_REGISTRATION_ID,
+      specialKind: special?.kind ?? null,
     });
   await back(year, { ok: "bib", bezec: runnerId, ...(outside ? { mimo: "1" } : {}) });
 }
@@ -229,12 +230,8 @@ export async function applyStartListProposal(formData: FormData): Promise<void> 
   if (startListProposalLock(await getSiteSettings()).locked) {
     await back(year, { chyba: "published" });
   }
-  const [settings, rows, groups] = await Promise.all([
-    loadStartSettings(year),
-    loadAdminStartRows(year),
-    loadStartGroups(year),
-  ]);
-  const input = await buildGeneratorInput(year, settings, rows, groups);
+  const [settings, rows] = await Promise.all([loadStartSettings(year), loadAdminStartRows(year)]);
+  const input = await buildGeneratorInput(year, settings, rows);
   if (inputFingerprint(input) !== formString(formData, "fingerprint")) {
     await back(year, { chyba: "stale" });
   }
@@ -277,120 +274,4 @@ export async function applyStartListProposal(formData: FormData): Promise<void> 
   }
   revalidateStartList();
   await back(year, { ok: "applied", n: String(changes.length) });
-}
-
-/** Skupina společného / navazujícího startu z vybraných řádků. */
-export async function createStartGroup(formData: FormData): Promise<void> {
-  const session = await requireStaff();
-  const year = yearOf(formData);
-  if (!year) {
-    return;
-  }
-  const kind = formString(formData, "kind") === "consecutive" ? "consecutive" : "joint";
-  const runnerIds = [
-    ...new Set(
-      formData
-        .getAll("member")
-        .map((value) => String(value).trim())
-        .filter(Boolean),
-    ),
-  ].slice(0, 20);
-  if (runnerIds.length < 2) {
-    await back(year, { chyba: "groupSize" });
-  }
-  const lines = await prisma.registrationLine.count({
-    where: { year, runnerId: { in: runnerIds } },
-  });
-  if (lines !== runnerIds.length) {
-    await back(year, { chyba: "groupSize" });
-  }
-  const membershipBefore = await prisma.startLineMeta.findMany({
-    where: { year, runnerId: { in: runnerIds } },
-    select: { runnerId: true, groupId: true },
-  });
-  const groupBefore = new Map(membershipBefore.map((row) => [row.runnerId, row.groupId]));
-  const note = formString(formData, "note").slice(0, 200) || null;
-  const group = await prisma.startGroup.create({ data: { year, kind, note } });
-  for (const [index, runnerId] of runnerIds.entries()) {
-    await prisma.startLineMeta.upsert({
-      where: { year_runnerId: { year, runnerId } },
-      update: { groupId: group.id, groupOrder: index },
-      create: { year, runnerId, groupId: group.id, groupOrder: index },
-    });
-  }
-  // Přeřazení z jiné skupiny ji může vyprázdnit – prázdné skupiny se smažou.
-  const emptied = await prisma.startGroup.findMany({
-    where: { year, members: { none: {} } },
-    select: { id: true },
-  });
-  await prisma.startGroup.deleteMany({ where: { year, members: { none: {} } } });
-  await writeAudit({
-    actor: session,
-    action: "startlist.group_created",
-    target: startGroupTarget(group.id),
-    detail: {
-      year,
-      groupId: group.id,
-      removedEmptyGroups: emptied.map((row) => row.id),
-      changes: {
-        ...diffFields(null, startGroupSnapshot({ kind, note, members: runnerIds })),
-        // Přiřazení členů: `<bezec>.group` = původní skupina → nová.
-        ...lineChanges(
-          Object.fromEntries(runnerIds.map((id) => [id, { group: groupBefore.get(id) ?? null }])),
-          Object.fromEntries(runnerIds.map((id) => [id, { group: group.id }])),
-        ),
-      },
-    },
-  });
-  revalidateStartList();
-  await back(year, { ok: "group" });
-}
-
-export async function deleteStartGroup(formData: FormData): Promise<void> {
-  const session = await requireStaff();
-  const year = yearOf(formData);
-  const id = formInt(formData, "groupId");
-  if (!year || !id) {
-    return;
-  }
-  await prisma.$transaction(async (tx) => {
-    const group = await tx.startGroup.findFirst({
-      where: { id, year },
-      select: {
-        kind: true,
-        note: true,
-        members: { select: { runnerId: true }, orderBy: { groupOrder: "asc" } },
-      },
-    });
-    await tx.startLineMeta.updateMany({
-      where: { year, groupId: id },
-      data: { groupId: null, groupOrder: 0 },
-    });
-    await tx.startGroup.deleteMany({ where: { id, year } });
-    if (!group) {
-      return;
-    }
-    const members = group.members.map((member) => member.runnerId);
-    await writeAudit(
-      {
-        actor: session,
-        action: "startlist.group_deleted",
-        target: startGroupTarget(id),
-        detail: {
-          year,
-          groupId: id,
-          changes: {
-            ...diffFields(startGroupSnapshot({ kind: group.kind, note: group.note, members }), {}),
-            ...lineChanges(
-              Object.fromEntries(members.map((runnerId) => [runnerId, { group: id }])),
-              Object.fromEntries(members.map((runnerId) => [runnerId, { group: null }])),
-            ),
-          },
-        },
-      },
-      tx,
-    );
-  });
-  revalidateStartList();
-  await back(year, { ok: "groupDeleted" });
 }

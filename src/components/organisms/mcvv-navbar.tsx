@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Menu, Settings, X } from "lucide-react";
+import { ArrowRight, Menu, Settings, Timer, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -27,6 +27,8 @@ export type McvvNavbarAccount = {
   staff?: boolean;
   /** Cíl odkazu do administrace (výchozí /admin; Časomíra → /admin/den-zavodu). */
   adminHref?: string;
+  /** Odkaz na obrazovku startéra (jen role Startér). */
+  starter?: { href: "/start"; label: string } | null;
   /** Odznak zpráv (null = funkce vypnutá / bez dat). */
   messages?: { count: number; href: "/zpravy" | "/admin/zpravy" } | null;
 };
@@ -166,6 +168,24 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               >
                 <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
               </Button>
+              {account.starter ? (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className={navIconButtonClass}
+                  aria-label={account.starter.label}
+                  title={account.starter.label}
+                >
+                  <Link
+                    href={getLocalizedHref(account.starter.href, locale)}
+                    data-testid="nav-starter"
+                  >
+                    <Timer className="size-[18px]" aria-hidden="true" />
+                    <span className="sr-only">{account.starter.label}</span>
+                  </Link>
+                </Button>
+              ) : null}
               {account.staff ? (
                 <Button
                   asChild
@@ -286,6 +306,23 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                         </Button>
                       </SheetClose>
                       <div className="flex items-center gap-2">
+                        {account.starter ? (
+                          <SheetClose asChild>
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon"
+                              className={cn(navIconButtonClass, "size-11")}
+                              aria-label={account.starter.label}
+                              title={account.starter.label}
+                            >
+                              <Link href={getLocalizedHref(account.starter.href, locale)}>
+                                <Timer className="size-[18px]" aria-hidden="true" />
+                                <span className="sr-only">{account.starter.label}</span>
+                              </Link>
+                            </Button>
+                          </SheetClose>
+                        ) : null}
                         {account.staff ? (
                           <SheetClose asChild>
                             <Button

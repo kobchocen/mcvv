@@ -264,6 +264,13 @@ function fakeDb() {
       [{ year: 2026, runnerId: "19830002", locked: true, groupId: null }],
       (r) => `${r.year}|${r.runnerId}`,
     ),
+    specialStart: table(
+      [
+        { year: 2026, runnerId: "19830002", kind: "early", partnerId: null, offsetSeconds: 0 },
+        { year: 2026, runnerId: "19830001", kind: "with", partnerId: "19830002", offsetSeconds: 0 },
+      ],
+      (r) => `${r.year}|${r.runnerId}`,
+    ),
     category: table(CATEGORIES as unknown as Row[], (r) => String(r.id)),
   };
   let failAt: string | null = null;
@@ -338,7 +345,14 @@ describe("applySexChange (re-keying in one transaction)", () => {
       runnerPhotos: 2,
       webImages: 1,
       startLines: 1,
+      specialStarts: 1,
+      specialPartners: 1,
     });
+    assert.equal(
+      fake.specialStart.rows.find((r) => r.runnerId === "19830001")?.partnerId,
+      "19835003",
+      "spec. start partner re-pointed",
+    );
     const ids = fake.runner.rows.map((r) => r.id);
     assert.ok(ids.includes("19835003"));
     assert.ok(!ids.includes("19830002"));
@@ -349,6 +363,7 @@ describe("applySexChange (re-keying in one transaction)", () => {
       "runnerPhoto",
       "webImage",
       "startLineMeta",
+      "specialStart",
     ] as const) {
       assert.ok(
         !fake[model].rows.some((r) => r.runnerId === "19830002"),

@@ -39,11 +39,23 @@ async function back(query: Record<string, string> = {}): Promise<never> {
 }
 
 /**
- * Krok 1: dvojice id a povinná volba hlavního id (`main` = "a" | "b", bez výchozí hodnoty)
- * → náhled sloučení s počty dotčených řádků. Nic nemění.
+ * Krok 1 → náhled sloučení s počty dotčených řádků. Nic nemění. Dvě podoby formuláře:
+ * - ruční výběr (Q245): `hlavni` (zůstane) a `sloucit` (zanikne) přímo z našeptávače,
+ * - návrh: dvojice `idA` / `idB` a povinná volba hlavního id (`main` = "a" | "b").
  */
 export async function previewClubMergeAction(formData: FormData): Promise<void> {
   await requireAdmin();
+  if (formData.has("hlavni") || formData.has("sloucit")) {
+    const main = clubKey(formString(formData, "hlavni"));
+    const other = clubKey(formString(formData, "sloucit"));
+    if (!main || !other) {
+      return back({ chyba: "empty" });
+    }
+    if (main === other) {
+      return back({ chyba: "same" });
+    }
+    return back({ hlavni: main, sloucit: other });
+  }
   const idA = clubKey(formString(formData, "idA"));
   const idB = clubKey(formString(formData, "idB"));
   const side = formString(formData, "main");

@@ -7,10 +7,11 @@ import { McvvAdminPartnerForm } from "@/components/organisms/mcvv-admin-partner-
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
+import { logoErrorMessage } from "@/lib/partners/logo-error";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ logo?: string }>;
+  searchParams: Promise<{ logo?: string; reason?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function AdminEditPartnerPage({ params, searchParams }: PageProps) {
-  const { logo: logoStatus } = await searchParams;
+  const { logo: logoStatus, reason: logoReason } = await searchParams;
   const { locale: requestedLocale, id: rawId } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -62,7 +63,7 @@ export default async function AdminEditPartnerPage({ params, searchParams }: Pag
             image: copy("partnersImage"),
             upload: copy("partnersUpload"),
             uploadHint: copy("partnersUploadHint"),
-            logoError: logoStatus === "invalid" ? copy("partnersLogoInvalid") : undefined,
+            logoError: logoErrorMessage(logoStatus, logoReason, copy),
             category: copy("partnersCategory"),
             order: copy("partnersOrder"),
             active: copy("active"),

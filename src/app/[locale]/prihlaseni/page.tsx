@@ -105,6 +105,7 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
               password: copy("password"),
               submit: copy("submit"),
               error: copy("error"),
+              rateLimited: copy("rateLimited"),
               unverified: copy("unverified"),
               resend: copy("resend"),
               sent: copy("verifySent"),

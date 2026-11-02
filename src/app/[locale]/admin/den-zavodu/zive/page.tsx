@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Link, type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 import { canManageLiveResults } from "@/lib/auth/roles";
+import { formatStartClock } from "@/lib/date/race-schedule";
+import { currentRaceYear } from "@/lib/entries/year";
 import { formatDateTime } from "@/lib/format/date";
 import {
   createTokenAction,
@@ -22,6 +24,7 @@ import {
   switchOfeedProfileAction,
   saveRaceSetupAction,
   saveSplitmakerStationsAction,
+  saveStarterSettingsAction,
 } from "@/lib/live/admin-actions";
 import { listSplitmakers } from "@/lib/live/assignment";
 import { parseAssignment } from "@/lib/live/assignment-core";
@@ -36,6 +39,8 @@ import {
   formatStartOffsetLimit,
 } from "@/lib/live/splits-screen-core";
 import { formatRaceTime } from "@/lib/live/start-time";
+import { loadStarterSettings } from "@/lib/live/starter";
+import { STARTER_SOUND_MODES } from "@/lib/live/starter-core";
 import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX, withStart } from "@/lib/live/stations";
 import {
   getActiveTestRun,
@@ -113,15 +118,20 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   // Test nejdřív: vypršelý se tady ukončí a uklidí, zbytek stránky pak čte čistý stav.
   const [testRun, testCutoff] = await Promise.all([getActiveTestRun(), getTestCutoff()]);
   const ctx = await getRaceContext();
-  const [stations, ofeed, status, tokens, overview, site, splitmakers] = await Promise.all([
-    getStations(),
-    getOfeedSettings(),
-    ofeedStatus(),
-    listDeviceTokens(ctx.year),
-    raceDayOverview(ctx.year),
-    getSiteSettings(),
-    listSplitmakers(),
-  ]);
+  // Nulový čas ročníku (st_nula_s) pro nápovědy a předvolbu testu.
+  const zeroClock = formatStartClock((await currentRaceYear()).startModel.zeroSeconds);
+  const [stations, ofeed, status, tokens, overview, site, splitmakers, starter] = await Promise.all(
+    [
+      getStations(),
+      getOfeedSettings(),
+      ofeedStatus(),
+      listDeviceTokens(ctx.year),
+      raceDayOverview(ctx.year),
+      getSiteSettings(),
+      listSplitmakers(),
+      loadStarterSettings(),
+    ],
+  );
   const now = new Date();
   const testBlocked = testRunBlocked(now, testCutoff);
   const testOfeedReady = ofeed.profile === "test" && Boolean(ofeed.profiles.test.eventId);
@@ -247,15 +257,15 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                       defaultChecked={index === 0}
                       className="size-4"
                     />
-                    {tt(
-                      choice === "in5"
-                        ? "zeroIn5"
-                        : choice === "at1015"
-                          ? "zeroAt1015"
-                          : choice === "at2015"
-                            ? "zeroAt2015"
-                            : "zeroCustom",
-                    )}
+                    {choice === "atZero"
+                      ? tt("zeroAtStart", { time: zeroClock })
+                      : tt(
+                          choice === "in5"
+                            ? "zeroIn5"
+                            : choice === "at2015"
+                              ? "zeroAt2015"
+                              : "zeroCustom",
+                        )}
                   </label>
                 ))}
                 <Input
@@ -684,7 +694,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 className="h-10 w-fit bg-race-surface"
               />
               <p className="text-xs text-race-muted">
-                {testRun ? tt("zeroLocked") : t("zeroOverrideHint")}
+                {testRun ? tt("zeroLocked") : t("zeroOverrideHint", { time: zeroClock })}
               </p>
             </div>
             <div className="grid gap-1.5">
@@ -731,6 +741,66 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 className="h-10 w-40 bg-race-surface"
               />
               <p className="text-xs text-race-muted">{t("dnsGraceFallbackHint")}</p>
+            </div>
+            <Button
+              type="submit"
+              className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
+            >
+              {admin("save")}
+            </Button>
+          </form>
+        </fieldset>
+
+        <fieldset className={box} id="starter" data-testid="starter-settings">
+          <legend className={legend}>{t("starterTitle")}</legend>
+          <p className="text-sm text-race-muted">
+            {t("starterIntro")}{" "}
+            <Link href="/start" className="font-medium text-race-accent hover:underline">
+              {t("starterOpen")}
+            </Link>
+          </p>
+          <form action={saveStarterSettingsAction} className="grid gap-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="starterSound">{t("starterSound")}</Label>
+              <select
+                id="starterSound"
+                name="starterSound"
+                defaultValue={starter.sound}
+                className="h-10 w-fit border border-race-line bg-race-surface px-2 text-sm"
+              >
+                {STARTER_SOUND_MODES.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {t(`starterSoundMode.${mode}`)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-race-muted">{t("starterSoundHint")}</p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="starterRedPhase">{t("starterRedPhase")}</Label>
+              <Input
+                id="starterRedPhase"
+                name="starterRedPhase"
+                type="number"
+                min={0}
+                max={120}
+                step={1}
+                defaultValue={starter.redPhaseS}
+                className="h-10 w-28 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("starterRedPhaseHint")}</p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="starterDnsWindow">{t("starterDnsWindow")}</Label>
+              <Input
+                id="starterDnsWindow"
+                name="starterDnsWindow"
+                type="text"
+                maxLength={32}
+                defaultValue={formatStartOffsetLimit(starter.dnsWindowS)}
+                className="h-10 w-40 bg-race-surface"
+              />
+              <p className="text-xs text-race-muted">{t("starterDnsWindowHint")}</p>
             </div>
             <Button
               type="submit"

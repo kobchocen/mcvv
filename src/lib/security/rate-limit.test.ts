@@ -139,3 +139,13 @@ test("online results limit: generous default for CGNAT, configurable, 0 = off", 
   assert.equal(liveResultsRateLimit("-5"), DEFAULT_LIVE_RESULTS_RATE_LIMIT);
   assert.equal(liveResultsRateLimit("lots"), DEFAULT_LIVE_RESULTS_RATE_LIMIT);
 });
+
+test("reset forgets one key's window", () => {
+  const limiter = createRateLimiter({ limit: 1, windowMs: 60_000 });
+  assert.equal(limiter.hit("a", 1).limited, false);
+  assert.equal(limiter.hit("a", 2).limited, true);
+  assert.equal(limiter.hit("b", 2).limited, false);
+  limiter.reset("a");
+  assert.equal(limiter.hit("a", 3).limited, false);
+  assert.equal(limiter.hit("b", 3).limited, true);
+});

@@ -1,0 +1,117 @@
+/* Pruh partnerů na online výsledcích (Q210–Q215). Barvy z .root online výsledků. */
+.tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+a.tile:hover,
+a.tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Logo vždy celé (jako resultboard po #254): vyjmuté z toku, object-fit: contain. */
+.tile img {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  padding: 4px 10px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+/* Desktop: přilepená lišta 60 px, dlaždice 48 px. */
+.spacer {
+  height: 60px;
+}
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  height: 60px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--forest);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.35);
+}
+.gen {
+  flex: none;
+  /* o čtvrtinu širší než běžná dlaždice (48 × 3,4 ≈ 163 px) */
+  width: 204px;
+  display: flex;
+  padding-right: 8px;
+  border-right: 1px solid var(--line);
+}
+.rot {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+.grp {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+.grp.act {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobil: jedno logo 200 × 54 pod výsledky. */
+.single {
+  display: none;
+  justify-content: center;
+  padding: 10px 12px 4px;
+}
+.stage {
+  position: relative;
+  width: 200px;
+  height: 54px;
+}
+.slot {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+.slot.act {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* stejný zlom jako mobilní rozvržení online výsledků */
+@media (max-width: 700px) {
+  .spacer,
+  .bar {
+    display: none;
+  }
+  .single {
+    display: flex;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grp,
+  .slot {
+    transition: none;
+  }
+}

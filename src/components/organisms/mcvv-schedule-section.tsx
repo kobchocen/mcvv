@@ -65,6 +65,7 @@ export function McvvScheduleSection({ content }: McvvScheduleSectionProps) {
             label={content.countdownLabel}
             units={content.countdownUnits}
             inProgressLabel={content.raceInProgress}
+            zeroSeconds={content.zeroSeconds}
           />
         </div>
 

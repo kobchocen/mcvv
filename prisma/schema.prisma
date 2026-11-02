@@ -41,12 +41,12 @@ model Category {
 
 /// Číselník běžců (master data)
 model Runner {
-  id      String    @id @map("id") @db.Char(8)
-  name    String    @map("jmeno") @db.VarChar(50)
-  created DateTime? @map("created")
-  author  String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
+  id          String    @id @map("id") @db.Char(8)
+  name        String    @map("jmeno") @db.VarChar(50)
+  created     DateTime? @map("created")
+  author      String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
   /// Státní příslušnost (#200): ISO 3166-1 alpha-2 (CZ, SK…), NULL = neuvedeno.
-  nationality String? @map("statni_prislusnost") @db.Char(2)
+  nationality String?   @map("statni_prislusnost") @db.Char(2)
 
   // Relations
   runnerPhotos      RunnerPhoto[]
@@ -55,6 +55,8 @@ model Runner {
   startEntries      StartEntry[]
   results           Result[]
   startLineMetas    StartLineMeta[]
+  specialStarts     SpecialStart[]     @relation("SpecialStartRunner")
+  specialPartners   SpecialStart[]     @relation("SpecialStartPartner")
 
   @@map("cis_bezec")
 }
@@ -362,6 +364,8 @@ enum UserRole {
   splitmaker
   /// „Závodní kancelář“ (#207): pokladna a prodejky na místě, bez administrace.
   race_office
+  /// „Startér“: obrazovka startu `/start` pro jeden koridor (mcvv_user.start_corridor).
+  starter
 }
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.
@@ -379,6 +383,8 @@ model User {
   /// Přiřazená stanoviště splitmakera (kódy splitů, např. "1" nebo "13", "0" = start); null = žádné.
   /// Admin a organizer zapisují na všechna stanoviště bez ohledu na tohle pole.
   splitStations   String?   @map("split_stations") @db.VarChar(8)
+  /// Koridor startéra: 1 = čísla 1 … st_druhy_od − 1, 2 = od st_druhy_od; null = nepřiřazen.
+  startCorridor   Int?      @map("start_corridor") @db.TinyInt
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -786,14 +792,29 @@ model SplitEntry {
 /// export pro OBD tuhle tabulku nečtou (počítají dál s plánovaným startem ze startovky).
 /// Jeden řádek = aktuální záznam čísla v ročníku (první zápis vyhrává jako u mezičasů).
 model StartCheck {
-  year      Int      @map("rok") @db.SmallInt
-  bib       Int      @map("cislo") @db.SmallInt
-  /// Okamžik startu podle zařízení (po korekci hodin) nebo ručního zápisu admina.
-  startedAt DateTime @map("started_at") @db.DateTime(3)
-  /// web | admin
-  source    String   @db.VarChar(8)
-  userId    Int?     @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  year        Int       @map("rok") @db.SmallInt
+  bib         Int       @map("cislo") @db.SmallInt
+  /// Okamžik startu podle zařízení (po korekci hodin) nebo ručního zápisu admina. Startér a
+  /// automatické doplnění ze splitu sem píšou plánovaný start ze startovky (ten platí).
+  startedAt   DateTime  @map("started_at") @db.DateTime(3)
+  /// web | admin | starter | split
+  source      String    @db.VarChar(8)
+  userId      Int?      @map("user_id")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  /// Startér: okamžik ťuknutí „na startu“ (podle hodin zařízení po synchronizaci).
+  markedAt    DateTime? @map("marked_at") @db.DateTime(3)
+  /// Start doplněný automaticky z mezičasu / cíle – startér závodníka neoznačil.
+  notMarked   Boolean   @default(false) @map("not_marked")
+  /// Kód splitu, který start doplnil (jen `not_marked`).
+  splitCode   String?   @map("split_code") @db.VarChar(2)
+  /// Okamžik toho splitu (jen `not_marked`).
+  splitAt     DateTime? @map("split_at") @db.DateTime(3)
+  /// Koridor startéra, který zapsal (1 / 2).
+  corridor    Int?      @db.TinyInt
+  /// „Odstartovat teď“: skutečný okamžik startu (jen informace, do výsledků se počítá plán).
+  realStartAt DateTime? @map("real_start_at") @db.DateTime(3)
+  /// Pozdní start (víc než 15 s po plánu) – jen informace.
+  late        Boolean   @default(false)
 
   @@id([year, bib])
   @@map("mcvv_start_check")
@@ -810,13 +831,15 @@ model StartCheckEntry {
   startedAt  DateTime? @map("started_at") @db.DateTime(3)
   /// Odchylka od plánovaného startu v sekundách (jen pro zobrazení, nikde se nepočítá).
   offsetS    Int?      @map("offset_s")
-  /// web | admin
+  /// web | admin | starter | split
   source     String    @db.VarChar(8)
-  /// create | correct | delete
+  /// create | correct | delete; startér: mark | unmark | ontime | late; split: auto
   action     String    @db.VarChar(8)
   replaces   String?   @db.VarChar(80)
-  /// applied | duplicate | rejected | replaced | deleted
+  /// applied | duplicate | rejected | replaced | deleted; startér navíc unknown | ignored
   outcome    String    @db.VarChar(12)
+  /// Startér: okamžik ťuknutí na zařízení (po korekci hodin).
+  markedAt   DateTime? @map("marked_at") @db.DateTime(3)
   note       String?   @db.VarChar(255)
   userId     Int?      @map("user_id")
   receivedAt DateTime  @default(now()) @map("received_at") @db.DateTime(3)
@@ -870,6 +893,8 @@ enum StartGroupKind {
 }
 
 /// Požadavek na společný (stejný čas) nebo navazující start skupiny běžců.
+/// Zastaralé (Q225, 2. 11. 2026): skupiny nahradil spec. start „spolu s“ (migrace
+/// 20261102120000_spec_start_data). Tabulka zůstává kvůli rollbacku a historii; aplikace ji nepoužívá.
 model StartGroup {
   id        Int            @id @default(autoincrement())
   year      Int            @map("rok") @db.SmallInt
@@ -889,7 +914,9 @@ model StartLineMeta {
   year       Int      @map("rok") @db.SmallInt
   runnerId   String   @map("bezec_id") @db.Char(8)
   locked     Boolean  @default(false) @map("zamceno")
+  /// Zastaralé (Q225) – viz StartGroup; aplikace nečte ani nezapisuje.
   groupId    Int?     @map("skupina_id")
+  /// Zastaralé (Q225).
   groupOrder Int      @default(0) @map("skupina_poradi") @db.SmallInt
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -899,6 +926,38 @@ model StartLineMeta {
   @@id([year, runnerId])
   @@index([groupId])
   @@map("mcvv_start_radek")
+}
+
+/// Typ speciálního startu (jen administrace): pořadatel, start brzy, start pozdě, spolu s.
+enum SpecialStartKind {
+  organizer
+  early
+  late
+  with
+}
+
+/// Speciální start běžce v ročníku (Pavel, 30. 10. 2026). Nastavuje jen pořadatel v administraci,
+/// ve veřejné části se nikde neukazuje. Návrh startovky ho zohlední (organizer → blok pořadatelů,
+/// early → nejdřívější volná čísla, late → nejpozdější, with → posun vůči partnerovi).
+model SpecialStart {
+  year          Int              @map("rok") @db.SmallInt
+  runnerId      String           @map("bezec_id") @db.Char(8)
+  kind          SpecialStartKind @map("typ")
+  /// Jen u `with`: běžec, ke kterému se start váže (přihlášený ve stejném ročníku).
+  partnerId     String?          @map("partner_bezec_id") @db.Char(8)
+  /// Jen u `with`: posun startu vůči partnerovi v sekundách (0 = stejný čas, 120 = o 2 min později).
+  offsetSeconds Int              @default(0) @map("posun_s") @db.SmallInt
+  /// Interní poznámka pořadatele (krátká).
+  note          String?          @map("poznamka") @db.VarChar(200)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  runner  Runner  @relation("SpecialStartRunner", fields: [runnerId], references: [id], onDelete: Cascade)
+  partner Runner? @relation("SpecialStartPartner", fields: [partnerId], references: [id], onDelete: SetNull)
+
+  @@id([year, runnerId])
+  @@index([year, partnerId])
+  @@map("mcvv_spec_start")
 }
 
 /// Prodejní položka závodní kanceláře pro ročník (#207): dohláška na místě, merch apod.

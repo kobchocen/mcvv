@@ -1,7 +1,7 @@
 import {
+  clockParts,
+  DEFAULT_RACE_ZERO_SECONDS,
   getEditionStart,
-  RACE_START_HOUR,
-  RACE_START_MINUTE,
   zonedCivilToUtc,
 } from "@/lib/date/race-schedule";
 
@@ -11,7 +11,7 @@ import {
  * - A – entries: before the start list is published ("Přihlášky (n)" + "Rozpis", countdown).
  * - B – start list published (admin setting) and race not started yet
  *       ("Startovka (n)" + "Pokyny").
- * - C – race started (Edition.date at 10:15 Europe/Prague) and no results yet
+ * - C – race started (Edition.date at the edition zero, default 10:15 Europe/Prague) and no results yet
  *       ("Online výsledky" external link, or "Výsledky" when the URL is not set, + "Pokyny").
  *       C lasts until the first result of the year is stored.
  * - D – results of the year exist ("Výsledky (n)").
@@ -45,18 +45,22 @@ export function resolveHeroPhase({
 
 /**
  * Race start instant: the edition date (a calendar date, stored as UTC midnight) at
- * 10:15 Europe/Prague; without an edition date the canonical first Sunday of December.
+ * the edition zero (`st_nula_s`, default 10:15) Europe/Prague; without an edition date the
+ * canonical first Sunday of December.
  */
-export function raceStartFor(editionDate: Date | null | undefined, year: number): Date {
+export function raceStartFor(
+  editionDate: Date | null | undefined,
+  year: number,
+  zeroSeconds = DEFAULT_RACE_ZERO_SECONDS,
+): Date {
   if (!editionDate) {
-    return getEditionStart(year);
+    return getEditionStart(year, zeroSeconds);
   }
   return zonedCivilToUtc(
     editionDate.getUTCFullYear(),
     editionDate.getUTCMonth() + 1,
     editionDate.getUTCDate(),
-    RACE_START_HOUR,
-    RACE_START_MINUTE,
+    ...clockParts(zeroSeconds),
   );
 }
 

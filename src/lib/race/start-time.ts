@@ -1,4 +1,4 @@
-import { zonedCivilToUtc } from "@/lib/date/race-schedule";
+import { DEFAULT_RACE_ZERO_SECONDS, zonedCivilToUtc } from "@/lib/date/race-schedule";
 
 /**
  * Model startu ročníku (#114). Jediné místo, kde se počítá startovní čas z čísla:
@@ -19,7 +19,7 @@ export type StartModel = {
 };
 
 export const DEFAULT_START_MODEL: StartModel = {
-  zeroSeconds: 10 * 3600 + 15 * 60,
+  zeroSeconds: DEFAULT_RACE_ZERO_SECONDS,
   intervalSeconds: 15,
   secondStartFrom: 601,
 };

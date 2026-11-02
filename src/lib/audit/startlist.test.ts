@@ -5,8 +5,6 @@ import {
   lineChanges,
   partnerSnapshot,
   partnerTarget,
-  startGroupSnapshot,
-  startGroupTarget,
   startLineTarget,
   startListTarget,
 } from "./startlist";
@@ -15,7 +13,6 @@ describe("audit targets", () => {
   it("uses entita:id format", () => {
     assert.equal(startLineTarget(2026, "ABCD1234"), "startlist:2026/ABCD1234");
     assert.equal(startListTarget(2026), "startlist:2026");
-    assert.equal(startGroupTarget(7), "start_group:7");
     assert.equal(partnerTarget(3), "partner:3");
   });
 });
@@ -35,10 +32,10 @@ describe("lineChanges", () => {
     );
   });
 
-  it("records a move to a free bib and group membership", () => {
-    assert.deepEqual(lineChanges({ A: { bib: 10, group: null } }, { A: { bib: 11, group: 4 } }), {
+  it("records a move to a free bib", () => {
+    assert.deepEqual(lineChanges({ A: { bib: 10 } }, { A: { bib: 11, locked: true } }), {
       "A.bib": { before: 10, after: 11 },
-      "A.group": { before: null, after: 4 },
+      "A.locked": { before: null, after: true },
     });
   });
 
@@ -48,14 +45,6 @@ describe("lineChanges", () => {
 });
 
 describe("snapshots", () => {
-  it("lists group members in order", () => {
-    assert.deepEqual(startGroupSnapshot({ kind: "joint", note: null, members: ["B", "A"] }), {
-      kind: "joint",
-      note: null,
-      members: "B, A",
-    });
-  });
-
   it("omits logo fields that were not touched", () => {
     const base = {
       name: "Sponzor",

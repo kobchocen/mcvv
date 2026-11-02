@@ -39,10 +39,27 @@ import { Link } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
 import { nationalityField } from "@/lib/runner/nationality-field";
+import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
+import { McvvAdminPartnerOptions } from "@/components/organisms/mcvv-admin-partner-combobox";
+import {
+  loadPartnerOptions,
+  specialStartCopy,
+  specialStartFlash,
+  specialStartPartnerText,
+  specialStartValue,
+} from "@/lib/admin/special-start-view";
+import { startModelFromEdition } from "@/lib/race/start-time";
+import { editionForYear, loadSpecialStarts } from "@/lib/race/startlist-load";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; rok: string; id: string }>;
-  searchParams: Promise<{ mail?: string; sex?: string; stat?: string }>;
+  searchParams: Promise<{
+    mail?: string;
+    sex?: string;
+    stat?: string;
+    spec?: string;
+    duvod?: string;
+  }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -53,10 +70,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AdminRegistrationDetailPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale, rok, id: rawId } = await params;
-  const { mail, sex: sexChanged, stat: nationalityStatus } = await searchParams;
+  const {
+    mail,
+    sex: sexChanged,
+    stat: nationalityStatus,
+    spec: specStatus,
+    duvod: specReason,
+  } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  const session = await requireStaff();
   const year = Number.parseInt(rok, 10);
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(year) || !Number.isFinite(id)) {
@@ -88,6 +111,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
 
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const nationality = await getTranslations({ locale, namespace: "Nationality" });
+  const runnersCopy = await getTranslations({ locale, namespace: "AdminRunners" });
   const nationalityOptions = await nationalityField(locale);
   const relatedPayments = payments.filter(
     (payment) => paymentRegistrationId(payment.registrationId) === id,
@@ -131,11 +155,22 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       })
     ).map((row) => row.runnerId),
   );
-  const [thread, messageSettings, autoConfirmed] = await Promise.all([
-    loadRegistrationThread(year, id),
-    getMessageSettings(),
-    freeAutoConfirmedIds(year),
-  ]);
+  const [thread, messageSettings, autoConfirmed, specialStarts, partnerOptions, specialT, edition] =
+    await Promise.all([
+      loadRegistrationThread(year, id),
+      getMessageSettings(),
+      freeAutoConfirmedIds(year),
+      loadSpecialStarts(year),
+      loadPartnerOptions(year),
+      getTranslations({ locale, namespace: "SpecialStart" }),
+      editionForYear(year),
+    ]);
+  const startModel = startModelFromEdition(edition);
+  const intervalSeconds = startModel.intervalSeconds;
+  const partnerNames = new Map(partnerOptions.map((option) => [option.runnerId, option.name]));
+  const partnerName = (runnerId: string) => partnerNames.get(runnerId) ?? null;
+  const specialCopy = specialStartCopy(specialT, startModel);
+  const specialFlash = specialStartFlash(specialT, specStatus, specReason, intervalSeconds);
   // Letošní poznámky převedla migrace do vlákna; starší (nebo nepřevedené) zůstávají
   // jen ke čtení jako interní poznámka.
   const internalNote = showInternalNote(registration.note, year, !!thread);
@@ -185,6 +220,18 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           {sexChange ? (
             <p role="status" className="mt-3 text-sm font-medium text-race-accent">
               {copy("sexChangeDone", { oldId: sexChange[1], newId: sexChange[2] })}
+            </p>
+          ) : null}
+          {specialFlash ? (
+            <p
+              role={specialFlash.ok ? "status" : "alert"}
+              className={
+                specialFlash.ok
+                  ? "mt-3 text-sm font-medium text-race-accent"
+                  : "mt-3 text-sm text-red-600 dark:text-red-400"
+              }
+            >
+              {specialFlash.text}
             </p>
           ) : null}
           {nationalityStatus === "chyba" ? (
@@ -324,70 +371,121 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
         </section>
 
         <section>
-          <h2 className="font-display text-xl font-semibold">{copy("regsRunners")}</h2>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                  <th className="py-2 pr-3">{copy("regsName")}</th>
-                  <th className="py-2 pr-3">{copy("regsBirth")}</th>
-                  <th className="py-2 pr-3">{copy("regsClub")}</th>
-                  <th className="py-2 pr-3">{copy("regsCategory")}</th>
-                  <th className="py-2 pr-3">{copy("regsFee")}</th>
-                  <th className="py-2 pr-3">{copy("regsBib")}</th>
-                  <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
-                  <th className="py-2 pr-3">{nationalityOptions.label}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {registration.lines.map((line) => (
-                  <tr key={line.runnerId} className="border-b border-race-line/40">
-                    <td className="py-2.5 pr-3">{line.runner.name}</td>
-                    <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
-                    <td className="py-2.5 pr-3">
-                      <ClubLink id={line.clubId} name={line.club.name} />
-                    </td>
-                    <td className="py-2.5 pr-3">{line.category.name}</td>
-                    <td className="py-2.5 pr-3">{line.entryFee ?? ""}</td>
-                    <td className="py-2.5 pr-3">{line.bib ?? ""}</td>
-                    <td className="py-2.5 pr-3">
-                      <span className="mr-2">
-                        {runnerSexOf(line.runnerId) === "F" ? copy("sexFemale") : copy("sexMale")}
-                      </span>
-                      <McvvAdminSexChange
-                        runnerId={line.runnerId}
-                        runnerName={line.runner.name}
-                        year={year}
-                        registrationId={id}
-                        hasResults={runnersWithResults.has(line.runnerId)}
-                        copy={sexCopy}
-                      />
-                    </td>
-                    <td className="py-2.5 pr-3">
-                      <form
-                        action={saveRunnerNationality}
-                        className="flex items-center gap-2"
-                        data-testid={`nationality-form-${line.runnerId}`}
-                      >
-                        <input type="hidden" name="runnerId" value={line.runnerId} />
-                        <input type="hidden" name="year" value={year} />
-                        <input type="hidden" name="registrationId" value={id} />
-                        <NationalitySelect
-                          id={`nationality-${line.runnerId}`}
-                          field={nationalityOptions}
-                          defaultValue={line.runner.nationality ?? ""}
-                          className="h-8 max-w-[11rem] border border-race-line bg-race-surface px-2 text-sm"
-                        />
-                        <Button type="submit" size="sm" variant="outline">
-                          {nationality("save")}
-                        </Button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">{copy("regsRunners")}</h2>
+            <Link
+              href={{ pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year) } }}
+              className="text-sm font-medium text-race-accent hover:underline"
+            >
+              {specialT("overviewLink", { count: specialStarts.size })}
+            </Link>
           </div>
+          <McvvAdminPartnerOptions options={partnerOptions}>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[60rem] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                    <th className="py-2 pr-3">{copy("regsName")}</th>
+                    <th className="py-2 pr-3">{copy("regsBirth")}</th>
+                    <th className="py-2 pr-3">{copy("regsClub")}</th>
+                    <th className="py-2 pr-3">{copy("regsCategory")}</th>
+                    <th className="py-2 pr-3">{copy("regsFee")}</th>
+                    <th className="py-2 pr-3">{copy("regsBib")}</th>
+                    <th className="py-2 pr-3">{copy("sexChangeSex")}</th>
+                    <th className="py-2 pr-3">{nationalityOptions.label}</th>
+                    <th className="py-2 pr-3">{specialT("column")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registration.lines.map((line) => (
+                    <tr key={line.runnerId} className="border-b border-race-line/40">
+                      <td className="py-2.5 pr-3">{line.runner.name}</td>
+                      <td className="py-2.5 pr-3">{line.runnerId.slice(0, 4)}</td>
+                      <td className="py-2.5 pr-3">
+                        <ClubLink id={line.clubId} name={line.club.name} />
+                      </td>
+                      <td className="py-2.5 pr-3">{line.category.name}</td>
+                      <td className="py-2.5 pr-3">{line.entryFee ?? ""}</td>
+                      <td className="py-2.5 pr-3">{line.bib ?? ""}</td>
+                      <td className="py-2.5 pr-3">
+                        <span className="mr-2">
+                          {runnerSexOf(line.runnerId) === "F" ? copy("sexFemale") : copy("sexMale")}
+                        </span>
+                        <McvvAdminSexChange
+                          runnerId={line.runnerId}
+                          runnerName={line.runner.name}
+                          year={year}
+                          registrationId={id}
+                          hasResults={runnersWithResults.has(line.runnerId)}
+                          copy={sexCopy}
+                        />
+                        {/* Změna jména (#198, Q249) – jen admin, v Číselníky → Běžci. */}
+                        {session.role === "admin" ? (
+                          <Link
+                            href={{
+                              pathname: "/admin/ciselniky/bezci/[id]",
+                              params: { id: line.runnerId },
+                              query: { z: `${year}-${id}` },
+                            }}
+                            className="ml-2 text-xs font-semibold text-race-accent hover:underline"
+                            data-testid={`runner-rename-link-${line.runnerId}`}
+                          >
+                            {runnersCopy("renameShortcut")}
+                          </Link>
+                        ) : null}
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <form
+                          action={saveRunnerNationality}
+                          className="flex items-center gap-2"
+                          data-testid={`nationality-form-${line.runnerId}`}
+                        >
+                          <input type="hidden" name="runnerId" value={line.runnerId} />
+                          <input type="hidden" name="year" value={year} />
+                          <input type="hidden" name="registrationId" value={id} />
+                          <NationalitySelect
+                            id={`nationality-${line.runnerId}`}
+                            field={nationalityOptions}
+                            defaultValue={line.runner.nationality ?? ""}
+                            className="h-8 max-w-[11rem] border border-race-line bg-race-surface px-2 text-sm"
+                          />
+                          <Button type="submit" size="sm" variant="outline">
+                            {nationality("save")}
+                          </Button>
+                        </form>
+                      </td>
+                      <td className="py-2.5 pr-3" data-testid={`spec-start-${line.runnerId}`}>
+                        {(() => {
+                          const special = specialStarts.get(line.runnerId) ?? null;
+                          return (
+                            <div className="grid gap-1">
+                              <McvvAdminSpecialStart
+                                year={year}
+                                runnerId={line.runnerId}
+                                runnerName={line.runner.name}
+                                registrationId={id}
+                                from="detail"
+                                value={specialStartValue(special)}
+                                intervalSeconds={intervalSeconds}
+                                copy={specialCopy}
+                              />
+                              {special && (special.kind === "with" || special.note) ? (
+                                <span className="max-w-[16rem] text-xs text-race-muted">
+                                  {specialStartPartnerText(specialT, special, partnerName)}
+                                  {special.kind === "with" && special.note ? " · " : null}
+                                  {special.note}
+                                </span>
+                              ) : null}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </McvvAdminPartnerOptions>
         </section>
 
         <section>

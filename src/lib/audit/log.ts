@@ -9,6 +9,8 @@ export type AuditAction =
   | "user.role_change"
   // Přiřazení splitmakera ke stanovišti (mcvv_user.split_stations).
   | "user.split_stations_change"
+  // Přiřazení startéra ke startovnímu koridoru (mcvv_user.start_corridor).
+  | "user.start_corridor_change"
   | "raceday.obd_export"
   | "raceday.import_presentation"
   | "raceday.import_results"
@@ -52,6 +54,9 @@ export type AuditAction =
   // Úklid sirotků v číselníku klubů (#193), detail = smazané řádky cis_klub
   // (OrphanCleanupAuditDetail) pro ruční obnovení.
   | "club.orphan_cleanup"
+  // Sloučení duplicitních běžců (#261), detail = úplný stav před sloučením (smazaný běžec
+  // a všechny jeho přepsané řádky) pro ruční obnovu; akce „vrátit“ není (jako u klubů).
+  | "runner.merge"
   // Denní limit e-mailů v Nastavení (#190), detail = před / po.
   | "settings.mail_limit"
   // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).
@@ -59,6 +64,9 @@ export type AuditAction =
   | "runner.sex_changed"
   // Státní příslušnost běžce (#200) změněná pořadatelem, detail = `diffFields` (nationality).
   | "runner.nationality_changed"
+  // Změna jména běžce (#198), detail = staré / nové jméno, režim a přepsané řádky ročníků
+  // (rok, tabulka, původní bezec_name) pro ruční vrácení.
+  | "runner.name_changed"
   | "registration.updated"
   | "registration.confirmed"
   | "payment.created"
@@ -74,15 +82,17 @@ export type AuditAction =
   | "club.updated"
   // Uložení Nastavení: změněné klíče mcvv_setting (zveřejnění startovky, URL výsledků…).
   | "settings.changed"
-  // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu, skupiny startu.
-  // Cíl `startlist:<rok>/<bezec>`, `startlist:<rok>`, `start_group:<id>`; detail `changes`
-  // (u více řádků klíče `<bezec>.bib` / `.locked` / `.group`).
+  // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu. Cíl
+  // `startlist:<rok>/<bezec>` nebo `startlist:<rok>`; detail `changes` (u více řádků klíče
+  // `<bezec>.bib` / `.locked`). Skupiny startu nahradil spec. start „spolu s“ (Q225) – starší
+  // záznamy `startlist.group_created` / `group_deleted` v logu zůstávají jen pro historii.
   | "startlist.bib_set"
   | "startlist.bibs_swapped"
   | "startlist.lock_changed"
   | "startlist.proposal_applied"
-  | "startlist.group_created"
-  | "startlist.group_deleted"
+  // Spec. start běžce (pořadatel / brzy / pozdě / spolu s), cíl `startlist:<rok>/<bezec>`.
+  | "startlist.special_set"
+  | "startlist.special_cleared"
   // Partneři (#107), cíl `partner:<id>`. Smazání = deaktivace (řádek zůstává).
   | "partner.created"
   | "partner.updated"

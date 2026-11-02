@@ -11,7 +11,7 @@ import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { partnerSnapshot, partnerTarget } from "@/lib/audit/startlist";
 import { prisma } from "@/lib/db/client";
-import { validateLogo } from "@/lib/partners/logo-file";
+import { validateLogo, type LogoRejectReason } from "@/lib/partners/logo-file";
 import { redirect } from "@/i18n/routing";
 
 function revalidatePartners() {
@@ -21,7 +21,7 @@ function revalidatePartners() {
 
 type LogoUpload =
   | { kind: "none" }
-  | { kind: "invalid" }
+  | { kind: "invalid"; reason: LogoRejectReason | "read-failed" }
   | { kind: "ok"; logo: Uint8Array<ArrayBuffer>; logoType: string; logoHash: string };
 
 /**
@@ -33,9 +33,19 @@ async function readLogo(file: File | null): Promise<LogoUpload> {
   if (!file || file.size === 0) {
     return { kind: "none" };
   }
-  const result = validateLogo(Buffer.from(await file.arrayBuffer()), file.name);
+  // Odmítnuté / nečitelné logo nesmí shodit akci: vždy vrátí důvod pro srozumitelnou hlášku.
+  let result: ReturnType<typeof validateLogo>;
+  try {
+    result = validateLogo(Buffer.from(await file.arrayBuffer()), file.name);
+  } catch (error) {
+    console.error("[partners] logo upload could not be read", {
+      size: file.size,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { kind: "invalid", reason: "read-failed" };
+  }
   if (!result.ok) {
-    return { kind: "invalid" };
+    return { kind: "invalid", reason: result.reason };
   }
   const logoHash = createHash("sha256").update(result.data).digest("hex").slice(0, 16);
   return {
@@ -112,12 +122,18 @@ export async function savePartner(formData: FormData): Promise<void> {
         href: {
           pathname: "/admin/partneri/[id]",
           params: { id: String(id) },
-          query: { logo: "invalid" },
+          query: { logo: "invalid", reason: upload.reason },
         },
         locale,
       });
     } else {
-      redirect({ href: { pathname: "/admin/partneri/novy", query: { logo: "invalid" } }, locale });
+      redirect({
+        href: {
+          pathname: "/admin/partneri/novy",
+          query: { logo: "invalid", reason: upload.reason },
+        },
+        locale,
+      });
     }
     return;
   }

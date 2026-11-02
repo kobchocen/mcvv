@@ -1,8 +1,11 @@
-/** Canonical race clock: first Sunday of December, 10:15 Europe/Prague. */
+/**
+ * Canonical race clock: first Sunday of December, Europe/Prague. The start time (zero) comes
+ * from the edition (`st_nula_s`, editable in /admin/rocniky); 10:15 is only the default.
+ */
 
 export const RACE_TIME_ZONE = "Europe/Prague";
-export const RACE_START_HOUR = 10;
-export const RACE_START_MINUTE = 15;
+/** Default edition zero (seconds after midnight): 10:15:00. Source of truth is `st_nula_s`. */
+export const DEFAULT_RACE_ZERO_SECONDS = 10 * 3600 + 15 * 60;
 /** Exclusive end of the "race in progress" window (13:00 Prague). */
 export const RACE_IN_PROGRESS_END_HOUR = 13;
 
@@ -75,9 +78,21 @@ export function firstSundayOfDecember(year: number): number {
   throw new Error(`No Sunday found in the first week of December ${year}`);
 }
 
-export function getEditionStart(year: number): Date {
+/** Seconds after midnight → [hour, minute, second]. */
+export function clockParts(zeroSeconds: number): [number, number, number] {
+  return [Math.floor(zeroSeconds / 3600), Math.floor((zeroSeconds % 3600) / 60), zeroSeconds % 60];
+}
+
+/** Start clock for texts: 36 900 → "10:15", 34 230 → "9:30:30" (seconds only when non-zero). */
+export function formatStartClock(zeroSeconds: number): string {
+  const [hour, minute, second] = clockParts(zeroSeconds);
+  const base = `${hour}:${String(minute).padStart(2, "0")}`;
+  return second ? `${base}:${String(second).padStart(2, "0")}` : base;
+}
+
+export function getEditionStart(year: number, zeroSeconds = DEFAULT_RACE_ZERO_SECONDS): Date {
   const day = firstSundayOfDecember(year);
-  return zonedCivilToUtc(year, 12, day, RACE_START_HOUR, RACE_START_MINUTE);
+  return zonedCivilToUtc(year, 12, day, ...clockParts(zeroSeconds));
 }
 
 export function getEditionInProgressEnd(year: number): Date {
@@ -94,9 +109,12 @@ export function pragueCalendarYear(now: Date): number {
   );
 }
 
-export function resolveRaceCountdown(now: Date = new Date()): RaceCountdownResolution {
+export function resolveRaceCountdown(
+  now: Date = new Date(),
+  zeroSeconds = DEFAULT_RACE_ZERO_SECONDS,
+): RaceCountdownResolution {
   const year = pragueCalendarYear(now);
-  const start = getEditionStart(year);
+  const start = getEditionStart(year, zeroSeconds);
   const inProgressEnd = getEditionInProgressEnd(year);
 
   if (now.getTime() < start.getTime()) {
@@ -105,7 +123,7 @@ export function resolveRaceCountdown(now: Date = new Date()): RaceCountdownResol
   if (now.getTime() < inProgressEnd.getTime()) {
     return { phase: "in-progress", target: null };
   }
-  return { phase: "upcoming", target: getEditionStart(year + 1) };
+  return { phase: "upcoming", target: getEditionStart(year + 1, zeroSeconds) };
 }
 
 export function remainingParts(target: Date, now: Date): RemainingParts {

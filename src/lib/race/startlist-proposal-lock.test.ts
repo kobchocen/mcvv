@@ -35,13 +35,7 @@ describe("start list proposal lock after publishing", () => {
 
   it("manual row edits and the OBD import stay allowed", () => {
     const actions = source("lib/admin/startlist.ts");
-    for (const name of [
-      "setStartBib",
-      "swapStartBibs",
-      "toggleStartLock",
-      "createStartGroup",
-      "deleteStartGroup",
-    ]) {
+    for (const name of ["setStartBib", "swapStartBibs", "toggleStartLock"]) {
       assert.doesNotMatch(exported(actions, name), /startListProposalLock/, name);
     }
     assert.doesNotMatch(source("lib/raceday/import-actions.ts"), /startListProposalLock/);

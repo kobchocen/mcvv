@@ -41,6 +41,7 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
   const settings = await loadStartSettings(edition.date.getUTCFullYear());
   const { chyba } = await searchParams;
 
+  const startModel = startModelFromEdition(edition);
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -65,11 +66,16 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
           }}
         >
           <McvvAdminStartModelFields
-            model={startModelFromEdition(edition)}
+            model={startModel}
             champions={{ men: edition.championBibMen, women: edition.championBibWomen }}
             ranges={settings.ranges}
             categories={settings.categories}
-            copy={startModelCopy(startCopy, chyba, !settings.rangesStored)}
+            copy={startModelCopy(
+              startCopy,
+              chyba,
+              !settings.rangesStored,
+              startModel.secondStartFrom,
+            )}
           />
         </McvvAdminEditionForm>
       </div>

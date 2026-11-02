@@ -3,7 +3,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { requireAdmin } from "@/lib/admin/staff";
 import { saveSettings } from "@/lib/admin/settings";
+import { formatStartClock } from "@/lib/date/race-schedule";
 import { getFreeEntryEmailsText } from "@/lib/entries/settings";
+import { currentRaceYear } from "@/lib/entries/year";
 import { getOrganizerRegistrationEmailText } from "@/lib/entries/organizer-registration";
 import { DEFAULT_ORGANIZER_REGISTRATION_EMAIL } from "@/lib/entries/organizer-registration-core";
 import { getSiteSettings, ONLINE_RESULTS_URL_MAX, STATS_MOMENT_MAX } from "@/lib/settings/site";
@@ -48,15 +50,17 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   setRequestLocale(locale);
   await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const [emails, site, messages, receipt, organizerRegEmail, mail, mailToday] = await Promise.all([
-    getFreeEntryEmailsText(),
-    getSiteSettings(),
-    getMessageSettings(),
-    getStoredReceiptIssuer(),
-    getOrganizerRegistrationEmailText(),
-    getMailSettings(),
-    mailStats().catch(() => null),
-  ]);
+  const [emails, site, messages, receipt, organizerRegEmail, mail, mailToday, raceYear] =
+    await Promise.all([
+      getFreeEntryEmailsText(),
+      getSiteSettings(),
+      getMessageSettings(),
+      getStoredReceiptIssuer(),
+      getOrganizerRegistrationEmailText(),
+      getMailSettings(),
+      mailStats().catch(() => null),
+      currentRaceYear(),
+    ]);
   const mailFallback = envMailPolicy(env);
   const mailPolicyNow = resolveMailPolicy(mail, env);
   const organizerFallback = resolveOrganizerEmail(null, env.CONTACT_TO);
@@ -128,7 +132,9 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
                 className="h-10 bg-race-surface"
               />
               <p id="onlineResultsUrlHint" className="text-xs text-race-muted">
-                {copy("settingsOnlineUrlHint")}
+                {copy("settingsOnlineUrlHint", {
+                  time: formatStartClock(raceYear.startModel.zeroSeconds),
+                })}
               </p>
             </div>
           </fieldset>

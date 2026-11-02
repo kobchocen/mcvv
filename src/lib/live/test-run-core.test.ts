@@ -74,7 +74,7 @@ test("testRunBlocked from race day 00:00 (Q70)", () => {
 test("resolveTestZero: presets, in 5 minutes and exact time", () => {
   const now = new Date("2026-11-02T08:00:30.250Z"); // 9:00:30 Prague
   assert.equal(resolveTestZero("in5", "", now)?.toISOString(), "2026-11-02T08:05:30.000Z");
-  assert.equal(resolveTestZero("at1015", "", now)?.toISOString(), "2026-11-02T09:15:00.000Z");
+  assert.equal(resolveTestZero("atZero", "", now)?.toISOString(), "2026-11-02T09:15:00.000Z");
   assert.equal(resolveTestZero("at2015", "", now)?.toISOString(), "2026-11-02T19:15:00.000Z");
   assert.equal(
     resolveTestZero("custom", "2026-11-03T18:30", now)?.toISOString(),
@@ -84,8 +84,13 @@ test("resolveTestZero: presets, in 5 minutes and exact time", () => {
   assert.equal(resolveTestZero("nonsense", "2026-11-03T18:30", now), null);
   // předvolba „dnes“ podle Europe/Prague, ne UTC (23:30 UTC = 0:30 dalšího dne v Praze)
   assert.equal(
-    resolveTestZero("at1015", "", new Date("2026-11-02T23:30:00.000Z"))?.toISOString(),
+    resolveTestZero("atZero", "", new Date("2026-11-02T23:30:00.000Z"))?.toISOString(),
     "2026-11-03T09:15:00.000Z",
+  );
+  // jiný nulový čas ročníku (9:30:30) → předvolba „dnes v nulu“ ho převezme
+  assert.equal(
+    resolveTestZero("atZero", "", now, 9 * 3600 + 30 * 60 + 30)?.toISOString(),
+    "2026-11-02T08:30:30.000Z",
   );
 });
 

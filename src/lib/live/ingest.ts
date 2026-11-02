@@ -18,8 +18,10 @@ import {
   type WebEntry,
 } from "./ingest-core";
 import { conflictStillCurrent } from "./manual-core";
-import type { RaceContext } from "./race-context";
+import { getRaceContext, type RaceContext } from "./race-context";
 import { startInstant } from "./start-time";
+import { plannedStartMs } from "./starter-core";
+import { autoMarkStart, type StarterPlan } from "./starter";
 import { isSplitCode, webAuthor } from "./stations";
 
 type Tx = Prisma.TransactionClient;
@@ -159,7 +161,11 @@ async function applyWebEntry(
 
   // create / correct: spočítat čas od startu daného čísla
   const punchedAt = entry.punchedAt;
-  const check = checkPunch(punchedAt, startInstant(ctx.zero, entry.bib, ctx.intervalS), now);
+  const check = checkPunch(
+    punchedAt,
+    startInstant(ctx.zero, entry.bib, ctx.intervalS, ctx.secondStartFrom),
+    now,
+  );
   if (!check.ok) {
     const row = await tx.splitEntry.create({
       data: {
@@ -178,6 +184,14 @@ async function applyWebEntry(
     { year: ctx.year, split: entry.split, bib: entry.bib, time: check.time, author, now },
     "web",
   );
+  // Mezičas bez záznamu startu = startér číslo neoznačil: doplnit start (`not_marked`).
+  if (written.outcome === "applied") {
+    await autoMarkStart(
+      tx,
+      { year: ctx.year, bib: entry.bib, split: entry.split, splitAt: new Date(punchedAt) },
+      ctx,
+    );
+  }
   const notes = [
     (await knownBib(tx, ctx.year, entry.bib)) ? null : "unknown-bib",
     written.existingTime !== undefined ? `existing=${written.existingTime}` : null,
@@ -297,6 +311,7 @@ async function applyDeviceItem(
   item: DeviceItem,
   token: DeviceToken,
   now: Date,
+  plan: StarterPlan | null,
 ): Promise<EntryResult> {
   const base = deviceEntryKey(token.id, item);
   // Idempotence: poslední zápis se stejným klíčem platí, dokud ho nepřepsala/nesmazala novější verze souboru.
@@ -370,6 +385,24 @@ async function applyDeviceItem(
   } else {
     outcome = decision === "unchanged" ? "unchanged" : "conflict";
   }
+  if (outcome === "applied" && plan && plan.year === token.year) {
+    const planned = plannedStartMs(
+      plan.zero.getTime(),
+      item.bib,
+      plan.intervalS,
+      plan.secondStartFrom,
+    );
+    await autoMarkStart(
+      tx,
+      {
+        year: token.year,
+        bib: item.bib,
+        split: item.split,
+        splitAt: new Date(planned + item.timeS * 1000),
+      },
+      plan,
+    );
+  }
   const notes = [
     unknown,
     existing && existing.time !== item.timeS ? `existing=${existing.time}` : null,
@@ -394,13 +427,16 @@ export async function applyDeviceItems(
   items: DeviceItem[],
   token: DeviceToken,
   now = new Date(),
+  plan?: StarterPlan | null,
 ): Promise<EntryResult[]> {
   const results: EntryResult[] = [];
+  // Kontext závodu pro doplnění startu ze splitu (jednou na dávku).
+  const startPlan = plan === undefined ? await getRaceContext() : plan;
   for (const item of items) {
     const key = deviceEntryKey(token.id, item);
     results.push(
       await withRetry(key, () =>
-        prisma.$transaction((tx) => applyDeviceItem(tx, item, token, now)),
+        prisma.$transaction((tx) => applyDeviceItem(tx, item, token, now, startPlan)),
       ),
     );
   }
@@ -435,6 +471,12 @@ export async function resolveConflict(
         created: new Date(),
         author: entry.author,
       },
+    });
+    await autoMarkStart(tx, {
+      year: entry.year,
+      bib: entry.bib,
+      split: entry.split,
+      splitAt: entry.punchedAt ?? new Date(),
     });
     await tx.splitEntry.updateMany({
       where: {

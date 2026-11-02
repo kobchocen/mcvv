@@ -17,10 +17,18 @@ import { registrationThreadSummaries, summaryKey } from "@/lib/messages/store";
 import { requireStaff } from "@/lib/admin/staff";
 import { loadRegistrationTimeline } from "@/lib/admin/registration-timeline-data";
 import { McvvAdminRegistrationTimeline } from "@/components/organisms/mcvv-admin-registration-timeline";
+import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
+import type { SpecialStartKind } from "@/lib/race/special-start";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ rok?: string; stav?: string; zrusene?: string; prazdne?: string }>;
+  searchParams: Promise<{
+    rok?: string;
+    stav?: string;
+    zrusene?: string;
+    prazdne?: string;
+    spec?: string;
+  }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -66,7 +74,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   setRequestLocale(locale);
   await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const { rok, stav, zrusene, prazdne } = await searchParams;
+  const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
+  const { rok, stav, zrusene, prazdne, spec } = await searchParams;
 
   const [latest, yearRows] = await Promise.all([
     prisma.edition.findFirst({ orderBy: { id: "desc" }, select: { date: true, id: true } }),
@@ -88,6 +97,31 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   // Při výběru stavu 1 („prázdná“) se zobrazí vždy; přihláška pořadatelů č. 1 také.
   const includeEmpty = prazdne === "1" || statusFilter === ENTRY_STATUS.empty;
   const emptyWhere = includeEmpty ? {} : { OR: [{ lines: { some: {} } }, { id: 1 }] };
+  // Spec. starty ročníku podle přihlášky (seznam ukazuje jen odznak, detail je v dialogu).
+  const specialRows = await prisma.specialStart.findMany({
+    where: { year: selectedYear },
+    select: { runnerId: true, kind: true },
+  });
+  const specialLines = await prisma.registrationLine.findMany({
+    where: { year: selectedYear, runnerId: { in: specialRows.map((row) => row.runnerId) } },
+    select: { runnerId: true, registrationId: true },
+  });
+  const registrationOfRunner = new Map(
+    specialLines.map((line) => [line.runnerId, line.registrationId]),
+  );
+  const specialByRegistration = new Map<number, SpecialStartKind[]>();
+  for (const row of specialRows) {
+    const registrationId = registrationOfRunner.get(row.runnerId);
+    if (registrationId == null) {
+      continue;
+    }
+    specialByRegistration.set(registrationId, [
+      ...(specialByRegistration.get(registrationId) ?? []),
+      row.kind,
+    ]);
+  }
+  const onlySpecial = spec === "1";
+  const specialWhere = onlySpecial ? { id: { in: [...specialByRegistration.keys()] } } : {};
   const hiddenEmpty = includeEmpty
     ? 0
     : await prisma.registration.count({
@@ -96,7 +130,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   const [registrations, payments, autoConfirmed, timeline] = await Promise.all([
     prisma.registration.findMany({
-      where: { year: selectedYear, AND: [statusWhere, emptyWhere] },
+      where: { year: selectedYear, AND: [statusWhere, emptyWhere, specialWhere] },
       include: { lines: { select: { entryFee: true } } },
       orderBy: { id: "asc" },
     }),
@@ -155,6 +189,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <input type="checkbox" name="prazdne" value="1" defaultChecked={includeEmpty} />
             {copy("includeEmpty")}
           </label>
+          <label className="flex h-10 items-center gap-2 text-sm">
+            <input type="checkbox" name="spec" value="1" defaultChecked={onlySpecial} />
+            {specialT("regsFilter")}
+          </label>
           <Button type="submit" variant="outline" className="h-10 border-race-line bg-race-surface">
             {copy("filter")}
           </Button>
@@ -176,6 +214,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ))}
           </p>
         ) : null}
+        <p className="mt-3 text-sm">
+          <Link
+            href={{
+              pathname: "/admin/prihlasky/spec-starty",
+              query: { rok: String(selectedYear) },
+            }}
+            className="font-medium text-race-accent hover:underline"
+            data-testid="spec-start-overview-link"
+          >
+            {specialT("overviewLink", { count: specialRows.length })}
+          </Link>
+        </p>
         <McvvAdminRegistrationTimeline data={timeline} />
         {hiddenEmpty > 0 ? (
           <p className="mt-3 text-sm text-race-muted">
@@ -200,7 +250,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <p className="mt-8 text-sm text-race-muted">{copy("regsEmpty")}</p>
         ) : (
           <div className="mt-8 overflow-x-auto">
-            <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
+            <table className="w-full min-w-[62rem] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                   <th className="py-2 pr-3">{copy("regsId")}</th>
@@ -214,6 +264,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   <th className="py-2 pr-3">{copy("regsStatus")}</th>
                   <th className="py-2 pr-3">{copy("regsPromotion")}</th>
                   <th className="py-2 pr-3">{copy("regsMessages")}</th>
+                  <th className="py-2 pr-3">{specialT("column")}</th>
                   <th className="py-2" />
                 </tr>
               </thead>
@@ -223,6 +274,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   const paid = paidById.get(row.id) ?? 0;
                   const diff = paid - fee;
                   const summary = threadSummaries.get(summaryKey(row.year, row.id));
+                  const specialKinds = specialByRegistration.get(row.id) ?? [];
                   return (
                     <tr key={`${row.year}-${row.id}`} className="border-b border-race-line/40">
                       <td className="py-2.5 pr-3 font-medium">{row.id}</td>
@@ -270,6 +322,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                                 summary.open && summary.unread > 0
                                   ? `${copy("msgUnread")}: ${summary.unread}`
                                   : copy("msgCount", { count: summary.count })
+                              }
+                            />
+                          </Link>
+                        ) : null}
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        {specialKinds.length > 0 ? (
+                          <Link
+                            href={{
+                              pathname: "/admin/prihlasky/[rok]/[id]",
+                              params: { rok: String(row.year), id: String(row.id) },
+                            }}
+                            title={[...new Set(specialKinds)]
+                              .map((kind) => specialT(`kind_${kind}`))
+                              .join(", ")}
+                          >
+                            <McvvAdminSpecialStartBadge
+                              label={
+                                specialKinds.length === 1
+                                  ? specialT(`kind_${specialKinds[0]}`)
+                                  : specialT("regsCount", { count: specialKinds.length })
                               }
                             />
                           </Link>

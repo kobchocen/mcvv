@@ -36,6 +36,7 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
     latest ? latest.date.getUTCFullYear() : new Date().getFullYear(),
   );
 
+  const startModel = startModelFromEdition(latest);
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -79,14 +80,14 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
           }}
         >
           <McvvAdminStartModelFields
-            model={startModelFromEdition(latest)}
+            model={startModel}
             champions={{
               men: latest ? latest.championBibMen : DEFAULT_CHAMPION_BIBS.men,
               women: latest ? latest.championBibWomen : DEFAULT_CHAMPION_BIBS.women,
             }}
             ranges={settings.ranges}
             categories={settings.categories}
-            copy={startModelCopy(startCopy, chyba, false)}
+            copy={startModelCopy(startCopy, chyba, false, startModel.secondStartFrom)}
           />
         </McvvAdminEditionForm>
       </div>

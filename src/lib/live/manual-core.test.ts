@@ -31,14 +31,20 @@ test("parseRaceTime accepts m:ss, h:mm:ss and seconds within 0–6 h", () => {
 
 test("clockToRaceTime converts Prague wall clock on the zero day to seconds since start", () => {
   const zero = new Date("2026-12-06T09:15:00.000Z"); // 10:15 CET
-  assert.equal(clockToRaceTime("10:43:06", zero, 1, 15), 1686);
+  assert.equal(clockToRaceTime("10:43:06", zero, 1, 15, 601), 1686);
   // bib 3 starts 30 s later, bib 601 together with bib 1
-  assert.equal(clockToRaceTime("10:43:06", zero, 3, 15), 1656);
-  assert.equal(clockToRaceTime("10:43:06", zero, 601, 15), 1686);
-  assert.equal(clockToRaceTime("10:43", zero, 1, 15), 1680);
-  assert.equal(clockToRaceTime("10:14:59", zero, 1, 15), null);
-  assert.equal(clockToRaceTime("25:00", zero, 1, 15), null);
-  assert.equal(clockToRaceTime("x", zero, 1, 15), null);
+  assert.equal(clockToRaceTime("10:43:06", zero, 3, 15, 601), 1656);
+  assert.equal(clockToRaceTime("10:43:06", zero, 601, 15, 601), 1686);
+  assert.equal(clockToRaceTime("10:43", zero, 1, 15, 601), 1680);
+  assert.equal(clockToRaceTime("10:14:59", zero, 1, 15, 601), null);
+  assert.equal(clockToRaceTime("25:00", zero, 1, 15, 601), null);
+  assert.equal(clockToRaceTime("x", zero, 1, 15, 601), null);
+  // jiná hranice 2. startu (501): 501 startuje s 1, 601 je 101. slot (25 min po nule)
+  assert.equal(clockToRaceTime("10:43:06", zero, 501, 15, 501), 1686);
+  assert.equal(clockToRaceTime("10:43:06", zero, 601, 15, 501), 1686 - 1500);
+  // 500 je v 1. startu poslední (start 12:19:45) → zápis v 10:43 je před jeho startem
+  assert.equal(clockToRaceTime("10:43:06", zero, 500, 15, 501), null);
+  assert.equal(clockToRaceTime("12:20:00", zero, 500, 15, 501), 15);
 });
 
 test("bib, split, reason and expected value", () => {

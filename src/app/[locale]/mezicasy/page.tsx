@@ -80,6 +80,7 @@ export default async function SplitsPage({ params }: PageProps) {
         userName={session.name}
         zeroIso={ctx.zero.toISOString()}
         intervalS={ctx.intervalS}
+        secondStartFrom={ctx.secondStartFrom}
         zeroOverridden={ctx.zeroOverridden}
         startLimitS={ctx.startLimitS}
         locale={locale}

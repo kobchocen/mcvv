@@ -49,8 +49,10 @@ export function startOffsetSeconds(
   zero: Date,
   bib: number,
   intervalS: number,
+  secondStartFrom: number,
 ): number {
-  return Math.round((startedAt.getTime() - startInstant(zero, bib, intervalS).getTime()) / 1000);
+  const planned = startInstant(zero, bib, intervalS, secondStartFrom);
+  return Math.round((startedAt.getTime() - planned.getTime()) / 1000);
 }
 
 /** `+0:05`, `-1:10`, `0:00` – odchylka pro přehled a klienta. */
@@ -60,9 +62,16 @@ export function formatOffset(seconds: number): string {
   return `${sign}${Math.floor(abs / 60)}:${String(abs % 60).padStart(2, "0")}`;
 }
 
-/** Webový zápis: první vyhrává (dvojí zadání téhož čísla = duplicita, nic se nepřepíše). */
-export function decideStartWrite(existing: { startedAt: Date } | null): "insert" | "duplicate" {
-  return existing ? "duplicate" : "insert";
+/**
+ * Webový zápis: první vyhrává (dvojí zadání téhož čísla = duplicita, nic se nepřepíše).
+ * Výjimka: start doplněný automaticky z mezičasu (`source = split`) zápis ze stanoviště přepíše
+ * (priorita admin > startér / stanoviště Start > split).
+ */
+export function decideStartWrite(
+  existing: { startedAt: Date; source?: string } | null,
+): "insert" | "duplicate" | "replace" {
+  if (!existing) return "insert";
+  return existing.source === "split" ? "replace" : "duplicate";
 }
 
 /** Zápis vlastní řádek startu, když ho vytvořil a čas sedí (stejně jako u mezičasů). */
@@ -78,10 +87,18 @@ export function ownsStart(
   );
 }
 
-export type StartFilter = "all" | "started" | "missing" | "unknown";
+export type StartFilter = "all" | "started" | "missing" | "unknown" | "notMarked" | "late";
+
+const START_FILTERS: readonly StartFilter[] = [
+  "started",
+  "missing",
+  "unknown",
+  "notMarked",
+  "late",
+];
 
 export function parseStartFilter(raw: string | null | undefined): StartFilter {
-  return raw === "started" || raw === "missing" || raw === "unknown" ? raw : "all";
+  return START_FILTERS.includes(raw as StartFilter) ? (raw as StartFilter) : "all";
 }
 
 export type StartListRow = {
@@ -98,6 +115,16 @@ export type StartRecord = {
   startedAt: Date;
   source: string;
   userId: number | null;
+  /** Startér: okamžik ťuknutí. */
+  markedAt?: Date | null;
+  /** Start doplněný ze splitu – startér závodníka neoznačil. */
+  notMarked?: boolean;
+  splitCode?: string | null;
+  splitAt?: Date | null;
+  corridor?: number | null;
+  /** „Odstartovat teď“: skutečný start (jen informace). */
+  realStartAt?: Date | null;
+  late?: boolean;
 };
 
 export type StartOverviewRow = StartListRow & {
@@ -117,6 +144,10 @@ export type StartSummary = {
   missing: number;
   /** Záznam startu pro číslo, které ve startovce není. */
   unknown: number;
+  /** Start doplněný ze splitu – startér závodníka neoznačil. */
+  notMarked: number;
+  /** „Odstartovat teď“ víc než jeden interval ročníku po plánu. */
+  late: number;
 };
 
 /**
@@ -126,7 +157,7 @@ export type StartSummary = {
 export function buildStartOverview(
   startList: readonly StartListRow[],
   records: readonly StartRecord[],
-  ctx: { zero: Date; intervalS: number },
+  ctx: { zero: Date; intervalS: number; secondStartFrom: number },
 ): { rows: StartOverviewRow[]; summary: StartSummary } {
   const byBib = new Map(records.map((record) => [record.bib, record]));
   const seen = new Set<number>();
@@ -136,10 +167,16 @@ export function buildStartOverview(
     return {
       ...base,
       known,
-      planned: startInstant(ctx.zero, base.bib, ctx.intervalS),
+      planned: startInstant(ctx.zero, base.bib, ctx.intervalS, ctx.secondStartFrom),
       record,
       offsetS: record
-        ? startOffsetSeconds(record.startedAt, ctx.zero, base.bib, ctx.intervalS)
+        ? startOffsetSeconds(
+            record.realStartAt ?? record.startedAt,
+            ctx.zero,
+            base.bib,
+            ctx.intervalS,
+            ctx.secondStartFrom,
+          )
         : null,
     };
   };
@@ -156,7 +193,14 @@ export function buildStartOverview(
   const started = rows.filter((r) => r.record).length;
   return {
     rows: [...rows, ...unknown],
-    summary: { total: known, started, missing: known - started, unknown: unknown.length },
+    summary: {
+      total: known,
+      started,
+      missing: known - started,
+      unknown: unknown.length,
+      notMarked: records.filter((record) => record.notMarked).length,
+      late: records.filter((record) => record.late).length,
+    },
   };
 }
 
@@ -170,6 +214,8 @@ export function filterStartRows(
     if (filter === "started" && !(row.known && row.record)) return false;
     if (filter === "missing" && !(row.known && !row.record)) return false;
     if (filter === "unknown" && row.known) return false;
+    if (filter === "notMarked" && !row.record?.notMarked) return false;
+    if (filter === "late" && !row.record?.late) return false;
     if (!q) return true;
     return (
       String(row.bib) === q ||

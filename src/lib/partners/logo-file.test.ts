@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { detectBitmapType, logoResponseHeaders, sanitizeSvg, validateLogo } from "./logo-file";
+import {
+  analyzeSvg,
+  detectBitmapType,
+  logoResponseHeaders,
+  sanitizeSvg,
+  validateLogo,
+} from "./logo-file";
 
 const clean =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#e2531c"/></svg>';
@@ -118,6 +124,82 @@ describe("partner logo upload", () => {
     });
     const svg = validateLogo(Buffer.from(clean), "logo.svg");
     assert.equal(svg.ok && svg.type, "image/svg+xml");
+  });
+
+  it("accepts a CorelDRAW export (DOCTYPE, comment, CDATA style, metadata) and stores it sanitized", () => {
+    const corel = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
+      "<!-- Creator: CorelDRAW X6 -->",
+      '<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="210mm" height="99mm" version="1.1" style="fill-rule:evenodd; clip-rule:evenodd"',
+      'viewBox="0 0 21000 9900"',
+      ' xmlns:xlink="http://www.w3.org/1999/xlink">',
+      " <defs>",
+      '  <style type="text/css">',
+      "   <![CDATA[",
+      "    .fil0 {fill:#00CCFF}",
+      "   ]]>",
+      "  </style>",
+      " </defs>",
+      ' <g id="Vrstva_x0020_1">',
+      '  <metadata id="CorelCorpID_0Corel-Layer"/>',
+      '  <path class="fil0" d="M100 100l200 0 0 200 -200 0z"/>',
+      " </g>",
+      "</svg>",
+    ].join("\n");
+    const result = validateLogo(Buffer.from(corel), "kudos.svg");
+    assert.equal(result.ok, true);
+    const svg = result.ok ? result.data.toString("utf8") : "";
+    assert.match(svg, /^<svg /);
+    assert.doesNotMatch(svg, /DOCTYPE|CorelDRAW|CDATA|<metadata|<\?xml/);
+    assert.match(svg, /<style type="text\/css">\s*\.fil0 \{fill:#00CCFF\}\s*<\/style>/);
+    assert.match(svg, /<path class="fil0" d="M100 100l200 0 0 200 -200 0z"\/>/);
+  });
+
+  it("accepts only harmless DOCTYPEs and reports why an SVG is rejected", () => {
+    for (const doctype of [
+      "<!DOCTYPE svg>",
+      '<!doctype svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
+      "<!DOCTYPE svg SYSTEM 'svg11.dtd'>",
+    ]) {
+      assert.deepEqual(analyzeSvg(`${doctype}\n${clean}`), { ok: true, svg: clean }, doctype);
+    }
+    const reasons: [string, string][] = [
+      ['<!DOCTYPE svg [<!ENTITY x "y">]><svg>&x;</svg>', "svg-entities"],
+      [
+        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "svg11.dtd" [<!ENTITY ns_svg "http://www.w3.org/2000/svg">]><svg/>',
+        "svg-entities",
+      ],
+      ['<!DOCTYPE svg SYSTEM "file:///etc/passwd"><!DOCTYPE svg><svg></svg>', "svg-entities"],
+      ['<svg><!ENTITY x "y"><rect/></svg>', "svg-entities"],
+      [`${clean}<!DOCTYPE svg>`, "svg-entities"],
+      ["<svg><style>.a{-moz-binding:x}</style></svg>", "svg-external"],
+      ["<html><body></body></html>", "svg-not-svg"],
+      ["hello <svg></svg>", "svg-not-svg"],
+      ["<svg><g></svg>", "svg-malformed"],
+      ["<svg><rect", "svg-malformed"],
+      ["<svg><!-- never closed <rect/></svg>", "svg-malformed"],
+    ];
+    for (const [input, reason] of reasons) {
+      assert.deepEqual(analyzeSvg(input), { ok: false, reason }, input);
+      assert.deepEqual(validateLogo(Buffer.from(input), "logo.svg"), { ok: false, reason }, input);
+    }
+  });
+
+  it("drops metadata subtrees including their text", () => {
+    assert.equal(
+      sanitizeSvg(
+        "<svg><metadata><rdf:RDF><dc:title>secret</dc:title></rdf:RDF>note</metadata><rect/></svg>",
+      ),
+      "<svg><rect/></svg>",
+    );
+  });
+
+  it("never throws on hostile input", () => {
+    for (const input of ["", "<", "<!", "<svg", "\uFEFF", "<svg>".repeat(5000), "<![CDATA[x]]>"]) {
+      const result = validateLogo(Buffer.from(input), "logo.svg");
+      assert.equal(typeof result.ok, "boolean", input.slice(0, 20));
+    }
   });
 
   it("serves logos with sandboxing headers", () => {

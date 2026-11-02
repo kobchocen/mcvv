@@ -6,10 +6,12 @@ import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/staff";
+import { changeStartCorridor } from "@/lib/admin/users";
 import { isRoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/format/date";
+import { getRaceContext } from "@/lib/live/race-context";
 import { Link, type Locale } from "@/i18n/routing";
 
 const PAGE_SIZE = 50;
@@ -23,6 +25,8 @@ type SearchParams = {
   error?: string;
   /** Výsledek e-mailu o změně role (#191). */
   mail?: string;
+  /** Uložen koridor startéra (id účtu). */
+  corridor?: string;
 };
 
 type PageProps = Readonly<{
@@ -61,7 +65,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
     ...(q ? { OR: [{ name: { contains: q } }, { email: { contains: q } }] } : {}),
   };
 
-  const [total, users, roleCounts, audit] = await Promise.all([
+  const [total, users, roleCounts, audit, raceCtx] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
@@ -74,6 +78,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
         email: true,
         clubName: true,
         role: true,
+        startCorridor: true,
         emailVerified: true,
         createdAt: true,
       },
@@ -84,7 +89,10 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
+    getRaceContext(),
   ]);
+  const secondStartFrom = raceCtx.secondStartFrom;
+  const corridorSavedId = Number.parseInt(sp.corridor ?? "", 10);
   const emails = users.map((user) => user.email);
   const registrationCounts = emails.length
     ? await prisma.registration.groupBy({
@@ -142,6 +150,10 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
         {errorKey ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
             {copy(errorKey)}
+          </p>
+        ) : Number.isFinite(corridorSavedId) ? (
+          <p role="status" className="mt-4 text-sm text-race-accent">
+            {copy("corridorSaved")}
           </p>
         ) : Number.isFinite(savedId) ? (
           <p role="status" className="mt-4 text-sm text-race-accent">
@@ -220,7 +232,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
                 <tr
                   key={user.id}
                   className={
-                    user.id === savedId
+                    user.id === savedId || user.id === corridorSavedId
                       ? "border-b border-race-line/40 bg-race-accent/10"
                       : "border-b border-race-line/40"
                   }
@@ -253,6 +265,40 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
                         back={back}
                       />
                     )}
+                    {user.role === "starter" ? (
+                      <form
+                        action={changeStartCorridor}
+                        className="mt-2 flex flex-wrap items-center gap-2"
+                        data-testid={`corridor-form-${user.id}`}
+                      >
+                        <input type="hidden" name="userId" value={user.id} />
+                        <input type="hidden" name="back" value={back} />
+                        <label className="flex items-center gap-2 text-xs text-race-muted">
+                          {copy("corridor")}
+                          <select
+                            name="corridor"
+                            defaultValue={user.startCorridor ? String(user.startCorridor) : ""}
+                            className="h-9 border border-race-line bg-race-surface px-2 text-sm text-foreground"
+                            title={copy("corridorHint", { first: secondStartFrom })}
+                          >
+                            <option value="">{copy("corridorNone")}</option>
+                            <option value="1">
+                              {copy("corridor1", { last: secondStartFrom - 1 })}
+                            </option>
+                            <option value="2">
+                              {copy("corridor2", { first: secondStartFrom })}
+                            </option>
+                          </select>
+                        </label>
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          className="h-9 border-race-line bg-race-surface px-3 text-xs"
+                        >
+                          {copy("corridorSave")}
+                        </Button>
+                      </form>
+                    ) : null}
                   </td>
                 </tr>
               ))}

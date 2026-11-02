@@ -48,7 +48,7 @@ export default async function CurrentResultsPage({ params }: PageProps) {
   const raceDay =
     resolveHeroPhase({
       now: new Date(),
-      raceStart: raceStartFor(raceYear.raceDate, raceYear.year),
+      raceStart: raceStartFor(raceYear.raceDate, raceYear.year, raceYear.startModel.zeroSeconds),
       startlistPublished: true,
       resultsCount: count,
     }) === "C";

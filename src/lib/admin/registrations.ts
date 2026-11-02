@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/admin/staff";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { computeLineFee, paidAmount } from "@/lib/entries/fee";
+import { registrationCategoryFee } from "@/lib/slots/load";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
 import { canCancelRegistration } from "@/lib/entries/empty-registrations";
@@ -30,10 +31,11 @@ function revalidateRegistrations() {
 async function refreshLineFees(year: number, id: number, email: string): Promise<void> {
   const lines = await prisma.registrationLine.findMany({
     where: { year, registrationId: id },
-    include: { category: { select: { entryFee: true } } },
+    include: { category: { select: { id: true, entryFee: true } } },
   });
   for (const line of lines) {
-    const { fee } = await computeLineFee(email, line.runnerId, line.category.entryFee);
+    const base = await registrationCategoryFee(year, id, line.category);
+    const { fee } = await computeLineFee(email, line.runnerId, base);
     if (fee !== (line.entryFee ?? 0)) {
       await prisma.registrationLine.update({
         where: { year_runnerId: { year, runnerId: line.runnerId } },

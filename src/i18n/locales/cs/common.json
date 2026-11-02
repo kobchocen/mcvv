@@ -138,7 +138,7 @@
       "facts": [
         {
           "title": "Prezentace",
-          "description": "Přihlášky na místě do 9:45 u Velké Verandy. Vyzvednutí čísla pro online přihlášené."
+          "description": "Přihlášky na místě do {onsiteUntil} u Velké Verandy. Vyzvednutí čísla pro online přihlášené."
         },
         {
           "title": "Start",
@@ -415,7 +415,7 @@
       "older": "{year} a starší"
     },
     "timetable": {
-      "registration": "Do 9:45 — přihlášky na místě",
+      "registration": "Do {onsiteUntil} — přihlášky na místě",
       "start": "{startTime} — start (interval {interval} s)",
       "ceremony": "12:20 — vyhlášení výsledků"
     },
@@ -447,8 +447,8 @@
       },
       "registration": {
         "title": "Přihlášky",
-        "summary": "Online přihláška · na místě do 9:45",
-        "body": "V den závodu lze podat přihlášku na místě do 9:45. Online přihláška platí až po připsání platby."
+        "summary": "Online přihláška · na místě do {onsiteUntil}",
+        "body": "V den závodu lze podat přihlášku na místě do {onsiteUntil}. Online přihláška platí až po připsání platby."
       },
       "fees": {
         "title": "Startovné",
@@ -472,8 +472,8 @@
       },
       "timetable": {
         "title": "Časový harmonogram",
-        "summary": "9:45 · {startTime} · 12:20",
-        "body": "Přihlášky na místě končí v 9:45. Intervalový start od {startTime}. Vyhlášení výsledků ve 12:20."
+        "summary": "{onsiteUntil} · {startTime} · 12:20",
+        "body": "Přihlášky na místě končí v {onsiteUntil}. Intervalový start od {startTime}. Vyhlášení výsledků ve 12:20."
       },
       "privacy": {
         "title": "Ochrana údajů",
@@ -557,7 +557,7 @@
     "title": "Přihlášení závodníci",
     "deadline": "Uzávěrka online přihlášek",
     "register": "Přihlásit se",
-    "closed": "Online přihlášky skončily. Na místě se lze přihlásit do 9:45 za dvojnásobné startovné (dospělí {adult} Kč / žáci {kids} Kč).",
+    "closed": "Online přihlášky skončily. Přihlásit se lze ještě na místě v den závodu v závodní kanceláři do {onsiteUntil} (dospělí {adult} Kč / mládež {kids} Kč).",
     "empty": "Zatím tu není žádný potvrzený běžec.",
     "newbie": "nováček",
     "starts": "{count, plural, one {# start} few {# starty} other {# startů}}",
@@ -592,7 +592,6 @@
     "saved": "Uloženo",
     "runners": "Přihlášení běžci",
     "birthCol": "Ročník",
-    "feeReasonOrganizer": "pořadatel",
     "feeReasonWinner": "vítěz",
     "feeReasonVeteran": "veterán",
     "club": "Klub",
@@ -1176,6 +1175,36 @@
     "editionsKidsPlace": "Startovné děti na místě",
     "editionsAdultMail": "Startovné dospělí e-mail",
     "editionsAdultPlace": "Startovné dospělí na místě",
+    "slotsTitle": "Termíny a startovné",
+    "slotsIntro": "Termíny online přihlášek a startovné podle skupin (dospělí / mládež). Časy jsou v pražském čase; konec termínu už do něj nepatří. Uzávěrka a startovné v hlavním formuláři se podle této sekce synchronizují.",
+    "slotsStored": "Termíny jsou uložené.",
+    "slotsDefaults": "Termíny ještě nejsou uložené – zobrazují se výchozí hodnoty z uzávěrky a startovného. Platí, až je uložíte.",
+    "slotsSaved": "Termíny a startovné jsou uložené.",
+    "slotsEarly": "Brzké přihlášky",
+    "slotsEarlyHint": "Volitelný termín před standardními přihláškami (např. se slevou).",
+    "slotsStandard": "Standardní přihlášky",
+    "slotsStandardHint": "Konec standardu = uzávěrka. Po konci se přihlášky uzamknou; nezaplacené přihlášky dostanou ráno e-mail a po lhůtě doplatku se automaticky zruší.",
+    "slotsLate": "Pozdní přihlášky",
+    "slotsLateHint": "Zatím vypnuté – zapnou se s pozdními přihláškami (další část). Lhůta na zaplacení v minutách od odeslání.",
+    "slotsOnsite": "Přihlášky na místě",
+    "slotsOnsiteHint": "V den závodu v závodní kanceláři; časy platí i pro texty na webu.",
+    "slotsActive": "Zapnuto",
+    "slotsFrom": "Od",
+    "slotsTo": "Do (už nepatří)",
+    "slotsFeeAdult": "Startovné dospělí (Kč)",
+    "slotsFeeYouth": "Startovné mládež (Kč)",
+    "slotsPayWithin": "Lhůta na zaplacení (min)",
+    "slotsPayUntil": "Lhůta doplatku nezaplacených standardních přihlášek",
+    "slotsPayMail": "Čas e-mailu „zaplaťte dnes“ (v den lhůty)",
+    "slotsOfficeOpens": "Závodní kancelář od",
+    "slotsOnsiteUntil": "Přihlášky na místě do",
+    "slotsSave": "Uložit termíny",
+    "slotsIssue_order": "Začátek termínu musí být před koncem.",
+    "slotsIssue_overlap": "Zapnuté termíny se překrývají.",
+    "slotsIssue_standard_missing": "Standardní přihlášky musí být nastavené.",
+    "slotsIssue_pay_until": "Lhůta doplatku nesmí být před koncem standardních přihlášek.",
+    "slotsIssue_fee": "Startovné musí být 0–9999 Kč.",
+    "slotsIssue_onsite": "Závodní kancelář musí otevřít před koncem přihlášek na místě.",
     "editionsPrize": "Cena {place}. místo",
     "editionsVet": "Cena veteráni {place}.",
     "editionsNewHint": "Startovné a ceny se zkopírují z posledního ročníku. Datum vyplňte.",

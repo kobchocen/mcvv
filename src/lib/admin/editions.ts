@@ -13,6 +13,12 @@ import { ensureOrganizerRegistration } from "@/lib/entries/organizer-registratio
 import { loadBibRanges } from "@/lib/race/startlist-load";
 import { encodeStartIssues, validateStartSettings, type BibRange } from "@/lib/race/start-settings";
 import { DEFAULT_START_MODEL, parseClock } from "@/lib/race/start-time";
+import {
+  DEFAULT_OFFICE_OPENS_S,
+  DEFAULT_ONSITE_UNTIL_S,
+  standardEndFromDeadline,
+} from "@/lib/slots/core";
+import { onsiteWindow } from "@/lib/slots/defaults";
 import { redirect } from "@/i18n/routing";
 
 function revalidateEditions() {
@@ -68,6 +74,72 @@ async function copyRangesForNewYear(year: number): Promise<void> {
     data: source.ranges.map((range) => ({ year, ...range })),
     skipDuplicates: true,
   });
+}
+
+/**
+ * Když má ročník termíny přihlášek (sloty), úprava uzávěrky, startovného nebo data závodu
+ * v hlavním formuláři je promítne i do nich (standard = uzávěrka a online startovné,
+ * na místě = den závodu a startovné na místě), aby se obě místa nerozcházela.
+ */
+async function syncSlotsFromEdition(
+  id: number | null,
+  year: number,
+  payload: {
+    date: Date;
+    regDeadline: Date | null;
+    startAdultMail: number | null;
+    startKidsMail: number | null;
+    startAdultPlace: number | null;
+    startKidsPlace: number | null;
+  },
+  before: Record<string, unknown> | null,
+): Promise<void> {
+  const slots = await prisma.registrationSlot.findMany({ where: { year } });
+  if (slots.length === 0) {
+    return;
+  }
+  const changed = (key: keyof typeof payload) =>
+    !before || String(before[key] ?? "") !== String(payload[key] ?? "");
+  const standard = slots.find((slot) => slot.type === "standard");
+  if (standard) {
+    const data: Prisma.RegistrationSlotUpdateInput = {};
+    if (payload.regDeadline && changed("regDeadline")) {
+      data.to = standardEndFromDeadline(payload.regDeadline);
+    }
+    if (payload.startAdultMail !== null && changed("startAdultMail")) {
+      data.feeAdult = payload.startAdultMail;
+    }
+    if (payload.startKidsMail !== null && changed("startKidsMail")) {
+      data.feeYouth = payload.startKidsMail;
+    }
+    if (Object.keys(data).length > 0) {
+      await prisma.registrationSlot.update({
+        where: { year_type: { year, type: "standard" } },
+        data,
+      });
+    }
+  }
+  if (slots.some((slot) => slot.type === "onsite")) {
+    const times = await prisma.edition.findFirst({
+      where: id ? { id } : { date: payload.date },
+      select: { officeOpensS: true, onsiteUntilS: true },
+    });
+    const data: Prisma.RegistrationSlotUpdateInput = onsiteWindow(
+      payload.date,
+      times?.officeOpensS ?? DEFAULT_OFFICE_OPENS_S,
+      times?.onsiteUntilS ?? DEFAULT_ONSITE_UNTIL_S,
+    );
+    if (payload.startAdultPlace !== null && changed("startAdultPlace")) {
+      data.feeAdult = payload.startAdultPlace;
+    }
+    if (payload.startKidsPlace !== null && changed("startKidsPlace")) {
+      data.feeYouth = payload.startKidsPlace;
+    }
+    await prisma.registrationSlot.update({
+      where: { year_type: { year, type: "onsite" } },
+      data,
+    });
+  }
 }
 
 export async function saveEdition(formData: FormData): Promise<void> {
@@ -136,6 +208,7 @@ export async function saveEdition(formData: FormData): Promise<void> {
   } else {
     await prisma.edition.create({ data: payload });
   }
+  await syncSlotsFromEdition(id, year, payload, before);
   const changes = diffFields(before, payload);
   if (Object.keys(changes).length > 0) {
     await writeAudit({

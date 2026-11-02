@@ -77,6 +77,8 @@ export type AuditAction =
   | "bank_tx.refunded"
   | "edition.created"
   | "edition.updated"
+  // Termíny a startovné ročníku (mcvv_prihl_slot + nastavení doplatku a závodní kanceláře).
+  | "edition.slots_updated"
   // Kategorie včetně startovného a rekordu; klub = název v číselníku pro (id, rok).
   | "category.updated"
   | "club.updated"

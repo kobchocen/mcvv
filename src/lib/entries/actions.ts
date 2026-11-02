@@ -9,6 +9,7 @@ import { getSession } from "@/lib/auth/session";
 import { resolveClub } from "@/lib/entries/club";
 import { recordEntryChange } from "@/lib/entries/changes";
 import { computeLineFee } from "@/lib/entries/fee";
+import { currentCategoryFee } from "@/lib/slots/load";
 import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/runner";
 import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
@@ -183,7 +184,9 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   }
   const [club, { fee }] = await Promise.all([
     resolveClub(formString(formData, "clubName"), year, formString(formData, "clubId")),
-    computeLineFee(session.email, runnerId, category.entryFee),
+    currentCategoryFee(year, category).then((base) =>
+      computeLineFee(session.email, runnerId, base),
+    ),
   ]);
   await prisma.registrationLine.create({
     data: {
@@ -266,7 +269,11 @@ export async function addNewRunner(
     year,
     formString(formData, "clubId"),
   );
-  const { fee } = await computeLineFee(session.email, resolved.id, category.entryFee);
+  const { fee } = await computeLineFee(
+    session.email,
+    resolved.id,
+    await currentCategoryFee(year, category),
+  );
   await prisma.registrationLine.create({
     data: {
       year,

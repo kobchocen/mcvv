@@ -138,7 +138,7 @@
       "facts": [
         {
           "title": "Check-in",
-          "description": "On-site registration until 9:45 at Velká Veranda. Bib pickup for online entries."
+          "description": "On-site registration until {onsiteUntil} at Velká Veranda. Bib pickup for online entries."
         },
         {
           "title": "Start",
@@ -415,7 +415,7 @@
       "older": "{year} and older"
     },
     "timetable": {
-      "registration": "Until 9:45 — on-site registration",
+      "registration": "Until {onsiteUntil} — on-site registration",
       "start": "{startTime} — start ({interval} s interval)",
       "ceremony": "12:20 — awards ceremony"
     },
@@ -447,8 +447,8 @@
       },
       "registration": {
         "title": "Registration",
-        "summary": "Online registration · on site until 9:45",
-        "body": "On race day you can register on site until 9:45. An online entry is valid only after the payment is received."
+        "summary": "Online registration · on site until {onsiteUntil}",
+        "body": "On race day you can register on site until {onsiteUntil}. An online entry is valid only after the payment is received."
       },
       "fees": {
         "title": "Entry fees",
@@ -472,8 +472,8 @@
       },
       "timetable": {
         "title": "Timetable",
-        "summary": "9:45 · {startTime} · 12:20",
-        "body": "On-site registration closes at 9:45. Interval start from {startTime}. Awards at 12:20."
+        "summary": "{onsiteUntil} · {startTime} · 12:20",
+        "body": "On-site registration closes at {onsiteUntil}. Interval start from {startTime}. Awards at 12:20."
       },
       "privacy": {
         "title": "Privacy",
@@ -557,7 +557,7 @@
     "title": "Entered runners",
     "deadline": "Online entry deadline",
     "register": "Enter",
-    "closed": "Online entries have closed. On site you can enter until 9:45 for double the fee (adults {adult} CZK / juniors {kids} CZK).",
+    "closed": "Online entries have closed. You can still enter on site on race day at the race office until {onsiteUntil} (adults {adult} CZK / youth {kids} CZK).",
     "empty": "No confirmed runners yet.",
     "newbie": "newcomer",
     "starts": "{count, plural, one {# start} other {# starts}}",
@@ -592,7 +592,6 @@
     "saved": "Saved",
     "runners": "Entered runners",
     "birthCol": "Year",
-    "feeReasonOrganizer": "organizer",
     "feeReasonWinner": "winner",
     "feeReasonVeteran": "veteran",
     "club": "Club",
@@ -1176,6 +1175,36 @@
     "editionsKidsPlace": "Kids fee (on site)",
     "editionsAdultMail": "Adults fee (email)",
     "editionsAdultPlace": "Adults fee (on site)",
+    "slotsTitle": "Entry periods and fees",
+    "slotsIntro": "Online entry periods and fees by group (adults / youth). Times are Prague time; the end is exclusive. The deadline and fees in the main form are kept in sync with this section.",
+    "slotsStored": "Entry periods are saved.",
+    "slotsDefaults": "Entry periods are not saved yet – showing defaults from the deadline and fees. They apply once saved.",
+    "slotsSaved": "Entry periods and fees saved.",
+    "slotsEarly": "Early entries",
+    "slotsEarlyHint": "Optional period before standard entries (e.g. discounted).",
+    "slotsStandard": "Standard entries",
+    "slotsStandardHint": "End of standard = deadline. Entries lock afterwards; unpaid entries get an email in the morning and are cancelled automatically after the payment deadline.",
+    "slotsLate": "Late entries",
+    "slotsLateHint": "Off for now – enabled with late entries (next part). Payment window in minutes from submission.",
+    "slotsOnsite": "On-site entries",
+    "slotsOnsiteHint": "On race day at the race office; the times are also used in public texts.",
+    "slotsActive": "Enabled",
+    "slotsFrom": "From",
+    "slotsTo": "Until (exclusive)",
+    "slotsFeeAdult": "Adults fee (CZK)",
+    "slotsFeeYouth": "Youth fee (CZK)",
+    "slotsPayWithin": "Payment window (min)",
+    "slotsPayUntil": "Payment deadline for unpaid standard entries",
+    "slotsPayMail": "Time of the “pay today” email (on the deadline day)",
+    "slotsOfficeOpens": "Race office opens",
+    "slotsOnsiteUntil": "On-site entries until",
+    "slotsSave": "Save entry periods",
+    "slotsIssue_order": "The start of a period must be before its end.",
+    "slotsIssue_overlap": "Enabled periods overlap.",
+    "slotsIssue_standard_missing": "Standard entries must be set.",
+    "slotsIssue_pay_until": "The payment deadline cannot be before the end of standard entries.",
+    "slotsIssue_fee": "Fees must be 0–9999 CZK.",
+    "slotsIssue_onsite": "The race office must open before on-site entries close.",
     "editionsPrize": "Prize {place}. place",
     "editionsVet": "Veterans prize {place}.",
     "editionsNewHint": "Fees and prizes are copied from the latest edition. Fill in the date.",

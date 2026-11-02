@@ -2,6 +2,17 @@ import { cache } from "react";
 
 import { zonedCivilToUtc } from "@/lib/date/race-schedule";
 import { prisma } from "@/lib/db/client";
+import {
+  DEFAULT_OFFICE_OPENS_S,
+  DEFAULT_ONSITE_UNTIL_S,
+  DEFAULT_STANDARD_PAY_MAIL_S,
+  registrationOpen,
+  standardEnd,
+  standardPayUntil,
+  type Slot,
+  type SlotSettings,
+} from "@/lib/slots/core";
+import { loadSlots } from "@/lib/slots/load";
 import { startModelFromEdition, type StartModel } from "@/lib/race/start-time";
 
 export function registrationDeadlineEnd(deadline: Date | null | undefined): Date | null {
@@ -28,6 +39,14 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
   editionId: number | null;
   /** Start model of the edition (zero, interval, second start); defaults without an edition. */
   startModel: StartModel;
+  /** Termíny přihlášek (sloty) ročníku; prázdné = dosavadní chování podle uzávěrky. */
+  slots: Slot[];
+  /** Nastavení termínů ročníku (časy v sekundách od půlnoci, Praha). */
+  slotSettings: SlotSettings;
+  /** Konec standardních přihlášek (exkluzivní); null = bez uzávěrky. */
+  standardEnd: Date | null;
+  /** Lhůta doplatku nezaplacených standardních přihlášek. */
+  standardPayUntil: Date | null;
 }> {
   const latest = await prisma.edition.findFirst({
     orderBy: { id: "desc" },
@@ -38,12 +57,23 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
       startZeroSeconds: true,
       startInterval: true,
       secondStartFrom: true,
+      standardPayUntil: true,
+      standardPayMailS: true,
+      officeOpensS: true,
+      onsiteUntilS: true,
     },
   });
   const year = latest?.date.getUTCFullYear() ?? latest?.id ?? new Date().getFullYear();
   const deadline = latest?.regDeadline ?? null;
-  const end = registrationDeadlineEnd(deadline);
-  const open = !end || Date.now() <= end.getTime();
+  const slots = latest ? await loadSlots(year) : [];
+  const slotSettings: SlotSettings = {
+    regDeadline: deadline,
+    standardPayUntil: latest?.standardPayUntil ?? null,
+    standardPayMailS: latest?.standardPayMailS ?? DEFAULT_STANDARD_PAY_MAIL_S,
+    officeOpensS: latest?.officeOpensS ?? DEFAULT_OFFICE_OPENS_S,
+    onsiteUntilS: latest?.onsiteUntilS ?? DEFAULT_ONSITE_UNTIL_S,
+  };
+  const open = registrationOpen(slots, deadline, new Date());
   return {
     year,
     deadline,
@@ -51,6 +81,10 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
     raceDate: latest?.date ?? null,
     editionId: latest?.id ?? null,
     startModel: startModelFromEdition(latest),
+    slots,
+    slotSettings,
+    standardEnd: standardEnd(slots, deadline),
+    standardPayUntil: standardPayUntil(slots, slotSettings),
   };
 });
 

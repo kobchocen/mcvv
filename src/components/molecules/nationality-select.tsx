@@ -1,16 +1,19 @@
-import type { CountryOption } from "@/lib/runner/nationality";
+import { HOME_COUNTRY, type CountryOption } from "@/lib/runner/nationality";
 
 /** Data pro výběr státní příslušnosti (#200), připravená na serveru (názvy podle jazyka). */
 export type NationalityField = {
   label: string;
-  /** Text prázdné volby („neuvedeno“). */
+  /** Text pro běžce bez uvedeného státu (jen ve výpisech; ve výběru taková volba není, Q360). */
   unknown: string;
   hint?: string;
   common: CountryOption[];
   other: CountryOption[];
 };
 
-/** Select státní příslušnosti: časté státy nahoře, oddělovač, pak ostatní abecedně. */
+/**
+ * Select státní příslušnosti: časté státy nahoře, oddělovač, pak ostatní abecedně.
+ * Stát je povinný (Q360): ve výběru není volba „neuvedeno“, bez hodnoty se předvyplní CZ.
+ */
 export function NationalitySelect({
   id,
   name = "nationality",
@@ -34,13 +37,13 @@ export function NationalitySelect({
     <select
       id={id}
       name={name}
-      value={value}
-      defaultValue={value === undefined ? defaultValue : undefined}
+      value={value === undefined ? undefined : value || HOME_COUNTRY}
+      defaultValue={value === undefined ? defaultValue || HOME_COUNTRY : undefined}
       onChange={onChange ? (event) => onChange(event.target.value) : undefined}
       aria-describedby={describedBy}
+      required
       className={className ?? "h-10 border border-race-line bg-race-surface px-3"}
     >
-      <option value="">{field.unknown}</option>
       {field.common.map((option) => (
         <option key={option.code} value={option.code}>
           {option.label}

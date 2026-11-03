@@ -798,7 +798,7 @@
   "Nationality": {
     "label": "Státní příslušnost",
     "unknown": "— neuvedeno —",
-    "hint": "Podle ní ukážeme u zahraničních běžců ve výsledcích vlaječku. Údaj u běžce, který už ho má, přihláška nepřepíše.",
+    "hint": "Podle ní ukážeme u zahraničních běžců ve výsledcích vlaječku. Když vyberete jiný stát než Česko, uložíme ho i běžci, který už u nás běžel.",
     "save": "Uložit",
     "saveError": "Státní příslušnost se nepodařilo uložit (neplatný stát nebo běžec).",
     "saved": "Státní příslušnost uložena."

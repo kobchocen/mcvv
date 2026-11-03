@@ -8,6 +8,7 @@ import {
   computeNationalityStats,
   countryName,
   countryOptions,
+  entryNationalityUpdate,
   flagSrc,
   listFlag,
   normalizeNationality,
@@ -101,5 +102,28 @@ describe("computeNationalityStats", () => {
       { year: 2025, countries: 2, foreign: 3, unknown: 0 },
       { year: 2024, countries: 2, foreign: 1, unknown: 1 },
     ]);
+  });
+});
+
+describe("entryNationalityUpdate (Q362)", () => {
+  it("fills a missing country, including the prefilled CZ", () => {
+    assert.equal(entryNationalityUpdate(null, "CZ"), "CZ");
+    assert.equal(entryNationalityUpdate("", "SK"), "SK");
+  });
+
+  it("overwrites the stored country with a country other than CZ", () => {
+    assert.equal(entryNationalityUpdate("CZ", "SK"), "SK");
+    assert.equal(entryNationalityUpdate("PL", "de"), "DE");
+  });
+
+  it("keeps a foreign country when the entry leaves the prefilled CZ", () => {
+    assert.equal(entryNationalityUpdate("SK", "CZ"), null);
+  });
+
+  it("changes nothing for the same or an invalid country", () => {
+    assert.equal(entryNationalityUpdate("SK", "SK"), null);
+    assert.equal(entryNationalityUpdate("CZ", ""), null);
+    assert.equal(entryNationalityUpdate("CZ", "XX"), null);
+    assert.equal(entryNationalityUpdate(null, null), null);
   });
 });

@@ -1,7 +1,7 @@
 import { allocateRunnerId } from "@/lib/admin/runner-sex-core";
 import { prisma } from "@/lib/db/client";
 import { matchRunnerByPreviousName } from "@/lib/entries/runner-match";
-import { HOME_COUNTRY } from "@/lib/runner/nationality";
+import { HOME_COUNTRY, entryNationalityUpdate } from "@/lib/runner/nationality";
 import {
   defaultCategory,
   eligibleCategoriesFor,
@@ -17,8 +17,12 @@ export function runnerPrefix(birthYear: number, sex: "M" | "F"): string {
   return `${birthYear}${sexDigit(sex)}`;
 }
 
+/** Změna státu stávajícího běžce z přihlášky (Q362) – pro audit. */
+export type NationalityChange = { from: string | null; to: string };
+
 export type ResolveRunnerResult =
-  { id: string; name: string; created: boolean } | { error: "ambiguous" };
+  | { id: string; name: string; created: boolean; nationalityChange?: NationalityChange }
+  | { error: "ambiguous" };
 
 function normalizeRunnerName(firstName: string, lastName: string): string {
   return `${lastName.trim()} ${firstName.trim()}`.replace(/\s+/g, " ").slice(0, 50);
@@ -29,7 +33,7 @@ export async function resolveRunner(input: {
   lastName: string;
   birthYear: number;
   sex: "M" | "F";
-  /** ISO kód státu (#200); null = neuvedeno. */
+  /** ISO kód státu (#200, povinný v přihlášce – Q360); null = neuvedeno. */
   nationality?: string | null;
 }): Promise<ResolveRunnerResult> {
   const name = normalizeRunnerName(input.firstName, input.lastName);
@@ -40,24 +44,32 @@ export async function resolveRunner(input: {
     select: { id: true, name: true, nationality: true },
   });
   const nationality = input.nationality ?? null;
-  // Existující běžec: příslušnost jen doplníme, pokud chybí – přihlašující nepřepíše
-  // údaj, který už je v číselníku (opravu dělá pořadatel v administraci).
+  // Existující běžec (Q362): chybějící stát doplníme, jiný stát než CZ přepíše uložený;
+  // předvyplněné CZ cizí stát nepřepíše (viz entryNationalityUpdate).
+  let nationalityChange: NationalityChange | undefined;
   const fillNationality = async (runner: { id: string; nationality: string | null }) => {
-    if (nationality && !runner.nationality) {
-      await prisma.runner.update({ where: { id: runner.id }, data: { nationality } });
+    const next = entryNationalityUpdate(runner.nationality, nationality);
+    if (next) {
+      await prisma.runner.update({ where: { id: runner.id }, data: { nationality: next } });
+      nationalityChange = { from: runner.nationality ?? null, to: next };
     }
   };
   const wanted = name.toLowerCase();
   const matches = yearMates.filter((row) => row.name.trim().toLowerCase() === wanted);
   if (matches.length === 1) {
     await fillNationality(matches[0]);
-    return { id: matches[0].id, name: matches[0].name, created: false };
+    return { id: matches[0].id, name: matches[0].name, created: false, nationalityChange };
   }
   if (matches.length > 1) {
     const sexMatches = matches.filter((row) => row.id.charAt(4) === sex);
     if (sexMatches.length === 1) {
       await fillNationality(sexMatches[0]);
-      return { id: sexMatches[0].id, name: sexMatches[0].name, created: false };
+      return {
+        id: sexMatches[0].id,
+        name: sexMatches[0].name,
+        created: false,
+        nationalityChange,
+      };
     }
     return { error: "ambiguous" };
   }
@@ -66,7 +78,7 @@ export async function resolveRunner(input: {
   const previous = await findRunnerByPreviousName(name, input.birthYear, sex, yearMates);
   if (previous) {
     await fillNationality(previous);
-    return { id: previous.id, name: previous.name, created: false };
+    return { id: previous.id, name: previous.name, created: false, nationalityChange };
   }
   // Same allocation as the admin sex change: YYYY + 0/5 + next sequence of that prefix.
   const id = allocateRunnerId(

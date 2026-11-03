@@ -798,7 +798,7 @@
   "Nationality": {
     "label": "Nationality",
     "unknown": "— not stated —",
-    "hint": "Runners from abroad get a flag in the results. An entry does not overwrite a nationality the runner already has.",
+    "hint": "Runners from abroad get a flag in the results. If you choose a country other than the Czech Republic, we also save it for a runner who has raced with us before.",
     "save": "Save",
     "saveError": "The nationality could not be saved (invalid country or runner).",
     "saved": "Country saved."

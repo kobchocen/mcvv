@@ -12,20 +12,23 @@ const valid = {
   sex: "F",
   categoryId: "F",
   clubName: "K.O.B. Choceň",
+  nationality: "CZ",
 };
 
 describe("parseNewRunner", () => {
-  it("accepts an optional nationality code (#200)", () => {
-    const none = parseNewRunner(valid);
-    assert.ok(none.ok);
-    assert.equal(none.data.nationality, "");
+  it("requires a valid nationality code (#200, Q360)", () => {
     const sk = parseNewRunner({ ...valid, nationality: " sk " });
     assert.ok(sk.ok);
     assert.equal(sk.data.nationality, "SK");
-    assert.deepEqual(parseNewRunner({ ...valid, nationality: "XX" }), {
-      ok: false,
-      error: "invalid",
-    });
+    const { nationality: _omit, ...withoutNationality } = valid;
+    void _omit;
+    for (const raw of [
+      withoutNationality,
+      { ...valid, nationality: "" },
+      { ...valid, nationality: "XX" },
+    ]) {
+      assert.deepEqual(parseNewRunner(raw), { ok: false, error: "invalid" });
+    }
   });
 
   it("accepts a complete form", () => {

@@ -8,6 +8,7 @@
 import { emailEquals, isCancelledStatus } from "@/lib/entries/ensure-core";
 
 import { activeSlot, type Slot, type SlotType } from "./core";
+import { isPaidStatus } from "./late-core";
 
 /** Termín přihlášky; bez záznamu (přihlášky před zavedením termínů) = standard. */
 export function entrySlotType(slot: SlotType | null | undefined): SlotType {
@@ -30,7 +31,7 @@ export type EntryRow = {
 /**
  * Přihláška e-mailu v daném termínu, do které se dá přidávat (nezrušená); při více kandidátech
  * ta s nejnižším číslem. Ročník bez termínů (`slot` = null) → dosavadní chování: kterákoli
- * nezrušená přihláška.
+ * nezrušená přihláška. Pozdní přihlášky mají vlastní pravidla (`pickLateTarget`).
  */
 export function pickWritableRegistration<T extends EntryRow>(
   rows: readonly T[],
@@ -74,12 +75,21 @@ export function currentEntrySlot(ctx: EntryWriteContext): SlotType | null {
  */
 export function registrationWritable(
   ctx: EntryWriteContext,
-  reg: { year: number; status: number | null; slot: SlotType | null },
+  reg: {
+    year: number;
+    status: number | null;
+    slot: SlotType | null;
+    /** Pozdní přihláška: odeslaná (lhůta na zaplacení běží) už se z webu nemění (Q330). */
+    submittedAt?: Date | null;
+  },
 ): boolean {
   if (reg.year !== ctx.year || !ctx.open || isCancelledStatus(reg.status)) return false;
   if (ctx.slots.length === 0) return true;
   const running = currentEntrySlot(ctx);
-  return running !== null && entrySlotType(reg.slot) === running;
+  if (running === null || entrySlotType(reg.slot) !== running) return false;
+  // Pozdní přihláška je košík jen do odeslání; zaplacená je zamčená (Q332, Q343).
+  if (running === "late") return !reg.submittedAt && !isPaidStatus(reg.status);
+  return true;
 }
 
 /**

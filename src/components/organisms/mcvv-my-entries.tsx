@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { CheckCircle2, Clock, FileDown, Lock, XCircle } from "lucide-react";
 
 import { Link, type Locale } from "@/i18n/routing";
@@ -12,6 +14,7 @@ import { termEndLabel } from "@/lib/slots/term-end";
 /** Překladač jmenného prostoru Entries (getTranslations). */
 type Copy = {
   (key: string, values?: Record<string, string | number>): string;
+  rich?: (key: string, values: Record<string, (chunks: ReactNode) => ReactNode>) => ReactNode;
 };
 
 type Line = {
@@ -27,6 +30,8 @@ export type MyLockedEntry = {
   id: number;
   status: number | null;
   slot: SlotType | null;
+  /** Pozdní přihláška: odeslána (zaplacená pozdní přihláška je zamčená hned, ne až koncem termínu). */
+  submittedAt?: Date | null;
   lines: Line[];
   payments: { id: number; date: Date | null; amount: number | null }[];
 };
@@ -172,9 +177,22 @@ export async function McvvLockedEntry({
         item={{ id: entry.id, slot: entry.slot, fee, paid, editable: false }}
         copy={copy}
       />
-      <p className="mt-2 max-w-2xl text-sm text-race-muted">
-        {end ? copy("entryTermEnded", { slot: slotType, end }) : copy("entryTermEndedNoDate")}
-      </p>
+      {slotType === "late" && entry.submittedAt ? (
+        <div className="mt-3 grid max-w-2xl gap-2 text-sm">
+          <p>{copy("latePaidThanks")}</p>
+          <p className="rounded-md border border-race-line/60 p-3 leading-6 text-race-muted">
+            {copy.rich
+              ? copy.rich("latePaidBibPending", {
+                  b: (chunks) => <b className="text-foreground dark:text-white">{chunks}</b>,
+                })
+              : null}
+          </p>
+        </div>
+      ) : (
+        <p className="mt-2 max-w-2xl text-sm text-race-muted">
+          {end ? copy("entryTermEnded", { slot: slotType, end }) : copy("entryTermEndedNoDate")}
+        </p>
+      )}
 
       <ul className="mt-4 grid gap-2 text-sm">
         {entry.lines.map((line) => (
@@ -187,7 +205,7 @@ export async function McvvLockedEntry({
               {copy("birthCol")}: {line.runnerId.slice(0, 4)}
             </span>
             <span className="text-race-muted">
-              {line.club.name} · {line.category.name}
+              {[line.club.name, line.category.name].filter(Boolean).join(" · ")}
             </span>
             <span>{line.entryFee ?? line.category.entryFee ?? 0} Kč</span>
           </li>

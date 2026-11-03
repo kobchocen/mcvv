@@ -204,6 +204,7 @@ export function specialStartFlash(
       "offsetRange",
       "note",
       "line",
+      "late",
     ] as const;
     const key = known.find((item) => item === reason) ?? "kind";
     return {

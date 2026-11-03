@@ -704,6 +704,10 @@ model RegistrationMeta {
   /// null = přihláška bez uložené ceny → cena termínu (dosavadní chování).
   feeAdult          Int?                  @map("cena_dospeli") @db.SmallInt
   feeYouth          Int?                  @map("cena_mladez") @db.SmallInt
+  /// Pozdní přihláška odeslána (checkbox „Zaplatím ihned“); pak už ji nelze z webu měnit (Q330).
+  submittedAt       DateTime?             @map("odeslano_at")
+  /// Lhůta na zaplacení odeslané pozdní přihlášky (odeslání + 60 min); po ní auto-zrušení.
+  payUntil          DateTime?             @map("platba_do")
 
   @@id([year, id])
   @@map("mcvv_prihlaska_meta")

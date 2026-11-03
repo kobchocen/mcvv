@@ -130,3 +130,19 @@ test("splitMyEntries: forms only for a writable entry (Q346)", () => {
   assert.deepEqual(splitMyEntries([a, b], false), { primary: a, locked: [b] });
   assert.deepEqual(splitMyEntries([], true), { primary: null, locked: [] });
 });
+
+test("registrationWritable: late draft is writable until submitted or paid (Q330, Q343)", () => {
+  const now = "2026-12-03T12:00:00Z";
+  const draft = { year: 2026, status: 2, slot: "late" as const };
+  assert.equal(currentEntrySlot(ctx(now)), "late");
+  assert.equal(registrationWritable(ctx(now), draft), true);
+  assert.equal(
+    registrationWritable(ctx(now), { ...draft, submittedAt: iso("2026-12-03T11:50:00Z") }),
+    false,
+  );
+  assert.equal(registrationWritable(ctx(now), { ...draft, status: 3 }), false);
+  // standardní přihláška je v pozdním termínu uzavřená
+  assert.equal(registrationWritable(ctx(now), { ...draft, slot: "standard" as const }), false);
+  // bez startovného zdarma v pozdním termínu
+  assert.equal(freeEntryAllowed(currentEntrySlot(ctx(now))), false);
+});

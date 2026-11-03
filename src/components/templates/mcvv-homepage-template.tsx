@@ -70,6 +70,9 @@ export async function McvvHomepageTemplate({
   });
   // Odpočet do konce standardních přihlášek (ze slotu, jinak konec dne uzávěrky).
   const deadlineEnd = standardEnd ? new Date(standardEnd.getTime() - 1000) : null;
+  // V pozdním termínu je přihlašování otevřené, ale odpočet do konce standardního už neplatí.
+  const countdownEnd =
+    deadlineEnd && deadlineEnd.getTime() > new Date().getTime() ? deadlineEnd : null;
   const t = await getTranslations({ locale, namespace: "Home.hero" });
   const toCta = (button: HeroButton): McvvHeroCta => {
     switch (button.kind) {
@@ -139,7 +142,7 @@ export async function McvvHomepageTemplate({
       />
       <McvvHeroSection
         content={content}
-        deadlineMs={buttons.showCountdown && open ? (deadlineEnd?.getTime() ?? null) : null}
+        deadlineMs={buttons.showCountdown && open ? (countdownEnd?.getTime() ?? null) : null}
         primary={toCta(buttons.primary)}
         secondary={buttons.secondary ? toCta(buttons.secondary) : null}
         refreshAtMs={phase === "A" || phase === "B" ? raceStart.getTime() : null}

@@ -5,6 +5,7 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { enqueueMail } from "@/lib/mail/queue";
 
+import { runLatePayment, type LatePayResult } from "@/lib/slots/late-pay-job";
 import { runStandardPayment, type StandardPayResult } from "@/lib/slots/standard-pay-job";
 
 import { renderReminder } from "./render";
@@ -22,10 +23,13 @@ export type RemindersResult = {
   reminder1: number;
   /** Doplatek standardu (e-mail v den lhůty, automatické zrušení po lhůtě). */
   standardPay: StandardPayResult;
+  /** Pozdní přihlášky: auto-storno po lhůtě na zaplacení, košíky po konci termínu. */
+  latePay: LatePayResult;
 };
 
 /**
- * Zařadí due připomínky R1 do e-mailové fronty (nízká priorita) a spustí doplatek standardu.
+ * Zařadí due připomínky R1 do e-mailové fronty (nízká priorita), spustí doplatek standardu
+ * a auto-storno pozdních přihlášek.
  * Idempotentní.
  */
 export async function runReminders(
@@ -120,5 +124,6 @@ export async function runReminders(
     reminder1 += 1;
   }
   const standardPay = await runStandardPayment({ now, dryRun });
-  return { dryRun, reminder1, standardPay };
+  const latePay = await runLatePayment({ now, dryRun });
+  return { dryRun, reminder1, standardPay, latePay };
 }

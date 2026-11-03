@@ -78,9 +78,16 @@ export function matchTransaction(
   };
 }
 
-/** Auto-potvrzení jen u plateb s datem do 3. 12. ročníku (včetně). */
-export function autoConfirmAllowed(paymentDate: string, year: number): boolean {
-  return paymentDate <= `${year}-12-03`;
+/**
+ * Auto-potvrzení jen u plateb s datem do posledního dne placení ročníku (včetně): podle termínů
+ * přihlášek (lhůta doplatku standardu, konec zapnutých pozdních přihlášek), jinak 3. 12.
+ */
+export function autoConfirmAllowed(
+  paymentDate: string,
+  year: number,
+  lastDay: string = `${year}-12-03`,
+): boolean {
+  return paymentDate <= lastDay;
 }
 
 export type BankTxReason =
@@ -103,7 +110,7 @@ export const REASON_LABELS: Record<BankTxReason, string> = {
   underpaid: "nižší částka než k úhradě",
   interrupted: "přerušené zpracování – ověřit ručně",
   partial: "částečná platba",
-  late: "platba po 3. 12. – potvrdit ručně",
+  late: "platba po lhůtě – potvrdit ručně",
   already_confirmed: "už potvrzená přihláška (možný duplikát)",
   sale: "prodejka závodní kanceláře",
   sale_not_found: "prodejka neexistuje",

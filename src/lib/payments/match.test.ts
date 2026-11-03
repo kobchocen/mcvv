@@ -66,6 +66,9 @@ test("auto-confirm only for payments dated up to 3 December of the race year", (
   assert.equal(autoConfirmAllowed("2026-10-13", Y), true);
   assert.equal(autoConfirmAllowed("2026-12-04", Y), false);
   assert.equal(autoConfirmAllowed("2027-01-02", Y), false);
+  // podle termínů přihlášek (např. konec pozdních přihlášek v sobotu 5. 12.)
+  assert.equal(autoConfirmAllowed("2026-12-05", Y, "2026-12-05"), true);
+  assert.equal(autoConfirmAllowed("2026-12-06", Y, "2026-12-05"), false);
 });
 
 test("partial payments are matched and summed per entry", () => {

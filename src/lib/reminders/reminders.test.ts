@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { renderReminder } from "./render";
-import { dueReminder, isReminder2Window, type ReminderCandidate } from "./schedule";
+import { dueReminder, type ReminderCandidate } from "./schedule";
 
 const Y = 2026;
-const deadlineEnd = new Date("2026-12-02T22:59:59Z");
+const standardEnd = new Date("2026-12-02T23:00:00Z");
 const base: ReminderCandidate = {
   status: 2,
   email: "a@example.test",
@@ -13,9 +13,8 @@ const base: ReminderCandidate = {
   paid: 0,
   lastModified: new Date("2026-10-17T08:00:00Z"),
   reminder1At: null,
-  reminder2At: null,
 };
-const at = (iso: string) => ({ now: new Date(iso), year: Y, deadlineEnd });
+const at = (iso: string) => ({ now: new Date(iso), standardEnd });
 
 test("R1 goes 24 h after the last change, in the 8–20 h window, once", () => {
   assert.equal(dueReminder(base, at("2026-10-18T07:00:00Z")), null); // 23 h
@@ -31,23 +30,16 @@ test("no reminders for paid, confirmed, cancelled or email-less entries", () => 
   assert.equal(dueReminder({ ...base, email: null }, now), null);
 });
 
-test("R1 is not sent after the deadline", () => {
-  assert.equal(dueReminder(base, at("2026-12-03T08:00:00Z")), 2);
-  assert.equal(dueReminder({ ...base, reminder2At: new Date() }, at("2026-12-03T08:00:00Z")), null);
+test("R1 is not sent after standard entries end, and R2 no longer exists", () => {
+  assert.equal(dueReminder(base, at("2026-12-02T18:00:00Z")), 1); // st 19:00 Praha
+  assert.equal(dueReminder(base, at("2026-12-03T08:00:00Z")), null);
   assert.equal(dueReminder(base, at("2026-12-04T09:00:00Z")), null);
-});
-
-test("R2 only on 3 December in the morning (Prague), once, even after R1", () => {
-  assert.equal(isReminder2Window(new Date("2026-12-03T05:59:00Z"), Y), false); // 6:59
-  assert.equal(isReminder2Window(new Date("2026-12-03T06:00:00Z"), Y), true); // 7:00
-  assert.equal(isReminder2Window(new Date("2026-12-03T11:00:00Z"), Y), false); // 12:00
-  assert.equal(dueReminder({ ...base, reminder1At: new Date() }, at("2026-12-03T07:00:00Z")), 2);
+  assert.equal(dueReminder({ ...base, reminder1At: new Date() }, at("2026-12-03T07:00:00Z")), null);
 });
 
 test("reminder emails show the remaining amount, payment details, QR and the signature", () => {
-  for (const kind of [1, 2] as const) {
+  {
     const mail = renderReminder({
-      kind,
       year: Y,
       id: 32,
       name: "Klub <A>",
@@ -58,7 +50,6 @@ test("reminder emails show the remaining amount, payment details, QR and the sig
       fee: 500,
       paid: 200,
       site: "https://www.mcvv.org",
-      deadline: "2026-12-02",
     });
     assert.match(mail.text, /Zbývá zaplatit: 300 Kč/);
     assert.match(mail.text, /K úhradě: 300 Kč/);
@@ -68,17 +59,12 @@ test("reminder emails show the remaining amount, payment details, QR and the sig
     assert.match(mail.text, /Tým pořadatelů z K\.O\.B\. Choceň/);
     assert.match(mail.html, /api\/platba-qr\?rok=2026&amp;id=32&amp;castka=300/);
     assert.ok(!/návod/i.test(mail.text + mail.html));
-    if (kind === 2) {
-      assert.match(mail.text, /nezaplacené přihlášky budou zrušeny/);
-      assert.ok(!/mohou být zrušeny/.test(mail.text));
-    }
     assert.ok(!mail.html.includes("<A>"));
   }
 });
 
 test("reminder start time follows the edition zero", () => {
   const mail = renderReminder({
-    kind: 1,
     year: Y,
     id: 32,
     name: null,
@@ -86,7 +72,6 @@ test("reminder start time follows the edition zero", () => {
     fee: 300,
     paid: 0,
     site: "https://www.mcvv.org",
-    deadline: "2026-12-02",
     startZeroSeconds: 9 * 3600 + 30 * 60,
   });
   assert.match(mail.text, /Intervalový start od 9:30/);

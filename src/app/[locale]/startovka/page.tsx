@@ -71,7 +71,10 @@ export default async function StartListPage({ params, searchParams }: PageProps)
   const { model } = settings;
   const { rows } = await loadPublicStartList(raceYear.year, model);
   // Státní příslušnost (#200): vlaječka u zahraničních běžců.
-  const nationalities = await loadNationalityMap(rows.map((row) => row.runnerId));
+  const nationalities = await loadNationalityMap(
+    rows.map((row) => row.runnerId),
+    { foreignOnly: true },
+  );
   const { kat, q } = await searchParams;
   const categories = settings.categories.filter((c) => rows.some((r) => r.categoryId === c.id));
   const category = categories.some((c) => c.id === kat) ? kat! : "";

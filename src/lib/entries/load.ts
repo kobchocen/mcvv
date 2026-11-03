@@ -3,7 +3,14 @@ import { prisma } from "@/lib/db/client";
 import { nextStatus } from "@/lib/entries/status";
 import { buildQuickList, withLastClub } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
-import { pickActiveRegistration, pickCancelledRegistrations } from "@/lib/entries/ensure-core";
+import {
+  emailEquals,
+  isCancelledStatus,
+  pickCancelledRegistrations,
+} from "@/lib/entries/ensure-core";
+import type { SlotType } from "@/lib/slots/core";
+import { orderMyEntries, registrationWritable, splitMyEntries } from "@/lib/slots/entry-slot";
+import { lateEntryState } from "@/lib/slots/late-core";
 import { pastRegistrationKeys } from "@/lib/entries/load-core";
 
 const registrationInclude = {
@@ -27,27 +34,98 @@ const registrationInclude = {
  * Nezávislé dotazy běží souběžně.
  */
 export async function loadMyEntry(email: string) {
-  const { year, open, deadline } = await currentRaceYear();
+  const { year, open, deadline, slots } = await currentRaceYear();
   const index = await prisma.registration.findMany({
     select: { year: true, id: true, email: true, status: true, name: true },
   });
   const yearIndex = index.filter((row) => row.year === year);
   // Přihláška se tu už nezakládá – vzniká až s prvním běžcem (ensureRegistration).
-  const active = pickActiveRegistration(yearIndex, email);
-  const cancelled = pickCancelledRegistrations(yearIndex, email).map((row) => ({
-    year: row.year,
-    id: row.id,
-    name: row.name,
-  }));
+  // Jedna přihláška na e-mail a termín (Q302): může jich být víc; nahoře ta, kterou lze měnit
+  // (běžící termín), jinak nejnovější zamčená (jen čtení).
+  const mineActive = yearIndex.filter(
+    (row) => emailEquals(row.email, email) && !isCancelledStatus(row.status),
+  );
+  const cancelledRows = pickCancelledRegistrations(yearIndex, email);
+  const metaIds = [...mineActive, ...cancelledRows].map((row) => row.id);
+  const metas =
+    metaIds.length > 0
+      ? await prisma.registrationMeta.findMany({
+          where: { year, id: { in: metaIds } },
+          select: {
+            id: true,
+            slot: true,
+            submittedAt: true,
+            payUntil: true,
+            autoCancelledAt: true,
+          },
+        })
+      : [];
+  const metaById = new Map(metas.map((meta) => [meta.id, meta]));
+  const ctx = { year, open, slots, now: new Date() };
+  const entries = orderMyEntries(
+    mineActive.map((row) => {
+      const meta = metaById.get(row.id);
+      const slot = meta?.slot ?? null;
+      const submittedAt = meta?.submittedAt ?? null;
+      return {
+        year: row.year,
+        id: row.id,
+        name: row.name,
+        status: row.status,
+        slot,
+        submittedAt,
+        payUntil: meta?.payUntil ?? null,
+        writable: registrationWritable(ctx, {
+          year: row.year,
+          status: row.status,
+          slot,
+          submittedAt,
+        }),
+      };
+    }),
+  );
+  // Odeslaná pozdní přihláška čekající na platbu: platební obrazovka místo formulářů (Q344).
+  const awaitingRef =
+    entries.find(
+      (entry) =>
+        entry.slot === "late" &&
+        lateEntryState({ status: entry.status, submittedAt: entry.submittedAt }) === "awaiting",
+    ) ?? null;
+  const split = splitMyEntries(entries, open);
+  const active = split.primary === awaitingRef ? null : split.primary;
+  const lockedRefs = split.locked.filter((entry) => entry !== awaitingRef);
+  const cancelled = cancelledRows.map((row) => {
+    const meta = metaById.get(row.id);
+    return {
+      year: row.year,
+      id: row.id,
+      name: row.name,
+      slot: (meta?.slot ?? null) as SlotType | null,
+      payUntil: meta?.payUntil ?? null,
+      autoCancelledAt: meta?.autoCancelledAt ?? null,
+    };
+  });
   const pastKeys = pastRegistrationKeys(index, year, email);
 
-  const [current, minePast, yearPayments] = await Promise.all([
+  const [current, awaitingRow, lockedRows, minePast, yearPayments] = await Promise.all([
     active
       ? prisma.registration.findUnique({
           where: { year_id: { year: active.year, id: active.id } },
           include: registrationInclude,
         })
       : null,
+    awaitingRef
+      ? prisma.registration.findUnique({
+          where: { year_id: { year, id: awaitingRef.id } },
+          include: registrationInclude,
+        })
+      : null,
+    lockedRefs.length > 0
+      ? prisma.registration.findMany({
+          where: { year, id: { in: lockedRefs.map((entry) => entry.id) } },
+          include: registrationInclude,
+        })
+      : [],
     pastKeys.length > 0
       ? prisma.registration.findMany({
           where: { OR: pastKeys },
@@ -57,10 +135,36 @@ export async function loadMyEntry(email: string) {
           orderBy: [{ year: "desc" }, { id: "asc" }],
         })
       : [],
-    active
+    entries.length > 0
       ? prisma.payment.findMany({ where: { year }, orderBy: [{ date: "asc" }, { id: "asc" }] })
       : [],
   ]);
+  const paymentsOf = (id: number) =>
+    yearPayments.filter((payment) => paymentRegistrationId(payment.registrationId) === id);
+  // Uzavřené přihlášky (jen čtení) v pořadí `entries` – i s běžci a platbami.
+  const lockedById = new Map(lockedRows.map((row) => [row.id, row]));
+  const locked = lockedRefs.flatMap((entry) => {
+    const row = lockedById.get(entry.id);
+    return row
+      ? [
+          {
+            ...row,
+            slot: entry.slot as SlotType | null,
+            submittedAt: entry.submittedAt,
+            payments: paymentsOf(row.id),
+          },
+        ]
+      : [];
+  });
+  const awaiting =
+    awaitingRow && awaitingRef?.submittedAt && awaitingRef.payUntil
+      ? {
+          ...awaitingRow,
+          submittedAt: awaitingRef.submittedAt,
+          payUntil: awaitingRef.payUntil,
+          payments: paymentsOf(awaitingRow.id),
+        }
+      : null;
 
   // Rychlá nabídka: běžci z minulých přihlášek, kteří letos ještě nejsou přihlášení.
   const pastRunners = minePast.flatMap((row) =>
@@ -96,11 +200,7 @@ export async function loadMyEntry(email: string) {
   );
 
   let registration = current;
-  const payments = registration
-    ? yearPayments.filter(
-        (payment) => paymentRegistrationId(payment.registrationId) === registration!.id,
-      )
-    : [];
+  const payments = registration ? paymentsOf(registration.id) : [];
   if (registration) {
     // Stejný přepočet jako recalculateRegistrationStatus, jen z už načtených dat (bez dalšího
     // čtení přihlášky, řádků a plateb a bez opětovného načtení přihlášky).
@@ -116,5 +216,25 @@ export async function loadMyEntry(email: string) {
     }
   }
 
-  return { year, open, deadline, registration, cancelled, past: minePast, quick, payments };
+  return {
+    year,
+    open,
+    deadline,
+    registration,
+    /** Termín hlavní přihlášky (null = standard / ročník bez termínů). */
+    slot: active?.slot ?? null,
+    /** Lze hlavní přihlášku měnit z webu (její termín běží)? */
+    writable: active?.writable ?? false,
+    /** Odeslaná pozdní přihláška čekající na platbu (lhůta běží) – s běžci a platbami. */
+    awaiting,
+    /** Všechny nezrušené přihlášky e-mailu v ročníku (pořadí: měnitelná, pak zamčené). */
+    entries,
+    /** Ostatní (uzavřené) přihlášky ročníku s běžci a platbami – jen ke čtení. */
+    locked,
+    slots,
+    cancelled,
+    past: minePast,
+    quick,
+    payments,
+  };
 }

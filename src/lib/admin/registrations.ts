@@ -7,6 +7,8 @@ import { requireStaff } from "@/lib/admin/staff";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { computeLineFee, paidAmount } from "@/lib/entries/fee";
+import { freeEntryAllowed } from "@/lib/slots/entry-slot";
+import { registrationCategoryFee } from "@/lib/slots/load";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
 import { canCancelRegistration } from "@/lib/entries/empty-registrations";
@@ -28,12 +30,21 @@ function revalidateRegistrations() {
 }
 
 async function refreshLineFees(year: number, id: number, email: string): Promise<void> {
-  const lines = await prisma.registrationLine.findMany({
-    where: { year, registrationId: id },
-    include: { category: { select: { entryFee: true } } },
-  });
+  const [lines, meta] = await Promise.all([
+    prisma.registrationLine.findMany({
+      where: { year, registrationId: id },
+      include: { category: { select: { id: true, entryFee: true } } },
+    }),
+    prisma.registrationMeta.findUnique({
+      where: { year_id: { year, id } },
+      select: { slot: true },
+    }),
+  ]);
+  // Startovné zdarma jen v early a standardu (Q301) – pozdní přihláška platí plnou cenu.
+  const allowFree = freeEntryAllowed(meta?.slot ?? null);
   for (const line of lines) {
-    const { fee } = await computeLineFee(email, line.runnerId, line.category.entryFee);
+    const base = await registrationCategoryFee(year, id, line.category);
+    const { fee } = await computeLineFee(email, line.runnerId, base, { allowFree });
     if (fee !== (line.entryFee ?? 0)) {
       await prisma.registrationLine.update({
         where: { year_runnerId: { year, runnerId: line.runnerId } },
@@ -82,6 +93,59 @@ export async function saveRegistrationHeader(formData: FormData): Promise<void> 
   }
   await recalculateRegistrationStatus(year, id);
   revalidateRegistrations();
+}
+
+/**
+ * Ruční úprava startovného přihlášky (Q342): ceny dospělí / mládež uložené u přihlášky.
+ * Změna ceny termínu existující přihlášky nemění – jen tato explicitní úprava. Po uložení se
+ * přepočte startovné řádků (zdarma zůstává zdarma) a stav přihlášky.
+ */
+export async function saveRegistrationPrices(formData: FormData): Promise<void> {
+  const session = await requireStaff();
+  const year = formInt(formData, "year");
+  const id = formInt(formData, "id");
+  const feeAdult = formInt(formData, "feeAdult");
+  const feeYouth = formInt(formData, "feeYouth");
+  if (!year || id === null || !validEntryPrice(feeAdult) || !validEntryPrice(feeYouth)) {
+    return;
+  }
+  const [registration, before] = await Promise.all([
+    prisma.registration.findUnique({
+      where: { year_id: { year, id } },
+      select: { email: true },
+    }),
+    prisma.registrationMeta.findUnique({
+      where: { year_id: { year, id } },
+      select: { feeAdult: true, feeYouth: true },
+    }),
+  ]);
+  if (!registration) {
+    return;
+  }
+  await prisma.registrationMeta.upsert({
+    where: { year_id: { year, id } },
+    create: { year, id, feeAdult, feeYouth },
+    update: { feeAdult, feeYouth },
+  });
+  const priceChanges = diffFields(
+    { feeAdult: before?.feeAdult ?? null, feeYouth: before?.feeYouth ?? null },
+    { feeAdult, feeYouth },
+  );
+  if (Object.keys(priceChanges).length > 0) {
+    await writeAudit({
+      actor: session,
+      action: "registration.updated",
+      target: entryTarget(year, id),
+      detail: { changes: priceChanges },
+    });
+  }
+  await refreshLineFees(year, id, registration.email ?? "");
+  await recalculateRegistrationStatus(year, id);
+  revalidateRegistrations();
+}
+
+function validEntryPrice(value: number | null): value is number {
+  return value !== null && Number.isInteger(value) && value >= 0 && value <= 10000;
 }
 
 export async function savePayment(formData: FormData): Promise<void> {

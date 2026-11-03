@@ -94,3 +94,8 @@ export async function staffAccess(forbidden?: {
 }): Promise<RouteAccess> {
   return routeAccess(isStaffRole, forbidden);
 }
+
+/** Route handlery jen pro admina (číselník běžců – našeptávač). Ostatní role → 403. */
+export async function adminRouteAccess(): Promise<RouteAccess> {
+  return routeAccess((role) => role === "admin");
+}

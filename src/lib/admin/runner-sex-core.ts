@@ -87,10 +87,16 @@ export type CategoryChange = {
   newCategory: { id: string; name: string } | null;
 };
 
+/** Price of the target category for a line (registration term price; default = catalog). */
+export type LineFeeFor = (line: LineInput, target: CategoryRow) => number;
+
+const catalogFee: LineFeeFor = (_line, target) => target.entryFee;
+
 /**
  * New category and fee of a registration line after the sex change.
  * A line that was free (fee 0 while its category costs something – organizer, former winner,
- * veteran) stays free; otherwise the fee follows the new category.
+ * veteran) stays free; otherwise the fee follows the new category – at the price of the
+ * registration's term (early / standard / late), see `feeFor`.
  */
 export function planLine(
   line: LineInput,
@@ -98,13 +104,14 @@ export function planLine(
   birthYear: number,
   categories: CategoryRow[],
   currentYear: number,
+  feeFor: LineFeeFor = catalogFee,
 ): LinePlan {
   const old = categories.find((category) => category.id === line.categoryId);
   const target = pickCategoryByBirthYear(birthYear, newSex, line.year, categories);
   const oldFee = line.entryFee ?? old?.entryFee ?? 0;
   const wasFree = oldFee === 0 && (old?.entryFee ?? 0) > 0;
   const recalc = line.year === currentYear && target !== null;
-  const newFee = recalc ? (wasFree ? 0 : target.entryFee) : oldFee;
+  const newFee = recalc ? (wasFree ? 0 : feeFor(line, target)) : oldFee;
   return {
     year: line.year,
     registrationId: line.registrationId,
@@ -152,6 +159,7 @@ export function buildSexChangePlan(input: {
   webImages: number;
   categories: CategoryRow[];
   currentYear: number;
+  feeFor?: LineFeeFor;
 }): SexChangePlan {
   const { runner, categories, currentYear } = input;
   if (!isRunnerId(runner.id)) {
@@ -168,7 +176,7 @@ export function buildSexChangePlan(input: {
     oldSex,
     newSex,
     lines: input.lines
-      .map((line) => planLine(line, newSex, birthYear, categories, currentYear))
+      .map((line) => planLine(line, newSex, birthYear, categories, currentYear, input.feeFor))
       .sort((a, b) => b.year - a.year),
     starts: input.starts
       .map((row) => planCategory(row, newSex, birthYear, categories))

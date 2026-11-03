@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
+import { clubsSubnav, McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { McvvAdminPendingSubmit } from "@/components/organisms/mcvv-admin-pending-submit";
 import { confirmOrphanCleanup } from "@/lib/admin/club-orphan-actions";
 import { requireAdmin } from "@/lib/admin/staff";
@@ -48,13 +49,20 @@ export default async function ClubOrphansPage({ params, searchParams }: PageProp
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <McvvAdminHomeLink label={admin("title")} />
-        <Link
-          href="/admin/ciselniky/kluby"
-          className="mt-1 inline-block text-sm text-race-muted hover:text-foreground"
-        >
-          ← {admin("dictsClubs")}
-        </Link>
-        <h1 className="mt-2 font-display text-3xl font-bold text-foreground dark:text-white">
+        <McvvAdminDictsSubnav
+          backLabel={admin("dictsTitle")}
+          label={admin("dictsClubs")}
+          items={clubsSubnav(
+            {
+              list: admin("clubsSubnavList"),
+              merge: admin("clubsSubnavMerge"),
+              orphans: copy("title"),
+            },
+            true,
+            "orphans",
+          )}
+        />
+        <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">

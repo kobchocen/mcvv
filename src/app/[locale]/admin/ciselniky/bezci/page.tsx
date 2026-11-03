@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
+import { CountryFlag } from "@/components/atoms";
+import { McvvAdminDictsSubnav, McvvAdminHomeLink } from "@/components/organisms";
+import { McvvAdminRunnerSearch } from "@/components/organisms/mcvv-admin-runner-search";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
 import { RUNNER_SEARCH_LIMIT, RUNNER_SEARCH_MIN } from "@/lib/admin/runner-directory-core";
 import { searchRunners } from "@/lib/admin/runner-directory";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
 import { requireAdmin } from "@/lib/admin/staff";
+import { countryName } from "@/lib/runner/nationality";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -22,7 +24,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("title") };
 }
 
-/** Číselník běžců (#198): hledání podle jména, id nebo dřívějšího jména. Jen admin. */
+/**
+ * Číselník běžců (#198): hledání podle jména, id, dřívějšího jména nebo ročníku narození,
+ * s našeptávačem. Záložka Slučování běžců je pod ním. Jen admin.
+ */
 export default async function AdminRunnersPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
@@ -39,13 +44,19 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <McvvAdminHomeLink label={admin("title")} />
-        <Link
-          href="/admin/ciselniky"
-          className="text-sm font-semibold text-race-accent hover:underline"
-        >
-          ← {admin("dictsTitle")}
-        </Link>
-        <h1 className="mt-2 font-display text-3xl font-bold text-foreground dark:text-white">
+        <McvvAdminDictsSubnav
+          backLabel={admin("dictsTitle")}
+          label={copy("title")}
+          items={[
+            { href: "/admin/ciselniky/bezci", label: copy("subnavSearch"), active: true },
+            {
+              href: "/admin/ciselniky/bezci/slouceni",
+              label: copy("subnavMerge"),
+              testId: "subnav-runner-merge",
+            },
+          ]}
+        />
+        <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-race-muted">{copy("intro")}</p>
@@ -57,18 +68,18 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
         >
           <div className="grid gap-1.5">
             <Label htmlFor="runner-q">{copy("searchLabel")}</Label>
-            <Input
+            <McvvAdminRunnerSearch
               id="runner-q"
-              name="q"
-              type="search"
               defaultValue={query}
-              minLength={RUNNER_SEARCH_MIN}
-              placeholder={copy("searchPlaceholder")}
-              className="h-10 w-80 max-w-full bg-race-surface"
-              autoFocus
+              copy={{
+                placeholder: copy("searchPlaceholder"),
+                noResults: copy("suggestEmpty"),
+                lastYear: copy("suggestLast"),
+                hint: copy("suggestHint"),
+              }}
             />
           </div>
-          <Button type="submit" className="h-10">
+          <Button type="submit" className="mb-5 h-10">
             {copy("search")}
           </Button>
         </form>
@@ -95,6 +106,7 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
                   <th className="py-2 pr-3">{copy("colId")}</th>
                   <th className="py-2 pr-3">{copy("colBirthYear")}</th>
                   <th className="py-2 pr-3">{copy("colSex")}</th>
+                  <th className="py-2 pr-3">{copy("colNationality")}</th>
                   <th className="py-2 pr-3">{copy("colYears")}</th>
                   <th className="py-2 pr-3">{copy("colPrevious")}</th>
                 </tr>
@@ -114,6 +126,16 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
                     <td className="py-2.5 pr-3">{birthYearOf(hit.id)}</td>
                     <td className="py-2.5 pr-3">
                       {runnerSexOf(hit.id) === "F" ? copy("sexF") : copy("sexM")}
+                    </td>
+                    <td className="py-2.5 pr-3">
+                      {hit.nationality ? (
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                          <CountryFlag code={hit.nationality} />
+                          {countryName(hit.nationality, locale)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="py-2.5 pr-3 text-race-muted">
                       {hit.years.length

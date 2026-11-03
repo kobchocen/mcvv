@@ -93,7 +93,7 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   const rozpisYear = edition?.date ? edition.date.getUTCFullYear() : raceYear.year;
 
   // Čas startu a interval podle modelu aktuálního ročníku (st_nula_s, st_interval).
-  const startText = startTextParams(raceYear.startModel);
+  const startText = startTextParams(raceYear.startModel, raceYear.slotSettings);
   const rawSections = fillPlaceholders(
     program.raw("sections") as McvvProgramContent["sections"],
     startText,

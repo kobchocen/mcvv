@@ -39,6 +39,7 @@ export type AuditAction =
   | "entry.header_changed"
   | "entry.line_club_changed"
   | "entry.cancelled"
+  | "entry.late_submitted"
   // Závodní kancelář (#207): prodejky a ceník. Spárování z Fio je v mcvv_bank_tx (bez auditu).
   | "sale.created"
   | "sale.paid_cash"
@@ -75,8 +76,12 @@ export type AuditAction =
   // Bankovní pohyby (Fio) vyřízené ručně: označení bez platby a vrácení přeplatku.
   | "bank_tx.ignored"
   | "bank_tx.refunded"
+  // Platby na zrušenou přihlášku vráceny (auto-zrušení po lhůtě doplatku).
+  | "entry.refunded"
   | "edition.created"
   | "edition.updated"
+  // Termíny a startovné ročníku (mcvv_prihl_slot + nastavení doplatku a závodní kanceláře).
+  | "edition.slots_updated"
   // Kategorie včetně startovného a rekordu; klub = název v číselníku pro (id, rok).
   | "category.updated"
   | "club.updated"

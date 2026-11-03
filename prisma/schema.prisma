@@ -46,7 +46,8 @@ model Runner {
   created     DateTime? @map("created")
   author      String?   @map("autor") @db.VarChar(64) // legacy user ref (length varies)
   /// Státní příslušnost (#200): ISO 3166-1 alpha-2 (CZ, SK…), NULL = neuvedeno.
-  nationality String?   @map("statni_prislusnost") @db.Char(2)
+  /// Výchozí CZ: všichni dosavadní běžci bez státu dostali CZ (migrace runner_nationality_cz).
+  nationality String?   @default("CZ") @map("statni_prislusnost") @db.Char(2)
 
   // Relations
   runnerPhotos      RunnerPhoto[]
@@ -161,6 +162,18 @@ model Edition {
   secondStartFrom  Int       @default(601) @map("st_druhy_od") @db.SmallInt
   championBibMen   Int?      @default(400) @map("st_obhajce_m") @db.SmallInt
   championBibWomen Int?      @default(950) @map("st_obhajce_z") @db.SmallInt
+  // Termíny přihlášek (sloty, mcvv_prihl_slot) – nastavení ročníku. Časy v sekundách od půlnoci
+  // (Europe/Prague) jako st_nula_s; DATETIME v UTC.
+  /// Otevření přihlášek (začátek early/standardu); null = podle slotu standard.
+  regOpensAt       DateTime? @map("prihl_otevreni")
+  /// Lhůta doplatku nezaplacených standardních přihlášek; null = den po konci standardu 12:00.
+  standardPayUntil DateTime? @map("doplatek_std_do")
+  /// Čas e-mailu „zaplaťte dnes do …“ v den lhůty doplatku (výchozí 7:00).
+  standardPayMailS Int       @default(25200) @map("doplatek_std_mail")
+  /// Otevření závodní kanceláře v den závodu (výchozí 9:00).
+  officeOpensS     Int       @default(32400) @map("kancelar_od")
+  /// Konec přihlášek na místě v den závodu (výchozí 9:45).
+  onsiteUntilS     Int       @default(35100) @map("na_miste_do")
 
   @@map("mcvv_info")
 }
@@ -674,11 +687,28 @@ model JobRun {
 /// Doplňková data přihlášky (legacy tabulka mcvv_prihlaska se nemění):
 /// poslední změna a odeslané připomínky platby.
 model RegistrationMeta {
-  year        Int       @map("rok") @db.SmallInt
-  id          Int       @map("id") @db.SmallInt
-  updatedAt   DateTime? @map("updated_at")
-  reminder1At DateTime? @map("pripominka1_at")
-  reminder2At DateTime? @map("pripominka2_at")
+  year              Int                   @map("rok") @db.SmallInt
+  id                Int                   @map("id") @db.SmallInt
+  updatedAt         DateTime?             @map("updated_at")
+  reminder1At       DateTime?             @map("pripominka1_at")
+  reminder2At       DateTime?             @map("pripominka2_at")
+  /// Termín (slot), ve kterém přihláška vznikla; null = standard (přihlášky před zavedením slotů).
+  slot              RegistrationSlotType? @map("slot")
+  /// Odeslán e-mail „zaplaťte dnes do …“ (doplatek standardu).
+  standardPayMailAt DateTime?             @map("doplatek_mail_at")
+  /// Automaticky zrušeno (nezaplaceno ve lhůtě).
+  autoCancelledAt   DateTime?             @map("auto_zruseno_at")
+  /// Platby na zrušenou přihlášku vráceny plátci (admin „Vráceno“ v /admin/platby).
+  refundedAt        DateTime?             @map("vraceno_at")
+  /// Startovné přihlášky (dospělí / mládež) uložené při založení z ceny termínu (Q342);
+  /// pozdější změna ceny termínu ho nemění, upravit ho lze jen ručně v administraci.
+  /// null = přihláška bez uložené ceny → cena termínu (dosavadní chování).
+  feeAdult          Int?                  @map("cena_dospeli") @db.SmallInt
+  feeYouth          Int?                  @map("cena_mladez") @db.SmallInt
+  /// Pozdní přihláška odeslána (checkbox „Zaplatím ihned“); pak už ji nelze z webu měnit (Q330).
+  submittedAt       DateTime?             @map("odeslano_at")
+  /// Lhůta na zaplacení odeslané pozdní přihlášky (odeslání + 60 min); po ní auto-zrušení.
+  payUntil          DateTime?             @map("platba_do")
 
   @@id([year, id])
   @@map("mcvv_prihlaska_meta")
@@ -1026,4 +1056,47 @@ model SaleLine {
 
   @@index([saleId])
   @@map("mcvv_sale_line")
+}
+
+// ============================================
+// Termíny přihlášek a startovné (sloty, fáze 1)
+// ============================================
+
+/// Druh termínu přihlášek. Veřejně: standardní / pozdní přihlášky / přihlášky na místě.
+enum RegistrationSlotType {
+  early
+  standard
+  late
+  onsite
+}
+
+/// Skupina startovného kategorie (Q298/Q323): dospělí / mládež (žactvo + dorost).
+enum FeeGroup {
+  dospeli
+  mladez
+}
+
+/// Termín přihlášek ročníku – zdroj termínů a startovného (od/do v UTC, `do` exkluzivní).
+model RegistrationSlot {
+  year             Int                  @map("rok") @db.SmallInt
+  type             RegistrationSlotType @map("typ")
+  from             DateTime             @map("od")
+  to               DateTime             @map("do")
+  active           Boolean              @default(true) @map("aktivni")
+  feeAdult         Int                  @map("cena_dospeli") @db.SmallInt
+  feeYouth         Int                  @map("cena_mladez") @db.SmallInt
+  /// Lhůta na zaplacení od odeslání přihlášky v minutách (late = 60); null = bez lhůty.
+  payWithinMinutes Int?                 @map("platba_min") @db.SmallInt
+  updatedAt        DateTime             @default(now()) @updatedAt @map("updated_at")
+
+  @@id([year, type])
+  @@map("mcvv_prihl_slot")
+}
+
+/// Doplňková data kategorie (legacy číselník cis_mcvv_kateg se nemění).
+model CategoryMeta {
+  categoryId String   @id @map("kateg_id") @db.Char(1)
+  feeGroup   FeeGroup @default(dospeli) @map("skupina")
+
+  @@map("mcvv_kateg_meta")
 }

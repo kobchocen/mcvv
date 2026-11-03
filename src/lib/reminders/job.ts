@@ -1,9 +1,12 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
-import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
+import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { enqueueMail } from "@/lib/mail/queue";
+
+import { runLatePayment, type LatePayResult } from "@/lib/slots/late-pay-job";
+import { runStandardPayment, type StandardPayResult } from "@/lib/slots/standard-pay-job";
 
 import { renderReminder } from "./render";
 import { dueReminder } from "./schedule";
@@ -15,16 +18,26 @@ export function remindersDryRun(): boolean {
   return !(appEnv === "prod" || appEnv === "production");
 }
 
-export type RemindersResult = { dryRun: boolean; reminder1: number; reminder2: number };
+export type RemindersResult = {
+  dryRun: boolean;
+  reminder1: number;
+  /** Doplatek standardu (e-mail v den lhůty, automatické zrušení po lhůtě). */
+  standardPay: StandardPayResult;
+  /** Pozdní přihlášky: auto-storno po lhůtě na zaplacení, košíky po konci termínu. */
+  latePay: LatePayResult;
+};
 
-/** Zařadí due připomínky do e-mailové fronty (nízká priorita). Idempotentní. */
+/**
+ * Zařadí due připomínky R1 do e-mailové fronty (nízká priorita), spustí doplatek standardu
+ * a auto-storno pozdních přihlášek.
+ * Idempotentní.
+ */
 export async function runReminders(
   options: { now?: Date; dryRun?: boolean } = {},
 ): Promise<RemindersResult> {
   const now = options.now ?? new Date();
   const dryRun = options.dryRun ?? remindersDryRun();
-  const { year, deadline, startModel } = await currentRaceYear();
-  const deadlineEnd = registrationDeadlineEnd(deadline);
+  const { year, startModel, standardEnd } = await currentRaceYear();
   const site = (env.AUTH_ORIGIN ?? "https://www.mcvv.org").replace(/\/$/, "");
   const [regs, payments, metas] = await Promise.all([
     prisma.registration.findMany({
@@ -49,7 +62,7 @@ export async function runReminders(
     paidById.set(id, (paidById.get(id) ?? 0) + (p.amount ?? 0));
   }
   const metaById = new Map(metas.map((m) => [m.id, m]));
-  const result: RemindersResult = { dryRun, reminder1: 0, reminder2: 0 };
+  let reminder1 = 0;
 
   for (const reg of regs) {
     const meta = metaById.get(reg.id);
@@ -69,13 +82,12 @@ export async function runReminders(
         paid,
         lastModified: lastModifiedMs ? new Date(lastModifiedMs) : null,
         reminder1At: meta?.reminder1At ?? null,
-        reminder2At: meta?.reminder2At ?? null,
       },
-      { now, year, deadlineEnd },
+      { now, standardEnd },
     );
     if (!kind) continue;
     if (dryRun) {
-      result[kind === 1 ? "reminder1" : "reminder2"] += 1;
+      reminder1 += 1;
       continue;
     }
     // Atomicky „zabrat“ připomínku – souběžný běh ji nepošle podruhé.
@@ -83,14 +95,12 @@ export async function runReminders(
       data: [{ year, id: reg.id }],
       skipDuplicates: true,
     });
-    const field = kind === 1 ? "reminder1At" : "reminder2At";
     const claimed = await prisma.registrationMeta.updateMany({
-      where: { year, id: reg.id, [field]: null },
-      data: { [field]: now },
+      where: { year, id: reg.id, reminder1At: null },
+      data: { reminder1At: now },
     });
     if (claimed.count !== 1) continue;
     const mail = renderReminder({
-      kind,
       year,
       id: reg.id,
       name: reg.name,
@@ -103,16 +113,17 @@ export async function runReminders(
       fee,
       paid,
       site,
-      deadline: deadline ? deadline.toISOString().slice(0, 10) : null,
       startZeroSeconds: startModel.zeroSeconds,
     });
     await enqueueMail({
       ...mail,
       to: reg.email!,
       kind: "reminder",
-      dedupeKey: `reminder${kind}:${year}:${reg.id}`,
+      dedupeKey: `reminder1:${year}:${reg.id}`,
     });
-    result[kind === 1 ? "reminder1" : "reminder2"] += 1;
+    reminder1 += 1;
   }
-  return result;
+  const standardPay = await runStandardPayment({ now, dryRun });
+  const latePay = await runLatePayment({ now, dryRun });
+  return { dryRun, reminder1, standardPay, latePay };
 }

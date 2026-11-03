@@ -16,14 +16,12 @@ export const newRunnerSchema = z.object({
   sex: z.enum(["M", "F"]),
   categoryId: z.string().trim().length(1),
   clubName: z.string().trim().optional().default(""),
-  /** Státní příslušnost (#200): ISO kód, prázdné = neuvedeno, neznámý kód = chyba. */
+  /** Státní příslušnost (#200): povinná (Q360), ISO kód; prázdný / neznámý kód = chyba. */
   nationality: z
     .string()
     .trim()
     .toUpperCase()
-    .optional()
-    .default("")
-    .refine((value) => value === "" || isCountryCode(value)),
+    .refine((value) => isCountryCode(value)),
 });
 
 export type NewRunnerInput = z.infer<typeof newRunnerSchema>;

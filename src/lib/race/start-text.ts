@@ -2,13 +2,29 @@ import { formatStartClock } from "@/lib/date/race-schedule";
 
 import type { StartModel } from "./start-time";
 
-/** Parametry veřejných textů o startu: čas nuly a interval z modelu ročníku. */
-export type StartTextParams = { startTime: string; interval: string };
+/**
+ * Parametry veřejných textů o startu: čas nuly a interval z modelu ročníku, otevření závodní
+ * kanceláře a konec přihlášek na místě z nastavení ročníku (výchozí 9:00 / 9:45).
+ */
+export type StartTextParams = {
+  startTime: string;
+  interval: string;
+  officeOpens: string;
+  onsiteUntil: string;
+};
 
-export function startTextParams(model: Pick<StartModel, "zeroSeconds" | "intervalSeconds">) {
+export function startTextParams(
+  model: Pick<StartModel, "zeroSeconds" | "intervalSeconds">,
+  raceDay: { officeOpensS: number; onsiteUntilS: number } = {
+    officeOpensS: 9 * 3600,
+    onsiteUntilS: 9 * 3600 + 45 * 60,
+  },
+) {
   return {
     startTime: formatStartClock(model.zeroSeconds),
     interval: String(model.intervalSeconds),
+    officeOpens: formatStartClock(raceDay.officeOpensS),
+    onsiteUntil: formatStartClock(raceDay.onsiteUntilS),
   } satisfies StartTextParams;
 }
 

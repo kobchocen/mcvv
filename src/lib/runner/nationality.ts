@@ -280,12 +280,15 @@ export function normalizeNationality(value: unknown): CountryCode | null {
   return isCountryCode(code) ? code : null;
 }
 
-/** Vlaječka jako emoji z regionálních indikátorů (🇨🇿); neplatný kód → "". */
-export function flagEmoji(code: string | null | undefined): string {
+/**
+ * Cesta k obrázku vlaječky (SVG z balíčku flag-icons, MIT, uložené v `public/flags/4x3`).
+ * Emoji vlaječky Windows nezobrazí (ukáže jen písmena), proto obrázek. Neplatný kód → null.
+ */
+export function flagSrc(code: string | null | undefined): string | null {
   if (!code || !isCountryCode(code)) {
-    return "";
+    return null;
   }
-  return String.fromCodePoint(...[...code].map((char) => 0x1f1e6 + char.charCodeAt(0) - 65));
+  return `/flags/4x3/${code.toLowerCase()}.svg`;
 }
 
 /** Lokalizovaný název státu (Intl), fallback kód. */
@@ -312,6 +315,29 @@ export function countryOptions(locale: string): {
       .map(option)
       .sort((a, b) => collator.compare(a.label, b.label)),
   };
+}
+
+/**
+ * Stát zvolený v přihlášce u běžce, který už je v číselníku (Q362): chybějící stát se doplní,
+ * jiný stát než CZ přepíše uložený. Předvyplněné CZ uložený cizí stát nepřepíše (přihlašující
+ * ho často jen nezměnil). Vrací nový kód k uložení, nebo null = beze změny.
+ */
+export function entryNationalityUpdate(
+  current: string | null | undefined,
+  chosen: string | null | undefined,
+): CountryCode | null {
+  const next = normalizeNationality(chosen);
+  if (!next) {
+    return null;
+  }
+  const stored = isCountryCode(current) ? current : null;
+  if (stored === next) {
+    return null;
+  }
+  if (!stored || next !== HOME_COUNTRY) {
+    return next;
+  }
+  return null;
 }
 
 /** Vlaječka ve výpisech (výsledky, startovka…): jen u jiného než domácího státu. */

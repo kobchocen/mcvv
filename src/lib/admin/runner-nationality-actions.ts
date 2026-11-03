@@ -13,8 +13,11 @@ import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 import { redirect } from "@/i18n/routing";
 
 /**
- * Pořadatel nastaví / opraví státní příslušnost běžce (#200). Prázdná volba = neuvedeno.
+ * Pořadatel nastaví / opraví státní příslušnost běžce (#200). Stát je povinný (Q360):
+ * prázdná nebo neznámá hodnota se neuloží (návrat s chybou).
  * Změna se zapíše do auditu (#107: cíl `runner:<id>`, detail `changes` = před / po).
+ * Volá se z detailu přihlášky (návrat `year` + `registrationId`) i z detailu běžce
+ * v Číselníku (`back=runner`, návrat s `?stat=ulozeno|chyba`, případně se zkratkou `z`).
  */
 export async function saveRunnerNationality(formData: FormData): Promise<void> {
   const session = await requireStaff();
@@ -23,9 +26,11 @@ export async function saveRunnerNationality(formData: FormData): Promise<void> {
   const nationality = normalizeNationality(raw);
   const backYear = formInt(formData, "year");
   const backId = formInt(formData, "registrationId");
+  const backToRunner = formString(formData, "back") === "runner";
+  const via = formString(formData, "z");
   let outcome: "ok" | "invalid" = "ok";
 
-  if (!runnerId || (raw.trim() !== "" && !nationality)) {
+  if (!runnerId || !nationality) {
     outcome = "invalid";
   } else {
     await prisma.$transaction(async (tx) => {
@@ -54,11 +59,26 @@ export async function saveRunnerNationality(formData: FormData): Promise<void> {
       );
     });
     revalidatePath("/[locale]/admin/prihlasky", "layout");
+    revalidatePath("/[locale]/admin/ciselniky/bezci", "layout");
     revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
     revalidatePath("/[locale]/startovka", "page");
     revalidatePath("/[locale]/results", "page");
     revalidatePath("/[locale]/bezec/[id]", "page");
     revalidateTag(STATS_CACHE_TAG, "max");
+  }
+
+  if (backToRunner && runnerId) {
+    redirect({
+      href: {
+        pathname: "/admin/ciselniky/bezci/[id]",
+        params: { id: runnerId },
+        query: {
+          stat: outcome === "invalid" ? "chyba" : "ulozeno",
+          ...(/^\d{4}-\d{1,6}$/.test(via) ? { z: via } : {}),
+        },
+      },
+      locale: await getLocale(),
+    });
   }
 
   if (backYear && backId !== null) {

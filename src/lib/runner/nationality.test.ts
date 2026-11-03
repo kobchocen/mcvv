@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   COUNTRY_CODES,
   computeNationalityStats,
   countryName,
   countryOptions,
-  flagEmoji,
+  entryNationalityUpdate,
+  flagSrc,
   listFlag,
   normalizeNationality,
 } from "./nationality";
@@ -25,11 +28,17 @@ describe("nationality codes", () => {
     assert.equal(normalizeNationality(undefined), null);
   });
 
-  it("builds flag emoji from regional indicators", () => {
-    assert.equal(flagEmoji("CZ"), "🇨🇿");
-    assert.equal(flagEmoji("SK"), "🇸🇰");
-    assert.equal(flagEmoji("XX"), "");
-    assert.equal(flagEmoji(null), "");
+  it("points flags to bundled SVG images (Windows shows no flag emoji)", () => {
+    assert.equal(flagSrc("CZ"), "/flags/4x3/cz.svg");
+    assert.equal(flagSrc("SK"), "/flags/4x3/sk.svg");
+    assert.equal(flagSrc("XX"), null);
+    assert.equal(flagSrc(null), null);
+  });
+
+  it("bundles a flag image for every country code", () => {
+    const dir = fileURLToPath(new URL("../../../public/flags/4x3/", import.meta.url));
+    const missing = COUNTRY_CODES.filter((code) => !existsSync(`${dir}${code.toLowerCase()}.svg`));
+    assert.deepEqual(missing, []);
   });
 
   it("names countries per locale", () => {
@@ -93,5 +102,28 @@ describe("computeNationalityStats", () => {
       { year: 2025, countries: 2, foreign: 3, unknown: 0 },
       { year: 2024, countries: 2, foreign: 1, unknown: 1 },
     ]);
+  });
+});
+
+describe("entryNationalityUpdate (Q362)", () => {
+  it("fills a missing country, including the prefilled CZ", () => {
+    assert.equal(entryNationalityUpdate(null, "CZ"), "CZ");
+    assert.equal(entryNationalityUpdate("", "SK"), "SK");
+  });
+
+  it("overwrites the stored country with a country other than CZ", () => {
+    assert.equal(entryNationalityUpdate("CZ", "SK"), "SK");
+    assert.equal(entryNationalityUpdate("PL", "de"), "DE");
+  });
+
+  it("keeps a foreign country when the entry leaves the prefilled CZ", () => {
+    assert.equal(entryNationalityUpdate("SK", "CZ"), null);
+  });
+
+  it("changes nothing for the same or an invalid country", () => {
+    assert.equal(entryNationalityUpdate("SK", "SK"), null);
+    assert.equal(entryNationalityUpdate("CZ", ""), null);
+    assert.equal(entryNationalityUpdate("CZ", "XX"), null);
+    assert.equal(entryNationalityUpdate(null, null), null);
   });
 });

@@ -17,10 +17,16 @@ export type LineFee = { fee: number; reason: FeeReason | null };
  * výsledků se načtou nejvýš jednou (výsledky jen, když e-mail není pořadatelský), ne
  * 1× / 2× pro každý řádek.
  */
+export type LineFeeOptions = {
+  /** Startovné zdarma jen v early a standardu (Q301); v pozdních přihláškách plná cena. */
+  allowFree?: boolean;
+};
+
 export function createLineFeeResolver(): (
   email: string,
   runnerId: string,
   categoryFee: number,
+  options?: LineFeeOptions,
 ) => Promise<LineFee> {
   let freeEmails: Promise<Set<string>> | undefined;
   let results: Promise<{ winners: Set<string>; veterans: Set<string> }> | undefined;
@@ -30,7 +36,10 @@ export function createLineFeeResolver(): (
     });
     return { winners: absoluteWinnerIdsFrom(rows), veterans: veteranIdsFrom(rows) };
   };
-  return async (email, runnerId, categoryFee) => {
+  return async (email, runnerId, categoryFee, options) => {
+    if (options?.allowFree === false) {
+      return { fee: categoryFee, reason: null };
+    }
     freeEmails ??= getFreeEntryEmails();
     const free = await freeEmails;
     if (feeReasonFor(email, runnerId, { freeEmails: free, winners: EMPTY, veterans: EMPTY })) {
@@ -48,8 +57,9 @@ export async function computeLineFee(
   email: string,
   runnerId: string,
   categoryFee: number,
+  options?: LineFeeOptions,
 ): Promise<LineFee> {
-  return createLineFeeResolver()(email, runnerId, categoryFee);
+  return createLineFeeResolver()(email, runnerId, categoryFee, options);
 }
 
 export async function paidAmount(year: number, registrationId: number): Promise<number> {

@@ -17,7 +17,7 @@ import { getTranslations } from "next-intl/server";
 import { adminAccess, getSession } from "@/lib/auth/session";
 import { adminHomeHref } from "@/lib/auth/roles";
 import { getHomeCounts } from "@/lib/home/cached";
-import { currentRaceYear, registrationDeadlineEnd } from "@/lib/entries/year";
+import { currentRaceYear } from "@/lib/entries/year";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
 import { getOfeedSettings, onlineResultsOverrideUrl } from "@/lib/ofeed/settings";
@@ -44,7 +44,7 @@ export async function McvvHomepageTemplate({
   locale,
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
-  const { year, deadline, open, raceDate, startModel } = await currentRaceYear();
+  const { year, open, raceDate, startModel, standardEnd } = await currentRaceYear();
   const [settings, ofeed, { resultsCount, startlistCount, entriesCount }] = await Promise.all([
     getSiteSettings(),
     getOfeedSettings().catch(() => null),
@@ -68,7 +68,11 @@ export async function McvvHomepageTemplate({
     // akci OFeed web na OFeed neodkazuje (Q33)
     onlineResultsUrl: onlineResultsOverrideUrl(settings.onlineResultsUrl, ofeed),
   });
-  const deadlineEnd = registrationDeadlineEnd(deadline);
+  // Odpočet do konce standardních přihlášek (ze slotu, jinak konec dne uzávěrky).
+  const deadlineEnd = standardEnd ? new Date(standardEnd.getTime() - 1000) : null;
+  // V pozdním termínu je přihlašování otevřené, ale odpočet do konce standardního už neplatí.
+  const countdownEnd =
+    deadlineEnd && deadlineEnd.getTime() > new Date().getTime() ? deadlineEnd : null;
   const t = await getTranslations({ locale, namespace: "Home.hero" });
   const toCta = (button: HeroButton): McvvHeroCta => {
     switch (button.kind) {
@@ -138,7 +142,7 @@ export async function McvvHomepageTemplate({
       />
       <McvvHeroSection
         content={content}
-        deadlineMs={buttons.showCountdown && open ? (deadlineEnd?.getTime() ?? null) : null}
+        deadlineMs={buttons.showCountdown && open ? (countdownEnd?.getTime() ?? null) : null}
         primary={toCta(buttons.primary)}
         secondary={buttons.secondary ? toCta(buttons.secondary) : null}
         refreshAtMs={phase === "A" || phase === "B" ? raceStart.getTime() : null}

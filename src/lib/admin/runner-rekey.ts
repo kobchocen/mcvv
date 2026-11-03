@@ -1,6 +1,13 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
-import { buildSexChangePlan, birthYearOf, type SexChangePlan } from "@/lib/admin/runner-sex-core";
+import {
+  buildSexChangePlan,
+  birthYearOf,
+  type LineFeeFor,
+  type SexChangePlan,
+} from "@/lib/admin/runner-sex-core";
+import { entryFee, entryPrices } from "@/lib/slots/core";
+import { slotFromRow } from "@/lib/slots/load";
 
 /** Models re-pointed to the new runner id by the sex change. */
 export const RUNNER_REKEYED_MODELS = [
@@ -61,14 +68,14 @@ async function loadPlan(
   currentYear: number,
 ): Promise<{
   plan: SexChangePlan;
-  runner: { name: string; created: Date | null; author: string | null };
+  runner: { name: string; created: Date | null; author: string | null; nationality: string | null };
 }> {
   if (!/^\d{8}$/.test(runnerId)) {
     throw new SexChangeError("invalid_id");
   }
   const runner = await tx.runner.findUnique({
     where: { id: runnerId },
-    select: { id: true, name: true, created: true, author: true },
+    select: { id: true, name: true, created: true, author: true, nationality: true },
   });
   if (!runner) {
     throw new SexChangeError("not_found");
@@ -133,6 +140,32 @@ async function loadPlan(
     select: { id: true, name: true, sex: true, age: true, entryFee: true },
   });
 
+  // Startovné letošních řádků podle ceny uložené u přihlášky (Q342; starší záznam bez ceny =
+  // cena jejího termínu) a skupiny nové kategorie; bez termínů / skupiny = cena z číselníku.
+  const currentIds = lines
+    .filter((line) => line.year === currentYear)
+    .map((line) => line.registrationId);
+  const [slotRows, metas, groups] =
+    currentIds.length > 0
+      ? await Promise.all([
+          tx.registrationSlot.findMany({ where: { year: currentYear } }),
+          tx.registrationMeta.findMany({
+            where: { year: currentYear, id: { in: currentIds } },
+            select: { id: true, slot: true, feeAdult: true, feeYouth: true },
+          }),
+          tx.categoryMeta.findMany({ select: { categoryId: true, feeGroup: true } }),
+        ])
+      : [[], [], []];
+  const slots = slotRows.map(slotFromRow);
+  const metaById = new Map(metas.map((meta) => [meta.id, meta]));
+  const groupById = new Map(groups.map((group) => [group.categoryId, group.feeGroup]));
+  const feeFor: LineFeeFor = (line, target) =>
+    entryFee(
+      entryPrices(metaById.get(line.registrationId) ?? null, slots),
+      groupById.get(target.id) ?? null,
+      target.entryFee,
+    );
+
   const plan = buildSexChangePlan({
     runner: { id: runner.id, name: runner.name },
     takenIds: taken,
@@ -142,6 +175,7 @@ async function loadPlan(
     webImages,
     categories,
     currentYear,
+    feeFor,
   });
   return { plan, runner };
 }
@@ -174,7 +208,13 @@ export async function applySexChange(
         throw new SexChangeError("collision");
       }
       await tx.runner.create({
-        data: { id: newId, name: runner.name, created: runner.created, author: runner.author },
+        data: {
+          id: newId,
+          name: runner.name,
+          created: runner.created,
+          author: runner.author,
+          nationality: runner.nationality,
+        },
       });
       const from = { where: { runnerId: oldId }, data: { runnerId: newId } };
       const counts: SexChangeCounts = {

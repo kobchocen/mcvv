@@ -33,6 +33,7 @@ const envSchema = z.object({
   MAIL_FROM: emptyToUndefined,
   NEWSLETTER_DRY_RUN: z.enum(["true", "false"]).optional(),
   MAIL_DRY_RUN: z.enum(["true", "false"]).optional(),
+  MAIL_ALLOWED_RECIPIENTS: emptyToUndefined,
   MAIL_DAILY_CAP: z
     .string()
     .regex(/^[1-9]\d*$/)
@@ -86,6 +87,7 @@ const parsedEnv = envSchema.safeParse({
   MAIL_FROM: process.env.MAIL_FROM,
   NEWSLETTER_DRY_RUN: process.env.NEWSLETTER_DRY_RUN || undefined,
   MAIL_DRY_RUN: process.env.MAIL_DRY_RUN || undefined,
+  MAIL_ALLOWED_RECIPIENTS: process.env.MAIL_ALLOWED_RECIPIENTS,
   MAIL_DAILY_CAP: process.env.MAIL_DAILY_CAP || undefined,
   MAIL_PRIORITY_RESERVE: process.env.MAIL_PRIORITY_RESERVE || undefined,
   ALERT_TO: process.env.ALERT_TO || undefined,

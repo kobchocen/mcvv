@@ -1,5 +1,12 @@
 import { env } from "@/lib/env";
 
+import {
+  mailAllowlist,
+  maskRecipient,
+  recipientAllowed,
+  SKIPPED_PROVIDER_ID,
+} from "@/lib/mail/allowlist";
+
 import type { BatchSendResult, OutgoingMessage } from "./core";
 
 /** Resend batch API accepts up to 100 messages per request (1 request toward the rate limit). */
@@ -18,7 +25,44 @@ export function newsletterMailConfigured(): boolean {
   return Boolean(env.RESEND_API_KEY && env.MAIL_FROM);
 }
 
+/**
+ * Odešle dávku; příjemci mimo `MAIL_ALLOWED_RECIPIENTS` (Q347) se přeskočí a zalogují
+ * (providerId „skipped-allowlist“), ostatní odejdou normálně.
+ */
 export async function sendNewsletterBatch(
+  messages: OutgoingMessage[],
+  idempotencyKey: string,
+  options: { dryRun: boolean },
+): Promise<BatchSendResult> {
+  const allow = mailAllowlist();
+  if (allow) {
+    const allowed = messages.filter((m) => recipientAllowed(m.to, allow));
+    if (allowed.length < messages.length) {
+      for (const m of messages) {
+        if (!recipientAllowed(m.to, allow)) {
+          console.info(
+            `[newsletter] skipped (MAIL_ALLOWED_RECIPIENTS): ${maskRecipient(m.to)} (${idempotencyKey})`,
+          );
+        }
+      }
+      const sent =
+        allowed.length > 0
+          ? await sendBatch(allowed, `${idempotencyKey}-allowed`, options)
+          : { ok: true as const, providerIds: [] };
+      if (!sent.ok) return sent;
+      let next = 0;
+      return {
+        ok: true,
+        providerIds: messages.map((m) =>
+          recipientAllowed(m.to, allow) ? (sent.providerIds[next++] ?? null) : SKIPPED_PROVIDER_ID,
+        ),
+      };
+    }
+  }
+  return sendBatch(messages, idempotencyKey, options);
+}
+
+async function sendBatch(
   messages: OutgoingMessage[],
   idempotencyKey: string,
   options: { dryRun: boolean },

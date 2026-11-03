@@ -20,6 +20,10 @@ Newsletter má vlastní tabulku příjemců, ale počítá se do stejného denn�
 - Jiný 429 / 5xx / síť → opakování po 15 min, max. 5 pokusů; 4xx → `failed`.
 - Při dosažení stropu / kvóty odejde 1× denně alert na `ALERT_TO` (mcvv@mcvv.org).
 - Mimo produkci je výchozí `MAIL_DRY_RUN=true` (nic se neodesílá, záznam se označí jako odeslaný).
+- `MAIL_ALLOWED_RECIPIENTS` (Q347, pro STG): seznam adres a domén (`@example.cz`) oddělený čárkou.
+  Když je nastavený, fronta i newsletter posílají jen na ně; ostatní e-maily se neodešlou, jen se
+  zalogují (`[mail] skipped …` s maskovanou adresou) a ve frontě se označí jako vyřízené
+  s `provider_id = skipped-allowlist`. Hodnota bez platné položky blokuje vše. Na produkci nenastavovat.
 
 ## Plánovaný běh
 

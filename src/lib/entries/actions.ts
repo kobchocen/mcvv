@@ -32,6 +32,7 @@ import { writeAudit } from "@/lib/audit/log";
 import { diffFields } from "@/lib/audit/diff";
 import { entryTarget } from "@/lib/entries/changes-core";
 import { latePayUntil } from "@/lib/slots/late-core";
+import { sendLatePayMail } from "@/lib/slots/late-mail";
 
 type ChangeActor = Parameters<typeof recordEntryChange>[0];
 type OwnRegistration = { year: number; id: number; name: string | null };
@@ -498,6 +499,8 @@ export async function submitLateEntry(
     console.error("[entries] late submit audit failed", error);
   }
   await touchRegistration(year, id);
+  // E-mail k „zaplaťte dnes do HH:MM“ hned po odeslání (Q350).
+  await sendLatePayMail(year, id);
   revalidatePath("/[locale]/prihlasky", "page");
   return { ok: true };
 }

@@ -11,7 +11,8 @@ const int = (value: string | null, min: number, max: number) => {
 };
 
 /**
- * PNG QR platby pro e-maily (e-mailoví klienti nezobrazují inline SVG ani data: URI).
+ * PNG QR platby pro e-maily (e-mailoví klienti nezobrazují inline SVG ani data: URI)
+ * a pro „Uložit QR“ na platební obrazovce pozdní přihlášky (`stahnout=1`).
  * Generuje jen QR na klubový účet – parametry nic neprozrazují.
  */
 export async function GET(request: Request) {
@@ -26,7 +27,13 @@ export async function GET(request: Request) {
     margin: 1,
     errorCorrectionLevel: "M",
   });
+  // „Uložit QR“ na platební obrazovce (Q352): stáhnout jako soubor PNG.
+  const download = url.searchParams.get("stahnout") === "1";
   return new Response(new Uint8Array(png), {
-    headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=86400",
+      ...(download ? { "Content-Disposition": `attachment; filename="qr-${year}${id}.png"` } : {}),
+    },
   });
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { CheckCircle2, Clock, FileDown, Lock, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, FileDown, Lock, PencilLine, XCircle } from "lucide-react";
 
 import { Link, type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,8 @@ export type MyEntryNavItem = {
   /** Lze přihlášku teď měnit z webu? */
   editable: boolean;
   cancelled?: boolean;
+  /** Rozpracovaná (neodeslaná) pozdní přihláška – štítek „Rozpracovaná“ místo „Čeká na platbu“ (Q354). */
+  draft?: boolean;
 };
 
 const PILL =
@@ -58,6 +60,14 @@ export function EntryStatusPills({ item, copy }: { item: MyEntryNavItem; copy: C
       <span className={PILL_MUTED}>
         <XCircle className="size-3.5" aria-hidden="true" />
         {copy("entryPillCancelled")}
+      </span>
+    );
+  }
+  if (item.draft) {
+    return (
+      <span className={PILL_MUTED}>
+        <PencilLine className="size-3.5" aria-hidden="true" />
+        {copy("entryPillDraft")}
       </span>
     );
   }

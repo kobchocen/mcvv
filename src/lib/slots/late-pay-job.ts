@@ -10,7 +10,15 @@ import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { alertPayments } from "@/lib/payments/job";
 
 import { slotOf } from "./core";
-import { lateCancelReadiness, lateEntryState, lateNeedsCancel } from "./late-core";
+import {
+  lastChangeOf,
+  lateCancelReadiness,
+  lateDraftExpired,
+  lateEntryState,
+  lateNeedsCancel,
+} from "./late-core";
+import { lateCancelOffers, mailSite, sendLateCancelMail } from "./late-mail";
+import { hasMailAddress } from "./standard-pay-core";
 
 /** Aktér auditu za plánovaný job (bez účtu). */
 const SYSTEM_ACTOR = { actorUserId: null, actorEmail: "system@mcvv", actorRole: "system" } as const;
@@ -19,7 +27,7 @@ export type LatePayResult = {
   dryRun: boolean;
   /** Odeslané pozdní přihlášky zrušené po lhůtě na zaplacení. */
   cancelled: number;
-  /** Neodeslané pozdní přihlášky (košík) zrušené po konci pozdních přihlášek. */
+  /** Rozpracované (neodeslané) pozdní přihlášky zrušené po 1 h bez změny nebo po konci termínu. */
   draftsCancelled: number;
   /** Lhůta uplynula, ale čeká se na stažení plateb zahájené po lhůtě. */
   waiting: number;
@@ -31,8 +39,9 @@ export type LatePayResult = {
  * 1. Odeslaná pozdní přihláška nezaplacená v plné výši po `platba_do`: zrušit až po úspěšném
  *    stažení plateb, které začalo po lhůtě (jinak nejvýš +5 min, pak i tak + alert).
  *    Zrušení = stav 0, řádky smazané, platby zůstávají → k vrácení v /admin/platby (bez obnovení).
- * 2. Po konci pozdních přihlášek se zruší neodeslané košíky (nikdo je nemůže zaplatit ani odeslat).
- * E-mail o zrušení zatím neposílá (text čeká na schválení, mockup dohlaska.html?s=l).
+ *    Pak e-mail l „přihláška zrušena, platba nedorazila včas“ (mockup dohlaska.html?s=l, Q350).
+ * 2. Rozpracované (neodeslané) přihlášky se zruší po `LATE_DRAFT_TTL_MINUTES` (1 h) od poslední
+ *    změny a vždy po konci pozdních přihlášek; běžci se tím uvolní (Q351). Bez e-mailu.
  */
 export async function runLatePayment(options: {
   now?: Date;
@@ -47,7 +56,7 @@ export async function runLatePayment(options: {
 
   const metas = await prisma.registrationMeta.findMany({
     where: { year, slot: "late" },
-    select: { id: true, slot: true, submittedAt: true, payUntil: true },
+    select: { id: true, slot: true, submittedAt: true, payUntil: true, updatedAt: true },
   });
   if (metas.length === 0) return result;
   const metaById = new Map(metas.map((meta) => [meta.id, meta]));
@@ -63,6 +72,7 @@ export async function runLatePayment(options: {
           select: {
             runnerId: true,
             entryFee: true,
+            created: true,
             runner: { select: { name: true } },
             category: { select: { name: true } },
           },
@@ -84,6 +94,8 @@ export async function runLatePayment(options: {
   }
   const lateEnded = now.getTime() >= late.to.getTime();
   let forcedAny = false;
+  const offers = dryRun ? null : await lateCancelOffers(now);
+  const site = mailSite();
 
   for (const reg of regs) {
     const meta = metaById.get(reg.id);
@@ -94,7 +106,12 @@ export async function runLatePayment(options: {
     let auto: "unpaid_late" | "late_draft";
     let forced = false;
     if (state === "draft") {
-      if (!lateEnded) continue;
+      const lastChange = lastChangeOf([
+        meta.updatedAt,
+        reg.created,
+        ...reg.lines.map((line) => line.created),
+      ]);
+      if (!lateEnded && !lateDraftExpired(now, lastChange, late.to)) continue;
       auto = "late_draft";
     } else {
       if (!meta.payUntil || !lateNeedsCancel({ status: reg.status, ...meta, fee, paid })) continue;
@@ -160,7 +177,26 @@ export async function runLatePayment(options: {
     });
     if (!cancelled) continue;
     if (auto === "late_draft") result.draftsCancelled += 1;
-    else result.cancelled += 1;
+    else {
+      result.cancelled += 1;
+      if (offers && meta.submittedAt && meta.payUntil && hasMailAddress(reg.email)) {
+        const lines = reg.lines.map((line) => ({
+          runner: line.runner?.name ?? "",
+          fee: line.entryFee ?? 0,
+        }));
+        await sendLateCancelMail(reg.email, {
+          year,
+          id: reg.id,
+          lines,
+          fee,
+          paid,
+          site,
+          submittedAt: meta.submittedAt,
+          payUntil: meta.payUntil,
+          ...offers,
+        });
+      }
+    }
     if (forced) {
       result.forced += 1;
       forcedAny = true;

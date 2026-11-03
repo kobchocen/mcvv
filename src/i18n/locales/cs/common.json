@@ -399,7 +399,7 @@
       "onsiteKids": "Děti a dorost na místě",
       "refund": "Startovné vracíme při odhlášení do termínu online přihlášek ({date}). Po tomto termínu startovné nevracíme.",
       "refundOpen": "Startovné vracíme při odhlášení do termínu online přihlášek. Po termínu startovné nevracíme.",
-      "freeEntry": "Vítězové hlavní kategorie muži a ženy a členové klubu veteránů MCVV mají startovné zdarma při včasné online přihlášce."
+      "freeEntry": "Vítězové a veteráni MCVV mají startovné zdarma při včasné online přihlášce."
     },
     "prizes": {
       "adult": "Muži a ženy",
@@ -580,7 +580,7 @@
     "closedRead": "Uzávěrka přihlášek už proběhla. Novou přihlášku nelze založit.",
     "noRegistration": "Zatím nemáte přihlášku na ročník {year}.",
     "noRegistrationHint": "Přihláška se založí automaticky, jakmile přidáte prvního běžce.",
-    "cancelledNotice": "Přihláška č. {id} byla zrušena pořadatelem.",
+    "cancelledNotice": "Přihláška č. {id} byla zrušena.",
     "accountMessagesIntro": "Dotaz k účtu nebo k závodu můžete pořadateli poslat i bez přihlášky.",
     "accountSettings": "Nastavení účtu",
     "deadline": "Uzávěrka",

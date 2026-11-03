@@ -697,6 +697,8 @@ model RegistrationMeta {
   standardPayMailAt DateTime?             @map("doplatek_mail_at")
   /// Automaticky zrušeno (nezaplaceno ve lhůtě).
   autoCancelledAt   DateTime?             @map("auto_zruseno_at")
+  /// Platby na zrušenou přihlášku vráceny plátci (admin „Vráceno“ v /admin/platby).
+  refundedAt        DateTime?             @map("vraceno_at")
 
   @@id([year, id])
   @@map("mcvv_prihlaska_meta")

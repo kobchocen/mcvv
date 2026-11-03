@@ -214,3 +214,20 @@ export function parsePragueLocalInput(raw: string | null | undefined): Date | nu
   if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return null;
   return zonedCivilToUtc(y, mo, d, h, mi);
 }
+
+/**
+ * Poslední den (pražské datum YYYY-MM-DD), kdy se platba přihlášky ještě automaticky potvrdí:
+ * pozdější z lhůty doplatku standardu a konce zapnutých pozdních přihlášek. Bez termínů null
+ * (platí dosavadní 3. 12.).
+ */
+export function autoConfirmLastDay(slots: readonly Slot[], payUntil: Date | null): string | null {
+  if (slots.length === 0) return null;
+  const late = slotOf(slots, "late");
+  const candidates = [payUntil, late?.active ? new Date(late.to.getTime() - 1000) : null].filter(
+    (d): d is Date => d !== null,
+  );
+  if (candidates.length === 0) return null;
+  const last = new Date(Math.max(...candidates.map((d) => d.getTime())));
+  const c = pragueCivil(last);
+  return `${c.year}-${String(c.month).padStart(2, "0")}-${String(c.day).padStart(2, "0")}`;
+}

@@ -6,6 +6,7 @@ import { confirmRegistrationCore } from "@/lib/entries/confirm";
 import { paidAmount } from "@/lib/entries/fee";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
+import { autoConfirmLastDay } from "@/lib/slots/core";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
 import { matchSaleTransaction, parseSaleVs, type SaleSnapshot } from "@/lib/sales/core";
@@ -202,7 +203,7 @@ export type TxOutcome = "skipped" | "duplicate" | "matched" | "unmatched" | "dry
 export async function processTransaction(
   tx: FioTransaction,
   year: number,
-  options: { dryRun: boolean },
+  options: { dryRun: boolean; autoConfirmUntil?: string },
 ): Promise<TxOutcome> {
   // Prodejky závodní kanceláře (#207) mají vlastní rozsah VS (rok + 9 + 5 číslic).
   const saleOutcome = await processSaleTransaction(tx, year, options);
@@ -257,7 +258,7 @@ export async function processTransaction(
       overpaid: decision.overpaid,
       reason: decision.alreadyConfirmed
         ? "already_confirmed"
-        : !autoConfirmAllowed(tx.date, year)
+        : !autoConfirmAllowed(tx.date, year, options.autoConfirmUntil)
           ? "late"
           : decision.remaining > 0
             ? "partial"
@@ -266,7 +267,7 @@ export async function processTransaction(
   });
   await recalculateRegistrationStatus(year, decision.registrationId);
   // Auto-potvrzení, jakmile součet plateb pokryje startovné (stav 3/4); jinak zůstává 2.
-  if (!decision.alreadyConfirmed && autoConfirmAllowed(tx.date, year)) {
+  if (!decision.alreadyConfirmed && autoConfirmAllowed(tx.date, year, options.autoConfirmUntil)) {
     const result = await confirmRegistrationCore(year, decision.registrationId, { site: origin() });
     if (result !== "not_confirmable") {
       await prisma.bankTx.update({
@@ -437,11 +438,12 @@ export async function runPaymentsJob(
         error: result.error,
       };
     }
-    const { year } = await currentRaceYear();
+    const { year, slots, standardPayUntil } = await currentRaceYear();
+    const autoConfirmUntil = autoConfirmLastDay(slots, standardPayUntil) ?? undefined;
     let matched = 0;
     let unmatched = 0;
     for (const tx of result.transactions) {
-      const outcome = await processTransaction(tx, year, { dryRun });
+      const outcome = await processTransaction(tx, year, { dryRun, autoConfirmUntil });
       if (outcome === "matched") matched += 1;
       if (outcome === "unmatched") unmatched += 1;
     }

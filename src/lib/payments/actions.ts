@@ -9,6 +9,7 @@ import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { entryTarget } from "@/lib/entries/changes-core";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
+import { ENTRY_STATUS } from "@/lib/entries/status-codes";
 
 function revalidate() {
   revalidatePath("/[locale]/admin/platby", "page");
@@ -38,7 +39,10 @@ export async function ignoreBankTx(formData: FormData): Promise<void> {
   revalidate();
 }
 
-/** Ručně přiřadit nespárovaný pohyb k přihlášce (vytvoří platbu, bez auto-potvrzení). */
+/**
+ * Ručně přiřadit nespárovaný pohyb k přihlášce (vytvoří platbu, bez auto-potvrzení).
+ * Zrušenou přihlášku nelze obnovit platbou – takový pohyb jde k vrácení.
+ */
 export async function assignBankTx(formData: FormData): Promise<void> {
   const session = await requireStaff();
   const id = formInt(formData, "id");
@@ -49,9 +53,9 @@ export async function assignBankTx(formData: FormData): Promise<void> {
   const year = formInt(formData, "year") ?? tx.year;
   const reg = await prisma.registration.findUnique({
     where: { year_id: { year, id: registrationId } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
-  if (!reg) return;
+  if (!reg || reg.status === ENTRY_STATUS.cancelled) return;
   const claimed = await prisma.bankTx.updateMany({
     where: { id, status: "unmatched" },
     data: { status: "processing" },
@@ -117,6 +121,64 @@ export async function markRefunded(formData: FormData): Promise<void> {
             ? entryTarget(row.year, row.registrationId)
             : null,
       },
+    });
+  }
+  revalidate();
+}
+
+/** Platba na zrušenou přihlášku (nespárovaný pohyb) vrácena plátci. */
+export async function refundCancelledBankTx(formData: FormData): Promise<void> {
+  const session = await requireStaff();
+  const id = formInt(formData, "id");
+  if (!id) return;
+  const refunded = await prisma.bankTx.updateMany({
+    where: { id, status: "unmatched", reason: "cancelled" },
+    data: {
+      status: "ignored",
+      refundedAt: new Date(),
+      note: "vráceno – přihláška zrušena",
+      resolvedBy: session.email.slice(0, 64),
+    },
+  });
+  if (refunded.count === 1) {
+    const row = await prisma.bankTx.findUnique({
+      where: { id },
+      select: { amount: true, year: true, registrationId: true },
+    });
+    await writeAudit({
+      actor: session,
+      action: "bank_tx.refunded",
+      target: `bank_tx:${id}`,
+      detail: {
+        amount: row ? Math.round(Number(row.amount)) : null,
+        reason: "cancelled",
+        registration:
+          row?.year && row.registrationId !== null
+            ? entryTarget(row.year, row.registrationId)
+            : null,
+      },
+    });
+  }
+  revalidate();
+}
+
+/** Platby, které přišly před automatickým zrušením přihlášky, vráceny plátci. */
+export async function markEntryRefunded(formData: FormData): Promise<void> {
+  const session = await requireStaff();
+  const year = formInt(formData, "year");
+  const id = formInt(formData, "registrationId");
+  if (!year || !id) return;
+  const amount = formInt(formData, "amount");
+  const refunded = await prisma.registrationMeta.updateMany({
+    where: { year, id, autoCancelledAt: { not: null }, refundedAt: null },
+    data: { refundedAt: new Date() },
+  });
+  if (refunded.count === 1) {
+    await writeAudit({
+      actor: session,
+      action: "entry.refunded",
+      target: entryTarget(year, id),
+      detail: { amount },
     });
   }
   revalidate();

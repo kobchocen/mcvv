@@ -1,3 +1,4 @@
+import { mailAllowlist, maskRecipient, recipientAllowed } from "@/lib/mail/allowlist";
 import { env } from "@/lib/env";
 import { escapeHtml } from "@/lib/mail/layout";
 import { sendResendEmail } from "@/lib/mail/resend";
@@ -50,6 +51,11 @@ export async function sendContactMessage(
   }
 
   if (env.SMTP_HOST) {
+    // Q347: SMTP záloha respektuje MAIL_ALLOWED_RECIPIENTS stejně jako Resend.
+    if (!recipientAllowed(to, mailAllowlist())) {
+      console.info(`[contact] skipped (MAIL_ALLOWED_RECIPIENTS): ${maskRecipient(to)}`);
+      return { delivered: true };
+    }
     const nodemailer = await import("nodemailer");
     const port = env.SMTP_PORT ?? 587;
     const transporter = nodemailer.createTransport({

@@ -1,5 +1,6 @@
 import { env } from "@/lib/env";
 
+import { mailAllowlist, maskRecipient, recipientAllowed, SKIPPED_PROVIDER_ID } from "./allowlist";
 import { classifyResendFailure, type MailKind, type SendResult } from "./queue-core";
 
 export function mailConfigured(): boolean {
@@ -19,6 +20,13 @@ export async function postResendEmail(
   input: ResendMessage,
   options: { dryRun: boolean; idempotencyKey?: string; fetchImpl?: typeof fetch },
 ): Promise<SendResult> {
+  // Q347: mimo povolené příjemce (MAIL_ALLOWED_RECIPIENTS) se nic neodesílá, jen zaloguje.
+  if (!recipientAllowed(input.to, mailAllowlist())) {
+    console.info(
+      `[mail] skipped (MAIL_ALLOWED_RECIPIENTS): ${maskRecipient(input.to)} "${input.subject}" (${options.idempotencyKey ?? "-"})`,
+    );
+    return { ok: true, providerId: SKIPPED_PROVIDER_ID };
+  }
   if (options.dryRun) {
     console.info(`[mail] dry-run: "${input.subject}" (${options.idempotencyKey ?? "-"})`);
     return { ok: true, providerId: "dry-run" };

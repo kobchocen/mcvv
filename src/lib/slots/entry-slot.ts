@@ -57,10 +57,15 @@ export type EntryWriteContext = {
   now: Date;
 };
 
+/** Běžící termín (s cenami), do kterého teď vznikají nové přihlášky z webu; jinak null. */
+export function currentEntrySlotRow(ctx: EntryWriteContext): Slot | null {
+  if (ctx.slots.length === 0 || !ctx.open) return null;
+  return activeSlot(ctx.slots, ctx.now);
+}
+
 /** Termín, do kterého teď vznikají nové přihlášky z webu; ročník bez termínů / zavřeno → null. */
 export function currentEntrySlot(ctx: EntryWriteContext): SlotType | null {
-  if (ctx.slots.length === 0 || !ctx.open) return null;
-  return activeSlot(ctx.slots, ctx.now)?.type ?? null;
+  return currentEntrySlotRow(ctx)?.type ?? null;
 }
 
 /**
@@ -88,4 +93,18 @@ export function orderMyEntries<T extends { id: number; writable: boolean }>(
     if (a.writable !== b.writable) return a.writable ? -1 : 1;
     return a.writable ? a.id - b.id : b.id - a.id;
   });
+}
+
+/**
+ * Hlavní přihláška na „Moje přihláška“ (s formuláři): při otevřených přihláškách jen ta, kterou
+ * lze měnit – jinak žádná (dalšího běžce založí novou přihlášku v běžícím termínu, Q346);
+ * po uzávěrce nejnovější (jen čtení). Ostatní se ukazují jako uzavřené (jen čtení).
+ */
+export function splitMyEntries<T extends { writable: boolean }>(
+  ordered: readonly T[],
+  open: boolean,
+): { primary: T | null; locked: T[] } {
+  const first = ordered[0] ?? null;
+  const primary = first && (first.writable || !open) ? first : null;
+  return { primary, locked: ordered.filter((entry) => entry !== primary) };
 }

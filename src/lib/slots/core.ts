@@ -170,6 +170,34 @@ export function slotFee(slot: Slot | null, group: FeeGroup | null, categoryFee: 
   return group === "mladez" ? slot.feeYouth : slot.feeAdult;
 }
 
+/** Startovné přihlášky (dospělí / mládež). */
+export type EntryPrices = { feeAdult: number; feeYouth: number };
+
+/**
+ * Ceny přihlášky (Q342): uložené u přihlášky, jinak (starší záznam bez ceny) dnešní cena
+ * termínu, ve kterém vznikla (bez termínu = standard); ročník bez termínů → null.
+ */
+export function entryPrices(
+  meta: { slot: SlotType | null; feeAdult: number | null; feeYouth: number | null } | null,
+  slots: readonly Slot[],
+): EntryPrices | null {
+  if (meta && meta.feeAdult != null && meta.feeYouth != null) {
+    return { feeAdult: meta.feeAdult, feeYouth: meta.feeYouth };
+  }
+  const slot = slotOf(slots, meta?.slot ?? "standard");
+  return slot ? { feeAdult: slot.feeAdult, feeYouth: slot.feeYouth } : null;
+}
+
+/** Startovné kategorie v přihlášce: cena skupiny z cen přihlášky, jinak cena z číselníku. */
+export function entryFee(
+  prices: EntryPrices | null,
+  group: FeeGroup | null,
+  categoryFee: number,
+): number {
+  if (!prices || !group) return categoryFee;
+  return group === "mladez" ? prices.feeYouth : prices.feeAdult;
+}
+
 export type SlotIssue = "order" | "overlap" | "standard_missing" | "pay_until" | "fee" | "onsite";
 
 /** Kontrola nastavení termínů před uložením. */

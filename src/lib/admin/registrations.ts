@@ -95,6 +95,59 @@ export async function saveRegistrationHeader(formData: FormData): Promise<void> 
   revalidateRegistrations();
 }
 
+/**
+ * Ruční úprava startovného přihlášky (Q342): ceny dospělí / mládež uložené u přihlášky.
+ * Změna ceny termínu existující přihlášky nemění – jen tato explicitní úprava. Po uložení se
+ * přepočte startovné řádků (zdarma zůstává zdarma) a stav přihlášky.
+ */
+export async function saveRegistrationPrices(formData: FormData): Promise<void> {
+  const session = await requireStaff();
+  const year = formInt(formData, "year");
+  const id = formInt(formData, "id");
+  const feeAdult = formInt(formData, "feeAdult");
+  const feeYouth = formInt(formData, "feeYouth");
+  if (!year || id === null || !validEntryPrice(feeAdult) || !validEntryPrice(feeYouth)) {
+    return;
+  }
+  const [registration, before] = await Promise.all([
+    prisma.registration.findUnique({
+      where: { year_id: { year, id } },
+      select: { email: true },
+    }),
+    prisma.registrationMeta.findUnique({
+      where: { year_id: { year, id } },
+      select: { feeAdult: true, feeYouth: true },
+    }),
+  ]);
+  if (!registration) {
+    return;
+  }
+  await prisma.registrationMeta.upsert({
+    where: { year_id: { year, id } },
+    create: { year, id, feeAdult, feeYouth },
+    update: { feeAdult, feeYouth },
+  });
+  const priceChanges = diffFields(
+    { feeAdult: before?.feeAdult ?? null, feeYouth: before?.feeYouth ?? null },
+    { feeAdult, feeYouth },
+  );
+  if (Object.keys(priceChanges).length > 0) {
+    await writeAudit({
+      actor: session,
+      action: "registration.updated",
+      target: entryTarget(year, id),
+      detail: { changes: priceChanges },
+    });
+  }
+  await refreshLineFees(year, id, registration.email ?? "");
+  await recalculateRegistrationStatus(year, id);
+  revalidateRegistrations();
+}
+
+function validEntryPrice(value: number | null): value is number {
+  return value !== null && Number.isInteger(value) && value >= 0 && value <= 10000;
+}
+
 export async function savePayment(formData: FormData): Promise<void> {
   const session = await requireStaff();
   const year = formInt(formData, "year");

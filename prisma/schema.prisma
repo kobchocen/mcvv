@@ -699,6 +699,11 @@ model RegistrationMeta {
   autoCancelledAt   DateTime?             @map("auto_zruseno_at")
   /// Platby na zrušenou přihlášku vráceny plátci (admin „Vráceno“ v /admin/platby).
   refundedAt        DateTime?             @map("vraceno_at")
+  /// Startovné přihlášky (dospělí / mládež) uložené při založení z ceny termínu (Q342);
+  /// pozdější změna ceny termínu ho nemění, upravit ho lze jen ručně v administraci.
+  /// null = přihláška bez uložené ceny → cena termínu (dosavadní chování).
+  feeAdult          Int?                  @map("cena_dospeli") @db.SmallInt
+  feeYouth          Int?                  @map("cena_mladez") @db.SmallInt
 
   @@id([year, id])
   @@map("mcvv_prihlaska_meta")

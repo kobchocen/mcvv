@@ -379,6 +379,31 @@ describe("applySexChange (re-keying in one transaction)", () => {
     assert.equal(past?.newFee, 100, "past years are settled");
   });
 
+  it("prices by the entry's stored price snapshot, not today's term price (Q342)", async () => {
+    const fake = fakeDb();
+    fake.registrationSlot.rows.push({
+      year: 2026,
+      type: "standard",
+      from: new Date(0),
+      to: new Date(1),
+      active: true,
+      feeAdult: 100,
+      feeYouth: 50,
+      payWithinMinutes: null,
+    });
+    // cena termínu se po vzniku přihlášky změnila (100 Kč), přihláška má uloženo 170 Kč
+    fake.registrationMeta.rows.push({
+      year: 2026,
+      id: 4,
+      slot: "standard",
+      feeAdult: 170,
+      feeYouth: 60,
+    });
+    fake.categoryMeta.rows.push({ categoryId: "G", feeGroup: "dospeli" });
+    const plan = await previewSexChange(asClient(fake), "19830002", 2026);
+    assert.equal(plan.lines.find((line) => line.year === 2026)?.newFee, 170);
+  });
+
   it("previews old → new id, categories and counts without writing", async () => {
     const fake = fakeDb();
     const plan = await previewSexChange(asClient(fake), "19830002", 2026);

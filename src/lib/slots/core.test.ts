@@ -4,6 +4,8 @@ import test from "node:test";
 import {
   activeSlot,
   deadlineFromStandardEnd,
+  entryFee,
+  entryPrices,
   parsePragueLocalInput,
   pragueLocalInput,
   registrationOpen,
@@ -166,4 +168,27 @@ test("default slots match the migration seed", () => {
   const stored = [slot({ type: "standard", feeAdult: 120 })];
   assert.equal(slotsWithDefaults(stored, edition)[1]!.feeAdult, 120);
   assert.equal(slotsWithDefaults(stored, edition).length, 4);
+});
+
+test("entry prices: stored snapshot wins over today's term price (Q342)", () => {
+  const stored = entryPrices({ slot: "standard", feeAdult: 150, feeYouth: 70 }, slots2026);
+  assert.deepEqual(stored, { feeAdult: 150, feeYouth: 70 });
+  assert.equal(entryFee(stored, "dospeli", 80), 150);
+  assert.equal(entryFee(stored, "mladez", 80), 70);
+  assert.equal(entryFee(stored, null, 80), 80);
+});
+
+test("entry prices: legacy entry without a snapshot uses its own term's price", () => {
+  assert.deepEqual(entryPrices({ slot: "late", feeAdult: null, feeYouth: null }, slots2026), {
+    feeAdult: 200,
+    feeYouth: 100,
+  });
+  assert.deepEqual(entryPrices(null, slots2026), { feeAdult: 100, feeYouth: 50 });
+  // Jen jedna uložená cena = neúplný snapshot → cena termínu.
+  assert.deepEqual(entryPrices({ slot: null, feeAdult: 120, feeYouth: null }, slots2026), {
+    feeAdult: 100,
+    feeYouth: 50,
+  });
+  assert.equal(entryPrices(null, []), null);
+  assert.equal(entryFee(null, "dospeli", 80), 80);
 });

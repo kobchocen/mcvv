@@ -1,7 +1,7 @@
+import { CountryFlag } from "@/components/atoms";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { ClubLink, RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
-import { flagEmoji } from "@/lib/runner/nationality";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type StatsCell = {
@@ -157,10 +157,8 @@ export function McvvStatsPage({
                               ) : cell.clubSlug ? (
                                 <ClubLink slug={cell.clubSlug} name={cell.text} />
                               ) : cell.flag ? (
-                                <span className="whitespace-nowrap text-foreground">
-                                  <span role="img" aria-hidden="true" className="mr-1.5">
-                                    {flagEmoji(cell.flag)}
-                                  </span>
+                                <span className="inline-flex items-center gap-2 whitespace-nowrap text-foreground">
+                                  <CountryFlag code={cell.flag} />
                                   {cell.text}
                                 </span>
                               ) : (

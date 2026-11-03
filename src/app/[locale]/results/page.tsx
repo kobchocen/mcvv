@@ -232,7 +232,10 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   // cached club names ("stats" tag, the same index as /kluby), not all of cis_klub per view
   const clubs = createClubResolver(await getClubIndex());
   // Státní příslušnost (#200): vlaječka u zahraničních běžců.
-  const nationalities = await loadNationalityMap(fullResults.map((r) => r.runnerId));
+  const nationalities = await loadNationalityMap(
+    fullResults.map((r) => r.runnerId),
+    { foreignOnly: true },
+  );
   const toRow = (r: ResultRow, rank: number | undefined, withCategory: boolean) => ({
     key: r.runnerId,
     runnerId: r.runnerId,

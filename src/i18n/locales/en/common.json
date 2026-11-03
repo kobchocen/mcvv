@@ -745,14 +745,23 @@
     "error_unchanged": "The name does not change.",
     "error_year": "Enter a valid year.",
     "error_not_found": "Runner not found.",
-    "error_failed": "The change could not be saved, try again."
+    "error_failed": "The change could not be saved, try again.",
+    "colNationality": "Country",
+    "nationalityTitle": "Country",
+    "nationalityHint": "Foreign runners get a flag in the results, start list and entry list. The change is recorded in the change history.",
+    "suggestHint": "Suggestions appear as you type (last name, first name, birth year – e.g. “Novák 1980”). Pick a runner with the arrow keys, Enter opens the detail; Enter without a pick searches everything.",
+    "suggestEmpty": "No runner matches.",
+    "suggestLast": "last",
+    "subnavSearch": "Search and edits",
+    "subnavMerge": "Merge runners"
   },
   "Nationality": {
     "label": "Nationality",
     "unknown": "— not stated —",
     "hint": "Runners from abroad get a flag in the results. An entry does not overwrite a nationality the runner already has.",
     "save": "Save",
-    "saveError": "The nationality could not be saved (invalid country or runner)."
+    "saveError": "The nationality could not be saved (invalid country or runner).",
+    "saved": "Country saved."
   },
   "Club": {
     "eyebrow": "Club",
@@ -1231,9 +1240,9 @@
     "runnerMergeHint": "Duplicate runners (one person under two ids) – admin only.",
     "dictsClubs": "Clubs",
     "dictsClubProfile": "Profile",
-    "dictsClubsHint": "Clubs in the list for a given race year.",
+    "dictsClubsHint": "Clubs in the list for a given race year and merging duplicate clubs.",
     "dictsRunners": "Runners",
-    "dictsRunnersHint": "Find runners and fix their name (typo, marriage). Admin only.",
+    "dictsRunnersHint": "Find runners, fix their name and country, merge duplicates. Admin only.",
     "dictsYear": "Year",
     "dictsCode": "Code",
     "dictsName": "Name",
@@ -1402,7 +1411,9 @@
     "clubMergeHistoryCounts": "entries {entries} · start lists {starts} · results {results}",
     "clubMergeHistoryAudit": "Audit",
     "regsDeletePaymentTitle": "Delete payment?",
-    "regsDeletePaymentConfirm": "Payment of CZK {amount} ({date}) will be removed from the entry and the payment status recalculated."
+    "regsDeletePaymentConfirm": "Payment of CZK {amount} ({date}) will be removed from the entry and the payment status recalculated.",
+    "clubsSubnavList": "Club list",
+    "clubsSubnavMerge": "Merge clubs"
   },
   "Stats": {
     "overview": {

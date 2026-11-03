@@ -745,14 +745,23 @@
     "error_unchanged": "Jméno se nemění.",
     "error_year": "Zadejte platný ročník.",
     "error_not_found": "Běžec nenalezen.",
-    "error_failed": "Změnu se nepodařilo uložit, zkuste to znovu."
+    "error_failed": "Změnu se nepodařilo uložit, zkuste to znovu.",
+    "colNationality": "Stát",
+    "nationalityTitle": "Státní příslušnost",
+    "nationalityHint": "U zahraničních běžců se ve výsledcích, startovce a seznamu přihlášených ukazuje vlaječka. Změna se zapíše do historie změn.",
+    "suggestHint": "Návrhy se ukazují při psaní (jméno, příjmení, ročník narození – např. „Novák 1980“). Šipkami vyberte běžce, Enter otevře detail; Enter bez výběru vyhledá vše.",
+    "suggestEmpty": "Žádný běžec neodpovídá.",
+    "suggestLast": "naposledy",
+    "subnavSearch": "Hledání a úpravy",
+    "subnavMerge": "Slučování běžců"
   },
   "Nationality": {
     "label": "Státní příslušnost",
     "unknown": "— neuvedeno —",
     "hint": "Podle ní ukážeme u zahraničních běžců ve výsledcích vlaječku. Údaj u běžce, který už ho má, přihláška nepřepíše.",
     "save": "Uložit",
-    "saveError": "Státní příslušnost se nepodařilo uložit (neplatný stát nebo běžec)."
+    "saveError": "Státní příslušnost se nepodařilo uložit (neplatný stát nebo běžec).",
+    "saved": "Státní příslušnost uložena."
   },
   "Club": {
     "eyebrow": "Klub",
@@ -1231,9 +1240,9 @@
     "runnerMergeHint": "Duplicitní běžci (stejný člověk pod dvěma id) – jen admin.",
     "dictsClubs": "Kluby",
     "dictsClubProfile": "Profil",
-    "dictsClubsHint": "Kluby v číselníku podle roku závodu.",
+    "dictsClubsHint": "Kluby v číselníku podle roku závodu a slučování duplicitních klubů.",
     "dictsRunners": "Běžci",
-    "dictsRunnersHint": "Hledání běžců a oprava jména (překlep, svatba). Jen admin.",
+    "dictsRunnersHint": "Hledání běžců, oprava jména a státu, slučování duplicit. Jen admin.",
     "dictsYear": "Rok",
     "dictsCode": "Kód",
     "dictsName": "Název",
@@ -1402,7 +1411,9 @@
     "clubMergeHistoryCounts": "přihlášky {entries} · startovky {starts} · výsledky {results}",
     "clubMergeHistoryAudit": "Audit",
     "regsDeletePaymentTitle": "Smazat platbu?",
-    "regsDeletePaymentConfirm": "Platba {amount} Kč ({date}) se z přihlášky odstraní a přepočítá se stav úhrady."
+    "regsDeletePaymentConfirm": "Platba {amount} Kč ({date}) se z přihlášky odstraní a přepočítá se stav úhrady.",
+    "clubsSubnavList": "Seznam klubů",
+    "clubsSubnavMerge": "Slučování klubů"
   },
   "Stats": {
     "overview": {

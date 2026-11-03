@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/routing";
-import { flagEmoji, listFlag } from "@/lib/runner/nationality";
+import { CountryFlag } from "@/components/atoms/country-flag";
+import { listFlag } from "@/lib/runner/nationality";
 
 export type RunnerNameLinkProps = {
   id?: string | null;
@@ -16,11 +17,7 @@ export function RunnerNameFlag({ code }: { code?: string | null }) {
   if (!flag) {
     return null;
   }
-  return (
-    <span className="ml-1.5 font-normal" role="img" aria-label={flag} title={flag}>
-      {flagEmoji(flag)}
-    </span>
-  );
+  return <CountryFlag code={flag} label={flag} className="ml-1.5" />;
 }
 
 export function RunnerNameLink({ id, name, nationality }: RunnerNameLinkProps) {

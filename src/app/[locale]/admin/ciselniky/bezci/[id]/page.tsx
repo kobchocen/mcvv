@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { CountryFlag } from "@/components/atoms";
+import { NationalityFlagSelect } from "@/components/molecules/nationality-flag-select";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPendingSubmit } from "@/components/organisms/mcvv-admin-pending-submit";
 import { Button } from "@/components/ui/button";
@@ -13,9 +15,12 @@ import { previewRunnerRename } from "@/lib/admin/runner-rename";
 import { renameRunnerAction } from "@/lib/admin/runner-rename-actions";
 import { keptOtherNames, RUNNER_NAME_MAX, splitRunnerName } from "@/lib/admin/runner-rename-core";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
+import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
 import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
+import { countryName, isCountryCode } from "@/lib/runner/nationality";
+import { nationalityField } from "@/lib/runner/nationality-field";
 
 type Search = {
   prijmeni?: string;
@@ -25,6 +30,8 @@ type Search = {
   z?: string;
   chyba?: string;
   prejmenovano?: string;
+  /** Výsledek uložení státu: ulozeno | chyba. */
+  stat?: string;
 };
 
 type PageProps = Readonly<{
@@ -55,13 +62,16 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireAdmin();
-  const [admin, copy, query, runner, { year: currentYear }] = await Promise.all([
-    getTranslations({ locale, namespace: "Admin" }),
-    getTranslations({ locale, namespace: "AdminRunners" }),
-    searchParams,
-    loadRunnerDetail(id),
-    currentRaceYear(),
-  ]);
+  const [admin, copy, nationalityCopy, nationalityOptions, query, runner, { year: currentYear }] =
+    await Promise.all([
+      getTranslations({ locale, namespace: "Admin" }),
+      getTranslations({ locale, namespace: "AdminRunners" }),
+      getTranslations({ locale, namespace: "Nationality" }),
+      nationalityField(locale),
+      searchParams,
+      loadRunnerDetail(id),
+      currentRaceYear(),
+    ]);
   if (!runner) notFound();
 
   const back = backTarget(query.z);
@@ -129,6 +139,19 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
               <dd>{runnerSexOf(runner.id) === "F" ? copy("sexF") : copy("sexM")}</dd>
             </div>
             <div>
+              <dt className="text-race-muted">{copy("colNationality")}</dt>
+              <dd className="flex items-center gap-1.5" data-testid="runner-card-nationality">
+                {runner.nationality && isCountryCode(runner.nationality) ? (
+                  <>
+                    <CountryFlag code={runner.nationality} />
+                    {countryName(runner.nationality, locale)}
+                  </>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div>
               <dt className="text-race-muted">{copy("colPrevious")}</dt>
               <dd>{runner.previousNames.join(", ") || "—"}</dd>
             </div>
@@ -151,6 +174,50 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
             <p className="mt-1 text-race-muted">{copy("doneDetail", { name: runner.name })}</p>
           </div>
         ) : null}
+
+        <section className="mt-8" data-testid="runner-nationality">
+          <h2 className="font-display text-2xl font-semibold text-foreground dark:text-white">
+            {copy("nationalityTitle")}
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-race-muted">
+            {copy("nationalityHint")}
+          </p>
+          <form
+            key={runner.nationality ?? ""}
+            action={saveRunnerNationality}
+            className="mt-4 flex flex-wrap items-center gap-3"
+            data-testid="runner-nationality-form"
+          >
+            <input type="hidden" name="runnerId" value={runner.id} />
+            <input type="hidden" name="back" value="runner" />
+            {back ? <input type="hidden" name="z" value={`${back.rok}-${back.id}`} /> : null}
+            <label htmlFor="runner-nationality" className="sr-only">
+              {nationalityOptions.label}
+            </label>
+            <NationalityFlagSelect
+              id="runner-nationality"
+              field={nationalityOptions}
+              defaultValue={runner.nationality ?? ""}
+              className="h-10 min-w-[14rem] border border-race-line bg-race-surface px-3 text-sm"
+            />
+            <Button type="submit" variant="outline" className="h-10">
+              {nationalityCopy("save")}
+            </Button>
+          </form>
+          {query.stat === "ulozeno" ? (
+            <p
+              role="status"
+              className="mt-3 text-sm font-medium text-race-accent"
+              data-testid="runner-nationality-saved"
+            >
+              {nationalityCopy("saved")}
+            </p>
+          ) : query.stat === "chyba" ? (
+            <p role="alert" className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">
+              {nationalityCopy("saveError")}
+            </p>
+          ) : null}
+        </section>
 
         <section className="mt-8" data-testid="runner-rename">
           <h2 className="font-display text-2xl font-semibold text-foreground dark:text-white">

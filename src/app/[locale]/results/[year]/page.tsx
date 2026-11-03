@@ -7,6 +7,7 @@ import { createClubResolver } from "@/lib/clubs/core";
 import { getRecordSettersByYear } from "@/lib/stats/record-setters";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
+import { loadNationalityMap } from "@/lib/runner/nationality-query";
 import { HighlightHashedRow } from "@/components/molecules";
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import {
@@ -75,6 +76,11 @@ export default async function ResultsYearPage({ params }: PageProps) {
   })) as ResultRow[];
 
   const total = results.length;
+  // Státní příslušnost (#200): vlaječka u zahraničních běžců (stejně jako archiv výsledků).
+  const nationalities = await loadNationalityMap(
+    results.map((r) => r.runnerId),
+    { foreignOnly: true },
+  );
 
   // Edition info (weather, temp)
   const editionInfo = await prisma.edition.findFirst({
@@ -240,6 +246,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
                     key: `${r.year}-${r.runnerId}`,
                     runnerId: r.runnerId,
                     runnerName: r.runnerName,
+                    nationality: nationalities.get(r.runnerId) ?? null,
                     rank: r._catRank,
                     birthYear: r._birthYear,
                     club: r._clubName,

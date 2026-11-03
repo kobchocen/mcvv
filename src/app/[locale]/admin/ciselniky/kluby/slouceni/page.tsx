@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LinkPendingLabel } from "@/components/molecules/link-pending-label";
 import { PendingSubmitButton } from "@/components/molecules/pending-submit-button";
 import { McvvAdminHomeLink } from "@/components/organisms";
+import { clubsSubnav, McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { McvvAdminMergePicker } from "@/components/organisms/mcvv-admin-merge-picker";
 import { Link, type Locale } from "@/i18n/routing";
 import {
@@ -91,6 +92,7 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   // Q47: an organizer sees the suggestions and may reject them; preview and merge are admin only.
   const canMerge = canMergeClubs(session.role);
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const cleanup = await getTranslations({ locale, namespace: "ClubCleanup" });
   const query = await searchParams;
   const confidence = CONFIDENCES.find((value) => value === query.jistota);
   const limit = Math.max(PAGE, Number.parseInt(query.pocet ?? "", 10) || PAGE);
@@ -340,6 +342,19 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <McvvAdminHomeLink label={copy("title")} />
+        <McvvAdminDictsSubnav
+          backLabel={copy("dictsTitle")}
+          label={copy("dictsClubs")}
+          items={clubsSubnav(
+            {
+              list: copy("clubsSubnavList"),
+              merge: copy("clubsSubnavMerge"),
+              orphans: cleanup("title"),
+            },
+            canMerge,
+            "merge",
+          )}
+        />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("clubMergeTitle")}
         </h1>

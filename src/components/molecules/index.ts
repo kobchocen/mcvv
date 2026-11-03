@@ -19,6 +19,7 @@ export * from "./section-header";
 export * from "./photo-tile";
 export * from "./pagination-links";
 export * from "./nationality-select";
+export * from "./nationality-flag-select";
 export * from "./confirm-dialog";
 export * from "./pending-submit-button";
 export * from "./link-pending-label";

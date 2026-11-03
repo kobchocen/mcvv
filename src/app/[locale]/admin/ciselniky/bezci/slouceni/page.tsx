@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LinkPendingLabel } from "@/components/molecules/link-pending-label";
 import { PendingSubmitButton } from "@/components/molecules/pending-submit-button";
+import { McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { McvvAdminMergePicker } from "@/components/organisms/mcvv-admin-merge-picker";
 import { Link, type Locale } from "@/i18n/routing";
 import type { MergePickOption } from "@/lib/admin/merge-pick";
@@ -73,7 +74,11 @@ export default async function AdminRunnerMergePage({ params, searchParams }: Pag
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireAdmin();
-  const copy = await getTranslations({ locale, namespace: "AdminRunnerMerge" });
+  const [copy, admin, runners] = await Promise.all([
+    getTranslations({ locale, namespace: "AdminRunnerMerge" }),
+    getTranslations({ locale, namespace: "Admin" }),
+    getTranslations({ locale, namespace: "AdminRunners" }),
+  ]);
   const query = await searchParams;
   const limit = Math.max(
     RUNNER_MERGE_SUGGESTIONS_PAGE,
@@ -318,14 +323,19 @@ export default async function AdminRunnerMergePage({ params, searchParams }: Pag
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <p className="mb-4">
-          <Link
-            href="/admin/ciselniky"
-            className="text-sm font-medium text-race-accent hover:underline"
-          >
-            {copy("back")}
-          </Link>
-        </p>
+        <McvvAdminDictsSubnav
+          backLabel={admin("dictsTitle")}
+          label={runners("title")}
+          items={[
+            { href: "/admin/ciselniky/bezci", label: runners("subnavSearch") },
+            {
+              href: "/admin/ciselniky/bezci/slouceni",
+              label: runners("subnavMerge"),
+              active: true,
+              testId: "subnav-runner-merge",
+            },
+          ]}
+        />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>

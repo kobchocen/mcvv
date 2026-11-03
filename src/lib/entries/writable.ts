@@ -20,6 +20,8 @@ export type OwnEntry = {
   name: string | null;
   status: number | null;
   slot: SlotType | null;
+  /** Pozdní přihláška odeslána (lhůta na zaplacení běží). */
+  submittedAt: Date | null;
   writable: boolean;
 };
 
@@ -42,12 +44,18 @@ export async function ownEntry(
     }),
     prisma.registrationMeta.findUnique({
       where: { year_id: { year, id } },
-      select: { slot: true },
+      select: { slot: true, submittedAt: true },
     }),
   ]);
   if (!row) return null;
   const slot = meta?.slot ?? null;
-  return { ...row, slot, writable: registrationWritable(ctx, { ...row, slot }) };
+  const submittedAt = meta?.submittedAt ?? null;
+  return {
+    ...row,
+    slot,
+    submittedAt,
+    writable: registrationWritable(ctx, { ...row, slot, submittedAt }),
+  };
 }
 
 /** Vlastní přihláška, kterou lze teď z webu měnit (jinak null – zamčená, cizí, zrušená). */

@@ -5,6 +5,7 @@ import { promotionValue } from "@/lib/entries/promotion";
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
 import type { Slot } from "@/lib/slots/core";
 import { pickWritableRegistration } from "@/lib/slots/entry-slot";
+import { pickLateTarget } from "@/lib/slots/late-core";
 
 export type EnsuredRegistration = {
   registration: { year: number; id: number; name: string | null; email: string | null };
@@ -20,13 +21,15 @@ export type EnsuredRegistration = {
  * (dosavadní chování: jedna přihláška na e-mail a ročník).
  * Volá se jen při přidání prvního běžce – návštěva stránky ani přihlášení nic nezakládá.
  * Hledání a založení běží v transakci; kolize čísla (souběh, P2002) se zopakuje.
+ * Pozdní přihlášky: přidává se do rozpracované (neodeslané) pozdní přihlášky; zaplacená se
+ * nedoplňuje (Q343). Čeká-li odeslaná pozdní přihláška na platbu, nová se nezakládá (Q344) → null.
  */
 export async function ensureRegistration(
   year: number,
   email: string,
   displayName: string,
   slot: Slot | null = null,
-): Promise<EnsuredRegistration> {
+): Promise<EnsuredRegistration | null> {
   // Legacy sloupec `promotion` se plní ze souhlasu na účtu (newsletter už čte účet).
   const promotion = promotionValue(await loadAccountPromotionOptOut(email));
   return retryOnUniqueViolation(() =>
@@ -40,14 +43,22 @@ export async function ensureRegistration(
           ? []
           : await tx.registrationMeta.findMany({
               where: { year },
-              select: { id: true, slot: true },
+              select: { id: true, slot: true, submittedAt: true },
             });
-      const slotById = new Map(metas.map((meta) => [meta.id, meta.slot]));
-      const existing = pickWritableRegistration(
-        yearRows.map((row) => ({ ...row, slot: slotById.get(row.id) ?? null })),
-        email,
-        slot?.type ?? null,
-      );
+      const metaById = new Map(metas.map((meta) => [meta.id, meta]));
+      const rows = yearRows.map((row) => ({
+        ...row,
+        slot: metaById.get(row.id)?.slot ?? null,
+        submittedAt: metaById.get(row.id)?.submittedAt ?? null,
+      }));
+      let existing: (typeof rows)[number] | null;
+      if (slot?.type === "late") {
+        const late = pickLateTarget(rows, email);
+        if (late.blocking) return null;
+        existing = late.target;
+      } else {
+        existing = pickWritableRegistration(rows, email, slot?.type ?? null);
+      }
       if (existing) {
         const { year: y, id: i, name, email: e } = existing;
         return { registration: { year: y, id: i, name, email: e }, created: false };
@@ -80,6 +91,8 @@ export async function ensureRegistration(
             reminder2At: null,
             standardPayMailAt: null,
             autoCancelledAt: null,
+            submittedAt: null,
+            payUntil: null,
           },
         });
       }

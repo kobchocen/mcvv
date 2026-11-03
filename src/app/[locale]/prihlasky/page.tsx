@@ -17,7 +17,15 @@ import {
   McvvMyEntriesNav,
   type MyEntryNavItem,
 } from "@/components/organisms/mcvv-my-entries";
+import {
+  McvvLateAlert,
+  McvvLateCancelled,
+  McvvLatePayment,
+  McvvLateTotal,
+} from "@/components/organisms/mcvv-late-entry";
 import { userThreadCopy } from "@/components/organisms/mcvv-message-copy";
+import { activeSlot, slotOf } from "@/lib/slots/core";
+import { LATE_PAY_MINUTES } from "@/lib/slots/late-core";
 import { McvvMessageBubble, McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
 import { countUnreadMessages } from "@/lib/messages/core";
@@ -146,9 +154,39 @@ async function EntryBody({
     getMessageSettings(),
   ]);
   const { year, open, deadline, registration, cancelled, past, quick, payments } = entry;
-  const { slot, writable, entries, locked, slots } = entry;
+  const { slot, writable, entries, locked, slots, awaiting } = entry;
   // Q346: formuláře jen u přihlášky, kterou lze měnit (běžící termín); jinak jen čtení.
   const editable = open && writable;
+  // Pozdní přihlášky: varování, košík s odesláním, platební obrazovka (NAVRH 2.3).
+  const lateSlot = slotOf(slots, "late");
+  const lateRunning = open && activeSlot(slots, new Date())?.type === "late";
+  // Odeslaná pozdní přihláška čeká na platbu → dalšího běžce až po zaplacení / zrušení (Q344).
+  const canAdd = open && !awaiting;
+  const lateAlert =
+    lateRunning && !awaiting ? <McvvLateAlert slots={slots} locale={locale} copy={copy} /> : null;
+  const awaitingPanel = awaiting ? (
+    <McvvLatePayment entry={awaiting} locale={locale} copy={copy} />
+  ) : null;
+  const lateCancelled = entry.cancelled.filter(
+    (row) => row.slot === "late" && row.autoCancelledAt && row.payUntil,
+  );
+  const lateCancelledSections = lateCancelled.map((row) => (
+    <McvvLateCancelled
+      key={row.id}
+      entry={{ year: row.year, id: row.id, payUntil: row.payUntil! }}
+      slots={slots}
+      locale={locale}
+      copy={copy}
+    />
+  ));
+  const anotherEntryText =
+    lateRunning && lateSlot
+      ? copy("lateAddAnother", {
+          adult: lateSlot.feeAdult,
+          youth: lateSlot.feeYouth,
+          minutes: LATE_PAY_MINUTES,
+        })
+      : copy("addAnotherEntry");
   const promotionForm = (
     <section>
       <h2 className="font-display text-2xl font-semibold">{copy("accountSettings")}</h2>
@@ -226,10 +264,11 @@ async function EntryBody({
     past.length > 0 ? (
       <PastRegistrations past={past} summaries={pastSummaries} title={copy("past")} msg={msg} />
     ) : null;
+  const otherCancelled = cancelled.filter((row) => !lateCancelled.includes(row));
   const cancelledNotice =
-    cancelled.length > 0 ? (
+    otherCancelled.length > 0 ? (
       <p role="status" className="text-sm text-race-muted">
-        {cancelled.map((row) => copy("cancelledNotice", { id: row.id })).join(" ")}
+        {otherCancelled.map((row) => copy("cancelledNotice", { id: row.id })).join(" ")}
       </p>
     ) : null;
   // Víc přihlášek v ročníku (po jedné na termín): přehled nahoře, uzavřené jen ke čtení dole.
@@ -238,6 +277,17 @@ async function EntryBody({
     : null;
   const navItems: MyEntryNavItem[] = [
     ...(primaryItem ? [primaryItem] : []),
+    ...(awaiting
+      ? [
+          {
+            id: awaiting.id,
+            slot: "late" as const,
+            fee: registrationFee(awaiting.lines),
+            paid: sumPayments(awaiting.payments),
+            editable: false,
+          },
+        ]
+      : []),
     ...locked.map((row) => ({
       id: row.id,
       slot: row.slot,
@@ -247,7 +297,7 @@ async function EntryBody({
     })),
     ...cancelled.map((row) => ({
       id: row.id,
-      slot: null,
+      slot: row.slot,
       fee: 0,
       paid: 0,
       editable: false,
@@ -267,17 +317,22 @@ async function EntryBody({
     return (
       <div className="mt-8 space-y-12">
         {/* Skrytý prvek jako první potomek: space-y (Tailwind 4) odsazuje jen spodní okraj. */}
-        {open ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
+        {canAdd ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
+        {awaitingPanel}
+        {lateCancelledSections}
+        {lateAlert}
         {open ? (
           <div className="grid gap-3">
-            {deadline ? (
+            {deadline && !lateRunning ? (
               <p className="text-sm text-race-muted">
                 {copy("deadline")}: {formatDate(deadline, locale)}
               </p>
             ) : null}
-            <p className="text-base leading-7 text-foreground dark:text-white">
-              {entries.length > 0 ? copy("addAnotherEntry") : copy("noRegistration", { year })}
-            </p>
+            {awaiting ? null : (
+              <p className="text-base leading-7 text-foreground dark:text-white">
+                {entries.length > 0 ? anotherEntryText : copy("noRegistration", { year })}
+              </p>
+            )}
             {cancelledNotice}
             {entriesNav}
           </div>
@@ -291,7 +346,7 @@ async function EntryBody({
           </div>
         )}
 
-        {open ? (
+        {canAdd ? (
           <section>
             <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
             <p className="mt-2 max-w-2xl text-sm text-race-muted">
@@ -359,13 +414,15 @@ async function EntryBody({
   return (
     <div className="mt-8 space-y-12">
       {editable ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
-      {deadline ? (
+      {deadline && !lateRunning ? (
         <p className="text-sm text-race-muted">
           {copy("deadline")}: {formatDate(deadline, locale)}
           {editable ? "" : ` — ${copy("readOnly")}`}
         </p>
       ) : null}
       {cancelledNotice}
+      {lateCancelledSections}
+      {lateAlert}
       {entriesNav}
       {multi && primaryItem ? (
         <div id={`p${registration.id}`} className="scroll-mt-28">
@@ -568,61 +625,65 @@ async function EntryBody({
         ) : null}
       </section>
 
-      <section>
-        <h2 className="font-display text-2xl font-semibold">{copy("payment")}</h2>
-        <p className="mt-2 text-sm text-race-muted">
-          {copy("feeTotal")}: {fee} Kč · {copy("paid")}: {paid} Kč · {copy("due")}:{" "}
-          {Math.max(0, due)} Kč
-        </p>
-        {qr ? (
-          <div className="mt-4 max-w-sm">
-            <div
-              className="aspect-square max-w-[16rem] bg-white p-2 [&_svg]:h-full [&_svg]:w-full"
-              dangerouslySetInnerHTML={{ __html: qr }}
-            />
-            <dl className="mt-4 grid gap-1 text-sm">
-              <div>
-                {copy("account")}: {BANK_ACCOUNT} (Fio)
-              </div>
-              <div>IBAN: {BANK_IBAN}</div>
-              <div>BIC: {BANK_BIC}</div>
-              <div>
-                {copy("vs")}: {vs}
-              </div>
-              <div>
-                {copy("due")}: {due} Kč
-              </div>
-            </dl>
-          </div>
-        ) : !hasLines ? (
-          <p className="mt-3 text-sm text-race-muted">{copy("addRunnersFirst")}</p>
-        ) : fee > 0 && paid >= fee ? (
-          <div className="mt-3 grid gap-3">
-            <p className="text-sm text-race-muted">{copy("paidInFull")}</p>
-            {receiptReady ? (
-              <Button
-                asChild
-                variant="outline"
-                className="h-10 w-fit border-race-line bg-race-surface"
-              >
-                <a href={receiptHref(year, registration.id, locale)} download>
-                  <FileDown className="size-4" aria-hidden="true" />
-                  {copy("receiptDownload")}
-                </a>
-              </Button>
-            ) : null}
-          </div>
-        ) : fee === 0 ? (
-          <p className="mt-3 text-sm text-race-muted">{copy("noFeeDue")}</p>
-        ) : null}
-        <ul className="mt-4 text-sm text-race-muted">
-          {payments.map((payment) => (
-            <li key={payment.id}>
-              {payment.date ? formatDate(payment.date, locale) : "—"} — {payment.amount ?? 0} Kč
-            </li>
-          ))}
-        </ul>
-      </section>
+      {editable && slot === "late" ? (
+        <McvvLateTotal year={year} id={registration.id} lines={registration.lines} copy={copy} />
+      ) : (
+        <section>
+          <h2 className="font-display text-2xl font-semibold">{copy("payment")}</h2>
+          <p className="mt-2 text-sm text-race-muted">
+            {copy("feeTotal")}: {fee} Kč · {copy("paid")}: {paid} Kč · {copy("due")}:{" "}
+            {Math.max(0, due)} Kč
+          </p>
+          {qr ? (
+            <div className="mt-4 max-w-sm">
+              <div
+                className="aspect-square max-w-[16rem] bg-white p-2 [&_svg]:h-full [&_svg]:w-full"
+                dangerouslySetInnerHTML={{ __html: qr }}
+              />
+              <dl className="mt-4 grid gap-1 text-sm">
+                <div>
+                  {copy("account")}: {BANK_ACCOUNT} (Fio)
+                </div>
+                <div>IBAN: {BANK_IBAN}</div>
+                <div>BIC: {BANK_BIC}</div>
+                <div>
+                  {copy("vs")}: {vs}
+                </div>
+                <div>
+                  {copy("due")}: {due} Kč
+                </div>
+              </dl>
+            </div>
+          ) : !hasLines ? (
+            <p className="mt-3 text-sm text-race-muted">{copy("addRunnersFirst")}</p>
+          ) : fee > 0 && paid >= fee ? (
+            <div className="mt-3 grid gap-3">
+              <p className="text-sm text-race-muted">{copy("paidInFull")}</p>
+              {receiptReady ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-10 w-fit border-race-line bg-race-surface"
+                >
+                  <a href={receiptHref(year, registration.id, locale)} download>
+                    <FileDown className="size-4" aria-hidden="true" />
+                    {copy("receiptDownload")}
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          ) : fee === 0 ? (
+            <p className="mt-3 text-sm text-race-muted">{copy("noFeeDue")}</p>
+          ) : null}
+          <ul className="mt-4 text-sm text-race-muted">
+            {payments.map((payment) => (
+              <li key={payment.id}>
+                {payment.date ? formatDate(payment.date, locale) : "—"} — {payment.amount ?? 0} Kč
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {lockedSections}
 

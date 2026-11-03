@@ -40,8 +40,11 @@ export const DEFAULT_STANDARD_PAY_UNTIL_S = 12 * 3600;
 export const DEFAULT_OFFICE_OPENS_S = 9 * 3600;
 export const DEFAULT_ONSITE_UNTIL_S = 9 * 3600 + 45 * 60;
 
-/** Termíny, ve kterých lze v části 1 přihlášku měnit z webu (late přijde v části 2). */
-export const WRITABLE_SLOT_TYPES: readonly SlotType[] = ["early", "standard"];
+/**
+ * Termíny, ve kterých vznikají a mění se přihlášky z webu. Pozdní přihláška (late) se mění jen
+ * do odeslání a hned se platí (`late-core.ts`); na místě jen v závodní kanceláři.
+ */
+export const WRITABLE_SLOT_TYPES: readonly SlotType[] = ["early", "standard", "late"];
 
 export function slotOf(slots: readonly Slot[], type: SlotType): Slot | null {
   return slots.find((slot) => slot.type === type) ?? null;
@@ -127,8 +130,9 @@ export function deadlineFromStandardEnd(to: Date): Date {
 }
 
 /**
- * Jsou přihlášky otevřené (lze přidávat / měnit z webu)? Se sloty: běží aktivní early nebo
- * standard. Bez slotů: dosavadní chování – do konce dne uzávěrky (bez uzávěrky vždy).
+ * Jsou přihlášky otevřené (lze přidávat / měnit z webu)? Se sloty: běží aktivní early,
+ * standard nebo pozdní přihlášky. Bez slotů: dosavadní chování – do konce dne uzávěrky
+ * (bez uzávěrky vždy).
  */
 export function registrationOpen(
   slots: readonly Slot[],

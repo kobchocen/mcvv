@@ -28,6 +28,9 @@ import type { EntryWriteContext } from "@/lib/slots/entry-slot";
 import { promotionValue } from "@/lib/entries/promotion";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
+import { writeAudit } from "@/lib/audit/log";
+import { entryTarget } from "@/lib/entries/changes-core";
+import { latePayUntil } from "@/lib/slots/late-core";
 
 type ChangeActor = Parameters<typeof recordEntryChange>[0];
 type OwnRegistration = { year: number; id: number; name: string | null };
@@ -48,12 +51,15 @@ async function registrationForNewLine(
   if (own?.writable) {
     return own;
   }
-  const { registration, created } = await ensureRegistration(
+  const ensured = await ensureRegistration(
     year,
     session.email,
     session.name,
     currentEntrySlotRow(ctx),
   );
+  // Odeslaná pozdní přihláška čeká na platbu – další až po zaplacení / zrušení (Q344).
+  if (!ensured) return null;
+  const { registration, created } = ensured;
   if (created) {
     await recordEntryChange(session, "entry.created", {
       year,
@@ -412,4 +418,70 @@ export async function removeRunner(formData: FormData): Promise<void> {
   revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
   revalidatePath("/[locale]", "page");
   revalidateTag(HOME_COUNTS_TAG, "max");
+}
+
+export type SubmitLateState = { error?: "confirm" | "empty" | "invalid"; ok?: boolean };
+
+/**
+ * Odeslání pozdní přihlášky (NAVRH 2.3): povinný souhlas „Zaplatím ihned“, aspoň jeden běžec.
+ * Uloží čas odeslání a lhůtu na zaplacení (+60 min); od té chvíle přihlášku nelze z webu měnit
+ * (Q330) a do lhůty ji je potřeba zaplatit, jinak se automaticky zruší.
+ */
+export async function submitLateEntry(
+  _prev: SubmitLateState,
+  formData: FormData,
+): Promise<SubmitLateState> {
+  const session = await getSession();
+  const year = formInt(formData, "year");
+  const id = formInt(formData, "registrationId");
+  if (!session || year === null || id === null) {
+    return { error: "invalid" };
+  }
+  if (formString(formData, "payNow") !== "1") {
+    return { error: "confirm" };
+  }
+  const ctx = await loadEntryWriteContext();
+  if (!entryWritable(ctx, year)) {
+    return { error: "invalid" };
+  }
+  const own = await writableOwnEntry(ctx, year, id, session.email);
+  if (!own || own.slot !== "late") {
+    return { error: "invalid" };
+  }
+  const lines = await prisma.registrationLine.findMany({
+    where: { year, registrationId: id },
+    select: { entryFee: true },
+  });
+  if (lines.length === 0) {
+    return { error: "empty" };
+  }
+  const now = ctx.now;
+  const payUntil = latePayUntil(now);
+  // Zabrat: jen dosud neodeslanou (dvojí odeslání nebo souběh lhůtu neposune).
+  const claimed = await prisma.registrationMeta.updateMany({
+    where: { year, id, slot: "late", submittedAt: null },
+    data: { submittedAt: now, payUntil },
+  });
+  if (claimed.count !== 1) {
+    return { error: "invalid" };
+  }
+  await recalculateRegistrationStatus(year, id);
+  try {
+    await writeAudit({
+      actor: session,
+      action: "entry.late_submitted",
+      target: entryTarget(year, id),
+      detail: {
+        year,
+        registrationId: id,
+        fee: lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0),
+        payUntil: payUntil.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("[entries] late submit audit failed", error);
+  }
+  await touchRegistration(year, id);
+  revalidatePath("/[locale]/prihlasky", "page");
+  return { ok: true };
 }

@@ -61,15 +61,15 @@ test("standard end from the deadline is the next Prague midnight (Wed 2. 12. →
   assert.deepEqual(deadlineFromStandardEnd(iso("2026-12-02T22:59:00Z")), day("2026-12-02"));
 });
 
-test("registration is open only inside an active early/standard slot", () => {
+test("registration is open only inside an active early/standard/late slot", () => {
   assert.equal(registrationOpen(slots2026, null, iso("2026-11-30T10:00:00Z")), true);
   assert.equal(registrationOpen(slots2026, null, iso("2026-12-02T22:59:59Z")), true);
   // Čt 3. 12. 0:00 Praha – standard skončil, late je vypnutý
   assert.equal(registrationOpen(slots2026, null, iso("2026-12-02T23:00:00Z")), false);
   assert.equal(registrationOpen(slots2026, null, iso("2026-08-31T21:59:00Z")), false);
-  // late se v části 1 nepočítá, ani když je zapnutý
+  // zapnutý late (pozdní přihlášky, jen přes účet – Q320) přihlašování znovu otevře
   const lateOn = slots2026.map((s) => (s.type === "late" ? { ...s, active: true } : s));
-  assert.equal(registrationOpen(lateOn, null, iso("2026-12-03T10:00:00Z")), false);
+  assert.equal(registrationOpen(lateOn, null, iso("2026-12-03T10:00:00Z")), true);
   assert.equal(activeSlot(slots2026, iso("2026-11-01T10:00:00Z"))?.type, "standard");
 });
 

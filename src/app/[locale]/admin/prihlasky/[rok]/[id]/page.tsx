@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { FileDown } from "lucide-react";
 
-import { ClubLink, ConfirmSubmitButton, NationalitySelect } from "@/components/molecules";
+import { ClubLink, ConfirmSubmitButton, NationalityFlagSelect } from "@/components/molecules";
 import {
   cancelRegistration,
   confirmRegistration,
@@ -498,7 +498,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                           <input type="hidden" name="runnerId" value={line.runnerId} />
                           <input type="hidden" name="year" value={year} />
                           <input type="hidden" name="registrationId" value={id} />
-                          <NationalitySelect
+                          <NationalityFlagSelect
                             id={`nationality-${line.runnerId}`}
                             field={nationalityOptions}
                             defaultValue={line.runner.nationality ?? ""}

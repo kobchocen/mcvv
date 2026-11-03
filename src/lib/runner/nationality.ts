@@ -280,12 +280,15 @@ export function normalizeNationality(value: unknown): CountryCode | null {
   return isCountryCode(code) ? code : null;
 }
 
-/** Vlaječka jako emoji z regionálních indikátorů (🇨🇿); neplatný kód → "". */
-export function flagEmoji(code: string | null | undefined): string {
+/**
+ * Cesta k obrázku vlaječky (SVG z balíčku flag-icons, MIT, uložené v `public/flags/4x3`).
+ * Emoji vlaječky Windows nezobrazí (ukáže jen písmena), proto obrázek. Neplatný kód → null.
+ */
+export function flagSrc(code: string | null | undefined): string | null {
   if (!code || !isCountryCode(code)) {
-    return "";
+    return null;
   }
-  return String.fromCodePoint(...[...code].map((char) => 0x1f1e6 + char.charCodeAt(0) - 65));
+  return `/flags/4x3/${code.toLowerCase()}.svg`;
 }
 
 /** Lokalizovaný název státu (Intl), fallback kód. */

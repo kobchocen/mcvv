@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cache } from "react";
 
+import { CountryFlag } from "@/components/atoms";
 import { McvvPublicNavbar } from "@/components/organisms";
 import {
   ClubLink,
@@ -18,7 +19,7 @@ import { clubKey, createClubResolver } from "@/lib/clubs";
 import { getClubIndex } from "@/lib/clubs/cached";
 import { getClubResolver } from "@/lib/clubs/queries";
 import { displayRunnerName } from "@/lib/format/runner-name";
-import { countryName, flagEmoji, isCountryCode } from "@/lib/runner/nationality";
+import { countryName, isCountryCode } from "@/lib/runner/nationality";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { getRunnerPeerIndex, runnerProfileDb } from "@/lib/runner/cached";
@@ -217,11 +218,12 @@ export default async function RunnerPage({ params }: PageProps) {
             </span>
           </h1>
           {runner?.nationality && isCountryCode(runner.nationality) ? (
-            <p className="mt-2 text-base text-race-muted" data-testid="runner-nationality">
+            <p
+              className="mt-2 flex items-center gap-2 text-base text-race-muted"
+              data-testid="runner-nationality"
+            >
               <span className="sr-only">{nationalityCopy("label")}: </span>
-              <span role="img" aria-hidden="true" className="mr-1.5">
-                {flagEmoji(runner.nationality)}
-              </span>
+              <CountryFlag code={runner.nationality} />
               {countryName(runner.nationality, locale)}
             </p>
           ) : null}

@@ -21,7 +21,8 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const session = await requireStaff();
-  // Úpravy běžců (přejmenování #198, slučování) smí jen admin.
+  // Úpravy běžců (přejmenování #198, stát, slučování) smí jen admin. Slučování běžců a klubů
+  // je záložka uvnitř číselníku Běžci / Kluby (ne samostatná dlaždice).
   const isAdmin = session.role === "admin";
   const copy = await getTranslations({ locale, namespace: "Admin" });
 
@@ -35,20 +36,6 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
       href: "/admin/ciselniky/kluby" as const,
       title: copy("dictsClubs"),
       hint: copy("dictsClubsHint"),
-    },
-    ...(isAdmin
-      ? [
-          {
-            href: "/admin/ciselniky/bezci/slouceni" as const,
-            title: copy("runnerMergeTitle"),
-            hint: copy("runnerMergeHint"),
-          },
-        ]
-      : []),
-    {
-      href: "/admin/ciselniky/kluby/slouceni" as const,
-      title: copy("clubMergeTitle"),
-      hint: copy("clubMergeHint"),
     },
     ...(isAdmin
       ? [

@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   COUNTRY_CODES,
   computeNationalityStats,
   countryName,
   countryOptions,
-  flagEmoji,
+  flagSrc,
   listFlag,
   normalizeNationality,
 } from "./nationality";
@@ -25,11 +27,17 @@ describe("nationality codes", () => {
     assert.equal(normalizeNationality(undefined), null);
   });
 
-  it("builds flag emoji from regional indicators", () => {
-    assert.equal(flagEmoji("CZ"), "🇨🇿");
-    assert.equal(flagEmoji("SK"), "🇸🇰");
-    assert.equal(flagEmoji("XX"), "");
-    assert.equal(flagEmoji(null), "");
+  it("points flags to bundled SVG images (Windows shows no flag emoji)", () => {
+    assert.equal(flagSrc("CZ"), "/flags/4x3/cz.svg");
+    assert.equal(flagSrc("SK"), "/flags/4x3/sk.svg");
+    assert.equal(flagSrc("XX"), null);
+    assert.equal(flagSrc(null), null);
+  });
+
+  it("bundles a flag image for every country code", () => {
+    const dir = fileURLToPath(new URL("../../../public/flags/4x3/", import.meta.url));
+    const missing = COUNTRY_CODES.filter((code) => !existsSync(`${dir}${code.toLowerCase()}.svg`));
+    assert.deepEqual(missing, []);
   });
 
   it("names countries per locale", () => {

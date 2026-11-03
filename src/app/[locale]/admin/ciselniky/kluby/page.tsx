@@ -3,9 +3,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink } from "@/components/molecules";
 import { McvvAdminHomeLink } from "@/components/organisms";
+import { clubsSubnav, McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { saveClub } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
-import { Link, type Locale } from "@/i18n/routing";
+import { type Locale } from "@/i18n/routing";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/admin/staff";
@@ -47,24 +48,22 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <McvvAdminHomeLink label={copy("title")} />
+        <McvvAdminDictsSubnav
+          backLabel={copy("dictsTitle")}
+          label={copy("dictsClubs")}
+          items={clubsSubnav(
+            {
+              list: copy("clubsSubnavList"),
+              merge: copy("clubsSubnavMerge"),
+              orphans: cleanup("title"),
+            },
+            canMergeClubs(session.role),
+            "list",
+          )}
+        />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("dictsClubs")}
         </h1>
-        <Link
-          href="/admin/ciselniky/kluby/slouceni"
-          className="mt-2 inline-block text-sm font-semibold text-race-accent hover:underline"
-        >
-          {copy("clubMergeTitle")} →
-        </Link>
-        {/* Úklid sirotků (#193) smí jen admin – stejně jako sloučení. */}
-        {canMergeClubs(session.role) ? (
-          <Link
-            href="/admin/ciselniky/kluby/sirotci"
-            className="ml-4 mt-2 inline-block text-sm font-semibold text-race-accent hover:underline"
-          >
-            {cleanup("title")} →
-          </Link>
-        ) : null}
         <form className="mt-4 flex flex-wrap items-end gap-3" method="get">
           <AdminField
             name="rok"

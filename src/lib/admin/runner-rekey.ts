@@ -68,14 +68,14 @@ async function loadPlan(
   currentYear: number,
 ): Promise<{
   plan: SexChangePlan;
-  runner: { name: string; created: Date | null; author: string | null };
+  runner: { name: string; created: Date | null; author: string | null; nationality: string | null };
 }> {
   if (!/^\d{8}$/.test(runnerId)) {
     throw new SexChangeError("invalid_id");
   }
   const runner = await tx.runner.findUnique({
     where: { id: runnerId },
-    select: { id: true, name: true, created: true, author: true },
+    select: { id: true, name: true, created: true, author: true, nationality: true },
   });
   if (!runner) {
     throw new SexChangeError("not_found");
@@ -208,7 +208,13 @@ export async function applySexChange(
         throw new SexChangeError("collision");
       }
       await tx.runner.create({
-        data: { id: newId, name: runner.name, created: runner.created, author: runner.author },
+        data: {
+          id: newId,
+          name: runner.name,
+          created: runner.created,
+          author: runner.author,
+          nationality: runner.nationality,
+        },
       });
       const from = { where: { runnerId: oldId }, data: { runnerId: newId } };
       const counts: SexChangeCounts = {

@@ -1,6 +1,7 @@
 import { allocateRunnerId } from "@/lib/admin/runner-sex-core";
 import { prisma } from "@/lib/db/client";
 import { matchRunnerByPreviousName } from "@/lib/entries/runner-match";
+import { HOME_COUNTRY } from "@/lib/runner/nationality";
 import {
   defaultCategory,
   eligibleCategoriesFor,
@@ -73,8 +74,9 @@ export async function resolveRunner(input: {
     input.birthYear,
     input.sex,
   );
+  // Nový běžec bez zadaného státu = CZ (domácí stát), stejně jako výchozí hodnota sloupce.
   await prisma.runner.create({
-    data: { id, name, author: "web", nationality },
+    data: { id, name, author: "web", nationality: nationality ?? HOME_COUNTRY },
   });
   return { id, name, created: true };
 }

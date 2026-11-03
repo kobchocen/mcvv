@@ -79,3 +79,34 @@ export function runnerSearchPattern(query: string | null | undefined): string | 
   if (clean.length < RUNNER_SEARCH_MIN) return null;
   return `%${clean.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
+
+/** Počet návrhů našeptávače v číselníku běžců. */
+export const RUNNER_SUGGEST_LIMIT = 10;
+
+export type RunnerSearchTerms = {
+  /** LIKE vzory jednotlivých slov (každé slovo musí sedět – pořadí příjmení / jméno nehraje roli). */
+  words: string[];
+  /** Ročník narození zadaný jako samostatné čtyřmístné číslo (např. „Novák 1980“). */
+  birthYear: number | null;
+};
+
+const BIRTH_YEAR_TOKEN = /^(19|20)\d{2}$/;
+
+/**
+ * Rozloží hledaný text na slova a případný ročník narození. Null = nic k hledání
+ * (kratší než minimum a bez ročníku). Zástupné znaky uživatele (% _ \) se escapují.
+ */
+export function runnerSearchTerms(query: string | null | undefined): RunnerSearchTerms | null {
+  const clean = normalizeRunnerName(query);
+  if (clean.length < RUNNER_SEARCH_MIN) return null;
+  let birthYear: number | null = null;
+  const words: string[] = [];
+  for (const token of clean.split(" ")) {
+    if (birthYear === null && BIRTH_YEAR_TOKEN.test(token)) {
+      birthYear = Number(token);
+      continue;
+    }
+    words.push(`%${token.replace(/[\\%_]/g, (char) => `\\${char}`)}%`);
+  }
+  return words.length || birthYear !== null ? { words, birthYear } : null;
+}

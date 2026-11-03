@@ -68,6 +68,7 @@ export type McvvProgramTemplateProps = McvvProgramView;
 
 export function McvvProgramTemplate({
   content,
+  locale,
   editionId,
   feeRows,
   feeRefund,
@@ -166,6 +167,7 @@ export function McvvProgramTemplate({
                       <p>
                         <Link
                           href="/prihlasky"
+                          locale={locale}
                           className="font-medium text-race-accent underline-offset-2 hover:underline"
                         >
                           {content.onlineEntry}
@@ -271,10 +273,16 @@ export function McvvProgramTemplate({
                     {id === "timetable" ? (
                       <ol className="grid gap-2">
                         <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
+                          {content.timetable.office}
+                        </li>
+                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
                           {content.timetable.registration}
                         </li>
                         <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
                           {content.timetable.start}
+                        </li>
+                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
+                          {content.timetable.lastStart}
                         </li>
                         <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
                           {content.timetable.ceremony}
@@ -298,7 +306,11 @@ export function McvvProgramTemplate({
                           </li>
                         ) : null}
                         <li>
-                          <Link href={contactHref} className="text-race-accent hover:underline">
+                          <Link
+                            href={contactHref}
+                            locale={locale}
+                            className="text-race-accent hover:underline"
+                          >
                             {contactLabel}
                           </Link>
                         </li>

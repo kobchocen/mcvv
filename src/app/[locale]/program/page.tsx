@@ -17,6 +17,8 @@ import {
   FALLBACK_ROZPIS_EDITION_ID,
   FREE_ENTRY_LINKS,
   formatFreeEntryDeadline,
+  formatOnlineDeadline,
+  formatRaceDayShort,
   hasRozpisData,
 } from "@/lib/race/program";
 import { formatCzk } from "@/lib/utils";
@@ -102,8 +104,39 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
     program.raw("sections") as McvvProgramContent["sections"],
     startText,
   );
+  // Q414 / Q416: online deadline (end of standard entries), race day and on-site fees from the
+  // edition settings; without a deadline or race date the section keeps the general wording.
+  const onlineUntil = formatOnlineDeadline(raceYear.standardEnd, locale);
+  const raceDay = formatRaceDayShort(edition?.date, locale);
+  const registrationParams = {
+    officeOpens: startText.officeOpens,
+    onsiteUntil: startText.onsiteUntil,
+    feeAdult: formatCzk(edition?.startAdultPlace, locale, program("dash")),
+    feeYouth: formatCzk(edition?.startKidsPlace, locale, program("dash")),
+  };
   const sections: McvvProgramContent["sections"] = {
     ...rawSections,
+    registration: {
+      ...rawSections.registration,
+      ...(onlineUntil && raceDay
+        ? {
+            summary: program("sections.registration.summary", {
+              onlineUntilShort: onlineUntil.short,
+              onsiteUntil: startText.onsiteUntil,
+            }),
+            body: program("sections.registration.body", {
+              ...registrationParams,
+              onlineUntil: onlineUntil.long,
+              raceDay,
+            }),
+          }
+        : {
+            summary: program("sections.registration.summaryOpen", {
+              onsiteUntil: startText.onsiteUntil,
+            }),
+            body: program("sections.registration.bodyOpen", registrationParams),
+          }),
+    },
     date: edition?.date
       ? { ...rawSections.date, summary: formatRaceDate(edition.date, locale) }
       : rawSections.date,
@@ -184,6 +217,7 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   return (
     <McvvProgramTemplate
       content={content}
+      locale={locale}
       editionId={editionId}
       feeRows={[
         {

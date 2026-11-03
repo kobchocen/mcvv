@@ -13,6 +13,7 @@ import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
 import {
   EntryHeading,
+  LateBibCards,
   McvvLockedEntry,
   McvvMyEntriesNav,
   type MyEntryNavItem,
@@ -26,7 +27,12 @@ import {
 import { userThreadCopy } from "@/components/organisms/mcvv-message-copy";
 import { activeSlot, slotOf } from "@/lib/slots/core";
 import { loadLateBibView } from "@/lib/slots/late-bib-view";
-import { LATE_DRAFT_TTL_MINUTES, LATE_PAY_MINUTES } from "@/lib/slots/late-core";
+import {
+  LATE_DRAFT_TTL_MINUTES,
+  LATE_PAY_MINUTES,
+  lateReadOnlyBibSection,
+} from "@/lib/slots/late-core";
+import { entryDeadlineLabel } from "@/lib/slots/term-end";
 import { McvvMessageBubble, McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
 import { countUnreadMessages } from "@/lib/messages/core";
@@ -240,6 +246,26 @@ async function EntryBody({
       paid,
     });
   const hasLines = (registration?.lines.length ?? 0) > 0;
+  // Q394: zaplacená pozdní přihláška i po konci pozdního termínu (jen čtení) ukazuje
+  // čísla a časy startu, je-li startovka zveřejněná.
+  const registrationBibs =
+    registration && !editable && slot === "late"
+      ? await loadLateBibView(
+          { year, status: registration.status, lines: registration.lines },
+          locale,
+        )
+      : null;
+  // Q395: bez zveřejněné startovky text „přidělíme při losování“.
+  const registrationBibSection = registration
+    ? lateReadOnlyBibSection({
+        slot,
+        status: registration.status,
+        editable,
+        hasBibs: registrationBibs != null,
+      })
+    : null;
+  // Q396: u pozdní přihlášky konec pozdního termínu místo běžné uzávěrky.
+  const registrationDeadline = entryDeadlineLabel({ slot, deadline }, slots, locale);
   const qr =
     registration && hasLines && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
   const vs = registration ? variableSymbol(year, registration.id) : "";
@@ -434,9 +460,9 @@ async function EntryBody({
   return (
     <div className="mt-8 space-y-12">
       {editable ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
-      {deadline && !lateRunning ? (
+      {registrationDeadline && !lateRunning ? (
         <p className="text-sm text-race-muted">
-          {copy("deadline")}: {formatDate(deadline, locale)}
+          {copy("deadline")}: {registrationDeadline}
           {editable ? "" : ` — ${copy("readOnly")}`}
         </p>
       ) : null}
@@ -521,6 +547,21 @@ async function EntryBody({
             <Link href="/zpravy" className="font-medium text-race-accent hover:underline">
               {msg("backToList")}
             </Link>
+          </p>
+        </section>
+      ) : null}
+
+      {registrationBibSection === "cards" && registrationBibs ? (
+        <section>
+          <LateBibCards bibs={registrationBibs} copy={copy} headingLevel="h2" />
+        </section>
+      ) : registrationBibSection === "pending" ? (
+        <section>
+          <h2 className="font-display text-2xl font-semibold">{copy("lateBibsTitle")}</h2>
+          <p className="mt-2 max-w-2xl rounded-md border border-race-line/60 p-3 text-sm leading-6 text-race-muted">
+            {copy.rich("latePaidBibPending", {
+              b: (chunks) => <b className="text-foreground dark:text-white">{chunks}</b>,
+            })}
           </p>
         </section>
       ) : null}

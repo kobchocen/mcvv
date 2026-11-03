@@ -13,6 +13,8 @@ import {
   markRefunded,
   refundCancelledBankTx,
 } from "@/lib/payments/actions";
+import { latePaymentPending } from "@/lib/cron/cadence";
+import { nextBankCheck } from "@/lib/cron/cadence-core";
 import { fioMode, paymentsDryRun } from "@/lib/payments/job";
 import { REASON_LABELS, type BankTxReason } from "@/lib/payments/match";
 import { loadCancelledEntryRefunds } from "@/lib/payments/refunds";
@@ -25,6 +27,25 @@ export const dynamic = "force-dynamic";
 const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
 const fmtTime = (d: Date | null | undefined) =>
   d ? d.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" }) : "–";
+const stateDate = (value: string | null | undefined) => {
+  const d = value ? new Date(value) : null;
+  return d && !Number.isNaN(d.getTime()) ? d : null;
+};
+const fmtWhen = (d: Date | null) =>
+  d
+    ? d.toLocaleString("cs-CZ", {
+        timeZone: "Europe/Prague",
+        weekday: "short",
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+    : "–";
+const fmtClock = (d: Date) =>
+  d.toLocaleTimeString("cs-CZ", { timeZone: "Europe/Prague", hour: "2-digit", minute: "2-digit" });
 const reasonLabel = (r: string | null) => (r ? (REASON_LABELS[r as BankTxReason] ?? r) : "");
 
 const th = "py-2 pr-4";
@@ -49,6 +70,17 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
     prisma.bankTx.count({ where: { status: "dry_run" } }),
     loadCancelledEntryRefunds(),
   ]);
+  // Poslední / další kontrola banky (část 8): dotaz na Fio a adaptivní interval cronu (část 6).
+  const now = new Date();
+  const [stateRows, latePending] = await Promise.all([
+    prisma.jobState.findMany({
+      where: { name: { in: ["fio_last_request_at", "cron_slow_payments"] } },
+    }),
+    latePaymentPending(now),
+  ]);
+  const state = new Map(stateRows.map((row) => [row.name, row.value]));
+  const lastRequest = stateDate(state.get("fio_last_request_at"));
+  const next = nextBankCheck(now, stateDate(state.get("cron_slow_payments")), latePending);
   // Platby na zrušené přihlášky mají vlastní sekci (k vrácení); zrušenou přihlášku nelze obnovit.
   const cancelledTx = unmatchedAll.filter((tx) => tx.reason === "cancelled");
   const unmatched = unmatchedAll.filter((tx) => tx.reason !== "cancelled");
@@ -69,6 +101,13 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
             ? ` Poslední běh selhal: ${lastRuns[0].error ?? ""}`
             : ""}
           {dryRunRows ? ` Záznamů v dry-run: ${dryRunRows}.` : ""}
+        </p>
+        <p className="mt-2 text-sm" data-testid="bank-check">
+          Poslední kontrola banky (dotaz na Fio): <strong>{fmtWhen(lastRequest)}</strong>. Další
+          kontrola: <strong>kolem {fmtClock(next.at)}</strong>{" "}
+          {next.fast
+            ? "– pozdní přihláška čeká na platbu, banka se kontroluje každou minutu."
+            : "– běžně každých 15 min; každou minutu, jen když pozdní přihláška čeká na platbu."}
         </p>
 
         <h2 className="mt-10 font-display text-2xl font-semibold">

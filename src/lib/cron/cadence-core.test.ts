@@ -7,6 +7,7 @@ import {
   LATE_FAST_AFTER_MS,
   cronDecision,
   lateFastSince,
+  nextBankCheck,
   slowDue,
 } from "./cadence-core";
 
@@ -36,4 +37,27 @@ test("lateFastSince: minutová kontrola pokrývá i pojistku zrušení po lhůt�
   const now = at("2026-12-03T12:40:00Z");
   assert.equal(lateFastSince(now).toISOString(), "2026-12-03T12:30:00.000Z");
   assert.ok(LATE_FAST_AFTER_MS >= 5 * 60_000);
+});
+
+test("next bank check: every minute while a late entry waits, else 15 min after last slow run", () => {
+  const now = new Date("2026-12-05T12:07:20Z");
+  assert.deepEqual(nextBankCheck(now, new Date("2026-12-05T12:00:04Z"), true), {
+    at: new Date("2026-12-05T12:08:00Z"),
+    fast: true,
+  });
+  assert.deepEqual(nextBankCheck(now, new Date("2026-12-05T12:00:04Z"), false), {
+    at: new Date("2026-12-05T12:15:00Z"),
+    fast: false,
+  });
+  // Po splatnosti / bez záznamu / záznam v budoucnosti = nejbližší minuta.
+  for (const last of [new Date("2026-12-05T11:40:00Z"), null, new Date("2026-12-05T13:00Z")]) {
+    assert.deepEqual(nextBankCheck(now, last, false), {
+      at: new Date("2026-12-05T12:08:00Z"),
+      fast: false,
+    });
+  }
+  assert.deepEqual(
+    nextBankCheck(new Date("2026-12-05T12:08:00Z"), null, false).at,
+    new Date("2026-12-05T12:09:00Z"),
+  );
 });

@@ -75,9 +75,12 @@ function byName(a: PartnerOption, b: PartnerOption) {
 }
 
 /** Nabídka našeptávače „spolu s“: přihlášení běžci ročníku (bez zrušených), podle jména. */
-export function partnerOptions(rows: AdminStartRow[]): PartnerOption[] {
+export function partnerOptions(
+  rows: AdminStartRow[],
+  lateIds: ReadonlySet<number> = new Set(),
+): PartnerOption[] {
   return rows
-    .filter((row) => !row.cancelled)
+    .filter((row) => !row.cancelled && !lateIds.has(row.registrationId))
     .map((row) => ({
       runnerId: row.runnerId,
       name: row.name,
@@ -157,10 +160,21 @@ export function specialStartPartnerText(
 }
 
 /** Nabídka našeptávače bez celé startovky (detail přihlášky): přihlášení běžci ročníku. */
+/** Pozdní přihlášky ročníku (spec. start nemají a nejsou ani partnerem „spolu s“, část 8). */
+export async function lateRegistrationIds(year: number): Promise<Set<number>> {
+  const rows = await prisma.registrationMeta.findMany({
+    where: { year, slot: "late" },
+    select: { id: true },
+  });
+  return new Set(rows.map((row) => row.id));
+}
+
 export async function loadPartnerOptions(year: number): Promise<PartnerOption[]> {
+  const late = [...(await lateRegistrationIds(year))];
   const lines = await prisma.registrationLine.findMany({
     where: {
       year,
+      ...(late.length > 0 ? { registrationId: { notIn: late } } : {}),
       registration: { OR: [{ status: { not: ENTRY_STATUS.cancelled } }, { status: null }] },
     },
     select: {
@@ -205,6 +219,7 @@ export function specialStartFlash(
       "note",
       "line",
       "late",
+      "partnerLate",
     ] as const;
     const key = known.find((item) => item === reason) ?? "kind";
     return {

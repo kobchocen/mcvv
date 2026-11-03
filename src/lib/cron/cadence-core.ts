@@ -37,3 +37,19 @@ export function cronDecision(fastAllowed: boolean, pending: boolean, slow: boole
   const fast = fastAllowed && pending;
   return { run: slow || fast, fast, slow };
 }
+
+export type NextCheck = { at: Date; fast: boolean };
+
+/**
+ * Odhad další kontroly banky pro /admin/platby (část 8): ve spěchu (pozdní přihláška čeká
+ * na platbu) nejbližší celá minuta, jinak první minutový běh, kdy je pomalý běh splatný
+ * (`slowDue`). Bez záznamu nebo po splatnosti = nejbližší minuta.
+ */
+export function nextBankCheck(now: Date, lastSlow: Date | null, pending: boolean): NextCheck {
+  const ceilMinute = (ms: number) => new Date(Math.ceil(ms / 60_000) * 60_000);
+  const soon = ceilMinute(now.getTime() + 1);
+  if (pending) return { at: soon, fast: true };
+  if (!lastSlow || lastSlow.getTime() > now.getTime()) return { at: soon, fast: false };
+  const due = ceilMinute(lastSlow.getTime() + CRON_SLOW_INTERVAL_MS - CRON_SLACK_MS);
+  return { at: due.getTime() > soon.getTime() ? due : soon, fast: false };
+}

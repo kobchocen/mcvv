@@ -162,3 +162,17 @@ export function lateAdminActionsAllowed(c: {
     !isPaidStatus(c.status)
   );
 }
+
+/**
+ * Moje přihláška po konci pozdního termínu (jen čtení): zaplacená pozdní přihláška ukazuje
+ * karty s čísly (Q394), dokud startovka není zveřejněná, text „přidělíme při losování“ (Q395).
+ */
+export function lateReadOnlyBibSection(entry: {
+  slot: string | null | undefined;
+  status: number | null | undefined;
+  editable: boolean;
+  hasBibs: boolean;
+}): "cards" | "pending" | null {
+  if (entry.editable || entry.slot !== "late" || !isPaidStatus(entry.status)) return null;
+  return entry.hasBibs ? "cards" : "pending";
+}

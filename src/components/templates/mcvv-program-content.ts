@@ -1,3 +1,7 @@
+import type { ReactNode } from "react";
+
+import type { Locale } from "@/i18n/routing";
+
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type ProgramSectionId =
@@ -47,8 +51,10 @@ export type ProgramCategoryCopy = {
 };
 
 export type ProgramTimetableCopy = {
+  office: string;
   registration: string;
   start: string;
+  lastStart: string;
   ceremony: string;
 };
 
@@ -103,9 +109,12 @@ export type ProgramCategoryRow = {
 
 export type McvvProgramView = {
   content: McvvProgramContent;
+  /** Locale of the page; passed to every link so the en Rozpis links stay under /en. */
+  locale: Locale;
   editionId: number;
   feeRows: ProgramFeeRow[];
   feeRefund: string;
+  freeEntry: ReactNode;
   prizeAdult: string[];
   prizeVeterans: string[];
   categories: ProgramCategoryRow[];

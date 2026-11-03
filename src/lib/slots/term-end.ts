@@ -1,4 +1,5 @@
 import type { Slot } from "@/lib/slots/core";
+import { formatDate, formatDateTime } from "@/lib/format/date";
 
 const CS_ON_WEEKDAY = [
   "v neděli",
@@ -80,4 +81,20 @@ function pragueParts(d: Date) {
     hour,
     time: `${hour}:${parts.minute}`,
   };
+}
+
+/**
+ * Uzávěrka u přihlášky (Q396): pozdní přihláška ukazuje konec pozdního termínu z nastavení
+ * termínů („5. 12. 2026 18:00“), ostatní běžnou uzávěrku online přihlášek (jen datum).
+ */
+export function entryDeadlineLabel(
+  entry: { slot: string | null | undefined; deadline: Date | null | undefined },
+  slots: Pick<Slot, "type" | "to">[],
+  locale: string,
+): string | null {
+  if (entry.slot === "late") {
+    const late = slots.find((slot) => slot.type === "late");
+    if (late) return formatDateTime(late.to, locale);
+  }
+  return entry.deadline ? formatDate(entry.deadline, locale) : null;
 }

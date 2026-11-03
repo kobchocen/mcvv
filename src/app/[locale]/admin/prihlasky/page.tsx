@@ -19,6 +19,9 @@ import { loadRegistrationTimeline } from "@/lib/admin/registration-timeline-data
 import { McvvAdminRegistrationTimeline } from "@/components/organisms/mcvv-admin-registration-timeline";
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
 import type { SpecialStartKind } from "@/lib/race/special-start";
+import { McvvAdminLateTimer } from "@/components/organisms/mcvv-admin-late-timer";
+import { SLOT_TYPES, type SlotType } from "@/lib/slots/core";
+import { entrySlot, lateAdminState, parseSlotFilter } from "@/lib/slots/admin-overview";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -28,6 +31,7 @@ type PageProps = Readonly<{
     zrusene?: string;
     prazdne?: string;
     spec?: string;
+    termin?: string;
   }>;
 }>;
 
@@ -56,6 +60,25 @@ function statusClass(status: number | null | undefined): string {
   }
 }
 
+const pragueShort = (d: Date, locale: Locale) =>
+  new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "cs-CZ", {
+    timeZone: "Europe/Prague",
+    weekday: "short",
+    day: "numeric",
+    month: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+
+const lateBadge: Record<string, string> = {
+  draft: "border-race-line text-race-muted",
+  awaiting: "border-amber-600/40 bg-amber-500/10 text-amber-800 dark:text-amber-300",
+  overdue: "border-red-600/40 bg-red-600/10 text-red-700 dark:text-red-300",
+  paid: "border-emerald-600/40 bg-emerald-600/10 text-emerald-700 dark:text-emerald-300",
+  autoCancelled: "border-race-line text-race-dim",
+  cancelled: "border-race-line text-race-dim",
+};
+
 function statusKey(
   status: number | null | undefined,
 ): "status0" | "status1" | "status2" | "status3" | "status4" | "status5" | "statusUnknown" {
@@ -75,7 +98,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
-  const { rok, stav, zrusene, prazdne, spec } = await searchParams;
+  const { rok, stav, zrusene, prazdne, spec, termin } = await searchParams;
+  const slotFilter = parseSlotFilter(termin);
 
   const [latest, yearRows] = await Promise.all([
     prisma.edition.findFirst({ orderBy: { id: "desc" }, select: { date: true, id: true } }),
@@ -128,7 +152,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         where: { year: selectedYear, ...statusWhere, lines: { none: {} }, id: { not: 1 } },
       });
 
-  const [registrations, payments, autoConfirmed, timeline] = await Promise.all([
+  const [allRegistrations, payments, autoConfirmed, timeline, metaRows] = await Promise.all([
     prisma.registration.findMany({
       where: { year: selectedYear, AND: [statusWhere, emptyWhere, specialWhere] },
       include: { lines: { select: { entryFee: true } } },
@@ -140,7 +164,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     }),
     freeAutoConfirmedIds(selectedYear),
     loadRegistrationTimeline(selectedYear),
+    // Termín a lhůta pozdní přihlášky (část 8); bez záznamu = standardní přihláška.
+    prisma.registrationMeta.findMany({
+      where: { year: selectedYear },
+      select: { id: true, slot: true, submittedAt: true, payUntil: true, autoCancelledAt: true },
+    }),
   ]);
+  const metaById = new Map(metaRows.map((row) => [row.id, row]));
+  const slotOfRow = (id: number): SlotType => entrySlot(metaById.get(id)?.slot);
+  const registrations = slotFilter
+    ? allRegistrations.filter((row) => slotOfRow(row.id) === slotFilter)
+    : allRegistrations;
+  const now = new Date();
+  const lateAwaiting = allRegistrations.filter((row) => {
+    const meta = metaById.get(row.id);
+    return (
+      meta?.slot === "late" &&
+      lateAdminState({ status: row.status, ...meta }, now).kind === "awaiting"
+    );
+  }).length;
 
   const threadSummaries = await registrationThreadSummaries(
     registrations.map((row) => ({ year: row.year, id: row.id })),
@@ -179,6 +221,22 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <option value="4">{copy("status4")}</option>
               <option value="5">{copy("status5")}</option>
               <option value="0">{copy("status0")}</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span className="text-race-muted">{copy("regsTerm")}</span>
+            <select
+              name="termin"
+              defaultValue={slotFilter ?? ""}
+              className="h-10 border border-race-line bg-race-surface px-2"
+              data-testid="regs-slot-filter"
+            >
+              <option value="">{copy("regsTermAll")}</option>
+              {SLOT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {copy(`regsTerm_${type}`)}
+                </option>
+              ))}
             </select>
           </label>
           <label className="flex h-10 items-center gap-2 text-sm">
@@ -226,6 +284,23 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {specialT("overviewLink", { count: specialRows.length })}
           </Link>
         </p>
+        {lateAwaiting > 0 ? (
+          <p
+            className="mt-3 text-sm font-medium text-amber-800 dark:text-amber-300"
+            data-testid="late-awaiting"
+          >
+            {copy("lateAwaitingSummary", { count: lateAwaiting })}{" "}
+            <Link
+              href={{
+                pathname: "/admin/prihlasky",
+                query: { rok: String(selectedYear), termin: "late" },
+              }}
+              className="text-race-accent hover:underline"
+            >
+              {copy("lateAwaitingShow")}
+            </Link>
+          </p>
+        ) : null}
         <McvvAdminRegistrationTimeline data={timeline} />
         {hiddenEmpty > 0 ? (
           <p className="mt-3 text-sm text-race-muted">
@@ -238,6 +313,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   prazdne: "1",
                   ...(Number.isFinite(statusFilter) ? { stav: String(statusFilter) } : {}),
                   ...(zrusene === "1" ? { zrusene: "1" } : {}),
+                  ...(slotFilter ? { termin: slotFilter } : {}),
                 },
               }}
               className="font-medium text-race-accent hover:underline"
@@ -250,13 +326,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <p className="mt-8 text-sm text-race-muted">{copy("regsEmpty")}</p>
         ) : (
           <div className="mt-8 overflow-x-auto">
-            <table className="w-full min-w-[62rem] border-collapse text-left text-sm">
+            <table className="w-full min-w-[68rem] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                   <th className="py-2 pr-3">{copy("regsId")}</th>
                   <th className="py-2 pr-3">{copy("regsName")}</th>
                   <th className="py-2 pr-3">{copy("regsEmail")}</th>
                   <th className="py-2 pr-3">{copy("regsCreated")}</th>
+                  <th className="py-2 pr-3">{copy("regsTerm")}</th>
                   <th className="py-2 pr-3">{copy("regsCount")}</th>
                   <th className="py-2 pr-3">{copy("regsFee")}</th>
                   <th className="py-2 pr-3">{copy("regsPaid")}</th>
@@ -275,12 +352,61 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   const diff = paid - fee;
                   const summary = threadSummaries.get(summaryKey(row.year, row.id));
                   const specialKinds = specialByRegistration.get(row.id) ?? [];
+                  const meta = metaById.get(row.id);
+                  const slot = slotOfRow(row.id);
+                  const late =
+                    meta && slot === "late"
+                      ? lateAdminState({ status: row.status, ...meta }, now)
+                      : null;
+                  const lateTitle =
+                    late?.kind === "draft"
+                      ? copy("lateState_draftTitle")
+                      : late?.kind === "awaiting" && meta?.payUntil
+                        ? copy("lateState_awaitingTitle", {
+                            at: pragueShort(meta.payUntil, locale),
+                          })
+                        : late?.kind === "overdue" && meta?.payUntil
+                          ? copy("lateState_overdueTitle", {
+                              at: pragueShort(meta.payUntil, locale),
+                            })
+                          : late?.kind === "autoCancelled" && meta?.autoCancelledAt
+                            ? copy(
+                                meta.submittedAt
+                                  ? "lateState_autoCancelledTitle"
+                                  : "lateState_draftCancelledTitle",
+                                {
+                                  at: pragueShort(meta.autoCancelledAt, locale),
+                                },
+                              )
+                            : undefined;
                   return (
                     <tr key={`${row.year}-${row.id}`} className="border-b border-race-line/40">
                       <td className="py-2.5 pr-3 font-medium">{row.id}</td>
                       <td className="py-2.5 pr-3">{row.name}</td>
                       <td className="py-2.5 pr-3">{row.email}</td>
                       <td className="py-2.5 pr-3">{dateInputValue(row.created)}</td>
+                      <td className="py-2.5 pr-3" data-testid={`regs-slot-${row.id}`}>
+                        <span className="whitespace-nowrap">{copy(`regsTerm_${slot}`)}</span>
+                        {late ? (
+                          <span
+                            title={lateTitle}
+                            className={cn(
+                              "mt-1 block w-fit whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium",
+                              lateBadge[late.kind],
+                            )}
+                          >
+                            {late.kind === "awaiting" && meta?.payUntil ? (
+                              <McvvAdminLateTimer
+                                payUntil={meta.payUntil.toISOString()}
+                                template={copy.raw("lateState_awaiting") as string}
+                                overdueLabel={copy("lateState_overdue")}
+                              />
+                            ) : (
+                              copy(`lateState_${late.kind}`)
+                            )}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="py-2.5 pr-3">{row.lines.length}</td>
                       <td className="py-2.5 pr-3">{fee}</td>
                       <td className="py-2.5 pr-3">{paid}</td>

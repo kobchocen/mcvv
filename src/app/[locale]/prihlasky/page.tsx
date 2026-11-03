@@ -11,6 +11,12 @@ import { McvvClubDatalist } from "@/components/organisms/mcvv-club-datalist";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
+import {
+  EntryHeading,
+  McvvLockedEntry,
+  McvvMyEntriesNav,
+  type MyEntryNavItem,
+} from "@/components/organisms/mcvv-my-entries";
 import { userThreadCopy } from "@/components/organisms/mcvv-message-copy";
 import { McvvMessageBubble, McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
@@ -140,6 +146,9 @@ async function EntryBody({
     getMessageSettings(),
   ]);
   const { year, open, deadline, registration, cancelled, past, quick, payments } = entry;
+  const { slot, writable, entries, locked, slots } = entry;
+  // Q346: formuláře jen u přihlášky, kterou lze měnit (běžící termín); jinak jen čtení.
+  const editable = open && writable;
   const promotionForm = (
     <section>
       <h2 className="font-display text-2xl font-semibold">{copy("accountSettings")}</h2>
@@ -223,6 +232,33 @@ async function EntryBody({
         {cancelled.map((row) => copy("cancelledNotice", { id: row.id })).join(" ")}
       </p>
     ) : null;
+  // Víc přihlášek v ročníku (po jedné na termín): přehled nahoře, uzavřené jen ke čtení dole.
+  const primaryItem: MyEntryNavItem | null = registration
+    ? { id: registration.id, slot, fee, paid, editable }
+    : null;
+  const navItems: MyEntryNavItem[] = [
+    ...(primaryItem ? [primaryItem] : []),
+    ...locked.map((row) => ({
+      id: row.id,
+      slot: row.slot,
+      fee: registrationFee(row.lines),
+      paid: sumPayments(row.payments),
+      editable: false,
+    })),
+    ...cancelled.map((row) => ({
+      id: row.id,
+      slot: null,
+      fee: 0,
+      paid: 0,
+      editable: false,
+      cancelled: true,
+    })),
+  ];
+  const multi = entries.length > 1 || (entries.length > 0 && !registration);
+  const entriesNav = multi ? <McvvMyEntriesNav year={year} items={navItems} copy={copy} /> : null;
+  const lockedSections = locked.map((row) => (
+    <McvvLockedEntry key={row.id} entry={row} slots={slots} locale={locale} copy={copy} />
+  ));
 
   if (!registration) {
     // Účet bez přihlášky (např. obsluha mezičasů nebo ještě nepřihlášený běžec):
@@ -240,9 +276,10 @@ async function EntryBody({
               </p>
             ) : null}
             <p className="text-base leading-7 text-foreground dark:text-white">
-              {copy("noRegistration", { year })}
+              {entries.length > 0 ? copy("addAnotherEntry") : copy("noRegistration", { year })}
             </p>
             {cancelledNotice}
+            {entriesNav}
           </div>
         ) : (
           <div className="grid gap-3">
@@ -257,7 +294,9 @@ async function EntryBody({
         {open ? (
           <section>
             <h2 className="font-display text-2xl font-semibold">{copy("runners")}</h2>
-            <p className="mt-2 max-w-2xl text-sm text-race-muted">{copy("noRegistrationHint")}</p>
+            <p className="mt-2 max-w-2xl text-sm text-race-muted">
+              {entries.length > 0 ? copy("addAnotherEntryHint") : copy("noRegistrationHint")}
+            </p>
             {quick.length > 0 ? (
               <McvvQuickAdd
                 year={year}
@@ -284,6 +323,8 @@ async function EntryBody({
             </div>
           </section>
         ) : null}
+
+        {lockedSections}
 
         {messagesEnabled ? (
           <section id="zpravy" className="scroll-mt-28">
@@ -317,14 +358,20 @@ async function EntryBody({
 
   return (
     <div className="mt-8 space-y-12">
-      {open ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
+      {editable ? <McvvClubDatalist id={CLUB_LIST_ID} clubs={clubOptions} /> : null}
       {deadline ? (
         <p className="text-sm text-race-muted">
           {copy("deadline")}: {formatDate(deadline, locale)}
-          {open ? "" : ` — ${copy("readOnly")}`}
+          {editable ? "" : ` — ${copy("readOnly")}`}
         </p>
       ) : null}
       {cancelledNotice}
+      {entriesNav}
+      {multi && primaryItem ? (
+        <div id={`p${registration.id}`} className="scroll-mt-28">
+          <EntryHeading item={primaryItem} copy={copy} />
+        </div>
+      ) : null}
 
       {messagesEnabled ? (
         <p className="-mt-6 flex flex-wrap items-center gap-2 text-sm">
@@ -356,7 +403,7 @@ async function EntryBody({
           name={registration.name ?? ""}
           noMail={noMail}
           email={email}
-          open={open}
+          open={editable}
           copy={{
             name: copy("name"),
             email: copy("email"),
@@ -367,7 +414,7 @@ async function EntryBody({
         />
       </section>
 
-      {open ? null : promotionForm}
+      {editable ? null : promotionForm}
 
       {messagesEnabled ? (
         <section id="zpravy" className="scroll-mt-28">
@@ -441,7 +488,7 @@ async function EntryBody({
                       <span className="text-xs font-semibold uppercase tracking-wide text-race-dim md:hidden">
                         {copy("club")}
                       </span>
-                      {open ? (
+                      {editable ? (
                         <McvvLineClubSelect
                           year={year}
                           registrationId={registration.id}
@@ -473,7 +520,7 @@ async function EntryBody({
                       </span>
                     </td>
                     <td className="col-start-2 row-start-1 -mr-2 -mt-2 md:m-0 md:table-cell md:py-2.5">
-                      {open ? (
+                      {editable ? (
                         <form action={removeRunner}>
                           <input type="hidden" name="year" value={year} />
                           <input type="hidden" name="registrationId" value={registration.id} />
@@ -495,7 +542,7 @@ async function EntryBody({
           </table>
         </div>
 
-        {open && quick.length > 0 ? (
+        {editable && quick.length > 0 ? (
           <McvvQuickAdd
             year={year}
             registrationId={registration.id}
@@ -505,7 +552,7 @@ async function EntryBody({
           />
         ) : null}
 
-        {open ? (
+        {editable ? (
           <div className="mt-8">
             <h3 className="font-display text-lg font-semibold">{copy("newRunner")}</h3>
             <McvvNewRunnerForm
@@ -576,6 +623,8 @@ async function EntryBody({
           ))}
         </ul>
       </section>
+
+      {lockedSections}
 
       {pastSection}
     </div>

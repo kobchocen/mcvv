@@ -9,6 +9,7 @@ import {
   orderMyEntries,
   pickWritableRegistration,
   registrationWritable,
+  splitMyEntries,
   type EntryWriteContext,
 } from "./entry-slot";
 
@@ -116,4 +117,16 @@ test("orderMyEntries: writable first (lowest id), then locked newest first", () 
     orderMyEntries(rows).map((row) => row.id),
     [4, 9, 6, 2],
   );
+});
+
+test("splitMyEntries: forms only for a writable entry (Q346)", () => {
+  const w = { id: 3, writable: true };
+  const a = { id: 2, writable: false };
+  const b = { id: 1, writable: false };
+  assert.deepEqual(splitMyEntries([w, a, b], true), { primary: w, locked: [a, b] });
+  // Otevřeno, ale žádná měnitelná (brzká skončila) → žádná hlavní; další běžec = nová přihláška.
+  assert.deepEqual(splitMyEntries([a, b], true), { primary: null, locked: [a, b] });
+  // Po uzávěrce nahoře nejnovější, jen ke čtení.
+  assert.deepEqual(splitMyEntries([a, b], false), { primary: a, locked: [b] });
+  assert.deepEqual(splitMyEntries([], true), { primary: null, locked: [] });
 });

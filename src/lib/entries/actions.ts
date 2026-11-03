@@ -9,7 +9,8 @@ import { getSession } from "@/lib/auth/session";
 import { resolveClub } from "@/lib/entries/club";
 import { recordEntryChange } from "@/lib/entries/changes";
 import { computeLineFee } from "@/lib/entries/fee";
-import { currentCategoryFee } from "@/lib/slots/load";
+import { currentEntrySlotRow } from "@/lib/slots/entry-slot";
+import { registrationCategoryFee } from "@/lib/slots/load";
 import { eligibleCategories, pickCategory, resolveRunner } from "@/lib/entries/runner";
 import { formDataRecord, parseNewRunner } from "@/lib/entries/new-runner-schema";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
@@ -51,7 +52,7 @@ async function registrationForNewLine(
     year,
     session.email,
     session.name,
-    currentEntrySlot(ctx),
+    currentEntrySlotRow(ctx),
   );
   if (created) {
     await recordEntryChange(session, "entry.created", {
@@ -189,7 +190,8 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   const allowFree = freeEntryAllowed(currentEntrySlot(ctx));
   const [club, { fee }] = await Promise.all([
     resolveClub(formString(formData, "clubName"), year, formString(formData, "clubId")),
-    currentCategoryFee(year, category).then((base) =>
+    // Cena uložená u přihlášky (Q342), ne dnešní cena termínu.
+    registrationCategoryFee(year, registration.id, category).then((base) =>
       computeLineFee(session.email, runnerId, base, { allowFree }),
     ),
   ]);
@@ -279,7 +281,7 @@ export async function addNewRunner(
   const { fee } = await computeLineFee(
     session.email,
     resolved.id,
-    await currentCategoryFee(year, category),
+    await registrationCategoryFee(year, registration.id, category),
     { allowFree: freeEntryAllowed(currentEntrySlot(ctx)) },
   );
   await prisma.registrationLine.create({

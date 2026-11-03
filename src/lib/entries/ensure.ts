@@ -3,7 +3,7 @@ import { loadAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { nextRegistrationId, retryOnUniqueViolation } from "@/lib/entries/ensure-core";
 import { promotionValue } from "@/lib/entries/promotion";
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
-import type { SlotType } from "@/lib/slots/core";
+import type { Slot } from "@/lib/slots/core";
 import { pickWritableRegistration } from "@/lib/slots/entry-slot";
 
 export type EnsuredRegistration = {
@@ -14,7 +14,8 @@ export type EnsuredRegistration = {
 
 /**
  * Vrátí aktivní přihlášku e-mailu v ročníku a termínu, nebo ji založí (číslo = max + 1
- * v ročníku) a zapíše k ní termín. Jedna přihláška na e-mail a termín (Q302): po konci termínu
+ * v ročníku) a zapíše k ní termín a jeho dnešní startovné (Q342 – pozdější změna ceny termínu
+ * přihlášku neovlivní). Jedna přihláška na e-mail a termín (Q302): po konci termínu
  * vznikne pro dalšího běžce nová přihláška s vlastním VS. `slot` null = ročník bez termínů
  * (dosavadní chování: jedna přihláška na e-mail a ročník).
  * Volá se jen při přidání prvního běžce – návštěva stránky ani přihlášení nic nezakládá.
@@ -24,7 +25,7 @@ export async function ensureRegistration(
   year: number,
   email: string,
   displayName: string,
-  slot: SlotType | null = null,
+  slot: Slot | null = null,
 ): Promise<EnsuredRegistration> {
   // Legacy sloupec `promotion` se plní ze souhlasu na účtu (newsletter už čte účet).
   const promotion = promotionValue(await loadAccountPromotionOptOut(email));
@@ -45,7 +46,7 @@ export async function ensureRegistration(
       const existing = pickWritableRegistration(
         yearRows.map((row) => ({ ...row, slot: slotById.get(row.id) ?? null })),
         email,
-        slot,
+        slot?.type ?? null,
       );
       if (existing) {
         const { year: y, id: i, name, email: e } = existing;
@@ -68,11 +69,13 @@ export async function ensureRegistration(
       });
       if (slot !== null) {
         // upsert: případný osiřelý záznam smazané přihlášky se stejným číslem se přepíše.
+        const meta = { slot: slot.type, feeAdult: slot.feeAdult, feeYouth: slot.feeYouth };
         await tx.registrationMeta.upsert({
           where: { year_id: { year, id } },
-          create: { year, id, slot },
+          create: { year, id, ...meta },
           update: {
-            slot,
+            ...meta,
+            refundedAt: null,
             reminder1At: null,
             reminder2At: null,
             standardPayMailAt: null,

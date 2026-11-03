@@ -11,7 +11,10 @@ import {
   deletePayment,
   savePayment,
   saveRegistrationHeader,
+  saveRegistrationPrices,
 } from "@/lib/admin/registrations";
+import { entryPrices } from "@/lib/slots/core";
+import { loadSlots } from "@/lib/slots/load";
 import { canCancelRegistration } from "@/lib/entries/empty-registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
 import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
@@ -86,7 +89,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     notFound();
   }
 
-  const [registration, payments] = await Promise.all([
+  const [registration, payments, meta, slots] = await Promise.all([
     prisma.registration.findUnique({
       where: { year_id: { year, id } },
       include: {
@@ -104,12 +107,30 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
       where: { year },
       orderBy: [{ date: "asc" }, { id: "asc" }],
     }),
+    prisma.registrationMeta.findUnique({
+      where: { year_id: { year, id } },
+      select: { slot: true, feeAdult: true, feeYouth: true },
+    }),
+    loadSlots(year),
   ]);
   if (!registration) {
     notFound();
   }
 
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  // Startovné uložené u přihlášky (Q342); jen ročníky s termíny.
+  const prices = slots.length > 0 ? entryPrices(meta, slots) : null;
+  const pricesStored = meta?.feeAdult != null && meta?.feeYouth != null;
+  const pricesTerm = copy(
+    (
+      {
+        early: "slotsEarly",
+        standard: "slotsStandard",
+        late: "slotsLate",
+        onsite: "slotsOnsite",
+      } as const
+    )[meta?.slot ?? "standard"],
+  );
   const nationality = await getTranslations({ locale, namespace: "Nationality" });
   const runnersCopy = await getTranslations({ locale, namespace: "AdminRunners" });
   const nationalityOptions = await nationalityField(locale);
@@ -320,6 +341,40 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
             </Button>
           </form>
         </section>
+
+        {prices ? (
+          <section>
+            <h2 className="font-display text-xl font-semibold">{copy("regsPricesTitle")}</h2>
+            <p className="mt-1 max-w-2xl text-sm text-race-muted">
+              {copy(pricesStored ? "regsPricesHint" : "regsPricesLegacy", { term: pricesTerm })}
+            </p>
+            <form
+              action={saveRegistrationPrices}
+              className="mt-4 flex max-w-2xl flex-wrap items-end gap-3"
+            >
+              <input type="hidden" name="year" value={year} />
+              <input type="hidden" name="id" value={id} />
+              <AdminField
+                name="feeAdult"
+                label={copy("slotsFeeAdult")}
+                type="number"
+                defaultValue={String(prices.feeAdult)}
+              />
+              <AdminField
+                name="feeYouth"
+                label={copy("slotsFeeYouth")}
+                type="number"
+                defaultValue={String(prices.feeYouth)}
+              />
+              <Button
+                type="submit"
+                className="h-11 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
+              >
+                {copy("regsPricesSave")}
+              </Button>
+            </form>
+          </section>
+        ) : null}
 
         <section id="zpravy" className="scroll-mt-28">
           <div className="flex flex-wrap items-baseline justify-between gap-3">

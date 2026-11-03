@@ -6,7 +6,7 @@ import {
   type LineFeeFor,
   type SexChangePlan,
 } from "@/lib/admin/runner-sex-core";
-import { slotFee, slotOf } from "@/lib/slots/core";
+import { entryFee, entryPrices } from "@/lib/slots/core";
 import { slotFromRow } from "@/lib/slots/load";
 
 /** Models re-pointed to the new runner id by the sex change. */
@@ -140,8 +140,8 @@ async function loadPlan(
     select: { id: true, name: true, sex: true, age: true, entryFee: true },
   });
 
-  // Startovné letošních řádků podle termínu přihlášky (early / standard / late) a skupiny
-  // nové kategorie; ročník bez termínů nebo kategorie bez skupiny = cena z číselníku.
+  // Startovné letošních řádků podle ceny uložené u přihlášky (Q342; starší záznam bez ceny =
+  // cena jejího termínu) a skupiny nové kategorie; bez termínů / skupiny = cena z číselníku.
   const currentIds = lines
     .filter((line) => line.year === currentYear)
     .map((line) => line.registrationId);
@@ -151,17 +151,17 @@ async function loadPlan(
           tx.registrationSlot.findMany({ where: { year: currentYear } }),
           tx.registrationMeta.findMany({
             where: { year: currentYear, id: { in: currentIds } },
-            select: { id: true, slot: true },
+            select: { id: true, slot: true, feeAdult: true, feeYouth: true },
           }),
           tx.categoryMeta.findMany({ select: { categoryId: true, feeGroup: true } }),
         ])
       : [[], [], []];
   const slots = slotRows.map(slotFromRow);
-  const slotById = new Map(metas.map((meta) => [meta.id, meta.slot]));
+  const metaById = new Map(metas.map((meta) => [meta.id, meta]));
   const groupById = new Map(groups.map((group) => [group.categoryId, group.feeGroup]));
   const feeFor: LineFeeFor = (line, target) =>
-    slotFee(
-      slotOf(slots, slotById.get(line.registrationId) ?? "standard"),
+    entryFee(
+      entryPrices(metaById.get(line.registrationId) ?? null, slots),
       groupById.get(target.id) ?? null,
       target.entryFee,
     );

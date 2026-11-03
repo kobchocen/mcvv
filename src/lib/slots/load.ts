@@ -2,7 +2,7 @@ import type { RegistrationSlot } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
 
-import { activeSlot, slotFee, slotOf, type FeeGroup, type Slot } from "./core";
+import { entryFee, entryPrices, type FeeGroup, type Slot } from "./core";
 
 export function slotFromRow(row: RegistrationSlot): Slot {
   return {
@@ -29,21 +29,8 @@ export async function categoryFeeGroup(categoryId: string): Promise<FeeGroup | n
 }
 
 /**
- * Startovné kategorie pro přihlášku uloženou teď: cena skupiny v běžícím termínu
- * (early / standard), jinak cena z číselníku kategorií (dosavadní chování).
- */
-export async function currentCategoryFee(
-  year: number,
-  category: { id: string; entryFee: number },
-  now = new Date(),
-): Promise<number> {
-  const [slots, group] = await Promise.all([loadSlots(year), categoryFeeGroup(category.id)]);
-  return slotFee(activeSlot(slots, now), group, category.entryFee);
-}
-
-/**
- * Startovné kategorie pro existující přihlášku (přepočet v administraci): cena skupiny v termínu,
- * ve kterém přihláška vznikla (bez záznamu = standard), jinak cena z číselníku.
+ * Startovné kategorie v existující přihlášce (nový běžec, přepočet v administraci): cena skupiny
+ * uložená u přihlášky (Q342), u starších záznamů cena termínu, ve kterém vznikla; jinak číselník.
  */
 export async function registrationCategoryFee(
   year: number,
@@ -55,8 +42,8 @@ export async function registrationCategoryFee(
     categoryFeeGroup(category.id),
     prisma.registrationMeta.findUnique({
       where: { year_id: { year, id: registrationId } },
-      select: { slot: true },
+      select: { slot: true, feeAdult: true, feeYouth: true },
     }),
   ]);
-  return slotFee(slotOf(slots, meta?.slot ?? "standard"), group, category.entryFee);
+  return entryFee(entryPrices(meta, slots), group, category.entryFee);
 }

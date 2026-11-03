@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type ProgramSectionId =
@@ -106,6 +108,7 @@ export type McvvProgramView = {
   editionId: number;
   feeRows: ProgramFeeRow[];
   feeRefund: string;
+  freeEntry: ReactNode;
   prizeAdult: string[];
   prizeVeterans: string[];
   categories: ProgramCategoryRow[];

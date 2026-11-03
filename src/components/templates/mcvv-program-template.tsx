@@ -71,6 +71,7 @@ export function McvvProgramTemplate({
   editionId,
   feeRows,
   feeRefund,
+  freeEntry,
   prizeAdult,
   prizeVeterans,
   categories,
@@ -193,7 +194,7 @@ export function McvvProgramTemplate({
                           {feeRefund}
                         </p>
                         <p className="text-sm leading-7 text-race-muted sm:text-base">
-                          {content.fees.freeEntry}
+                          {freeEntry}
                         </p>
                       </>
                     ) : null}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import {
@@ -14,15 +15,20 @@ import { fillPlaceholders, startTextParams } from "@/lib/race/start-text";
 import {
   categoryBirthYearBound,
   FALLBACK_ROZPIS_EDITION_ID,
+  FREE_ENTRY_LINKS,
+  formatFreeEntryDeadline,
+  formatOnlineDeadline,
+  formatRaceDayShort,
   hasRozpisData,
 } from "@/lib/race/program";
 import { formatCzk } from "@/lib/utils";
-import { type Locale } from "@/i18n/routing";
+import { Link, type Locale } from "@/i18n/routing";
 
 type ProgramPageProps = Readonly<{
   params: Promise<{ locale: string }>;
 }>;
 
+const FREE_ENTRY_LINK_CLASS = "font-medium text-race-accent underline-offset-2 hover:underline";
 const MAP_HREF =
   "https://www.openstreetmap.org/?mlat=49.99583&mlon=16.20278#map=16/49.99583/16.20278";
 
@@ -98,8 +104,39 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
     program.raw("sections") as McvvProgramContent["sections"],
     startText,
   );
+  // Q414 / Q416: online deadline (end of standard entries), race day and on-site fees from the
+  // edition settings; without a deadline or race date the section keeps the general wording.
+  const onlineUntil = formatOnlineDeadline(raceYear.standardEnd, locale);
+  const raceDay = formatRaceDayShort(edition?.date, locale);
+  const registrationParams = {
+    officeOpens: startText.officeOpens,
+    onsiteUntil: startText.onsiteUntil,
+    feeAdult: formatCzk(edition?.startAdultPlace, locale, program("dash")),
+    feeYouth: formatCzk(edition?.startKidsPlace, locale, program("dash")),
+  };
   const sections: McvvProgramContent["sections"] = {
     ...rawSections,
+    registration: {
+      ...rawSections.registration,
+      ...(onlineUntil && raceDay
+        ? {
+            summary: program("sections.registration.summary", {
+              onlineUntilShort: onlineUntil.short,
+              onsiteUntil: startText.onsiteUntil,
+            }),
+            body: program("sections.registration.body", {
+              ...registrationParams,
+              onlineUntil: onlineUntil.long,
+              raceDay,
+            }),
+          }
+        : {
+            summary: program("sections.registration.summaryOpen", {
+              onsiteUntil: startText.onsiteUntil,
+            }),
+            body: program("sections.registration.bodyOpen", registrationParams),
+          }),
+    },
     date: edition?.date
       ? { ...rawSections.date, summary: formatRaceDate(edition.date, locale) }
       : rawSections.date,
@@ -145,6 +182,31 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   const feeRefund = deadline
     ? program("fees.refund", { date: deadline })
     : program("fees.refundOpen");
+  // Q417: links to the statistics lists; the date is the end of online (standard) entries.
+  const freeEntryDate = formatFreeEntryDeadline(edition?.regDeadline, locale);
+  const freeEntryLinks = {
+    winners: (chunks: ReactNode) => (
+      <Link
+        href={{ pathname: "/statistiky/[slug]", params: { slug: FREE_ENTRY_LINKS.winners } }}
+        locale={locale}
+        className={FREE_ENTRY_LINK_CLASS}
+      >
+        {chunks}
+      </Link>
+    ),
+    veterans: (chunks: ReactNode) => (
+      <Link
+        href={{ pathname: "/statistiky/[slug]", params: { slug: FREE_ENTRY_LINKS.veterans } }}
+        locale={locale}
+        className={FREE_ENTRY_LINK_CLASS}
+      >
+        {chunks}
+      </Link>
+    ),
+  };
+  const freeEntry = freeEntryDate
+    ? program.rich("fees.freeEntry", { ...freeEntryLinks, date: freeEntryDate })
+    : program.rich("fees.freeEntryOpen", freeEntryLinks);
 
   const categories: ProgramCategoryRow[] = categoryRows.map((row) => ({
     id: row.id,
@@ -155,6 +217,7 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   return (
     <McvvProgramTemplate
       content={content}
+      locale={locale}
       editionId={editionId}
       feeRows={[
         {
@@ -175,6 +238,7 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
         },
       ]}
       feeRefund={feeRefund}
+      freeEntry={freeEntry}
       prizeAdult={[
         formatCzk(edition?.finAdult1, locale, dash),
         formatCzk(edition?.finAdult2, locale, dash),

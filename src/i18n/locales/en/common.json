@@ -399,7 +399,8 @@
       "onsiteKids": "Youth on site",
       "refund": "Entry fees are refunded if you withdraw by the online registration deadline ({date}). After that date fees are not refunded.",
       "refundOpen": "Entry fees are refunded if you withdraw by the online registration deadline. After that date fees are not refunded.",
-      "freeEntry": "MCVV winners and veterans enter free if they register online in time."
+      "freeEntry": "<winners>Winners of the Men and Women categories</winners> and <veterans>members of the MCVV Veterans Club</veterans> enter free if they register online by {date}.",
+      "freeEntryOpen": "<winners>Winners of the Men and Women categories</winners> and <veterans>members of the MCVV Veterans Club</veterans> enter free if they register online in time."
     },
     "prizes": {
       "adult": "Men and women",
@@ -415,9 +416,11 @@
       "older": "{year} and older"
     },
     "timetable": {
+      "office": "{officeOpens} — race office opens",
       "registration": "Until {onsiteUntil} — on-site registration",
       "start": "{startTime} — start ({interval} s interval)",
-      "ceremony": "12:20 — awards ceremony"
+      "lastStart": "11:55 — planned start of the last runner",
+      "ceremony": "12:20 — awards ceremony and raffle"
     },
     "sections": {
       "intro": {
@@ -447,8 +450,10 @@
       },
       "registration": {
         "title": "Registration",
-        "summary": "Online registration · on site until {onsiteUntil}",
-        "body": "On race day you can register on site until {onsiteUntil}. An online entry is valid only after the payment is received."
+        "summary": "Online until {onlineUntilShort} · on site until {onsiteUntil}",
+        "body": "Online registration until {onlineUntil}. On race day ({raceDay}) you can register on site at the race office from {officeOpens} until {onsiteUntil} (adults {feeAdult}, youth {feeYouth}). An online entry is valid only after the payment is received.",
+        "summaryOpen": "Online registration · on site until {onsiteUntil}",
+        "bodyOpen": "On race day you can register on site at the race office from {officeOpens} until {onsiteUntil} (adults {feeAdult}, youth {feeYouth}). An online entry is valid only after the payment is received."
       },
       "fees": {
         "title": "Entry fees",
@@ -468,12 +473,12 @@
       "start": {
         "title": "Start",
         "summary": "{interval} s interval from {startTime}",
-        "body": "Start interval {seconds} s from {startTime}. Interval start in pairs, no separate kids' start."
+        "body": "Start interval {seconds} s from {startTime}. Interval start in pairs."
       },
       "timetable": {
         "title": "Timetable",
-        "summary": "{onsiteUntil} · {startTime} · 12:20",
-        "body": "On-site registration closes at {onsiteUntil}. Interval start from {startTime}. Awards at 12:20."
+        "summary": "{officeOpens} · {onsiteUntil} · {startTime} · 11:55 · 12:20",
+        "body": "The race office opens at {officeOpens}. On-site registration closes at {onsiteUntil}. Interval start from {startTime}. Planned start of the last runner at 11:55. Awards and raffle at 12:20."
       },
       "privacy": {
         "title": "Privacy",

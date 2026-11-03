@@ -399,7 +399,8 @@
       "onsiteKids": "Děti a dorost na místě",
       "refund": "Startovné vracíme při odhlášení do termínu online přihlášek ({date}). Po tomto termínu startovné nevracíme.",
       "refundOpen": "Startovné vracíme při odhlášení do termínu online přihlášek. Po termínu startovné nevracíme.",
-      "freeEntry": "Vítězové a veteráni MCVV mají startovné zdarma při včasné online přihlášce."
+      "freeEntry": "<winners>Vítězové kategorií Muži a Ženy</winners> a <veterans>členové Klubu veteránů MCVV</veterans> mají startovné zdarma při online přihlášce do {date}.",
+      "freeEntryOpen": "<winners>Vítězové kategorií Muži a Ženy</winners> a <veterans>členové Klubu veteránů MCVV</veterans> mají startovné zdarma při včasné online přihlášce."
     },
     "prizes": {
       "adult": "Muži a ženy",
@@ -415,9 +416,11 @@
       "older": "{year} a starší"
     },
     "timetable": {
+      "office": "{officeOpens} — otevření závodní kanceláře",
       "registration": "Do {onsiteUntil} — přihlášky na místě",
       "start": "{startTime} — start (interval {interval} s)",
-      "ceremony": "12:20 — vyhlášení výsledků"
+      "lastStart": "11:55 — plánovaný start posledního závodníka",
+      "ceremony": "12:20 — vyhlášení výsledků a tombola"
     },
     "sections": {
       "intro": {
@@ -447,8 +450,10 @@
       },
       "registration": {
         "title": "Přihlášky",
-        "summary": "Online přihláška · na místě do {onsiteUntil}",
-        "body": "V den závodu lze podat přihlášku na místě do {onsiteUntil}. Online přihláška platí až po připsání platby."
+        "summary": "Online do {onlineUntilShort} · na místě do {onsiteUntil}",
+        "body": "Online přihlášky do {onlineUntil}. V den závodu ({raceDay}) lze podat přihlášku na místě v závodní kanceláři od {officeOpens} do {onsiteUntil} (dospělí {feeAdult}, děti a dorost {feeYouth}). Online přihláška platí až po připsání platby.",
+        "summaryOpen": "Online přihláška · na místě do {onsiteUntil}",
+        "bodyOpen": "V den závodu lze podat přihlášku na místě v závodní kanceláři od {officeOpens} do {onsiteUntil} (dospělí {feeAdult}, děti a dorost {feeYouth}). Online přihláška platí až po připsání platby."
       },
       "fees": {
         "title": "Startovné",
@@ -468,12 +473,12 @@
       "start": {
         "title": "Start",
         "summary": "Interval {interval} s od {startTime}",
-        "body": "Startovní interval {seconds} s od {startTime}. Intervalový start ve dvojicích, bez samostatného dětského startu."
+        "body": "Startovní interval {seconds} s od {startTime}. Intervalový start ve dvojicích."
       },
       "timetable": {
         "title": "Časový harmonogram",
-        "summary": "{onsiteUntil} · {startTime} · 12:20",
-        "body": "Přihlášky na místě končí v {onsiteUntil}. Intervalový start od {startTime}. Vyhlášení výsledků ve 12:20."
+        "summary": "{officeOpens} · {onsiteUntil} · {startTime} · 11:55 · 12:20",
+        "body": "Závodní kancelář se otevírá v {officeOpens}. Přihlášky na místě končí v {onsiteUntil}. Intervalový start od {startTime}. Plánovaný start posledního závodníka v 11:55. Vyhlášení výsledků a tombola ve 12:20."
       },
       "privacy": {
         "title": "Ochrana údajů",

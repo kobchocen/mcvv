@@ -1507,7 +1507,26 @@
     "regsDeletePaymentTitle": "Smazat platbu?",
     "regsDeletePaymentConfirm": "Platba {amount} Kč ({date}) se z přihlášky odstraní a přepočítá se stav úhrady.",
     "clubsSubnavList": "Seznam klubů",
-    "clubsSubnavMerge": "Slučování klubů"
+    "clubsSubnavMerge": "Slučování klubů",
+    "regsTerm": "Termín",
+    "regsTermAll": "Všechny termíny",
+    "regsTerm_early": "zvýhodněná",
+    "regsTerm_standard": "standardní",
+    "regsTerm_late": "pozdní",
+    "regsTerm_onsite": "na místě",
+    "lateState_draft": "rozpracovaná",
+    "lateState_draftTitle": "Pozdní přihláška zatím není odeslaná (lhůta na zaplacení neběží).",
+    "lateState_awaiting": "čeká {time}",
+    "lateState_awaitingTitle": "Čeká na platbu – zaplatit do {at}.",
+    "lateState_overdue": "po lhůtě",
+    "lateState_overdueTitle": "Lhůta uplynula {at} – čeká se na kontrolu banky, pak se přihláška sama zruší.",
+    "lateState_paid": "zaplaceno",
+    "lateState_autoCancelled": "auto-zrušeno",
+    "lateState_autoCancelledTitle": "Zrušena automaticky {at} (platba nedorazila včas).",
+    "lateState_draftCancelledTitle": "Rozpracovaná přihláška zrušena automaticky {at} (nebyla odeslána).",
+    "lateState_cancelled": "zrušeno",
+    "lateAwaitingSummary": "{count, plural, one {# pozdní přihláška čeká} few {# pozdní přihlášky čekají} other {# pozdních přihlášek čeká}} na platbu.",
+    "lateAwaitingShow": "Zobrazit pozdní"
   },
   "Stats": {
     "overview": {
@@ -3243,7 +3262,11 @@
     "err_offsetStep": "Posun musí být násobek intervalu {interval} s.",
     "err_offsetRange": "Posun může být nejvýš ± 60 min.",
     "check_range": "Číslo není v rozsahu {range}",
-    "overviewRanges": "Rozsahy čísel: pořadatelé {organizer} · brzy {early} · pozdě {late}."
+    "overviewRanges": "Rozsahy čísel: pořadatelé {organizer} · brzy {early} · pozdě {late}.",
+    "err_partnerLate": "Partner je v pozdní přihlášce – spec. start „spolu s“ s ním nastavit nejde.",
+    "lateNone": "pozdní – bez spec. startu",
+    "lateNoneTitle": "Pozdní přihlášky spec. start nemají: čísla dostávají po zaplacení z rozsahu pro pozdní přihlášky.",
+    "lateExcluded": "{count, plural, one {# pozdní přihláška se zprávou tu není} few {# pozdní přihlášky se zprávou tu nejsou} other {# pozdních přihlášek se zprávou tu není}} – pozdní přihlášky spec. start nemají (čísla dostávají po zaplacení)."
   },
   "Starter": {
     "metaTitle": "Startér",

@@ -16,25 +16,61 @@ export type ProgramSectionId =
   | "notice"
   | "info";
 
-/**
- * Blok Rozpisu jako v legacy `rozpis.php`: nadpis + odstavec. `body` smí obsahovat `\n`
- * (zalomení řádku) a odkazy `<tag>text</tag>` – viz `splitRozpisMarkup`.
- */
 export type ProgramSectionCopy = {
   title: string;
+  summary: string;
   body: string;
+};
+
+export type ProgramFeeCopy = {
+  onlineAdult: string;
+  onlineKids: string;
+  onsiteAdult: string;
+  onsiteKids: string;
+  refund: string;
+  freeEntry: string;
+};
+
+export type ProgramPrizeCopy = {
+  adult: string;
+  veterans: string;
+  place: string;
+  material: string;
+};
+
+export type ProgramCategoryCopy = {
+  name: string;
+  birthYear: string;
+  open: string;
+  younger: string;
+  older: string;
+};
+
+export type ProgramTimetableCopy = {
+  registration: string;
+  start: string;
+  ceremony: string;
 };
 
 export type McvvProgramContent = {
   brand: McvvHomepageContent["brand"];
   nav: McvvHomepageContent["nav"];
   header: {
+    eyebrow: string;
     title: string;
+    lead: string;
   };
   tocTitle: string;
   emptyCategories: string;
+  dash: string;
+  gpsLabel: string;
   backToTop: string;
+  onlineEntry: string;
   sections: Record<ProgramSectionId, ProgramSectionCopy>;
+  fees: ProgramFeeCopy;
+  prizes: ProgramPrizeCopy;
+  categories: ProgramCategoryCopy;
+  timetable: ProgramTimetableCopy;
 };
 
 export const PROGRAM_SECTION_ORDER: ProgramSectionId[] = [
@@ -54,6 +90,11 @@ export const PROGRAM_SECTION_ORDER: ProgramSectionId[] = [
   "info",
 ];
 
+export type ProgramFeeRow = {
+  label: string;
+  value: string;
+};
+
 export type ProgramCategoryRow = {
   id: string;
   name: string;
@@ -62,7 +103,14 @@ export type ProgramCategoryRow = {
 
 export type McvvProgramView = {
   content: McvvProgramContent;
+  editionId: number;
+  feeRows: ProgramFeeRow[];
+  feeRefund: string;
+  prizeAdult: string[];
+  prizeVeterans: string[];
   categories: ProgramCategoryRow[];
-  /** Web ročníku (`mcvv_info.infowww`) – cíl odkazu `<www>` v bloku Informace. */
   infoWww: string;
+  contactHref: "/kontakt";
+  contactLabel: string;
+  mapHref: string;
 };

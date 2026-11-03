@@ -381,84 +381,114 @@
   },
   "Program": {
     "header": {
-      "title": "Race notice"
+      "eyebrow": "K.O.B. Choceň · {year}",
+      "title": "Race notice",
+      "lead": "{n}. edition of Malá cena Velké Verandy"
     },
     "tocTitle": "On this page",
     "emptyCategories": "Categories will be added.",
     "dash": "—",
+    "gpsLabel": "Open map (GPS)",
     "backToTop": "Back to top",
-    "introZhl": " - part of the <zhl>Zimní hradubická liga</zhl>",
+    "onlineEntry": "Online registration",
+    "contactLabel": "Contact the organizer",
     "fees": {
-      "online": "{adult} (youth and juniors {kids}) when registering online and paying the entry fee by {deadlineDay} at the latest.",
-      "onsite": "{adult} (youth and juniors {kids}) when registering on race day.",
-      "zhl": "Members of the ZHL organising clubs pay a flat entry fee of CZK 10 (online entries by {deadline} only).",
-      "freeEntry": "<vitezove>MCVV winners</vitezove> in the main men's and women's categories and current members of the <veterani>MCVV veterans' club</veterani> start FREE if they register online by {deadline}."
+      "onlineAdult": "Adults online",
+      "onlineKids": "Youth online",
+      "onsiteAdult": "Adults on site",
+      "onsiteKids": "Youth on site",
+      "refund": "Entry fees are refunded if you withdraw by the online registration deadline ({date}). After that date fees are not refunded.",
+      "refundOpen": "Entry fees are refunded if you withdraw by the online registration deadline. After that date fees are not refunded.",
+      "freeEntry": "MCVV winners and veterans enter free if they register online in time."
     },
     "prizes": {
-      "money": "Cash prizes for 1st - 5th place in the men's and women's categories ({adult}) and for 1st - 3rd place in the veterans' categories ({veterans}).",
+      "adult": "Men and women",
+      "veterans": "Veterans",
+      "place": "{n}. place",
       "material": "Prizes in kind for the best in the youth and junior categories."
     },
     "categories": {
+      "name": "Category",
+      "birthYear": "Year of birth",
       "open": "no age limit",
-      "younger": "born {year} or later",
-      "older": "born {year} or earlier"
+      "younger": "{year} and younger",
+      "older": "{year} and older"
+    },
+    "timetable": {
+      "registration": "Until {onsiteUntil} — on-site registration",
+      "start": "{startTime} — start ({interval} s interval)",
+      "ceremony": "12:20 — awards ceremony"
     },
     "sections": {
       "intro": {
         "title": "Race notice",
-        "body": "Edition {n} of the Malá cena Velké Verandy forest cross-country race{zhl}"
+        "summary": "Basic information for this edition",
+        "body": "One forest course and an interval start."
       },
       "date": {
         "title": "Date",
-        "body": "{date}"
+        "summary": "Sunday 6 December 2026",
+        "body": "The traditional first Sunday in December."
       },
       "venue": {
         "title": "Venue",
-        "body": "Choceň - \"Velká Veranda\", <gps>49°59'45\"N, 16°12'10\"E</gps>"
+        "summary": "Velká Veranda, Choceň",
+        "body": "Start and finish at Velká Veranda. GPS 49°59′45″N, 16°12′10″E."
       },
       "organizer": {
         "title": "Organizer",
-        "body": "K.O.B. Choceň"
+        "summary": "K.O.B. Choceň",
+        "body": "Choceň orienteering club."
       },
       "course": {
         "title": "Course",
-        "body": "4 300 m on forest roads and paths (400 m asphalt), hilly profile (200 m climb), marked with streamers"
+        "summary": "4 300 m · 200 m climb",
+        "body": "Forest roads and paths, 400 m of asphalt. 200 m of climb. Marked with streamers. One course for all categories."
       },
       "registration": {
         "title": "Registration",
-        "body": "<online>Online</online> by {deadlineDay} at www.mcvv.org or on race day until {onsiteUntil}. An online entry is valid only after the entry fee has been paid to the organizer's account."
+        "summary": "Online registration · on site until {onsiteUntil}",
+        "body": "On race day you can register on site until {onsiteUntil}. An online entry is valid only after the payment is received."
       },
       "fees": {
         "title": "Entry fees",
-        "body": ""
+        "summary": "By category, cheaper online",
+        "body": "Fees follow the rates below."
       },
       "categories": {
         "title": "Categories",
+        "summary": "Age limits for {year}",
         "body": ""
       },
       "prizes": {
         "title": "Prizes",
-        "body": ""
+        "summary": "Men and women, veterans, youth and juniors",
+        "body": "Cash prizes in CZK in the men's and women's categories (1st–5th) and veterans (1st–3rd)."
       },
       "start": {
         "title": "Start",
-        "body": "Interval start, {interval} seconds apart"
+        "summary": "{interval} s interval from {startTime}",
+        "body": "Start interval {seconds} s from {startTime}. Interval start in pairs, no separate kids' start."
       },
       "timetable": {
         "title": "Timetable",
-        "body": "Registration until {onsiteUntil}, interval start from {startTime}, results ceremony at 12:20"
+        "summary": "{onsiteUntil} · {startTime} · 12:20",
+        "body": "On-site registration closes at {onsiteUntil}. Interval start from {startTime}. Awards at 12:20."
       },
       "privacy": {
-        "title": "Personal data protection, filming and photography",
-        "body": "By registering for this race every participant agrees to the publication of their personal data to the extent of the entry form, in the list of registered runners, the start list and the results on the race website and at the race centre. During the event news photos and videos will be taken (including the use of an unmanned drone) to inform the public about the race, to promote the race or to account for grants for the event etc., in accordance with applicable law. Photos for the participants' personal use (as a souvenir of the race, to promote sports clubs etc.) may also be taken, mainly at the awards ceremony and on the course. If you do not agree to being photographed or filmed, tell the photographer/camera operator explicitly."
+        "title": "Privacy",
+        "summary": "GDPR and photos",
+        "body": "We process personal data to run the race and publish results. Photos and video may be used to present the event. Objections can be sent to the organizer."
       },
       "notice": {
         "title": "Notice",
-        "body": "Competitors start at their own risk!\nBy its nature the race is not suitable for children under six. Only competitors who complete the whole course without help from another person will be included in the results.\nSales or promotional activities are only permitted with the consent of the race organizer."
+        "summary": "At your own risk",
+        "body": "Participation is at your own risk. The race is not suitable for children under 6. Only those who complete the whole course without help from another person are listed in the results. Sales and stalls only with the organizer's consent."
       },
       "info": {
         "title": "Information",
-        "body": "<www>{www}</www>"
+        "summary": "mcvv.org",
+        "body": "Current information is on the website. Send questions through the form; we do not publish e-mail or phone."
       }
     }
   },

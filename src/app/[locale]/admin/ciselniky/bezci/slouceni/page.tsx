@@ -3,7 +3,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LinkPendingLabel } from "@/components/molecules/link-pending-label";
 import { PendingSubmitButton } from "@/components/molecules/pending-submit-button";
-import { McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
+import {
+  McvvAdminDictsSubnav,
+  runnersSubnav,
+} from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { McvvAdminMergePicker } from "@/components/organisms/mcvv-admin-merge-picker";
 import { Link, type Locale } from "@/i18n/routing";
 import type { MergePickOption } from "@/lib/admin/merge-pick";
@@ -326,15 +329,14 @@ export default async function AdminRunnerMergePage({ params, searchParams }: Pag
         <McvvAdminDictsSubnav
           backLabel={admin("dictsTitle")}
           label={runners("title")}
-          items={[
-            { href: "/admin/ciselniky/bezci", label: runners("subnavSearch") },
+          items={runnersSubnav(
             {
-              href: "/admin/ciselniky/bezci/slouceni",
-              label: runners("subnavMerge"),
-              active: true,
-              testId: "subnav-runner-merge",
+              search: runners("subnavSearch"),
+              merge: runners("subnavMerge"),
+              orphans: runners("subnavOrphans"),
             },
-          ]}
+            "merge",
+          )}
         />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}

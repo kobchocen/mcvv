@@ -25,6 +25,7 @@ import {
 } from "@/components/organisms/mcvv-late-entry";
 import { userThreadCopy } from "@/components/organisms/mcvv-message-copy";
 import { activeSlot, slotOf } from "@/lib/slots/core";
+import { loadLateBibView } from "@/lib/slots/late-bib-view";
 import { LATE_DRAFT_TTL_MINUTES, LATE_PAY_MINUTES } from "@/lib/slots/late-core";
 import { McvvMessageBubble, McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
@@ -313,8 +314,20 @@ async function EntryBody({
   ];
   const multi = entries.length > 1 || (entries.length > 0 && !registration);
   const entriesNav = multi ? <McvvMyEntriesNav year={year} items={navItems} copy={copy} /> : null;
-  const lockedSections = locked.map((row) => (
-    <McvvLockedEntry key={row.id} entry={row} slots={slots} locale={locale} copy={copy} />
+  const lockedBibs = await Promise.all(
+    locked.map((row) =>
+      row.slot === "late" && row.submittedAt ? loadLateBibView(row, locale) : null,
+    ),
+  );
+  const lockedSections = locked.map((row, index) => (
+    <McvvLockedEntry
+      key={row.id}
+      entry={row}
+      slots={slots}
+      locale={locale}
+      copy={copy}
+      bibs={lockedBibs[index]}
+    />
   ));
 
   if (!registration) {

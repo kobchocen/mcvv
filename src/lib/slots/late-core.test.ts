@@ -3,7 +3,12 @@ import test from "node:test";
 
 import {
   isPaidStatus,
+  lastChangeOf,
   LATE_CANCEL_GRACE_MS,
+  LATE_DRAFT_TTL_MINUTES,
+  lateCancelMailDedupeKey,
+  lateDraftExpired,
+  latePayMailDedupeKey,
   lateCancelReadiness,
   lateEntryState,
   lateNeedsCancel,
@@ -102,4 +107,28 @@ test("secondsLeft", () => {
   const until = latePayUntil(SENT);
   assert.equal(secondsLeft(new Date(until.getTime() - 2832_000), until), 2832);
   assert.equal(secondsLeft(new Date(until.getTime() + 5000), until), 0);
+});
+
+test("lateDraftExpired: 1 h after the last change, always after the late term ends (Q351)", () => {
+  const lateEnd = at("2026-12-05T17:00:00Z");
+  const changed = at("2026-12-03T12:00:00Z");
+  assert.equal(LATE_DRAFT_TTL_MINUTES, 60);
+  assert.equal(lateDraftExpired(at("2026-12-03T12:59:59Z"), changed, lateEnd), false);
+  assert.equal(lateDraftExpired(at("2026-12-03T13:00:00Z"), changed, lateEnd), true);
+  assert.equal(lateDraftExpired(at("2026-12-03T12:20:00Z"), changed, lateEnd, 15), true);
+  assert.equal(lateDraftExpired(at("2026-12-03T12:00:00Z"), null, lateEnd), false);
+  assert.equal(lateDraftExpired(lateEnd, at("2026-12-05T16:59:00Z"), lateEnd), true);
+});
+
+test("lastChangeOf picks the latest known time", () => {
+  assert.equal(lastChangeOf([null, undefined]), null);
+  assert.equal(
+    lastChangeOf([at("2026-12-03T12:00:00Z"), null, at("2026-12-03T12:40:00Z")])?.toISOString(),
+    "2026-12-03T12:40:00.000Z",
+  );
+});
+
+test("late mail dedupe keys differ per mail and entry", () => {
+  assert.equal(latePayMailDedupeKey(2026, 412), "latepay:2026:412");
+  assert.equal(lateCancelMailDedupeKey(2026, 412), "latecancel:2026:412");
 });

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { CountryFlag } from "@/components/atoms/country-flag";
+import { HOME_COUNTRY } from "@/lib/runner/nationality";
 import {
   NationalitySelect,
   type NationalityField,
@@ -25,7 +26,8 @@ export function NationalityFlagSelect({
   defaultValue?: string;
   className?: string;
 }) {
-  const [value, setValue] = useState(defaultValue);
+  // Stát je povinný (Q360): běžec bez státu se ve výběru ukáže jako CZ.
+  const [value, setValue] = useState(defaultValue || HOME_COUNTRY);
   return (
     <span className="inline-flex items-center gap-2" data-testid={`${id}-picker`}>
       <span className="inline-flex w-5 justify-center" aria-hidden="true">

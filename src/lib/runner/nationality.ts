@@ -317,6 +317,29 @@ export function countryOptions(locale: string): {
   };
 }
 
+/**
+ * Stát zvolený v přihlášce u běžce, který už je v číselníku (Q362): chybějící stát se doplní,
+ * jiný stát než CZ přepíše uložený. Předvyplněné CZ uložený cizí stát nepřepíše (přihlašující
+ * ho často jen nezměnil). Vrací nový kód k uložení, nebo null = beze změny.
+ */
+export function entryNationalityUpdate(
+  current: string | null | undefined,
+  chosen: string | null | undefined,
+): CountryCode | null {
+  const next = normalizeNationality(chosen);
+  if (!next) {
+    return null;
+  }
+  const stored = isCountryCode(current) ? current : null;
+  if (stored === next) {
+    return null;
+  }
+  if (!stored || next !== HOME_COUNTRY) {
+    return next;
+  }
+  return null;
+}
+
 /** Vlaječka ve výpisech (výsledky, startovka…): jen u jiného než domácího státu. */
 export function listFlag(code: string | null | undefined): CountryCode | null {
   return isCountryCode(code) && code !== HOME_COUNTRY ? code : null;

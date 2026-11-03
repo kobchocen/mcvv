@@ -13,7 +13,8 @@ import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 import { redirect } from "@/i18n/routing";
 
 /**
- * Pořadatel nastaví / opraví státní příslušnost běžce (#200). Prázdná volba = neuvedeno.
+ * Pořadatel nastaví / opraví státní příslušnost běžce (#200). Stát je povinný (Q360):
+ * prázdná nebo neznámá hodnota se neuloží (návrat s chybou).
  * Změna se zapíše do auditu (#107: cíl `runner:<id>`, detail `changes` = před / po).
  * Volá se z detailu přihlášky (návrat `year` + `registrationId`) i z detailu běžce
  * v Číselníku (`back=runner`, návrat s `?stat=ulozeno|chyba`, případně se zkratkou `z`).
@@ -29,7 +30,7 @@ export async function saveRunnerNationality(formData: FormData): Promise<void> {
   const via = formString(formData, "z");
   let outcome: "ok" | "invalid" = "ok";
 
-  if (!runnerId || (raw.trim() !== "" && !nationality)) {
+  if (!runnerId || !nationality) {
     outcome = "invalid";
   } else {
     await prisma.$transaction(async (tx) => {

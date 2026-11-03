@@ -29,6 +29,7 @@ import { promotionValue } from "@/lib/entries/promotion";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
 import { writeAudit } from "@/lib/audit/log";
+import { diffFields } from "@/lib/audit/diff";
 import { entryTarget } from "@/lib/entries/changes-core";
 import { latePayUntil } from "@/lib/slots/late-core";
 
@@ -270,6 +271,21 @@ export async function addNewRunner(
   });
   if ("error" in resolved) {
     return { error: "ambiguous" };
+  }
+  if (resolved.nationalityChange) {
+    // Q362: stát změněný přihláškou se zapíše do auditu běžce (stejně jako změna v administraci).
+    await writeAudit({
+      actor: session,
+      action: "runner.nationality_changed",
+      target: `runner:${resolved.id}`,
+      detail: {
+        changes: diffFields(
+          { nationality: resolved.nationalityChange.from },
+          { nationality: resolved.nationalityChange.to },
+        ),
+        via: "entry",
+      },
+    });
   }
   const taken = await prisma.registrationLine.findFirst({ where: { year, runnerId: resolved.id } });
   if (taken) {

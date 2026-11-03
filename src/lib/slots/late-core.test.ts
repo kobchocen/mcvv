@@ -8,6 +8,7 @@ import {
   LATE_DRAFT_TTL_MINUTES,
   lateCancelMailDedupeKey,
   lateDraftExpired,
+  lateReadOnlyBibSection,
   latePayMailDedupeKey,
   lateCancelReadiness,
   lateEntryState,
@@ -131,4 +132,16 @@ test("lastChangeOf picks the latest known time", () => {
 test("late mail dedupe keys differ per mail and entry", () => {
   assert.equal(latePayMailDedupeKey(2026, 412), "latepay:2026:412");
   assert.equal(lateCancelMailDedupeKey(2026, 412), "latecancel:2026:412");
+});
+
+test("lateReadOnlyBibSection (Q394/Q395): karty, nebo text „přidělíme při losování“", () => {
+  const base = { slot: "late", status: 5, editable: false };
+  assert.equal(lateReadOnlyBibSection({ ...base, hasBibs: true }), "cards");
+  assert.equal(lateReadOnlyBibSection({ ...base, hasBibs: false }), "pending");
+  assert.equal(lateReadOnlyBibSection({ ...base, status: 3, hasBibs: false }), "pending");
+  // Nezaplacená, upravitelná nebo jiná než pozdní přihláška → nic.
+  assert.equal(lateReadOnlyBibSection({ ...base, status: 2, hasBibs: false }), null);
+  assert.equal(lateReadOnlyBibSection({ ...base, editable: true, hasBibs: false }), null);
+  assert.equal(lateReadOnlyBibSection({ ...base, slot: "standard", hasBibs: false }), null);
+  assert.equal(lateReadOnlyBibSection({ ...base, slot: null, hasBibs: true }), null);
 });

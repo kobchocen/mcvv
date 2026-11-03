@@ -399,7 +399,7 @@
       "onsiteKids": "Youth on site",
       "refund": "Entry fees are refunded if you withdraw by the online registration deadline ({date}). After that date fees are not refunded.",
       "refundOpen": "Entry fees are refunded if you withdraw by the online registration deadline. After that date fees are not refunded.",
-      "freeEntry": "Winners of the main men's and women's categories and members of the MCVV veterans club enter free if they register online in time."
+      "freeEntry": "MCVV winners and veterans enter free if they register online in time."
     },
     "prizes": {
       "adult": "Men and women",
@@ -580,7 +580,7 @@
     "closedRead": "The entry deadline has passed. A new entry cannot be created.",
     "noRegistration": "You have no entry for the {year} edition yet.",
     "noRegistrationHint": "The entry is created automatically when you add the first runner.",
-    "cancelledNotice": "Entry no. {id} was cancelled by the organizer.",
+    "cancelledNotice": "Entry no. {id} was cancelled.",
     "accountMessagesIntro": "You can send the organizer a question about your account or the race even without an entry.",
     "accountSettings": "Account settings",
     "deadline": "Deadline",

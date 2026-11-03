@@ -7,7 +7,6 @@ export type ReminderCandidate = {
   paid: number;
   lastModified: Date | null;
   reminder1At: Date | null;
-  reminder2At: Date | null;
 };
 
 /** Pražský den (YYYY-MM-DD) a hodina. */
@@ -24,12 +23,6 @@ export function pragueNow(now: Date): { day: string; hour: number } {
   return { day: `${get("year")}-${get("month")}-${get("day")}`, hour: Number(get("hour")) };
 }
 
-/** R2 jde jednou 3. 12. ráno (Praha): okno 7:00–11:59, aby výpadek jobu nevedl k odeslání večer. */
-export function isReminder2Window(now: Date, year: number): boolean {
-  const { day, hour } = pragueNow(now);
-  return day === `${year}-12-03` && hour >= 7 && hour < 12;
-}
-
 /** Odesílací okno R1 8–20 h (Praha). */
 export function isReminder1Window(now: Date): boolean {
   const { hour } = pragueNow(now);
@@ -37,19 +30,19 @@ export function isReminder1Window(now: Date): boolean {
 }
 
 /**
- * Která připomínka (pokud vůbec) patří přihlášce. Jen nezaplacené (stav 2) se zbývající částkou a e-mailem.
- * R1: ≥ 24 h od poslední změny, do konce uzávěrky. R2: 3. 12. ráno. Každá max. jednou.
+ * Patří přihlášce připomínka R1? Jen nezaplacené (stav 2) se zbývající částkou a e-mailem,
+ * ≥ 24 h od poslední změny, do konce standardních přihlášek (`standardEnd`, exkluzivní). Max. jednou.
+ * Ranní e-mail po uzávěrce („zaplaťte dnes do 12:00“) a zrušení řeší doplatek standardu
+ * (`@/lib/slots/standard-pay-job`), dřívější R2 ho nahradil.
  */
 export function dueReminder(
   c: ReminderCandidate,
-  input: { now: Date; year: number; deadlineEnd: Date | null },
-): 1 | 2 | null {
+  input: { now: Date; standardEnd: Date | null },
+): 1 | null {
   if (c.status !== 2 || !c.email?.includes("@") || c.fee - c.paid <= 0) return null;
-  if (!c.reminder2At && isReminder2Window(input.now, input.year)) return 2;
-  const beforeDeadline = !input.deadlineEnd || input.now.getTime() <= input.deadlineEnd.getTime();
+  const beforeDeadline = !input.standardEnd || input.now.getTime() < input.standardEnd.getTime();
   if (
     !c.reminder1At &&
-    !c.reminder2At &&
     beforeDeadline &&
     isReminder1Window(input.now) &&
     c.lastModified &&

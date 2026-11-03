@@ -75,6 +75,8 @@ export type AuditAction =
   // Bankovní pohyby (Fio) vyřízené ručně: označení bez platby a vrácení přeplatku.
   | "bank_tx.ignored"
   | "bank_tx.refunded"
+  // Platby na zrušenou přihlášku vráceny (auto-zrušení po lhůtě doplatku).
+  | "entry.refunded"
   | "edition.created"
   | "edition.updated"
   // Termíny a startovné ročníku (mcvv_prihl_slot + nastavení doplatku a závodní kanceláře).

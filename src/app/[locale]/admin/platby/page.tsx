@@ -6,9 +6,16 @@ import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
-import { assignBankTx, ignoreBankTx, markRefunded } from "@/lib/payments/actions";
+import {
+  assignBankTx,
+  ignoreBankTx,
+  markEntryRefunded,
+  markRefunded,
+  refundCancelledBankTx,
+} from "@/lib/payments/actions";
 import { fioMode, paymentsDryRun } from "@/lib/payments/job";
 import { REASON_LABELS, type BankTxReason } from "@/lib/payments/match";
+import { loadCancelledEntryRefunds } from "@/lib/payments/refunds";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -27,7 +34,7 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   await requireStaff();
-  const [unmatched, overpaid, recent, lastRuns, dryRunRows] = await Promise.all([
+  const [unmatchedAll, overpaid, recent, lastRuns, dryRunRows, entryRefunds] = await Promise.all([
     prisma.bankTx.findMany({ where: { status: "unmatched" }, orderBy: { date: "desc" } }),
     prisma.bankTx.findMany({
       where: { status: "matched", overpaid: { gt: 0 }, refundedAt: null },
@@ -40,7 +47,11 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
     }),
     prisma.jobRun.findMany({ where: { job: "payments" }, orderBy: { id: "desc" }, take: 5 }),
     prisma.bankTx.count({ where: { status: "dry_run" } }),
+    loadCancelledEntryRefunds(),
   ]);
+  // Platby na zrušené přihlášky mají vlastní sekci (k vrácení); zrušenou přihlášku nelze obnovit.
+  const cancelledTx = unmatchedAll.filter((tx) => tx.reason === "cancelled");
+  const unmatched = unmatchedAll.filter((tx) => tx.reason !== "cancelled");
   const lastOk = lastRuns.find((r) => r.ok);
 
   return (
@@ -167,6 +178,96 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
                   <td className={td}>
                     <form action={markRefunded}>
                       <input type="hidden" name="id" value={tx.id} />
+                      <Button type="submit" size="sm" variant="outline">
+                        Vráceno
+                      </Button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className="mt-10 font-display text-2xl font-semibold">
+          Platby na zrušené přihlášky – k vrácení ({cancelledTx.length + entryRefunds.length})
+        </h2>
+        <p className="mt-2 text-sm text-race-muted">
+          Zrušená přihláška se neobnovuje. Peníze vraťte na protiúčet a označte „Vráceno“. Pokud
+          plátce jen zadal špatný VS, přiřaďte platbu ke správné přihlášce.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[48rem] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                <th className={th}>Datum</th>
+                <th className={th}>Přihláška</th>
+                <th className={th}>Částka</th>
+                <th className={th}>Protistrana / e-mail</th>
+                <th className={th}>Akce</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cancelledTx.length + entryRefunds.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-6 text-race-muted">
+                    Nic k vrácení.
+                  </td>
+                </tr>
+              ) : null}
+              {cancelledTx.map((tx) => (
+                <tr key={`tx-${tx.id}`} className="border-b border-race-line/50">
+                  <td className={td}>{fmtDate(tx.date)}</td>
+                  <td className={td}>
+                    {tx.year}/{tx.registrationId ?? "–"} (platba po zrušení)
+                  </td>
+                  <td className={td}>
+                    {Number(tx.amount)} {tx.currency}
+                  </td>
+                  <td className={td}>
+                    {tx.counterName ?? ""} {tx.counterAccount ? `(${tx.counterAccount})` : ""}
+                    {tx.message ? <div className="text-race-muted">{tx.message}</div> : null}
+                  </td>
+                  <td className={td}>
+                    <form action={refundCancelledBankTx}>
+                      <input type="hidden" name="id" value={tx.id} />
+                      <Button type="submit" size="sm" variant="outline">
+                        Vráceno
+                      </Button>
+                    </form>
+                    <form action={assignBankTx} className="mt-2 flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="id" value={tx.id} />
+                      <input type="hidden" name="year" value={tx.year ?? ""} />
+                      <input
+                        name="registrationId"
+                        inputMode="numeric"
+                        placeholder="jiná přihláška"
+                        className="h-8 w-28 rounded border border-race-line bg-transparent px-2"
+                        aria-label="Číslo jiné přihlášky"
+                      />
+                      <Button type="submit" size="sm" variant="ghost">
+                        Přiřadit
+                      </Button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+              {entryRefunds.map((r) => (
+                <tr
+                  key={`reg-${r.year}-${r.registrationId}`}
+                  className="border-b border-race-line/50"
+                >
+                  <td className={td}>{fmtTime(r.autoCancelledAt)}</td>
+                  <td className={td}>
+                    {r.year}/{r.registrationId} (zaplaceno jen částečně, zrušeno automaticky)
+                  </td>
+                  <td className={td}>{r.paid} Kč</td>
+                  <td className={td}>{r.email ?? "–"}</td>
+                  <td className={td}>
+                    <form action={markEntryRefunded}>
+                      <input type="hidden" name="year" value={r.year} />
+                      <input type="hidden" name="registrationId" value={r.registrationId} />
+                      <input type="hidden" name="amount" value={r.paid} />
                       <Button type="submit" size="sm" variant="outline">
                         Vráceno
                       </Button>

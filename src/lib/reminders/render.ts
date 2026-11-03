@@ -3,10 +3,7 @@ import { BANK_ACCOUNT, BANK_IBAN, variableSymbol } from "@/lib/entries/spd";
 import { DEFAULT_RACE_ZERO_SECONDS, formatStartClock } from "@/lib/date/race-schedule";
 import { escapeHtml, renderBrandedEmail } from "@/lib/mail/layout";
 
-export type ReminderKind = 1 | 2;
-
 export type ReminderInput = {
-  kind: ReminderKind;
   year: number;
   id: number;
   name: string | null | undefined;
@@ -14,8 +11,6 @@ export type ReminderInput = {
   fee: number;
   paid: number;
   site: string;
-  /** Datum uzávěrky (YYYY-MM-DD) – pro text. */
-  deadline: string | null;
   /** Nulový čas ročníku (st_nula_s); chybí → výchozí 10:15. */
   startZeroSeconds?: number;
 };
@@ -30,12 +25,6 @@ export function qrImageUrl(site: string, year: number, id: number, amount: numbe
   return `${site}/api/platba-qr?rok=${year}&id=${id}&castka=${amount}`;
 }
 
-function deadlineLabel(deadline: string | null): string {
-  if (!deadline) return "";
-  const [, m, d] = deadline.split("-").map(Number);
-  return `${d}. ${m}.`;
-}
-
 export function renderReminder(input: ReminderInput) {
   const remaining = Math.max(0, input.fee - input.paid);
   const vs = variableSymbol(input.year, input.id);
@@ -43,16 +32,9 @@ export function renderReminder(input: ReminderInput) {
   const start = formatStartClock(input.startZeroSeconds ?? DEFAULT_RACE_ZERO_SECONDS);
   const date = raceDateLabel(input.year);
   const editUrl = `${input.site}/prihlasky`;
-  const deadline = deadlineLabel(input.deadline);
-  const subject =
-    input.kind === 1
-      ? `Platba startovného – přihláška ${input.year}/${input.id}`
-      : `Připomínka: nezaplacené startovné – přihláška ${input.year}/${input.id}`;
+  const subject = `Platba startovného – přihláška ${input.year}/${input.id}`;
   const greeting = `Dobrý den${input.name ? `, ${input.name}` : ""},`;
-  const intro =
-    input.kind === 1
-      ? `děkujeme za přihlášku č. ${input.year}/${input.id}. Zatím u ní neevidujeme úhradu celého startovného. Přihláška bude potvrzena po připsání platby na účet.`
-      : `uzávěrka přihlášek${deadline ? ` byla ${deadline}` : " již proběhla"} a u přihlášky č. ${input.year}/${input.id} stále neevidujeme úhradu celého startovného. Prosíme o doplacení co nejdříve, nezaplacené přihlášky budou zrušeny.`;
+  const intro = `děkujeme za přihlášku č. ${input.year}/${input.id}. Zatím u ní neevidujeme úhradu celého startovného. Přihláška bude potvrzena po připsání platby na účet.`;
   const partialNote =
     input.paid > 0
       ? `Děkujeme za dosavadní platby (${kc(input.paid)}). Zbývá doplatit ${kc(remaining)}.`

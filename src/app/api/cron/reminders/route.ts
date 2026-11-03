@@ -6,7 +6,10 @@ import { runReminders } from "@/lib/reminders/job";
 
 export const dynamic = "force-dynamic";
 
-/** Plánovaný běh připomínek plateb (R1/R2) – e-maily jdou do fronty s nízkou prioritou. */
+/**
+ * Plánovaný běh připomínek plateb (R1, nízká priorita) a doplatku standardních přihlášek
+ * (e-mail „zaplaťte dnes“, automatické zrušení po lhůtě).
+ */
 export async function POST(request: Request) {
   if (!cronAuthorized(request.headers.get("authorization"), env.CRON_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });

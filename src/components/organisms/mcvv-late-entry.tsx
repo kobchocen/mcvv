@@ -6,8 +6,10 @@ import { AlertTriangle, CheckCircle2, Clock, XCircle, Zap } from "lucide-react";
 import { Link, type Locale } from "@/i18n/routing";
 import { McvvLateCountdown } from "@/components/organisms/mcvv-late-countdown";
 import { McvvLateSubmitForm } from "@/components/organisms/mcvv-late-submit-form";
+import { McvvLateVerify } from "@/components/organisms/mcvv-late-verify";
 import { Button } from "@/components/ui/button";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
+import { lastBankCheck } from "@/lib/payments/verify";
 import { BANK_ACCOUNT, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { slotOf, type Slot } from "@/lib/slots/core";
 import { LATE_DRAFT_TTL_MINUTES, LATE_PAY_MINUTES } from "@/lib/slots/late-core";
@@ -144,6 +146,15 @@ export async function McvvLatePayment({
   const qr = due > 0 ? await spdQrSvg(entry.year, entry.id, due) : null;
   const vs = variableSymbol(entry.year, entry.id);
   const expired = now.getTime() >= entry.payUntil.getTime();
+  const checkedAt = await lastBankCheck();
+  const lastCheck = checkedAt
+    ? new Intl.DateTimeFormat("cs-CZ", {
+        timeZone: "Europe/Prague",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+      }).format(checkedAt)
+    : null;
   // „Uložit QR“ stáhne PNG (Q352) – SVG bankovní aplikace z galerie neotevřou.
   const qrHref = qr
     ? `/api/platba-qr?rok=${entry.year}&id=${entry.id}&castka=${due}&stahnout=1`
@@ -241,7 +252,23 @@ export async function McvvLatePayment({
               {copy("latePayStepDone")}
             </li>
           </ol>
-          <p className="text-xs text-race-muted">{copy("latePayAutoRefresh")}</p>
+          <McvvLateVerify
+            year={entry.year}
+            registrationId={entry.id}
+            lastCheck={lastCheck}
+            copy={{
+              button: copy("latePayVerify"),
+              pending: copy("latePayVerifyPending"),
+              limit: copy("latePayVerifyLimit"),
+              lastCheck: copy.raw("latePayVerifyLastCheck") as string,
+              retryIn: copy.raw("latePayVerifyRetryIn") as string,
+              paid: copy("latePayVerifyPaid"),
+              notYet: copy("latePayVerifyNotYet"),
+              wait: copy("latePayVerifyWait"),
+              error: copy("latePayVerifyError"),
+              invalid: copy("latePayVerifyInvalid"),
+            }}
+          />
         </div>
       </section>
       <section>

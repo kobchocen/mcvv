@@ -40,6 +40,8 @@ export type AuditAction =
   | "entry.line_club_changed"
   | "entry.cancelled"
   | "entry.late_submitted"
+  // Admin u odeslané nezaplacené pozdní přihlášky: lhůta +60 min (detail před / po).
+  | "entry.late_extended"
   // Závodní kancelář (#207): prodejky a ceník. Spárování z Fio je v mcvv_bank_tx (bez auditu).
   | "sale.created"
   | "sale.paid_cash"
@@ -58,6 +60,11 @@ export type AuditAction =
   // Sloučení duplicitních běžců (#261), detail = úplný stav před sloučením (smazaný běžec
   // a všechny jeho přepsané řádky) pro ruční obnovu; akce „vrátit“ není (jako u klubů).
   | "runner.merge"
+  // Smazání běžce bez navázaných dat: jednotlivě z detailu (`runner.deleted`, cíl
+  // `runner:<id>`) a hromadný úklid sirotků (`runner.orphan_cleanup`); detail = smazané
+  // řádky cis_bezec (RunnerDeleteAuditDetail) pro ruční obnovení.
+  | "runner.deleted"
+  | "runner.orphan_cleanup"
   // Denní limit e-mailů v Nastavení (#190), detail = před / po.
   | "settings.mail_limit"
   // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).

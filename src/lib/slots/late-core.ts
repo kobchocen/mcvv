@@ -138,3 +138,27 @@ export function latePayMailDedupeKey(year: number, id: number): string {
 export function lateCancelMailDedupeKey(year: number, id: number): string {
   return `latecancel:${year}:${id}`;
 }
+
+/** Admin „Prodloužit +60 min“: od pozdějšího z (lhůta, teď). */
+export function extendedPayUntil(payUntil: Date, now: Date, minutes = LATE_PAY_MINUTES): Date {
+  return new Date(Math.max(payUntil.getTime(), now.getTime()) + minutes * 60 * 1000);
+}
+
+/**
+ * Admin zásahy u pozdní přihlášky (Prodloužit +60 min, Zrušit hned): jen odeslaná,
+ * nezaplacená a nezrušená pozdní přihláška.
+ */
+export function lateAdminActionsAllowed(c: {
+  status: number | null;
+  slot: SlotType | null;
+  submittedAt: Date | null;
+  payUntil: Date | null;
+}): boolean {
+  return (
+    c.slot === "late" &&
+    c.submittedAt != null &&
+    c.payUntil != null &&
+    !isCancelledStatus(c.status) &&
+    !isPaidStatus(c.status)
+  );
+}

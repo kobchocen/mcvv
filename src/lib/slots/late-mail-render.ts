@@ -68,7 +68,7 @@ function runnersText(lines: LateMailInput["lines"]): string {
   return lines.map((line) => `${line.runner} (${kc(line.fee)})`).join(", ");
 }
 
-function footer(input: LateMailInput): string {
+function footer(input: { raceDate: Date | null }): string {
   const day = input.raceDate ? ` · ${pragueWeekdayDate(input.raceDate)}` : "";
   return `Malá cena Velké Verandy${day} · Choceň · Tento e-mail byl odeslán automaticky z`;
 }
@@ -184,6 +184,114 @@ export function renderLateCancelMail(input: LateCancelMailInput) {
     intro,
     "",
     ...items.map((item) => `- ${item.text}`),
+    "",
+    `Moje přihláška: ${myEntry}`,
+  ].join("\n");
+  return {
+    subject,
+    ...renderBrandedEmail({ subject, site: input.site, htmlBlocks, text, footer: footer(input) }),
+  };
+}
+
+export type LatePaidMailInput = {
+  year: number;
+  id: number;
+  lines: {
+    runner: string;
+    category: string;
+    fee: number;
+    /** Číslo a čas startu (jen po zveřejnění startovky). */
+    bib: number | null;
+    start: string | null;
+  }[];
+  fee: number;
+  paid: number;
+  site: string;
+  raceDate: Date | null;
+  /** Startovka je zveřejněná – čísla a časy už platí. */
+  published: boolean;
+  /** Otevření závodní kanceláře v den závodu (výdej čísel). */
+  officeOpens: Date | null;
+  /** Start prvního běžce („10:15“). */
+  firstStart: string | null;
+};
+
+/** „v 10:15“ / „ve 12:00“ – předložka podle vyslovené hodiny. */
+export function atClock(clock: string): string {
+  const hour = Number.parseInt(clock, 10);
+  return `${[2, 3, 4, 12, 13, 14, 20, 21, 22, 23].includes(hour) ? "ve" : "v"} ${clock}`;
+}
+
+const PENDING_BIB =
+  "Číslo a čas startu přidělíme při losování startovky – najdete je v Moje přihláška.";
+const MISSING_BIB = "Číslo a čas startu najdete v Moje přihláška.";
+
+/**
+ * Stav g: platba pozdní přihlášky přijata – potvrzení s číslem a časem startu (mockup
+ * dohlaska.html?s=g). Bez způsobu přidělení čísla, bez spec. startu.
+ */
+export function renderLatePaidMail(input: LatePaidMailInput) {
+  const vs = variableSymbol(input.year, input.id);
+  const subject = `MCVV ${input.year} – platba přijata, přihláška č. ${input.id} potvrzena`;
+  const title = "Platba přijata – jste přihlášeni";
+  const introText = `Dobrý den, platba ${kc(input.paid)} (VS ${vs}) dorazila. Pozdní přihláška č. ${input.id} je potvrzena.`;
+  const introHtml = `Dobrý den, platba <strong>${escapeHtml(kc(input.paid))}</strong> (VS ${escapeHtml(vs)}) dorazila. Pozdní přihláška č. ${input.id} je potvrzena.`;
+  const withBib = input.published ? input.lines.filter((line) => line.bib != null) : [];
+  const missing = input.published && withBib.length < input.lines.length;
+  const card = (line: LatePaidMailInput["lines"][number]) =>
+    `<td valign="top" style="padding:0 6px 12px 0;width:50%"><div style="border:1px solid #d6e0d6;border-radius:6px;background:#f1f5f0;padding:12px 14px"><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5d6d63">${escapeHtml(line.runner)} · ${escapeHtml(line.category)}</div><div style="font-size:26px;font-weight:bold;color:#0f2a1c;margin:6px 0 4px">č. ${line.bib}</div><div style="font-size:14px;color:#1d2a22">start ${escapeHtml(line.start ?? "")}</div></div></td>`;
+  const cardRows: string[] = [];
+  for (let index = 0; index < withBib.length; index += 2) {
+    cardRows.push(
+      `<tr>${withBib
+        .slice(index, index + 2)
+        .map(card)
+        .join("")}</tr>`,
+    );
+  }
+  const th =
+    'style="text-align:left;padding:8px 8px 8px 0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#5d6d63;border-bottom:1px solid #e3e9e2"';
+  const td = 'style="padding:9px 8px 9px 0;font-size:14px;border-bottom:1px solid #e3e9e2"';
+  const rows = input.lines
+    .map(
+      (line) =>
+        `<tr><td ${td}>${escapeHtml(line.runner)}</td><td ${td}>${escapeHtml(line.category)}</td><td ${td}>${escapeHtml(kc(line.fee))}</td></tr>`,
+    )
+    .join("");
+  const pickup = input.raceDate
+    ? `Startovní čísla vyzvednete v závodní kanceláři ${pragueDayLabel(input.raceDate)}${input.officeOpens ? ` od ${pragueClock(input.officeOpens)}` : ""}.${input.firstStart ? ` Start prvního běžce ${atClock(input.firstStart)}.` : ""}`
+    : null;
+  const locked = "Zaplacenou pozdní přihlášku už nelze měnit ani zrušit; startovné se nevrací.";
+  const myEntry = `${input.site}/prihlasky`;
+  const htmlBlocks = [
+    h2(title),
+    p(introHtml),
+    cardRows.length > 0
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px">${cardRows.join("")}</table>`
+      : "",
+    !input.published ? warning(escapeHtml(PENDING_BIB)) : "",
+    missing ? p(escapeHtml(MISSING_BIB)) : "",
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px"><tr><th ${th}>Běžec</th><th ${th}>Kategorie</th><th ${th}>Startovné</th></tr>${rows}<tr><td ${td}><strong>Zaplaceno</strong></td><td ${td}></td><td ${td}><strong>${escapeHtml(kc(input.paid))}</strong></td></tr></table>`,
+    pickup ? p(escapeHtml(pickup)) : "",
+    muted(locked),
+    button("Moje přihláška", myEntry),
+  ].filter(Boolean);
+  const text = [
+    title,
+    "",
+    introText,
+    "",
+    ...withBib.map(
+      (line) => `${line.runner} · ${line.category}: č. ${line.bib}, start ${line.start ?? ""}`,
+    ),
+    ...(!input.published ? [PENDING_BIB] : []),
+    ...(missing ? [MISSING_BIB] : []),
+    "",
+    ...input.lines.map((line) => `- ${line.runner} · ${line.category} · ${kc(line.fee)}`),
+    `Zaplaceno: ${kc(input.paid)}`,
+    "",
+    ...(pickup ? [pickup, ""] : []),
+    locked,
     "",
     `Moje přihláška: ${myEntry}`,
   ].join("\n");

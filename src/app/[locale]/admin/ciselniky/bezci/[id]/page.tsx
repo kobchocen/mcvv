@@ -6,11 +6,14 @@ import { CountryFlag } from "@/components/atoms";
 import { NationalityFlagSelect } from "@/components/molecules/nationality-flag-select";
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPendingSubmit } from "@/components/organisms/mcvv-admin-pending-submit";
+import { McvvAdminRunnerDelete } from "@/components/organisms/mcvv-admin-runner-delete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
 import { loadRunnerDetail } from "@/lib/admin/runner-directory";
+import { countRunnerAuditEntries, loadRunnerLinkCounts } from "@/lib/admin/runner-orphans";
+import { canDeleteRunner, RUNNER_LINK_KINDS, totalLinks } from "@/lib/admin/runner-orphans-core";
 import { previewRunnerRename } from "@/lib/admin/runner-rename";
 import { renameRunnerAction } from "@/lib/admin/runner-rename-actions";
 import { keptOtherNames, RUNNER_NAME_MAX, splitRunnerName } from "@/lib/admin/runner-rename-core";
@@ -32,6 +35,8 @@ type Search = {
   prejmenovano?: string;
   /** Výsledek uložení státu: ulozeno | chyba. */
   stat?: string;
+  /** Chyba smazání běžce: potvrzeni | vazby. */
+  smazani?: string;
 };
 
 type PageProps = Readonly<{
@@ -73,6 +78,13 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
       currentRaceYear(),
     ]);
   if (!runner) notFound();
+  const [links, auditEntries] = await Promise.all([
+    loadRunnerLinkCounts(prisma, runner.id),
+    countRunnerAuditEntries(prisma, runner.id),
+  ]);
+  const linkTotal = totalLinks(links);
+  const deleteError =
+    query.smazani === "potvrzeni" || query.smazani === "vazby" ? query.smazani : null;
 
   const back = backTarget(query.z);
   const split = splitRunnerName(runner.name);
@@ -162,6 +174,64 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
           >
             {copy("profile")} →
           </Link>
+        </section>
+
+        <section className="mt-8" data-testid="runner-links">
+          <h2 className="font-display text-2xl font-semibold text-foreground dark:text-white">
+            {copy("linksTitle")}
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-race-muted">{copy("linksHint")}</p>
+          <table className="mt-4 w-full max-w-xl border-collapse text-left text-sm">
+            <tbody>
+              {RUNNER_LINK_KINDS.map((kind) => (
+                <tr
+                  key={kind}
+                  className="border-b border-race-line/40"
+                  data-testid={`runner-link-${kind}`}
+                >
+                  <td className="py-1.5 pr-3">{copy(`link_${kind}`)}</td>
+                  <td
+                    className={`py-1.5 text-right tabular-nums ${links[kind] > 0 ? "font-semibold" : "text-race-muted"}`}
+                  >
+                    {links[kind]}
+                  </td>
+                </tr>
+              ))}
+              <tr className="font-semibold">
+                <td className="py-1.5 pr-3">{copy("linksTotal")}</td>
+                <td className="py-1.5 text-right tabular-nums" data-testid="runner-links-total">
+                  {linkTotal}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-2 max-w-3xl text-xs text-race-dim">
+            {copy("linksIndirect", { audit: auditEntries })}
+          </p>
+          {deleteError ? (
+            <p
+              role="alert"
+              className="mt-3 text-sm font-medium text-red-600 dark:text-red-400"
+              data-testid="runner-delete-error"
+            >
+              {copy(`deleteError_${deleteError}`)}
+            </p>
+          ) : null}
+          {canDeleteRunner(links) ? (
+            <McvvAdminRunnerDelete
+              runnerId={runner.id}
+              copy={{
+                trigger: copy("deleteTrigger"),
+                title: copy("deleteTitle", { name: runner.name }),
+                description: copy("deleteText", { name: runner.name, id: runner.id }),
+                confirm: copy("deleteConfirm"),
+              }}
+            />
+          ) : (
+            <p className="mt-3 text-sm text-race-muted" data-testid="runner-delete-locked">
+              {copy("deleteLocked")}
+            </p>
+          )}
         </section>
 
         {query.prejmenovano ? (

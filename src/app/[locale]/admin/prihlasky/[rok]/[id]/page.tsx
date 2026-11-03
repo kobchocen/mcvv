@@ -42,6 +42,7 @@ import { Link } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
 import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
 import { nationalityField } from "@/lib/runner/nationality-field";
+import { McvvAdminLatePanel } from "@/components/organisms/mcvv-admin-late-panel";
 import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
 import { McvvAdminPartnerOptions } from "@/components/organisms/mcvv-admin-partner-combobox";
 import {
@@ -62,6 +63,7 @@ type PageProps = Readonly<{
     stat?: string;
     spec?: string;
     duvod?: string;
+    late?: string;
   }>;
 }>;
 
@@ -79,6 +81,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     stat: nationalityStatus,
     spec: specStatus,
     duvod: specReason,
+    late: lateFlash,
   } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -109,7 +112,14 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     }),
     prisma.registrationMeta.findUnique({
       where: { year_id: { year, id } },
-      select: { slot: true, feeAdult: true, feeYouth: true },
+      select: {
+        slot: true,
+        feeAdult: true,
+        feeYouth: true,
+        submittedAt: true,
+        payUntil: true,
+        autoCancelledAt: true,
+      },
     }),
     loadSlots(year),
   ]);
@@ -262,6 +272,18 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
           ) : null}
           {mail === "0" ? (
             <p className="mt-3 text-sm text-red-600 dark:text-red-400">{copy("confirmMailFail")}</p>
+          ) : null}
+          {meta?.slot === "late" && meta.submittedAt ? (
+            <McvvAdminLatePanel
+              year={year}
+              id={id}
+              status={registration.status}
+              submittedAt={meta.submittedAt}
+              payUntil={meta.payUntil}
+              autoCancelledAt={meta.autoCancelledAt}
+              flash={lateFlash}
+              locale={locale}
+            />
           ) : null}
           {canCancelRegistration({
             status: registration.status,

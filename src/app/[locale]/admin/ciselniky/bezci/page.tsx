@@ -2,20 +2,21 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CountryFlag } from "@/components/atoms";
-import { McvvAdminDictsSubnav, McvvAdminHomeLink } from "@/components/organisms";
+import { McvvAdminDictsSubnav, McvvAdminHomeLink, runnersSubnav } from "@/components/organisms";
 import { McvvAdminRunnerSearch } from "@/components/organisms/mcvv-admin-runner-search";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
 import { RUNNER_SEARCH_LIMIT, RUNNER_SEARCH_MIN } from "@/lib/admin/runner-directory-core";
 import { searchRunners } from "@/lib/admin/runner-directory";
+import { isRunnerId } from "@/lib/admin/runner-orphans-core";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
 import { requireAdmin } from "@/lib/admin/staff";
 import { countryName } from "@/lib/runner/nationality";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; smazan?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -37,7 +38,9 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
     getTranslations({ locale, namespace: "Admin" }),
     getTranslations({ locale, namespace: "AdminRunners" }),
   ]);
-  const query = ((await searchParams).q ?? "").trim();
+  const search = await searchParams;
+  const query = (search.q ?? "").trim();
+  const deletedId = isRunnerId(search.smazan) ? search.smazan : null;
   const found = query ? await searchRunners(query) : null;
 
   return (
@@ -47,19 +50,28 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
         <McvvAdminDictsSubnav
           backLabel={admin("dictsTitle")}
           label={copy("title")}
-          items={[
-            { href: "/admin/ciselniky/bezci", label: copy("subnavSearch"), active: true },
+          items={runnersSubnav(
             {
-              href: "/admin/ciselniky/bezci/slouceni",
-              label: copy("subnavMerge"),
-              testId: "subnav-runner-merge",
+              search: copy("subnavSearch"),
+              merge: copy("subnavMerge"),
+              orphans: copy("subnavOrphans"),
             },
-          ]}
+            "search",
+          )}
         />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-race-muted">{copy("intro")}</p>
+        {deletedId ? (
+          <p
+            role="status"
+            className="mt-4 border border-race-accent/40 bg-race-accent/10 px-3 py-2 text-sm"
+            data-testid="runner-deleted"
+          >
+            {copy("deleteDone", { id: deletedId })}
+          </p>
+        ) : null}
 
         <form
           method="get"

@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
+import { McvvAdminEditionSlots } from "@/components/organisms/mcvv-admin-edition-slots";
 import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
 import { startModelCopy } from "@/components/organisms/mcvv-admin-start-model-copy";
 import { prisma } from "@/lib/db/client";
@@ -11,10 +12,13 @@ import { loadStartSettings } from "@/lib/race/startlist-load";
 import { startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
+import { standardPayUntil } from "@/lib/slots/core";
+import { slotsWithDefaults } from "@/lib/slots/defaults";
+import { loadSlots } from "@/lib/slots/load";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ chyba?: string }>;
+  searchParams: Promise<{ chyba?: string; terminy?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -39,7 +43,11 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });
   const settings = await loadStartSettings(edition.date.getUTCFullYear());
-  const { chyba } = await searchParams;
+  const { chyba, terminy } = await searchParams;
+  const year = edition.date.getUTCFullYear();
+  const storedSlots = await loadSlots(year);
+  const slots = slotsWithDefaults(storedSlots, edition);
+  const slotIssues = terminy && terminy !== "ok" ? terminy.split(",") : [];
 
   const startModel = startModelFromEdition(edition);
   return (
@@ -78,6 +86,50 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
             )}
           />
         </McvvAdminEditionForm>
+        <McvvAdminEditionSlots
+          editionId={edition.id}
+          slots={slots}
+          stored={storedSlots.length > 0}
+          settings={{
+            standardPayUntil: standardPayUntil(slots, edition),
+            standardPayMailS: edition.standardPayMailS,
+            officeOpensS: edition.officeOpensS,
+            onsiteUntilS: edition.onsiteUntilS,
+          }}
+          copy={{
+            title: copy("slotsTitle"),
+            intro: copy("slotsIntro"),
+            stored: copy("slotsStored"),
+            defaults: copy("slotsDefaults"),
+            saved: terminy === "ok" ? copy("slotsSaved") : "",
+            issues: slotIssues.map((issue) =>
+              copy.has(`slotsIssue_${issue}`) ? copy(`slotsIssue_${issue}`) : issue,
+            ),
+            slotTitle: {
+              early: copy("slotsEarly"),
+              standard: copy("slotsStandard"),
+              late: copy("slotsLate"),
+              onsite: copy("slotsOnsite"),
+            },
+            slotHint: {
+              early: copy("slotsEarlyHint"),
+              standard: copy("slotsStandardHint"),
+              late: copy("slotsLateHint"),
+              onsite: copy("slotsOnsiteHint"),
+            },
+            active: copy("slotsActive"),
+            from: copy("slotsFrom"),
+            to: copy("slotsTo"),
+            feeAdult: copy("slotsFeeAdult"),
+            feeYouth: copy("slotsFeeYouth"),
+            payWithin: copy("slotsPayWithin"),
+            payUntil: copy("slotsPayUntil"),
+            payMail: copy("slotsPayMail"),
+            officeOpens: copy("slotsOfficeOpens"),
+            onsiteUntil: copy("slotsOnsiteUntil"),
+            save: copy("slotsSave"),
+          }}
+        />
       </div>
     </main>
   );

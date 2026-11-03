@@ -72,9 +72,9 @@ export default async function Home({ params }: PageProps) {
     ];
   }
 
-  const { raceDate, startModel } = await currentRaceYear();
+  const { raceDate, startModel, slotSettings } = await currentRaceYear();
   // Čas startu a interval v textech z modelu ročníku (st_nula_s, st_interval), ne natvrdo.
-  const startText = startTextParams(startModel);
+  const startText = startTextParams(startModel, slotSettings);
   const rawSchedule = {
     ...fillPlaceholders(t.raw("schedule") as McvvHomepageContent["schedule"], startText),
     zeroSeconds: startModel.zeroSeconds,

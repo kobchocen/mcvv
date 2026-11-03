@@ -10,6 +10,8 @@ import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
 import { validRegistrationIds } from "@/lib/entries/status";
 import { ClubLink, RunnerNameLink } from "@/components/molecules";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
+import { formatStartClock } from "@/lib/date/race-schedule";
+import { slotOf } from "@/lib/slots/core";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { Link } from "@/i18n/routing";
@@ -57,6 +59,7 @@ export default async function EntrantsPage({ params }: PageProps) {
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
   const raceYear = await currentRaceYear();
   const { year, deadline, open } = raceYear;
+  const onsite = slotOf(raceYear.slots, "onsite");
   const edition = await prisma.edition.findFirst({
     orderBy: { id: "desc" },
     select: { startAdultPlace: true, startKidsPlace: true },
@@ -150,8 +153,9 @@ export default async function EntrantsPage({ params }: PageProps) {
           ) : (
             <p className="mt-6 max-w-xl text-base leading-7 text-race-muted">
               {copy("closed", {
-                adult: edition?.startAdultPlace ?? 200,
-                kids: edition?.startKidsPlace ?? 100,
+                adult: onsite?.feeAdult ?? edition?.startAdultPlace ?? 200,
+                kids: onsite?.feeYouth ?? edition?.startKidsPlace ?? 100,
+                onsiteUntil: formatStartClock(raceYear.slotSettings.onsiteUntilS),
               })}
             </p>
           )}

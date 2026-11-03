@@ -169,15 +169,14 @@ async function EntryBody({
         continue;
       }
       const { reason } = await lineFee(email, line.runnerId, line.category.entryFee);
+      // Startovné zdarma pro pořadatele je jen interní pravidlo – veřejně se důvod neukazuje.
       feeReasons.set(
         line.runnerId,
-        reason === "organizer"
-          ? copy("feeReasonOrganizer")
-          : reason === "winner"
-            ? copy("feeReasonWinner")
-            : reason === "veteran"
-              ? copy("feeReasonVeteran")
-              : null,
+        reason === "winner"
+          ? copy("feeReasonWinner")
+          : reason === "veteran"
+            ? copy("feeReasonVeteran")
+            : null,
       );
     }
   }

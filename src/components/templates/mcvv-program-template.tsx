@@ -3,7 +3,6 @@ import {
   Calendar,
   ClipboardList,
   Flag,
-  Globe,
   Info,
   MapPin,
   Route,
@@ -18,6 +17,7 @@ import {
 import { BackToTop } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
+import { splitRozpisMarkup } from "@/lib/race/rozpis-text";
 import {
   PROGRAM_SECTION_ORDER,
   type McvvProgramView,
@@ -64,39 +64,89 @@ function TocLinks({
   );
 }
 
+const ZHL_HREF = "http://vco-ob.cz/index_zh.php";
+
+const linkClass = "font-medium text-race-accent underline-offset-2 hover:underline";
+
+/** Odkazy v textu Rozpisu – stejné cíle jako legacy `rozpis.php`. */
+function RozpisLink({ tag, text, infoWww }: { tag: string; text: string; infoWww: string }) {
+  switch (tag) {
+    case "online":
+      return (
+        <Link href="/prihlasky" className={linkClass}>
+          {text}
+        </Link>
+      );
+    case "gps":
+      return (
+        <Link href="/kontakt" className={linkClass}>
+          {text}
+        </Link>
+      );
+    case "vitezove":
+    case "veterani":
+      return (
+        <Link
+          href={{ pathname: "/statistiky/[slug]", params: { slug: tag } }}
+          className={linkClass}
+        >
+          {text}
+        </Link>
+      );
+    case "zhl":
+      return (
+        <a href={ZHL_HREF} className={linkClass} target="_blank" rel="noreferrer">
+          {text}
+        </a>
+      );
+    case "www":
+      return (
+        <a
+          href={infoWww.startsWith("http") ? infoWww : `https://${infoWww}`}
+          className={linkClass}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {text}
+        </a>
+      );
+    default:
+      return <>{text}</>;
+  }
+}
+
+function RozpisText({ text, infoWww }: { text: string; infoWww: string }) {
+  const lines = text.split("\n");
+  return (
+    <p className="max-w-3xl text-base leading-7 text-foreground dark:text-white/88">
+      {lines.map((line, lineIndex) => (
+        <span key={lineIndex}>
+          {lineIndex > 0 ? <br /> : null}
+          {splitRozpisMarkup(line).map((segment, index) =>
+            segment.tag ? (
+              <RozpisLink key={index} tag={segment.tag} text={segment.text} infoWww={infoWww} />
+            ) : (
+              <span key={index}>{segment.text}</span>
+            ),
+          )}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export type McvvProgramTemplateProps = McvvProgramView;
 
-export function McvvProgramTemplate({
-  content,
-  editionId,
-  feeRows,
-  feeRefund,
-  prizeAdult,
-  prizeVeterans,
-  categories,
-  infoWww,
-  contactHref,
-  contactLabel,
-  mapHref,
-}: McvvProgramTemplateProps) {
+export function McvvProgramTemplate({ content, categories, infoWww }: McvvProgramTemplateProps) {
   return (
     <main id="top" className="min-h-screen bg-race-deep text-foreground">
       <McvvPublicNavbar content={content} variant="solid" />
       <div className="bg-race-forest">
         <section className="px-4 py-10 sm:px-6 lg:px-8 lg:py-[60px]">
           <div className="mx-auto grid max-w-7xl gap-5">
-            <div className="flex items-center gap-3">
-              <span className="h-0.5 w-7 bg-race-accent" />
-              <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-race-accent sm:text-sm">
-                {content.header.eyebrow}
-              </p>
-            </div>
             <h1 className="font-display text-5xl font-bold leading-none tracking-normal text-foreground dark:text-white sm:text-6xl lg:text-[66px]">
               {content.header.title}
             </h1>
-            <p className="max-w-2xl text-base leading-7 text-race-muted dark:text-white/84 sm:text-lg sm:leading-8">
-              {content.header.lead.replace("{n}", String(editionId))}
-            </p>
           </div>
         </section>
       </div>
@@ -138,65 +188,8 @@ export function McvvProgramTemplate({
                       {section.title}
                     </h2>
                   </div>
-                  <div className="grid gap-3">
-                    <p className="text-base font-semibold leading-7 text-foreground dark:text-white">
-                      {section.summary}
-                    </p>
-                    {section.body ? (
-                      <p className="max-w-3xl text-sm leading-7 text-race-muted sm:text-base">
-                        {section.body}
-                      </p>
-                    ) : null}
-
-                    {id === "venue" ? (
-                      <p className="text-sm leading-7 text-race-muted sm:text-base">
-                        <a
-                          href={mapHref}
-                          className="font-medium text-race-accent underline-offset-2 hover:underline"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {content.gpsLabel}
-                        </a>
-                      </p>
-                    ) : null}
-
-                    {id === "registration" ? (
-                      <p>
-                        <Link
-                          href="/prihlasky"
-                          className="font-medium text-race-accent underline-offset-2 hover:underline"
-                        >
-                          {content.onlineEntry}
-                        </Link>
-                      </p>
-                    ) : null}
-
-                    {id === "fees" ? (
-                      <>
-                        <dl className="mt-1 grid gap-2 sm:grid-cols-2">
-                          {feeRows.map((row) => (
-                            <div
-                              key={row.label}
-                              className="border border-race-line/55 bg-race-surface px-4 py-3"
-                            >
-                              <dt className="text-xs font-semibold uppercase tracking-wide text-race-dim">
-                                {row.label}
-                              </dt>
-                              <dd className="mt-1 font-display text-xl font-semibold text-foreground dark:text-white">
-                                {row.value}
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                        <p className="text-sm leading-7 text-race-muted sm:text-base">
-                          {feeRefund}
-                        </p>
-                        <p className="text-sm leading-7 text-race-muted sm:text-base">
-                          {content.fees.freeEntry}
-                        </p>
-                      </>
-                    ) : null}
+                  <div className="grid gap-3 lg:pt-2">
+                    {section.body ? <RozpisText text={section.body} infoWww={infoWww} /> : null}
 
                     {id === "categories" ? (
                       categories.length === 0 ? (
@@ -205,103 +198,22 @@ export function McvvProgramTemplate({
                         </p>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="w-full min-w-[22rem] border-collapse text-left text-sm">
-                            <thead>
-                              <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                                <th className="py-2 pr-4">{content.categories.name}</th>
-                                <th className="py-2">{content.categories.birthYear}</th>
-                              </tr>
-                            </thead>
+                          <table className="w-full min-w-[20rem] border-collapse text-left text-base">
                             <tbody>
                               {categories.map((row) => (
                                 <tr key={row.id} className="border-b border-race-line/40">
-                                  <td className="py-2.5 pr-4 font-medium text-foreground dark:text-white">
+                                  <td className="py-2 pr-4 font-semibold text-foreground dark:text-white">
                                     {row.name}
                                   </td>
-                                  <td className="py-2.5 text-race-muted">{row.birthYear}</td>
+                                  <td className="py-2 text-foreground/85 dark:text-white/80">
+                                    {row.birthYear}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
                         </div>
                       )
-                    ) : null}
-
-                    {id === "prizes" ? (
-                      <>
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-race-dim">
-                              {content.prizes.adult}
-                            </p>
-                            <ol className="mt-2 grid gap-1.5">
-                              {prizeAdult.map((value, index) => (
-                                <li
-                                  key={`adult-${index}`}
-                                  className="text-sm text-foreground dark:text-white"
-                                >
-                                  {content.prizes.place.replace("{n}", String(index + 1))}: {value}
-                                </li>
-                              ))}
-                            </ol>
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-race-dim">
-                              {content.prizes.veterans}
-                            </p>
-                            <ol className="mt-2 grid gap-1.5">
-                              {prizeVeterans.map((value, index) => (
-                                <li
-                                  key={`vet-${index}`}
-                                  className="text-sm text-foreground dark:text-white"
-                                >
-                                  {content.prizes.place.replace("{n}", String(index + 1))}: {value}
-                                </li>
-                              ))}
-                            </ol>
-                          </div>
-                        </div>
-                        <p className="text-sm leading-7 text-race-muted sm:text-base">
-                          {content.prizes.material}
-                        </p>
-                      </>
-                    ) : null}
-
-                    {id === "timetable" ? (
-                      <ol className="grid gap-2">
-                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
-                          {content.timetable.registration}
-                        </li>
-                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
-                          {content.timetable.start}
-                        </li>
-                        <li className="text-sm leading-7 text-foreground dark:text-white sm:text-base">
-                          {content.timetable.ceremony}
-                        </li>
-                      </ol>
-                    ) : null}
-
-                    {id === "info" ? (
-                      <ul className="grid gap-1 text-sm leading-7 text-race-muted sm:text-base">
-                        {infoWww ? (
-                          <li>
-                            <a
-                              href={infoWww.startsWith("http") ? infoWww : `https://${infoWww}`}
-                              className="inline-flex items-center gap-2 text-race-accent hover:underline"
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <Globe className="size-4" aria-hidden="true" />
-                              {infoWww.replace(/^https?:\/\//, "")}
-                            </a>
-                          </li>
-                        ) : null}
-                        <li>
-                          <Link href={contactHref} className="text-race-accent hover:underline">
-                            {contactLabel}
-                          </Link>
-                        </li>
-                      </ul>
                     ) : null}
                   </div>
                 </article>

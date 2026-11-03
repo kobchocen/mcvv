@@ -381,114 +381,84 @@
   },
   "Program": {
     "header": {
-      "eyebrow": "K.O.B. Choceň · {year}",
-      "title": "Rozpis",
-      "lead": "{n}. ročník Malé ceny Velké Verandy"
+      "title": "Rozpis závodu"
     },
     "tocTitle": "Na této stránce",
     "emptyCategories": "Kategorie se doplní.",
     "dash": "—",
-    "gpsLabel": "Otevřít mapu (GPS)",
     "backToTop": "Nahoru",
-    "onlineEntry": "Online přihláška",
-    "contactLabel": "Napsat pořadateli",
+    "introZhl": " - součást <zhl>Zimní hradubické ligy</zhl>",
     "fees": {
-      "onlineAdult": "Dospělí online",
-      "onlineKids": "Děti a dorost online",
-      "onsiteAdult": "Dospělí na místě",
-      "onsiteKids": "Děti a dorost na místě",
-      "refund": "Startovné vracíme při odhlášení do termínu online přihlášek ({date}). Po tomto termínu startovné nevracíme.",
-      "refundOpen": "Startovné vracíme při odhlášení do termínu online přihlášek. Po termínu startovné nevracíme.",
-      "freeEntry": "Vítězové a veteráni MCVV mají startovné zdarma při včasné online přihlášce."
+      "online": "{adult} (žactvo a dorost {kids}) v případě přihlášení online a uhrazení startovného nejpozději do {deadlineDay}.",
+      "onsite": "{adult} (žactvo a dorost {kids}) v případě přihlášky v den závodu.",
+      "zhl": "Členové pořadatelských oddílů ZHL jednotné startovné 10 Kč (platí pouze pro online přihlášky do {deadline}).",
+      "freeEntry": "<vitezove>Vítězové MCVV</vitezove> v hlavní mužské a ženské kategorii a aktuální členové <veterani>klubu veteránů MCVV</veterani> mají startovné ZDARMA v případě přihlášení online do {deadline}."
     },
     "prizes": {
-      "adult": "Muži a ženy",
-      "veterans": "Veteráni",
-      "place": "{n}. místo",
-      "material": "Věcné ceny pro nejlepší v žákovských a dorosteneckých kategoriích."
+      "money": "Finanční odměny za 1. - 5. místo v kategoriích muži a ženy ({adult}) a za 1. - 3. místo v kategoriích veteránských ({veterans}).",
+      "material": "Věcné odměny pro nejlepší v žákovských a dorosteneckých kategoriích."
     },
     "categories": {
-      "name": "Kategorie",
-      "birthYear": "Ročník narození",
       "open": "bez omezení",
-      "younger": "{year} a mladší",
-      "older": "{year} a starší"
-    },
-    "timetable": {
-      "registration": "Do {onsiteUntil} — přihlášky na místě",
-      "start": "{startTime} — start (interval {interval} s)",
-      "ceremony": "12:20 — vyhlášení výsledků"
+      "younger": "ročník narození {year} a mladší",
+      "older": "ročník narození {year} a starší"
     },
     "sections": {
       "intro": {
         "title": "Rozpis",
-        "summary": "Základní informace k ročníku",
-        "body": "Jedna lesní trať, intervalový start."
+        "body": "{n}. ročník lesního krosu Malá cena Velké Verandy{zhl}"
       },
       "date": {
         "title": "Datum",
-        "summary": "Neděle 6. 12. 2026",
-        "body": "Tradiční první prosincová neděle."
+        "body": "{date}"
       },
       "venue": {
         "title": "Místo",
-        "summary": "Velká Veranda, Choceň",
-        "body": "Start i cíl u Velké Verandy. GPS 49°59′45″N, 16°12′10″E."
+        "body": "Choceň - \"Velká Veranda\", <gps>49°59'45\"N, 16°12'10\"E</gps>"
       },
       "organizer": {
         "title": "Pořadatel",
-        "summary": "K.O.B. Choceň",
-        "body": "Klub orientačního běhu Choceň."
+        "body": "K.O.B. Choceň"
       },
       "course": {
         "title": "Popis tratě",
-        "summary": "4 300 m · převýšení 200 m",
-        "body": "Lesní cesty a pěšiny, 400 m asfaltu. Převýšení 200 m. Značeno fáborky. Jedna trať pro všechny kategorie."
+        "body": "4 300 m po lesních cestách a pěšinách (400 m asfalt), kopcovitý profil (převýšení 200 m), značeno fáborky"
       },
       "registration": {
         "title": "Přihlášky",
-        "summary": "Online přihláška · na místě do {onsiteUntil}",
-        "body": "V den závodu lze podat přihlášku na místě do {onsiteUntil}. Online přihláška platí až po připsání platby."
+        "body": "<online>Online</online> do {deadlineDay} na webu www.mcvv.org nebo v den závodu do {onsiteUntil}. Online přihláška je platná až po zaplacení startovného na účet pořadatele."
       },
       "fees": {
         "title": "Startovné",
-        "summary": "Podle kategorie, online výhodněji",
-        "body": "Startovné se platí podle sazeb níže."
+        "body": ""
       },
       "categories": {
         "title": "Kategorie",
-        "summary": "Věkové hranice k roku {year}",
         "body": ""
       },
       "prizes": {
         "title": "Ceny",
-        "summary": "Muži a ženy, veteráni, žáci a dorost",
-        "body": "Finanční ceny v Kč v kategoriích muži a ženy (1.–5. místo) a veteráni (1.–3. místo)."
+        "body": ""
       },
       "start": {
         "title": "Start",
-        "summary": "Interval {interval} s od {startTime}",
-        "body": "Startovní interval {seconds} s od {startTime}. Intervalový start ve dvojicích, bez samostatného dětského startu."
+        "body": "Intervalový po {interval} sekundách"
       },
       "timetable": {
         "title": "Časový harmonogram",
-        "summary": "{onsiteUntil} · {startTime} · 12:20",
-        "body": "Přihlášky na místě končí v {onsiteUntil}. Intervalový start od {startTime}. Vyhlášení výsledků ve 12:20."
+        "body": "Přihlášky do {onsiteUntil}, intervalový start od {startTime}, vyhlášení výsledků v 12:20"
       },
       "privacy": {
-        "title": "Ochrana údajů",
-        "summary": "GDPR a fotografie",
-        "body": "Osobní údaje zpracováváme kvůli organizaci závodu a zveřejnění výsledků. Fotografie a video z akce můžeme použít k prezentaci závodu. Námitku lze poslat pořadateli."
+        "title": "Ochrana osobních údajů, filmování a fotografování",
+        "body": "Přihlášením se na tento závod každý účastník souhlasí se zveřejněním svých osobních údajů v rozsahu přihlášky na závod a to v podobě seznamu přihlášených, startovní listiny a výsledkové listiny na webu závodu a v centru závodu. V průběhu akce budou pořizovány zpravodajské fotografie a videa (včetně použití bezpilotního dronu) sloužící k informování veřejnosti o proběhlém závodě, propagaci závodu či vyúčtování dotací na akci atd. v souladu s platnou legislativou. Dále zde mohou být pořizovány fotografie k osobní potřebě účastníků závodu (jako vzpomínka na závody, pro propagaci sportovních klubu, atp.) zejména z vyhlašování výsledků a z tratě závodu. V případě, že nesouhlasíte s fotografováním či filmováním, oznamte to explicitně fotografovi/kameramanovi."
       },
       "notice": {
         "title": "Upozornění",
-        "summary": "Vlastní nebezpečí",
-        "body": "Účast je na vlastní nebezpečí. Závod není vhodný pro děti mladší 6 let. Do výsledkové listiny se započítá jen ten, kdo absolvuje celou trať bez pomoci jiné osoby. Prodej a stánky jen se souhlasem pořadatele."
+        "body": "Závodníci startují na vlastní nebezpečí!\nZávod svým charakterem není vhodný pro děti mladší šesti let. Do výsledkové listiny bude zařazen pouze závodník absolvující celou trať bez pomoci jiné osoby.\nProvozování prodejní nebo propagační činnosti je možné pouze se souhlasem pořadatele závodu."
       },
       "info": {
         "title": "Informace",
-        "summary": "mcvv.org",
-        "body": "Aktuální informace na webu. Dotazy posílejte formulářem, e-mail ani telefon na webu neuveřejňujeme."
+        "body": "<www>{www}</www>"
       }
     }
   },

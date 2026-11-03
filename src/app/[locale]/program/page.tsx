@@ -10,6 +10,7 @@ import {
 import { formatRaceDate } from "@/lib/format/date";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
+import { formatRozpisDeadline } from "@/lib/race/rozpis-text";
 import { fillPlaceholders, startTextParams } from "@/lib/race/start-text";
 import {
   categoryBirthYearBound,
@@ -23,14 +24,9 @@ type ProgramPageProps = Readonly<{
   params: Promise<{ locale: string }>;
 }>;
 
-const MAP_HREF =
-  "https://www.openstreetmap.org/?mlat=49.99583&mlon=16.20278#map=16/49.99583/16.20278";
+type CategoryCopy = { open: string; younger: string; older: string };
 
-function formatBirthYear(
-  age: number,
-  rozpisYear: number,
-  copy: McvvProgramContent["categories"],
-): string {
+function formatBirthYear(age: number, rozpisYear: number, copy: CategoryCopy): string {
   const bound = categoryBirthYearBound(age, rozpisYear);
   if (bound === null) {
     return copy.open;
@@ -40,18 +36,6 @@ function formatBirthYear(
     return copy.younger.replace("{year}", year);
   }
   return copy.older.replace("{year}", year);
-}
-
-function formatDeadline(date: Date | null | undefined, locale: Locale): string {
-  if (!date) {
-    return "";
-  }
-  return new Intl.DateTimeFormat(locale === "cs" ? "cs-CZ" : "en-GB", {
-    day: "numeric",
-    month: locale === "cs" ? "numeric" : "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
 }
 
 export async function generateMetadata({ params }: ProgramPageProps): Promise<Metadata> {
@@ -91,109 +75,83 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   }
   const editionId = edition?.id ?? editionNumber(raceYear);
   const rozpisYear = edition?.date ? edition.date.getUTCFullYear() : raceYear.year;
+  const dash = program("dash");
+  const czk = (value: number | null | undefined) => formatCzk(value, locale, dash);
 
-  // Čas startu a interval podle modelu aktuálního ročníku (st_nula_s, st_interval).
+  // Texty jsou v legacy znění (rozpis.php); hodnoty z ročníku a nastavení jako dřív.
   const startText = startTextParams(raceYear.startModel, raceYear.slotSettings);
+  const infoWww = edition?.infoWww?.trim() || "www.mcvv.org";
+  const zhl = edition?.zhl === true;
+  const textParams: Record<string, string> = {
+    ...startText,
+    n: String(editionId),
+    zhl: zhl ? (program.raw("introZhl") as string) : "",
+    date: edition?.date ? formatRaceDate(edition.date, locale) : dash,
+    deadlineDay: formatRozpisDeadline(edition?.regDeadline, locale, true) || dash,
+    deadline: formatRozpisDeadline(edition?.regDeadline, locale, false) || dash,
+    www: infoWww.replace(/^https?:\/\//, ""),
+  };
+
+  const fees = program.raw("fees") as Record<"online" | "onsite" | "zhl" | "freeEntry", string>;
+  const feeLines = [
+    fillPlaceholders(fees.online, {
+      ...textParams,
+      adult: czk(edition?.startAdultMail),
+      kids: czk(edition?.startKidsMail),
+    }),
+    fillPlaceholders(fees.onsite, {
+      adult: czk(edition?.startAdultPlace),
+      kids: czk(edition?.startKidsPlace),
+    }),
+    ...(zhl ? [fillPlaceholders(fees.zhl, textParams)] : []),
+    fillPlaceholders(fees.freeEntry, textParams),
+  ];
+
+  const prizes = program.raw("prizes") as Record<"money" | "material", string>;
+  const prizeLines = [
+    fillPlaceholders(prizes.money, {
+      adult: [
+        edition?.finAdult1,
+        edition?.finAdult2,
+        edition?.finAdult3,
+        edition?.finAdult4,
+        edition?.finAdult5,
+      ]
+        .map(czk)
+        .join(", "),
+      veterans: [edition?.finVet1, edition?.finVet2, edition?.finVet3].map(czk).join(", "),
+    }),
+    prizes.material,
+  ];
+
   const rawSections = fillPlaceholders(
     program.raw("sections") as McvvProgramContent["sections"],
-    startText,
+    textParams,
   );
   const sections: McvvProgramContent["sections"] = {
     ...rawSections,
-    date: edition?.date
-      ? { ...rawSections.date, summary: formatRaceDate(edition.date, locale) }
-      : rawSections.date,
-    start: {
-      ...rawSections.start,
-      body: program("sections.start.body", {
-        seconds: startText.interval,
-        startTime: startText.startTime,
-      }),
-    },
-    categories: {
-      ...rawSections.categories,
-      summary: program("sections.categories.summary", { year: rozpisYear }),
-    },
+    fees: { ...rawSections.fees, body: feeLines.join("\n") },
+    prizes: { ...rawSections.prizes, body: prizeLines.join("\n") },
   };
 
   const content: McvvProgramContent = {
     brand: home.raw("brand") as McvvHomepageContent["brand"],
     nav: home.raw("nav") as McvvHomepageContent["nav"],
-    header: {
-      ...program.raw("header"),
-      eyebrow: program("header.eyebrow", { year: rozpisYear }),
-      lead: program("header.lead", { n: editionId }),
-    } as McvvProgramContent["header"],
+    header: { title: program("header.title") },
     tocTitle: program("tocTitle"),
     emptyCategories: program("emptyCategories"),
-    dash: program("dash"),
-    gpsLabel: program("gpsLabel"),
     backToTop: program("backToTop"),
-    onlineEntry: program("onlineEntry"),
     sections,
-    fees: program.raw("fees") as McvvProgramContent["fees"],
-    prizes: program.raw("prizes") as McvvProgramContent["prizes"],
-    categories: program.raw("categories") as McvvProgramContent["categories"],
-    timetable: fillPlaceholders(
-      program.raw("timetable") as McvvProgramContent["timetable"],
-      startText,
-    ),
   };
 
-  const dash = content.dash;
-  const deadline = formatDeadline(edition?.regDeadline, locale);
-  const feeRefund = deadline
-    ? program("fees.refund", { date: deadline })
-    : program("fees.refundOpen");
-
+  const categoryCopy = program.raw("categories") as CategoryCopy;
   const categories: ProgramCategoryRow[] = categoryRows.map((row) => ({
     id: row.id,
     name: row.name,
-    birthYear: formatBirthYear(row.age, rozpisYear, content.categories),
+    birthYear: formatBirthYear(row.age, rozpisYear, categoryCopy),
   }));
 
-  return (
-    <McvvProgramTemplate
-      content={content}
-      editionId={editionId}
-      feeRows={[
-        {
-          label: content.fees.onlineAdult,
-          value: formatCzk(edition?.startAdultMail, locale, dash),
-        },
-        {
-          label: content.fees.onlineKids,
-          value: formatCzk(edition?.startKidsMail, locale, dash),
-        },
-        {
-          label: content.fees.onsiteAdult,
-          value: formatCzk(edition?.startAdultPlace, locale, dash),
-        },
-        {
-          label: content.fees.onsiteKids,
-          value: formatCzk(edition?.startKidsPlace, locale, dash),
-        },
-      ]}
-      feeRefund={feeRefund}
-      prizeAdult={[
-        formatCzk(edition?.finAdult1, locale, dash),
-        formatCzk(edition?.finAdult2, locale, dash),
-        formatCzk(edition?.finAdult3, locale, dash),
-        formatCzk(edition?.finAdult4, locale, dash),
-        formatCzk(edition?.finAdult5, locale, dash),
-      ]}
-      prizeVeterans={[
-        formatCzk(edition?.finVet1, locale, dash),
-        formatCzk(edition?.finVet2, locale, dash),
-        formatCzk(edition?.finVet3, locale, dash),
-      ]}
-      categories={categories}
-      infoWww={edition?.infoWww?.trim() || "www.mcvv.org"}
-      contactHref="/kontakt"
-      contactLabel={program("contactLabel")}
-      mapHref={MAP_HREF}
-    />
-  );
+  return <McvvProgramTemplate content={content} categories={categories} infoWww={infoWww} />;
 }
 
 export const dynamic = "force-dynamic";

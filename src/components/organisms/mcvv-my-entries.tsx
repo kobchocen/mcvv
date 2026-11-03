@@ -9,6 +9,7 @@ import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/l
 import { formatDate } from "@/lib/format/date";
 import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import type { Slot, SlotType } from "@/lib/slots/core";
+import type { LateBibView } from "@/lib/slots/late-bib-view";
 import { termEndLabel } from "@/lib/slots/term-end";
 
 /** Překladač jmenného prostoru Entries (getTranslations). */
@@ -20,6 +21,7 @@ type Copy = {
 type Line = {
   runnerId: string;
   entryFee: number | null;
+  bib?: number | null;
   runner: { name: string };
   club: { name: string };
   category: { name: string; entryFee: number | null };
@@ -160,11 +162,14 @@ export async function McvvLockedEntry({
   slots,
   locale,
   copy,
+  bibs = null,
 }: {
   entry: MyLockedEntry;
   slots: Slot[];
   locale: Locale;
   copy: Copy;
+  /** Zaplacená pozdní přihláška se zveřejněnou startovkou: čísla a časy startu (mockup d). */
+  bibs?: LateBibView | null;
 }) {
   const fee = registrationFee(entry.lines);
   const paid = sumPayments(entry.payments);
@@ -190,13 +195,43 @@ export async function McvvLockedEntry({
       {slotType === "late" && entry.submittedAt ? (
         <div className="mt-3 grid max-w-2xl gap-2 text-sm">
           <p>{copy("latePaidThanks")}</p>
-          <p className="rounded-md border border-race-line/60 p-3 leading-6 text-race-muted">
-            {copy.rich
-              ? copy.rich("latePaidBibPending", {
-                  b: (chunks) => <b className="text-foreground dark:text-white">{chunks}</b>,
-                })
-              : null}
-          </p>
+          {bibs ? (
+            <div className="mt-2">
+              <h3 className="text-base font-semibold">{copy("lateBibsTitle")}</h3>
+              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                {bibs.cards.map((card) => (
+                  <li
+                    key={card.runnerId}
+                    className="rounded-[12px] border border-race-line/60 bg-race-surface p-3"
+                  >
+                    <div className="text-xs text-race-muted">
+                      {[card.name, card.category].filter(Boolean).join(" · ")}
+                    </div>
+                    <div className="text-3xl font-bold tabular-nums leading-tight">{card.bib}</div>
+                    <div className="text-race-muted">
+                      {copy("lateBibStart")}{" "}
+                      <b className="tabular-nums text-foreground dark:text-white">{card.start}</b>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {bibs.day ? (
+                <p className="mt-2 text-xs text-race-muted">
+                  {bibs.from
+                    ? copy("lateBibPickup", { day: bibs.day, from: bibs.from })
+                    : copy("lateBibPickupNoTime", { day: bibs.day })}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="rounded-md border border-race-line/60 p-3 leading-6 text-race-muted">
+              {copy.rich
+                ? copy.rich("latePaidBibPending", {
+                    b: (chunks) => <b className="text-foreground dark:text-white">{chunks}</b>,
+                  })
+                : null}
+            </p>
+          )}
         </div>
       ) : (
         <p className="mt-2 max-w-2xl text-sm text-race-muted">

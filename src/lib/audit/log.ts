@@ -40,6 +40,8 @@ export type AuditAction =
   | "entry.line_club_changed"
   | "entry.cancelled"
   | "entry.late_submitted"
+  // Admin u odeslané nezaplacené pozdní přihlášky: lhůta +60 min (detail před / po).
+  | "entry.late_extended"
   // Závodní kancelář (#207): prodejky a ceník. Spárování z Fio je v mcvv_bank_tx (bez auditu).
   | "sale.created"
   | "sale.paid_cash"

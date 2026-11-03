@@ -686,6 +686,10 @@
     "latePayRunners": "Běžci",
     "latePaidThanks": "Děkujeme, platba dorazila včas.",
     "latePaidBibPending": "<b>Číslo a čas startu přidělíme při losování startovky.</b> Najdete je zde v „Moje přihláška“ a ve zveřejněné startovce.",
+    "lateBibsTitle": "Startovní čísla a časy",
+    "lateBibStart": "start",
+    "lateBibPickup": "Startovní číslo vyzvednete v závodní kanceláři {day} od {from}.",
+    "lateBibPickupNoTime": "Startovní číslo vyzvednete v závodní kanceláři {day}.",
     "lateCancelledTitle": "Přihláška č. {id} byla zrušena – platba nedorazila včas",
     "lateCancelledBody": "Lhůta na zaplacení vypršela {when}. Do té doby jsme na účtu platbu s VS {vs} nenašli, proto se přihláška automaticky zrušila. Běžci z této přihlášky nejsou přihlášeni.",
     "lateCancelledRefund": "<b>Platbu jste už odeslali?</b> Platbu, která dorazí po zrušení, <b>vrátíme</b> na účet, ze kterého přišla. Přihláška zůstává zrušená.",
@@ -3274,5 +3278,23 @@
     "toastOntime": "{bib} vyběhl včas",
     "toastLate": "{bib} odstartován teď",
     "navLink": "Startér"
+  },
+  "AdminLate": {
+    "title": "Pozdní přihláška",
+    "submitted": "odeslána {at}",
+    "payUntil": "zaplatit do {at}",
+    "left": "Čeká na platbu – zbývá {minutes} min.",
+    "overdue": "Lhůta uplynula před {minutes} min – čeká se na kontrolu banky, pak se přihláška sama zruší.",
+    "extend": "Prodloužit +60 min",
+    "cancelNow": "Zrušit hned",
+    "cancelTitle": "Zrušit pozdní přihlášku č. {id} hned?",
+    "cancelConfirmBefore": "Lhůta ještě běží. Přihláška se zruší bez e-mailu přihlašujícímu (napište mu zprávu). Platby, které dorazí, půjdou k vrácení.",
+    "cancelConfirmAfter": "Lhůta uplynula. Přihláška se zruší a přihlašujícímu odejde e-mail o zrušení. Platby, které dorazí, půjdou k vrácení.",
+    "hint": "Prodloužení počítá 60 min od pozdějšího z lhůty a teď; přihlašujícímu se nic neposílá, nová lhůta je vidět v Moje přihláška. Zrušení přihlášku neobnovuje.",
+    "autoCancelled": "Zrušena {at} (platba nedorazila včas).",
+    "flashExtended": "Lhůta prodloužena o 60 min.",
+    "flashCancelled": "Pozdní přihláška zrušena.",
+    "flashStale": "Přihláška se mezitím změnila (zaplacena nebo zrušena) – nic se neprovedlo.",
+    "keep": "Ponechat"
   }
 }

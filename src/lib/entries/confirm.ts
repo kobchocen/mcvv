@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/client";
 import { sendConfirmationEmail } from "@/lib/entries/confirm-mail";
 import { paidAmount } from "@/lib/entries/fee";
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
+import { isSubmittedLate, onLatePaidConfirmed } from "@/lib/slots/late-paid";
 
 export type ConfirmResult = "confirmed" | "confirmed_mail_failed" | "not_confirmable";
 
@@ -36,6 +37,12 @@ export async function confirmRegistrationCore(
     data: { status: ENTRY_STATUS.confirmed },
   });
   if (updated.count !== 1) return "not_confirmable";
+  // Pozdní přihláška: číslo a čas startu + e-mail g místo běžného potvrzení (část 7).
+  if (await isSubmittedLate(year, id)) {
+    return (await onLatePaidConfirmed(year, id, { site: options.site }))
+      ? "confirmed"
+      : "confirmed_mail_failed";
+  }
   const paidTotal = await paidAmount(year, id);
   const fee = row.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
   const sent = await sendConfirmationEmail({

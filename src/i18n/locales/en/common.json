@@ -686,6 +686,10 @@
     "latePayRunners": "Runners",
     "latePaidThanks": "Thank you, the payment arrived in time.",
     "latePaidBibPending": "<b>The bib number and start time are assigned when the start list is drawn.</b> You will find them here in “My entry” and in the published start list.",
+    "lateBibsTitle": "Bib numbers and start times",
+    "lateBibStart": "start",
+    "lateBibPickup": "Pick up your bib at the race office {day} from {from}.",
+    "lateBibPickupNoTime": "Pick up your bib at the race office {day}.",
     "lateCancelledTitle": "Entry no. {id} was cancelled – the payment did not arrive in time",
     "lateCancelledBody": "The payment time limit expired {when}. By then we had not found a payment with VS {vs} on the account, so the entry was cancelled automatically. The runners of this entry are not entered.",
     "lateCancelledRefund": "<b>Already sent the payment?</b> A payment that arrives after the cancellation <b>is refunded</b> to the account it came from. The entry stays cancelled.",
@@ -3274,5 +3278,23 @@
     "toastOntime": "{bib} started on time",
     "toastLate": "{bib} started now",
     "navLink": "Starter"
+  },
+  "AdminLate": {
+    "title": "Late entry",
+    "submitted": "submitted {at}",
+    "payUntil": "pay by {at}",
+    "left": "Awaiting payment – {minutes} min left.",
+    "overdue": "The deadline passed {minutes} min ago – waiting for the bank check, then the entry cancels itself.",
+    "extend": "Extend +60 min",
+    "cancelNow": "Cancel now",
+    "cancelTitle": "Cancel late entry no. {id} now?",
+    "cancelConfirmBefore": "The deadline is still running. The entry is cancelled without an email to the entrant (send them a message). Payments that arrive go to refunds.",
+    "cancelConfirmAfter": "The deadline has passed. The entry is cancelled and the entrant gets the cancellation email. Payments that arrive go to refunds.",
+    "hint": "Extending adds 60 min to the later of the deadline and now; nothing is sent to the entrant, the new deadline shows in My entry. Cancelling never restores the entry.",
+    "autoCancelled": "Cancelled {at} (payment did not arrive in time).",
+    "flashExtended": "Deadline extended by 60 min.",
+    "flashCancelled": "Late entry cancelled.",
+    "flashStale": "The entry changed meanwhile (paid or cancelled) – nothing was done.",
+    "keep": "Keep"
   }
 }

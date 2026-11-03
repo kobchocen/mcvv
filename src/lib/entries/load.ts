@@ -3,7 +3,12 @@ import { prisma } from "@/lib/db/client";
 import { nextStatus } from "@/lib/entries/status";
 import { buildQuickList, withLastClub } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
-import { pickActiveRegistration, pickCancelledRegistrations } from "@/lib/entries/ensure-core";
+import {
+  emailEquals,
+  isCancelledStatus,
+  pickCancelledRegistrations,
+} from "@/lib/entries/ensure-core";
+import { orderMyEntries, registrationWritable } from "@/lib/slots/entry-slot";
 import { pastRegistrationKeys } from "@/lib/entries/load-core";
 
 const registrationInclude = {
@@ -27,13 +32,40 @@ const registrationInclude = {
  * Nezávislé dotazy běží souběžně.
  */
 export async function loadMyEntry(email: string) {
-  const { year, open, deadline } = await currentRaceYear();
+  const { year, open, deadline, slots } = await currentRaceYear();
   const index = await prisma.registration.findMany({
     select: { year: true, id: true, email: true, status: true, name: true },
   });
   const yearIndex = index.filter((row) => row.year === year);
   // Přihláška se tu už nezakládá – vzniká až s prvním běžcem (ensureRegistration).
-  const active = pickActiveRegistration(yearIndex, email);
+  // Jedna přihláška na e-mail a termín (Q302): může jich být víc; nahoře ta, kterou lze měnit
+  // (běžící termín), jinak nejnovější zamčená (jen čtení).
+  const mineActive = yearIndex.filter(
+    (row) => emailEquals(row.email, email) && !isCancelledStatus(row.status),
+  );
+  const metas =
+    mineActive.length > 0
+      ? await prisma.registrationMeta.findMany({
+          where: { year, id: { in: mineActive.map((row) => row.id) } },
+          select: { id: true, slot: true },
+        })
+      : [];
+  const slotById = new Map(metas.map((meta) => [meta.id, meta.slot]));
+  const ctx = { year, open, slots, now: new Date() };
+  const entries = orderMyEntries(
+    mineActive.map((row) => {
+      const slot = slotById.get(row.id) ?? null;
+      return {
+        year: row.year,
+        id: row.id,
+        name: row.name,
+        status: row.status,
+        slot,
+        writable: registrationWritable(ctx, { year: row.year, status: row.status, slot }),
+      };
+    }),
+  );
+  const active = entries[0] ?? null;
   const cancelled = pickCancelledRegistrations(yearIndex, email).map((row) => ({
     year: row.year,
     id: row.id,
@@ -116,5 +148,18 @@ export async function loadMyEntry(email: string) {
     }
   }
 
-  return { year, open, deadline, registration, cancelled, past: minePast, quick, payments };
+  return {
+    year,
+    open,
+    deadline,
+    registration,
+    /** Lze zobrazenou přihlášku měnit z webu (její termín běží)? */
+    writable: active?.writable ?? false,
+    /** Všechny nezrušené přihlášky e-mailu v ročníku (pořadí: měnitelná, pak zamčené). */
+    entries,
+    cancelled,
+    past: minePast,
+    quick,
+    payments,
+  };
 }

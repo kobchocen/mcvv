@@ -16,41 +16,43 @@ import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/statu
 import { ensureRegistration } from "@/lib/entries/ensure";
 import { setAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { entryWritable } from "@/lib/entries/guard";
+import {
+  currentEntrySlot,
+  loadEntryWriteContext,
+  ownEntry,
+  writableOwnEntry,
+} from "@/lib/entries/writable";
+import { freeEntryAllowed } from "@/lib/slots/entry-slot";
+import type { EntryWriteContext } from "@/lib/slots/entry-slot";
 import { promotionValue } from "@/lib/entries/promotion";
 import { currentRaceYear } from "@/lib/entries/year";
 import { prisma } from "@/lib/db/client";
-
-/** Vlastní nezrušená přihláška (zrušenou pořadatelem už přihlašující měnit nesmí). */
-async function ownRegistration(year: number, id: number, email: string) {
-  return prisma.registration.findFirst({
-    where: {
-      year,
-      id,
-      email: { equals: email },
-      OR: [{ status: { not: ENTRY_STATUS.cancelled } }, { status: null }],
-    },
-  });
-}
 
 type ChangeActor = Parameters<typeof recordEntryChange>[0];
 type OwnRegistration = { year: number; id: number; name: string | null };
 type ResolvedClub = Awaited<ReturnType<typeof resolveClub>>;
 
 /**
- * Přihláška pro nového běžce: s číslem z formuláře jen vlastní přihláška, bez čísla (0)
- * se přihláška ročníku najde nebo založí – až teď, po validaci běžce.
+ * Přihláška pro nového běžce: s číslem z formuláře vlastní přihláška, pokud ji lze měnit (její
+ * termín běží). Bez čísla (0) nebo s číslem zamčené přihlášky (termín skončil – Q302/Q303) se
+ * najde nebo založí přihláška e-mailu v běžícím termínu – až teď, po validaci běžce.
  */
 async function registrationForNewLine(
+  ctx: EntryWriteContext,
   year: number,
-  registrationId: number | null,
   session: ChangeActor & { email: string; name: string },
-  /** Už ověřená vlastní přihláška (rychlá nabídka ji načítá souběžně s ostatními kontrolami). */
-  own?: OwnRegistration | null,
-) {
-  if (registrationId) {
-    return own !== undefined ? own : ownRegistration(year, registrationId, session.email);
+  /** Už ověřená vlastní přihláška z formuláře (null = bez čísla). */
+  own: { year: number; id: number; name: string | null; writable: boolean } | null,
+): Promise<OwnRegistration | null> {
+  if (own?.writable) {
+    return own;
   }
-  const { registration, created } = await ensureRegistration(year, session.email, session.name);
+  const { registration, created } = await ensureRegistration(
+    year,
+    session.email,
+    session.name,
+    currentEntrySlot(ctx),
+  );
   if (created) {
     await recordEntryChange(session, "entry.created", {
       year,
@@ -98,10 +100,12 @@ export async function saveEntryHeader(formData: FormData): Promise<void> {
   if (!session || year === null || id === null) {
     return;
   }
-  if (!entryWritable(await currentRaceYear(), year)) {
+  const ctx = await loadEntryWriteContext();
+  if (!entryWritable(ctx, year)) {
     return;
   }
-  const row = await ownRegistration(year, id, session.email);
+  // Zamčenou přihlášku (termín skončil) už přihlašující neupravuje – jen administrace (Q329).
+  const row = await writableOwnEntry(ctx, year, id, session.email);
   if (!row) {
     return;
   }
@@ -158,14 +162,14 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
     return;
   }
   // #189: nezávislé kontroly a čtení souběžně, ne jedno po druhém (každý dotaz = cesta do DB).
-  const [race, own, taken, categories, runner] = await Promise.all([
-    currentRaceYear(),
-    registrationId ? ownRegistration(year, registrationId, session.email) : null,
+  const ctx = await loadEntryWriteContext();
+  const [own, taken, categories, runner] = await Promise.all([
+    registrationId ? ownEntry(ctx, year, registrationId, session.email) : null,
     prisma.registrationLine.findFirst({ where: { year, runnerId }, select: { runnerId: true } }),
     prisma.category.findMany(),
     prisma.runner.findUnique({ where: { id: runnerId }, select: { name: true } }),
   ]);
-  if (!entryWritable(race, year)) {
+  if (!entryWritable(ctx, year)) {
     return;
   }
   if (registrationId && !own) {
@@ -178,14 +182,15 @@ export async function addExistingRunner(formData: FormData): Promise<void> {
   if (!category) {
     return;
   }
-  const registration = await registrationForNewLine(year, registrationId, session, own);
+  const registration = await registrationForNewLine(ctx, year, session, own);
   if (!registration) {
     return;
   }
+  const allowFree = freeEntryAllowed(currentEntrySlot(ctx));
   const [club, { fee }] = await Promise.all([
     resolveClub(formString(formData, "clubName"), year, formString(formData, "clubId")),
     currentCategoryFee(year, category).then((base) =>
-      computeLineFee(session.email, runnerId, base),
+      computeLineFee(session.email, runnerId, base, { allowFree }),
     ),
   ]);
   await prisma.registrationLine.create({
@@ -234,10 +239,12 @@ export async function addNewRunner(
   }
   const { year, registrationId, birthYear, firstName, lastName, sex, categoryId, nationality } =
     parsed.data;
-  if (!entryWritable(await currentRaceYear(), year)) {
+  const ctx = await loadEntryWriteContext();
+  if (!entryWritable(ctx, year)) {
     return { error: "invalid" };
   }
-  if (registrationId && !(await ownRegistration(year, registrationId, session.email))) {
+  const own = registrationId ? await ownEntry(ctx, year, registrationId, session.email) : null;
+  if (registrationId && !own) {
     return { error: "invalid" };
   }
   const categories = await prisma.category.findMany();
@@ -260,7 +267,7 @@ export async function addNewRunner(
   if (taken) {
     return { error: "taken" };
   }
-  const registration = await registrationForNewLine(year, registrationId, session);
+  const registration = await registrationForNewLine(ctx, year, session, own);
   if (!registration) {
     return { error: "invalid" };
   }
@@ -273,6 +280,7 @@ export async function addNewRunner(
     session.email,
     resolved.id,
     await currentCategoryFee(year, category),
+    { allowFree: freeEntryAllowed(currentEntrySlot(ctx)) },
   );
   await prisma.registrationLine.create({
     data: {
@@ -317,10 +325,12 @@ export async function updateLineClub(formData: FormData): Promise<void> {
   if (!session || year === null || registrationId === null || !runnerId) {
     return;
   }
-  if (!entryWritable(await currentRaceYear(), year)) {
+  const ctx = await loadEntryWriteContext();
+  if (!entryWritable(ctx, year)) {
     return;
   }
-  const registration = await ownRegistration(year, registrationId, session.email);
+  // Jen přihláška v běžícím termínu – po jeho konci je zamčená (Q303).
+  const registration = await writableOwnEntry(ctx, year, registrationId, session.email);
   if (!registration) {
     return;
   }
@@ -368,10 +378,12 @@ export async function removeRunner(formData: FormData): Promise<void> {
   if (!session || year === null || registrationId === null || !runnerId) {
     return;
   }
-  if (!entryWritable(await currentRaceYear(), year)) {
+  const ctx = await loadEntryWriteContext();
+  if (!entryWritable(ctx, year)) {
     return;
   }
-  const registration = await ownRegistration(year, registrationId, session.email);
+  // Jen přihláška v běžícím termínu – po jeho konci je zamčená (Q303).
+  const registration = await writableOwnEntry(ctx, year, registrationId, session.email);
   if (!registration) {
     return;
   }

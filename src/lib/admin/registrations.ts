@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/admin/staff";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { computeLineFee, paidAmount } from "@/lib/entries/fee";
+import { freeEntryAllowed } from "@/lib/slots/entry-slot";
 import { registrationCategoryFee } from "@/lib/slots/load";
 import { ENTRY_STATUS, recalculateRegistrationStatus } from "@/lib/entries/status";
 import { confirmRegistrationCore } from "@/lib/entries/confirm";
@@ -29,13 +30,21 @@ function revalidateRegistrations() {
 }
 
 async function refreshLineFees(year: number, id: number, email: string): Promise<void> {
-  const lines = await prisma.registrationLine.findMany({
-    where: { year, registrationId: id },
-    include: { category: { select: { id: true, entryFee: true } } },
-  });
+  const [lines, meta] = await Promise.all([
+    prisma.registrationLine.findMany({
+      where: { year, registrationId: id },
+      include: { category: { select: { id: true, entryFee: true } } },
+    }),
+    prisma.registrationMeta.findUnique({
+      where: { year_id: { year, id } },
+      select: { slot: true },
+    }),
+  ]);
+  // Startovné zdarma jen v early a standardu (Q301) – pozdní přihláška platí plnou cenu.
+  const allowFree = freeEntryAllowed(meta?.slot ?? null);
   for (const line of lines) {
     const base = await registrationCategoryFee(year, id, line.category);
-    const { fee } = await computeLineFee(email, line.runnerId, base);
+    const { fee } = await computeLineFee(email, line.runnerId, base, { allowFree });
     if (fee !== (line.entryFee ?? 0)) {
       await prisma.registrationLine.update({
         where: { year_runnerId: { year, runnerId: line.runnerId } },

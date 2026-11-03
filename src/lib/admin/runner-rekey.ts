@@ -1,6 +1,13 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
-import { buildSexChangePlan, birthYearOf, type SexChangePlan } from "@/lib/admin/runner-sex-core";
+import {
+  buildSexChangePlan,
+  birthYearOf,
+  type LineFeeFor,
+  type SexChangePlan,
+} from "@/lib/admin/runner-sex-core";
+import { slotFee, slotOf } from "@/lib/slots/core";
+import { slotFromRow } from "@/lib/slots/load";
 
 /** Models re-pointed to the new runner id by the sex change. */
 export const RUNNER_REKEYED_MODELS = [
@@ -133,6 +140,32 @@ async function loadPlan(
     select: { id: true, name: true, sex: true, age: true, entryFee: true },
   });
 
+  // Startovné letošních řádků podle termínu přihlášky (early / standard / late) a skupiny
+  // nové kategorie; ročník bez termínů nebo kategorie bez skupiny = cena z číselníku.
+  const currentIds = lines
+    .filter((line) => line.year === currentYear)
+    .map((line) => line.registrationId);
+  const [slotRows, metas, groups] =
+    currentIds.length > 0
+      ? await Promise.all([
+          tx.registrationSlot.findMany({ where: { year: currentYear } }),
+          tx.registrationMeta.findMany({
+            where: { year: currentYear, id: { in: currentIds } },
+            select: { id: true, slot: true },
+          }),
+          tx.categoryMeta.findMany({ select: { categoryId: true, feeGroup: true } }),
+        ])
+      : [[], [], []];
+  const slots = slotRows.map(slotFromRow);
+  const slotById = new Map(metas.map((meta) => [meta.id, meta.slot]));
+  const groupById = new Map(groups.map((group) => [group.categoryId, group.feeGroup]));
+  const feeFor: LineFeeFor = (line, target) =>
+    slotFee(
+      slotOf(slots, slotById.get(line.registrationId) ?? "standard"),
+      groupById.get(target.id) ?? null,
+      target.entryFee,
+    );
+
   const plan = buildSexChangePlan({
     runner: { id: runner.id, name: runner.name },
     takenIds: taken,
@@ -142,6 +175,7 @@ async function loadPlan(
     webImages,
     categories,
     currentYear,
+    feeFor,
   });
   return { plan, runner };
 }

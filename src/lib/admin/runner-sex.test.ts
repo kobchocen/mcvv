@@ -97,6 +97,30 @@ describe("planLine", () => {
     assert.equal(kid.feeChanged, true);
   });
 
+  it("uses the registration term price when feeFor is given", () => {
+    const feeFor = (line: { registrationId: number }, target: CategoryRow) =>
+      line.registrationId === 7 ? 150 : target.entryFee;
+    const late = planLine(
+      { year: 2026, registrationId: 7, categoryId: "A", entryFee: 150 },
+      "F",
+      2007,
+      CATEGORIES,
+      2026,
+      feeFor,
+    );
+    assert.equal(late.newFee, 150);
+    assert.equal(late.feeChanged, false);
+    const free = planLine(
+      { year: 2026, registrationId: 7, categoryId: "B", entryFee: 0 },
+      "F",
+      1980,
+      CATEGORIES,
+      2026,
+      feeFor,
+    );
+    assert.equal(free.newFee, 0);
+  });
+
   it("keeps a free entry free and does not touch fees of past years", () => {
     const free = planLine(
       { year: 2026, registrationId: 1, categoryId: "B", entryFee: 0 },
@@ -132,6 +156,9 @@ function matches(row: Row, where: Where = {}): boolean {
     if (key === "year_runnerId") {
       const c = cond as { year: number; runnerId: string };
       return row.year === c.year && row.runnerId === c.runnerId;
+    }
+    if (cond && typeof cond === "object" && "in" in cond) {
+      return (cond.in as unknown[]).includes(row[key]);
     }
     if (cond && typeof cond === "object" && "startsWith" in cond) {
       return (
@@ -272,6 +299,10 @@ function fakeDb() {
       (r) => `${r.year}|${r.runnerId}`,
     ),
     category: table(CATEGORIES as unknown as Row[], (r) => String(r.id)),
+    // termíny přihlášek: ročník bez termínů → cena z číselníku (dosavadní chování)
+    registrationSlot: table([], (r) => `${r.year}|${r.type}`),
+    registrationMeta: table([], (r) => `${r.year}|${r.id}`),
+    categoryMeta: table([], (r) => String(r.categoryId)),
   };
   let failAt: string | null = null;
   const client = {
@@ -313,6 +344,41 @@ function fakeDb() {
 const asClient = (fake: ReturnType<typeof fakeDb>) => fake as unknown as PrismaClient;
 
 describe("applySexChange (re-keying in one transaction)", () => {
+  it("prices the current year's line by its registration term and fee group", async () => {
+    const fake = fakeDb();
+    // přihláška 4 vznikla v pozdním termínu: dospělí 150 Kč (číselník 100 Kč)
+    fake.registrationSlot.rows.push(
+      {
+        year: 2026,
+        type: "standard",
+        from: new Date(0),
+        to: new Date(1),
+        active: true,
+        feeAdult: 100,
+        feeYouth: 50,
+        payWithinMinutes: null,
+      },
+      {
+        year: 2026,
+        type: "late",
+        from: new Date(1),
+        to: new Date(2),
+        active: true,
+        feeAdult: 150,
+        feeYouth: 80,
+        payWithinMinutes: 60,
+      },
+    );
+    fake.registrationMeta.rows.push({ year: 2026, id: 4, slot: "late" });
+    fake.categoryMeta.rows.push({ categoryId: "G", feeGroup: "dospeli" });
+    const plan = await previewSexChange(asClient(fake), "19830002", 2026);
+    const current = plan.lines.find((line) => line.year === 2026);
+    assert.equal(current?.newFee, 150);
+    assert.equal(current?.feeChanged, true);
+    const past = plan.lines.find((line) => line.year === 2025);
+    assert.equal(past?.newFee, 100, "past years are settled");
+  });
+
   it("previews old → new id, categories and counts without writing", async () => {
     const fake = fakeDb();
     const plan = await previewSexChange(asClient(fake), "19830002", 2026);

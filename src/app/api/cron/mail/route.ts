@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { cronAuthorized } from "@/lib/cron/auth";
+import { cronGate } from "@/lib/cron/cadence";
 import { runFreeAutoConfirm } from "@/lib/entries/auto-confirm";
 import { env } from "@/lib/env";
 import { processMailQueue } from "@/lib/mail/queue";
@@ -10,7 +11,8 @@ import { continueNewsletters } from "@/lib/newsletter/runner";
 export const dynamic = "force-dynamic";
 
 /**
- * Plánovaný běh e-mailové fronty (ACA Job / GitHub Action každých 15 min):
+ * Plánovaný běh e-mailové fronty (každých 15 min; ACA Job volá každou minutu, routa
+ * mezi tím nic nedělá – transakční e-maily odcházejí hned přes sendMail):
  * denní souhrn pořadateli (zprávy, změny přihlášek), fronta (potvrzení, připomínky, alerty, zprávy), pak zbytek pro newsletter.
  */
 export async function POST(request: Request) {
@@ -18,6 +20,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
+    const gate = await cronGate("mail", { fastAllowed: false });
+    if (!gate.run) return NextResponse.json({ ok: true, skipped: "cadence" });
     // Denní souhrn pro pořadatele (zprávy a změny přihlášek; max. 1× denně, jen zapnuté
     // sekce) – před frontou, aby odešel ve stejném běhu.
     const messages = await runOrganizerDigest().catch((error) => {

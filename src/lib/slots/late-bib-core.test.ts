@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { latePaidMailDedupeKey, pickLateBib, pickLateBibs } from "./late-bib-core";
+import {
+  latePaidMailDedupeKey,
+  pickLateBib,
+  pickLateBibs,
+  latePaidStartFacts,
+} from "./late-bib-core";
+import { DEFAULT_START_MODEL, startTimeForBib } from "@/lib/race/start-time";
 
 const range = { bibFrom: 101, bibTo: 105 };
 
@@ -58,4 +64,23 @@ test("late bibs: two runners never get the same number, existing bibs kept", () 
 
 test("late paid mail dedupe key", () => {
   assert.equal(latePaidMailDedupeKey(2026, 412), "late-paid:2026:412");
+});
+
+test("e-mail g facts: first start and start times come from the edition start model (Q393)", () => {
+  const lines = [
+    { bib: 287, entryFee: 200, runner: { name: "Petr" }, category: { name: "Muži" } },
+    { bib: null, entryFee: 100, runner: { name: "Anna" }, category: { name: "Dorostenky" } },
+  ];
+  const def = latePaidStartFacts(DEFAULT_START_MODEL, lines, true);
+  assert.equal(def.firstStart, "10:15");
+  assert.equal(def.lines[0].start, startTimeForBib(DEFAULT_START_MODEL, 287));
+  assert.equal(def.lines[1].bib, null);
+  const custom = { ...DEFAULT_START_MODEL, zeroSeconds: 9 * 3600 + 30 * 60 + 30 };
+  const own = latePaidStartFacts(custom, lines, true);
+  assert.equal(own.firstStart, "9:30:30");
+  assert.equal(own.lines[0].start, startTimeForBib(custom, 287));
+  assert.notEqual(own.lines[0].start, def.lines[0].start);
+  const hidden = latePaidStartFacts(custom, lines, false);
+  assert.equal(hidden.lines[0].bib, null);
+  assert.equal(hidden.lines[0].start, null);
 });

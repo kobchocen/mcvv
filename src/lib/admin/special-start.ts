@@ -18,7 +18,16 @@ import { redirect } from "@/i18n/routing";
 const NOTE_MAX = 200;
 
 export type SpecialStartError =
-  "kind" | "partner" | "self" | "offset" | "offsetStep" | "offsetRange" | "note" | "line" | "late";
+  | "kind"
+  | "partner"
+  | "self"
+  | "offset"
+  | "offsetStep"
+  | "offsetRange"
+  | "note"
+  | "line"
+  | "late"
+  | "partnerLate";
 
 /** Kam se po uložení vrátit: detail přihlášky, nebo přehled spec. startů (Q229). */
 async function back(data: FormData, year: number, query: Record<string, string>): Promise<never> {
@@ -138,10 +147,17 @@ export async function saveSpecialStart(formData: FormData): Promise<void> {
     }
     const partnerLine = await prisma.registrationLine.findUnique({
       where: { year_runnerId: { year, runnerId: partnerId } },
-      select: { runnerId: true },
+      select: { runnerId: true, registrationId: true },
     });
     if (!partnerLine) {
       return back(formData, year, { spec: "chyba", duvod: "partner" });
+    }
+    const partnerMeta = await prisma.registrationMeta.findUnique({
+      where: { year_id: { year, id: partnerLine.registrationId } },
+      select: { slot: true },
+    });
+    if (partnerMeta?.slot === "late") {
+      return back(formData, year, { spec: "chyba", duvod: "partnerLate" });
     }
     const { intervalSeconds } = startModelFromEdition(await editionForYear(year));
     const offset = parseOffset(formString(formData, "offset"), intervalSeconds);

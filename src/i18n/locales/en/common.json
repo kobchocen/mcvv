@@ -1507,7 +1507,26 @@
     "regsDeletePaymentTitle": "Delete payment?",
     "regsDeletePaymentConfirm": "Payment of CZK {amount} ({date}) will be removed from the entry and the payment status recalculated.",
     "clubsSubnavList": "Club list",
-    "clubsSubnavMerge": "Merge clubs"
+    "clubsSubnavMerge": "Merge clubs",
+    "regsTerm": "Period",
+    "regsTermAll": "All periods",
+    "regsTerm_early": "early",
+    "regsTerm_standard": "standard",
+    "regsTerm_late": "late",
+    "regsTerm_onsite": "on site",
+    "lateState_draft": "in progress",
+    "lateState_draftTitle": "Late entry not submitted yet (the payment deadline is not running).",
+    "lateState_awaiting": "waiting {time}",
+    "lateState_awaitingTitle": "Waiting for payment – pay by {at}.",
+    "lateState_overdue": "overdue",
+    "lateState_overdueTitle": "Deadline passed {at} – waiting for the bank check, then the entry is cancelled automatically.",
+    "lateState_paid": "paid",
+    "lateState_autoCancelled": "auto-cancelled",
+    "lateState_autoCancelledTitle": "Cancelled automatically {at} (payment did not arrive in time).",
+    "lateState_draftCancelledTitle": "Unsubmitted entry cancelled automatically {at}.",
+    "lateState_cancelled": "cancelled",
+    "lateAwaitingSummary": "{count, plural, one {# late entry is} other {# late entries are}} waiting for payment.",
+    "lateAwaitingShow": "Show late entries"
   },
   "Stats": {
     "overview": {
@@ -3243,7 +3262,11 @@
     "err_offsetStep": "The offset must be a multiple of the {interval} s interval.",
     "err_offsetRange": "The offset can be at most ± 60 min.",
     "check_range": "Bib is not in the range {range}",
-    "overviewRanges": "Bib ranges: organisers {organizer} · early {early} · late {late}."
+    "overviewRanges": "Bib ranges: organisers {organizer} · early {early} · late {late}.",
+    "err_partnerLate": "The partner is in a late entry – a “together with” special start cannot be set.",
+    "lateNone": "late – no special start",
+    "lateNoneTitle": "Late entries have no special start: they get bibs after payment from the late-entry range.",
+    "lateExcluded": "{count, plural, one {# late entry with a message is} other {# late entries with a message are}} not listed – late entries have no special start (they get bibs after payment)."
   },
   "Starter": {
     "metaTitle": "Starter",

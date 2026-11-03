@@ -7,6 +7,7 @@ import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
 import { Button } from "@/components/ui/button";
 import {
+  lateRegistrationIds,
   partnerOptions,
   specialCheckState,
   specialCheckText,
@@ -63,10 +64,15 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
       : await latestEditionYear();
   const kindFilter = isSpecialStartKind(query.typ) ? query.typ : null;
 
-  const [settings, rows] = await Promise.all([loadStartSettings(year), loadAdminStartRows(year)]);
+  const [settings, rows, lateIds] = await Promise.all([
+    loadStartSettings(year),
+    loadAdminStartRows(year),
+    lateRegistrationIds(year),
+  ]);
   const { model } = settings;
   const byId = new Map(rows.map((row) => [row.runnerId, row]));
-  const options = partnerOptions(rows);
+  // Pozdní přihlášky spec. start nemají a nejsou ani partnerem „spolu s“ (část 8).
+  const options = partnerOptions(rows, lateIds);
   const checks = specialStartChecks(model, rows);
   const copy = specialStartCopy(t, model);
   const flash = specialStartFlash(t, query.spec, query.duvod, model.intervalSeconds);
@@ -81,8 +87,11 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
 
   // Přihlášky se zprávou od přihlašujícího.
   const byRegistration = new Map<number, AdminStartRow[]>();
+  const lateWithMessages = new Set<number>();
   for (const row of rows) {
-    if (row.messageThreadId != null && !row.cancelled) {
+    if (row.messageThreadId != null && !row.cancelled && lateIds.has(row.registrationId)) {
+      lateWithMessages.add(row.registrationId);
+    } else if (row.messageThreadId != null && !row.cancelled) {
       byRegistration.set(row.registrationId, [
         ...(byRegistration.get(row.registrationId) ?? []),
         row,
@@ -290,6 +299,14 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
               {t("messagesHeading", { count: withMessages.length })}
             </h2>
             <p className="mt-1 max-w-3xl text-sm text-race-muted">{t("messagesHint")}</p>
+            {lateWithMessages.size > 0 ? (
+              <p
+                className="mt-1 max-w-3xl text-sm text-race-muted"
+                data-testid="spec-start-late-excluded"
+              >
+                {t("lateExcluded", { count: lateWithMessages.size })}
+              </p>
+            ) : null}
             {withMessages.length === 0 ? (
               <p className="mt-3 text-sm text-race-muted">{t("messagesEmpty")}</p>
             ) : (

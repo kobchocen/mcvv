@@ -536,16 +536,27 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                           const special = specialStarts.get(line.runnerId) ?? null;
                           return (
                             <div className="grid gap-1">
-                              <McvvAdminSpecialStart
-                                year={year}
-                                runnerId={line.runnerId}
-                                runnerName={line.runner.name}
-                                registrationId={id}
-                                from="detail"
-                                value={specialStartValue(special)}
-                                intervalSeconds={intervalSeconds}
-                                copy={specialCopy}
-                              />
+                              {meta?.slot === "late" && !special ? (
+                                // Pozdní přihláška spec. start nemá (server ho odmítne, část 8).
+                                <span
+                                  className="text-xs text-race-muted"
+                                  title={specialT("lateNoneTitle")}
+                                  data-testid={`spec-start-late-${line.runnerId}`}
+                                >
+                                  {specialT("lateNone")}
+                                </span>
+                              ) : (
+                                <McvvAdminSpecialStart
+                                  year={year}
+                                  runnerId={line.runnerId}
+                                  runnerName={line.runner.name}
+                                  registrationId={id}
+                                  from="detail"
+                                  value={specialStartValue(special)}
+                                  intervalSeconds={intervalSeconds}
+                                  copy={specialCopy}
+                                />
+                              )}
                               {special && (special.kind === "with" || special.note) ? (
                                 <span className="max-w-[16rem] text-xs text-race-muted">
                                   {specialStartPartnerText(specialT, special, partnerName)}

@@ -8,6 +8,9 @@
  * Způsob přidělení se veřejně nikde neuvádí.
  */
 
+import { formatStartClock } from "@/lib/date/race-schedule";
+import { startTimeForBib, type StartModel } from "@/lib/race/start-time";
+
 export type LateBibPick = { bib: number; outsideCategory: boolean };
 
 export function pickLateBib(
@@ -58,4 +61,31 @@ export function pickLateBibs(
 /** Klíč fronty e-mailů g (platba přijata), brání dvojímu odeslání. */
 export function latePaidMailDedupeKey(year: number, id: number): string {
   return `late-paid:${year}:${id}`;
+}
+
+/**
+ * Čísla, časy a „Start prvního běžce“ pro e-mail g – vše z modelu startu ročníku
+ * (nulový čas st_nula_s, interval, 2. start; /admin/rocniky, výchozí 10:15), nic natvrdo (Q393).
+ */
+export function latePaidStartFacts<
+  L extends {
+    bib: number | null;
+    runner: { name: string };
+    category: { name: string };
+    entryFee: number | null;
+  },
+>(model: StartModel, lines: L[], published: boolean) {
+  return {
+    lines: lines.map((line) => {
+      const bib = published && line.bib && line.bib > 0 ? line.bib : null;
+      return {
+        runner: line.runner.name,
+        category: line.category.name,
+        fee: line.entryFee ?? 0,
+        bib,
+        start: bib ? startTimeForBib(model, bib) : null,
+      };
+    }),
+    firstStart: formatStartClock(model.zeroSeconds),
+  };
 }

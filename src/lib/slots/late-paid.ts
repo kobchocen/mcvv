@@ -11,12 +11,10 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
 import { loadStartSettings } from "@/lib/race/startlist-load";
-import { formatStartClock } from "@/lib/date/race-schedule";
-import { startTimeForBib } from "@/lib/race/start-time";
 import { getSiteSettings } from "@/lib/settings/site";
 
 import { onsiteWindow } from "./defaults";
-import { latePaidMailDedupeKey, pickLateBibs } from "./late-bib-core";
+import { latePaidMailDedupeKey, latePaidStartFacts, pickLateBibs } from "./late-bib-core";
 import { mailSite } from "./late-mail";
 import { renderLatePaidMail } from "./late-mail-render";
 import { hasMailAddress } from "./standard-pay-core";
@@ -156,16 +154,8 @@ export async function sendLatePaidMail(
     const paid = payments
       .filter((payment) => paymentRegistrationId(payment.registrationId) === id)
       .reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
-    const lines = reg.lines.map((line) => {
-      const bib = options.published && line.bib && line.bib > 0 ? line.bib : null;
-      return {
-        runner: line.runner.name,
-        category: line.category.name,
-        fee: line.entryFee ?? 0,
-        bib,
-        start: bib ? startTimeForBib(settings.model, bib) : null,
-      };
-    });
+    const facts = latePaidStartFacts(settings.model, reg.lines, options.published);
+    const lines = facts.lines;
     const office = race.raceDate
       ? onsiteWindow(race.raceDate, race.slotSettings.officeOpensS, race.slotSettings.onsiteUntilS)
       : null;
@@ -179,7 +169,7 @@ export async function sendLatePaidMail(
       raceDate: race.raceDate,
       published: options.published,
       officeOpens: office?.from ?? null,
-      firstStart: formatStartClock(settings.model.zeroSeconds),
+      firstStart: facts.firstStart,
     });
     const outcome = await sendMail({
       ...mail,

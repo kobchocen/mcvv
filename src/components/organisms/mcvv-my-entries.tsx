@@ -153,6 +153,56 @@ export function EntryHeading({ item, copy }: { item: MyEntryNavItem; copy: Copy 
   );
 }
 
+/** Karty „Startovní čísla a časy“ zaplacené pozdní přihlášky (mockup d, varianta 1). */
+export function LateBibCards({
+  bibs,
+  copy,
+  className,
+  headingLevel = "h3",
+}: {
+  bibs: LateBibView;
+  copy: Copy;
+  className?: string;
+  headingLevel?: "h2" | "h3";
+}) {
+  const Heading = headingLevel;
+  return (
+    <div className={className}>
+      <Heading
+        className={
+          headingLevel === "h2" ? "font-display text-2xl font-semibold" : "text-base font-semibold"
+        }
+      >
+        {copy("lateBibsTitle")}
+      </Heading>
+      <ul className="mt-2 grid max-w-2xl gap-2 sm:grid-cols-2">
+        {bibs.cards.map((card) => (
+          <li
+            key={card.runnerId}
+            className="rounded-[12px] border border-race-line/60 bg-race-surface p-3"
+          >
+            <div className="text-xs text-race-muted">
+              {[card.name, card.category].filter(Boolean).join(" · ")}
+            </div>
+            <div className="text-3xl font-bold tabular-nums leading-tight">{card.bib}</div>
+            <div className="text-race-muted">
+              {copy("lateBibStart")}{" "}
+              <b className="tabular-nums text-foreground dark:text-white">{card.start}</b>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {bibs.day ? (
+        <p className="mt-2 text-xs text-race-muted">
+          {bibs.from
+            ? copy("lateBibPickup", { day: bibs.day, from: bibs.from })
+            : copy("lateBibPickupNoTime", { day: bibs.day })}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * Uzavřená přihláška (termín skončil): jen čtení – běžci, platba, storno podmínky a doklad.
  * Úpravy už jen přes zprávu závodní kanceláři.
@@ -196,33 +246,7 @@ export async function McvvLockedEntry({
         <div className="mt-3 grid max-w-2xl gap-2 text-sm">
           <p>{copy("latePaidThanks")}</p>
           {bibs ? (
-            <div className="mt-2">
-              <h3 className="text-base font-semibold">{copy("lateBibsTitle")}</h3>
-              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-                {bibs.cards.map((card) => (
-                  <li
-                    key={card.runnerId}
-                    className="rounded-[12px] border border-race-line/60 bg-race-surface p-3"
-                  >
-                    <div className="text-xs text-race-muted">
-                      {[card.name, card.category].filter(Boolean).join(" · ")}
-                    </div>
-                    <div className="text-3xl font-bold tabular-nums leading-tight">{card.bib}</div>
-                    <div className="text-race-muted">
-                      {copy("lateBibStart")}{" "}
-                      <b className="tabular-nums text-foreground dark:text-white">{card.start}</b>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {bibs.day ? (
-                <p className="mt-2 text-xs text-race-muted">
-                  {bibs.from
-                    ? copy("lateBibPickup", { day: bibs.day, from: bibs.from })
-                    : copy("lateBibPickupNoTime", { day: bibs.day })}
-                </p>
-              ) : null}
-            </div>
+            <LateBibCards bibs={bibs} copy={copy} className="mt-2" />
           ) : (
             <p className="rounded-md border border-race-line/60 p-3 leading-6 text-race-muted">
               {copy.rich

@@ -13,6 +13,7 @@ import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
 import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
 import {
   EntryHeading,
+  LateBibCards,
   McvvLockedEntry,
   McvvMyEntriesNav,
   type MyEntryNavItem,
@@ -240,6 +241,15 @@ async function EntryBody({
       paid,
     });
   const hasLines = (registration?.lines.length ?? 0) > 0;
+  // Q394: zaplacená pozdní přihláška i po konci pozdního termínu (jen čtení) ukazuje
+  // čísla a časy startu, je-li startovka zveřejněná.
+  const registrationBibs =
+    registration && !editable && slot === "late"
+      ? await loadLateBibView(
+          { year, status: registration.status, lines: registration.lines },
+          locale,
+        )
+      : null;
   const qr =
     registration && hasLines && due > 0 ? await spdQrSvg(year, registration.id, due) : null;
   const vs = registration ? variableSymbol(year, registration.id) : "";
@@ -522,6 +532,12 @@ async function EntryBody({
               {msg("backToList")}
             </Link>
           </p>
+        </section>
+      ) : null}
+
+      {registrationBibs ? (
+        <section>
+          <LateBibCards bibs={registrationBibs} copy={copy} headingLevel="h2" />
         </section>
       ) : null}
 

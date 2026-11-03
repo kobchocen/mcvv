@@ -86,3 +86,25 @@ export function clubsSubnav(
       : []),
   ];
 }
+
+/** Záložky číselníku běžců: hledání a úpravy, slučování, úklid běžců bez dat (vše jen admin). */
+export function runnersSubnav(
+  labels: { search: string; merge: string; orphans: string },
+  active: "search" | "merge" | "orphans" | null,
+): McvvAdminDictsSubnavItem[] {
+  return [
+    { href: "/admin/ciselniky/bezci", label: labels.search, active: active === "search" },
+    {
+      href: "/admin/ciselniky/bezci/slouceni",
+      label: labels.merge,
+      active: active === "merge",
+      testId: "subnav-runner-merge",
+    },
+    {
+      href: "/admin/ciselniky/bezci/sirotci",
+      label: labels.orphans,
+      active: active === "orphans",
+      testId: "subnav-runner-orphans",
+    },
+  ];
+}

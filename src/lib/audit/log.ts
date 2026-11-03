@@ -60,6 +60,11 @@ export type AuditAction =
   // Sloučení duplicitních běžců (#261), detail = úplný stav před sloučením (smazaný běžec
   // a všechny jeho přepsané řádky) pro ruční obnovu; akce „vrátit“ není (jako u klubů).
   | "runner.merge"
+  // Smazání běžce bez navázaných dat: jednotlivě z detailu (`runner.deleted`, cíl
+  // `runner:<id>`) a hromadný úklid sirotků (`runner.orphan_cleanup`); detail = smazané
+  // řádky cis_bezec (RunnerDeleteAuditDetail) pro ruční obnovení.
+  | "runner.deleted"
+  | "runner.orphan_cleanup"
   // Denní limit e-mailů v Nastavení (#190), detail = před / po.
   | "settings.mail_limit"
   // Citlivé ruční zásahy v administraci (#107), detail = stav před / po (`diffFields`).

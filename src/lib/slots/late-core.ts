@@ -15,6 +15,11 @@ import type { SlotType } from "./core";
 
 /** Lhůta na zaplacení odeslané pozdní přihlášky. */
 export const LATE_PAY_MINUTES = 60;
+/**
+ * Rozpracovaná (neodeslaná) pozdní přihláška se bez změny po této době automaticky zruší
+ * a uvolní své běžce (Q351).
+ */
+export const LATE_DRAFT_TTL_MINUTES = 60;
 /** Když se platby po lhůtě nepodaří stáhnout, zruší se přihláška i tak po této pojistce. */
 export const LATE_CANCEL_GRACE_MS = 5 * 60 * 1000;
 
@@ -103,4 +108,33 @@ export function lateNeedsCancel(c: {
 /** Zbývající čas do lhůty v sekundách (nejméně 0). */
 export function secondsLeft(now: Date, payUntil: Date): number {
   return Math.max(0, Math.floor((payUntil.getTime() - now.getTime()) / 1000));
+}
+
+/**
+ * Má se rozpracovaná pozdní přihláška zrušit? Po `ttlMinutes` od poslední změny (přidání
+ * běžce, úprava), nebo když pozdní přihlášky skončily (nikdo ji už nemůže odeslat).
+ */
+export function lateDraftExpired(
+  now: Date,
+  lastChange: Date | null,
+  lateEnd: Date,
+  ttlMinutes = LATE_DRAFT_TTL_MINUTES,
+): boolean {
+  if (now.getTime() >= lateEnd.getTime()) return true;
+  if (!lastChange) return false;
+  return now.getTime() >= lastChange.getTime() + ttlMinutes * 60 * 1000;
+}
+
+/** Poslední změna přihlášky: meta `updated_at`, založení přihlášky a řádků (nejpozdější). */
+export function lastChangeOf(times: readonly (Date | null | undefined)[]): Date | null {
+  const ms = Math.max(0, ...times.map((d) => d?.getTime() ?? 0));
+  return ms > 0 ? new Date(ms) : null;
+}
+
+export function latePayMailDedupeKey(year: number, id: number): string {
+  return `latepay:${year}:${id}`;
+}
+
+export function lateCancelMailDedupeKey(year: number, id: number): string {
+  return `latecancel:${year}:${id}`;
 }

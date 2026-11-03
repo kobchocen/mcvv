@@ -17,6 +17,8 @@ export function McvvLateSubmitForm({
     payNow: ReactNode;
     submit: string;
     hint: string;
+    /** Rozpracovaná přihláška se bez odeslání po čase zruší (Q351). */
+    draftExpiry: string;
     confirm: string;
     empty: string;
     invalid: string;
@@ -58,6 +60,7 @@ export function McvvLateSubmitForm({
         </Button>
         <span className="text-xs text-race-muted">{copy.hint}</span>
       </div>
+      <p className="text-xs text-race-muted">{copy.draftExpiry}</p>
     </form>
   );
 }

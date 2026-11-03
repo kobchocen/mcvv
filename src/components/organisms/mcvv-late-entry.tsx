@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { BANK_ACCOUNT, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
 import { slotOf, type Slot } from "@/lib/slots/core";
-import { LATE_PAY_MINUTES } from "@/lib/slots/late-core";
+import { LATE_DRAFT_TTL_MINUTES, LATE_PAY_MINUTES } from "@/lib/slots/late-core";
 import {
   clockLabel,
   dateTimeLabel,
@@ -109,6 +109,7 @@ export function McvvLateTotal({
           payNow: copy.rich("latePayNow", { minutes: LATE_PAY_MINUTES, b }),
           submit: copy("lateSubmit", { total }),
           hint: copy("lateSubmitHint", { minutes: LATE_PAY_MINUTES }),
+          draftExpiry: copy("lateDraftExpiry", { minutes: LATE_DRAFT_TTL_MINUTES }),
           confirm: copy("lateSubmitConfirm"),
           empty: copy("lateSubmitEmpty"),
           invalid: copy("lateSubmitInvalid"),
@@ -143,7 +144,10 @@ export async function McvvLatePayment({
   const qr = due > 0 ? await spdQrSvg(entry.year, entry.id, due) : null;
   const vs = variableSymbol(entry.year, entry.id);
   const expired = now.getTime() >= entry.payUntil.getTime();
-  const qrHref = qr ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(qr)}` : null;
+  // „Uložit QR“ stáhne PNG (Q352) – SVG bankovní aplikace z galerie neotevřou.
+  const qrHref = qr
+    ? `/api/platba-qr?rok=${entry.year}&id=${entry.id}&castka=${due}&stahnout=1`
+    : null;
   return (
     <div id={`p${entry.id}`} className="grid scroll-mt-28 gap-8">
       <h2 className="font-display text-2xl font-semibold sm:text-3xl">
@@ -176,7 +180,7 @@ export async function McvvLatePayment({
               {qrHref ? (
                 <a
                   href={qrHref}
-                  download={`qr-${vs}.svg`}
+                  download={`qr-${vs}.png`}
                   className="text-sm font-medium text-race-accent hover:underline sm:hidden"
                 >
                   {copy("latePaySaveQr")}

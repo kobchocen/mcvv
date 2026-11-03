@@ -25,7 +25,7 @@ import {
 } from "@/components/organisms/mcvv-late-entry";
 import { userThreadCopy } from "@/components/organisms/mcvv-message-copy";
 import { activeSlot, slotOf } from "@/lib/slots/core";
-import { LATE_PAY_MINUTES } from "@/lib/slots/late-core";
+import { LATE_DRAFT_TTL_MINUTES, LATE_PAY_MINUTES } from "@/lib/slots/late-core";
 import { McvvMessageBubble, McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { markReadByUser, postUserMessage } from "@/lib/messages/actions";
 import { countUnreadMessages } from "@/lib/messages/core";
@@ -268,12 +268,19 @@ async function EntryBody({
   const cancelledNotice =
     otherCancelled.length > 0 ? (
       <p role="status" className="text-sm text-race-muted">
-        {otherCancelled.map((row) => copy("cancelledNotice", { id: row.id })).join(" ")}
+        {otherCancelled
+          .map((row) =>
+            // Rozpracovaná pozdní přihláška zrušená bez odeslání (Q351).
+            row.slot === "late" && row.autoCancelledAt && !row.payUntil
+              ? copy("lateDraftCancelledNotice", { id: row.id, minutes: LATE_DRAFT_TTL_MINUTES })
+              : copy("cancelledNotice", { id: row.id }),
+          )
+          .join(" ")}
       </p>
     ) : null;
   // Víc přihlášek v ročníku (po jedné na termín): přehled nahoře, uzavřené jen ke čtení dole.
   const primaryItem: MyEntryNavItem | null = registration
-    ? { id: registration.id, slot, fee, paid, editable }
+    ? { id: registration.id, slot, fee, paid, editable, draft: editable && slot === "late" }
     : null;
   const navItems: MyEntryNavItem[] = [
     ...(primaryItem ? [primaryItem] : []),

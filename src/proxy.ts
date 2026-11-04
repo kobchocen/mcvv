@@ -21,7 +21,7 @@ const bezecLimiter = createRateLimiter({ limit: bezecRateLimit(env.BEZEC_RATE_LI
 // - guards admin pages: without a valid session cookie of an admin-capable role it answers
 //   with a real 307 to /{locale}/prihlaseni?next=<original path> (pages still verify the
 //   role against the DB via requireStaff & co.),
-// - rate-limits runner profiles /cs|en/bezec/* per client IP (#199, BEZEC_RATE_LIMIT).
+// - rate-limits runner profiles /{locale}/bezec/* per client IP (#199, BEZEC_RATE_LIMIT).
 export default function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -82,11 +82,12 @@ function cookieRole(request: NextRequest) {
 }
 
 export const config = {
+  // Keep the locale list in sync with next-intl.config.ts (proxy.test.ts checks it).
   // Everything except locale-prefixed pages, API/internal routes and static files,
   // plus the locale-prefixed admin pages (login guard) and runner profiles (rate limit).
   matcher: [
-    "/((?!cs/|cs$|en/|en$|api|_next|_vercel|healthz|readyz|test|.*\\..*).*)",
-    "/(cs|en)/admin/:path*",
-    "/(cs|en)/bezec/:path*",
+    "/((?!cs/|cs$|en/|en$|de/|de$|pl/|pl$|uk/|uk$|api|_next|_vercel|healthz|readyz|test|.*\\..*).*)",
+    "/(cs|en|de|pl|uk)/admin/:path*",
+    "/(cs|en|de|pl|uk)/bezec/:path*",
   ],
 };

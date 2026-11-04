@@ -12,7 +12,7 @@ import { safeNext } from "@/lib/auth/safe-next";
 /** Hlavička, kterou proxy předává stránce s původní cestou (přepisuje případnou z klienta). */
 export const REQUEST_PATH_HEADER = "x-mcvv-path";
 
-const ADMIN_PAGE = /^\/(cs|en)(\/admin(?:\/[^?#]*)?)$/;
+const ADMIN_PAGE = /^\/(cs|en|de|pl|uk)(\/admin(?:\/[^?#]*)?)$/;
 
 /** Locale a cesta bez locale pro admin stránku (`/cs/admin/platby`), jinak null. */
 export function adminPage(pathname: string): { locale: string; path: string } | null {

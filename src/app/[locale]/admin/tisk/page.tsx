@@ -10,6 +10,7 @@ import { championBibList } from "@/lib/print/bib-start";
 import { BIB_PARTNER_CATEGORIES, DEFAULT_BATCH } from "@/lib/print/bibs-core";
 import { loadPrintStartList } from "@/lib/print/load-bibs";
 import { formatClock } from "@/lib/race/start-time";
+import { documentLocale } from "@/lib/i18n/locale";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -42,7 +43,7 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
   setRequestLocale(locale as Locale);
   await requireStaff();
   const t = await getTranslations({ locale: locale as Locale, namespace: "PrintReports" });
-  const lang = locale === "en" ? "en" : "cs";
+  const lang = documentLocale(locale);
   const [startList, partners] = await Promise.all([
     loadPrintStartList(),
     prisma.sponsor.findMany({

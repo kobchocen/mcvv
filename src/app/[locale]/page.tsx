@@ -24,6 +24,7 @@ export default async function Home({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "Home" });
+  const stats = await getTranslations({ locale, namespace: "Stats" });
 
   // Random portrait photos from the last 3 years. Candidate list (ids + stored
   // dimensions) is cached for ~10 min and served by index (rok, has_image); no blob reads.
@@ -32,7 +33,6 @@ export default async function Home({ params }: PageProps) {
   const galleryPhotoIds = pickGalleryPhotoIds(candidates, 7);
 
   const rawResults = t.raw("results") as McvvHomepageContent["results"];
-  const isCs = locale === "cs";
   // Cached (DB load on race day): latest results year, its count and the overall winners change only
   // with a result import or a runner/club fix, all of which revalidate the "stats" tag.
   const summary = await getHomeResultsSummary();
@@ -44,7 +44,7 @@ export default async function Home({ params }: PageProps) {
     const winners: { category: string; name: string; time: string; runnerId?: string }[] = [];
     if (topMen) {
       winners.push({
-        category: isCs ? "Muži" : "Men",
+        category: stats("men"),
         name: topMen.name || "—",
         time: formatRaceTime(topMen.time),
         runnerId: topMen.runnerId,
@@ -52,7 +52,7 @@ export default async function Home({ params }: PageProps) {
     }
     if (topWomen) {
       winners.push({
-        category: isCs ? "Ženy" : "Women",
+        category: stats("women"),
         name: topWomen.name || "—",
         time: formatRaceTime(topWomen.time),
         runnerId: topWomen.runnerId,

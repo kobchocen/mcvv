@@ -15,6 +15,7 @@ import { env } from "@/lib/env";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
 import { setSession, type UserRole } from "@/lib/auth/session";
 import { type Locale } from "@/i18n/routing";
+import { isLocale, siteLocale } from "@/lib/i18n/locale";
 
 const STATE_COOKIE = "mcvv_oauth";
 const STATE_MAX_AGE = 60 * 10;
@@ -72,7 +73,7 @@ function readState(token: string): { n: string; locale: Locale; next: string | n
       locale?: string;
       next?: string | null;
     };
-    if (payload.locale !== "cs" && payload.locale !== "en") {
+    if (!isLocale(payload.locale)) {
       return null;
     }
     if (typeof payload.n !== "string") {
@@ -307,5 +308,5 @@ export async function finishApple(
 }
 
 export function oauthLocale(raw: string | null): Locale {
-  return raw === "en" ? "en" : "cs";
+  return siteLocale(raw);
 }

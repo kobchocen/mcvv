@@ -4,7 +4,14 @@ import { Check, Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
-import { locales, type Locale, usePathname, useRouter } from "@/i18n/routing";
+import {
+  localeCodes,
+  localeLabels,
+  locales,
+  type Locale,
+  usePathname,
+  useRouter,
+} from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 import {
@@ -19,11 +26,6 @@ export type LanguageSwitcherProps = {
   className?: string;
   compact?: boolean;
   showLabel?: boolean;
-};
-
-const localeCodes: Record<Locale, string> = {
-  cs: "CZ",
-  en: "EN",
 };
 
 export function LanguageSwitcher({ className, compact = false }: LanguageSwitcherProps) {
@@ -143,7 +145,7 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="min-w-[7.5rem] rounded-[12px] border-race-line bg-race-surface p-1.5 text-foreground shadow-2xl shadow-black/20 backdrop-blur dark:bg-race-deep/95 dark:text-white dark:shadow-black/35"
+        className="min-w-[11rem] rounded-[12px] border-race-line bg-race-surface p-1.5 text-foreground shadow-2xl shadow-black/20 backdrop-blur dark:bg-race-deep/95 dark:text-white dark:shadow-black/35"
         sideOffset={10}
       >
         {locales.map((value) => {
@@ -152,19 +154,24 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
           return (
             <DropdownMenuItem
               key={value}
+              lang={value}
+              aria-current={isSelected ? "true" : undefined}
               onClick={() => handleChange(value)}
               className={cn(
                 "flex cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 text-foreground outline-none focus:bg-race-forest-2 dark:text-white dark:focus:bg-white/10",
                 isSelected && "bg-race-forest-2 dark:bg-white/10",
               )}
             >
+              <span className="w-7 shrink-0 text-xs font-bold tracking-[0.06em] text-muted-foreground">
+                {localeCodes[value]}
+              </span>
               <span
                 className={cn(
-                  "min-w-0 flex-1 text-sm font-semibold tracking-[0.04em]",
+                  "min-w-0 flex-1 text-sm font-semibold",
                   isSelected && "text-foreground",
                 )}
               >
-                {localeCodes[value]}
+                {localeLabels[value]}
               </span>
               {isSelected && <Check className="size-[15px] text-race-accent" />}
             </DropdownMenuItem>

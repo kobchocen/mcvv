@@ -23,6 +23,7 @@ import {
 } from "@/lib/race/program";
 import { formatCzk } from "@/lib/utils";
 import { Link, type Locale } from "@/i18n/routing";
+import { intlTag } from "@/lib/i18n/locale";
 
 type ProgramPageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -52,7 +53,7 @@ function formatDeadline(date: Date | null | undefined, locale: Locale): string {
   if (!date) {
     return "";
   }
-  return new Intl.DateTimeFormat(locale === "cs" ? "cs-CZ" : "en-GB", {
+  return new Intl.DateTimeFormat(intlTag(locale), {
     day: "numeric",
     month: locale === "cs" ? "numeric" : "long",
     year: "numeric",

@@ -8,9 +8,22 @@ export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = routing.defaultLocale;
 export const localePrefix = routing.localePrefix ?? "always";
 
+/** Native language names shown in the language switcher. */
 export const localeLabels: Record<Locale, string> = {
-  en: "English",
   cs: "Čeština",
+  en: "English",
+  de: "Deutsch",
+  pl: "Polski",
+  uk: "Українська",
+};
+
+/** Short codes shown on the switcher button (UA for Ukrainian, as users expect, not the ISO "UK"). */
+export const localeCodes: Record<Locale, string> = {
+  cs: "CZ",
+  en: "EN",
+  de: "DE",
+  pl: "PL",
+  uk: "UA",
 };
 
 export const { Link, redirect, usePathname, useRouter } = createNavigation(routing);

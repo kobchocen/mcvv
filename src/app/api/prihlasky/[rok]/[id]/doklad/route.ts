@@ -21,7 +21,7 @@ function notFound(): Response {
 }
 
 /**
- * GET /api/prihlasky/{rok}/{id}/doklad?lang=cs|en – PDF doklad o zaplacení.
+ * GET /api/prihlasky/{rok}/{id}/doklad?lang=cs|en|de|pl|uk (de/pl/uk → en) – PDF doklad o zaplacení.
  * Jen pro vlastníka přihlášky (shoda e-mailu, aktuální ročník) a pořadatele;
  * jen pro plně uhrazenou přihlášku. Jinak 404 (nic neprozrazuje).
  */

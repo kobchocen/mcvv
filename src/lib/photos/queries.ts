@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/client";
 import type { PhotoMeta } from "./gallery";
+import { isPublicPhoto } from "./share";
 
 const REVALIDATE_SECONDS = 600;
 export const PHOTOS_CACHE_TAG = "photos";
@@ -50,5 +51,21 @@ export const getGalleryPhotos = unstable_cache(
       orderBy: { id: "asc" },
     }),
   ["gallery-photos"],
+  { revalidate: REVALIDATE_SECONDS, tags: [PHOTOS_CACHE_TAG] },
+);
+
+/**
+ * One photo for its permalink (no image column). Null when the photo does not exist or is
+ * not published in the gallery (has_image = false) — the permalink then answers 404.
+ */
+export const getPublicPhoto = unstable_cache(
+  async (id: number) => {
+    const photo = await prisma.photo.findUnique({
+      where: { id },
+      select: { id: true, year: true, width: true, height: true, hasImage: true },
+    });
+    return isPublicPhoto(photo) ? photo : null;
+  },
+  ["public-photo"],
   { revalidate: REVALIDATE_SECONDS, tags: [PHOTOS_CACHE_TAG] },
 );

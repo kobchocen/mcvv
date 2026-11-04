@@ -95,6 +95,13 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       router.replace({ pathname, params: { id: String(params.id ?? "") } }, { locale: nextLocale });
       return;
     }
+    if (pathname === "/fotogalerie/foto/[id]") {
+      // The gallery lightbox moves between photos with history.replaceState, so take the
+      // open photo id from the address bar rather than from the (stale) route params.
+      const id = window.location.pathname.split("/").filter(Boolean).pop() ?? "";
+      router.replace({ pathname, params: { id } }, { locale: nextLocale });
+      return;
+    }
     if (pathname === "/resultboard/[tv]") {
       router.replace(
         { pathname, params: { tv: String(params.tv ?? "1") } },

@@ -27,6 +27,8 @@ export default defineRouting({
     "/kluby": "/kluby",
     "/kluby/[slug]": "/kluby/[slug]",
     "/fotogalerie": "/fotogalerie",
+    // trvalý odkaz na fotku pro sdílení (Q426)
+    "/fotogalerie/foto/[id]": "/fotogalerie/foto/[id]",
     "/prihlaseni": "/prihlaseni",
     "/registrace": "/registrace",
     "/overeni": "/overeni",

@@ -3,7 +3,9 @@
  *
  * - cs and en are complete and have identical key sets.
  * - de, pl and uk contain exactly the public namespaces, with exactly the keys of en there;
- *   everything else falls back to en (see messages.ts).
+ *   everything else (admin, race-day staff screens) falls back to cs (Q430, see messages.ts).
+ * - Keys listed in AHEAD_OF_EN may exist in de/pl/uk before they land in cs/en (translations
+ *   prepared for a feature on another branch); once en has them, the normal checks apply.
  * - Every translated string keeps the ICU arguments, select keys and rich-text tags of en,
  *   so a translation can never break a page at runtime.
  */
@@ -44,6 +46,18 @@ export const PUBLIC_NAMESPACES = [
   "Leader",
   "Record",
 ].sort();
+
+/**
+ * Keys translated ahead of cs/en, with the ICU shape their en text will have.
+ * PhotoGallery share texts come with photo sharing (PR #290).
+ */
+const AHEAD_OF_EN: Record<string, string[]> = {
+  "PhotoGallery.share": [],
+  "PhotoGallery.linkCopied": [],
+  "PhotoGallery.copyFailed": [],
+  "PhotoGallery.shareTitle": ["arg:year"],
+  "PhotoGallery.shareDescription": ["arg:year"],
+};
 
 function load(locale: string): Record<string, Json> {
   const url = new URL(`./locales/${locale}/common.json`, import.meta.url);
@@ -147,7 +161,7 @@ describe("web locales", () => {
     assert.deepEqual([...routingConfig.locales], ["cs", "en", "de", "pl", "uk"]);
     assert.equal(routingConfig.defaultLocale, "cs");
     assert.deepEqual([...PARTIAL_LOCALES], ["de", "pl", "uk"]);
-    assert.equal(FALLBACK_LOCALE, "en");
+    assert.equal(FALLBACK_LOCALE, "cs");
   });
 
   it("cs and en have identical keys and compatible ICU shapes", () => {
@@ -193,12 +207,15 @@ describe("web locales", () => {
         const expected = [...enFlat.keys()].filter((key) =>
           PUBLIC_NAMESPACES.includes(key.split(".")[0]),
         );
-        assert.deepEqual([...ownFlat.keys()].sort(), expected.sort());
+        const pending = Object.keys(AHEAD_OF_EN).filter((key) => !enFlat.has(key));
+        assert.deepEqual([...ownFlat.keys()].sort(), [...expected, ...pending].sort());
       });
 
       it("keeps ICU arguments, select keys and rich-text tags of en", () => {
         for (const [key, value] of ownFlat) {
-          assert.deepEqual(icuShape(value), icuShape(enFlat.get(key) ?? ""), key);
+          const en = enFlat.get(key);
+          const expected = en === undefined ? AHEAD_OF_EN[key] : icuShape(en);
+          assert.deepEqual(icuShape(value), expected, key);
         }
       });
 
@@ -210,10 +227,16 @@ describe("web locales", () => {
         assert.doesNotMatch(all, /\bslots?\b|\bZK\b/i);
       });
 
-      it("loads with en as fallback for everything else", async () => {
+      it("loads with cs as fallback for staff screens (Q430)", async () => {
         const merged = flatten((await loadMessages(locale)) as Record<string, Json>);
-        assert.deepEqual([...merged.keys()].sort(), [...enFlat.keys()].sort());
+        const csFlat = flatten(cs);
+        const expectedKeys = new Set([...csFlat.keys(), ...ownFlat.keys()]);
+        assert.deepEqual([...merged.keys()].sort(), [...expectedKeys].sort());
         for (const [key, value] of ownFlat) assert.equal(merged.get(key), value, key);
+        for (const [key, value] of csFlat) {
+          if (!ownFlat.has(key)) assert.equal(merged.get(key), value, key);
+        }
+        assert.equal(merged.get("Admin.title") ?? null, csFlat.get("Admin.title") ?? null);
       });
     });
   }

@@ -22,6 +22,14 @@ export function documentLocale(raw: unknown): DocumentLocale {
   return isLocale(raw) && raw !== "cs" ? "en" : "cs";
 }
 
+/**
+ * Language of staff documents (admin print-outs, start-list PDF): English for en, Czech for
+ * everything else – staff screens in de/pl/uk are Czech-only (Q430).
+ */
+export function staffLocale(raw: unknown): DocumentLocale {
+  return raw === "en" ? "en" : "cs";
+}
+
 /** BCP 47 tag for Intl formatting of a web locale. */
 export const INTL_TAG: Record<Locale, string> = {
   cs: "cs-CZ",

@@ -1,11 +1,13 @@
 "use client";
 
-import { Check, Globe } from "lucide-react";
+import { Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
+import { CountryFlag } from "@/components/atoms/country-flag";
 import {
   localeCodes,
+  localeFlags,
   localeLabels,
   locales,
   type Locale,
@@ -138,7 +140,7 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
             className,
           )}
         >
-          <Globe className="size-[17px]" aria-hidden="true" />
+          <CountryFlag code={localeFlags[locale]} className="h-[13px] rounded-[2px]" />
           <span className="text-sm font-semibold">{localeCodes[locale]}</span>
           <span className="sr-only">{t("label")}</span>
         </Button>
@@ -162,9 +164,7 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
                 isSelected && "bg-race-forest-2 dark:bg-white/10",
               )}
             >
-              <span className="w-7 shrink-0 text-xs font-bold tracking-[0.06em] text-muted-foreground">
-                {localeCodes[value]}
-              </span>
+              <CountryFlag code={localeFlags[value]} className="h-[14px] rounded-[2px]" />
               <span
                 className={cn(
                   "min-w-0 flex-1 text-sm font-semibold",

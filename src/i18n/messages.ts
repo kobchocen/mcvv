@@ -2,16 +2,17 @@
  * Message loading with fallback (#273).
  *
  * cs and en are complete. de, pl and uk are machine translations of the public web only;
- * every namespace they do not contain (admin, race-day staff screens, receipts, …) falls
- * back to English, key by key.
+ * every namespace they do not contain (admin, race-day staff screens, cash desk, …) falls
+ * back to Czech, key by key (Q430: staff screens are Czech-only for these languages).
+ * E-mails and PDFs for runners use English instead – see documentLocale().
  */
 
 /** Locales whose message file contains only the public namespaces. */
 export const PARTIAL_LOCALES = ["de", "pl", "uk"] as const;
 export type PartialLocale = (typeof PARTIAL_LOCALES)[number];
 
-/** Locale whose messages fill gaps in the partial locales. */
-export const FALLBACK_LOCALE = "en" as const;
+/** Locale whose messages fill gaps in the partial locales (Q430). */
+export const FALLBACK_LOCALE = "cs" as const;
 
 export function isPartialLocale(locale: string): locale is PartialLocale {
   return (PARTIAL_LOCALES as readonly string[]).includes(locale);

@@ -10,7 +10,7 @@ import {
   loadPublicStartList,
   loadStartSettings,
 } from "@/lib/race/startlist-load";
-import { documentLocale } from "@/lib/i18n/locale";
+import { staffLocale } from "@/lib/i18n/locale";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export async function GET(request: Request): Promise<Response> {
   if (year < 2000 || year > 2100) {
     return new Response("Not found", { status: 404, headers: NO_STORE });
   }
-  const locale = documentLocale(params.get("lang"));
+  const locale = staffLocale(params.get("lang"));
   const settings = await loadStartSettings(year);
   const order = parseStartListOrder(params.get("razeni"));
   const { rows: loaded } = await loadPublicStartList(year, settings.model);

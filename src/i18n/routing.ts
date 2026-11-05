@@ -26,4 +26,16 @@ export const localeCodes: Record<Locale, string> = {
   uk: "UA",
 };
 
+/**
+ * Flag (country code in `public/flags/4x3`) shown next to each language in the switcher (Q436).
+ * English uses the UK flag, Ukrainian the flag of Ukraine.
+ */
+export const localeFlags: Record<Locale, string> = {
+  cs: "CZ",
+  en: "GB",
+  de: "DE",
+  pl: "PL",
+  uk: "UA",
+};
+
 export const { Link, redirect, usePathname, useRouter } = createNavigation(routing);

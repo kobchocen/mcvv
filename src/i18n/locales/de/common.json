@@ -714,7 +714,12 @@
     "close": "Schließen",
     "previousPhoto": "Vorheriges Foto",
     "nextPhoto": "Nächstes Foto",
-    "back": "Zurück zur Startseite"
+    "back": "Zurück zur Startseite",
+    "share": "Teilen",
+    "linkCopied": "Link kopiert",
+    "copyFailed": "Der Link konnte nicht kopiert werden",
+    "shareTitle": "Malá cena Velké Verandy {year} – Fotogalerie",
+    "shareDescription": "Ein Foto der Ausgabe {year} des traditionellen winterlichen Waldcrosslaufs in Choceň."
   },
   "Runner": {
     "statsLink": "Wo stehst du in der Geschichte? Zu den Statistiken",

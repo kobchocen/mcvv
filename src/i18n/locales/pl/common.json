@@ -714,7 +714,12 @@
     "close": "Zamknij",
     "previousPhoto": "Poprzednie zdjęcie",
     "nextPhoto": "Następne zdjęcie",
-    "back": "Powrót na stronę główną"
+    "back": "Powrót na stronę główną",
+    "share": "Udostępnij",
+    "linkCopied": "Link skopiowany",
+    "copyFailed": "Nie udało się skopiować linku",
+    "shareTitle": "Malá cena Velké Verandy {year} – galeria zdjęć",
+    "shareDescription": "Zdjęcie z edycji {year} tradycyjnego zimowego leśnego biegu przełajowego w mieście Choceň."
   },
   "Runner": {
     "statsLink": "Jak wypadasz na tle historii? Przejrzyj statystyki",

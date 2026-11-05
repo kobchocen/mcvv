@@ -9,7 +9,7 @@ import { formatOnlineDeadline, formatRaceDayShort } from "@/lib/race/program";
 import { languageAlternates, ogAlternateLocales, ogLocale, siteDescription } from "@/lib/site/seo";
 import { dateTimeLabel, dayLabel, termEndLabel } from "@/lib/slots/term-end";
 
-import { documentLocale, intlTag, isLocale, siteLocale } from "./locale";
+import { documentLocale, intlTag, isLocale, siteLocale, staffLocale } from "./locale";
 
 const plain = (value: string) => value.replace(/\s/g, " ");
 
@@ -26,6 +26,11 @@ describe("locale helpers (#273)", () => {
     for (const l of ["en", "de", "pl", "uk"]) assert.equal(documentLocale(l), "en", l);
     assert.equal(documentLocale("fr"), "cs");
     assert.equal(documentLocale(undefined), "cs");
+  });
+
+  it("staff documents are Czech except for English (Q430)", () => {
+    assert.equal(staffLocale("en"), "en");
+    for (const l of ["cs", "de", "pl", "uk", null]) assert.equal(staffLocale(l), "cs", String(l));
   });
 
   it("maps locales to Intl tags", () => {

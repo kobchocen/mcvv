@@ -1,0 +1,126 @@
+import { getTranslations } from "next-intl/server";
+
+import { PhotoGalleryGrid } from "@/components/molecules";
+import { McvvPublicNavbar } from "@/components/organisms";
+import type { McvvHomepageContent } from "@/components/templates";
+import { Link, type Locale } from "@/i18n/routing";
+import { photoCaption } from "@/lib/photos/caption";
+import { getGalleryPhotos, getPhotoYearCounts } from "@/lib/photos/queries";
+import { photoPermalinkBase } from "@/lib/photos/share";
+import { cn } from "@/lib/utils";
+
+type PhotoGalleryViewProps = Readonly<{
+  locale: Locale;
+  /** Requested year (?year=), falls back to the newest one. */
+  year: number | null;
+  /** Photo permalink: open this photo in the lightbox. */
+  initialPhotoId?: number;
+}>;
+
+/** Public photo gallery (/fotogalerie and the photo permalink /fotogalerie/foto/[id]). */
+export async function PhotoGalleryView({ locale, year, initialPhotoId }: PhotoGalleryViewProps) {
+  const home = await getTranslations({ locale, namespace: "Home" });
+  const copy = await getTranslations({ locale, namespace: "PhotoGallery" });
+
+  const yearRows = await getPhotoYearCounts();
+  const years = yearRows.map((row) => row.year);
+  const selectedYear = year && years.includes(year) ? year : (years[0] ?? null);
+
+  const photos = selectedYear === null ? [] : await getGalleryPhotos(selectedYear);
+  const gallery = photos.map((photo) => {
+    const caption = photoCaption({
+      year: photo.year,
+      description: photo.debugText,
+      place: photo.location.desc,
+      people: photo.runners.map((row) => row.runner.name),
+    });
+    return {
+      id: photo.id,
+      caption,
+      alt: caption || copy("photoAlt", { year: selectedYear ?? "" }),
+    };
+  });
+
+  return (
+    <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvPublicNavbar
+        content={{
+          brand: home.raw("brand") as McvvHomepageContent["brand"],
+          nav: home.raw("nav") as McvvHomepageContent["nav"],
+        }}
+        variant="solid"
+      />
+      <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex items-center gap-3">
+            <span className="h-0.5 w-7 bg-race-accent" />
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-race-accent">
+              {copy("eyebrow")}
+            </p>
+          </div>
+          <h1 className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white sm:text-5xl">
+            {copy("title")}
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-race-muted">{copy("intro")}</p>
+
+          {years.length === 0 ? (
+            <p className="mt-10 text-sm text-race-muted">{copy("empty")}</p>
+          ) : (
+            <>
+              <div className="mt-8 flex flex-wrap gap-2">
+                {years.map((y) => (
+                  <Link
+                    key={y}
+                    href={`/fotogalerie?year=${y}` as never}
+                    className={cn(
+                      "border px-3 py-1.5 text-sm font-semibold",
+                      y === selectedYear
+                        ? "border-race-accent bg-race-accent-solid text-white"
+                        : "border-race-line/60 text-race-muted hover:border-race-accent hover:text-foreground dark:hover:text-white",
+                    )}
+                  >
+                    {y}
+                  </Link>
+                ))}
+              </div>
+
+              <p className="mt-6 text-sm text-race-dim">
+                {copy("count", { count: photos.length, year: selectedYear ?? "" })}
+              </p>
+
+              <PhotoGalleryGrid
+                photos={gallery}
+                loadMoreLabel={copy("loadMore")}
+                closeLabel={copy("close")}
+                previousLabel={copy("previousPhoto")}
+                nextLabel={copy("nextPhoto")}
+                initialPhotoId={initialPhotoId}
+                share={
+                  selectedYear === null
+                    ? undefined
+                    : {
+                        permalinkBase: photoPermalinkBase(locale),
+                        galleryPath: `/${locale}/fotogalerie?year=${selectedYear}`,
+                        title: copy("shareTitle", { year: selectedYear }),
+                        label: copy("share"),
+                        copiedLabel: copy("linkCopied"),
+                        failedLabel: copy("copyFailed"),
+                      }
+                }
+              />
+            </>
+          )}
+
+          <p className="mt-10">
+            <Link
+              href="/"
+              className="font-medium text-race-accent underline-offset-2 hover:underline"
+            >
+              {copy("back")}
+            </Link>
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}

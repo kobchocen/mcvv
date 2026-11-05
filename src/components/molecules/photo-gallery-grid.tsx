@@ -3,12 +3,24 @@
 import { useState } from "react";
 
 import { PhotoTile } from "./photo-tile";
-import { PhotoLightbox } from "./photo-lightbox";
+import { PhotoLightbox, type PhotoLightboxShare } from "./photo-lightbox";
 
 export type PhotoGalleryItem = {
   id: number;
   caption: string;
   alt: string;
+};
+
+export type PhotoGalleryShare = {
+  /** Permalink prefix the photo id is appended to, e.g. `/cs/fotogalerie/foto/`. */
+  permalinkBase: string;
+  /** Address restored when the lightbox closes, e.g. `/cs/fotogalerie?year=2014`. */
+  galleryPath: string;
+  /** Share-sheet title (same for the whole year). */
+  title: string;
+  label: string;
+  copiedLabel: string;
+  failedLabel: string;
 };
 
 export type PhotoGalleryGridProps = {
@@ -17,9 +29,23 @@ export type PhotoGalleryGridProps = {
   closeLabel: string;
   previousLabel: string;
   nextLabel: string;
+  /** Open this photo in the lightbox on load (photo permalink). */
+  initialPhotoId?: number;
+  /** Permalinks + "Sdílet" button; the address bar follows the open photo. */
+  share?: PhotoGalleryShare;
 };
 
 const PAGE_SIZE = 20;
+
+/** Index of the photo a permalink opens, or null. */
+export function initialLightboxIndex(
+  photos: readonly { id: number }[],
+  initialPhotoId?: number,
+): number | null {
+  if (initialPhotoId === undefined) return null;
+  const index = photos.findIndex((photo) => photo.id === initialPhotoId);
+  return index === -1 ? null : index;
+}
 
 export function PhotoGalleryGrid({
   photos,
@@ -27,10 +53,38 @@ export function PhotoGalleryGrid({
   closeLabel,
   previousLabel,
   nextLabel,
+  initialPhotoId,
+  share,
 }: PhotoGalleryGridProps) {
-  const [visible, setVisible] = useState(PAGE_SIZE);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(() =>
+    initialLightboxIndex(photos, initialPhotoId),
+  );
+  const [visible, setVisible] = useState(() => Math.max(PAGE_SIZE, (activeIndex ?? 0) + 1));
   const shown = photos.slice(0, visible);
+
+  const open = (index: number | null) => {
+    // Keep the grid in sync when arrows move past the loaded page.
+    if (index !== null && index >= visible) setVisible(index + 1);
+    setActiveIndex(index);
+    if (share && typeof window !== "undefined") {
+      // The address bar always holds a shareable link to the open photo.
+      const photo = index === null ? null : photos[index];
+      const next = photo ? `${share.permalinkBase}${photo.id}` : share.galleryPath;
+      if (window.location.pathname + window.location.search !== next) {
+        window.history.replaceState(null, "", next);
+      }
+    }
+  };
+
+  const lightboxShare: PhotoLightboxShare | undefined = share
+    ? {
+        urlFor: (id) => `${share.permalinkBase}${id}`,
+        titleFor: () => share.title,
+        label: share.label,
+        copiedLabel: share.copiedLabel,
+        failedLabel: share.failedLabel,
+      }
+    : undefined;
 
   return (
     <>
@@ -40,7 +94,7 @@ export function PhotoGalleryGrid({
             key={photo.id}
             type="button"
             title={photo.caption}
-            onClick={() => setActiveIndex(index)}
+            onClick={() => open(index)}
             className="relative aspect-[3/4] cursor-zoom-in overflow-hidden border border-race-line/60 bg-race-forest text-left"
           >
             <PhotoTile
@@ -71,14 +125,11 @@ export function PhotoGalleryGrid({
           caption: photo.caption,
         }))}
         activeIndex={activeIndex}
-        onActiveIndexChange={(index) => {
-          // Keep the grid in sync when arrows move past the loaded page.
-          if (index !== null && index >= visible) setVisible(index + 1);
-          setActiveIndex(index);
-        }}
+        onActiveIndexChange={open}
         closeLabel={closeLabel}
         previousLabel={previousLabel}
         nextLabel={nextLabel}
+        share={lightboxShare}
       />
     </>
   );

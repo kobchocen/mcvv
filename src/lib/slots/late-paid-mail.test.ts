@@ -33,13 +33,17 @@ test("mail g: subject, bibs, start times, Sunday pickup, no forbidden words", ()
     assert.match(body, /Start prvního běžce v 10:15/);
     assert.match(body, /VS 2026412/);
     assert.doesNotMatch(body, FORBIDDEN);
-    assert.doesNotMatch(body, /přidělíme při losování/);
+    assert.doesNotMatch(body, /přidělíme|ve zveřejněné startovce/);
   }
 });
 
 test("mail g: not published → pending bib sentence, no numbers", () => {
   const mail = renderLatePaidMail({ ...base, published: false });
-  assert.match(mail.text, /přidělíme při losování startovky/);
+  assert.match(
+    mail.text,
+    /Startovní číslo a čas startu najdete v Moje přihláška a ve zveřejněné startovce\./,
+  );
+  assert.doesNotMatch(mail.text, /přidělíme/);
   assert.doesNotMatch(mail.text, /č\. 287/);
   assert.doesNotMatch(mail.html, FORBIDDEN);
 });

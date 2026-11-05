@@ -222,8 +222,9 @@ export function atClock(clock: string): string {
   return `${[2, 3, 4, 12, 13, 14, 20, 21, 22, 23].includes(hour) ? "ve" : "v"} ${clock}`;
 }
 
+/** Startovka ještě není zveřejněná (Q407/Q468 – stejné znění jako na webu). */
 const PENDING_BIB =
-  "Číslo a čas startu přidělíme při losování startovky – najdete je v Moje přihláška.";
+  "Startovní číslo a čas startu najdete v Moje přihláška a ve zveřejněné startovce.";
 const MISSING_BIB = "Číslo a čas startu najdete v Moje přihláška.";
 
 /**

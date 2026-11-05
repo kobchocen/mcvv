@@ -49,17 +49,26 @@ test("entryDeadlineLabel (Q396): pozdní přihláška → konec pozdního termí
     { type: "late" as const, to: new Date("2026-12-05T17:00:00Z") }, // so 5. 12. 18:00 SEČ
   ];
   const deadline = new Date("2026-12-02T12:00:00Z");
-  assert.equal(entryDeadlineLabel({ slot: "late", deadline }, slots, "cs"), "5. 12. 2026 18:00");
+  assert.equal(
+    entryDeadlineLabel({ slot: "late", deadline }, slots, "cs"),
+    "sobota 5. 12. 2026 18:00",
+  );
   assert.match(
     entryDeadlineLabel({ slot: "late", deadline }, slots, "en") ?? "",
-    /5 Dec 2026, 18:00/,
+    /Saturday 5 Dec 2026, 18:00/,
   );
   // Jiný konec pozdního termínu v nastavení → jiný text (nic natvrdo).
   const moved = [{ type: "late" as const, to: new Date("2026-12-05T15:30:00Z") }];
-  assert.equal(entryDeadlineLabel({ slot: "late", deadline }, moved, "cs"), "5. 12. 2026 16:30");
-  // Ostatní přihlášky a pozdní bez nastaveného termínu → běžná uzávěrka (jen datum).
-  assert.equal(entryDeadlineLabel({ slot: "standard", deadline }, slots, "cs"), "2. 12. 2026");
-  assert.equal(entryDeadlineLabel({ slot: null, deadline }, slots, "cs"), "2. 12. 2026");
-  assert.equal(entryDeadlineLabel({ slot: "late", deadline }, [], "cs"), "2. 12. 2026");
+  assert.equal(
+    entryDeadlineLabel({ slot: "late", deadline }, moved, "cs"),
+    "sobota 5. 12. 2026 16:30",
+  );
+  // Ostatní přihlášky a pozdní bez nastaveného termínu → běžná uzávěrka (den v týdnu a datum, Q406).
+  assert.equal(
+    entryDeadlineLabel({ slot: "standard", deadline }, slots, "cs"),
+    "středa 2. 12. 2026",
+  );
+  assert.equal(entryDeadlineLabel({ slot: null, deadline }, slots, "cs"), "středa 2. 12. 2026");
+  assert.equal(entryDeadlineLabel({ slot: "late", deadline }, [], "cs"), "středa 2. 12. 2026");
   assert.equal(entryDeadlineLabel({ slot: "standard", deadline: null }, slots, "cs"), null);
 });

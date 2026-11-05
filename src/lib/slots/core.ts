@@ -263,3 +263,25 @@ export function autoConfirmLastDay(slots: readonly Slot[], payUntil: Date | null
   const c = pragueCivil(last);
   return `${c.year}-${String(c.month).padStart(2, "0")}-${String(c.day).padStart(2, "0")}`;
 }
+
+/** Odpočet v hlavičce úvodní stránky (Q401): do konce standardních, nebo pozdních přihlášek. */
+export type DeadlineCountdown = { targetMs: number; term: "standard" | "late" };
+
+/**
+ * Co odpočítávat v hlavičce: před koncem standardních přihlášek jejich konec, během zapnutých
+ * pozdních přihlášek konec pozdního termínu; jinak nic. Cíl je o sekundu před výlučným koncem.
+ */
+export function deadlineCountdown(
+  slots: readonly Slot[],
+  standardEndAt: Date | null,
+  now: Date,
+): DeadlineCountdown | null {
+  if (standardEndAt && now.getTime() < standardEndAt.getTime() - 1000) {
+    return { targetMs: standardEndAt.getTime() - 1000, term: "standard" };
+  }
+  const late = slotOf(slots, "late");
+  if (late && slotRunning(late, now)) {
+    return { targetMs: late.to.getTime() - 1000, term: "late" };
+  }
+  return null;
+}

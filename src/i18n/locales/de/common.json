@@ -55,8 +55,10 @@
       "claim": "Ein Waldcross, der dich an jedem Anstieg prüft. Kurz, intensiv und gnadenlos – mit steilen Anstiegen und schnellen, technischen Abstiegen.",
       "primaryCta": "Anmeldungen",
       "primaryHref": "/prihlaseni-zavodnici",
-      "closesInDays": "Online-Anmeldung endet in {days, plural, one {# Tag} other {# Tagen}}",
-      "closesInHours": "Online-Anmeldung endet in {hours} h {minutes} min",
+      "closesInDays": "Standardanmeldung endet in {days, plural, one {# Tag} other {# Tagen}}",
+      "closesInHours": "Standardanmeldung endet in {hours} h {minutes} min",
+      "lateClosesInDays": "Späte Anmeldung endet in {days, plural, one {# Tag} other {# Tagen}}",
+      "lateClosesInHours": "Späte Anmeldung endet in {hours} h {minutes} min",
       "secondaryCta": "Ausschreibung",
       "secondaryHref": "/program",
       "tertiaryCta": "Ergebnisse",
@@ -560,7 +562,8 @@
   "Entrants": {
     "eyebrow": "{n}. Ausgabe",
     "title": "Angemeldete Läufer",
-    "deadline": "Ende der Online-Anmeldung",
+    "standardUntil": "Standardanmeldung bis {date}",
+    "lateUntil": "Späte Anmeldung bis {end} · Erwachsene {adult} CZK / Jugend {kids} CZK · innerhalb von {minutes} Minuten nach dem Absenden bezahlen",
     "register": "Anmelden",
     "closed": "Die Online-Anmeldung ist beendet. Am Wettkampftag kannst du dich noch vor Ort im Wettkampfbüro bis {onsiteUntil} anmelden (Erwachsene {adult} CZK / Kinder und Jugend {kids} CZK).",
     "empty": "Noch keine bestätigten Läufer.",
@@ -589,6 +592,7 @@
     "accountMessagesIntro": "Auch ohne Anmeldung kannst du dem Veranstalter eine Frage zu deinem Konto oder zum Rennen schicken.",
     "accountSettings": "Kontoeinstellungen",
     "deadline": "Anmeldeschluss",
+    "standardUntil": "Standardanmeldung bis: {date}",
     "readOnly": "nur lesen",
     "name": "Name der Anmeldung",
     "email": "E-Mail",
@@ -690,7 +694,7 @@
     "latePayVerifyInvalid": "Diese Anmeldung kann nicht mehr geprüft werden. Bitte lade die Seite neu.",
     "latePayRunners": "Läufer",
     "latePaidThanks": "Danke, die Zahlung ist rechtzeitig eingegangen.",
-    "latePaidBibPending": "<b>Startnummer und Startzeit werden bei der Auslosung der Startliste vergeben.</b> Du findest sie hier unter „Meine Anmeldung“ und in der veröffentlichten Startliste.",
+    "latePaidBibPending": "<b>Startnummer und Startzeit</b> findest du hier unter „Meine Anmeldung“ und in der veröffentlichten Startliste.",
     "lateBibsTitle": "Startnummern und Startzeiten",
     "lateBibStart": "Start",
     "lateBibPickup": "Hole deine Startnummer im Wettkampfbüro {day} ab {from} ab.",
@@ -1171,7 +1175,19 @@
         "q": "Ich melde mich mit Google an – brauche ich ein Passwort?",
         "a": "Nein. Wenn du zusätzlich ein Passwort festlegen möchtest, nutze „Passwort vergessen?“."
       }
-    ]
+    ],
+    "faqTerms": {
+      "stepTitle": "Änderungen bis zum Ende deines Zeitraums",
+      "stepText": "Den Verein oder die Läuferliste kannst du bis zum Ende des Zeitraums ändern, in dem du dich angemeldet hast (Standardanmeldung bis {standardEnd}). Danach ist die Anmeldung schreibgeschützt. Änderungen im Kopfbereich bestätigst du mit <b>Uložit</b> (Speichern).",
+      "validLate": "Eine späte Anmeldung muss innerhalb von {minutes} Minuten nach dem Absenden bezahlt werden.",
+      "change": "Ja, bis zum Ende der Standardanmeldung ({standardEnd}) kannst du Angaben ändern sowie Läufer hinzufügen und entfernen. Eine bezahlte späte Anmeldung kann nicht mehr geändert oder storniert werden.",
+      "lateQ": "Ich habe die Standardanmeldung verpasst. Kann ich mich noch anmelden?",
+      "lateA": "Ja. Die späte Anmeldung läuft {lateFrom} – {lateTo}: Startgeld {lateAdult} CZK Erwachsene / {lateKids} CZK Jugend. Bezahle die Anmeldung nach dem Absenden per QR-Zahlung, am besten als Sofortüberweisung, innerhalb von {minutes} Minuten – sonst wird sie automatisch storniert. Danach ist eine Anmeldung nur noch vor Ort möglich ({raceDay}) im Wettkampfbüro von {officeOpens} bis {onsiteUntil} ({onsiteAdult} / {onsiteKids} CZK).",
+      "addQ": "Ich habe eine Standardanmeldung und möchte einen weiteren Läufer hinzufügen.",
+      "addA": "Nach dem Ende der Standardanmeldung kann die ursprüngliche Anmeldung nicht mehr geändert werden. Melde den weiteren Läufer mit einer neuen späten Anmeldung an – sie hat ein eigenes Verwendungszeichen (VS) und wird innerhalb von {minutes} Minuten bezahlt.",
+      "refundQ": "Erstattet ihr das Startgeld bei einer Abmeldung?",
+      "refundA": "Das Startgeld erstatten wir bei einer Abmeldung bis zum Ende der Standardanmeldung ({standardEndShort}). Danach erstatten wir kein Startgeld, auch nicht bei späten Anmeldungen."
+    }
   },
   "ResultsArchive": {
     "eyebrow": "05 — Ergebnisse und Geschichte",

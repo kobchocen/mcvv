@@ -59,6 +59,40 @@ export function formatRaceDay(value: Date, locale: string): string {
   return capitalize(locale === "cs" ? text.replace(/,/g, "") : text);
 }
 
+/**
+ * Date with weekday (Q406): cs "středa 2. 12. 2026", en "Wednesday 2 Dec 2026",
+ * de "Mittwoch, 2.12.2026", pl "środa 2.12.2026", uk "середа 2.12.2026".
+ */
+export function formatWeekdayDate(
+  value: Date,
+  locale: string,
+  { year = true }: { year?: boolean } = {},
+): string {
+  const weekday = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : tag(locale), {
+    weekday: "long",
+    timeZone: TIME_ZONE,
+  }).format(value);
+  const date = year
+    ? formatDate(value, locale)
+    : new Intl.DateTimeFormat(locale === "en" ? "en-GB" : tag(locale), {
+        day: "numeric",
+        month: locale === "en" ? "short" : "numeric",
+        timeZone: TIME_ZONE,
+      }).format(value);
+  return `${weekday}${locale === "de" ? "," : ""} ${date}`;
+}
+
+/** Date and time with weekday: cs "sobota 5. 12. 2026 18:00", en "Saturday 5 Dec 2026, 18:00". */
+export function formatWeekdayDateTime(value: Date, locale: string): string {
+  const time = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: TIME_ZONE,
+  }).format(value);
+  return `${formatWeekdayDate(value, locale)}${locale === "en" ? "," : ""} ${time}`;
+}
+
 /** Date and time: cs "2. 12. 2026 14:05", en "2 Dec 2026, 14:05". */
 export function formatDateTime(value: Date, locale: string): string {
   return new Intl.DateTimeFormat(tag(locale), {

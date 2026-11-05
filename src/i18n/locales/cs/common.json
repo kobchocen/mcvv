@@ -55,8 +55,10 @@
       "claim": "Lesní kros, který tě prověří v každém kopci. Krátká, intenzivní a nemilosrdná trať plná výběhů a prudkých seběhů.",
       "primaryCta": "Přihlášky",
       "primaryHref": "/prihlaseni-zavodnici",
-      "closesInDays": "Online přihlášky končí za {days, plural, one {# den} few {# dny} other {# dní}}",
-      "closesInHours": "Online přihlášky končí za {hours} h {minutes} min",
+      "closesInDays": "Standardní přihlášky končí za {days, plural, one {# den} few {# dny} other {# dní}}",
+      "closesInHours": "Standardní přihlášky končí za {hours} h {minutes} min",
+      "lateClosesInDays": "Pozdní přihlášky končí za {days, plural, one {# den} few {# dny} other {# dní}}",
+      "lateClosesInHours": "Pozdní přihlášky končí za {hours} h {minutes} min",
       "secondaryCta": "Rozpis",
       "secondaryHref": "/program",
       "tertiaryCta": "Výsledky",
@@ -560,7 +562,8 @@
   "Entrants": {
     "eyebrow": "{n}. ročník",
     "title": "Přihlášení závodníci",
-    "deadline": "Uzávěrka online přihlášek",
+    "standardUntil": "Standardní přihlášky do {date}",
+    "lateUntil": "Pozdní přihlášky do {end} · dospělí {adult} Kč / mládež {kids} Kč · zaplatit do {minutes} minut od odeslání",
     "register": "Přihlásit se",
     "closed": "Online přihlášky skončily. Přihlásit se lze ještě na místě v den závodu v závodní kanceláři do {onsiteUntil} (dospělí {adult} Kč / mládež {kids} Kč).",
     "empty": "Zatím tu není žádný potvrzený běžec.",
@@ -589,6 +592,7 @@
     "accountMessagesIntro": "Dotaz k účtu nebo k závodu můžete pořadateli poslat i bez přihlášky.",
     "accountSettings": "Nastavení účtu",
     "deadline": "Uzávěrka",
+    "standardUntil": "Standardní přihlášky do: {date}",
     "readOnly": "jen čtení",
     "name": "Název přihlášky",
     "email": "E-mail",
@@ -690,7 +694,7 @@
     "latePayVerifyInvalid": "Přihlášku už nelze ověřit. Obnovte stránku.",
     "latePayRunners": "Běžci",
     "latePaidThanks": "Děkujeme, platba dorazila včas.",
-    "latePaidBibPending": "<b>Číslo a čas startu přidělíme při losování startovky.</b> Najdete je zde v „Moje přihláška“ a ve zveřejněné startovce.",
+    "latePaidBibPending": "<b>Startovní číslo a čas startu</b> najdete zde v „Moje přihláška“ a ve zveřejněné startovce.",
     "lateBibsTitle": "Startovní čísla a časy",
     "lateBibStart": "start",
     "lateBibPickup": "Startovní číslo vyzvednete v závodní kanceláři {day} od {from}.",
@@ -1780,7 +1784,19 @@
         "q": "Přihlašuji se přes Google – musím mít heslo?",
         "a": "Ne. Pokud byste si chtěli nastavit i heslo, použijte „Zapomněli jste heslo?“."
       }
-    ]
+    ],
+    "faqTerms": {
+      "stepTitle": "Úpravy do konce termínu",
+      "stepText": "Klub nebo seznam běžců můžete měnit do konce termínu, ve kterém jste se přihlásili (standardní přihlášky do {standardEnd}). Potom je přihláška jen pro čtení. Změny hlavičky potvrďte tlačítkem <b>Uložit</b>.",
+      "validLate": "Pozdní přihlášku je potřeba zaplatit do {minutes} minut od odeslání.",
+      "change": "Ano, do konce standardních přihlášek ({standardEnd}) můžete upravovat údaje, přidávat i odebírat běžce. Zaplacenou pozdní přihlášku už měnit ani zrušit nelze.",
+      "lateQ": "Nestihl jsem standardní přihlášky. Můžu se ještě přihlásit?",
+      "lateA": "Ano. Pozdní přihlášky běží {lateFrom} – {lateTo}: startovné {lateAdult} Kč dospělí / {lateKids} Kč mládež. Po odeslání přihlášku zaplaťte QR platbou, nejlépe okamžitou, do {minutes} minut – jinak se automaticky zruší. Potom se lze přihlásit už jen na místě ({raceDay}) v závodní kanceláři od {officeOpens} do {onsiteUntil} ({onsiteAdult} / {onsiteKids} Kč).",
+      "addQ": "Mám přihlášku ze standardního termínu a chci přidat dalšího běžce.",
+      "addA": "Po konci standardních přihlášek už původní přihlášku měnit nelze. Dalšího běžce přihlaste novou pozdní přihláškou – má vlastní variabilní symbol a platí se do {minutes} minut.",
+      "refundQ": "Vracíte startovné, když se odhlásím?",
+      "refundA": "Startovné vracíme při odhlášení do konce standardních přihlášek ({standardEndShort}). Po tomto termínu startovné nevracíme, ani u pozdních přihlášek."
+    }
   },
   "Receipt": {
     "title": "Doklad o zaplacení startovného",

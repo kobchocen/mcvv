@@ -54,7 +54,7 @@ import { isNewbie } from "@/lib/entries/newbie";
 import { loadAccountPromotionOptOut } from "@/lib/entries/account-promotion";
 import { countPastStarts } from "@/lib/entries/starts";
 import { BANK_ACCOUNT, BANK_BIC, BANK_IBAN, spdQrSvg, variableSymbol } from "@/lib/entries/spd";
-import { formatDate } from "@/lib/format/date";
+import { formatDate, formatWeekdayDate } from "@/lib/format/date";
 import { getSession, type SessionUser } from "@/lib/auth/session";
 import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { prisma } from "@/lib/db/client";
@@ -371,7 +371,7 @@ async function EntryBody({
           <div className="grid gap-3">
             {deadline && !lateRunning ? (
               <p className="text-sm text-race-muted">
-                {copy("deadline")}: {formatDate(deadline, locale)}
+                {copy("standardUntil", { date: formatWeekdayDate(deadline, locale) })}
               </p>
             ) : null}
             {awaiting ? null : (
@@ -386,7 +386,7 @@ async function EntryBody({
           <div className="grid gap-3">
             <p className="text-base leading-7 text-race-muted">
               {copy("closedRead")}
-              {deadline ? ` (${formatDate(deadline, locale)})` : ""}
+              {deadline ? ` (${formatWeekdayDate(deadline, locale)})` : ""}
             </p>
             {cancelledNotice}
           </div>

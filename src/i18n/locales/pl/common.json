@@ -55,8 +55,10 @@
       "claim": "Leśny przełaj, który sprawdzi cię na każdym podbiegu. Krótka, intensywna i bezlitosna trasa pełna stromych podbiegów i szybkich, technicznych zbiegów.",
       "primaryCta": "Zapisy",
       "primaryHref": "/prihlaseni-zavodnici",
-      "closesInDays": "Zapisy online kończą się za {days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
-      "closesInHours": "Zapisy online kończą się za {hours} h {minutes} min",
+      "closesInDays": "Zapisy standardowe kończą się za {days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+      "closesInHours": "Zapisy standardowe kończą się za {hours} h {minutes} min",
+      "lateClosesInDays": "Zapisy późne kończą się za {days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+      "lateClosesInHours": "Zapisy późne kończą się za {hours} h {minutes} min",
       "secondaryCta": "Regulamin",
       "secondaryHref": "/program",
       "tertiaryCta": "Wyniki",
@@ -560,7 +562,8 @@
   "Entrants": {
     "eyebrow": "{n}. edycja",
     "title": "Zapisani zawodnicy",
-    "deadline": "Koniec zapisów online",
+    "standardUntil": "Zapisy standardowe do {date}",
+    "lateUntil": "Zapisy późne do {end} · dorośli {adult} CZK / młodzież {kids} CZK · zapłać w ciągu {minutes} minut od wysłania",
     "register": "Zapisz się",
     "closed": "Zapisy online zostały zakończone. W dniu zawodów możesz jeszcze zapisać się na miejscu w biurze zawodów do {onsiteUntil} (dorośli {adult} CZK / dzieci i młodzież {kids} CZK).",
     "empty": "Brak jeszcze potwierdzonych zawodników.",
@@ -589,6 +592,7 @@
     "accountMessagesIntro": "Nawet bez zgłoszenia możesz wysłać organizatorowi pytanie dotyczące konta lub biegu.",
     "accountSettings": "Ustawienia konta",
     "deadline": "Termin",
+    "standardUntil": "Zapisy standardowe do: {date}",
     "readOnly": "tylko do odczytu",
     "name": "Nazwa zgłoszenia",
     "email": "E-mail",
@@ -690,7 +694,7 @@
     "latePayVerifyInvalid": "Tego zgłoszenia nie można już sprawdzić. Odśwież stronę.",
     "latePayRunners": "Zawodnicy",
     "latePaidThanks": "Dziękujemy, płatność dotarła na czas.",
-    "latePaidBibPending": "<b>Numer startowy i godzinę startu przydzielimy podczas losowania listy startowej.</b> Znajdziesz je tutaj w „Moje zgłoszenie” oraz na opublikowanej liście startowej.",
+    "latePaidBibPending": "<b>Numer startowy i godzinę startu</b> znajdziesz tutaj w „Moje zgłoszenie” oraz na opublikowanej liście startowej.",
     "lateBibsTitle": "Numery startowe i godziny startu",
     "lateBibStart": "start",
     "lateBibPickup": "Numer startowy odbierzesz w biurze zawodów {day} od {from}.",
@@ -1171,7 +1175,19 @@
         "q": "Loguję się przez Google – czy potrzebuję hasła?",
         "a": "Nie. Jeśli chcesz dodatkowo ustawić hasło, użyj opcji „Nie pamiętasz hasła?”."
       }
-    ]
+    ],
+    "faqTerms": {
+      "stepTitle": "Zmiany do końca Twojego terminu",
+      "stepText": "Klub lub listę zawodników możesz zmieniać do końca terminu, w którym się zgłosiłeś (zapisy standardowe do {standardEnd}). Potem zgłoszenie jest tylko do odczytu. Zmiany w nagłówku potwierdzasz przyciskiem <b>Uložit</b> (Zapisz).",
+      "validLate": "Zgłoszenie późne trzeba opłacić w ciągu {minutes} minut od wysłania.",
+      "change": "Tak, do końca zapisów standardowych ({standardEnd}) możesz zmieniać dane, dodawać i usuwać zawodników. Opłaconego zgłoszenia późnego nie można już zmienić ani anulować.",
+      "lateQ": "Nie zdążyłem z zapisami standardowymi. Czy mogę się jeszcze zgłosić?",
+      "lateA": "Tak. Zapisy późne trwają {lateFrom} – {lateTo}: wpisowe {lateAdult} CZK dorośli / {lateKids} CZK młodzież. Po wysłaniu opłać zgłoszenie płatnością QR, najlepiej natychmiastową, w ciągu {minutes} minut – inaczej zostanie automatycznie anulowane. Potem można się zgłosić już tylko na miejscu ({raceDay}) w biurze zawodów od {officeOpens} do {onsiteUntil} ({onsiteAdult} / {onsiteKids} CZK).",
+      "addQ": "Mam zgłoszenie z terminu standardowego i chcę dodać kolejnego zawodnika.",
+      "addA": "Po zakończeniu zapisów standardowych pierwotnego zgłoszenia nie można już zmienić. Kolejnego zawodnika zgłoś nowym zgłoszeniem późnym – ma własny symbol zmienny i opłaca się je w ciągu {minutes} minut.",
+      "refundQ": "Czy zwracacie wpisowe po wycofaniu zgłoszenia?",
+      "refundA": "Wpisowe zwracamy przy wycofaniu zgłoszenia do końca zapisów standardowych ({standardEndShort}). Po tym terminie wpisowego nie zwracamy, także przy zgłoszeniach późnych."
+    }
   },
   "ResultsArchive": {
     "eyebrow": "05 — Wyniki i historia",

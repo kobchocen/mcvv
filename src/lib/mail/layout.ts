@@ -3,6 +3,7 @@
  * Visually matches the newsletter template (feature/newsletter: renderNewsletter):
  * forest header with orange rule, white card, muted footer. Always paired with a text part.
  */
+import { documentLocale } from "@/lib/i18n/locale";
 
 export function escapeHtml(value: string): string {
   return value
@@ -26,7 +27,7 @@ export function renderTransactionalEmail(input: TransactionalEmailInput): {
   html: string;
   text: string;
 } {
-  const lang = input.locale === "en" ? "en" : "cs";
+  const lang = documentLocale(input.locale);
   const site = escapeHtml(input.site);
   const url = escapeHtml(input.action.url);
   const paragraph = (value: string) => `<p style="margin:0 0 16px">${escapeHtml(value)}</p>`;

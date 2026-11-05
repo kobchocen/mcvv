@@ -12,6 +12,7 @@ import {
   type RoleChangeMailOutcome,
   type RoleChangeMailTranslate,
 } from "./role-change-mail";
+import { documentLocale } from "@/lib/i18n/locale";
 
 /**
  * E-mail uživateli o změně role (#191). Jde přes e-mailovou frontu s nízkou prioritou
@@ -32,7 +33,7 @@ export async function notifyRoleChange(
     redirectTo,
     translator: async (lang) => {
       const t = await getTranslations({
-        locale: (lang === "en" ? "en" : "cs") as Locale,
+        locale: documentLocale(lang) as Locale,
         namespace: "RoleChangeMail",
       });
       return ((key, values) => t(key, values)) satisfies RoleChangeMailTranslate;

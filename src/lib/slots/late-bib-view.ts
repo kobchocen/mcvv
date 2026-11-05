@@ -7,6 +7,7 @@ import { getSiteSettings } from "@/lib/settings/site";
 import { onsiteWindow } from "./defaults";
 import { isPaidStatus } from "./late-core";
 import { pragueClock, pragueDayLabel } from "./standard-pay-core";
+import { dayLabel } from "./term-end";
 
 export type LateBibCard = {
   runnerId: string;
@@ -61,13 +62,15 @@ export async function loadLateBibView(
   const raceDate = race?.raceDate ?? null;
   if (!raceDate) return { cards, day: "", from: null };
   const day =
-    locale === "en"
-      ? `on ${new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Europe/Prague",
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        }).format(raceDate)}`
-      : pragueDayLabel(raceDate);
+    locale !== "cs" && locale !== "en"
+      ? dayLabel(raceDate, locale)
+      : locale === "en"
+        ? `on ${new Intl.DateTimeFormat("en-GB", {
+            timeZone: "Europe/Prague",
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          }).format(raceDate)}`
+        : pragueDayLabel(raceDate);
   return { cards, day, from: office ? pragueClock(office.from) : null };
 }

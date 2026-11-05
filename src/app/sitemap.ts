@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 
 import { locales } from "@/i18n/routing";
+import { languageAlternates } from "@/lib/site/seo";
 import { SITEMAP_ROUTES } from "@/lib/site/sitemap-routes";
 import { siteUrl } from "@/lib/site/url";
 
@@ -18,6 +19,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         lastModified: new Date(),
         changeFrequency: route === "" ? "weekly" : "monthly",
         priority: route === "" ? 1 : 0.8,
+        // hreflang for every language version (#273).
+        alternates: { languages: languageAlternates(base, route) },
       });
     });
   });

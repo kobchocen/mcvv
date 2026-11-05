@@ -2,6 +2,8 @@ import { getRequestConfig } from "next-intl/server";
 
 import routing from "@/next-intl.config";
 
+import { loadMessages } from "./messages";
+
 type Locale = (typeof routing.locales)[number];
 
 function normalizeLocale(input?: string): Locale {
@@ -11,11 +13,11 @@ function normalizeLocale(input?: string): Locale {
   return routing.defaultLocale;
 }
 
-export default getRequestConfig(async ({ locale }) => {
-  const resolvedLocale = normalizeLocale(locale);
+export default getRequestConfig(async ({ locale, requestLocale }) => {
+  const resolvedLocale = normalizeLocale(locale ?? (await requestLocale));
 
   return {
     locale: resolvedLocale,
-    messages: (await import(`./locales/${resolvedLocale}/common.json`)).default,
+    messages: await loadMessages(resolvedLocale),
   };
 });

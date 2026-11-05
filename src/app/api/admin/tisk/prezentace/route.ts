@@ -8,6 +8,7 @@ import { presentationPdfLabels } from "@/lib/print/presentation-labels";
 import { renderAlphabetPdf, renderPresentationPdf } from "@/lib/print/presentation-pdf";
 import { loadPresentationData } from "@/lib/print/load-presentation";
 import { loadReceiptFonts } from "@/lib/receipts/fonts";
+import { staffLocale } from "@/lib/i18n/locale";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function GET(request: Request): Promise<Response> {
   if (report !== "prihlasky" && report !== "abeceda") {
     return new Response("Not found", { status: 404, headers: NO_STORE });
   }
-  const locale = params.get("lang") === "en" ? "en" : "cs";
+  const locale = staffLocale(params.get("lang"));
   const data = await loadPresentationData();
   const fonts = await loadReceiptFonts();
   const blocks = buildPresentationBlocks(data.registrations, data.lines, data.paidById, data.model);

@@ -1,7 +1,14 @@
+import { intlTag } from "@/lib/i18n/locale";
+
 const TIME_ZONE = "Europe/Prague";
 
+/**
+ * Locale-aware formatting for every web locale (#273): cs and en keep their established
+ * formats; de, pl and uk use their own Intl conventions (numeric dates, long month names on
+ * the race day).
+ */
 function tag(locale: string): string {
-  return locale === "en" ? "en-GB" : "cs-CZ";
+  return intlTag(locale);
 }
 
 function capitalize(value: string): string {
@@ -26,10 +33,13 @@ export function formatDate(value: Date, locale: string): string {
   }).format(value);
 }
 
-/** Race day with weekday: cs "Neděle 6. 12. 2026", en "Sunday 6 December 2026". */
+/**
+ * Race day with weekday: cs "Neděle 6. 12. 2026", en "Sunday 6 December 2026",
+ * de "Sonntag 6. Dezember 2026", pl "Niedziela 6 grudnia 2026".
+ */
 export function formatRaceDate(value: Date, locale: string): string {
   const options: Intl.DateTimeFormatOptions =
-    locale === "en"
+    locale !== "cs"
       ? { weekday: "long", day: "numeric", month: "long", year: "numeric" }
       : { weekday: "long", day: "numeric", month: "numeric", year: "numeric" };
   const text = new Intl.DateTimeFormat(tag(locale), { ...options, timeZone: TIME_ZONE })
@@ -46,7 +56,7 @@ export function formatRaceDay(value: Date, locale: string): string {
     month: "long",
     timeZone: TIME_ZONE,
   }).format(value);
-  return capitalize(locale === "en" ? text : text.replace(/,/g, ""));
+  return capitalize(locale === "cs" ? text.replace(/,/g, "") : text);
 }
 
 /** Date and time: cs "2. 12. 2026 14:05", en "2 Dec 2026, 14:05". */

@@ -46,7 +46,7 @@ function defaultSelection(data: RegistrationTimelineData, count = 5): number[] {
 
 function formatDate(key: string, locale: string): string {
   const [year, month, day] = key.split("-").map(Number);
-  return new Intl.DateTimeFormat(locale === "cs" ? "cs-CZ" : "en-GB", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "cs-CZ", {
     day: "numeric",
     month: "numeric",
     year: "numeric",

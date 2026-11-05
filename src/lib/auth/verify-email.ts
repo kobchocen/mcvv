@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/client";
 import { setSession } from "@/lib/auth/session";
 import { hashToken } from "@/lib/auth/tokens";
+import { siteLocale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/config";
 
 export type VerifyResult = "ok" | "invalid";
 
@@ -43,6 +45,7 @@ export async function verifyEmailToken(token: string | null | undefined): Promis
   return "ok";
 }
 
-export function verifyLocale(raw: string | null | undefined): "cs" | "en" {
-  return raw === "en" ? "en" : "cs";
+/** Web locale for the post-verification redirect (any supported locale, else cs). */
+export function verifyLocale(raw: string | null | undefined): Locale {
+  return siteLocale(raw);
 }

@@ -18,6 +18,7 @@ import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
+import { intlTag } from "@/lib/i18n/locale";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -48,8 +49,6 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   const selectedYearParam = sp?.year ? parseInt(sp.year, 10) : null;
   const view = sp?.view === "absolute" ? "absolute" : "categories";
   const splitsRequested = sp?.splits === "true";
-
-  const isCs = locale === "cs";
 
   // All years with participant counts + basic top info for summary cards
   const yearData = await getResultYearCounts();
@@ -249,7 +248,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     ...pickSplits(r._splits || []),
     time: r.time,
   });
-  const dateLocale = isCs ? "cs-CZ" : "en-GB";
+  const dateLocale = intlTag(locale);
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
   const footer = withFooterYear(

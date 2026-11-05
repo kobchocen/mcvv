@@ -4,11 +4,13 @@
 import { lineFee, registrationFee, sumPayments } from "@/lib/entries/fee-total";
 import { variableSymbol } from "@/lib/entries/spd";
 import { ENTRY_STATUS } from "@/lib/entries/status-codes";
+import { documentLocale } from "@/lib/i18n/locale";
 
 export type ReceiptLocale = "cs" | "en";
 
+/** Receipts exist in cs and en; de/pl/uk get the English receipt (#273). */
 export function parseReceiptLocale(raw: string | null | undefined): ReceiptLocale {
-  return raw === "en" ? "en" : "cs";
+  return documentLocale(raw);
 }
 
 /** Stabilní číslo dokladu: MCVV{rok}-{id na 3 místa}, např. MCVV2026-042. */

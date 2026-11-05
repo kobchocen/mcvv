@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { siteLocale } from "@/lib/i18n/locale";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -10,7 +11,7 @@ type PageProps = Readonly<{
 export default async function VerifyPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const { token } = await searchParams;
-  const query = new URLSearchParams({ locale: locale === "en" ? "en" : "cs" });
+  const query = new URLSearchParams({ locale: siteLocale(locale) });
   if (token) {
     query.set("token", token);
   }

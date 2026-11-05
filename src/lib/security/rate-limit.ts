@@ -1,5 +1,5 @@
 /**
- * Lightweight per-IP rate limit for public runner profiles /cs|en/bezec/* (#199).
+ * Lightweight per-IP rate limit for public runner profiles /{locale}/bezec/* (#199).
  *
  * In memory per app instance (fixed one-minute window), so it is only a backstop against a
  * single aggressive crawler; the real limit belongs to Cloudflare (see the PR of #199).
@@ -62,7 +62,7 @@ export function bezecRateLimit(value: string | undefined): number {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : DEFAULT_BEZEC_RATE_LIMIT;
 }
 
-const BEZEC_PATH = /^\/(cs|en)\/bezec(\/|$)/;
+const BEZEC_PATH = /^\/(cs|en|de|pl|uk)\/bezec(\/|$)/;
 
 /** Locale-prefixed runner profile path (the proxy only rate-limits these and passes them on). */
 export function isBezecPath(pathname: string): boolean {

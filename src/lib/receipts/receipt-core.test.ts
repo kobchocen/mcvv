@@ -52,10 +52,13 @@ describe("receipt number and access", () => {
     assert.equal(receiptFilename(2026, 42), "doklad-MCVV2026-042.pdf");
   });
 
-  it("parses the locale, defaulting to Czech", () => {
+  it("parses the locale: cs/en, other web locales fall back to English, unknown to Czech", () => {
     assert.equal(parseReceiptLocale("en"), "en");
     assert.equal(parseReceiptLocale("cs"), "cs");
-    assert.equal(parseReceiptLocale("de"), "cs");
+    assert.equal(parseReceiptLocale("de"), "en");
+    assert.equal(parseReceiptLocale("pl"), "en");
+    assert.equal(parseReceiptLocale("uk"), "en");
+    assert.equal(parseReceiptLocale("fr"), "cs");
     assert.equal(parseReceiptLocale(null), "cs");
   });
 

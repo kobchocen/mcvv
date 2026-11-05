@@ -6,6 +6,7 @@
  */
 import { renderTransactionalEmail } from "@/lib/mail/layout";
 import type { UserRole } from "@/lib/auth/roles";
+import { documentLocale, siteLocale } from "@/lib/i18n/locale";
 
 export type RoleChangeMailOutcome = "sent" | "queued" | "failed" | "skipped";
 
@@ -58,8 +59,7 @@ export function roleHomePath(role: UserRole): string {
 }
 
 export function roleChangeMailUrl(site: string, locale: string, role: UserRole): string {
-  const lang = locale === "en" ? "en" : "cs";
-  return `${site.replace(/\/$/, "")}/${lang}${roleHomePath(role)}`;
+  return `${site.replace(/\/$/, "")}/${siteLocale(locale)}${roleHomePath(role)}`;
 }
 
 export type RoleChange = {
@@ -81,7 +81,7 @@ export function renderRoleChangeMail(input: {
   t: RoleChangeMailTranslate;
 }): { subject: string; html: string; text: string } {
   const { change, t } = input;
-  const locale = input.locale === "en" ? "en" : "cs";
+  const locale = documentLocale(input.locale);
   const from = t(`role_${change.from}`);
   const to = t(`role_${change.to}`);
   const subject = t("subject", { role: to }).slice(0, 300);

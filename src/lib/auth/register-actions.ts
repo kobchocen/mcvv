@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/client";
 import { isStaffRole } from "@/lib/auth/session";
 import { issueVerificationEmail } from "@/lib/auth/tokens";
 import { mailConfigured } from "@/lib/mail/resend";
+import { documentLocale } from "@/lib/i18n/locale";
 
 export type RegisterState = {
   error?: "mail" | "exists" | "generic" | "mismatch";
@@ -40,7 +41,8 @@ export async function registerAccount(
   }
 
   const locale = await getLocale();
-  const copy = await getTranslations({ locale, namespace: "Auth" });
+  // E-mails exist only in cs/en; de/pl/uk get English (#273).
+  const copy = await getTranslations({ locale: documentLocale(locale), namespace: "Auth" });
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (existing?.emailVerified) {
@@ -106,7 +108,8 @@ export async function resendVerification(
     return { sent: true };
   }
   const locale = await getLocale();
-  const copy = await getTranslations({ locale, namespace: "Auth" });
+  // E-mails exist only in cs/en; de/pl/uk get English (#273).
+  const copy = await getTranslations({ locale: documentLocale(locale), namespace: "Auth" });
   const sent = await issueVerificationEmail({
     userId: user.id,
     email: user.email,

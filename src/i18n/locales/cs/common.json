@@ -714,7 +714,12 @@
     "close": "Zavřít",
     "previousPhoto": "Předchozí fotka",
     "nextPhoto": "Další fotka",
-    "back": "Zpět na úvod"
+    "back": "Zpět na úvod",
+    "share": "Sdílet",
+    "linkCopied": "Odkaz zkopírován",
+    "copyFailed": "Odkaz se nepodařilo zkopírovat",
+    "shareTitle": "Malá cena Velké Verandy {year} – fotogalerie",
+    "shareDescription": "Fotka z ročníku {year} tradičního zimního lesního krosu v Chocni."
   },
   "Runner": {
     "statsLink": "Jak si stojíš v historii? Prohlédni si statistiky",

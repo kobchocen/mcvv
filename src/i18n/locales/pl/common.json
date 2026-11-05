@@ -1,0 +1,1411 @@
+{
+  "Home": {
+    "brand": {
+      "mark": "V",
+      "top": "MALA CENA",
+      "bottom": "VELKE VERANDY"
+    },
+    "nav": {
+      "register": "Zaloguj się",
+      "myEntry": "Zgłoszenie",
+      "admin": "Administracja",
+      "logout": "Wyloguj się",
+      "loggingOut": "Wylogowywanie…",
+      "messages": "Wiadomości",
+      "unreadMessages": "Wiadomości – nieprzeczytane rozmowy: {count}",
+      "menuLabel": "Otwórz menu",
+      "closeLabel": "Zamknij menu",
+      "home": {
+        "label": "Malá cena Velké Verandy",
+        "href": "/"
+      },
+      "links": [
+        {
+          "label": "O biegu",
+          "href": "#about"
+        },
+        {
+          "label": "Trasa",
+          "href": "#route"
+        },
+        {
+          "label": "Termin",
+          "href": "#date"
+        },
+        {
+          "label": "Statystyki",
+          "href": "/statistiky"
+        },
+        {
+          "label": "Zdjęcia",
+          "href": "#gallery"
+        },
+        {
+          "label": "Partnerzy",
+          "href": "#partners"
+        }
+      ]
+    },
+    "hero": {
+      "kicker": "Tradycyjny bieg przełajowy w lesie",
+      "place": "Choceň · co roku w pierwszą niedzielę grudnia",
+      "titleLine1": "MALA CENA",
+      "titleLine2": "VELKE VERANDY",
+      "memorial": "Memoriał Jirki Švadleny",
+      "claim": "Leśny przełaj, który sprawdzi cię na każdym podbiegu. Krótka, intensywna i bezlitosna trasa pełna stromych podbiegów i szybkich, technicznych zbiegów.",
+      "primaryCta": "Zapisy",
+      "primaryHref": "/prihlaseni-zavodnici",
+      "closesInDays": "Zapisy online kończą się za {days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+      "closesInHours": "Zapisy online kończą się za {hours} h {minutes} min",
+      "secondaryCta": "Regulamin",
+      "secondaryHref": "/program",
+      "tertiaryCta": "Wyniki",
+      "tertiaryHref": "/results",
+      "enrolledAria": "{cta} – {count, plural, one {zapisany # zawodnik} few {zapisanych # zawodników} many {zapisanych # zawodników} other {zapisanych # zawodnika}}",
+      "startlistCta": "Lista startowa",
+      "startlistAria": "{cta} – {count, plural, one {# startujący} few {# startujących} many {# startujących} other {# startującego}}",
+      "instructionsCta": "Komunikat",
+      "resultsCta": "Wyniki",
+      "resultsAria": "{cta} – {count, plural, one {# wynik} few {# wyniki} many {# wyników} other {# wyniku}}",
+      "onlineResultsCta": "Wyniki online",
+      "onlineResultsAria": "{cta} (otwiera się w nowej karcie)",
+      "stats": [
+        {
+          "value": "4300",
+          "label": "metrów długości trasy"
+        },
+        {
+          "value": "200",
+          "label": "metrów przewyższenia"
+        },
+        {
+          "value": "4",
+          "label": "duże podbiegi"
+        },
+        {
+          "value": "30+",
+          "label": "edycji tradycji"
+        }
+      ]
+    },
+    "overview": {
+      "eyebrow": "01 — O biegu",
+      "title": "To nie jest bieg. To jest wyzwanie.",
+      "body": [
+        "Malá cena Velké Verandy to tradycyjny leśny bieg przełajowy w sercu lasów wokół miasta Choceň. Na zaledwie 4300 metrach dostajesz wszystko, co sprawia, że bieg terenowy zapada w pamięć: strome podbiegi, techniczne zbiegi i korzenie pod stopami.",
+        "Krótki dystans kusi, by go zlekceważyć. Profil trasy szybko to koryguje. To bieg z charakterem – zarówno dla amatorów, jak i doświadczonych zawodników."
+      ],
+      "actions": [
+        {
+          "label": "Regulamin",
+          "href": "/program"
+        },
+        {
+          "label": "Zapisy",
+          "href": "/prihlaseni-zavodnici"
+        },
+        {
+          "label": "Komunikat",
+          "href": "/pokyny"
+        },
+        {
+          "label": "Lista startowa",
+          "href": "/startovka"
+        },
+        {
+          "label": "Wyniki",
+          "href": "/vysledky"
+        },
+        {
+          "label": "Masz pytanie? Napisz do organizatora.",
+          "href": "/kontakt"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Krótko, ale brutalnie",
+          "description": "4300 m, które zmuszają do pełnego wysiłku od startu do mety. Nie ma miejsca na spokojną rozgrzewkę."
+        },
+        {
+          "title": "Techniczny teren",
+          "description": "Leśne drogi, wąskie ścieżki, korzenie i błoto. Trasa, na której liczy się technika i odwaga."
+        },
+        {
+          "title": "Atmosfera i tradycja",
+          "description": "Zimna grudniowa niedziela, dopingujący kibice i legendarne podbiegi. Bieg z duszą."
+        }
+      ],
+      "facts": [
+        {
+          "title": "Biuro zawodów",
+          "description": "Zapisy na miejscu do {onsiteUntil} przy Velká Veranda. Odbiór numerów dla zapisanych online."
+        },
+        {
+          "title": "Start",
+          "description": "Start interwałowy parami co {interval} s od {startTime}."
+        },
+        {
+          "title": "Kategorie",
+          "description": "Dorośli, weterani oraz dzieci i młodzież. Każdy znajdzie swój pojedynek."
+        },
+        {
+          "title": "Opłata startowa",
+          "description": "Dorośli 100 CZK online / 200 CZK na miejscu. Dzieci i młodzież 50 / 100 CZK."
+        }
+      ]
+    },
+    "profile": {
+      "eyebrow": "02 — Trasa i profil",
+      "title": "Cztery podbiegi. Cztery zbiegi. Żadnych wymówek.",
+      "description": "Profil wysokościowy, który nie odpuszcza. Każdy metr podbiegu daje się odczuć.",
+      "axis": ["START", "1 km", "2 km", "3 km", "META · 4,3 km"],
+      "points": ["1", "2", "3", "4"],
+      "stats": [
+        {
+          "title": "4 podbiegi",
+          "description": "Wyraźne odcinki pod górę, które sprawdzą nogi i głowę."
+        },
+        {
+          "title": "4 strome zbiegi",
+          "description": "Techniczne zbieganie, w którym liczy się pewność siebie."
+        },
+        {
+          "title": "200 m przewyższenia",
+          "description": "Upchnięte na zaledwie 4,3 kilometra."
+        },
+        {
+          "title": "Leśna nawierzchnia",
+          "description": "Drogi, ścieżki, korzenie i grudniowe błoto."
+        }
+      ],
+      "mapKicker": "TRASA BIEGU",
+      "mapTitle": "START · META",
+      "mapAddress": "Velká Veranda, Choceň",
+      "mapAlt": "Mapa trasy Malá cena Velké Verandy",
+      "mapExpandLabel": "Powiększ mapę trasy"
+    },
+    "schedule": {
+      "eyebrow": "03 — Termin i miejsce",
+      "title": "Niedziela, 6 grudnia",
+      "items": [
+        {
+          "icon": "calendar",
+          "text": "Co roku w pierwszą niedzielę grudnia"
+        },
+        {
+          "icon": "clock",
+          "text": "Start interwałowy od {startTime}"
+        },
+        {
+          "icon": "pin",
+          "text": "Choceň - Velká Veranda - ",
+          "gpsLabel": "GPS: 49°59'45\"N, 16°12'10\"E",
+          "gpsHref": "https://goo.gl/PT3Eoq"
+        }
+      ],
+      "countdownLabel": "Czas do następnej edycji",
+      "countdownUnits": {
+        "days": "dni",
+        "hours": "godz.",
+        "minutes": "min",
+        "seconds": "sek."
+      },
+      "raceInProgress": "Bieg trwa",
+      "travel": [
+        {
+          "title": "Samochodem",
+          "description": "Parking P1 na zakręcie 1 km za miastem Choceň w kierunku Sruby (droga 315), dalej 400 m pieszo. Alternatywnie P2: nabrzeże Krále Jiřího, zielonym szlakiem 800 m do Veranda."
+        },
+        {
+          "title": "Pociągiem",
+          "description": "Stacja Choceň. Przez przejście podziemne i park, lewym brzegiem Cichej Orlicy (nabrzeże Krále Jiřího) do leśniczówki, pod torami w kierunku Týniště, zielonym szlakiem na płn.-zach., łącznie 1,8 km."
+        },
+        {
+          "title": "Autobusem",
+          "description": "Dworzec ČSAD przy kinie. Na płd.-zach. przez most na lewy brzeg, dalej jak od pociągu, łącznie 1,8 km."
+        }
+      ],
+      "arrivalMap": {
+        "linkLabel": "Mapa dojazdu i parkingów",
+        "title": "Mapa dojazdu i parkingów",
+        "mapAlt": "Mapa drogi do Velká Veranda z parkingami P1 i P2, dworcem kolejowym i autobusowym oraz trasami pieszymi",
+        "attribution": "Mapa © współtwórcy OpenStreetMap, trasy są orientacyjne.",
+        "closeLabel": "Zamknij mapę",
+        "townLabel": "Choceň",
+        "verandaLabel": "Veranda",
+        "labels": {
+          "veranda": "S/M",
+          "p1": "P1",
+          "p2": "P2",
+          "train": "Pociąg",
+          "bus": "Autobus"
+        }
+      }
+    },
+    "results": {
+      "eyebrow": "04 — Statystyki",
+      "overline": "Wyniki",
+      "title": "Pokolenia biegaczy, jedna trasa",
+      "allLabel": "Archiwum wyników",
+      "statsLabel": "Wszystkie statystyki",
+      "yearLabel": "Ostatnia edycja",
+      "linkLabel": "Pełne wyniki",
+      "empty": "Wyniki pojawią się po następnym biegu.",
+      "searchPlaceholder": "Szukaj zawodnika…",
+      "searchEmpty": "Brak pasującego zawodnika.",
+      "stats": [
+        {
+          "slug": "rekordy",
+          "title": "Rekordy trasy",
+          "description": "Kiedy i kto poprawiał rekord w poszczególnych kategoriach.",
+          "linkLabel": "Historia rekordów"
+        },
+        {
+          "slug": "vitezove",
+          "title": "Zwycięzcy",
+          "description": "Zwycięzcy open wśród mężczyzn i kobiet w każdej edycji.",
+          "linkLabel": "Zwycięzcy open"
+        },
+        {
+          "slug": "casy",
+          "title": "Najlepsze czasy",
+          "description": "Najszybsze wyniki mężczyzn i kobiet ze wszystkich edycji.",
+          "linkLabel": "TOP 20"
+        },
+        {
+          "slug": "vek",
+          "title": "Rekordy według wieku",
+          "description": "Najlepszy czas według wieku w roku biegu.",
+          "linkLabel": "Według wieku"
+        },
+        {
+          "slug": "veterani",
+          "title": "Weterani MCVV",
+          "description": "Zawodnicy z największą liczbą startów w historii biegu.",
+          "linkLabel": "Klub weteranów"
+        },
+        {
+          "slug": "ucast",
+          "title": "Frekwencja",
+          "description": "Uczestnicy, debiutanci i rekordy życiowe według lat.",
+          "linkLabel": "Frekwencja ogółem"
+        }
+      ]
+    },
+    "gallery": {
+      "eyebrow": "05 — Galeria",
+      "title": "Atmosfera mroźnej niedzieli",
+      "description": "Błoto, mgła, emocje na mecie i podbiegi, które wyciskają z ciebie wszystko.",
+      "allLabel": "Cała galeria zdjęć",
+      "alt": [
+        "Biegacz pokonuje kamienisty podbieg w zimowym lesie.",
+        "Mapa topograficzna leśnej trasy.",
+        "Biegacze w zamglonym zimowym lesie.",
+        "Fragment ciemnej mapy pętli trasy."
+      ]
+    },
+    "partners": {
+      "eyebrow": "06 — Partnerzy i organizatorzy",
+      "title": "Bieg, który tworzy grupa zapaleńców",
+      "organizer": "Organizator: K.O.B. Choceň, z.s."
+    },
+    "finalCta": {
+      "title": "Gotów na cztery podbiegi?",
+      "description": "Miejsca znikają szybciej niż siły na czwartym podbiegu. Zapewnij sobie numer startowy na następną edycję.",
+      "cta": "Zapisz się na bieg",
+      "guide": "Jak się zapisać"
+    },
+    "footer": {
+      "description": "Tradycyjny leśny bieg przełajowy w mieście Choceň. 4300 metrów, 200 metrów przewyższenia i charakter, który zapamiętasz.",
+      "columns": [
+        {
+          "title": "Bieg",
+          "links": [
+            {
+              "label": "O biegu",
+              "href": "#about"
+            },
+            {
+              "label": "Regulamin",
+              "href": "/program"
+            },
+            {
+              "label": "Zapisy",
+              "href": "/prihlasky"
+            }
+          ]
+        },
+        {
+          "title": "Statystyki",
+          "links": [
+            {
+              "label": "Przegląd statystyk",
+              "href": "/statistiky"
+            },
+            {
+              "label": "Ostatnia edycja",
+              "href": "/results/{year}"
+            },
+            {
+              "label": "Archiwum wyników",
+              "href": "/results"
+            },
+            {
+              "label": "Rekordy trasy",
+              "href": "/statistiky/rekordy"
+            },
+            {
+              "label": "Kluby",
+              "href": "/kluby"
+            }
+          ]
+        },
+        {
+          "title": "Kontakt",
+          "links": [
+            {
+              "label": "K.O.B. Choceň, z.s.",
+              "href": "#partners"
+            },
+            {
+              "label": "Napisz do organizatora",
+              "href": "/kontakt"
+            }
+          ]
+        }
+      ],
+      "copyright": "© 2026 Malá cena Velké Verandy · K.O.B. Choceň, z.s.",
+      "made": "Stworzone z szacunkiem dla lasu."
+    },
+    "backToTop": "Do góry"
+  },
+  "Program": {
+    "header": {
+      "eyebrow": "K.O.B. Choceň · {year}",
+      "title": "Regulamin",
+      "lead": "{n}. edycja biegu Malá cena Velké Verandy"
+    },
+    "tocTitle": "Na tej stronie",
+    "emptyCategories": "Kategorie zostaną uzupełnione.",
+    "dash": "—",
+    "gpsLabel": "Otwórz mapę (GPS)",
+    "backToTop": "Do góry",
+    "onlineEntry": "Zgłoszenie online",
+    "contactLabel": "Napisz do organizatora",
+    "fees": {
+      "onlineAdult": "Dorośli online",
+      "onlineKids": "Dzieci i młodzież online",
+      "onsiteAdult": "Dorośli na miejscu",
+      "onsiteKids": "Dzieci i młodzież na miejscu",
+      "refund": "Opłatę startową zwracamy w przypadku wycofania zgłoszenia do końca terminu zapisów online ({date}). Po tym terminie opłaty startowej nie zwracamy.",
+      "refundOpen": "Opłatę startową zwracamy w przypadku wycofania zgłoszenia do końca terminu zapisów online. Po tym terminie opłaty startowej nie zwracamy.",
+      "freeEntry": "<winners>Zwycięzcy kategorii Mężczyźni i Kobiety</winners> oraz <veterans>członkowie Klubu Weteranów MCVV</veterans> startują bezpłatnie przy zgłoszeniu online do {date}.",
+      "freeEntryOpen": "<winners>Zwycięzcy kategorii Mężczyźni i Kobiety</winners> oraz <veterans>członkowie Klubu Weteranów MCVV</veterans> startują bezpłatnie przy terminowym zgłoszeniu online."
+    },
+    "prizes": {
+      "adult": "Mężczyźni i kobiety",
+      "veterans": "Weterani",
+      "place": "{n}. miejsce",
+      "material": "Nagrody rzeczowe dla najlepszych w kategoriach dzieci i młodzieży."
+    },
+    "categories": {
+      "name": "Kategoria",
+      "birthYear": "Rocznik",
+      "open": "bez ograniczeń",
+      "younger": "{year} i młodsi",
+      "older": "{year} i starsi"
+    },
+    "timetable": {
+      "office": "{officeOpens} — otwarcie biura zawodów",
+      "registration": "Do {onsiteUntil} — zapisy na miejscu",
+      "start": "{startTime} — start (interwał {interval} s)",
+      "lastStart": "11:55 — planowany start ostatniego zawodnika",
+      "ceremony": "12:20 — ogłoszenie wyników i loteria fantowa"
+    },
+    "sections": {
+      "intro": {
+        "title": "Regulamin",
+        "summary": "Podstawowe informacje o edycji",
+        "body": "Jedna leśna trasa, start interwałowy."
+      },
+      "date": {
+        "title": "Data",
+        "summary": "Niedziela, 6 grudnia 2026",
+        "body": "Tradycyjnie pierwsza niedziela grudnia."
+      },
+      "venue": {
+        "title": "Miejsce",
+        "summary": "Velká Veranda, Choceň",
+        "body": "Start i meta przy Velká Veranda. GPS 49°59′45″N, 16°12′10″E."
+      },
+      "organizer": {
+        "title": "Organizator",
+        "summary": "K.O.B. Choceň",
+        "body": "Klub biegu na orientację Choceň (Klub orientačního běhu Choceň)."
+      },
+      "course": {
+        "title": "Opis trasy",
+        "summary": "4 300 m · przewyższenie 200 m",
+        "body": "Leśne drogi i ścieżki, 400 m asfaltu. Przewyższenie 200 m. Trasa oznaczona taśmami. Jedna trasa dla wszystkich kategorii."
+      },
+      "registration": {
+        "title": "Zapisy",
+        "summary": "Online do {onlineUntilShort} · na miejscu do {onsiteUntil}",
+        "body": "Zapisy online do {onlineUntil}. W dniu zawodów ({raceDay}) można zapisać się na miejscu w biurze zawodów od {officeOpens} do {onsiteUntil} (dorośli {feeAdult}, dzieci i młodzież {feeYouth}). Zgłoszenie online jest ważne dopiero po zaksięgowaniu wpłaty.",
+        "summaryOpen": "Zgłoszenie online · na miejscu do {onsiteUntil}",
+        "bodyOpen": "W dniu zawodów można zapisać się na miejscu w biurze zawodów od {officeOpens} do {onsiteUntil} (dorośli {feeAdult}, dzieci i młodzież {feeYouth}). Zgłoszenie online jest ważne dopiero po zaksięgowaniu wpłaty."
+      },
+      "fees": {
+        "title": "Opłata startowa",
+        "summary": "Według kategorii, online taniej",
+        "body": "Opłata startowa jest pobierana według poniższych stawek."
+      },
+      "categories": {
+        "title": "Kategorie",
+        "summary": "Granice wieku na rok {year}",
+        "body": ""
+      },
+      "prizes": {
+        "title": "Nagrody",
+        "summary": "Mężczyźni i kobiety, weterani, dzieci i młodzież",
+        "body": "Nagrody pieniężne w CZK w kategoriach mężczyzn i kobiet (1.–5. miejsce) oraz weteranów (1.–3. miejsce)."
+      },
+      "start": {
+        "title": "Start",
+        "summary": "Interwał {interval} s od {startTime}",
+        "body": "Interwał startowy {seconds} s od {startTime}. Start interwałowy parami."
+      },
+      "timetable": {
+        "title": "Harmonogram",
+        "summary": "{officeOpens} · {onsiteUntil} · {startTime} · 11:55 · 12:20",
+        "body": "Biuro zawodów zostanie otwarte o {officeOpens}. Zapisy na miejscu kończą się o {onsiteUntil}. Start interwałowy od {startTime}. Planowany start ostatniego zawodnika o 11:55. Ogłoszenie wyników i loteria fantowa o 12:20."
+      },
+      "privacy": {
+        "title": "Ochrona danych",
+        "summary": "RODO i zdjęcia",
+        "body": "Dane osobowe przetwarzamy w celu organizacji biegu i publikacji wyników. Zdjęcia i filmy z wydarzenia możemy wykorzystać do prezentacji biegu. Sprzeciw można przesłać organizatorowi."
+      },
+      "notice": {
+        "title": "Uwaga",
+        "summary": "Na własne ryzyko",
+        "body": "Udział na własne ryzyko. Bieg nie jest odpowiedni dla dzieci poniżej 6 lat. W wynikach uwzględniany jest tylko ten, kto pokona całą trasę bez pomocy innej osoby. Sprzedaż i stoiska tylko za zgodą organizatora."
+      },
+      "info": {
+        "title": "Informacje",
+        "summary": "mcvv.org",
+        "body": "Aktualne informacje na stronie internetowej. Pytania prosimy przesyłać przez formularz; adresu e-mail ani telefonu nie publikujemy na stronie."
+      }
+    }
+  },
+  "Contact": {
+    "loggedInIntro": "Jesteś zalogowany – Twoja wiadomość zostanie zapisana w Wiadomościach, gdzie znajdziesz też odpowiedź organizatora.",
+    "errorRate": "Dziś nie możesz rozpocząć kolejnej rozmowy. Kontynuuj w swoich Wiadomościach.",
+    "errorDisabled": "Wiadomości są tymczasowo wyłączone.",
+    "eyebrow": "Kontakt",
+    "title": "Napisz do organizatora",
+    "intro": "Napisz do nas. Odpowiemy e-mailem. Adresu ani telefonu nie publikujemy na stronie.",
+    "name": "Imię i nazwisko",
+    "email": "Twój e-mail",
+    "message": "Wiadomość",
+    "submit": "Wyślij",
+    "sending": "Wysyłanie…",
+    "success": "Wiadomość wysłana. Odezwiemy się.",
+    "errorInvalid": "Sprawdź imię i nazwisko, e-mail oraz wiadomość.",
+    "errorSend": "Nie udało się wysłać wiadomości. Spróbuj ponownie.",
+    "errorExpired": "Formularz wygasł. Odśwież stronę i wyślij wiadomość ponownie.",
+    "back": "Powrót na stronę główną"
+  },
+  "Instructions": {
+    "eyebrow": "{n}. edycja",
+    "title": "Komunikat",
+    "status": "Komunikat jest w przygotowaniu"
+  },
+  "ResultsCurrent": {
+    "eyebrow": "{n}. edycja",
+    "title": "Wyniki",
+    "status": "Wyniki zostaną opublikowane po biegu.",
+    "archive": "Archiwum wyników",
+    "liveTitle": "Bieg trwa",
+    "liveText": "Śledź wyniki na żywo wszystkich kategorii na stronie Wyniki online – międzyczasy, meta i klasyfikacja bez odświeżania."
+  },
+  "StartList": {
+    "eyebrow": "{n}. edycja",
+    "title": "Lista startowa",
+    "status": "Numery startowe i godziny startu pojawią się po losowaniu i publikacji przez organizatora.",
+    "count": "{count, plural, one {# zawodnik na liście startowej.} few {# zawodników na liście startowej.} many {# zawodników na liście startowej.} other {# zawodnika na liście startowej.}}",
+    "intro": "Według godziny startu, oba starty przeplatane. Start interwałowy co {interval} s od {zero}.",
+    "filterCategory": "Kategoria",
+    "filterAll": "Wszystkie kategorie",
+    "filterSearch": "Nazwisko lub klub",
+    "filter": "Szukaj",
+    "reset": "Wyczyść filtr",
+    "colTime": "Start",
+    "colBib": "Nr",
+    "colName": "Imię i nazwisko",
+    "colBirth": "Rocznik",
+    "colBirthShort": "Rocz.",
+    "colClub": "Klub",
+    "colCategory": "Kat.",
+    "none": "Nic nie pasuje do filtra.",
+    "pdfTitle": "Lista startowa {year}",
+    "pdfEdition": "{n}. edycja",
+    "pdfModel": "Start 1 i 2 równolegle od {zero} · interwał {interval} s · 2. start od nr {second}",
+    "pdfCount": "Zawodnicy: {count}",
+    "pdfLegend": "Numery 2. startu są pomarańczowe. Nr N i nr N + {offset} startują jednocześnie.",
+    "pdfCategory": "Kategoria",
+    "pdfFooter": "Malá cena Velké Verandy · www.mcvv.org · wygenerowano {date}",
+    "pdfPage": "Strona {page} / {pages}",
+    "pdfEmpty": "Nie przydzielono jeszcze numerów startowych."
+  },
+  "Entrants": {
+    "eyebrow": "{n}. edycja",
+    "title": "Zapisani zawodnicy",
+    "deadline": "Koniec zapisów online",
+    "register": "Zapisz się",
+    "closed": "Zapisy online zostały zakończone. W dniu zawodów możesz jeszcze zapisać się na miejscu w biurze zawodów do {onsiteUntil} (dorośli {adult} CZK / dzieci i młodzież {kids} CZK).",
+    "empty": "Brak jeszcze potwierdzonych zawodników.",
+    "newbie": "debiutant",
+    "starts": "{count, plural, one {# start} few {# starty} many {# startów} other {# startu}}",
+    "total": "{count, plural, one {# zapisany zawodnik} few {# zapisanych zawodników} many {# zapisanych zawodników} other {# zapisanego zawodnika}}",
+    "paidOnly": "Wyświetlane są tylko zgłoszenia z opłaconą opłatą startową.",
+    "colName": "Imię i nazwisko",
+    "colBirth": "Rocznik",
+    "colClub": "Klub",
+    "colStarts": "Starty",
+    "colRecord": "PB"
+  },
+  "Entries": {
+    "messagesCount": "{count, plural, one {# wiadomość} few {# wiadomości} many {# wiadomości} other {# wiadomości}}",
+    "messagesUnread": "nieprzeczytane: {count}",
+    "messagesNone": "brak wiadomości",
+    "guideLink": "Jak się zapisać",
+    "eyebrow": "Zgłoszenie",
+    "title": "Moje zgłoszenie",
+    "needAccount": "Zaloguj się lub załóż konto, aby się zapisać.",
+    "closedRead": "Termin zgłoszeń minął. Nie można utworzyć nowego zgłoszenia.",
+    "noRegistration": "Nie masz jeszcze zgłoszenia na edycję {year}.",
+    "noRegistrationHint": "Zgłoszenie zostanie utworzone automatycznie po dodaniu pierwszego zawodnika.",
+    "cancelledNotice": "Zgłoszenie nr {id} zostało anulowane.",
+    "accountMessagesIntro": "Nawet bez zgłoszenia możesz wysłać organizatorowi pytanie dotyczące konta lub biegu.",
+    "accountSettings": "Ustawienia konta",
+    "deadline": "Termin",
+    "readOnly": "tylko do odczytu",
+    "name": "Nazwa zgłoszenia",
+    "email": "E-mail",
+    "noMail": "Nie chcę otrzymywać informacji e-mailem",
+    "save": "Zapisz",
+    "saved": "Zapisano",
+    "runners": "Zgłoszeni zawodnicy",
+    "birthCol": "Rocznik",
+    "feeReasonWinner": "zwycięzca",
+    "feeReasonVeteran": "weteran",
+    "club": "Klub",
+    "clubOptional": "(opcjonalnie)",
+    "clubHint": "Nie biegasz w barwach klubu? To pole możesz zostawić puste.",
+    "runnerName": "Imię i nazwisko",
+    "category": "Kategoria",
+    "fee": "Opłata",
+    "remove": "Usuń",
+    "quickAddTitle": "{name}, rocznik {year}",
+    "quickAdd": "Szybki wybór",
+    "newRunner": "Nowy zawodnik",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "birthYear": "Rocznik",
+    "sex": "Płeć",
+    "sexPlaceholder": "Wybierz…",
+    "sexRequired": "Wybierz płeć zawodnika.",
+    "categoryPlaceholder": "Najpierw uzupełnij rocznik i płeć",
+    "male": "Mężczyzna",
+    "female": "Kobieta",
+    "add": "Dodaj",
+    "ambiguous": "Doprecyzuj dane – do tego nazwiska i rocznika pasuje więcej niż jeden zawodnik.",
+    "invalidRunner": "Nie udało się dodać zawodnika. Sprawdź dane i spróbuj ponownie.",
+    "taken": "Ten zawodnik jest już zapisany w tym roku.",
+    "payment": "Płatność",
+    "feeTotal": "Opłata startowa łącznie",
+    "paid": "Zapłacono",
+    "due": "Do zapłaty",
+    "account": "Konto",
+    "vs": "Symbol zmienny (VS)",
+    "addRunnersFirst": "To zgłoszenie nie ma jeszcze zawodników. Dodaj ich poniżej w sekcji Zawodnicy; opłata startowa i dane do płatności pojawią się potem.",
+    "noFeeDue": "Opłata startowa wynosi 0 CZK, nie ma nic do zapłaty.",
+    "paidInFull": "Opłata startowa jest uregulowana.",
+    "receiptDownload": "Pobierz potwierdzenie płatności (PDF)",
+    "receiptHint": "Potwierdzenie jest dostępne po pełnym opłaceniu opłaty startowej.",
+    "past": "Poprzednie edycje",
+    "myEntriesTitle": "Twoje zgłoszenia {year}",
+    "entryHeading": "Zgłoszenie nr {id} · {term}",
+    "entryTerm": "{slot, select, early {preferencyjne} late {spóźnione} onsite {na miejscu} other {standardowe}}",
+    "entryPillPaid": "Opłacone",
+    "entryPillUnpaid": "Oczekuje na płatność",
+    "entryPillLocked": "Zamknięte – tylko do odczytu",
+    "entryPillCancelled": "Anulowane",
+    "entryPillDraft": "Wersja robocza",
+    "entryTermEnded": "{slot, select, early {Zgłoszenia preferencyjne zakończyły się} late {Zgłoszenia spóźnione zakończyły się} onsite {Zapisy na miejscu zakończyły się} other {Zgłoszenia standardowe zakończyły się}} {end}. Tego zgłoszenia nie można już zmienić.",
+    "entryTermEndedNoDate": "Okres zgłoszeń dla tego zgłoszenia minął. Tego zgłoszenia nie można już zmienić.",
+    "entryLockedStorno": "Warunki rezygnacji: opłata startowa była zwracana tylko przy wycofaniu się przed końcem {slot, select, early {zgłoszeń preferencyjnych} onsite {zapisów na miejscu} other {zgłoszeń standardowych}}. Opłata startowa za to zgłoszenie nie jest już zwracana.",
+    "entryLockedStornoLate": "Opłaconego spóźnionego zgłoszenia nie można już zmienić ani anulować; opłata startowa nie jest zwracana.",
+    "entryLockedFix": "Literówka w nazwisku lub nazwie klubu?",
+    "entryLockedWrite": "Napisz do nas.",
+    "addAnotherEntry": "Możesz jeszcze zgłosić kolejnego zawodnika – zostanie utworzone nowe zgłoszenie z własnym symbolem zmiennym.",
+    "addAnotherEntryHint": "Nowe zgłoszenie zostanie utworzone automatycznie po dodaniu pierwszego zawodnika.",
+    "lateAlertTitle": "Zgłoszenie spóźnione – zapłać od razu",
+    "lateAlertBody": "Opłata startowa <b>{adult} CZK dorośli / {youth} CZK dzieci i młodzież</b>. Po wysłaniu zgłoszenia zapłać je <b>płatnością QR, najlepiej natychmiastową</b>. Jeśli płatność nie wpłynie w ciągu <b>{minutes} minut</b>, zgłoszenie zostanie <b>automatycznie anulowane</b>.",
+    "lateAlertEnd": "Zgłoszenia spóźnione kończą się {end}. Opłaconego spóźnionego zgłoszenia nie można już zmienić ani anulować, a opłata startowa nie jest zwracana.",
+    "lateAddAnother": "Aby zgłosić kolejnego zawodnika, wyślij nowe spóźnione zgłoszenie z własnym symbolem zmiennym (opłata {adult} / {youth} CZK, płatność w ciągu {minutes} minut).",
+    "lateTotalTitle": "Razem do zapłaty",
+    "lateTotalRunners": "{count, plural, one {# zawodnik} few {# zawodników} many {# zawodników} other {# zawodnika}} · {fees} CZK",
+    "latePayNow": "<b>Zapłacę od razu.</b> Rozumiem, że jeśli płatność nie wpłynie na konto biegu w ciągu {minutes} minut od wysłania, zgłoszenie zostanie automatycznie anulowane.",
+    "lateSubmit": "Wyślij i zapłać {total} CZK →",
+    "lateSubmitHint": "Limit {minutes} minut liczy się od wysłania.",
+    "lateDraftExpiry": "Jeśli nie wyślesz zgłoszenia, anulujemy je automatycznie po {minutes} minutach bez zmian.",
+    "lateDraftCancelledNotice": "Twój roboczy spóźniony formularz nr {id} nie został wysłany, więc anulowaliśmy go po {minutes} minutach. Możesz zgłosić zawodników ponownie.",
+    "lateSubmitConfirm": "Potwierdź, że zapłacisz od razu.",
+    "lateSubmitEmpty": "Najpierw dodaj co najmniej jednego zawodnika.",
+    "lateSubmitInvalid": "Nie udało się wysłać zgłoszenia. Odśwież stronę i spróbuj ponownie.",
+    "latePayTitle": "Zapłać za spóźnione zgłoszenie nr {id}",
+    "latePayLeft": "Pozostały czas na płatność",
+    "latePayUntil": "Zapłać do <b>{until}</b>. Potem zgłoszenie zostanie automatycznie anulowane.",
+    "latePayExpired": "Termin płatności minął. Sprawdzamy płatności na koncie biegu – jeśli płatność nie wpłynęła, zgłoszenie zostanie anulowane.",
+    "latePayInstant": "<b>Użyj płatności natychmiastowej.</b> Zwykły przelew z innego banku może dotrzeć po terminie – zgłoszenie zostanie wtedy anulowane, a płatność zwrócona.",
+    "latePayScan": "Zeskanuj kod w aplikacji bankowej (płatność QR).",
+    "latePaySaveQr": "Płacisz z tego telefonu? Zapisz obraz QR →",
+    "latePayMessage": "Tytuł przelewu",
+    "latePayMessageValue": "STARTOVNE MCVV PRIHLASKA {id}",
+    "latePayStatusTitle": "Status płatności",
+    "latePayWaiting": "Oczekiwanie na płatność",
+    "latePayStepSent": "Zgłoszenie wysłane {time}",
+    "latePayStepWaiting": "Oczekiwanie na płatność na koncie biegu",
+    "latePayStepDone": "Płatność otrzymana – zgłoszenie potwierdzone",
+    "latePayVerify": "Zapłaciłem – sprawdź płatność",
+    "latePayVerifyPending": "Sprawdzanie płatności…",
+    "latePayVerifyLimit": "Bank można sprawdzać najwyżej raz na 30 s. Strona odświeża się automatycznie.",
+    "latePayVerifyLastCheck": "Ostatnie sprawdzenie banku: {time}",
+    "latePayVerifyRetryIn": "Ponowne sprawdzenie możliwe za {seconds} s.",
+    "latePayVerifyPaid": "Płatność otrzymana – zgłoszenie jest opłacone.",
+    "latePayVerifyNotYet": "Nie widzimy jeszcze płatności na koncie biegu. Płatność natychmiastowa zwykle dociera w ciągu kilku minut – sprawdzamy dalej.",
+    "latePayVerifyWait": "Bank sprawdzaliśmy przed chwilą – spróbuj ponownie po zakończeniu odliczania.",
+    "latePayVerifyError": "Nie udało się teraz sprawdzić banku. Sprawdzamy dalej automatycznie.",
+    "latePayVerifyInvalid": "Tego zgłoszenia nie można już sprawdzić. Odśwież stronę.",
+    "latePayRunners": "Zawodnicy",
+    "latePaidThanks": "Dziękujemy, płatność dotarła na czas.",
+    "latePaidBibPending": "<b>Numer startowy i godzinę startu przydzielimy podczas losowania listy startowej.</b> Znajdziesz je tutaj w „Moje zgłoszenie” oraz na opublikowanej liście startowej.",
+    "lateBibsTitle": "Numery startowe i godziny startu",
+    "lateBibStart": "start",
+    "lateBibPickup": "Numer startowy odbierzesz w biurze zawodów {day} od {from}.",
+    "lateBibPickupNoTime": "Numer startowy odbierzesz w biurze zawodów {day}.",
+    "lateCancelledTitle": "Zgłoszenie nr {id} zostało anulowane – płatność nie dotarła na czas",
+    "lateCancelledBody": "Termin płatności upłynął {when}. Do tego czasu nie znaleźliśmy na koncie płatności z VS {vs}, dlatego zgłoszenie zostało automatycznie anulowane. Zawodnicy z tego zgłoszenia nie są zapisani.",
+    "lateCancelledRefund": "<b>Płatność już wysłana?</b> Płatność, która wpłynie po anulowaniu, <b>zostanie zwrócona</b> na konto, z którego przyszła. Zgłoszenie pozostaje anulowane.",
+    "lateCancelledNew": "<b>Chcesz biec?</b> Wyślij <b>nowe spóźnione zgłoszenie</b> (do {end}) i zapłać je płatnością natychmiastową w ciągu {minutes} minut.",
+    "lateCancelledOnsite": "Albo zapisz się <b>na miejscu</b> {day} w biurze zawodów ({from}–{to}), {adult} CZK dorośli / {youth} CZK dzieci i młodzież.",
+    "todayAt": "dziś {time}",
+    "lateWriteMessage": "Napisz wiadomość"
+  },
+  "PhotoGallery": {
+    "eyebrow": "Galeria",
+    "title": "Zdjęcia według edycji",
+    "intro": "Zdjęcia pogrupowane według roku biegu. Wybierz rok powyżej.",
+    "count": "{count} zdjęć · {year}",
+    "photoAlt": "Zdjęcie z edycji {year}",
+    "empty": "Galeria jest pusta.",
+    "loadMore": "Załaduj więcej",
+    "close": "Zamknij",
+    "previousPhoto": "Poprzednie zdjęcie",
+    "nextPhoto": "Następne zdjęcie",
+    "back": "Powrót na stronę główną",
+    "share": "Udostępnij",
+    "linkCopied": "Link skopiowany",
+    "copyFailed": "Nie udało się skopiować linku",
+    "shareTitle": "Malá cena Velké Verandy {year} – galeria zdjęć",
+    "shareDescription": "Zdjęcie z edycji {year} tradycyjnego zimowego leśnego biegu przełajowego w mieście Choceň."
+  },
+  "Runner": {
+    "statsLink": "Jak wypadasz na tle historii? Przejrzyj statystyki",
+    "eyebrow": "Zawodnik",
+    "starts": "Starty",
+    "record": "Rekord życiowy",
+    "average": "Średni czas",
+    "lastStart": "Ostatni start",
+    "year": "Rok",
+    "time": "Czas",
+    "graph": "Wykres wyników",
+    "graphTitle": "Strata do rekordu trasy {course} / PB {pb} / średnia {avg}",
+    "loss": "Strata do PB",
+    "club": "Klub",
+    "category": "Kategoria",
+    "courseRecord": "Rekord trasy",
+    "personalBest": "Rekord życiowy",
+    "os": "PB",
+    "medalAbs": "Open {rank}. miejsce",
+    "medalAge": "Kategoria {rank}. miejsce",
+    "photos": "Zdjęcia",
+    "photoAlt": "Zdjęcie — {name}",
+    "loadMore": "Załaduj więcej",
+    "close": "Zamknij",
+    "previousPhoto": "Poprzednie zdjęcie",
+    "nextPhoto": "Następne zdjęcie",
+    "empty": "Ten zawodnik nie ma jeszcze wyników.",
+    "registeredFirstStart": "Zapisany na {year} – pierwszy start",
+    "back": "Archiwum wyników"
+  },
+  "Nationality": {
+    "label": "Narodowość",
+    "unknown": "— nie podano —",
+    "hint": "Zawodnicy z zagranicy otrzymują w wynikach flagę. Jeśli wybierzesz kraj inny niż Czechy, zapiszemy go także u zawodnika, który już u nas startował.",
+    "save": "Zapisz",
+    "saveError": "Nie udało się zapisać narodowości (nieprawidłowy kraj lub zawodnik).",
+    "saved": "Kraj zapisany."
+  },
+  "Club": {
+    "eyebrow": "Klub",
+    "starts": "Starty",
+    "runners": "Zawodnicy",
+    "editions": "Edycje",
+    "years": "Lata",
+    "statsLink": "Więcej statystyk biegu",
+    "perYear": "Starty według lat",
+    "best": "Najlepsze wyniki",
+    "men": "Mężczyźni",
+    "women": "Kobiety",
+    "members": "Zawodnicy klubu",
+    "runner": "Imię i nazwisko",
+    "year": "Rok",
+    "time": "Czas",
+    "personalBest": "Najlepszy czas",
+    "history": "Nazwy klubu według edycji",
+    "allClubs": "Wszystkie kluby",
+    "membersShown": "Zawodnicy {from}–{to} z {total}",
+    "membersPages": "Strony zawodników klubu",
+    "previous": "Poprzednia",
+    "next": "Następna",
+    "page": "Strona {page}",
+    "recordMen": "Rekord klubu – mężczyźni",
+    "recordWomen": "Rekord klubu – kobiety",
+    "topRunners": "Top 10 zawodników klubu",
+    "topRunnersHint": "Najlepszy czas każdego zawodnika w barwach klubu – każdy wymieniony raz.",
+    "bestHint": "Najszybsze czasy klubu we wszystkich edycjach; zawodnik może pojawić się więcej niż raz.",
+    "perYearHint": "Kliknij rok, aby zobaczyć wyniki klubu w tej edycji.",
+    "mostStarts": "Najwięcej startów",
+    "mostStartsCount": "{count, plural, one {# start} few {# starty} many {# startów} other {# startu}}",
+    "yearResults": "Wyniki klubu {year}",
+    "yearResultsLink": "Wyniki klubu {year}",
+    "yearResultsClose": "Ukryj",
+    "yearResultsAll": "Pełne wyniki {year}",
+    "yearResultsEmpty": "Klub nie ma wyniku w tej edycji.",
+    "overallRank": "Open",
+    "category": "Kategoria",
+    "categoryRank": "W kategorii"
+  },
+  "Clubs": {
+    "metaTitle": "Kluby",
+    "eyebrow": "Kluby",
+    "title": "Kluby na MCVV",
+    "intro": "Wszystkie kluby, których zawodnicy ukończyli Malá cena Velké Verandy, wraz z liczbą startów i edycji.",
+    "lead": "{clubs, plural, one {# klub} few {# kluby} many {# klubów} other {# klubu}} i {starts} startów w wynikach wszystkich edycji.",
+    "searchLabel": "Znajdź klub",
+    "searchPlaceholder": "Nazwa klubu, także dawna",
+    "search": "Szukaj",
+    "reset": "Wyczyść wyszukiwanie",
+    "shown": "{from}–{to} z {total}",
+    "empty": "Żaden klub nie pasuje do wyszukiwania.",
+    "club": "Klub",
+    "starts": "Starty",
+    "runners": "Zawodnicy",
+    "editions": "Edycje",
+    "years": "Lata",
+    "pages": "Strony listy klubów",
+    "previous": "Poprzednia",
+    "next": "Następna",
+    "page": "Strona {page}"
+  },
+  "Messages": {
+    "title": "Wiadomości",
+    "eyebrow": "Wiadomości do organizatora",
+    "intro": "Wszystkie Twoje rozmowy z organizatorem – o zgłoszeniach i pytania ogólne.",
+    "empty": "Nie ma jeszcze żadnych wiadomości.",
+    "newMessage": "Napisz do organizatora",
+    "needLogin": "Zaloguj się, aby zobaczyć swoje wiadomości.",
+    "login": "Zaloguj się",
+    "threadRegistration": "Zgłoszenie {year}/{id}",
+    "threadGeneral": "Pytanie",
+    "unread": "Nieprzeczytane",
+    "statusOpen": "Otwarte",
+    "statusResolved": "Rozwiązane",
+    "messagesCount": "{count, plural, one {# wiadomość} few {# wiadomości} many {# wiadomości} other {# wiadomości}}",
+    "you": "Ty",
+    "organizer": "Organizator",
+    "registrant": "Zgłaszający",
+    "reply": "Twoja wiadomość",
+    "replyPlaceholder": "Napisz wiadomość…",
+    "send": "Wyślij",
+    "sending": "Wysyłanie…",
+    "sent": "Wysłano",
+    "chars": "{count}/{max} znaków",
+    "confirmRead": "Potwierdź przeczytanie",
+    "unreadHint": "Masz nieprzeczytaną wiadomość od organizatora. Potwierdź, że ją przeczytałeś, lub odpowiedz bezpośrednio.",
+    "resolvedNote": "Organizator zamknął tę rozmowę jako rozwiązaną. Nowa wiadomość otworzy ją ponownie.",
+    "errorInvalid": "Wiadomość jest pusta lub dłuższa niż 2000 znaków.",
+    "errorForbidden": "Nie masz dostępu do tej rozmowy.",
+    "errorDisabled": "Wiadomości są tymczasowo wyłączone.",
+    "errorRateHour": "W ciągu ostatniej godziny wysłałeś zbyt wiele wiadomości. Spróbuj ponownie później.",
+    "errorRateDay": "Osiągnięto dzienny limit wiadomości. Spróbuj ponownie jutro.",
+    "errorRateThreads": "Dziś nie możesz rozpocząć kolejnej rozmowy. Kontynuuj w istniejącej.",
+    "sectionTitle": "Wiadomości do organizatora",
+    "sectionIntro": "Napisz do organizatora w sprawie tego zgłoszenia – pytanie, poprawka itp. Możesz pisać także po terminie zgłoszeń.",
+    "sectionEmpty": "Brak wiadomości.",
+    "backToList": "Wszystkie wiadomości",
+    "backToEntry": "Powrót do mojego zgłoszenia",
+    "disabled": "Wiadomości są tymczasowo wyłączone. Skorzystaj z formularza kontaktowego.",
+    "contactLink": "Formularz kontaktowy"
+  },
+  "Auth": {
+    "forgotLink": "Nie pamiętasz hasła?",
+    "forgotTitle": "Zapomniane hasło",
+    "forgotIntro": "Podaj e-mail, którym się logujesz. Wyślemy Ci link do ustawienia nowego hasła. Jeśli nie masz jeszcze konta, wyślemy Ci link do jego założenia.",
+    "forgotSubmit": "Wyślij link",
+    "forgotSent": "Jeśli znamy ten e-mail, wysłaliśmy na niego instrukcje. Sprawdź skrzynkę odbiorczą (i folder spam).",
+    "forgotMailMissing": "Nie można teraz wysłać e-maila. Spróbuj ponownie później.",
+    "backToLogin": "Powrót do logowania",
+    "resetSubject": "Reset hasła — MCVV",
+    "resetIntro": "Ustaw nowe hasło za pomocą tego linku (ważny 1 godzinę):",
+    "resetAction": "Ustaw nowe hasło",
+    "resetOutro": "Jeśli logujesz się przez Google, tym linkiem również możesz ustawić hasło. Jeśli nie prosiłeś o reset, zignoruj tę wiadomość.",
+    "resetTitle": "Nowe hasło",
+    "resetSubmit": "Zapisz nowe hasło",
+    "resetInvalid": "Link do resetu hasła jest nieprawidłowy, został już użyty lub wygasł. Poproś o nowy.",
+    "passwordShort": "Hasło musi mieć co najmniej 8 znaków.",
+    "passwordChanged": "Hasło zostało zmienione. Możesz się teraz zalogować.",
+    "verifySuccess": "Twój e-mail został zweryfikowany. Jesteś zalogowany i możesz wysłać zgłoszenie.",
+    "verifyInvalid": "Link weryfikacyjny jest nieprawidłowy, został już użyty lub wygasł. Podaj e-mail, a wyślemy nowy.",
+    "resendSent": "Jeśli konto czeka na weryfikację, wysłaliśmy nowy link.",
+    "title": "Logowanie",
+    "email": "E-mail",
+    "password": "Hasło",
+    "submit": "Zaloguj się",
+    "error": "Nieprawidłowy e-mail lub hasło.",
+    "logout": "Wyloguj się",
+    "signedIn": "Jesteś zalogowany jako {name}.",
+    "name": "Imię i nazwisko",
+    "clubName": "Nazwa klubu (opcjonalnie)",
+    "passwordAgain": "Powtórz hasło",
+    "passwordHint": "Co najmniej 8 znaków.",
+    "passwordAgainHint": "Wpisz to samo hasło jeszcze raz, aby je potwierdzić.",
+    "newPassword": "Wybierz nowe hasło",
+    "newPasswordAgain": "Potwierdź nowe hasło",
+    "passwordMismatch": "Hasła nie są zgodne.",
+    "registerTitle": "Załóż konto",
+    "registerSubmit": "Załóż konto",
+    "registerGeneric": "Nie udało się założyć konta.",
+    "alreadyVerified": "Dla tego e-maila konto już istnieje.",
+    "mailMissing": "Nie można teraz wysłać e-maila weryfikacyjnego. Konto nie zostało utworzone.",
+    "verifySent": "Wysłaliśmy link weryfikacyjny na Twój e-mail. Jest ważny 24 godziny.",
+    "verifySubject": "Zweryfikuj e-mail — MCVV",
+    "verifyIntro": "Potwierdź swój e-mail tym linkiem (ważny 24 godziny):",
+    "verifyAction": "Zweryfikuj e-mail",
+    "verifyTitle": "Weryfikacja e-maila",
+    "verifyError": "Link jest nieprawidłowy lub wygasł.",
+    "rateLimited": "Zbyt wiele prób logowania, spróbuj ponownie za chwilę.",
+    "unverified": "Ten e-mail nie jest jeszcze zweryfikowany. Możesz poprosić o nowy link.",
+    "resend": "Wyślij link weryfikacyjny",
+    "google": "Kontynuuj z Google",
+    "apple": "Kontynuuj z Apple",
+    "signupInviteSubject": "Nie masz jeszcze konta – załóż je jednym kliknięciem",
+    "signupInviteIntro": "Poprosiłeś o reset hasła, ale dla tego adresu e-mail nie ma jeszcze konta. Nic nie szkodzi – zgłoszenia odbywają się teraz przez konto, a założysz je jednym kliknięciem. Link zweryfikuje Twój e-mail i pozwoli ustawić hasło (ważny 24 godziny, jednorazowy):",
+    "signupInviteAction": "Załóż konto",
+    "signupInviteOutro": "Gdy konto powstanie, zobaczysz w nim także zgłoszenia wysłane z tego e-maila w poprzednich latach. Jeśli używasz Gmaila, następnym razem możesz zalogować się przez Google bez hasła. Jeśli o nic nie prosiłeś, zignoruj tę wiadomość.",
+    "signupTitle": "Załóż konto",
+    "signupIntro": "Twój e-mail jest zweryfikowany. Podaj imię i nazwisko oraz ustaw hasło – w ten sposób powstanie konto i od razu zostaniesz zalogowany.",
+    "signupRegistrations": "{count, plural, one {Dla tego e-maila mamy # zgłoszenie z poprzednich lat; zobaczysz je po założeniu konta.} few {Dla tego e-maila mamy # zgłoszenia z poprzednich lat; zobaczysz je po założeniu konta.} many {Dla tego e-maila mamy # zgłoszeń z poprzednich lat; zobaczysz je po założeniu konta.} other {Dla tego e-maila mamy # zgłoszenia z poprzednich lat; zobaczysz je po założeniu konta.}}",
+    "signupSubmit": "Załóż konto i zaloguj się",
+    "signupInvalid": "Link do konta jest nieprawidłowy lub wygasł. Poproś o nowy przez „Nie pamiętasz hasła?”.",
+    "signupUsed": "Konto z tym e-mailem już istnieje; link został już wykorzystany.",
+    "signupNameMissing": "Podaj imię i nazwisko.",
+    "signupNewLink": "Wyślij nowy link",
+    "firstTimeTitle": "Jesteś tu pierwszy raz? Załóż konto w minutę",
+    "firstTimeText": "Zgłoszenia odbywają się teraz przez konto. Zgłoszenia z poprzednich lat zostaną do niego automatycznie przypisane na podstawie e-maila.",
+    "firstTimeAction": "Załóż konto",
+    "googleHint": "Najszybciej – bez hasła, wystarczy konto Google (Gmail).",
+    "orEmail": "lub e-mailem i hasłem"
+  },
+  "Stats": {
+    "overview": {
+      "nav": "Przegląd",
+      "metaTitle": "Statystyki",
+      "eyebrow": "Statystyki · {from}–{to}",
+      "title": "{n, plural, one {# edycja} few {# edycje} many {# edycji} other {# edycji}} w liczbach",
+      "lead": "Rekordy, zwycięzcy i chwile warte zapamiętania. Dane ze wszystkich list wyników od {from}.",
+      "counterEditions": "edycji",
+      "counterEditionsSub": "od {from}",
+      "counterStarts": "startów",
+      "counterStartsSub": "ukończonych biegów",
+      "counterRunners": "zawodników",
+      "counterRunnersSub": "różnych osób na mecie",
+      "counterKm": "przebiegnięte łącznie",
+      "counterKmSub": "{starts} × {km} km",
+      "top": "Najważniejsze chwile",
+      "records": "Rekordy trasy",
+      "recordsSameYear": "Oba rekordy padły w tej samej edycji.",
+      "wins": "Najwięcej zwycięstw",
+      "winsCount": "{count}×",
+      "photos": "Najwięcej zdjęć",
+      "photosTotal": "Z {total} zdjęć w galerii.",
+      "closest": "Najciaśniejszy finisz",
+      "margin": "Największa przewaga",
+      "vs": "vs",
+      "gapSeconds": "{seconds} s",
+      "gapMinutes": "{time} min",
+      "prs": "Najwięcej rekordów życiowych w jednej edycji",
+      "prsUnit": "{count, plural, one {rekord życiowy} few {rekordy życiowe} many {rekordów życiowych} other {rekordu życiowego}} · {year}",
+      "prsBest": "– największa poprawa o {gap} ({previous} → {time})",
+      "ages": "Najstarszy i najmłodszy na mecie",
+      "oldest": "Najstarszy · {year}",
+      "youngest": "Najmłodszy · {year}",
+      "ageUnit": "{age, plural, one {rok} few {lata} many {lat} other {roku}}",
+      "agesNote": "Wiek = rok biegu − rok urodzenia.",
+      "recordEdition": "Rekordowa edycja · {year}",
+      "recordEditionUnit": "{count, plural, one {uczestnik} few {uczestników} many {uczestników} other {uczestnika}} · {newcomers, plural, one {# debiutant} few {# debiutantów} many {# debiutantów} other {# debiutanta}} · {prs, plural, one {# rekord życiowy} few {# rekordy życiowe} many {# rekordów życiowych} other {# rekordu życiowego}}",
+      "women": "Kobiety na trasie",
+      "womenUnit": "wszystkich startów",
+      "womenPeak": "szczyt {year}: {share}",
+      "clubs": "Najwierniejszy klub",
+      "together": "Razem na trasie",
+      "togetherUnit": "godzin biegu",
+      "togetherNote": "≈ {days} dni biegu bez przerwy · {climb} km podbiegów ({starts} × {metres} m)",
+      "moment": "Chwila edycji",
+      "moreRecords": "Historia rekordów",
+      "moreWins": "Zwycięzcy open",
+      "morePhotos": "Galeria zdjęć",
+      "moreWinners": "Zwycięzcy według lat",
+      "moreAttendance": "Frekwencja ogółem",
+      "moreAges": "Rekordy według wieku",
+      "moreTimes": "Najlepsze czasy",
+      "moreClubs": "Wszystkie kluby",
+      "footnote": "Dystans = starty × {km} km (wszystkie kategorie biegną tę samą trasę), podbiegi = starty × {metres} m. Nazwiska według aktualnego rekordu zawodnika."
+    },
+    "eyebrow": "Statystyki",
+    "colName": "Zawodnik",
+    "colTime": "Czas",
+    "colYear": "Rok",
+    "colBirth": "Rocznik",
+    "colClub": "Klub",
+    "colRank": "Miejsce",
+    "colAge": "Wiek",
+    "colStarts": "Starty",
+    "colRecord": "Rekord życiowy",
+    "colAverage": "Średnia",
+    "colCount": "Zawodnicy",
+    "colNewcomers": "Debiutanci",
+    "colPrs": "Rekordy życiowe",
+    "colBest": "Najlepszy czas",
+    "men": "Mężczyźni",
+    "women": "Kobiety",
+    "menTime": "Czas M",
+    "womenTime": "Czas K",
+    "menYear": "Rok M",
+    "womenYear": "Rok K",
+    "chartCaption": "Frekwencja mężczyźni / kobiety",
+    "empty": "Na razie nic tu nie ma.",
+    "navLabel": "Nawigacja statystyk",
+    "back": "Powrót na stronę główną",
+    "printPdf": "Pobierz PDF do druku",
+    "rekordy": {
+      "nav": "Rekordy",
+      "title": "Rekordy trasy i ich historia",
+      "intro": ""
+    },
+    "vitezove": {
+      "nav": "Zwycięzcy",
+      "title": "Zwycięzcy open",
+      "intro": "Najlepszy czas mężczyzn i kobiet w każdej edycji."
+    },
+    "casy": {
+      "nav": "Najlepsze czasy",
+      "title": "Najlepsze czasy",
+      "intro": "TOP 20 mężczyzn i TOP 20 kobiet ze wszystkich edycji."
+    },
+    "vek": {
+      "nav": "Według wieku",
+      "title": "Rekordy według wieku",
+      "intro": "Najlepszy czas w danym wieku (rok biegu − rok urodzenia) dla mężczyzn i kobiet."
+    },
+    "veterani": {
+      "nav": "Weterani",
+      "title": "Weterani MCVV",
+      "intro": "Klub weteranów: zawodnicy z liczbą startów większą niż połowa edycji z wynikami."
+    },
+    "ucast": {
+      "nav": "Frekwencja",
+      "title": "Frekwencja ogółem",
+      "intro": "Uczestnicy, debiutanci i rekordy życiowe w każdym roku."
+    },
+    "staty": {
+      "nav": "Kraje",
+      "title": "Zawodnicy według krajów",
+      "intro": "Narodowość zawodników z wynikiem. W starszych edycjach jest przeważnie nieznana – zbieramy ją od zgłoszeń na 2026 rok, więc liczby będą z czasem rosły.",
+      "byCountry": "Według krajów",
+      "byYear": "Według edycji",
+      "colCountry": "Kraj",
+      "colRunners": "Zawodnicy",
+      "colYears": "Edycje",
+      "colCountries": "Kraje",
+      "colForeign": "Zawodnicy z zagranicy",
+      "colUnknown": "Nie podano",
+      "unknown": "Nie podano"
+    }
+  },
+  "LanguageSwitcher": {
+    "label": "Język"
+  },
+  "ThemeToggle": {
+    "label": "Motyw",
+    "light": "Jasny",
+    "dark": "Ciemny"
+  },
+  "Guide": {
+    "eyebrow": "Poradnik wideo",
+    "title": "Jak zapisać się na MCVV",
+    "description": "Poradnik wideo i instrukcja krok po kroku: założenie konta, zgłoszenie, szybkie dodanie zawodników z poprzednich lat i opłata startowa.",
+    "lead": "Zapisy na mcvv.org krok po kroku – najpierw krótki film, potem szczegółowa instrukcja ze zrzutami ekranu. Zrzuty ekranu pokazują czeską wersję strony; nazwy przycisków podajemy po czesku z polskim tłumaczeniem.",
+    "videoLabel": "Poradnik wideo (1:38, po czesku)",
+    "stepsTitle": "Instrukcja krok po kroku",
+    "prev": "Wstecz",
+    "next": "Następny krok",
+    "done": "Gotowe",
+    "counter": "Krok {n} z {total}",
+    "stepLabel": "Krok",
+    "ctaTitle": "Gotowy?",
+    "cta": "Przejdź do mojego zgłoszenia",
+    "faqTitle": "Najczęstsze pytania",
+    "link": "Jak się zapisać",
+    "steps": [
+      {
+        "image": "01-domu.jpg",
+        "title": "Otwórz mcvv.org",
+        "text": "Kliknij <b>Přihlásit se</b> (Zaloguj się) w prawym górnym rogu."
+      },
+      {
+        "image": "02-prihlaseni.jpg",
+        "title": "Zaloguj się lub załóż konto",
+        "text": "Jeśli masz już konto na nowej stronie, wpisz e-mail i hasło. W przeciwnym razie kliknij <b>Založit účet</b> (Załóż konto).",
+        "tip": "Konta ze starej strony już nie działają – załóż nowe."
+      },
+      {
+        "image": "03-registrace.jpg",
+        "title": "Załóż konto",
+        "text": "Wpisz imię i nazwisko, e-mail i hasło (dwukrotnie). Klub jest opcjonalny. Możesz też wybrać <b>Pokračovat přes Google</b> (Kontynuuj z Google) – bez hasła i bez e-maila weryfikacyjnego.",
+        "tip": "Użyj e-maila, którym zgłaszałeś się w poprzednich latach – zobaczysz swoje wcześniejsze zgłoszenia i dodasz ich zawodników jednym kliknięciem."
+      },
+      {
+        "image": "04-odeslano.jpg",
+        "title": "Sprawdź e-mail",
+        "text": "Wysłaliśmy Ci link weryfikacyjny. Jest ważny 24 godziny."
+      },
+      {
+        "image": "05-email.jpg",
+        "title": "Zweryfikuj e-mail",
+        "text": "W wiadomości „Ověření e-mailu — MCVV” kliknij <b>Ověřit e-mail</b> (Zweryfikuj e-mail).",
+        "tip": "Nie możesz znaleźć? Sprawdź folder spam."
+      },
+      {
+        "image": "06-overeno.jpg",
+        "title": "Jesteś zalogowany",
+        "text": "Po zalogowaniu zawsze trafiasz na <b>Moje přihláška</b> (Moje zgłoszenie). Zgłoszenie możesz przemianować, np. na nazwę klubu lub rodziny – potwierdź przyciskiem <b>Uložit</b> (Zapisz)."
+      },
+      {
+        "image": "07-bezec.jpg",
+        "title": "Dodaj nowego zawodnika",
+        "text": "Wpisz nazwisko, imię, rocznik i płeć. Kategoria zostanie zaproponowana na podstawie rocznika, a klub uzupełniony z nazwy zgłoszenia. Kliknij <b>Přidat</b> (Dodaj), a zawodnik pojawi się w tabeli."
+      },
+      {
+        "image": "08-rychla-nabidka.jpg",
+        "title": "Szybki wybór – zawodnicy z poprzednich lat",
+        "text": "<b>Rychlá nabídka</b> (Szybki wybór) pokazuje wszystkich zawodników, których zgłaszałeś z tego e-maila w poprzednich latach. Wystarczy ich kliknąć – kategoria i opłata uzupełnią się automatycznie.",
+        "tip": "Zgłaszasz klub? Najpierw zmień nazwę zgłoszenia na nazwę klubu i zapisz. Zawodnicy przejmują klub z nazwy zgłoszenia."
+      },
+      {
+        "image": "09-platba.jpg",
+        "title": "Zapłać opłatę startową",
+        "text": "W sekcji <b>Platba</b> (Płatność) znajdziesz kwotę, numer konta, symbol zmienny i kod QR do aplikacji bankowej.",
+        "tip": "Zgłoszenie staje się ważne i pojawia się na liście zapisanych zawodników dopiero po zapłacie."
+      },
+      {
+        "image": "10-uprava.jpg",
+        "title": "Zmiany do terminu zgłoszeń",
+        "text": "Do końca terminu zgłoszeń możesz zmieniać klub lub listę zawodników. Zmiany w nagłówku potwierdzasz przyciskiem <b>Uložit</b> (Zapisz)."
+      },
+      {
+        "image": "11-login.jpg",
+        "title": "Następnym razem",
+        "text": "Następnym razem po prostu zaloguj się e-mailem i hasłem (lub przez Google) – trafisz prosto na <b>Moje přihláška</b> (Moje zgłoszenie)."
+      },
+      {
+        "image": "12-zapomenute.jpg",
+        "title": "Zapomniane hasło",
+        "text": "Na stronie logowania kliknij <b>Zapomněli jste heslo?</b> (Nie pamiętasz hasła?), wpisz e-mail, a wyślemy Ci link do ustawienia nowego hasła (ważny 1 godzinę)."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Czy mogę użyć konta ze starej strony?",
+        "a": "Nie. Nowa strona ma nowe konta. Załóż nowe – najlepiej z tym samym e-mailem, którego używałeś przy wcześniejszych zgłoszeniach, aby jednym kliknięciem dodać zawodników z poprzednich lat w Szybkim wyborze."
+      },
+      {
+        "q": "Nie dostałem e-maila weryfikacyjnego.",
+        "a": "Sprawdź folder spam. Link jest ważny 24 godziny. Jeśli spróbujesz zalogować się na niezweryfikowane konto, strona zaproponuje ponowne wysłanie."
+      },
+      {
+        "q": "Zgłaszam kilka osób (rodzina, klub).",
+        "a": "Wystarczy jedno konto. Do jednego zgłoszenia dodasz dowolną liczbę zawodników; opłaty się sumują i płacisz je jednym przelewem z jednym symbolem zmiennym. W przypadku klubu najpierw zmień nazwę zgłoszenia na nazwę klubu."
+      },
+      {
+        "q": "Kiedy moje zgłoszenie jest ważne?",
+        "a": "Dopiero po opłaceniu opłaty startowej. Dopiero wtedy zawodnicy pojawią się na liście zapisanych zawodników."
+      },
+      {
+        "q": "Czy mogę zmienić zgłoszenie?",
+        "a": "Tak, do końca zapisów online możesz edytować dane oraz dodawać i usuwać zawodników."
+      },
+      {
+        "q": "Loguję się przez Google – czy potrzebuję hasła?",
+        "a": "Nie. Jeśli chcesz dodatkowo ustawić hasło, użyj opcji „Nie pamiętasz hasła?”."
+      }
+    ]
+  },
+  "ResultsArchive": {
+    "eyebrow": "05 — Wyniki i historia",
+    "home": "Strona główna",
+    "stats": "Statystyki",
+    "title": "Archiwum wyników",
+    "intro": "Wybierz rok, aby zobaczyć pełną listę wyników.",
+    "selectYear": "Wybierz rok",
+    "edition": "Edycja",
+    "participants": "{count, plural, one {# uczestnik} few {# uczestników} many {# uczestników} other {# uczestnika}}",
+    "info": "Informacje",
+    "weather": "Pogoda: {weather}, {temp} °C",
+    "overallWinners": "Zwycięzcy open",
+    "men": "Mężczyźni",
+    "women": "Kobiety",
+    "categoryWinners": "Zwycięzcy kategorii",
+    "fullResults": "Pełne wyniki {year}",
+    "dedicatedPage": "Otwórz osobną stronę",
+    "toOverall": "Przełącz na open",
+    "toCategories": "Przełącz na kategorie",
+    "showSplits": "Pokaż międzyczasy",
+    "hideSplits": "Ukryj międzyczasy",
+    "menGroup": "Mężczyźni",
+    "womenGroup": "Kobiety",
+    "colName": "Imię i nazwisko",
+    "colBirth": "Rocznik",
+    "colBirthShort": "Rocz.",
+    "colClub": "Klub",
+    "colCategory": "Kat.",
+    "colSplit1": "Międzyczas 1",
+    "colSplit2": "Międzyczas 2",
+    "split1Short": "M1",
+    "split2Short": "M2",
+    "colTime": "Czas",
+    "empty": "Brak wyników.",
+    "backToTop": "Do góry"
+  },
+  "ConfirmDialog": {
+    "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "working": "Przetwarzanie…",
+    "srDescription": "Potwierdź lub anuluj czynność."
+  },
+  "OnlineResults": {
+    "partners": "Partnerzy biegu",
+    "metaTitle": "Wyniki online {year}",
+    "metaDescription": "Nieoficjalne wyniki na żywo biegu Malá cena Velké Verandy – międzyczasy, meta i klasyfikacja we wszystkich kategoriach.",
+    "title": "Wyniki online",
+    "subtitle": "{year} · na żywo, nieoficjalne",
+    "homeTitle": "mcvv.org",
+    "legendNew": "przejście w ciągu 1 min",
+    "legendRank": "<b>1.</b> miejsce dopiero na mecie",
+    "legendFin": "<b>17:38</b> meta",
+    "legendOn": "bez miejsca = na trasie",
+    "legendFinal": "<ok>✓1.</ok> ostateczne",
+    "legendRun": "biegnie",
+    "updated": "zaktualizowano <b>{time}</b>",
+    "live": "na żywo, bez odświeżania",
+    "stale": "offline – ponawiamy",
+    "searchOpen": "Znajdź zawodnika",
+    "categories": "Kategorie",
+    "allCategories": "Wszystkie kategorie",
+    "close": "Zamknij ✕",
+    "recentDot": "przejście w ciągu 1 min",
+    "count": "na mecie <b>{fin}</b><i>·</i>na trasie <b>{on}</b><i>·</i>czeka <b>{wait}</b><i>·</i>DNS <b>{dns}</b>",
+    "catFinal": "✓ OSTATECZNE",
+    "colRank": "Miejsce",
+    "colBib": "Nr",
+    "colName": "Imię i nazwisko",
+    "colStart": "Start",
+    "colM1": "M1",
+    "colM2": "M2",
+    "colFin": "Meta",
+    "colLoss": "Strata",
+    "colIfNow": "Gdyby teraz",
+    "km1": "1,3 km",
+    "km2": "2,7 km",
+    "ifNow": "teraz",
+    "late": "spóźniony start +{offset}",
+    "lateShort": "+{offset} spóźn.",
+    "startAt": "start <b>{time}</b>",
+    "divRunning": "wystartowali · jeszcze bez międzyczasu",
+    "divWaiting": "czekają na start",
+    "divDns": "nie wystartowali (DNS)",
+    "startsIn": "startuje za <b>{time}</b>",
+    "pending": "na starcie · start jeszcze niepotwierdzony",
+    "pendingShort": "niepotwierdzony",
+    "dnsNote": "start niepotwierdzony w ciągu {grace} od planowanej godziny",
+    "nobody": "Nikt jeszcze nie wystartował.",
+    "findTitle": "Znajdź zawodnika",
+    "findSub": "we wszystkich kategoriach",
+    "searchPlaceholder": "numer lub nazwisko…",
+    "searchLabel": "Znajdź zawodnika po numerze lub nazwisku",
+    "searchNone": "nic nie znaleziono",
+    "stFinished": "meta {time} · {rank}.",
+    "stOnCourse": "na trasie · {point} {time}",
+    "stRunning": "biegnie {time}",
+    "stDns": "DNS",
+    "stWaiting": "start {time}",
+    "onList": "{count} na liście startowej",
+    "statFin": "na mecie",
+    "statOn": "na trasie",
+    "statWait": "czeka",
+    "statDns": "DNS",
+    "starts": "Kategoria startuje <b>{from}</b> – <b>{to}</b>",
+    "best": " · najlepszy czas <b>{time}</b>",
+    "recentTitle": "Ostatnie przejścia",
+    "recentSub": "wszystkie kategorie · miejsce na punkcie",
+    "recentEmpty": "Brak przejść.",
+    "pointM1": "M1",
+    "pointM2": "M2",
+    "pointFin": "META",
+    "note": "Wyniki na żywo są obliczane z międzyczasów (1,3 km, 2,7 km) i mety. Oficjalne wyniki zostaną opublikowane po biegu w <link>Wyniki {year}</link>.",
+    "footerStartlist": "Lista startowa",
+    "footerInstructions": "Komunikat",
+    "copyright": "© Malá cena Velké Verandy",
+    "legendRecord": "rekord trasy (wstępny)",
+    "followTitle": "★ Obserwowani",
+    "followSub": "zapisane w tej przeglądarce",
+    "followEmpty": "Stuknij ☆ przy zawodniku lub jego wiersz – pojawi się tutaj, a Ty dostaniesz powiadomienie o każdym międzyczasie, mecie i miejscu końcowym. Zapisane tylko w tej przeglądarce.",
+    "followStar": "Obserwuj zawodnika",
+    "unfollowStar": "Przestań obserwować",
+    "notifyLabel": "Powiadomienie systemowe",
+    "notifyHint": "gdy strona jest otwarta, ale pracujesz w innym oknie (przeglądarka zapyta o zgodę)",
+    "followSheetTitle": "★ Obserwowani zawodnicy",
+    "followOpen": "Obserwowani zawodnicy",
+    "detailTitle": "Zawodnik",
+    "detailClub": "{count} w biegu · pokaż wszystkich ›",
+    "detailCat": "{cat} · start {time}",
+    "detailFinal": " · ✓ ostatecznie {rank}.",
+    "detailProv": " · wstępnie {rank}.",
+    "detailAtPoint": "{rank}. na punkcie",
+    "detailRunning": "biegnie",
+    "detailFollow": "☆ Obserwuj zawodnika",
+    "detailUnfollow": "★ Obserwujesz – usuń",
+    "detailHint": "Powiadomienia o międzyczasach, mecie i miejscu końcowym. Bez logowania, tylko w tej przeglądarce.",
+    "toastSplit": "Międzyczas {point} · {km}",
+    "toastFin": "Na mecie",
+    "toastFinal": "✓ Miejsce końcowe",
+    "toastAtPoint": "na {point}",
+    "toastBestAtPoint": "najlepszy czas na punkcie",
+    "toastBehind": "+{time} do najlepszego",
+    "toastIfNow": " · gdyby teraz dobiegł: {rank}.",
+    "toastProv": "wstępnie",
+    "toastLeads": "prowadzi w kategorii",
+    "toastLoss": "strata +{time}",
+    "toastOnCourse": " · miejsce może się jeszcze zmienić, na trasie {count}",
+    "toastPlace": "✓ {rank}. miejsce",
+    "toastFinalSub": "w kategorii {cat} nikt go już nie wyprzedzi · oficjalnie po weryfikacji wyników",
+    "toastSummary": "★ Obserwowani – nowe czasy: {count}",
+    "toastClose": "Zamknij",
+    "notifSplit": "{point} {time} · {cat}",
+    "notifFin": "Meta {time} · wstępnie {rank}.",
+    "notifFinal": "✓ Miejsce końcowe {rank}.",
+    "notifSummaryTitle": "★ Obserwowani zawodnicy",
+    "notifSummary": "Nowe czasy: {count}",
+    "limitTitle": "Możesz obserwować najwyżej {limit} zawodników",
+    "limitSub": "Najpierw kogoś usuń (× na liście ★ Obserwowani).",
+    "clubFullSub": "Lista jest pełna – najpierw kogoś usuń. Cały klub zobaczysz zawsze w przeglądzie klubu.",
+    "clubFollowedTitle": "★ Obserwujesz {count} z {total} – {club}",
+    "clubFollowedPartial": "Limit {limit}: dodano tych, którzy jeszcze nie dobiegli (według startu). Pozostałych ({rest}) zobaczysz w przeglądzie klubu.",
+    "clubFollowedAll": "Powiadomienia o międzyczasach, mecie i miejscu końcowym.",
+    "clubUnfollowTitle": "Klub {club}",
+    "clubUnfollowSub": "Przestałeś obserwować wszystkich jego zawodników.",
+    "btnFollowAll": "☆ Obserwuj wszystkich ({count})",
+    "btnFollowSome": "☆ Obserwuj {free} z {count}",
+    "btnFollowSomeHint": "limit {limit} · pierwszeństwo mają ci, którzy jeszcze biegną",
+    "btnFull": "★ Lista jest pełna ({limit}/{limit})",
+    "btnUnfollowAll": "★ Obserwujesz wszystkich {count} – usuń",
+    "shareClub": "🔗 Link do klubu",
+    "shareShort": "🔗 Link",
+    "shareFollow": "🔗 Udostępnij wybór",
+    "copied": "Link skopiowany",
+    "clubProfile": "Profil klubu ›",
+    "viewFollowTitle": "Obserwowani zawodnicy",
+    "viewFollowSub": "{count}/{limit} · zapisane w tej przeglądarce",
+    "viewClubSub": "klub · zawodnicy: {count} · kategorie: {cats}",
+    "viewEmpty": "Nikogo jeszcze nie obserwujesz. Stuknij ☆ przy zawodniku lub w jego szczegółach – pojawi się tutaj we wszystkich kategoriach, a Ty dostaniesz powiadomienie o każdym międzyczasie, mecie i miejscu końcowym (najwyżej {limit}).",
+    "colRankCat": "w kat.",
+    "colStatus": "Status",
+    "stFinal": "ostateczne",
+    "stProv": "wstępne",
+    "tabFollow": "Obserwowani",
+    "closeClub": "Zamknij przegląd klubu",
+    "sumClubCount": "{count} w biegu",
+    "sumFollowCount": "{count}/{limit}",
+    "sumFollowNote": "Miejsce jest zawsze w ramach kategorii.",
+    "clubHit": "klub · {count} w biegu",
+    "clubHitGo": "przegląd ›",
+    "unknownRunner": "Nieznany zawodnik (nr {bib})",
+    "unknownSub": "brak w tegorocznych danych",
+    "unknownGroup": "Brak w tegorocznych danych",
+    "unknownRemove": "Usuń"
+  },
+  "Leader": {
+    "m1": "M1",
+    "m2": "M2",
+    "fin": "Meta",
+    "chipFin": "NOWY LIDER",
+    "chipSplit": "LIDER {point}",
+    "atFin": "na mecie",
+    "atSplit": "na {point}",
+    "newLeader": "NOWY LIDER {where}",
+    "first": "PIERWSZY {where}",
+    "late": "zgłoszenie spóźnione",
+    "before": "przed",
+    "faster": "o <b>{diff}</b> szybciej",
+    "onlyTime": "na razie jedyny czas {where}",
+    "finLoc": "na mecie"
+  },
+  "Record": {
+    "newRecord": "NOWY REKORD TRASY",
+    "newAbs": "NOWY ABSOLUTNY REKORD TRASY",
+    "eqRecord": "WYRÓWNANY REKORD TRASY",
+    "eqAbs": "WYRÓWNANY ABSOLUTNY REKORD TRASY",
+    "prev": "poprzedni rekord <b>{time}</b> · {who} ({year})",
+    "prevUnknown": "poprzedni rekord <b>{time}</b>",
+    "faster": "o {diff} szybciej",
+    "same": "ten sam czas",
+    "also": "+ także rekord kategorii {cat} (poprzednio {time})",
+    "alsoEq": "+ wyrównuje też rekord kategorii {cat} ({time})",
+    "note": "czas wstępny · oficjalnie po weryfikacji wyników",
+    "notePlural": "czasy wstępne · oficjalnie po weryfikacji wyników",
+    "summary": "{count} REKORDY TRASY NARAZ",
+    "close": "stuknij, aby zamknąć",
+    "closeAria": "Zamknij",
+    "toastFaster": "o {diff} lepiej niż {time}",
+    "toastEq": "wyrównuje {time}",
+    "prelim": "wstępnie",
+    "more": "+ {count} więcej",
+    "badge": "RT",
+    "badgeEq": "= RT",
+    "badgeTitle": "rekord trasy (wstępny)",
+    "badgeEqTitle": "wyrównany rekord trasy (wstępny)",
+    "finalTitle": "rekord trasy: {cats}"
+  }
+}

@@ -11,7 +11,7 @@ export function McvvLoginNextRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    const stripped = pathname.replace(/^\/(cs|en)(?=\/|$)/, "") || "/";
+    const stripped = pathname.replace(/^\/(cs|en|de|pl|uk)(?=\/|$)/, "") || "/";
     const rest = stripped.startsWith("/") ? stripped : `/${stripped}`;
     const search = searchParams.toString();
     const next = `${rest}${search ? `?${search}` : ""}`;

@@ -5,7 +5,7 @@ import { loginTarget } from "@/lib/auth/safe-next";
 export { safeAdminNext, safeNext } from "@/lib/auth/safe-next";
 
 export function stripLocalePrefix(pathname: string): string {
-  const match = pathname.match(/^\/(cs|en)(?=\/|$|\?)/);
+  const match = pathname.match(/^\/(cs|en|de|pl|uk)(?=\/|$|\?)/);
   if (!match || !locales.includes(match[1] as Locale)) {
     return pathname || "/";
   }

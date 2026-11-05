@@ -714,7 +714,12 @@
     "close": "Close",
     "previousPhoto": "Previous photo",
     "nextPhoto": "Next photo",
-    "back": "Back to home"
+    "back": "Back to home",
+    "share": "Share",
+    "linkCopied": "Link copied",
+    "copyFailed": "Could not copy the link",
+    "shareTitle": "Malá cena Velké Verandy {year} – photo gallery",
+    "shareDescription": "A photo from the {year} edition of the traditional winter cross-country race in Choceň."
   },
   "Runner": {
     "statsLink": "How do you rank in history? Browse the statistics",

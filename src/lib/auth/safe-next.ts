@@ -37,7 +37,7 @@ export const USER_NEXT_PATHS = [
 export type UserNextPath = (typeof USER_NEXT_PATHS)[number];
 
 export function stripLocale(pathname: string): string {
-  const match = pathname.match(/^\/(cs|en)(?=\/|$|\?)/);
+  const match = pathname.match(/^\/(cs|en|de|pl|uk)(?=\/|$|\?)/);
   if (!match) {
     return pathname || "/";
   }

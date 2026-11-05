@@ -21,6 +21,7 @@ import {
 import { mailConfigured } from "@/lib/mail/resend";
 import { clientIp as proxyClientIp } from "@/lib/security/rate-limit";
 import { redirect } from "@/i18n/routing";
+import { documentLocale } from "@/lib/i18n/locale";
 
 const WINDOW_MS = 15 * 60 * 1000;
 const perEmail = new RateLimiter(3, WINDOW_MS);
@@ -42,7 +43,8 @@ export async function requestPasswordReset(
   }
   const email = normalizeForgotEmail(formData.get("email"));
   const locale = await getLocale();
-  const copy = await getTranslations({ locale, namespace: "Auth" });
+  // E-mails exist only in cs/en; de/pl/uk get English (#273).
+  const copy = await getTranslations({ locale: documentLocale(locale), namespace: "Auth" });
   const outcome = await processForgotRequest(email, await clientIp(), {
     perIp,
     perEmail,

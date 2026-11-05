@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
 import { renderTransactionalEmail } from "@/lib/mail/layout";
 import { mailConfigured, sendResendEmail } from "@/lib/mail/resend";
+import { documentLocale, siteLocale } from "@/lib/i18n/locale";
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -55,11 +56,10 @@ export async function issueVerificationEmail(input: {
     },
   });
   const origin = await appOrigin();
-  const locale = input.locale === "en" ? "en" : "cs";
-  const url = `${origin}/api/auth/verify?token=${token}&locale=${locale}`;
+  const url = `${origin}/api/auth/verify?token=${token}&locale=${siteLocale(input.locale)}`;
   const { html, text } = renderTransactionalEmail({
     subject: input.subject,
-    locale,
+    locale: documentLocale(input.locale),
     site: origin,
     paragraphs: [input.intro],
     action: { label: input.action, url },
@@ -92,11 +92,10 @@ export async function issuePasswordResetEmail(input: {
     },
   });
   const origin = await appOrigin();
-  const locale = input.locale === "en" ? "en" : "cs";
-  const url = `${origin}/${locale}/obnova-hesla?token=${token}`;
+  const url = `${origin}/${siteLocale(input.locale)}/obnova-hesla?token=${token}`;
   const { html, text } = renderTransactionalEmail({
     subject: input.subject,
-    locale,
+    locale: documentLocale(input.locale),
     site: origin,
     paragraphs: [input.intro],
     action: { label: input.action, url },
@@ -112,7 +111,7 @@ export function signupSecret(): string | undefined {
 }
 
 export function signupInviteUrl(origin: string, locale: string, token: string): string {
-  return `${origin}/${locale === "en" ? "en" : "cs"}/zalozeni-uctu?token=${token}`;
+  return `${origin}/${siteLocale(locale)}/zalozeni-uctu?token=${token}`;
 }
 
 /**
@@ -133,13 +132,12 @@ export async function issueSignupInviteEmail(input: {
   }
   const token = createSignupToken(input.email, secret);
   const origin = env.AUTH_ORIGIN?.replace(/\/$/, "") || (await appOrigin());
-  const locale = input.locale === "en" ? "en" : "cs";
   const { html, text } = renderTransactionalEmail({
     subject: input.subject,
-    locale,
+    locale: documentLocale(input.locale),
     site: origin,
     paragraphs: [input.intro],
-    action: { label: input.action, url: signupInviteUrl(origin, locale, token) },
+    action: { label: input.action, url: signupInviteUrl(origin, input.locale, token) },
     after: [input.outro],
   });
   return sendResendEmail({ to: input.email, subject: input.subject, text, html, kind: "auth" });

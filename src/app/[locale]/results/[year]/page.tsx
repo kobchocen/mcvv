@@ -18,6 +18,7 @@ import { type McvvHomepageContent, withFooterYear } from "@/components/templates
 import { DownloadResultsButton } from "@/components/results/DownloadResultsButton";
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
+import { intlTag } from "@/lib/i18n/locale";
 
 type PageProps = {
   params: Promise<{ locale: string; year: string }>;
@@ -131,11 +132,21 @@ export default async function ResultsYearPage({ params }: PageProps) {
   };
 
   const isCs = locale === "cs";
-  const title = isCs ? `Výsledky ročníku ${year}` : `Results ${year}`;
-  const subtitle = isCs ? `${total} účastníků` : `${total} participants`;
+  // de/pl/uk (#273) use the ResultsArchive messages; cs/en keep their original wording.
+  const translated = locale !== "cs" && locale !== "en";
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
+  const title = translated
+    ? t("fullResults", { year })
+    : isCs
+      ? `Výsledky ročníku ${year}`
+      : `Results ${year}`;
+  const subtitle = translated
+    ? t("participants", { count: total })
+    : isCs
+      ? `${total} účastníků`
+      : `${total} participants`;
   const labels: McvvResultsTableLabels = {
     name: t("colName"),
     birth: t("colBirth"),
@@ -162,7 +173,11 @@ export default async function ResultsYearPage({ params }: PageProps) {
           <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[2px] text-race-accent">
-                {isCs ? "05 — Výsledky a historie" : "05 — Results and history"}
+                {translated
+                  ? t("eyebrow")
+                  : isCs
+                    ? "05 — Výsledky a historie"
+                    : "05 — Results and history"}
               </p>
               <h1 className="mt-2 font-display text-5xl font-bold">{title}</h1>
               <p className="mt-1 text-lg text-race-muted">{subtitle}</p>
@@ -170,17 +185,25 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 <>
                   {editionInfo.date && (
                     <p className="mt-1 text-sm text-race-muted">
-                      Datum:{" "}
-                      {new Date(editionInfo.date).toLocaleDateString("cs-CZ", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
+                      {translated ? "" : "Datum: "}
+                      {new Date(editionInfo.date).toLocaleDateString(
+                        translated ? intlTag(locale) : "cs-CZ",
+                        {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        },
+                      )}
                     </p>
                   )}
                   <p className="mt-1 text-sm text-race-muted">
-                    Počasí: {editionInfo.weather || "—"}, {editionInfo.temp ?? "—"} °C
+                    {translated
+                      ? t("weather", {
+                          weather: editionInfo.weather || "—",
+                          temp: editionInfo.temp ?? "—",
+                        })
+                      : `Počasí: ${editionInfo.weather || "—"}, ${editionInfo.temp ?? "—"} °C`}
                   </p>
                 </>
               )}
@@ -198,7 +221,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 href={`/${locale}/results`}
                 className="inline-flex items-center rounded-md border border-race-line/60 px-4 py-2 text-sm font-semibold hover:bg-race-forest"
               >
-                {isCs ? "Přehled ročníků" : "All years"}
+                {translated ? t("title") : isCs ? "Přehled ročníků" : "All years"}
               </NextLink>
               <NextLink
                 href={`/${locale}/statistiky`}
@@ -210,7 +233,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 href={`/${locale}/`}
                 className="inline-flex items-center rounded-md border border-race-line/60 px-4 py-2 text-sm font-semibold hover:bg-race-forest"
               >
-                ← {isCs ? "Domů" : "Home"}
+                ← {translated ? t("home") : isCs ? "Domů" : "Home"}
               </NextLink>
             </div>
           </div>

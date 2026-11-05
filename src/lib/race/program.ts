@@ -2,6 +2,7 @@
 
 import { pragueCivil } from "@/lib/slots/core";
 import type { StatSlug } from "@/lib/stats/core";
+import { intlTag } from "@/lib/i18n/locale";
 
 /** Edition used when the current one has no Rozpis data yet (34. ročník, 2026). */
 export const FALLBACK_ROZPIS_EDITION_ID = 34;
@@ -66,7 +67,20 @@ function formatCivilDate(
   locale: string,
   withYear: boolean,
 ): string {
-  const weekday = new Date(Date.UTC(civil.year, civil.month - 1, civil.day)).getUTCDay();
+  const utc = new Date(Date.UTC(civil.year, civil.month - 1, civil.day));
+  if (locale !== "cs" && locale !== "en") {
+    // de/pl/uk (#273): Intl in the locale's own convention, e.g. de "Mi., 2.12.2026".
+    return new Intl.DateTimeFormat(intlTag(locale), {
+      weekday: "short",
+      day: "numeric",
+      month: "numeric",
+      ...(withYear ? { year: "numeric" as const } : {}),
+      timeZone: "UTC",
+    })
+      .format(utc)
+      .replace(/\s+/g, NBSP);
+  }
+  const weekday = utc.getUTCDay();
   const parts =
     locale === "en"
       ? [
@@ -121,7 +135,7 @@ export function formatOnlineDeadline(
   const date = formatCivilDate(last, locale, true);
   const clock = `${last.hour}:${String(last.minute).padStart(2, "0")}`;
   return {
-    long: locale === "en" ? `${date},${NBSP}${clock}` : `${date}${NBSP}${clock}`,
+    long: locale === "cs" ? `${date}${NBSP}${clock}` : `${date},${NBSP}${clock}`,
     short: formatCivilDate(last, locale, false),
   };
 }

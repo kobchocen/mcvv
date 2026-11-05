@@ -6,11 +6,23 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { stepLightboxIndex, type LightboxDirection } from "@/lib/photos/lightbox";
 
+import { PhotoShareButton } from "./photo-share-button";
+
 export type PhotoLightboxItem = {
   id: number;
   alt: string;
   title: string;
   caption?: string;
+};
+
+export type PhotoLightboxShare = {
+  /** Permalink (path or absolute URL) of a photo. */
+  urlFor: (id: number) => string;
+  /** Title passed to the native share sheet. */
+  titleFor: (id: number) => string;
+  label: string;
+  copiedLabel: string;
+  failedLabel: string;
 };
 
 export type PhotoLightboxProps = {
@@ -23,6 +35,8 @@ export type PhotoLightboxProps = {
   nextLabel: string;
   /** Cycle from the last photo to the first (and back). Default: stop at the ends. */
   wrap?: boolean;
+  /** Show a "Sdílet" button for the open photo (public gallery only). */
+  share?: PhotoLightboxShare;
 };
 
 const navButtonClass =
@@ -36,6 +50,7 @@ export function PhotoLightbox({
   previousLabel,
   nextLabel,
   wrap = false,
+  share,
 }: PhotoLightboxProps) {
   const active = activeIndex === null ? null : (photos[activeIndex] ?? null);
   const step = (direction: LightboxDirection) =>
@@ -99,8 +114,19 @@ export function PhotoLightbox({
                 </button>
               </>
             ) : null}
-            {active.caption ? (
-              <p className="mt-3 text-sm leading-6 text-race-muted">{active.caption}</p>
+            {active.caption || share ? (
+              <div className="mt-3 flex items-start justify-between gap-3">
+                <p className="text-sm leading-6 text-race-muted">{active.caption ?? ""}</p>
+                {share ? (
+                  <PhotoShareButton
+                    url={share.urlFor(active.id)}
+                    title={share.titleFor(active.id)}
+                    label={share.label}
+                    copiedLabel={share.copiedLabel}
+                    failedLabel={share.failedLabel}
+                  />
+                ) : null}
+              </div>
             ) : null}
             <p className="sr-only" aria-live="polite">
               {`${(activeIndex ?? 0) + 1} / ${photos.length}`}

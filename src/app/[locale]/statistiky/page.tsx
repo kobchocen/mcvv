@@ -13,6 +13,7 @@ import { getStatsOverview } from "@/lib/stats/overview-query";
 import { STAT_SLUGS } from "@/lib/stats/core";
 import { formatRaceTime } from "@/lib/utils";
 import { type Locale } from "@/i18n/routing";
+import { intlTag } from "@/lib/i18n/locale";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -33,7 +34,7 @@ export default async function StatsIndexPage({ params }: PageProps) {
   const t = await getTranslations({ locale, namespace: "Stats.overview" });
   const [data, settings] = await Promise.all([getStatsOverview(), getSiteSettings()]);
 
-  const intl = locale === "cs" ? "cs-CZ" : "en-GB";
+  const intl = intlTag(locale);
   const number = (value: number) => new Intl.NumberFormat(intl).format(value);
   const decimal = (value: number) =>
     new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(value);

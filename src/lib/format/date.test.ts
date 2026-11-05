@@ -32,3 +32,14 @@ test("formatShortDateTime drops the year within the same Prague year", () => {
   const lastYear = new Date(Date.UTC(2025, 11, 31, 22, 30)); // 23:30 CET
   assert.equal(plain(formatShortDateTime(lastYear, "cs", now)), "31. 12. 2025 23:30");
 });
+
+test("formatWeekdayDate / formatWeekdayDateTime (Q406)", async () => {
+  const { formatWeekdayDate, formatWeekdayDateTime } = await import("./date");
+  const standardEnd = new Date(Date.UTC(2026, 11, 2, 12));
+  assert.equal(plain(formatWeekdayDate(standardEnd, "cs")), "středa 2. 12. 2026");
+  assert.equal(plain(formatWeekdayDate(standardEnd, "en")), "Wednesday 2 Dec 2026");
+  assert.equal(plain(formatWeekdayDate(standardEnd, "cs", { year: false })), "středa 2. 12.");
+  const lateEnd = new Date(Date.UTC(2026, 11, 5, 17));
+  assert.equal(plain(formatWeekdayDateTime(lateEnd, "cs")), "sobota 5. 12. 2026 18:00");
+  assert.equal(plain(formatWeekdayDateTime(lateEnd, "en")), "Saturday 5 Dec 2026, 18:00");
+});

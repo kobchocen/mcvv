@@ -55,8 +55,10 @@
       "claim": "A forest cross that tests you on every climb. Short, intense, and unforgiving, with steep uphills and fast technical descents.",
       "primaryCta": "Entries",
       "primaryHref": "/prihlaseni-zavodnici",
-      "closesInDays": "Online entries close in {days, plural, one {# day} other {# days}}",
-      "closesInHours": "Online entries close in {hours} h {minutes} min",
+      "closesInDays": "Standard entries close in {days, plural, one {# day} other {# days}}",
+      "closesInHours": "Standard entries close in {hours} h {minutes} min",
+      "lateClosesInDays": "Late entries close in {days, plural, one {# day} other {# days}}",
+      "lateClosesInHours": "Late entries close in {hours} h {minutes} min",
       "secondaryCta": "Race notice",
       "secondaryHref": "/program",
       "tertiaryCta": "Results",
@@ -560,7 +562,8 @@
   "Entrants": {
     "eyebrow": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
     "title": "Entered runners",
-    "deadline": "Online entry deadline",
+    "standardUntil": "Standard entries until {date}",
+    "lateUntil": "Late entries until {end} · adults CZK {adult} / youth CZK {kids} · pay within {minutes} minutes of submitting",
     "register": "Enter",
     "closed": "Online entries have closed. You can still enter on site on race day at the race office until {onsiteUntil} (adults {adult} CZK / youth {kids} CZK).",
     "empty": "No confirmed runners yet.",
@@ -589,6 +592,7 @@
     "accountMessagesIntro": "You can send the organizer a question about your account or the race even without an entry.",
     "accountSettings": "Account settings",
     "deadline": "Deadline",
+    "standardUntil": "Standard entries until: {date}",
     "readOnly": "read only",
     "name": "Entry name",
     "email": "Email",
@@ -690,7 +694,7 @@
     "latePayVerifyInvalid": "This entry can no longer be checked. Please refresh the page.",
     "latePayRunners": "Runners",
     "latePaidThanks": "Thank you, the payment arrived in time.",
-    "latePaidBibPending": "<b>The bib number and start time are assigned when the start list is drawn.</b> You will find them here in “My entry” and in the published start list.",
+    "latePaidBibPending": "You will find your <b>bib number and start time</b> here in “My entry” and in the published start list.",
     "lateBibsTitle": "Bib numbers and start times",
     "lateBibStart": "start",
     "lateBibPickup": "Pick up your bib at the race office {day} from {from}.",
@@ -1780,7 +1784,19 @@
         "q": "I sign in with Google – do I need a password?",
         "a": "No. If you want to set a password as well, use “Forgot password?”."
       }
-    ]
+    ],
+    "faqTerms": {
+      "stepTitle": "Edit until your period ends",
+      "stepText": "You can change the club or list of runners until the end of the period in which you entered (standard entries until {standardEnd}). After that the entry is read-only. Confirm header changes with <b>Uložit</b> (Save).",
+      "validLate": "A late entry must be paid within {minutes} minutes of submitting it.",
+      "change": "Yes, until the end of standard entries ({standardEnd}) you can edit details and add or remove runners. A paid late entry can no longer be changed or cancelled.",
+      "lateQ": "I missed standard entries. Can I still enter?",
+      "lateA": "Yes. Late entries run {lateFrom} – {lateTo}: entry fee CZK {lateAdult} adults / CZK {lateKids} youth. After submitting, pay by QR payment, ideally an instant one, within {minutes} minutes – otherwise the entry is cancelled automatically. After that you can only enter on site ({raceDay}) at the race office from {officeOpens} to {onsiteUntil} (CZK {onsiteAdult} / {onsiteKids}).",
+      "addQ": "I have a standard entry and want to add another runner.",
+      "addA": "After standard entries close, the original entry can no longer be changed. Enter the other runner with a new late entry – it has its own variable symbol and must be paid within {minutes} minutes.",
+      "refundQ": "Do you refund the entry fee if I withdraw?",
+      "refundA": "Entry fees are refunded if you withdraw by the end of standard entries ({standardEndShort}). After that date fees are not refunded, including late entries."
+    }
   },
   "Receipt": {
     "title": "Payment receipt",

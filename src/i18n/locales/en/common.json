@@ -520,7 +520,142 @@
   "Instructions": {
     "eyebrow": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
     "title": "Instructions",
-    "status": "Instructions are being prepared"
+    "tocTitle": "On this page",
+    "backToTop": "Back to top",
+    "mapAlt": "Course map of Malá cena Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Organizer",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Race",
+        "paragraphs": ["Forest cross Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Date",
+        "paragraphs": ["Sunday 6 December 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Place",
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
+        "items": []
+      },
+      "parking": {
+        "title": "Parking",
+        "paragraphs": [
+          "Car park 1 - In the bend of road 315 from Choceň to Sruby (49°59'36.018\"N, 16°12'15.656\"E), the car park has limited capacity, please follow the organizer's instructions, if you arrive via Choceň use car park no. 2.",
+          "Car park 2 - In Choceň, on Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), parking is not organised, observe the traffic rules.",
+          "A sketch with the car parks marked is on the race-centre map (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Distances",
+        "paragraphs": [],
+        "items": [
+          "Race centre - Car park 1: 400 m",
+          "Race centre - Car park 2: 800 m",
+          "Race centre - ČD railway station: 1.8 km",
+          "Race centre - start: 0 m",
+          "Race centre - finish: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Race office",
+        "paragraphs": ["Split into two \"counters\":"],
+        "items": [
+          "Registered runners with the entry fee paid - collect your bib any time before your start.",
+          "New entries - at a higher entry fee and only until 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Bib",
+        "paragraphs": [
+          "You receive a bib with your name (pre-registered runners only) and your start time at the race office. You will not be allowed to start without a bib. Wear the number visibly on your chest. Otherwise you may be disqualified. Course officials on the course may not be able to identify you, and you would then miss a passage through a control point!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Interval start in pairs every 15 seconds. Arrive at the start on time! At least 3 minutes before your start time. Each runner is responsible for arriving at the start on time. Race time is measured from the start time printed on the bib. The official race time is Central European Time (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Course",
+        "paragraphs": [
+          "4 300 m on forest roads and paths (400 m of asphalt), a hilly profile (200 m of elevation gain), marked with red streamers, the same course for all categories."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Refreshments",
+        "paragraphs": [
+          "A hot drink after the race. Stall sales of refreshments with the traditional range."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Changing rooms, toilets",
+        "paragraphs": [
+          "Only emergency shelters (tents) are available at the race centre - a limited number, mobile toilets at the race centre."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Medical service",
+        "paragraphs": [
+          "A medic at the race centre. The nearest hospitals are Ústí nad Orlicí or Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Prize giving",
+        "paragraphs": [
+          "Cash prizes for 1st - 5th place in the men's and women's categories (CZK 3 000, CZK 2 000, CZK 1 000, CZK 500, CZK 200) and for 1st - 3rd place in the veteran categories (CZK 500, CZK 300, CZK 200). Prizes in kind for the best three in the youth and junior categories."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Timetable",
+        "paragraphs": [],
+        "items": [
+          "9:00 - race office opens",
+          "9:45 - new entries close",
+          "10:15 - start of the first runners",
+          "11:55 - start of the last runner",
+          "12:15 - finish of the last runner",
+          "12:20 — awards ceremony and raffle"
+        ]
+      },
+      "privacy": {
+        "title": "Personal data, filming and photography",
+        "paragraphs": [
+          "By entering this race, each participant agrees to the publication of their personal data in the scope of the race entry, in the form of the list of entrants, the start list and the results list on the race website and at the race centre. During the event, news photographs and videos will be taken (including the use of an unmanned drone) to inform the public about the race that took place, to promote the race or to account for grants for the event and so on, in accordance with the applicable legislation. Photographs may also be taken here for the personal use of race participants (as a memory of the races, to promote sports clubs, and so on), especially from the prize giving and from the course. If you do not agree to being photographed or filmed, tell the photographer or camera operator explicitly."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Notice",
+        "paragraphs": [
+          "Selling or promotional activity (except the promotion of sports events) is allowed only with the consent of the race director.",
+          "By its nature the race is not suitable for children under six. Only a runner who completes the whole course without help from another person is included in the results."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "For spectators",
+        "paragraphs": [
+          "You can watch the runners and, by cheering, create the right atmosphere both in the finish arena (refreshments, a results service and split announcements are available there) and of course on the course. Here we recommend continuing along the forest track (Formanka) that leads to Veranda from car park no. 1, further north-west for about 400 m up the hill, where you turn right onto a forest path and after just under 100 m you meet the race course. Besides staying there, you can continue on to the top of Sutina (the 1st hill - the fastest runners are here about 90 s after the start) or turn left along the course (against the direction of the race) and walk as far as Hřebínek, the top of the last, fourth hill (the fastest runners are here about 13 minutes after the start). When moving on the course, please watch the race in progress and leave the runners enough room."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",

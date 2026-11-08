@@ -559,9 +559,9 @@
         "title": "Vzdálenosti",
         "paragraphs": [],
         "items": [
-          "Centrum závodu - Parkoviště 1: 300 m",
-          "Centrum závodu - Parkoviště 2: 500 m",
-          "Centrum závodu - nádraží ČD: 2 000 m",
+          "Centrum závodu - Parkoviště 1: 400 m",
+          "Centrum závodu - Parkoviště 2: 800 m",
+          "Centrum závodu - nádraží ČD: 1,8 km",
           "Centrum závodu - start: 0 m",
           "Centrum závodu - cíl: 0 m"
         ]
@@ -632,8 +632,7 @@
           "10:15 - start prvních závodníků",
           "11:55 - start posledního závodníka",
           "12:15 - doběh posledního závodníka",
-          "12:20 - vyhlášení vítězů",
-          "12:40 - konec závodu (tombola)"
+          "12:20 — vyhlášení výsledků a tombola"
         ]
       },
       "privacy": {

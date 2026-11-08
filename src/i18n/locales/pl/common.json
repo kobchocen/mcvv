@@ -559,9 +559,9 @@
         "title": "Odległości",
         "paragraphs": [],
         "items": [
-          "Centrum zawodów - parking 1: 300 m",
-          "Centrum zawodów - parking 2: 500 m",
-          "Centrum zawodów - dworzec ČD: 2 000 m",
+          "Centrum zawodów - parking 1: 400 m",
+          "Centrum zawodów - parking 2: 800 m",
+          "Centrum zawodów - dworzec ČD: 1,8 km",
           "Centrum zawodów - start: 0 m",
           "Centrum zawodów - meta: 0 m"
         ]
@@ -632,8 +632,7 @@
           "10:15 - start pierwszych zawodników",
           "11:55 - start ostatniego zawodnika",
           "12:15 - meta ostatniego zawodnika",
-          "12:20 - ogłoszenie zwycięzców",
-          "12:40 - koniec zawodów (loteria fantowa)"
+          "12:20 — ogłoszenie wyników i loteria fantowa"
         ]
       },
       "privacy": {

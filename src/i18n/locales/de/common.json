@@ -559,9 +559,9 @@
         "title": "Entfernungen",
         "paragraphs": [],
         "items": [
-          "Wettkampfzentrum - Parkplatz 1: 300 m",
-          "Wettkampfzentrum - Parkplatz 2: 500 m",
-          "Wettkampfzentrum - Bahnhof ČD: 2 000 m",
+          "Wettkampfzentrum - Parkplatz 1: 400 m",
+          "Wettkampfzentrum - Parkplatz 2: 800 m",
+          "Wettkampfzentrum - Bahnhof ČD: 1,8 km",
           "Wettkampfzentrum - Start: 0 m",
           "Wettkampfzentrum - Ziel: 0 m"
         ]
@@ -632,8 +632,7 @@
           "10:15 - Start der ersten Läufer",
           "11:55 - Start des letzten Läufers",
           "12:15 - Zieleinlauf des letzten Läufers",
-          "12:20 - Siegerehrung",
-          "12:40 - Ende des Rennens (Tombola)"
+          "12:20 — Siegerehrung und Tombola"
         ]
       },
       "privacy": {

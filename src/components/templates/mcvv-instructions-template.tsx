@@ -20,12 +20,13 @@ import {
 } from "lucide-react";
 
 import { BackToTop } from "@/components/molecules";
-import { McvvCourseMap, McvvPublicNavbar } from "@/components/organisms";
+import { McvvPublicNavbar } from "@/components/organisms";
 import {
   INSTRUCTION_SECTION_ORDER,
   type InstructionSectionId,
   type McvvInstructionsContent,
 } from "@/components/templates/mcvv-instructions-content";
+import { CourseMapLink, InstructionText } from "@/components/templates/mcvv-instructions-links";
 
 const sectionIcons: Record<InstructionSectionId, LucideIcon> = {
   organizer: Users,
@@ -137,7 +138,7 @@ export function McvvInstructionsTemplate({ content }: McvvInstructionsTemplatePr
                         key={`${id}-p-${index}`}
                         className="max-w-3xl text-sm leading-7 text-race-muted sm:text-base"
                       >
-                        {paragraph}
+                        <InstructionText text={paragraph} />
                       </p>
                     ))}
                     {section.items.length > 0 ? (
@@ -151,12 +152,16 @@ export function McvvInstructionsTemplate({ content }: McvvInstructionsTemplatePr
                             key={`${id}-i-${index}`}
                             className="text-sm leading-7 text-foreground dark:text-white sm:text-base"
                           >
-                            {item}
+                            <InstructionText text={item} />
                           </li>
                         ))}
                       </ul>
                     ) : null}
-                    {id === "course" ? <CourseMap alt={content.mapAlt} /> : null}
+                    {id === "course" ? (
+                      <p className="text-sm leading-7 sm:text-base">
+                        <CourseMapLink label={content.mapAlt} />
+                      </p>
+                    ) : null}
                   </div>
                 </article>
               );
@@ -167,19 +172,5 @@ export function McvvInstructionsTemplate({ content }: McvvInstructionsTemplatePr
 
       <BackToTop label={content.backToTop} />
     </main>
-  );
-}
-
-function CourseMap({ alt }: { alt: string }) {
-  return (
-    <div className="max-w-full overflow-x-auto overscroll-x-contain">
-      {/*
-        Place names in public/images/mcvv-trasa.svg are 25px in a 1779×1396 viewBox.
-        Below 58rem they render under about 13px, so narrow screens pan instead of shrinking.
-      */}
-      <div className="min-w-[58rem]">
-        <McvvCourseMap alt={alt} />
-      </div>
-    </div>
   );
 }

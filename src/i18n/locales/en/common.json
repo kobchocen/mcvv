@@ -541,9 +541,7 @@
       },
       "place": {
         "title": "Place",
-        "paragraphs": [
-          "Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E, further information on the race-centre map (CZ)."
-        ],
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
         "items": []
       },
       "parking": {
@@ -605,7 +603,7 @@
       "facilities": {
         "title": "Changing rooms, toilets",
         "paragraphs": [
-          "Only emergency shelters (tents) are available at the race centre - a limited number, ToiToi toilets."
+          "Only emergency shelters (tents) are available at the race centre - a limited number, mobile toilets at the race centre."
         ],
         "items": []
       },
@@ -619,7 +617,7 @@
       "awards": {
         "title": "Prize giving",
         "paragraphs": [
-          "Challenge cups for the best man and the best woman in the overall ranking. Cash prizes for 1st - 5th place in the men's and women's categories (CZK 3 000, CZK 2 000, CZK 1 000, CZK 500, CZK 200) and for 1st - 3rd place in the veteran categories (CZK 500, CZK 300, CZK 200). Prizes in kind for the best three in the youth and junior categories."
+          "Cash prizes for 1st - 5th place in the men's and women's categories (CZK 3 000, CZK 2 000, CZK 1 000, CZK 500, CZK 200) and for 1st - 3rd place in the veteran categories (CZK 500, CZK 300, CZK 200). Prizes in kind for the best three in the youth and junior categories."
         ],
         "items": []
       },

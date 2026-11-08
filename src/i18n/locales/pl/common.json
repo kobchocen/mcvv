@@ -541,9 +541,7 @@
       },
       "place": {
         "title": "Miejsce",
-        "paragraphs": [
-          "Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E, bliższe informacje na mapie centrum zawodów (CZ)."
-        ],
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
         "items": []
       },
       "parking": {
@@ -605,7 +603,7 @@
       "facilities": {
         "title": "Szatnie, WC",
         "paragraphs": [
-          "Do dyspozycji tylko prowizoryczne zadaszenia (namioty) w centrum zawodów - ograniczona liczba, WC ToiToi."
+          "Do dyspozycji tylko prowizoryczne zadaszenia (namioty) w centrum zawodów - ograniczona liczba, mobilne WC w centrum zawodów."
         ],
         "items": []
       },
@@ -619,7 +617,7 @@
       "awards": {
         "title": "Ogłoszenie wyników",
         "paragraphs": [
-          "Puchary przechodnie dla najlepszego mężczyzny i najlepszej kobiety w klasyfikacji generalnej. Nagrody pieniężne za 1. - 5. miejsce w kategoriach mężczyzn i kobiet (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) oraz za 1. - 3. miejsce w kategoriach weteranów (500 CZK, 300 CZK, 200 CZK). Nagrody rzeczowe dla najlepszej trójki w kategoriach dzieci i młodzieży."
+          "Nagrody pieniężne za 1. - 5. miejsce w kategoriach mężczyzn i kobiet (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) oraz za 1. - 3. miejsce w kategoriach weteranów (500 CZK, 300 CZK, 200 CZK). Nagrody rzeczowe dla najlepszej trójki w kategoriach dzieci i młodzieży."
         ],
         "items": []
       },

@@ -541,9 +541,7 @@
       },
       "place": {
         "title": "Místo",
-        "paragraphs": [
-          "Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E, bližší informace na mapě centra závodu (CZ)."
-        ],
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
         "items": []
       },
       "parking": {
@@ -605,7 +603,7 @@
       "facilities": {
         "title": "Šatny, WC",
         "paragraphs": [
-          "K dispozici pouze nouzové přístřešky (stany) v centru závodu - omezené množství, WC ToiToi."
+          "K dispozici pouze nouzové přístřešky (stany) v centru závodu - omezené množství, mobilní WC v centru závodu."
         ],
         "items": []
       },
@@ -619,7 +617,7 @@
       "awards": {
         "title": "Vyhlášení výsledků",
         "paragraphs": [
-          "Putovní poháry pro nejlepšího muže a ženu v absolutním pořadí. Finanční odměny za 1. - 5. místo v kategoriích muži a ženy (3 000 Kč, 2 000 Kč, 1 000 Kč, 500 Kč, 200 Kč) a za 1. - 3. místo v kategoriích veteránských (500 Kč, 300 Kč, 200 Kč). Věcné odměny pro nejlepší tři v žákovských a dorosteneckých kategoriích."
+          "Finanční odměny za 1. - 5. místo v kategoriích muži a ženy (3 000 Kč, 2 000 Kč, 1 000 Kč, 500 Kč, 200 Kč) a za 1. - 3. místo v kategoriích veteránských (500 Kč, 300 Kč, 200 Kč). Věcné odměny pro nejlepší tři v žákovských a dorosteneckých kategoriích."
         ],
         "items": []
       },

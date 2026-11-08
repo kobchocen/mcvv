@@ -541,9 +541,7 @@
       },
       "place": {
         "title": "Ort",
-        "paragraphs": [
-          "Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E, nähere Angaben auf der Karte des Wettkampfzentrums (CZ)."
-        ],
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
         "items": []
       },
       "parking": {
@@ -605,7 +603,7 @@
       "facilities": {
         "title": "Umkleiden, WC",
         "paragraphs": [
-          "Nur Notunterstände (Zelte) im Wettkampfzentrum verfügbar - begrenzte Anzahl, WC ToiToi."
+          "Nur Notunterstände (Zelte) im Wettkampfzentrum verfügbar - begrenzte Anzahl, mobile WC im Wettkampfzentrum."
         ],
         "items": []
       },
@@ -619,7 +617,7 @@
       "awards": {
         "title": "Siegerehrung",
         "paragraphs": [
-          "Wanderpokale für den besten Mann und die beste Frau in der Gesamtwertung. Geldpreise für den 1. - 5. Platz in den Kategorien Männer und Frauen (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) und für den 1. - 3. Platz in den Veterankategorien (500 CZK, 300 CZK, 200 CZK). Sachpreise für die besten drei in den Schüler- und Jugendkategorien."
+          "Geldpreise für den 1. - 5. Platz in den Kategorien Männer und Frauen (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) und für den 1. - 3. Platz in den Veterankategorien (500 CZK, 300 CZK, 200 CZK). Sachpreise für die besten drei in den Schüler- und Jugendkategorien."
         ],
         "items": []
       },

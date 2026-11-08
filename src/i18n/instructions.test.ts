@@ -25,8 +25,7 @@ const csExpected: Record<string, string> = {
   organizer: "Pořadatel\nK.O.B. Choceň",
   race: "Závod\nLesní kros Malá cena Velké Verandy",
   date: "Datum\nneděle 6. 12. 2026",
-  place:
-    'Místo\nChoceň - "Velká Veranda", 49°59\'45"N, 16°12\'10"E, bližší informace na mapě centra závodu (CZ).',
+  place: 'Místo\nChoceň - "Velká Veranda", 49°59\'45"N, 16°12\'10"E.',
   parking: [
     "Parkování",
     "Parkoviště 1 - V zatáčce silnice 315 z Chocně do Srubů (49°59'36.018\"N, 16°12'15.656\"E), kapacita parkoviště je omezená, dodržujte prosím pokyny pořadatele, pokud přijíždíte přes Choceň využijte Parkoviště č. 2.",
@@ -55,11 +54,11 @@ const csExpected: Record<string, string> = {
   refreshments:
     "Občerstvení\nTeplý nápoj po závodě. Stánkový prodej občerstvení s tradičním sortimentem.",
   facilities:
-    "Šatny, WC\nK dispozici pouze nouzové přístřešky (stany) v centru závodu - omezené množství, WC ToiToi.",
+    "Šatny, WC\nK dispozici pouze nouzové přístřešky (stany) v centru závodu - omezené množství, mobilní WC v centru závodu.",
   medical:
     "Zdravotní služba\nZdravotník v centru závodu. Nejbližší nemocnice Ústí nad Orlicí nebo Litomyšl.",
   awards:
-    "Vyhlášení výsledků\nPutovní poháry pro nejlepšího muže a ženu v absolutním pořadí. Finanční odměny za 1. - 5. místo v kategoriích muži a ženy (3 000 Kč, 2 000 Kč, 1 000 Kč, 500 Kč, 200 Kč) a za 1. - 3. místo v kategoriích veteránských (500 Kč, 300 Kč, 200 Kč). Věcné odměny pro nejlepší tři v žákovských a dorosteneckých kategoriích.",
+    "Vyhlášení výsledků\nFinanční odměny za 1. - 5. místo v kategoriích muži a ženy (3 000 Kč, 2 000 Kč, 1 000 Kč, 500 Kč, 200 Kč) a za 1. - 3. místo v kategoriích veteránských (500 Kč, 300 Kč, 200 Kč). Věcné odměny pro nejlepší tři v žákovských a dorosteneckých kategoriích.",
   timetable: [
     "Harmonogram",
     "9:00 - otevření závodní kanceláře",

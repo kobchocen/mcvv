@@ -520,7 +520,145 @@
   "Instructions": {
     "eyebrow": "{n}. edycja",
     "title": "Komunikat",
-    "status": "Komunikat jest w przygotowaniu"
+    "tocTitle": "Na tej stronie",
+    "backToTop": "Do góry",
+    "mapAlt": "Mapa trasy Malá cena Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Organizator",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Bieg",
+        "paragraphs": ["Leśny bieg przełajowy Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Data",
+        "paragraphs": ["niedziela, 6 grudnia 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Miejsce",
+        "paragraphs": [
+          "Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E, bliższe informacje na mapie centrum zawodów (CZ)."
+        ],
+        "items": []
+      },
+      "parking": {
+        "title": "Parking",
+        "paragraphs": [
+          "Parking 1 - Na zakręcie drogi 315 z Choceň do Sruby (49°59'36.018\"N, 16°12'15.656\"E), pojemność parkingu jest ograniczona, prosimy stosować się do poleceń organizatora, jeśli przyjeżdżacie przez Choceň, skorzystajcie z parkingu nr 2.",
+          "Parking 2 - W Choceň, na Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), parking nie jest zorganizowany, przestrzegajcie przepisów ruchu drogowego.",
+          "Szkic z zaznaczonymi parkingami jest na mapie centrum zawodów (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Odległości",
+        "paragraphs": [],
+        "items": [
+          "Centrum zawodów - parking 1: 300 m",
+          "Centrum zawodów - parking 2: 500 m",
+          "Centrum zawodów - dworzec ČD: 2 000 m",
+          "Centrum zawodów - start: 0 m",
+          "Centrum zawodów - meta: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Biuro zawodów",
+        "paragraphs": ["Podzielone na dwa \"stanowiska\":"],
+        "items": [
+          "Zapisani zawodnicy z opłaconym wpisowym - odbiór numeru startowego w dowolnej chwili do swojego startu.",
+          "Nowe zgłoszenia - za wyższe wpisowe i tylko do 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Numer startowy",
+        "paragraphs": [
+          "Numer startowy ze swoim nazwiskiem (tylko dla zapisanych wcześniej) i godziną startu otrzymacie w biurze zawodów. Bez numeru startowego nie zostaniecie dopuszczeni na start. Numer noście widocznie na piersi. W przeciwnym razie możecie zostać zdyskwalifikowani. Sędziowie na trasie mogą was bowiem nie zidentyfikować i zabraknie wam wtedy przejścia przez punkt kontrolny!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Start interwałowy parami co 15 sekund. Stawcie się na starcie punktualnie! Co najmniej 3 minuty przed swoją godziną startu. Każdy zawodnik sam odpowiada za to, że stawi się na starcie na czas. Czas biegu jest mierzony od godziny startu podanej na numerze startowym. Oficjalnym czasem biegu jest czas środkowoeuropejski (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Trasa",
+        "paragraphs": [
+          "4 300 m leśnymi drogami i ścieżkami (400 m asfaltu), pagórkowaty profil (200 m przewyższenia), oznaczona czerwonymi tasiemkami, trasa jest taka sama dla wszystkich kategorii."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Poczęstunek",
+        "paragraphs": [
+          "Ciepły napój po biegu. Sprzedaż poczęstunku ze straganów o tradycyjnym asortymencie."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Szatnie, WC",
+        "paragraphs": [
+          "Do dyspozycji tylko prowizoryczne zadaszenia (namioty) w centrum zawodów - ograniczona liczba, WC ToiToi."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Służba medyczna",
+        "paragraphs": [
+          "Ratownik w centrum zawodów. Najbliższe szpitale to Ústí nad Orlicí albo Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Ogłoszenie wyników",
+        "paragraphs": [
+          "Puchary przechodnie dla najlepszego mężczyzny i najlepszej kobiety w klasyfikacji generalnej. Nagrody pieniężne za 1. - 5. miejsce w kategoriach mężczyzn i kobiet (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) oraz za 1. - 3. miejsce w kategoriach weteranów (500 CZK, 300 CZK, 200 CZK). Nagrody rzeczowe dla najlepszej trójki w kategoriach dzieci i młodzieży."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Harmonogram",
+        "paragraphs": [],
+        "items": [
+          "9:00 - otwarcie biura zawodów",
+          "9:45 - koniec przyjmowania nowych zgłoszeń",
+          "10:15 - start pierwszych zawodników",
+          "11:55 - start ostatniego zawodnika",
+          "12:15 - meta ostatniego zawodnika",
+          "12:20 - ogłoszenie zwycięzców",
+          "12:40 - koniec zawodów (loteria fantowa)"
+        ]
+      },
+      "privacy": {
+        "title": "Ochrona danych osobowych, filmowanie i fotografowanie",
+        "paragraphs": [
+          "Zapisując się na ten bieg, każdy uczestnik zgadza się na publikację swoich danych osobowych w zakresie zgłoszenia na bieg, w postaci listy zapisanych, listy startowej i listy wyników na stronie biegu oraz w centrum zawodów. W trakcie imprezy będą wykonywane reporterskie fotografie i nagrania (w tym z użyciem bezzałogowego drona) służące informowaniu opinii publicznej o rozegranym biegu, promocji biegu albo rozliczeniu dotacji na imprezę itd., zgodnie z obowiązującymi przepisami. Mogą tu być też wykonywane fotografie na własny użytek uczestników biegu (jako pamiątka zawodów, do promocji klubów sportowych itp.), zwłaszcza z ogłaszania wyników i z trasy biegu. Jeśli nie zgadzacie się na fotografowanie albo filmowanie, powiedzcie o tym wprost fotografowi lub operatorowi kamery."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Uwaga",
+        "paragraphs": [
+          "Prowadzenie działalności sprzedażowej lub promocyjnej (z wyjątkiem promocji imprez sportowych) jest możliwe tylko za zgodą dyrektora zawodów.",
+          "Ze względu na swój charakter bieg nie jest odpowiedni dla dzieci poniżej sześciu lat. Na listę wyników zostanie wpisany tylko zawodnik, który pokona całą trasę bez pomocy innej osoby."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "Dla widzów",
+        "paragraphs": [
+          "Zawodników można oglądać i dopingiem tworzyć im właściwą atmosferę zarówno w arenie mety (są tam poczęstunek, serwis wyników i komunikaty międzyczasów), jak i oczywiście na trasie. Tu polecamy iść dalej leśną drogą (Formanka) prowadzącą na Verandę od parkingu nr 1, dalej na północny zachód około 400 m pod górę, gdzie skręcicie w prawo w leśną ścieżkę i po niecałych 100 m traficie na trasę biegu. Oprócz pozostania tam można iść dalej aż na szczyt Sutiny (1. wzgórze - najszybsi są tu około 90 s od startu) albo skręcić w lewo trasą (pod prąd) i dojść aż na Hřebínek, wierzchołek ostatniego, czwartego wzgórza (najszybsi są tu około 13 minut po starcie). Poruszając się po trasie, uważajcie proszę na trwający bieg i zostawcie zawodnikom dość miejsca."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n}. edycja",

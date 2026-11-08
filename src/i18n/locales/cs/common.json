@@ -520,7 +520,145 @@
   "Instructions": {
     "eyebrow": "{n}. ročník",
     "title": "Pokyny",
-    "status": "Pokyny se připravují"
+    "tocTitle": "Na této stránce",
+    "backToTop": "Nahoru",
+    "mapAlt": "Mapa tratě Malé ceny Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Pořadatel",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Závod",
+        "paragraphs": ["Lesní kros Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Datum",
+        "paragraphs": ["neděle 6. 12. 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Místo",
+        "paragraphs": [
+          "Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E, bližší informace na mapě centra závodu (CZ)."
+        ],
+        "items": []
+      },
+      "parking": {
+        "title": "Parkování",
+        "paragraphs": [
+          "Parkoviště 1 - V zatáčce silnice 315 z Chocně do Srubů (49°59'36.018\"N, 16°12'15.656\"E), kapacita parkoviště je omezená, dodržujte prosím pokyny pořadatele, pokud přijíždíte přes Choceň využijte Parkoviště č. 2.",
+          "Parkoviště 2 - V Chocni, na Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), parkování není organizováno, respektujte dopravní předpisy.",
+          "Mapka s vyznačenými parkovišti je na mapě centra závodu (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Vzdálenosti",
+        "paragraphs": [],
+        "items": [
+          "Centrum závodu - Parkoviště 1: 300 m",
+          "Centrum závodu - Parkoviště 2: 500 m",
+          "Centrum závodu - nádraží ČD: 2 000 m",
+          "Centrum závodu - start: 0 m",
+          "Centrum závodu - cíl: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Závodní kancelář",
+        "paragraphs": ["Rozdělena na dvě \"přepážky\":"],
+        "items": [
+          "Přihlášení závodníci se zaplaceným startovným - vyzvednutí startovního čísla kdykoliv do Vašeho startu.",
+          "Nové přihlášky - za vyšší startovné a pouze do 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Startovní číslo",
+        "paragraphs": [
+          "Startovní číslo se svým jménem (pouze pro předem přihlášené) a startovním časem obdržíte v závodní kanceláři. Bez startovního čísla nebudete připuštěni na start. Číslo noste viditelně na prsou. V opačném případě můžete být diskvalifikováni. Traťoví rozhodčí na trati Vás totiž nemusí identifikovat a tím pádem Vám bude chybět průchod kontrolním stanovištěm!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Intervalový ve dvojicích po 15 sekundách. Na start se dostavte včas! Minimálně 3 minuty před svým startovním časem. Každý závodník je sám zodpovědný za to, že se včas dostaví na start. Čas závodu se měří od startovního času vyznačeného na startovním čísle. Oficiálním časem závodu je středoevropský čas (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Trať",
+        "paragraphs": [
+          "4 300m po lesních cestách a pěšinách (400m asfalt), kopcovitý profil (převýšení 200m), značeno červenými fáborky, trať je shodná pro všechny kategorie."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Občerstvení",
+        "paragraphs": [
+          "Teplý nápoj po závodě. Stánkový prodej občerstvení s tradičním sortimentem."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Šatny, WC",
+        "paragraphs": [
+          "K dispozici pouze nouzové přístřešky (stany) v centru závodu - omezené množství, WC ToiToi."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Zdravotní služba",
+        "paragraphs": [
+          "Zdravotník v centru závodu. Nejbližší nemocnice Ústí nad Orlicí nebo Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Vyhlášení výsledků",
+        "paragraphs": [
+          "Putovní poháry pro nejlepšího muže a ženu v absolutním pořadí. Finanční odměny za 1. - 5. místo v kategoriích muži a ženy (3 000 Kč, 2 000 Kč, 1 000 Kč, 500 Kč, 200 Kč) a za 1. - 3. místo v kategoriích veteránských (500 Kč, 300 Kč, 200 Kč). Věcné odměny pro nejlepší tři v žákovských a dorosteneckých kategoriích."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Harmonogram",
+        "paragraphs": [],
+        "items": [
+          "9:00 - otevření závodní kanceláře",
+          "9:45 - konec příjmu nových přihlášek",
+          "10:15 - start prvních závodníků",
+          "11:55 - start posledního závodníka",
+          "12:15 - doběh posledního závodníka",
+          "12:20 - vyhlášení vítězů",
+          "12:40 - konec závodu (tombola)"
+        ]
+      },
+      "privacy": {
+        "title": "Ochrana osobních údajů, filmování a fotografování",
+        "paragraphs": [
+          "Přihlášením se na tento závod každý účastník souhlasí se zveřejněním svých osobních údajů v rozsahu přihlášky na závod a to v podobě seznamu přihlášených, startovní listiny a výsledkové listiny na webu závodu a v centru závodu. V průběhu akce budou pořizovány zpravodajské fotografie a videa (včetně použití bezpilotního dronu) sloužící k informování veřejnosti o proběhlém závodě, propagaci závodu či vyúčtování dotací na akci atd. v souladu s platnou legislativou. Dále zde mohou být pořizovány fotografie k osobní potřebě účastníků závodu (jako vzpomínka na závody, pro propagaci sportovních klubu, atp.) zejména z vyhlašování výsledků a z tratě závodu. V případě, že nesouhlasíte s fotografováním či filmováním, oznamte to explicitně fotografovi/kameramanovi."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Upozornění",
+        "paragraphs": [
+          "Provozování prodejní nebo propagační činnosti (vyjma propagace sportovních akcí) je možné pouze se souhlasem ředitele závodu.",
+          "Závod svým charakterem není vhodný pro děti mladší šesti let. Do výsledkové listiny bude zařazen pouze závodník absolvující celou trať bez pomoci jiné osoby."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "Pro diváky",
+        "paragraphs": [
+          "Sledovat závodníky a vytvořit jim svým povzbuzováním patřičnou atmosféru můžete jak v cílové aréně (zde máte k dispozici občerstvení, výsledkový servis či hlášení mezičasů) tak samozřejmě i na trati. Zde doporučujeme pokračovat po lesní silničce (Formanka) vedoucí na Verandu od Parkoviště č.1 dále SZ směrem asi 400m na kopec, kde se dáte doprava na lesní cestu a po necelých 100m narazíte na trať závodu. Zde máte kromě setrvání možnost pokračovat dále až na vrchol Sutiny (1. kopec - ti nejrychlejší jsou zde asi za 90s od startu) nebo případně se dát po trati vlevo (v protisměru) a dojít až na Hřebínek, vršek posledního čtvrtého kopce (ti nejrychlejší jsou zde asi za 13 minut po startu). Při pohybování po trati dbejte prosím pozor na probíhající závod a nechte závodníkům dostatek prostoru."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n}. ročník",

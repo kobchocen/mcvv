@@ -35,9 +35,9 @@ const csExpected: Record<string, string> = {
   ].join("\n"),
   distances: [
     "Vzdálenosti",
-    "Centrum závodu - Parkoviště 1: 300 m",
-    "Centrum závodu - Parkoviště 2: 500 m",
-    "Centrum závodu - nádraží ČD: 2 000 m",
+    "Centrum závodu - Parkoviště 1: 400 m",
+    "Centrum závodu - Parkoviště 2: 800 m",
+    "Centrum závodu - nádraží ČD: 1,8 km",
     "Centrum závodu - start: 0 m",
     "Centrum závodu - cíl: 0 m",
   ].join("\n"),
@@ -67,8 +67,7 @@ const csExpected: Record<string, string> = {
     "10:15 - start prvních závodníků",
     "11:55 - start posledního závodníka",
     "12:15 - doběh posledního závodníka",
-    "12:20 - vyhlášení vítězů",
-    "12:40 - konec závodu (tombola)",
+    "12:20 — vyhlášení výsledků a tombola",
   ].join("\n"),
   privacy:
     "Ochrana osobních údajů, filmování a fotografování\nPřihlášením se na tento závod každý účastník souhlasí se zveřejněním svých osobních údajů v rozsahu přihlášky na závod a to v podobě seznamu přihlášených, startovní listiny a výsledkové listiny na webu závodu a v centru závodu. V průběhu akce budou pořizovány zpravodajské fotografie a videa (včetně použití bezpilotního dronu) sloužící k informování veřejnosti o proběhlém závodě, propagaci závodu či vyúčtování dotací na akci atd. v souladu s platnou legislativou. Dále zde mohou být pořizovány fotografie k osobní potřebě účastníků závodu (jako vzpomínka na závody, pro propagaci sportovních klubu, atp.) zejména z vyhlašování výsledků a z tratě závodu. V případě, že nesouhlasíte s fotografováním či filmováním, oznamte to explicitně fotografovi/kameramanovi.",
@@ -90,7 +89,49 @@ test("cs instructions keep the agreed wording", () => {
   }
 });
 
+const alignedFacts: Record<string, { distances: string[]; ceremony: string }> = {
+  cs: {
+    distances: ["400 m", "800 m", "1,8 km"],
+    ceremony: "12:20 — vyhlášení výsledků a tombola",
+  },
+  en: {
+    distances: ["400 m", "800 m", "1.8 km"],
+    ceremony: "12:20 — awards ceremony and raffle",
+  },
+  de: {
+    distances: ["400 m", "800 m", "1,8 km"],
+    ceremony: "12:20 — Siegerehrung und Tombola",
+  },
+  pl: {
+    distances: ["400 m", "800 m", "1,8 km"],
+    ceremony: "12:20 — ogłoszenie wyników i loteria fantowa",
+  },
+  uk: {
+    distances: ["400 м", "800 м", "1,8 км"],
+    ceremony: "12:20 — нагородження й лотерея",
+  },
+};
+
 for (const locale of ["cs", "en", "de", "pl", "uk"]) {
+  test(`${locale} instructions use the published distances and 12:20 ceremony`, () => {
+    const instructions = load(locale);
+    const distances = visible({
+      title: "",
+      paragraphs: [],
+      items: instructions.sections.distances.items,
+    });
+    const timetable = visible({
+      title: "",
+      paragraphs: [],
+      items: instructions.sections.timetable.items,
+    });
+    for (const fact of alignedFacts[locale].distances) {
+      assert.equal(distances.includes(fact), true, fact);
+    }
+    assert.equal(timetable.includes(alignedFacts[locale].ceremony), true);
+    assert.equal(timetable.includes("12:40"), false);
+  });
+
   test(`${locale} instructions do not add links, covid rules, a fee table or timing claims`, () => {
     const instructions = load(locale);
     const text = INSTRUCTION_SECTION_ORDER.map((id) => visible(instructions.sections[id])).join(

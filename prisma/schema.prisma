@@ -1083,33 +1083,37 @@ model SaleItem {
 /// Prodejka závodní kanceláře (#207). VS = rok + 9 + pořadí na 5 míst (např. 2026900001),
 /// nikdy se nepotká s VS přihlášky (rok + 1–9999). Částka a řádky se po vytvoření nemění.
 model Sale {
-  id            Int       @id @default(autoincrement())
-  year          Int       @map("rok") @db.SmallInt
+  id             Int       @id @default(autoincrement())
+  year           Int       @map("rok") @db.SmallInt
   /// Pořadí prodejky v ročníku (1, 2, …).
-  number        Int       @map("cislo")
-  vs            String    @unique @db.VarChar(10)
+  number         Int       @map("cislo")
+  vs             String    @unique @db.VarChar(10)
   /// Celková částka v Kč (součet řádků).
-  total         Int       @map("castka")
+  total          Int       @map("castka")
   /// unpaid | paid_bank | paid_cash | cancelled
-  status        String    @default("unpaid") @map("stav") @db.VarChar(12)
-  createdById   Int?      @map("vytvoril_id")
-  createdByName String    @map("vytvoril") @db.VarChar(80)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  paidAt        DateTime? @map("zaplaceno_at")
+  status         String    @default("unpaid") @map("stav") @db.VarChar(12)
+  createdById    Int?      @map("vytvoril_id")
+  createdByName  String    @map("vytvoril") @db.VarChar(80)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  paidAt         DateTime? @map("zaplaceno_at")
   /// Kdo označil zaplaceno (hotově / ručně převodem); u spárování z Fio "fio".
-  paidByName    String?   @map("zaplatil_zapsal") @db.VarChar(80)
-  paidById      Int?      @map("zaplatil_zapsal_id")
+  paidByName     String?   @map("zaplatil_zapsal") @db.VarChar(80)
+  paidById       Int?      @map("zaplatil_zapsal_id")
   /// Spárovaný pohyb z Fio (mcvv_bank_tx.id).
-  bankTxId      Int?      @map("bank_tx_id")
-  cancelledAt   DateTime? @map("storno_at")
-  cancelledBy   String?   @map("storno_kdo") @db.VarChar(80)
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  bankTxId       Int?      @map("bank_tx_id")
+  cancelledAt    DateTime? @map("storno_at")
+  cancelledBy    String?   @map("storno_kdo") @db.VarChar(80)
+  /// Dohláška na místě (#222): přihláška (rok prodejky + id), kterou prodejka založila.
+  /// Zaplacení prodejky = platba přihlášky, storno = zrušení přihlášky a uvolnění čísla.
+  registrationId Int?      @map("prihlaska_id") @db.SmallInt
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   lines SaleLine[]
 
   @@unique([year, number])
   @@index([year, status])
   @@index([year, createdAt])
+  @@index([year, registrationId])
   @@map("mcvv_sale")
 }
 

@@ -22,7 +22,8 @@ import { renderLatePaidMail } from "./late-mail-render";
 import { hasMailAddress } from "./standard-pay-core";
 
 const SYSTEM_ACTOR = { actorUserId: null, actorEmail: "system@mcvv", actorRole: "system" } as const;
-const BIB_LOCK = "mcvv_late_bib";
+/** Zámek přidělování čísel (pozdní přihlášky i dohláška na místě v pokladně, #222). */
+export const BIB_LOCK = "mcvv_late_bib";
 
 export type LateBibResult = {
   published: boolean;

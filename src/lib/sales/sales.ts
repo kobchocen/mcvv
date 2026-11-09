@@ -5,6 +5,8 @@ import { saleStatusSection } from "@/lib/sales/guard";
 import type { SessionUser } from "@/lib/auth/session";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
+import { entryTarget } from "@/lib/entries/changes-core";
+import { recalculateRegistrationStatus } from "@/lib/entries/status";
 
 import {
   buildSaleLines,
@@ -14,6 +16,7 @@ import {
   type SaleFilter,
   type SaleItemPrice,
 } from "./core";
+import { payOnsiteRegistrationInTx, releaseOnsiteRegistrationInTx } from "./onsite";
 
 /**
  * Závodní kancelář (#207) – práce s DB. Oprávnění ověřují volající (stránky a server
@@ -124,20 +127,62 @@ export async function changeSaleStatus(
 ): Promise<SaleChangeResult> {
   // Pojistka i mimo server action: ruční převod jen admin (#207).
   if (!(await canAccess(saleStatusSection(to), "write"))) return "forbidden";
+  return applySaleStatusChange(session, id, to, note);
+}
+
+/**
+ * Změna stavu prodejky bez kontroly oprávnění (volá ji `changeSaleStatus` po ověření práva;
+ * samostatně jen pro testy proti DB).
+ */
+export async function applySaleStatusChange(
+  session: SessionUser,
+  id: number,
+  to: "paid_cash" | "paid_bank" | "cancelled",
+  note?: string,
+): Promise<Exclude<SaleChangeResult, "forbidden">> {
   const now = new Date();
   const name = actorName(session);
-  return prisma.$transaction(async (db) => {
+  const result = await prisma.$transaction(async (db) => {
     const sale = await db.sale.findUnique({
       where: { id },
-      select: { id: true, vs: true, total: true },
+      select: { id: true, year: true, vs: true, total: true, registrationId: true },
     });
-    if (!sale) return "not_found";
+    if (!sale) return { status: "not_found" as const };
     const data =
       to === "cancelled"
         ? { status: to, cancelledAt: now, cancelledBy: name }
         : { status: to, paidAt: now, paidByName: name, paidById: session.id };
     const changed = await db.sale.updateMany({ where: { id, status: "unpaid" }, data });
-    if (changed.count !== 1) return "not_unpaid";
+    if (changed.count !== 1) return { status: "not_unpaid" as const };
+    // Dohláška na místě (#222): platba přihlášky, nebo storno přihlášky a uvolnění čísla.
+    let onsite: Prisma.InputJsonValue | undefined;
+    if (sale.registrationId != null) {
+      if (to === "cancelled") {
+        const released = await releaseOnsiteRegistrationInTx(db, sale.year, sale.registrationId);
+        onsite = { registrationId: sale.registrationId, released };
+        await writeAudit(
+          {
+            actor: actor(session),
+            action: "entry.cancelled",
+            target: entryTarget(sale.year, sale.registrationId),
+            detail: { reason: "onsite_sale_cancelled", saleId: id, vs: sale.vs, released },
+          },
+          db,
+        );
+      } else {
+        const paymentId = await payOnsiteRegistrationInTx(db, sale, now);
+        onsite = { registrationId: sale.registrationId, paymentId };
+        await writeAudit(
+          {
+            actor: actor(session),
+            action: "payment.created",
+            target: entryTarget(sale.year, sale.registrationId),
+            detail: { paymentId, amount: sale.total, saleId: id, vs: sale.vs, source: to },
+          },
+          db,
+        );
+      }
+    }
     await writeAudit(
       {
         actor: actor(session),
@@ -148,12 +193,21 @@ export async function changeSaleStatus(
               ? "sale.paid_bank_manual"
               : "sale.cancelled",
         target: `sale:${id}`,
-        detail: { vs: sale.vs, total: sale.total, ...(note ? { note: note.slice(0, 200) } : {}) },
+        detail: {
+          vs: sale.vs,
+          total: sale.total,
+          ...(note ? { note: note.slice(0, 200) } : {}),
+          ...(onsite ? { onsite } : {}),
+        },
       },
       db,
     );
-    return "ok";
+    return { status: "ok" as const, year: sale.year, registrationId: sale.registrationId };
   });
+  if (result.status === "ok" && result.registrationId != null && to !== "cancelled") {
+    await recalculateRegistrationStatus(result.year, result.registrationId);
+  }
+  return result.status;
 }
 
 export async function getSale(id: number) {

@@ -17,6 +17,8 @@ import {
 } from "./bibs-core";
 import {
   fitSize,
+  BADGE_MARGIN_PX,
+  BADGE_RIGHT_PX,
   ITALIC_SKEW_DEG,
   pdfSkewXMatrix,
   renderBibsPdf,
@@ -244,6 +246,11 @@ describe("italic skew and start-number colours", () => {
     for (const match of cms) {
       assert.ok(Number(match[1]) > 0, `shear ${match[1]} should be positive in PDF space`);
     }
+  });
+
+  it("keeps the participation badge 60 px from the right edge, like v12", () => {
+    assert.equal(BADGE_MARGIN_PX, 60);
+    assert.ok(BADGE_RIGHT_PX <= 2480 - BADGE_MARGIN_PX);
   });
 });
 

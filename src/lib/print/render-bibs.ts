@@ -36,8 +36,22 @@ export function cssBaseline(topPx: number, fontSizePx: number, lineHeight = 1): 
 
 export const SURNAME_MAX_PX = 1400;
 export const SURNAME_SIZE_PX = 228;
-/** Pravý okraj počtu účastí v px (CSS right:100 + přesah kurzívy, viz schválený návrh). */
-export const PARTICIPATION_RIGHT_PX = 2476;
+/**
+ * Pravý ink odznaku má mít alespoň 60 px rezervu (jako „35“ ve v12).
+ * BADGE_RIGHT_PX je pravý okraj cesty, zmenšený o polovinu tloušťky obrysu.
+ */
+export const BADGE_MARGIN_PX = 60;
+const BADGE_STROKE_PX = 5;
+export const BADGE_RIGHT_PX = 2480 - BADGE_MARGIN_PX - Math.ceil(BADGE_STROKE_PX / 2);
+export const BADGE_NUMBER_SIZE_PX = 128;
+export const BADGE_LABEL_SIZE_PX = 26;
+export const BADGE_LABEL = "ÚČASTÍ";
+const BADGE_PAD_X_PX = 34;
+const BADGE_PAD_Y_PX = 20;
+const BADGE_GAP_PX = 6;
+const BADGE_RADIUS_PX = 28;
+/** Svislý střed odznaku – vedle těla startovního čísla, pod QR (spodek QR = 610). */
+const BADGE_CENTER_Y_PX = 880;
 
 export type BibLogo = { data: Uint8Array; width: number; height: number };
 
@@ -165,6 +179,62 @@ function drawContainedImage(
   );
 }
 
+function drawParticipationBadge(doc: jsPDF, count: number, hex: string) {
+  const label = BADGE_LABEL;
+  const numberText = String(count);
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(pxToPt(BADGE_NUMBER_SIZE_PX));
+  doc.setCharSpace(0);
+  const numberWidthPx = doc.getTextWidth(numberText) / MM;
+  const italicOverhangPx =
+    Math.tan((-ITALIC_SKEW_DEG * Math.PI) / 180) * OSWALD_ASCEND * BADGE_NUMBER_SIZE_PX;
+  doc.setFontSize(pxToPt(BADGE_LABEL_SIZE_PX));
+  const labelWidthPx = doc.getTextWidth(label) / MM;
+  const innerWidthPx = Math.max(numberWidthPx + italicOverhangPx, labelWidthPx);
+  const widthPx = innerWidthPx + 2 * BADGE_PAD_X_PX;
+  const heightPx =
+    BADGE_PAD_Y_PX +
+    OSWALD_ASCEND * BADGE_NUMBER_SIZE_PX +
+    BADGE_GAP_PX +
+    (OSWALD_ASCEND + OSWALD_DESCEND) * BADGE_LABEL_SIZE_PX +
+    BADGE_PAD_Y_PX;
+  const leftPx = BADGE_RIGHT_PX - widthPx;
+  const topPx = BADGE_CENTER_Y_PX - heightPx / 2;
+  const numberBaselinePx = topPx + BADGE_PAD_Y_PX + OSWALD_ASCEND * BADGE_NUMBER_SIZE_PX;
+  const labelBaselinePx = numberBaselinePx + BADGE_GAP_PX + OSWALD_ASCEND * BADGE_LABEL_SIZE_PX;
+  const centerXPx = leftPx + widthPx / 2;
+
+  doc.setDrawColor(hex);
+  doc.setLineWidth(pxToMm(BADGE_STROKE_PX));
+  doc.setLineJoin("round");
+  doc.setLineCap("round");
+  doc.roundedRect(
+    pxToMm(leftPx),
+    pxToMm(topPx),
+    pxToMm(widthPx),
+    pxToMm(heightPx),
+    pxToMm(BADGE_RADIUS_PX),
+    pxToMm(BADGE_RADIUS_PX),
+    "S",
+  );
+
+  const numberBaseline = pxToMm(numberBaselinePx);
+  withSkewX(doc, ITALIC_SKEW_DEG, numberBaseline, () => {
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(pxToPt(BADGE_NUMBER_SIZE_PX));
+    doc.setTextColor(hex);
+    doc.setCharSpace(0);
+    doc.text(numberText, pxToMm(centerXPx), numberBaseline, { align: "center" });
+  });
+
+  doc.setFont(FONT, "semibold");
+  doc.setFontSize(pxToPt(BADGE_LABEL_SIZE_PX));
+  doc.setTextColor(hex);
+  doc.setCharSpace(pxToMm(2));
+  doc.text(label, pxToMm(centerXPx), pxToMm(labelBaselinePx), { align: "center" });
+  doc.setCharSpace(0);
+}
+
 function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   const year = assets.year;
   const margin = pxToMm(100);
@@ -184,17 +254,10 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
 
   const numberBaseline = pxToMm(1172);
 
-  // Počet účastí vpravo u čísla (stejná baseline), barva podle pravidel
+  // Počet účastí jako obrysový odznak vpravo vedle čísla (pod QR)
   if (!card.blank && card.veteranStarts !== null) {
     const hex = participationHex(card.color) ?? NUMBER_COLORS.forest;
-    withSkewX(doc, ITALIC_SKEW_DEG, numberBaseline, () => {
-      doc.setFont(FONT, "bold");
-      doc.setFontSize(pxToPt(300));
-      doc.setTextColor(hex);
-      doc.text(String(card.veteranStarts), pxToMm(PARTICIPATION_RIGHT_PX), numberBaseline, {
-        align: "right",
-      });
-    });
+    drawParticipationBadge(doc, card.veteranStarts, hex);
   }
 
   // Startovní číslo vzpřímené; barva jako počet účastí (veterán forest, obhájce oranžová)

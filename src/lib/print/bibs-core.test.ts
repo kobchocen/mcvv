@@ -4,11 +4,14 @@ import { describe, it } from "node:test";
 import { DEFAULT_START_MODEL, startModelFromEdition, startTimeForBib } from "@/lib/race/start-time";
 
 import {
+  bibCategoryLabel,
+  bibGivenNameFirst,
   bibSurname,
   buildBibCard,
   buildBlankBibCard,
   parseBibList,
   parseBibPrintParams,
+  participationColor,
   sortBibRows,
   veteranMinStarts,
   type BuildBibOptions,
@@ -55,16 +58,20 @@ describe("bib cards", () => {
       runnerId: "19750101",
       name: "Švadlena  Pavel",
       categoryId: "C",
+      categoryName: "muži nad 50 let",
+      birthYear: "1975",
       registrationId: 7,
     };
     const veteran = buildBibCard({ ...row, bib: 131 }, options);
-    assert.equal(veteran.color, "green");
+    assert.equal(veteran.color, "forest");
     assert.equal(veteran.veteranStarts, 33);
     assert.equal(veteran.surname, "ŠVADLENA");
     assert.equal(veteran.fullName, "ŠVADLENA PAVEL");
+    assert.equal(veteran.category, "MUŽI NAD 50 LET");
+    assert.equal(veteran.birthYear, "1975");
     assert.equal(veteran.startTime, "10:47:30");
     assert.equal(veteran.logoIndex, 131 % 15);
-    assert.equal(buildBibCard({ ...row, bib: 400 }, options).color, "red");
+    assert.equal(buildBibCard({ ...row, bib: 400 }, options).color, "orange");
     assert.equal(buildBibCard({ ...row, runnerId: "x", bib: 41 }, options).color, "black");
   });
 
@@ -83,9 +90,33 @@ describe("bib cards", () => {
 
   it("legacy order = registration, then bib", () => {
     const rows = [
-      { bib: 50, runnerId: "a", name: "A", categoryId: "J", registrationId: 2 },
-      { bib: 300, runnerId: "b", name: "B", categoryId: "A", registrationId: 1 },
-      { bib: 41, runnerId: "c", name: "C", categoryId: "J", registrationId: 2 },
+      {
+        bib: 50,
+        runnerId: "a",
+        name: "A",
+        categoryId: "J",
+        categoryName: "žáci",
+        birthYear: null,
+        registrationId: 2,
+      },
+      {
+        bib: 300,
+        runnerId: "b",
+        name: "B",
+        categoryId: "A",
+        categoryName: "muži",
+        birthYear: null,
+        registrationId: 1,
+      },
+      {
+        bib: 41,
+        runnerId: "c",
+        name: "C",
+        categoryId: "J",
+        categoryName: "žáci",
+        birthYear: null,
+        registrationId: 2,
+      },
     ];
     assert.deepEqual(
       sortBibRows(rows, "registration").map((row) => row.bib),
@@ -100,6 +131,26 @@ describe("bib cards", () => {
   it("veteran threshold matches the statistics page (more than half of the editions)", () => {
     assert.equal(veteranMinStarts(33), 17);
     assert.equal(veteranMinStarts(34), 18);
+  });
+});
+
+describe("category label and participation colours", () => {
+  it("prints the category in words, uppercase", () => {
+    assert.equal(bibCategoryLabel("muži nad 40 let"), "MUŽI NAD 40 LET");
+    assert.equal(bibCategoryLabel("C"), "C");
+  });
+
+  it("puts the given name first on the small name line", () => {
+    assert.equal(bibGivenNameFirst("Novák Jan"), "JAN NOVÁK");
+    assert.equal(bibGivenNameFirst("Nováková-Malá Jana Marie"), "JANA MARIE NOVÁKOVÁ-MALÁ");
+    assert.equal(bibGivenNameFirst("Cher"), "CHER");
+  });
+
+  it("colours the participation count: forest for veterans, orange for men's/women's champions", () => {
+    assert.equal(participationColor(false, 35), "forest");
+    assert.equal(participationColor(true, 35), "orange");
+    assert.equal(participationColor(true, null), "orange");
+    assert.equal(participationColor(false, null), "black");
   });
 });
 

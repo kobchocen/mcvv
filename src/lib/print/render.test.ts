@@ -5,8 +5,17 @@ import { DEFAULT_START_MODEL } from "@/lib/race/start-time";
 import { loadReceiptFonts } from "@/lib/receipts/fonts";
 import { STAT_SLUGS } from "@/lib/stats/core";
 
+import { loadCourseProfileData, loadMcvvLogo, loadYearBadge } from "./bib-assets";
+import { loadBibFonts } from "./bib-fonts";
 import { buildBibCard, buildBlankBibCard, type BuildBibOptions } from "./bibs-core";
-import { renderBibsPdf } from "./render-bibs";
+import {
+  fitSize,
+  renderBibsPdf,
+  SURNAME_MAX_PX,
+  SURNAME_SIZE_PX,
+  pxToMm,
+  pxToPt,
+} from "./render-bibs";
 import { renderStatsPdf, type StatsReport } from "./render-stats";
 import { statsTranslator } from "./stats-labels";
 import { layoutStats } from "./stats-layout";
@@ -29,16 +38,72 @@ function pages(pdf: Uint8Array): number {
 }
 
 describe("renderBibsPdf", () => {
-  it("puts two bibs on an A4 page", async () => {
-    const row = { runnerId: "r", name: "Příkladová Jana", categoryId: "F", registrationId: 3 };
+  it("puts one bib on each A5 landscape page", async () => {
+    const row = {
+      runnerId: "r",
+      name: "Příkladová Jana",
+      categoryId: "F",
+      categoryName: "ženy",
+      birthYear: "1990",
+      registrationId: 3,
+    };
     const cards = [
       buildBibCard({ ...row, bib: 901 }, options),
       buildBibCard({ ...row, bib: 400 }, options),
       buildBlankBibCard(381, { ...options, mode: "blank" }),
     ];
-    const pdf = renderBibsPdf(cards, await loadReceiptFonts(), [], { title: "test" });
+    const [fonts, mcvvLogo, profile, yearBadge] = await Promise.all([
+      loadBibFonts(),
+      loadMcvvLogo(),
+      loadCourseProfileData(),
+      loadYearBadge(2026),
+    ]);
+    const pdf = renderBibsPdf(
+      cards,
+      { fonts, logos: [], mcvvLogo, profile, yearBadge, year: 2026 },
+      { title: "test" },
+    );
     assert.equal(Buffer.from(pdf.subarray(0, 5)).toString("latin1"), "%PDF-");
-    assert.equal(pages(pdf), 2);
+    assert.equal(pages(pdf), 3);
+    const box = /\/MediaBox\s*\[\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*\]/.exec(
+      Buffer.from(pdf).toString("latin1"),
+    );
+    assert.ok(box);
+    const width = Number(box[3]) - Number(box[1]);
+    const height = Number(box[4]) - Number(box[2]);
+    // A5 landscape ≈ 210 × 148 mm in points
+    assert.ok(Math.abs(width - 595.28) < 2);
+    assert.ok(Math.abs(height - 419.53) < 2);
+  });
+
+  it("shrinks a long surname to fit 1400 px", async () => {
+    const { jsPDF } = await import("jspdf");
+    const fonts = await loadBibFonts();
+    const doc = new jsPDF({ unit: "mm", format: "a5", orientation: "landscape" });
+    doc.addFileToVFS("Oswald-Bold.ttf", fonts.bold);
+    doc.addFont("Oswald-Bold.ttf", "Oswald", "bold");
+    doc.setFont("Oswald", "bold");
+    const long = "NOVÁKOVÁ-NEJVDELŠÍPŘÍJMENÍ";
+    const size = fitSize(doc, long, pxToPt(SURNAME_SIZE_PX), pxToMm(SURNAME_MAX_PX));
+    assert.ok(size < pxToPt(SURNAME_SIZE_PX));
+    doc.setFontSize(size);
+    assert.ok(doc.getTextWidth(long) <= pxToMm(SURNAME_MAX_PX) + 0.05);
+  });
+
+  it("renders an empty start list as a short explanation page", async () => {
+    const [fonts, mcvvLogo, profile, yearBadge] = await Promise.all([
+      loadBibFonts(),
+      loadMcvvLogo(),
+      loadCourseProfileData(),
+      loadYearBadge(2026),
+    ]);
+    const pdf = renderBibsPdf(
+      [],
+      { fonts, logos: [], mcvvLogo, profile, yearBadge, year: 2026 },
+      { title: "empty" },
+    );
+    assert.equal(Buffer.from(pdf.subarray(0, 5)).toString("latin1"), "%PDF-");
+    assert.equal(pages(pdf), 1);
   });
 });
 

@@ -3,7 +3,12 @@ import { startTimeForBib, type StartModel } from "@/lib/race/start-time";
 /** Režim tisku: celá startovka (po dávkách), vybraná čísla, prázdná čísla (rezerva). */
 export type BibPrintMode = "all" | "selected" | "blank";
 
-export type BibColor = "black" | "green" | "red";
+/** Barva počtu účastí: forest = člen klubu veteránů, orange = obhájce mužů/žen, black = bez vyznačení. */
+export type BibColor = "black" | "forest" | "orange";
+
+export const BIB_FOREST = "#07210e";
+export const BIB_ORANGE = "#fb5d1e";
+export const BIB_DEEP = "#031106";
 
 export type BibCard = {
   bib: number;
@@ -14,11 +19,14 @@ export type BibCard = {
   surname: string;
   /** „PŘÍJMENÍ JMÉNO“ velkými písmeny. */
   fullName: string;
+  /** Kategorie slovy, velká písmena („MUŽI NAD 40 LET“). */
   category: string;
   startTime: string;
   registrationId: number | null;
-  /** Počet startů veterána (vpravo dole), jinak null. */
+  /** Počet startů veterána (vpravo u čísla), jinak null. */
   veteranStarts: number | null;
+  /** Ročník narození (první 4 znaky bezec_id), jinak null. */
+  birthYear: string | null;
   /** Index loga partnera: `cislo % počet_log` (legacy `cislo % počet_reklam`). */
   logoIndex: number | null;
   /** Nápis dole – legacy barva podle režimu. */
@@ -31,6 +39,10 @@ export type BibEntryRow = {
   runnerId: string;
   name: string;
   categoryId: string;
+  /** Název kategorie z číselníku („muži nad 40 let“), jinak kód. */
+  categoryName: string;
+  /** Ročník narození, typicky první 4 znaky bezec_id. */
+  birthYear: string | null;
   /** Null u běžce jen v `mcvv_start` (přihláška na místě, bez řádku přihlášky). */
   registrationId: number | null;
 };
@@ -97,6 +109,39 @@ export function bibSurname(name: string): string {
   return space > 0 ? full.slice(0, space) : full;
 }
 
+/** Kategorie na čísle slovy, velkými písmeny. */
+export function bibCategoryLabel(nameOrId: string): string {
+  return upper(nameOrId);
+}
+
+/**
+ * Celé jméno pro drobný řádek: „Jméno Příjmení“ z uloženého „Příjmení Jméno“.
+ * První slovo je příjmení (stejně jako `bibSurname`).
+ */
+export function bibGivenNameFirst(name: string): string {
+  const full = upper(name);
+  const space = full.indexOf(" ");
+  return space > 0 ? `${full.slice(space + 1)} ${full.slice(0, space)}` : full;
+}
+
+/** Barva počtu účastí: obhájce (jen muži/ženy) má přednost před veteránem. */
+export function participationColor(isChampion: boolean, veteranStarts: number | null): BibColor {
+  if (isChampion) {
+    return "orange";
+  }
+  return veteranStarts !== null ? "forest" : "black";
+}
+
+export function participationHex(color: BibColor): string | null {
+  if (color === "forest") {
+    return BIB_FOREST;
+  }
+  if (color === "orange") {
+    return BIB_ORANGE;
+  }
+  return null;
+}
+
 export type BuildBibOptions = {
   mode: BibPrintMode;
   year: number;
@@ -122,20 +167,17 @@ function base(bib: number, options: BuildBibOptions) {
 
 export function buildBibCard(row: BibEntryRow, options: BuildBibOptions): BibCard {
   const starts = options.veterans.get(row.runnerId) ?? null;
-  const color: BibColor = options.championBibs.includes(row.bib)
-    ? "red"
-    : starts !== null
-      ? "green"
-      : "black";
+  const isChampion = options.championBibs.includes(row.bib);
   return {
     ...base(row.bib, options),
     blank: false,
-    color,
+    color: participationColor(isChampion, starts),
     surname: bibSurname(row.name),
     fullName: upper(row.name),
-    category: row.categoryId,
+    category: bibCategoryLabel(row.categoryName || row.categoryId),
     registrationId: row.registrationId,
     veteranStarts: starts,
+    birthYear: row.birthYear,
   };
 }
 
@@ -149,6 +191,7 @@ export function buildBlankBibCard(bib: number, options: BuildBibOptions): BibCar
     category: "",
     registrationId: null,
     veteranStarts: null,
+    birthYear: null,
   };
 }
 

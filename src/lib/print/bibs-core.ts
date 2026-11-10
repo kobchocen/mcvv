@@ -3,7 +3,7 @@ import { startTimeForBib, type StartModel } from "@/lib/race/start-time";
 /** Režim tisku: celá startovka (po dávkách), vybraná čísla, prázdná čísla (rezerva). */
 export type BibPrintMode = "all" | "selected" | "blank";
 
-/** Barva počtu účastí: forest = člen klubu veteránů, orange = obhájce mužů/žen, black = bez vyznačení. */
+/** Barva startovního čísla a počtu účastí: forest = člen klubu veteránů, orange = obhájce mužů/žen, black = bez vyznačení. */
 export type BibColor = "black" | "forest" | "orange";
 
 export const BIB_FOREST = "#07210e";
@@ -124,7 +124,7 @@ export function bibGivenNameFirst(name: string): string {
   return space > 0 ? `${full.slice(space + 1)} ${full.slice(0, space)}` : full;
 }
 
-/** Barva počtu účastí: obhájce (jen muži/ženy) má přednost před veteránem. */
+/** Barva čísla i počtu účastí: obhájce (jen muži/ženy) má přednost před veteránem. */
 export function participationColor(isChampion: boolean, veteranStarts: number | null): BibColor {
   if (isChampion) {
     return "orange";

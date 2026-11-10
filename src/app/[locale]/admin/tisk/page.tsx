@@ -26,7 +26,7 @@ const card = "border border-race-line/55 bg-race-surface p-5";
 function ChampionField({ value }: { value: string }) {
   return (
     <label className={label}>
-      Oranžový počet účastí (obhájci mužů a žen)
+      Oranžové číslo a počet účastí (obhájci mužů a žen)
       <input
         name="red"
         defaultValue={value}
@@ -68,8 +68,9 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-race-muted">
           PDF na A5 na šířku, jedno číslo na stránku (tisk 100 %, bez přizpůsobení). Startovní číslo
-          je vždy černé, s bílou linkou profilu tratě. Počet účastí u členů klubu veteránů je forest
-          zelený, u obhájců loňského vítězství mužů a žen oranžový. Místo čárového kódu je QR (MCVV
+          i počet účastí jsou u členů klubu veteránů forest zelené, u obhájců loňského vítězství
+          mužů a žen oranžové (při shodě oranžová); jinak je číslo černé. Přes číslo vede bílá linka
+          profilu tratě. Místo čárového kódu je QR (MCVV
           {year}-číslo). Reklamní pruh: logo partnera kategorie 1–2 podle čísla % počet log (
           {partners.length} {partners.length === 1 ? "logo" : "log"}
           {partners.length ? `: ${partners.map((p) => p.name).join(", ")}` : ""}). Startovní čas

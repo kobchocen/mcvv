@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { inflateSync } from "node:zlib";
 import { describe, it } from "node:test";
 
 import { DEFAULT_START_MODEL } from "@/lib/race/start-time";
@@ -7,9 +8,17 @@ import { STAT_SLUGS } from "@/lib/stats/core";
 
 import { loadCourseProfileData, loadMcvvLogo, loadYearBadge } from "./bib-assets";
 import { loadBibFonts } from "./bib-fonts";
-import { buildBibCard, buildBlankBibCard, type BuildBibOptions } from "./bibs-core";
+import {
+  BIB_FOREST,
+  BIB_ORANGE,
+  buildBibCard,
+  buildBlankBibCard,
+  type BuildBibOptions,
+} from "./bibs-core";
 import {
   fitSize,
+  ITALIC_SKEW_DEG,
+  pdfSkewXMatrix,
   renderBibsPdf,
   SURNAME_MAX_PX,
   SURNAME_SIZE_PX,
@@ -104,6 +113,137 @@ describe("renderBibsPdf", () => {
     );
     assert.equal(Buffer.from(pdf.subarray(0, 5)).toString("latin1"), "%PDF-");
     assert.equal(pages(pdf), 1);
+  });
+});
+
+describe("italic skew and start-number colours", () => {
+  it("leans typographic italic forward in PDF space (top to the right, like the logo)", () => {
+    const pageHeightMm = 148;
+    const originYMm = 100;
+    const m = pdfSkewXMatrix(ITALIC_SKEW_DEG, originYMm, pageHeightMm);
+    assert.equal(ITALIC_SKEW_DEG, -12);
+    assert.ok(m.c > 0);
+    const yBaseline = (pageHeightMm - originYMm) * (72 / 25.4);
+    const xAt = (x: number, y: number) => m.a * x + m.c * y + m.e;
+    assert.ok(Math.abs(xAt(10, yBaseline) - 10) < 1e-9);
+    assert.ok(xAt(10, yBaseline + 50) > 10);
+  });
+
+  it("colours the start number forest for veterans and orange for champions", async () => {
+    const row = {
+      runnerId: "19840101",
+      name: "Novák Jan",
+      categoryId: "B",
+      categoryName: "muži nad 40 let",
+      birthYear: "1984",
+      registrationId: 1,
+    };
+    const [fonts, mcvvLogo, profile, yearBadge] = await Promise.all([
+      loadBibFonts(),
+      loadMcvvLogo(),
+      loadCourseProfileData(),
+      loadYearBadge(2026),
+    ]);
+    const assets = { fonts, logos: [], mcvvLogo, profile, yearBadge, year: 2026 };
+    const colourBeforeNumber = (pdf: Uint8Array) => {
+      const raw = Buffer.from(pdf);
+      const start = raw.indexOf(Buffer.from("stream"));
+      const end = raw.indexOf(Buffer.from("endstream"), start);
+      let body = raw.subarray(start + 6, end);
+      if (body[0] === 0x0d) {
+        body = body.subarray(1);
+      }
+      if (body[0] === 0x0a) {
+        body = body.subarray(1);
+      }
+      const text = inflateSync(body).toString("latin1");
+      const idx = text.indexOf("237.6 Tf");
+      assert.ok(idx > 0, "expected the 990 px start number");
+      const untilTj = text.indexOf("Tj", idx);
+      assert.ok(untilTj > idx, "expected the start-number Tj");
+      const around = text.slice(idx, untilTj);
+      const colours = [
+        ...around.matchAll(/([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+rg|([0-9.]+)\s+g\b/g),
+      ];
+      assert.ok(colours.length > 0, "expected a fill colour on the start number");
+      const last = colours[colours.length - 1];
+      if (last[4] !== undefined) {
+        const g = Number(last[4]);
+        return [g, g, g] as const;
+      }
+      return [Number(last[1]), Number(last[2]), Number(last[3])] as const;
+    };
+    const hexRgb = (hex: string) =>
+      [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255);
+    const close = (got: readonly number[], expected: readonly number[]) => {
+      for (let i = 0; i < 3; i += 1) {
+        assert.ok(Math.abs(got[i] - expected[i]) < 0.01, `${got} !~ ${expected}`);
+      }
+    };
+
+    const veteran = renderBibsPdf(
+      [buildBibCard({ ...row, bib: 173 }, { ...options, veterans: new Map([["19840101", 35]]) })],
+      assets,
+      { title: "veteran" },
+    );
+    close(colourBeforeNumber(veteran), hexRgb(BIB_FOREST));
+
+    const champion = renderBibsPdf(
+      [buildBibCard({ ...row, bib: 400 }, { ...options, veterans: new Map([["19840101", 35]]) })],
+      assets,
+      { title: "champion" },
+    );
+    close(colourBeforeNumber(champion), hexRgb(BIB_ORANGE));
+
+    const regular = renderBibsPdf(
+      [buildBibCard({ ...row, runnerId: "x", bib: 41 }, options)],
+      assets,
+      { title: "regular" },
+    );
+    close(colourBeforeNumber(regular), [0, 0, 0]);
+  });
+
+  it("writes a forward italic shear around the surname in the PDF", async () => {
+    const [fonts, mcvvLogo, profile, yearBadge] = await Promise.all([
+      loadBibFonts(),
+      loadMcvvLogo(),
+      loadCourseProfileData(),
+      loadYearBadge(2026),
+    ]);
+    const pdf = renderBibsPdf(
+      [
+        buildBibCard(
+          {
+            bib: 173,
+            runnerId: "r",
+            name: "Novák Jan",
+            categoryId: "B",
+            categoryName: "muži nad 40 let",
+            birthYear: "1984",
+            registrationId: 1,
+          },
+          options,
+        ),
+      ],
+      { fonts, logos: [], mcvvLogo, profile, yearBadge, year: 2026 },
+      { title: "skew" },
+    );
+    const raw = Buffer.from(pdf);
+    const start = raw.indexOf(Buffer.from("stream"));
+    const end = raw.indexOf(Buffer.from("endstream"), start);
+    let body = raw.subarray(start + 6, end);
+    if (body[0] === 0x0d) {
+      body = body.subarray(1);
+    }
+    if (body[0] === 0x0a) {
+      body = body.subarray(1);
+    }
+    const text = inflateSync(body).toString("latin1");
+    const cms = [...text.matchAll(/1\.\s+0\.\s+(-?[0-9.]+)\s+1\.\s+(-?[0-9.]+)\s+0\.\s+cm/g)];
+    assert.ok(cms.length >= 1, "expected a skewX cm matrix");
+    for (const match of cms) {
+      assert.ok(Number(match[1]) > 0, `shear ${match[1]} should be positive in PDF space`);
+    }
   });
 });
 

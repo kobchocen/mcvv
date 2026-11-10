@@ -53,7 +53,7 @@ describe("start time on the bib (legacy tiskcisel.php / #114)", () => {
 });
 
 describe("bib cards", () => {
-  it("colours: veteran green with starts, champion red, otherwise black", () => {
+  it("colours: veteran forest with starts, champion orange, otherwise black", () => {
     const row = {
       runnerId: "19750101",
       name: "Švadlena  Pavel",
@@ -146,7 +146,7 @@ describe("category label and participation colours", () => {
     assert.equal(bibGivenNameFirst("Cher"), "CHER");
   });
 
-  it("colours the participation count: forest for veterans, orange for men's/women's champions", () => {
+  it("colours the number and participation count: forest for veterans, orange for men's/women's champions", () => {
     assert.equal(participationColor(false, 35), "forest");
     assert.equal(participationColor(true, 35), "orange");
     assert.equal(participationColor(true, null), "orange");

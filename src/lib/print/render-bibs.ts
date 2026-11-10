@@ -4,6 +4,7 @@ import type { BibFonts } from "./bib-fonts";
 import { bibQrMatrix } from "./bib-qr";
 import {
   BIB_FOREST,
+  BIB_ORANGE,
   bibGivenNameFirst,
   type BibCard,
   type BibColor,
@@ -52,8 +53,11 @@ export type BibRenderAssets = {
 const NUMBER_COLORS: Record<BibColor, string> = {
   black: "#000000",
   forest: BIB_FOREST,
-  orange: "#fb5d1e",
+  orange: BIB_ORANGE,
 };
+
+/** CSS/SVG skewX angle of the MCVV logo italic (top of the letters to the right). */
+export const ITALIC_SKEW_DEG = -12;
 
 function registerFonts(doc: jsPDF, fonts: BibFonts) {
   doc.addFileToVFS("Oswald-Regular.ttf", fonts.regular);
@@ -94,13 +98,31 @@ function drawPolyline(
 }
 
 /**
- * skewX(degrees) kolem svislé osy y = originY (souřadnice v mm).
- * Záporný úhel = typografická kurzíva (vršek písmen doprava).
+ * Matice skewX pro nativní PDF prostor (body, y nahoru).
+ * `degrees` je CSS/SVG úhel: záporný = typografická kurzíva (vršek doprava).
+ * `originYMm` je baseline v souřadnicích jsPDF (mm od horního okraje).
  */
+export function pdfSkewXMatrix(
+  degrees: number,
+  originYMm: number,
+  pageHeightMm: number,
+  ptPerMm = 72 / 25.4,
+): { a: number; b: number; c: number; d: number; e: number; f: number } {
+  const originYPt = (pageHeightMm - originYMm) * ptPerMm;
+  // V PDF (y nahoru) má stejný vizuální sklon opačné znaménko než CSS skewX.
+  const c = -Math.tan((degrees * Math.PI) / 180);
+  return { a: 1, b: 0, c, d: 1, e: -c * originYPt, f: 0 };
+}
+
 function withSkewX(doc: jsPDF, degrees: number, originYMm: number, draw: () => void) {
-  const k = Math.tan((degrees * Math.PI) / 180);
+  const m = pdfSkewXMatrix(
+    degrees,
+    originYMm,
+    doc.internal.pageSize.getHeight(),
+    doc.internal.scaleFactor,
+  );
   doc.saveGraphicsState();
-  doc.setCurrentTransformationMatrix(doc.Matrix(1, 0, k, 1, -k * originYMm, 0));
+  doc.setCurrentTransformationMatrix(doc.Matrix(m.a, m.b, m.c, m.d, m.e, m.f));
   draw();
   doc.restoreGraphicsState();
 }
@@ -165,7 +187,7 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   // Počet účastí vpravo u čísla (stejná baseline), barva podle pravidel
   if (!card.blank && card.veteranStarts !== null) {
     const hex = participationHex(card.color) ?? NUMBER_COLORS.forest;
-    withSkewX(doc, -12, numberBaseline, () => {
+    withSkewX(doc, ITALIC_SKEW_DEG, numberBaseline, () => {
       doc.setFont(FONT, "bold");
       doc.setFontSize(pxToPt(300));
       doc.setTextColor(hex);
@@ -175,12 +197,12 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
     });
   }
 
-  // Startovní číslo – vždy černé, vzpřímené
+  // Startovní číslo vzpřímené; barva jako počet účastí (veterán forest, obhájce oranžová)
   const number = String(card.bib);
   doc.setFont(FONT, "bold");
   doc.setFontSize(pxToPt(990));
   doc.setCharSpace(pxToMm(-20));
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(NUMBER_COLORS[card.color]);
   doc.text(number, pxToMm(1240), numberBaseline, { align: "center" });
   doc.setCharSpace(0);
 
@@ -222,7 +244,7 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
     // Příjmení pod číslem, kurzívou, centrované; dlouhá jména se zmenší
     const surnameSize = fitSize(doc, card.surname, pxToPt(SURNAME_SIZE_PX), pxToMm(SURNAME_MAX_PX));
     const surnameBaseline = pxToMm(cssBaseline(1200, surnameSize / PT /* px */));
-    withSkewX(doc, -12, surnameBaseline, () => {
+    withSkewX(doc, ITALIC_SKEW_DEG, surnameBaseline, () => {
       doc.setFont(FONT, "bold");
       doc.setFontSize(surnameSize);
       doc.setTextColor(0, 0, 0);

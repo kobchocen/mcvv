@@ -1,3 +1,4 @@
+import { SITE_NAME } from "@/lib/site/seo";
 import { cn } from "@/lib/utils";
 
 export type RaceBrandProps = {
@@ -5,22 +6,37 @@ export type RaceBrandProps = {
   bottom: string;
   mark: string;
   className?: string;
+  /**
+   * Accessible name of the mark. Pass an empty string when a parent link already
+   * has an aria-label, so the logo is not announced twice.
+   */
+  alt?: string;
 };
 
-export function RaceBrand({ top, bottom, mark, className }: RaceBrandProps) {
+const LOGO_WIDTH = 83;
+const LOGO_HEIGHT = 40;
+
+export function RaceBrand({ className, alt = SITE_NAME }: RaceBrandProps) {
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-race-accent-solid font-display text-xl font-bold text-white">
-        {mark}
-      </span>
-      <span className="grid min-w-0 gap-0.5 whitespace-nowrap leading-[1.1]">
-        <span className="font-display text-base font-semibold tracking-[0.03em] text-foreground dark:text-white">
-          {top}
-        </span>
-        <span className="font-display text-base font-semibold tracking-[0.03em] text-race-accent">
-          {bottom}
-        </span>
-      </span>
-    </div>
+    <span className={cn("inline-flex shrink-0 items-center", className)}>
+      {/* Official header mark, 15. 11. 2026 export. Plain <img>: never inlined, no optimizer. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/logo/mcvv-logo-hlavicka-svetla.svg"
+        alt={alt}
+        width={LOGO_WIDTH}
+        height={LOGO_HEIGHT}
+        className="h-10 w-auto dark:hidden"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/logo/mcvv-logo-hlavicka-tmava.svg"
+        alt=""
+        width={LOGO_WIDTH}
+        height={LOGO_HEIGHT}
+        className="hidden h-10 w-auto dark:block"
+        aria-hidden="true"
+      />
+    </span>
   );
 }

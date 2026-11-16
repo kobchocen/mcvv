@@ -1,0 +1,7 @@
+/* Official venku.app wordmark: viewBox 0 0 176 24, typographic baseline at y=19.40. */
+.wordmark {
+  height: 1.15em;
+  width: auto;
+  vertical-align: baseline;
+  transform: translateY(calc((24 - 19.4) / 24 * 100%));
+}

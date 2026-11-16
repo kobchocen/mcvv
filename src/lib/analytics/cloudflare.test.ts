@@ -76,12 +76,13 @@ function cspDirectiveTokens(csp: string, name: string): string[] {
 test("CSP allows the beacon script and its reporting endpoint", () => {
   const csp = reportOnlyCsp();
   const scriptOrigin = new URL(CF_WEB_ANALYTICS_SCRIPT).origin;
+  const reportOrigin = new URL("https://cloudflareinsights.com/").origin;
   assert.ok(
-    cspDirectiveTokens(csp, "script-src").includes(scriptOrigin),
+    cspDirectiveTokens(csp, "script-src").some((token) => token === scriptOrigin),
     `script-src should allow ${scriptOrigin}`,
   );
   assert.ok(
-    cspDirectiveTokens(csp, "connect-src").includes("https://cloudflareinsights.com"),
-    "connect-src should allow https://cloudflareinsights.com",
+    cspDirectiveTokens(csp, "connect-src").some((token) => token === reportOrigin),
+    `connect-src should allow ${reportOrigin}`,
   );
 });

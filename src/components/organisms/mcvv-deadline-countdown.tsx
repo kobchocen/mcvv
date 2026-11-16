@@ -18,7 +18,14 @@ function getServerClockSnapshot() {
   return 0;
 }
 
-export function McvvDeadlineCountdown({ targetMs }: { targetMs: number }) {
+export function McvvDeadlineCountdown({
+  targetMs,
+  term = "standard",
+}: {
+  targetMs: number;
+  /** Standard or late entries (Q401) – different wording. */
+  term?: "standard" | "late";
+}) {
   const t = useTranslations("Home.hero");
   const epochSec = useSyncExternalStore(subscribeToClock, getClockSnapshot, getServerClockSnapshot);
   const nowMs = epochSec > 0 ? epochSec * 1000 : null;
@@ -32,8 +39,11 @@ export function McvvDeadlineCountdown({ targetMs }: { targetMs: number }) {
   const totalHours = parts.days * 24 + parts.hours;
   const label =
     totalHours < 48
-      ? t("closesInHours", { hours: totalHours, minutes: parts.minutes })
-      : t("closesInDays", { days: parts.days });
+      ? t(term === "late" ? "lateClosesInHours" : "closesInHours", {
+          hours: totalHours,
+          minutes: parts.minutes,
+        })
+      : t(term === "late" ? "lateClosesInDays" : "closesInDays", { days: parts.days });
   return (
     <p className="mt-4 text-sm text-white/85 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">{label}</p>
   );

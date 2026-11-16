@@ -7,6 +7,77 @@ import { McvvGuideSteps, type GuideStep } from "@/components/organisms/mcvv-guid
 import type { McvvHomepageContent } from "@/components/templates";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
+import { formatStartClock } from "@/lib/date/race-schedule";
+import { currentRaceYear } from "@/lib/entries/year";
+import { formatWeekdayDate, formatWeekdayDateTime } from "@/lib/format/date";
+import { slotOf } from "@/lib/slots/core";
+
+type FaqItem = { q: string; a: string };
+
+/**
+ * Návod a časté dotazy s konkrétními daty z termínů ročníku (Q405): krok „Úpravy do konce
+ * termínu“, lhůta pozdní přihlášky, pozdní přihlášky, další běžec a vracení startovného
+ * (Q408). Bez uzávěrky ročníku zůstávají obecné texty.
+ */
+async function datedGuide(
+  locale: Locale,
+  steps: GuideStep[],
+  faq: FaqItem[],
+): Promise<{ steps: GuideStep[]; faq: FaqItem[] }> {
+  const raceYear = await currentRaceYear();
+  const standardLast = raceYear.standardEnd
+    ? new Date(raceYear.standardEnd.getTime() - 1000)
+    : raceYear.deadline;
+  if (!standardLast) return { steps, faq };
+  const t = await getTranslations({ locale, namespace: "Guide.faqTerms" });
+  const standardEnd = formatWeekdayDate(standardLast, locale);
+  const late = slotOf(raceYear.slots, "late");
+  const lateOn = late?.active ?? false;
+  const minutes = late?.payWithinMinutes ?? 60;
+  const onsite = slotOf(raceYear.slots, "onsite");
+  const datedSteps = steps.map((step) =>
+    step.image === "10-uprava.jpg"
+      ? {
+          ...step,
+          title: t("stepTitle"),
+          text: t.raw("stepText").replace("{standardEnd}", standardEnd),
+        }
+      : step,
+  );
+  // Pořadí obecných dotazů je ve všech jazycích stejné: [3] platnost, [4] změna přihlášky.
+  const datedFaq = faq.map((item, index) => {
+    if (index === 3 && lateOn) return { ...item, a: `${item.a} ${t("validLate", { minutes })}` };
+    if (index === 4) return { ...item, a: t("change", { standardEnd }) };
+    return item;
+  });
+  if (late && lateOn) {
+    datedFaq.push(
+      {
+        q: t("lateQ"),
+        a: t("lateA", {
+          lateFrom: formatWeekdayDate(late.from, locale, { year: false }),
+          lateTo: formatWeekdayDateTime(late.to, locale),
+          lateAdult: late.feeAdult,
+          lateKids: late.feeYouth,
+          minutes,
+          raceDay: raceYear.raceDate ? formatWeekdayDate(raceYear.raceDate, locale) : "",
+          officeOpens: formatStartClock(raceYear.slotSettings.officeOpensS),
+          onsiteUntil: formatStartClock(raceYear.slotSettings.onsiteUntilS),
+          onsiteAdult: onsite?.feeAdult ?? late.feeAdult,
+          onsiteKids: onsite?.feeYouth ?? late.feeYouth,
+        }),
+      },
+      { q: t("addQ"), a: t("addA", { minutes }) },
+    );
+  }
+  datedFaq.push({
+    q: t("refundQ"),
+    a: t("refundA", {
+      standardEndShort: formatWeekdayDate(standardLast, locale, { year: false }),
+    }),
+  });
+  return { steps: datedSteps, faq: datedFaq };
+}
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -26,8 +97,11 @@ export default async function GuidePage({ params }: PageProps) {
   const copy = await getTranslations({ locale, namespace: "Guide" });
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
-  const steps = copy.raw("steps") as GuideStep[];
-  const faq = copy.raw("faq") as { q: string; a: string }[];
+  const { steps, faq } = await datedGuide(
+    locale,
+    copy.raw("steps") as GuideStep[],
+    copy.raw("faq") as FaqItem[],
+  );
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -127,3 +201,5 @@ export default async function GuidePage({ params }: PageProps) {
     </main>
   );
 }
+
+export const dynamic = "force-dynamic";

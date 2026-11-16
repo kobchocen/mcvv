@@ -26,6 +26,8 @@ export type McvvHeroSectionProps = {
   content: Pick<McvvHomepageContent, "hero" | "schedule">;
   /** Countdown to the registration deadline (phase A only). */
   deadlineMs?: number | null;
+  /** Which entry period the countdown ends (Q401): standard or late entries. */
+  deadlineTerm?: "standard" | "late";
   primary: McvvHeroCta;
   secondary?: McvvHeroCta | null;
   /** Refresh the page when the race starts so the hero switches to phase C. */
@@ -68,6 +70,7 @@ function HeroCtaLink({
 export function McvvHeroSection({
   content,
   deadlineMs = null,
+  deadlineTerm = "standard",
   primary,
   secondary = null,
   refreshAtMs = null,
@@ -122,7 +125,9 @@ export function McvvHeroSection({
                 </Button>
               ) : null}
             </div>
-            {showCountdown && deadlineMs ? <McvvDeadlineCountdown targetMs={deadlineMs} /> : null}
+            {showCountdown && deadlineMs ? (
+              <McvvDeadlineCountdown targetMs={deadlineMs} term={deadlineTerm} />
+            ) : null}
             {refreshAtMs ? <McvvRefreshAt targetMs={refreshAtMs} /> : null}
           </div>
         </div>

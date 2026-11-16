@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getMessages, setRequestLocale } from "next-intl/server";
 
 import { routing, type Locale } from "@/i18n/routing";
+import { CloudflareWebAnalytics } from "@/components/atoms/cloudflare-web-analytics";
 import { HtmlLang } from "@/components/atoms/html-lang";
 import { env } from "@/lib/env";
 import { ogAlternateLocales, ogLocale, SITE_NAME, siteDescription } from "@/lib/site/seo";
@@ -51,6 +52,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
     <AppProviders locale={locale} messages={messages} timeZone={env.TIME_ZONE}>
       <HtmlLang locale={locale} />
       {children}
+      <CloudflareWebAnalytics />
     </AppProviders>
   );
 }

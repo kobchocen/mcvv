@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   activeSlot,
+  deadlineCountdown,
   deadlineFromStandardEnd,
   entryFee,
   entryPrices,
@@ -191,4 +192,32 @@ test("entry prices: legacy entry without a snapshot uses its own term's price", 
   });
   assert.equal(entryPrices(null, []), null);
   assert.equal(entryFee(null, "dospeli", 80), 80);
+});
+
+test("deadlineCountdown (Q401): standardní, potom pozdní přihlášky, jinak nic", () => {
+  const slot = (type: "standard" | "late", from: string, to: string, active = true) => ({
+    type,
+    from: new Date(from),
+    to: new Date(to),
+    active,
+    feeAdult: 200,
+    feeYouth: 100,
+    payWithinMinutes: type === "late" ? 60 : null,
+  });
+  const standardTo = new Date("2026-12-02T23:00:00Z");
+  const slots = [
+    slot("standard", "2026-09-01T00:00:00Z", "2026-12-02T23:00:00Z"),
+    slot("late", "2026-12-02T23:00:00Z", "2026-12-05T17:00:00Z"),
+  ];
+  assert.deepEqual(deadlineCountdown(slots, standardTo, new Date("2026-11-30T10:00:00Z")), {
+    targetMs: standardTo.getTime() - 1000,
+    term: "standard",
+  });
+  assert.deepEqual(deadlineCountdown(slots, standardTo, new Date("2026-12-04T10:00:00Z")), {
+    targetMs: new Date("2026-12-05T17:00:00Z").getTime() - 1000,
+    term: "late",
+  });
+  assert.equal(deadlineCountdown(slots, standardTo, new Date("2026-12-05T18:00:00Z")), null);
+  const lateOff = [slots[0], slot("late", "2026-12-02T23:00:00Z", "2026-12-05T17:00:00Z", false)];
+  assert.equal(deadlineCountdown(lateOff, standardTo, new Date("2026-12-04T10:00:00Z")), null);
 });

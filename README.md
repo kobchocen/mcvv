@@ -143,6 +143,10 @@ sdílené chování všech UI prvků.
 - Validace prostředí je v `src/lib/env.ts`.
 - V aplikaci preferujte import `{ env }` z `@/lib/env` místo přímého čtení
   `process.env`.
+- `CF_WEB_ANALYTICS_BEACON` zapíná Cloudflare Web Analytics (anonymní statistiky
+  bez cookies) jen na veřejných stránkách (ne v administraci a interních částech).
+  Bez hodnoty se nic nevkládá.
+  Nastavení pro produkci viz [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#cloudflare-web-analytics).
 
 ## Poznámky k databázi
 

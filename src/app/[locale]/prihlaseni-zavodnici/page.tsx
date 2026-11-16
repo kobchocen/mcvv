@@ -4,14 +4,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvPublicNavbar } from "@/components/organisms";
 import { shortBirthYear } from "@/lib/format/birth-year";
-import { formatDate } from "@/lib/format/date";
+import { formatWeekdayDate, formatWeekdayDateTime } from "@/lib/format/date";
 import { isNewbie } from "@/lib/entries/newbie";
 import { bestRaceTimes, countPastStarts } from "@/lib/entries/starts";
 import { validRegistrationIds } from "@/lib/entries/status";
 import { ClubLink, RunnerNameLink } from "@/components/molecules";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
 import { formatStartClock } from "@/lib/date/race-schedule";
-import { slotOf } from "@/lib/slots/core";
+import { slotOf, slotRunning } from "@/lib/slots/core";
 import { prisma } from "@/lib/db/client";
 import { formatRaceTime } from "@/lib/utils";
 import { Link } from "@/i18n/routing";
@@ -60,6 +60,12 @@ export default async function EntrantsPage({ params }: PageProps) {
   const raceYear = await currentRaceYear();
   const { year, deadline, open } = raceYear;
   const onsite = slotOf(raceYear.slots, "onsite");
+  // Pozdní přihlášky běží → konec pozdního termínu, startovné a lhůta na zaplacení (část 10).
+  const late = slotOf(raceYear.slots, "late");
+  const lateRunning = slotRunning(late, new Date());
+  const standardLastDay = raceYear.standardEnd
+    ? new Date(raceYear.standardEnd.getTime() - 1000)
+    : deadline;
   const edition = await prisma.edition.findFirst({
     orderBy: { id: "desc" },
     select: { startAdultPlace: true, startKidsPlace: true },
@@ -138,9 +144,18 @@ export default async function EntrantsPage({ params }: PageProps) {
             {copy("total", { count: lines.length })}
           </p>
           <p className="mt-2 text-sm text-race-muted">{copy("paidOnly")}</p>
-          {deadline ? (
+          {open && late && lateRunning ? (
             <p className="mt-2 text-sm text-race-muted">
-              {copy("deadline")}: {formatDate(deadline, locale)}
+              {copy("lateUntil", {
+                end: formatWeekdayDateTime(late.to, locale),
+                adult: late.feeAdult,
+                kids: late.feeYouth,
+                minutes: late.payWithinMinutes ?? 60,
+              })}
+            </p>
+          ) : open && standardLastDay ? (
+            <p className="mt-2 text-sm text-race-muted">
+              {copy("standardUntil", { date: formatWeekdayDate(standardLastDay, locale) })}
             </p>
           ) : null}
           {open ? (

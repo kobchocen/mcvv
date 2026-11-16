@@ -13,8 +13,13 @@ export type HeaderEntry = { key: string; value: string };
 
 /** External origins the browser talks to (keep in sync with the code). */
 export const CSP_EXTERNAL = {
-  /** jsPDF loads the DejaVu font for Czech diacritics (DownloadResultsButton). */
-  connect: ["https://cdn.jsdelivr.net"],
+  /** Cloudflare Web Analytics beacon script (src/lib/analytics/cloudflare.ts). */
+  script: ["https://static.cloudflareinsights.com"],
+  /**
+   * jsPDF loads the DejaVu font for Czech diacritics (DownloadResultsButton);
+   * the Cloudflare Web Analytics beacon posts to cloudflareinsights.com/cdn-cgi/rum.
+   */
+  connect: ["https://cdn.jsdelivr.net", "https://cloudflareinsights.com"],
   /** OAuth sign-in (redirect navigations; listed for form submissions that redirect). */
   formAction: ["https://accounts.google.com", "https://appleid.apple.com"],
 } as const;
@@ -40,7 +45,7 @@ export function enforcedCsp(): string {
 
 /** Full policy, report-only for now. */
 export function reportOnlyCsp(options: { dev?: boolean } = {}): string {
-  const script = ["'self'", "'unsafe-inline'"];
+  const script = ["'self'", "'unsafe-inline'", ...CSP_EXTERNAL.script];
   const connect = ["'self'", ...CSP_EXTERNAL.connect];
   if (options.dev) {
     // React Refresh / HMR in `next dev`.

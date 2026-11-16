@@ -176,6 +176,9 @@ export type McvvHomepageContent = {
   partners: {
     eyebrow: string;
     title: string;
+    venkuLine1: string;
+    venkuLine2Prefix: string;
+    venkuLogoAria: string;
     organizer: string;
     items: {
       name: string;

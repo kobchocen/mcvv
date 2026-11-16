@@ -2,10 +2,62 @@ import Image from "next/image";
 
 import { SectionHeader } from "@/components/molecules";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
+import { VENKU_LOCALITY_HREF } from "@/lib/partners/venku";
+
+import styles from "./mcvv-partners-section.module.css";
 
 export type McvvPartnersSectionProps = {
   content: McvvHomepageContent["partners"];
 };
+
+function VenkuSlogan({
+  line1,
+  line2Prefix,
+  logoAria,
+}: {
+  line1: string;
+  line2Prefix: string;
+  logoAria: string;
+}) {
+  return (
+    <div className="mt-12 text-center">
+      <p className="font-display text-2xl font-semibold leading-tight text-foreground dark:text-white sm:text-[28px]">
+        {line1}
+      </p>
+      <p className="mt-3.5 font-display text-lg font-normal text-foreground dark:text-white sm:text-xl">
+        <span>
+          {line2Prefix}
+          {"\u00a0"}
+        </span>
+        <a
+          href={VENKU_LOCALITY_HREF}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={logoAria}
+          className="inline-block align-baseline transition-opacity hover:opacity-80"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/venku/venku-app-orange.svg"
+            alt=""
+            width={176}
+            height={24}
+            className={`${styles.wordmark} inline-block dark:hidden`}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/venku/venku-app-white.svg"
+            alt=""
+            width={176}
+            height={24}
+            className={`${styles.wordmark} hidden dark:inline-block`}
+            aria-hidden="true"
+          />
+        </a>
+      </p>
+    </div>
+  );
+}
 
 export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
   return (
@@ -74,7 +126,12 @@ export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
             );
           })}
         </div>
-        <p className="mt-8 text-sm font-medium text-race-muted">{content.organizer}</p>
+        <VenkuSlogan
+          line1={content.venkuLine1}
+          line2Prefix={content.venkuLine2Prefix}
+          logoAria={content.venkuLogoAria}
+        />
+        <p className="mt-9 text-sm font-medium text-race-muted">{content.organizer}</p>
       </div>
     </section>
   );

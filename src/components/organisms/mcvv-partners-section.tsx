@@ -36,22 +36,14 @@ function VenkuSlogan({
           aria-label={logoAria}
           className="inline-block align-baseline transition-opacity hover:opacity-80"
         >
+          {/* Official wordmark is orange on both light and dark (brand mockup). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/venku/venku-app-orange.svg"
             alt=""
             width={176}
             height={24}
-            className={`${styles.wordmark} inline-block dark:hidden`}
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/venku/venku-app-white.svg"
-            alt=""
-            width={176}
-            height={24}
-            className={`${styles.wordmark} hidden dark:inline-block`}
-            aria-hidden="true"
+            className={`${styles.wordmark} inline-block`}
           />
         </a>
       </p>

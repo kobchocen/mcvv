@@ -125,7 +125,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
           href={getLocalizedHref(content.nav.home.href, locale)}
           aria-label={content.nav.home.label}
         >
-          <RaceBrand {...content.brand} />
+          <RaceBrand {...content.brand} alt="" />
         </Link>
 
         <nav
@@ -248,10 +248,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
             >
               <SheetHeader className="flex-row items-center justify-between border-b border-race-line/70 px-5 py-5">
                 <SheetTitle className="sr-only">{content.nav.menuLabel}</SheetTitle>
-                <RaceBrand
-                  {...content.brand}
-                  className="min-w-0 [&>span:first-child]:size-[34px] [&>span:first-child]:text-[17px] [&_span_span]:text-[14px]"
-                />
+                <RaceBrand {...content.brand} className="min-w-0 [&_img]:h-[34px]" />
                 <SheetClose asChild>
                   <Button
                     type="button"

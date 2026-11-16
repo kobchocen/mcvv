@@ -9,6 +9,7 @@ import { getSession } from "@/lib/auth/session";
 import { Link, redirect } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
+import { SITE_NAME } from "@/lib/site/seo";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -36,8 +37,8 @@ export default async function RegisterPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-16">
-        <Link href="/" aria-label={brand.top}>
-          <RaceBrand {...brand} />
+        <Link href="/" aria-label={SITE_NAME}>
+          <RaceBrand {...brand} alt="" />
         </Link>
         <h1 className="mt-10 font-display text-4xl font-bold text-foreground dark:text-white">
           {copy("registerTitle")}

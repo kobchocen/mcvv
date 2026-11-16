@@ -92,7 +92,7 @@
     },
     "overview": {
       "eyebrow": "01 — O závodě",
-      "title": "Není to běh. Je to výzva.",
+      "title": "Není to jen běh. Je to výzva.",
       "body": [
         "Malá cena Velké Verandy je tradiční lesní kros v srdci choceňských lesů. Na pouhých 4300 metrech tě čeká vše, co dělá terénní běh nezapomenutelným: strmé výběhy, technické seběhy a kořeny pod nohama.",
         "Krátká vzdálenost svádí k podcenění. Profil tratě tě ale rychle vyvede z omylu. Je to závod o charakteru pro hobby běžce i ostřílené borce."
@@ -309,6 +309,9 @@
     "partners": {
       "eyebrow": "06 — Partneři a pořadatelé",
       "title": "Závod, který drží pohromadě parta nadšenců",
+      "venkuLine1": "18 bodů v lese u Velké Verandy.",
+      "venkuLine2Prefix": "Vyraž za zážitky s",
+      "venkuLogoAria": "venku.app – lokalita Choceň",
       "organizer": "Pořádá K.O.B. Choceň, z.s."
     },
     "finalCta": {

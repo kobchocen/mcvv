@@ -92,7 +92,7 @@
     },
     "overview": {
       "eyebrow": "01 — O biegu",
-      "title": "To nie jest bieg. To jest wyzwanie.",
+      "title": "To nie jest tylko bieg. To jest wyzwanie.",
       "body": [
         "Malá cena Velké Verandy to tradycyjny leśny bieg przełajowy w sercu lasów wokół miasta Choceň. Na zaledwie 4300 metrach dostajesz wszystko, co sprawia, że bieg terenowy zapada w pamięć: strome podbiegi, techniczne zbiegi i korzenie pod stopami.",
         "Krótki dystans kusi, by go zlekceważyć. Profil trasy szybko to koryguje. To bieg z charakterem – zarówno dla amatorów, jak i doświadczonych zawodników."
@@ -309,6 +309,9 @@
     "partners": {
       "eyebrow": "06 — Partnerzy i organizatorzy",
       "title": "Bieg, który tworzy grupa zapaleńców",
+      "venkuLine1": "18 punktów w lesie przy Velké Verandzie.",
+      "venkuLine2Prefix": "Rusz po wrażenia z",
+      "venkuLogoAria": "venku.app – lokalizacja Choceň",
       "organizer": "Organizator: K.O.B. Choceň, z.s."
     },
     "finalCta": {

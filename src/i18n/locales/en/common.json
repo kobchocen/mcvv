@@ -92,7 +92,7 @@
     },
     "overview": {
       "eyebrow": "01 — About",
-      "title": "It is not a run. It is a challenge.",
+      "title": "It is not just a run. It is a challenge.",
       "body": [
         "Mala cena Velke Verandy is a traditional forest cross in the heart of the Chocen woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
         "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
@@ -309,6 +309,9 @@
     "partners": {
       "eyebrow": "06 — Partners and organizers",
       "title": "A race held together by a group of enthusiasts",
+      "venkuLine1": "18 points in the forest at Velká Veranda.",
+      "venkuLine2Prefix": "Head out for adventures with",
+      "venkuLogoAria": "venku.app – Choceň location",
       "organizer": "Organized by K.O.B. Choceň, z.s."
     },
     "finalCta": {

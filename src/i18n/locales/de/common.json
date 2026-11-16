@@ -92,7 +92,7 @@
     },
     "overview": {
       "eyebrow": "01 — Über das Rennen",
-      "title": "Das ist kein Lauf. Das ist eine Herausforderung.",
+      "title": "Das ist nicht nur ein Lauf. Das ist eine Herausforderung.",
       "body": [
         "Malá cena Velké Verandy ist ein traditioneller Waldcrosslauf mitten in den Wäldern von Choceň. Auf nur 4300 Metern bekommst du alles, was einen Traillauf unvergesslich macht: steile Anstiege, technische Abstiege und Wurzeln unter den Füßen.",
         "Die kurze Distanz verleitet dazu, das Rennen zu unterschätzen. Das Profil korrigiert das schnell. Ein Rennen mit Charakter – für Hobbyläufer ebenso wie für erfahrene Wettkämpfer."
@@ -309,6 +309,9 @@
     "partners": {
       "eyebrow": "06 — Partner und Veranstalter",
       "title": "Ein Rennen, getragen von einer Gruppe Begeisterter",
+      "venkuLine1": "18 Punkte im Wald bei Velká Veranda.",
+      "venkuLine2Prefix": "Auf zu Erlebnissen mit",
+      "venkuLogoAria": "venku.app – Standort Choceň",
       "organizer": "Veranstalter: K.O.B. Choceň, z.s."
     },
     "finalCta": {

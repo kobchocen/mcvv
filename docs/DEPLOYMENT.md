@@ -81,6 +81,38 @@ SQL migrace používá MySQL kolaci `utf8mb4_unicode_ci` a standardní cizí kl�
 Příznak `mysql_compatible` se smí potvrdit až po průchodu integračního testu;
 statická kontrola SQL sama kompatibilitu nepotvrzuje.
 
+## Cloudflare Web Analytics
+
+Web vkládá cookieless beacon `https://static.cloudflareinsights.com/beacon.min.js`
+(`next/script`, `afterInteractive`) do všech stránek pod `/[locale]`, pokud je nastavená
+runtime proměnná `CF_WEB_ANALYTICS_BEACON`. Hodnota je `token` z JS snippetu
+v Cloudflare dashboardu (Web Analytics → site `mcvv.org` → Manage site / JS snippet,
+ruční instalace, bez změny DNS). Bez hodnoty nebo s neplatnou hodnotou se beacon
+nevkládá a nic nepadá. Proměnná se čte za běhu (všechny `/[locale]` stránky se
+renderují dynamicky), změna hodnoty tedy nevyžaduje nový image, jen novou revizi
+Container App.
+
+Produkční web Container App dostává nesekretní runtime proměnné
+z infrastrukturního repozitáře `kobchocen/chc-azure-terraform`: klíč
+`runtime_env.prod` v repository variable `INFRA_CONFIG_JSON` (obsah
+`.local/infra.tfvars.json`), Terraform je propíše jako `env` web kontejneru.
+Postup: doplnit `"CF_WEB_ANALYTICS_BEACON": "<token>"` do `runtime_env.prod`,
+aktualizovat `INFRA_CONFIG_JSON` a spustit infrastrukturní apply podle README
+infrastruktury. Název je záměrně bez slova `TOKEN`: validace `scripts/config.mjs`
+v infrastruktuře odmítá v `runtime_env` názvy se `SECRET|PASSWORD|TOKEN|PRIVATE_KEY`.
+Nejde o `NEXT_PUBLIC_*` ani `PUBLIC_BUILD_ENV_JSON` (ty se zapékají při buildu).
+Na STG ji nenastavovat: Cloudflare ověřuje hostname podle přípony, takže by se
+provoz stagingu na subdoméně započítal do statistik `mcvv.org`.
+
+CSP (Report-Only, `src/lib/security/headers.ts`) povoluje
+`script-src https://static.cloudflareinsights.com` a
+`connect-src https://cloudflareinsights.com` (beacon posílá data na
+`https://cloudflareinsights.com/cdn-cgi/rum`). Vynucená CSP script/connect neomezuje.
+
+Ověření po nasazení: v DevTools → Network na `https://mcvv.org/cs` je request
+na `beacon.min.js` (200) a po načtení POST na `cloudflareinsights.com/cdn-cgi/rum`;
+v konzoli bez CSP hlášení. Data se v dashboardu objeví do několika minut.
+
 ## Vydávání a ověření
 
 Automatické verzování, větve, ACR, Helm, oprávnění a obnova jsou popsány v

@@ -485,7 +485,7 @@
       "privacy": {
         "title": "Ochrana údajů",
         "summary": "GDPR a fotografie",
-        "body": "Osobní údaje zpracováváme kvůli organizaci závodu a zveřejnění výsledků. Fotografie a video z akce můžeme použít k prezentaci závodu. Námitku lze poslat pořadateli."
+        "body": "Osobní údaje zpracováváme kvůli organizaci závodu a zveřejnění výsledků. Fotografie a video z akce můžeme použít k prezentaci závodu. Námitku lze poslat pořadateli. Anonymní souhrnné statistiky návštěvnosti webu sbíráme přes Cloudflare Web Analytics bez cookies."
       },
       "notice": {
         "title": "Upozornění",

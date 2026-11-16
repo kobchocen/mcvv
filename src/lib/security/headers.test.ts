@@ -19,7 +19,7 @@ test("enforced CSP contains only non-breaking directives", () => {
   assert.doesNotMatch(enforcedCsp(), /script-src|default-src/);
 });
 
-test("report-only CSP allows what the site loads (OAuth, jsDelivr font, data images)", () => {
+test("report-only CSP allows what the site loads (OAuth, jsDelivr font, CF analytics, data images)", () => {
   const csp = reportOnlyCsp();
   assert.match(csp, /default-src 'self'/);
   assert.match(csp, /connect-src 'self' https:\/\/cdn\.jsdelivr\.net/);
@@ -30,7 +30,18 @@ test("report-only CSP allows what the site loads (OAuth, jsDelivr font, data ima
   assert.match(csp, /img-src 'self' data: blob:/);
   assert.match(csp, /report-uri \/api\/csp-report/);
   assert.doesNotMatch(csp, /unsafe-eval/);
-  assert.match(reportOnlyCsp({ dev: true }), /script-src 'self' 'unsafe-inline' 'unsafe-eval'/);
+  assert.match(
+    csp,
+    /script-src 'self' 'unsafe-inline' https:\/\/static\.cloudflareinsights\.com(;|$)/,
+  );
+  assert.match(
+    csp,
+    /connect-src 'self' https:\/\/cdn\.jsdelivr\.net https:\/\/cloudflareinsights\.com(;|$)/,
+  );
+  assert.match(
+    reportOnlyCsp({ dev: true }),
+    /script-src 'self' 'unsafe-inline' https:\/\/static\.cloudflareinsights\.com 'unsafe-eval'/,
+  );
 });
 
 test("parseCspReport handles report-uri and Reporting API and strips query strings", () => {

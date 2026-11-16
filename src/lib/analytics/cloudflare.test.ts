@@ -63,9 +63,26 @@ test("admin and internal pages are never measured", () => {
   }
 });
 
+function cspDirectiveTokens(csp: string, name: string): string[] {
+  for (const part of csp.split(";")) {
+    const tokens = part.trim().split(" ").filter(Boolean);
+    if (tokens[0] === name) {
+      return tokens.slice(1);
+    }
+  }
+  return [];
+}
+
 test("CSP allows the beacon script and its reporting endpoint", () => {
   const csp = reportOnlyCsp();
   const scriptOrigin = new URL(CF_WEB_ANALYTICS_SCRIPT).origin;
-  assert.match(csp, new RegExp(`script-src [^;]*${scriptOrigin.replace(/[./]/g, "\\$&")}`));
-  assert.match(csp, /connect-src [^;]*https:\/\/cloudflareinsights\.com/);
+  const reportOrigin = new URL("https://cloudflareinsights.com/").origin;
+  assert.ok(
+    cspDirectiveTokens(csp, "script-src").some((token) => token === scriptOrigin),
+    `script-src should allow ${scriptOrigin}`,
+  );
+  assert.ok(
+    cspDirectiveTokens(csp, "connect-src").some((token) => token === reportOrigin),
+    `connect-src should allow ${reportOrigin}`,
+  );
 });

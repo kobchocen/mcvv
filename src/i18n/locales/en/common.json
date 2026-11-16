@@ -485,7 +485,7 @@
       "privacy": {
         "title": "Privacy",
         "summary": "GDPR and photos",
-        "body": "We process personal data to run the race and publish results. Photos and video may be used to present the event. Objections can be sent to the organizer."
+        "body": "We process personal data to run the race and publish results. Photos and video may be used to present the event. Objections can be sent to the organizer. Anonymous aggregate website traffic statistics are collected via Cloudflare Web Analytics without cookies."
       },
       "notice": {
         "title": "Notice",

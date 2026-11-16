@@ -485,7 +485,7 @@
       "privacy": {
         "title": "Ochrona danych",
         "summary": "RODO i zdjęcia",
-        "body": "Dane osobowe przetwarzamy w celu organizacji biegu i publikacji wyników. Zdjęcia i filmy z wydarzenia możemy wykorzystać do prezentacji biegu. Sprzeciw można przesłać organizatorowi."
+        "body": "Dane osobowe przetwarzamy w celu organizacji biegu i publikacji wyników. Zdjęcia i filmy z wydarzenia możemy wykorzystać do prezentacji biegu. Sprzeciw można przesłać organizatorowi. Anonimowe, zbiorcze statystyki odwiedzin strony zbieramy za pomocą Cloudflare Web Analytics bez plików cookie."
       },
       "notice": {
         "title": "Uwaga",

@@ -485,7 +485,7 @@
       "privacy": {
         "title": "Datenschutz",
         "summary": "DSGVO und Fotos",
-        "body": "Personenbezogene Daten verarbeiten wir zur Organisation des Rennens und zur Veröffentlichung der Ergebnisse. Fotos und Videos der Veranstaltung können wir zur Präsentation des Rennens verwenden. Ein Widerspruch kann an den Veranstalter gerichtet werden."
+        "body": "Personenbezogene Daten verarbeiten wir zur Organisation des Rennens und zur Veröffentlichung der Ergebnisse. Fotos und Videos der Veranstaltung können wir zur Präsentation des Rennens verwenden. Ein Widerspruch kann an den Veranstalter gerichtet werden. Anonyme, zusammengefasste Besucherstatistiken der Website erfassen wir mit Cloudflare Web Analytics ohne Cookies."
       },
       "notice": {
         "title": "Hinweis",

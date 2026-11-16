@@ -61,6 +61,7 @@ const envSchema = z.object({
   APPLE_TEAM_ID: emptyToUndefined,
   APPLE_KEY_ID: emptyToUndefined,
   APPLE_PRIVATE_KEY: emptyToUndefined,
+  CF_WEB_ANALYTICS_BEACON: emptyToUndefined,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -112,6 +113,7 @@ const parsedEnv = envSchema.safeParse({
   APPLE_TEAM_ID: process.env.APPLE_TEAM_ID,
   APPLE_KEY_ID: process.env.APPLE_KEY_ID,
   APPLE_PRIVATE_KEY: process.env.APPLE_PRIVATE_KEY,
+  CF_WEB_ANALYTICS_BEACON: process.env.CF_WEB_ANALYTICS_BEACON,
 });
 
 if (!parsedEnv.success) {

@@ -123,13 +123,14 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         <Link
           href={getLocalizedHref(content.nav.home.href, locale)}
+          className="min-w-0 shrink-0"
           aria-label={content.nav.home.label}
         >
           <RaceBrand {...content.brand} alt="" />
         </Link>
 
         <nav
-          className="hidden items-center gap-5 xl:gap-7 lg:flex"
+          className="hidden items-center gap-3 whitespace-nowrap xl:gap-7 lg:flex"
           aria-label={content.nav.menuLabel}
         >
           {content.nav.links.map((link) => (
@@ -137,7 +138,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               key={link.href}
               href={getLocalizedHref(link.href, locale)}
               className={cn(
-                "text-sm font-medium text-foreground/80 transition-colors hover:text-foreground dark:text-white/78 dark:hover:text-white",
+                "text-[13px] font-medium text-foreground/80 transition-colors hover:text-foreground xl:text-sm dark:text-white/78 dark:hover:text-white",
                 isActivePath(pathname, link.href) &&
                   "font-semibold text-foreground dark:text-white",
               )}
@@ -147,7 +148,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-2 xl:gap-3 lg:flex">
           <LanguageSwitcher />
           <ThemeToggle />
           {account ? (
@@ -164,7 +165,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
               />
               <Button
                 asChild
-                className="h-10 rounded-[10px] bg-race-accent-solid px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover"
+                className="h-10 rounded-[10px] bg-race-accent-solid px-4 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover xl:px-6"
               >
                 <Link href={getLocalizedHref("/prihlasky", locale)}>{content.nav.myEntry}</Link>
               </Button>
@@ -210,7 +211,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
           ) : (
             <Button
               asChild
-              className="h-10 rounded-[10px] bg-race-accent-solid px-6 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover"
+              className="h-10 rounded-[10px] bg-race-accent-solid px-4 font-display text-[15px] font-semibold uppercase tracking-[0.03em] text-white hover:bg-race-accent-solid-hover xl:px-6"
             >
               <Link href={getLocalizedHref("/prihlaseni", locale)}>{content.nav.register}</Link>
             </Button>
@@ -248,7 +249,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
             >
               <SheetHeader className="flex-row items-center justify-between border-b border-race-line/70 px-5 py-5">
                 <SheetTitle className="sr-only">{content.nav.menuLabel}</SheetTitle>
-                <RaceBrand {...content.brand} className="min-w-0 [&_img]:h-[34px]" />
+                <RaceBrand {...content.brand} size="compact" className="min-w-0" />
                 <SheetClose asChild>
                   <Button
                     type="button"

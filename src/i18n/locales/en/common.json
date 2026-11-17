@@ -312,7 +312,12 @@
       "venkuLine1": "18 points in the forest at Velká Veranda.",
       "venkuLine2Prefix": "Head out for adventures with",
       "venkuLogoAria": "venku.app – Choceň location",
-      "organizer": "Organized by K.O.B. Choceň, z.s."
+      "organizer": "Organized by K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Main partners",
+        "partners": "Partners",
+        "prizes": "Prizes for the best runners donated by"
+      }
     },
     "finalCta": {
       "title": "Ready for four climbs?",

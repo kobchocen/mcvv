@@ -68,13 +68,22 @@ export async function loadPartners() {
     const rows = await prisma.sponsor.findMany({
       where: { active: true },
       orderBy: [{ category: "asc" }, { order: "asc" }, { id: "asc" }],
-      select: { id: true, name: true, link: true, image: true, logoType: true, logoHash: true },
+      select: {
+        id: true,
+        name: true,
+        link: true,
+        image: true,
+        category: true,
+        logoType: true,
+        logoHash: true,
+      },
     });
     return rows
       .map((row) => {
         const logo = partnerLogo(row);
         return {
           name: row.name?.trim() || "Partner",
+          category: row.category,
           href: partnerHref(row.link),
           logoSrc: logo?.src ?? null,
           logoPlain: logo?.plain ?? false,

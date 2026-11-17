@@ -312,7 +312,12 @@
       "venkuLine1": "18 punktów w lesie przy Velké Verandzie.",
       "venkuLine2Prefix": "Rusz po wrażenia z",
       "venkuLogoAria": "venku.app – lokalizacja Choceň",
-      "organizer": "Organizator: K.O.B. Choceň, z.s."
+      "organizer": "Organizator: K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Partnerzy główni",
+        "partners": "Partnerzy",
+        "prizes": "Nagrody dla najlepszych ufundowali"
+      }
     },
     "finalCta": {
       "title": "Gotów na cztery podbiegi?",

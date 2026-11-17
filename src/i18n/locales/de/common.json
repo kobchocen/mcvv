@@ -312,7 +312,12 @@
       "venkuLine1": "18 Punkte im Wald bei Velká Veranda.",
       "venkuLine2Prefix": "Auf zu Erlebnissen mit",
       "venkuLogoAria": "venku.app – Standort Choceň",
-      "organizer": "Veranstalter: K.O.B. Choceň, z.s."
+      "organizer": "Veranstalter: K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Hauptpartner",
+        "partners": "Partner",
+        "prizes": "Die Preise für die Besten stifteten"
+      }
     },
     "finalCta": {
       "title": "Bereit für vier Anstiege?",

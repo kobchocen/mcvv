@@ -180,8 +180,12 @@ export type McvvHomepageContent = {
     venkuLine2Prefix: string;
     venkuLogoAria: string;
     organizer: string;
+    /** Group headings, keyed by partner group (sponsors.category 1 / 2 / 3). */
+    groups: { main: string; partners: string; prizes: string };
     items: {
       name: string;
+      /** sponsors.category: 1 = hlavní partneři, 2 = partneři, 3 = ceny. */
+      category?: number;
       href: string | null;
       logoSrc: string | null;
       /** SVG or DB-served logo: render with a plain <img>, not the image optimizer. */

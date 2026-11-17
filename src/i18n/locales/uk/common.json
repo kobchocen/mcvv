@@ -312,7 +312,12 @@
       "venkuLine1": "18 пунктів у лісі біля Velké Verandy.",
       "venkuLine2Prefix": "Вирушай за враженнями з",
       "venkuLogoAria": "venku.app – локація Choceň",
-      "organizer": "Організатор: K.O.B. Choceň, z.s."
+      "organizer": "Організатор: K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Головні партнери",
+        "partners": "Партнери",
+        "prizes": "Призи для найкращих надали"
+      }
     },
     "finalCta": {
       "title": "Готовий до чотирьох підйомів?",

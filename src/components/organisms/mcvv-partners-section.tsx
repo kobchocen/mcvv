@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { SectionHeader } from "@/components/molecules";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
+import { groupPartners, type PartnerGroupKey } from "@/lib/partners/groups";
 import { VENKU_LOCALITY_HREF } from "@/lib/partners/venku";
 
 import styles from "./mcvv-partners-section.module.css";
@@ -51,6 +52,77 @@ function VenkuSlogan({
   );
 }
 
+type PartnerItem = McvvHomepageContent["partners"]["items"][number];
+
+type GroupLayout = { grid: string; tile: string; sizes: string };
+
+/** Mockup 17. 11. 2026: main larger 3/row, partners as before 4/row, prizes smaller 6/row. */
+const GROUP_LAYOUT: Record<PartnerGroupKey, GroupLayout> = {
+  main: {
+    grid: "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3",
+    tile: "h-28 px-3 py-3 sm:h-36 sm:px-6 sm:py-4 lg:h-40",
+    sizes: "(min-width: 768px) 400px, 50vw",
+  },
+  partners: {
+    grid: "grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-4",
+    tile: "h-20 px-2 py-2 sm:h-28 sm:px-4 sm:py-3",
+    sizes: "(min-width: 1024px) 300px, 33vw",
+  },
+  prizes: {
+    grid: "grid grid-cols-4 gap-1.5 sm:gap-2 md:grid-cols-6",
+    tile: "h-14 p-1.5 sm:h-18 sm:px-3 sm:py-2",
+    sizes: "(min-width: 768px) 200px, 25vw",
+  },
+};
+
+function PartnerTile({ partner, layout }: { partner: PartnerItem; layout: GroupLayout }) {
+  const inner = (
+    <>
+      {partner.logoSrc && partner.logoPlain ? (
+        // SVG / uploaded logos: plain <img> (never inlined, no optimizer).
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={partner.logoSrc}
+          alt={partner.name}
+          width={240}
+          height={65}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-contain"
+        />
+      ) : partner.logoSrc ? (
+        <Image
+          src={partner.logoSrc}
+          alt={partner.name}
+          width={240}
+          height={65}
+          sizes={layout.sizes}
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        <span className="font-display text-base font-bold text-race-dim">{partner.name}</span>
+      )}
+    </>
+  );
+
+  const className = `flex items-center justify-center border border-race-line/55 bg-white dark:bg-white/95 ${layout.tile}`;
+
+  if (partner.href) {
+    return (
+      <a
+        href={partner.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className} transition hover:border-race-accent`}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  return <div className={className}>{inner}</div>;
+}
+
 export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
   return (
     <section id="partners" className="bg-race-deep px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
@@ -61,63 +133,25 @@ export function McvvPartnersSection({ content }: McvvPartnersSectionProps) {
           align="center"
           titleClassName="mx-auto max-w-3xl text-3xl sm:text-4xl"
         />
-        <div className="mt-10 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {content.items.map((partner) => {
-            const inner = (
-              <>
-                {partner.logoSrc && partner.logoPlain ? (
-                  // SVG / uploaded logos: plain <img> (never inlined, no optimizer).
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={partner.logoSrc}
-                    alt={partner.name}
-                    width={240}
-                    height={65}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-contain"
-                  />
-                ) : partner.logoSrc ? (
-                  <Image
-                    src={partner.logoSrc}
-                    alt={partner.name}
-                    width={240}
-                    height={65}
-                    sizes="(min-width: 1024px) 300px, (min-width: 768px) 33vw, 50vw"
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <span className="font-display text-base font-bold text-race-dim">
-                    {partner.name}
-                  </span>
-                )}
-              </>
-            );
-
-            const className =
-              "flex h-20 items-center justify-center border border-race-line/55 bg-white px-2 py-2 sm:h-28 sm:px-4 sm:py-3 dark:bg-white/95";
-
-            if (partner.href) {
-              return (
-                <a
-                  key={partner.name}
-                  href={partner.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${className} transition hover:border-race-accent`}
-                >
-                  {inner}
-                </a>
-              );
-            }
-
-            return (
-              <div key={partner.name} className={className}>
-                {inner}
+        {groupPartners(content.items).map((group, index) => {
+          const layout = GROUP_LAYOUT[group.key];
+          return (
+            <div
+              key={group.key}
+              className={index === 0 ? "mt-10" : "mt-12"}
+              data-partner-group={group.key}
+            >
+              <h3 className="mb-5 font-display text-xl font-semibold leading-tight text-foreground dark:text-white sm:text-2xl">
+                {content.groups[group.key]}
+              </h3>
+              <div className={layout.grid}>
+                {group.items.map((partner) => (
+                  <PartnerTile key={partner.name} partner={partner} layout={layout} />
+                ))}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
         <VenkuSlogan
           line1={content.venkuLine1}
           line2Prefix={content.venkuLine2Prefix}

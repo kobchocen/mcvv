@@ -312,7 +312,12 @@
       "venkuLine1": "18 bodů v lese u Velké Verandy.",
       "venkuLine2Prefix": "Vyraž za zážitky s",
       "venkuLogoAria": "venku.app – lokalita Choceň",
-      "organizer": "Pořádá K.O.B. Choceň, z.s."
+      "organizer": "Pořádá K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Hlavní partneři",
+        "partners": "Partneři",
+        "prizes": "Ceny pro nejlepší věnovali"
+      }
     },
     "finalCta": {
       "title": "Připraven na čtyři kopce?",

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvPlaceholderPage, type McvvHomepageContent } from "@/components/templates";
+import {
+  McvvInstructionsTemplate,
+  type McvvHomepageContent,
+  type McvvInstructionsContent,
+} from "@/components/templates";
 import { currentRaceYear, editionNumber } from "@/lib/entries/year";
 import { type Locale } from "@/i18n/routing";
 
@@ -25,15 +29,20 @@ export default async function InstructionsPage({ params }: PageProps) {
   const copy = await getTranslations({ locale, namespace: "Instructions" });
   const edition = await currentRaceYear();
 
-  return (
-    <McvvPlaceholderPage
-      brand={home.raw("brand") as McvvHomepageContent["brand"]}
-      nav={home.raw("nav") as McvvHomepageContent["nav"]}
-      eyebrow={copy("eyebrow", { n: editionNumber(edition) })}
-      title={copy("title")}
-      status={copy("status")}
-    />
-  );
+  const content: McvvInstructionsContent = {
+    brand: home.raw("brand") as McvvHomepageContent["brand"],
+    nav: home.raw("nav") as McvvHomepageContent["nav"],
+    header: {
+      eyebrow: copy("eyebrow", { n: editionNumber(edition) }),
+      title: copy("title"),
+    },
+    tocTitle: copy("tocTitle"),
+    backToTop: copy("backToTop"),
+    mapAlt: copy("mapAlt"),
+    sections: copy.raw("sections") as McvvInstructionsContent["sections"],
+  };
+
+  return <McvvInstructionsTemplate content={content} />;
 }
 
 export const dynamic = "force-dynamic";

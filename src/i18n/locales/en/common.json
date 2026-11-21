@@ -1579,7 +1579,12 @@
     "qOkStatus": "State changed: {status}.",
     "qErrInvalid": "The reply is empty or too long.",
     "qErrNotFound": "Question not found.",
-    "qReadOnly": "Replying and changing the state needs write access to Messages."
+    "qReadOnly": "Replying and changing the state needs write access to Messages.",
+    "editionsWeatherKind": "Weather",
+    "editionsWeatherNone": "— not set —",
+    "editionsCourseTags": "Course conditions",
+    "editionsWeatherNote": "Weather note (original text, shown only when no weather is selected)",
+    "editionsTempHint": "Optional, whole °C."
   },
   "Stats": {
     "overview": {
@@ -1905,7 +1910,8 @@
     "split2Short": "S2",
     "colTime": "Time",
     "empty": "No results.",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "weatherLine": "Weather: {line}"
   },
   "Splits": {
     "metaTitle": "Splits",
@@ -3764,6 +3770,31 @@
       "category": "The category does not match the year of birth and sex.",
       "bib_taken": "This bib is already taken in the test.",
       "no_bib": "No free bib for the category – enter one by hand."
+    }
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Clear",
+      "partly_cloudy": "Partly cloudy",
+      "cloudy": "Cloudy",
+      "overcast": "Overcast",
+      "fog": "Fog",
+      "drizzle": "Drizzle",
+      "rain": "Rain",
+      "showers": "Rain showers",
+      "snow": "Snow",
+      "snow_showers": "Snow showers"
+    },
+    "tag": {
+      "dry": "Dry course",
+      "hard": "Hard ground",
+      "wet": "Wet course",
+      "mud": "Muddy",
+      "frost": "Frost",
+      "ice": "Ice",
+      "snow_dusting": "Dusting of snow",
+      "snow_patches": "Patches of snow",
+      "snow_cover": "Snow on the course"
     }
   }
 }

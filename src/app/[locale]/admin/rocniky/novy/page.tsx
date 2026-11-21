@@ -27,6 +27,7 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
   setRequestLocale(locale);
   await requireSection("editions", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const weatherCopy = await getTranslations({ locale, namespace: "Weather" });
   const latest = await prisma.edition.findFirst({ orderBy: { id: "desc" } });
   const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });
   const { chyba } = await searchParams;
@@ -66,8 +67,14 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
           copy={{
             date: copy("editionsDate"),
             reg: copy("editionsReg"),
-            weather: copy("editionsWeather"),
+            weather: copy("editionsWeatherNote"),
             temp: copy("editionsTemp"),
+            weatherKind: copy("editionsWeatherKind"),
+            weatherNone: copy("editionsWeatherNone"),
+            courseTags: copy("editionsCourseTags"),
+            tempHint: copy("editionsTempHint"),
+            kindLabel: (kind) => weatherCopy(`kind.${kind}`),
+            tagLabel: (tag) => weatherCopy(`tag.${tag}`),
             kidsMail: copy("editionsKidsMail"),
             kidsPlace: copy("editionsKidsPlace"),
             adultMail: copy("editionsAdultMail"),

@@ -1232,7 +1232,8 @@
     "split2Short": "M2",
     "colTime": "Czas",
     "empty": "Brak wyników.",
-    "backToTop": "Do góry"
+    "backToTop": "Do góry",
+    "weatherLine": "Pogoda: {line}"
   },
   "ConfirmDialog": {
     "cancel": "Anuluj",
@@ -1442,5 +1443,30 @@
     "badgeTitle": "rekord trasy (wstępny)",
     "badgeEqTitle": "wyrównany rekord trasy (wstępny)",
     "finalTitle": "rekord trasy: {cats}"
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Bezchmurnie",
+      "partly_cloudy": "Częściowe zachmurzenie",
+      "cloudy": "Pochmurno",
+      "overcast": "Całkowite zachmurzenie",
+      "fog": "Mgła",
+      "drizzle": "Mżawka",
+      "rain": "Deszcz",
+      "showers": "Przelotne opady deszczu",
+      "snow": "Opady śniegu",
+      "snow_showers": "Przelotne opady śniegu"
+    },
+    "tag": {
+      "dry": "Sucha trasa",
+      "hard": "Twarde podłoże",
+      "wet": "Mokra trasa",
+      "mud": "Błotniście",
+      "frost": "Mróz",
+      "ice": "Gołoledź",
+      "snow_dusting": "Przyprószenie śniegiem",
+      "snow_patches": "Resztki śniegu",
+      "snow_cover": "Śnieg na trasie"
+    }
   }
 }

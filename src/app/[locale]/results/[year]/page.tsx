@@ -20,6 +20,7 @@ import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
 import { isPublicYear } from "@/lib/testmode/public-year";
+import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
 
 type PageProps = {
   params: Promise<{ locale: string; year: string }>;
@@ -97,6 +98,8 @@ export default async function ResultsYearPage({ params }: PageProps) {
       date: true,
       weather: true,
       temp: true,
+      weatherKind: true,
+      courseTags: true,
     },
   });
 
@@ -139,6 +142,9 @@ export default async function ResultsYearPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
+  const weatherT = await getTranslations({ locale, namespace: "Weather" });
+  // PDF výsledků je česky (bez emoji – písmo PDF je nemá)
+  const weatherCsT = await getTranslations({ locale: "cs", namespace: "Weather" });
   const title = translated
     ? t("fullResults", { year })
     : isCs
@@ -200,12 +206,10 @@ export default async function ResultsYearPage({ params }: PageProps) {
                     </p>
                   )}
                   <p className="mt-1 text-sm text-race-muted">
-                    {translated
-                      ? t("weather", {
-                          weather: editionInfo.weather || "—",
-                          temp: editionInfo.temp ?? "—",
-                        })
-                      : `Počasí: ${editionInfo.weather || "—"}, ${editionInfo.temp ?? "—"} °C`}
+                    {t("weatherLine", {
+                      line:
+                        formatWeatherLine(weatherView(editionInfo), (key) => weatherT(key)) || "—",
+                    })}
                   </p>
                 </>
               )}
@@ -216,6 +220,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 year={year}
                 total={total}
                 editionInfo={editionInfo}
+                weatherText={
+                  editionInfo
+                    ? formatWeatherLine(weatherView(editionInfo), (key) => weatherCsT(key), {
+                        emoji: false,
+                      }) || undefined
+                    : undefined
+                }
                 orderedCats={orderedCats}
                 catGroups={catGroups}
               />

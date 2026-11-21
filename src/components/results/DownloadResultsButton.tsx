@@ -21,11 +21,20 @@ type Props = {
   year: number;
   total: number;
   editionInfo: { date?: Date | null; weather?: string | null; temp?: number | null } | null;
+  /** Řádek počasí bez emoji (typ, stav trati, teplota) – když chybí, použije se původní text. */
+  weatherText?: string;
   orderedCats: Category[];
   catGroups: Record<string, ResultItem[]>;
 };
 
-export function DownloadResultsButton({ year, total, editionInfo, orderedCats, catGroups }: Props) {
+export function DownloadResultsButton({
+  year,
+  total,
+  editionInfo,
+  weatherText,
+  orderedCats,
+  catGroups,
+}: Props) {
   const handleDownload = async () => {
     const doc = new jsPDF({ compress: true });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -82,7 +91,13 @@ export function DownloadResultsButton({ year, total, editionInfo, orderedCats, c
     doc.text(`Počet účastníků: ${total}`, 14, y);
     y += 5;
     if (editionInfo) {
-      doc.text(`Počasí: ${editionInfo.weather || "—"}, ${editionInfo.temp ?? "—"} °C`, 14, y);
+      doc.text(
+        weatherText
+          ? `Počasí: ${weatherText}`
+          : `Počasí: ${editionInfo.weather || "—"}, ${editionInfo.temp ?? "—"} °C`,
+        14,
+        y,
+      );
       y += 6;
     }
 

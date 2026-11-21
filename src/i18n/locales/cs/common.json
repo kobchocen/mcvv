@@ -1579,7 +1579,12 @@
     "qOkStatus": "Stav změněn: {status}.",
     "qErrInvalid": "Odpověď je prázdná nebo příliš dlouhá.",
     "qErrNotFound": "Dotaz nenalezen.",
-    "qReadOnly": "Odpovídat a měnit stav může role se zápisem do Zpráv."
+    "qReadOnly": "Odpovídat a měnit stav může role se zápisem do Zpráv.",
+    "editionsWeatherKind": "Počasí",
+    "editionsWeatherNone": "— neuvedeno —",
+    "editionsCourseTags": "Stav trati",
+    "editionsWeatherNote": "Poznámka k počasí (původní text, zobrazí se jen bez vybraného počasí)",
+    "editionsTempHint": "Nepovinné, celé °C."
   },
   "Stats": {
     "overview": {
@@ -1905,7 +1910,8 @@
     "split2Short": "M2",
     "colTime": "Čas",
     "empty": "Žádné výsledky.",
-    "backToTop": "Nahoru"
+    "backToTop": "Nahoru",
+    "weatherLine": "Počasí: {line}"
   },
   "Splits": {
     "metaTitle": "Mezičasy",
@@ -3764,6 +3770,31 @@
       "category": "Kategorie neodpovídá ročníku a pohlaví.",
       "bib_taken": "Číslo už v testu někdo má.",
       "no_bib": "Pro kategorii není volné číslo – zadej ho ručně."
+    }
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Jasno",
+      "partly_cloudy": "Polojasno",
+      "cloudy": "Oblačno",
+      "overcast": "Zataženo",
+      "fog": "Mlha",
+      "drizzle": "Mrholení",
+      "rain": "Déšť",
+      "showers": "Dešťové přeháňky",
+      "snow": "Sněžení",
+      "snow_showers": "Sněhové přeháňky"
+    },
+    "tag": {
+      "dry": "Suchá trať",
+      "hard": "Tvrdá trať",
+      "wet": "Mokrá trať",
+      "mud": "Blátivo",
+      "frost": "Mráz",
+      "ice": "Náledí",
+      "snow_dusting": "Sněhový poprašek",
+      "snow_patches": "Zbytky sněhu",
+      "snow_cover": "Sníh na trati"
     }
   }
 }

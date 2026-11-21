@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireSection } from "@/lib/admin/access";
+import { getAccess, requireSection } from "@/lib/admin/access";
 import { notifyRoleChange } from "@/lib/admin/role-change-notify";
 import type { RoleChange, RoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
-import { syncLegacyRoleGrants } from "@/lib/admin/role-grants";
+import { setUserGrants, syncLegacyRoleGrants } from "@/lib/admin/role-grants";
 import { writeAudit } from "@/lib/audit/log";
 import { isUserRole, validateRoleChange, type RoleChangeError } from "@/lib/auth/roles";
+import { isStaffRoleCode, validateGrantsChange } from "@/lib/auth/staff-roles";
 import { prisma } from "@/lib/db/client";
 import { parseCorridor } from "@/lib/live/starter-core";
 import { redirect } from "@/i18n/routing";
@@ -98,6 +99,89 @@ export async function changeUserRole(formData: FormData): Promise<void> {
   redirect({ href: { pathname: "/admin/uzivatele", query }, locale });
 }
 
+/**
+ * Víc rolí na účet (P5): zaškrtnutá sada rolí z `STAFF_ROLES` se zapíše do `mcvv_user_role`,
+ * sloupec `mcvv_user.role` dostane hlavní roli (`primaryLegacyRole`). Jen admin a jen při
+ * zapnutém `permissions.v2` (při vypnutém se nic nezmění). Pojistky jako u jedné role.
+ * E-mail o změně jen při změně hlavní role (šablony jsou po dnešních rolích).
+ */
+export async function changeUserRoles(formData: FormData): Promise<void> {
+  const actor = await requireSection("users", "write");
+  const locale = await getLocale();
+  const userId = Number.parseInt(String(formData.get("userId") ?? ""), 10);
+  const next = formData.getAll("roles").map(String);
+  const query = backQuery(String(formData.get("back") ?? ""));
+  const access = await getAccess();
+
+  let outcome: Outcome = { ok: false, error: "not_found" };
+  if (!access.v2) {
+    outcome = { ok: false, error: "invalid_role" };
+  } else if (Number.isSafeInteger(userId) && userId > 0) {
+    outcome = await prisma.$transaction(async (tx): Promise<Outcome> => {
+      await tx.$queryRaw`SELECT id FROM mcvv_user WHERE role = 'admin' OR id = ${userId} FOR UPDATE`;
+      const target = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true, role: true, emailVerified: true },
+      });
+      if (!target || !isUserRole(target.role)) {
+        return { ok: false, error: "not_found" };
+      }
+      const current = (
+        await tx.userRoleGrant.findMany({ where: { userId }, select: { role: true } })
+      )
+        .map((row) => row.role)
+        .filter(isStaffRoleCode);
+      const adminCount = await tx.user.count({ where: { role: "admin" } });
+      const check = validateGrantsChange({
+        actorId: actor.id,
+        target: { id: target.id, role: target.role, emailVerified: Boolean(target.emailVerified) },
+        current,
+        next,
+        adminCount,
+      });
+      if (!check.ok) {
+        return { ok: false, error: check.error };
+      }
+      if (check.role !== target.role) {
+        await tx.user.update({ where: { id: target.id }, data: { role: check.role } });
+      }
+      await setUserGrants(tx, { userId: target.id, grants: check.grants, actorId: actor.id });
+      await writeAudit(
+        {
+          actor,
+          action: "user.role_change",
+          target: `user:${target.id}`,
+          detail: {
+            email: target.email,
+            from: target.role,
+            to: check.role,
+            fromRoles: current,
+            toRoles: check.grants,
+          },
+        },
+        tx,
+      );
+      return {
+        ok: true,
+        change: { email: target.email, name: target.name, from: target.role, to: check.role },
+      };
+    });
+  }
+
+  let mail: RoleChangeMailOutcome | null = null;
+  if (outcome.ok && outcome.change.from !== outcome.change.to) {
+    mail = await notifyRoleChange(outcome.change, locale).catch(() => "failed" as const);
+  }
+  revalidatePath("/[locale]/admin/uzivatele", "page");
+  if (outcome.ok) {
+    query.saved = String(userId);
+    if (mail) query.mail = mail;
+  } else {
+    query.error = outcome.error;
+  }
+  redirect({ href: { pathname: "/admin/uzivatele", query }, locale });
+}
+
 function backQuery(back: string): Record<string, string> {
   const query: Record<string, string> = Object.fromEntries(
     new URLSearchParams(/^[\w%=&+.@-]*$/.test(back) ? back : ""),
@@ -128,7 +212,16 @@ export async function changeStartCorridor(formData: FormData): Promise<void> {
         where: { id: userId },
         select: { id: true, email: true, role: true, startCorridor: true },
       });
-      if (!target || target.role !== "starter") return false;
+      if (!target) return false;
+      // Startér podle sloupce role, nebo (P5) s rolí Startér v mcvv_user_role.
+      if (
+        target.role !== "starter" &&
+        !(await tx.userRoleGrant.findUnique({
+          where: { userId_role: { userId: target.id, role: "starter" } },
+        }))
+      ) {
+        return false;
+      }
       if (target.startCorridor === corridor) return true;
       await tx.user.update({ where: { id: target.id }, data: { startCorridor: corridor } });
       await writeAudit(

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { canViewSpeakerScreen } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
 import { getSession } from "@/lib/auth/session";
 import { NO_STORE } from "@/lib/http/no-store";
 import { speakerCache } from "@/lib/live/speaker";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session) return new Response("Unauthorized", { status: 401, headers: NO_STORE });
-  if (!canViewSpeakerScreen(session.role)) {
+  if (!(await canAccess("screens.speaker", "read"))) {
     return new Response("Forbidden", { status: 403, headers: NO_STORE });
   }
   const cached = await speakerCache.get();

@@ -4,10 +4,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
-import { requireSection } from "@/lib/admin/access";
-import { changeStartCorridor } from "@/lib/admin/users";
+import { getAccess, requireSection } from "@/lib/admin/access";
+import { changeStartCorridor, changeUserRoles } from "@/lib/admin/users";
 import { isRoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
+import { isStaffRoleCode, STAFF_ROLES, type StaffRole } from "@/lib/auth/staff-roles";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/format/date";
 import { getRaceContext } from "@/lib/live/race-context";
@@ -48,6 +49,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const actor = await requireSection("users", "read");
+  const access = await getAccess();
   const copy = await getTranslations({ locale, namespace: "AdminUsers" });
   const sp = await searchParams;
 
@@ -99,6 +101,19 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
         _count: { _all: true },
       })
     : [];
+  // Víc rolí na účet (P5): jen při zapnutém permissions.v2, jinak se stránka nemění.
+  const grantRows =
+    access.v2 && users.length
+      ? await prisma.userRoleGrant.findMany({
+          where: { userId: { in: users.map((user) => user.id) } },
+          select: { userId: true, role: true },
+        })
+      : [];
+  const grantsByUser = new Map<number, StaffRole[]>();
+  for (const row of grantRows) {
+    if (!isStaffRoleCode(row.role)) continue;
+    grantsByUser.set(row.userId, [...(grantsByUser.get(row.userId) ?? []), row.role]);
+  }
   const countByEmail = new Map<string, number>();
   for (const row of registrationCounts) {
     const key = (row.email ?? "").toLowerCase();
@@ -262,7 +277,43 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
                         back={back}
                       />
                     )}
-                    {user.role === "starter" ? (
+                    {access.v2 && user.id !== actor.id ? (
+                      <details className="mt-2" data-testid={`roles-form-${user.id}`}>
+                        <summary className="cursor-pointer text-xs font-semibold text-race-accent">
+                          {copy("multiTitle")}
+                          {grantsByUser.get(user.id)?.length
+                            ? `: ${grantsByUser
+                                .get(user.id)!
+                                .map((role) => copy(`staffRole_${role}`))
+                                .join(", ")}`
+                            : ""}
+                        </summary>
+                        <form action={changeUserRoles} className="mt-2 grid gap-1">
+                          <input type="hidden" name="userId" value={user.id} />
+                          <input type="hidden" name="back" value={back} />
+                          {STAFF_ROLES.map((role) => (
+                            <label key={role} className="flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                name="roles"
+                                value={role}
+                                defaultChecked={grantsByUser.get(user.id)?.includes(role) ?? false}
+                              />
+                              {copy(`staffRole_${role}`)}
+                            </label>
+                          ))}
+                          <p className="max-w-xs text-xs text-race-muted">{copy("multiHint")}</p>
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            className="h-9 w-fit border-race-line bg-race-surface px-3 text-xs"
+                          >
+                            {copy("multiSave")}
+                          </Button>
+                        </form>
+                      </details>
+                    ) : null}
+                    {user.role === "starter" || grantsByUser.get(user.id)?.includes("starter") ? (
                       <form
                         action={changeStartCorridor}
                         className="mt-2 flex flex-wrap items-center gap-2"

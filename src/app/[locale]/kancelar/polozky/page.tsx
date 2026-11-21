@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvCashDeskForbidden, McvvCashDeskNav } from "@/components/organisms/mcvv-cash-desk-nav";
 import type { Locale } from "@/i18n/routing";
-import { canManageSaleItems } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
 import { currentRaceYear } from "@/lib/entries/year";
 import { saveSaleItem, toggleSaleItem } from "@/lib/sales/actions";
 import { cashDeskPageSession } from "@/lib/sales/guard";
@@ -29,7 +29,7 @@ export default async function SaleItemsPage({ params, searchParams }: PageProps)
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   const session = await cashDeskPageSession("/kancelar/polozky");
-  if (!session || !canManageSaleItems(session.role)) return <McvvCashDeskForbidden />;
+  if (!session || !(await canAccess("raceOffice.items", "read"))) return <McvvCashDeskForbidden />;
   const t = await getTranslations({ locale: locale as Locale, namespace: "CashDesk" });
   const { year } = await currentRaceYear();
   const items = await listSaleItems(year);

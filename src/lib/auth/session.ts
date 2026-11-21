@@ -3,7 +3,8 @@ import { cache } from "react";
 
 import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
-import { isUserRole, type UserRole } from "@/lib/auth/roles";
+import { hasAdminHome, isUserRole, type UserRole } from "@/lib/auth/roles";
+import { PERMISSIONS_V2_KEY, permissionsV2On } from "@/lib/auth/staff-roles";
 import {
   decodeSessionToken as decode,
   encodeSessionToken as encode,
@@ -78,13 +79,35 @@ async function sessionFromCookie(): Promise<SessionUser | null> {
   return { id: payload.id, email: payload.email, name: payload.name, role: payload.role };
 }
 
+/**
+ * Příznak `staff` do cookie (P5): jen při zapnutém `permissions.v2` a jen účtu, který
+ * podle sloupce role do adminu nesmí, ale má role v `mcvv_user_role`. Při vypnutém
+ * přepínači se cookie nemění.
+ */
+async function staffCookieFlag(user: SessionUser): Promise<boolean> {
+  if (hasAdminHome(user.role)) return false;
+  try {
+    const flag = await prisma.setting.findUnique({ where: { key: PERMISSIONS_V2_KEY } });
+    if (!permissionsV2On(flag?.text)) return false;
+    return (await prisma.userRoleGrant.count({ where: { userId: user.id } })) > 0;
+  } catch (error) {
+    console.error("[session] staff flag lookup failed", error);
+    return false;
+  }
+}
+
 export async function setSession(user: SessionUser): Promise<boolean> {
   const secret = sessionSecret();
   if (!secret) {
     return false;
   }
+  const staff = await staffCookieFlag(user);
   const token = encode(
-    { ...user, exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SEC },
+    {
+      ...user,
+      ...(staff ? { staff: true as const } : {}),
+      exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SEC,
+    },
     secret,
   );
   const jar = await cookies();

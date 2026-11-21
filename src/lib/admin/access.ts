@@ -52,10 +52,18 @@ export type Access = {
   overrides: Overrides;
 };
 
+/** Přepínač se čte z DB nejvýš jednou za 15 s na repliku (API mezičasů je na trati časté). */
+const FLAG_TTL_MS = 15_000;
+let flagCache: { value: boolean; at: number } | null = null;
+
 async function readFlag(): Promise<boolean> {
+  const now = Date.now();
+  if (flagCache && now - flagCache.at < FLAG_TTL_MS) return flagCache.value;
   try {
     const row = await prisma.setting.findUnique({ where: { key: PERMISSIONS_V2_KEY } });
-    return permissionsV2On(row?.text);
+    const value = permissionsV2On(row?.text);
+    flagCache = { value, at: now };
+    return value;
   } catch (error) {
     console.error("[access] permissions.v2 flag read failed – using legacy roles", error);
     return false;
@@ -99,6 +107,11 @@ export function can(access: Access, id: SectionId, level: AccessLevel): boolean 
 /** Zkratka: `can` pro aktuální účet. */
 export async function canAccess(id: SectionId, level: AccessLevel): Promise<boolean> {
   return can(await getAccess(), id, level);
+}
+
+/** `can` jako callback pro čisté funkce (`splitScope`, `starterScope`). */
+export function allowsFor(access: Access): (id: SectionId, level: AccessLevel) => boolean {
+  return (id, level) => can(access, id, level);
 }
 
 /** Má účet kolečko a rozcestník administrace? */

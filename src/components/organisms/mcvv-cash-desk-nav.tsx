@@ -1,13 +1,15 @@
 import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/routing";
-import { canManageSaleItems, isStaffRole } from "@/lib/auth/roles";
+import { can, canOpenAdmin, getAccess } from "@/lib/admin/access";
+import { isStaffRole } from "@/lib/auth/roles";
 import type { SessionUser } from "@/lib/auth/session";
 
 type Tab = "desk" | "sales" | "items";
 
 /** Záhlaví závodní kanceláře (#207): přepínání pokladna / prodejky / ceník. */
 export async function McvvCashDeskNav({ session, active }: { session: SessionUser; active: Tab }) {
+  const access = await getAccess();
   const t = await getTranslations("CashDesk");
   const tab = (key: Tab) =>
     `flex h-11 items-center justify-center border px-3 text-sm font-semibold ${
@@ -32,12 +34,12 @@ export async function McvvCashDeskNav({ session, active }: { session: SessionUse
         <Link href="/kancelar/prodejky" className={tab("sales")} data-testid="tab-sales">
           {t("tabSales")}
         </Link>
-        {canManageSaleItems(session.role) ? (
+        {can(access, "raceOffice.items", "read") ? (
           <Link href="/kancelar/polozky" className={tab("items")} data-testid="tab-items">
             {t("tabItems")}
           </Link>
         ) : null}
-        {isStaffRole(session.role) ? (
+        {(access.v2 ? canOpenAdmin(access) : isStaffRole(session.role)) ? (
           <Link
             href="/admin"
             className="flex h-11 items-center justify-center border border-race-line/60 bg-race-surface px-3 text-sm font-semibold text-race-muted"

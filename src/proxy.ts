@@ -41,12 +41,14 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const cookie = sessionCookie(request);
   const gate = adminGate({
     pathname,
     search,
     method: request.method,
     isRscOrAction: request.headers.has("rsc") || request.headers.has("next-action"),
-    cookieRole: cookieRole(request),
+    cookieRole: cookie?.role ?? null,
+    cookieStaff: cookie?.staff === true,
   });
   if (gate.kind === "redirect") {
     const url = request.nextUrl.clone();
@@ -72,13 +74,13 @@ export default function proxy(request: NextRequest) {
   return NextResponse.redirect(url, 308);
 }
 
-function cookieRole(request: NextRequest) {
+function sessionCookie(request: NextRequest) {
   const secret = usableSessionSecret(env.SESSION_SECRET);
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (!secret || !token) {
     return null;
   }
-  return decodeSessionToken(token, secret)?.role ?? null;
+  return decodeSessionToken(token, secret);
 }
 
 export const config = {

@@ -30,12 +30,28 @@ export function starterAccess(
   assigned: Corridor | null,
   requested: unknown,
 ): StarterAccess {
-  if (role === "starter") {
+  return starterAccessFor(
+    { any: isStaffRole(role) && role !== "starter", own: role === "starter" },
+    assigned,
+    requested,
+  );
+}
+
+/**
+ * Totéž podle práv (P5): `any` = libovolný koridor s přepínačem (dnes pořadatel a admin),
+ * `own` = jen přiřazený koridor (dnes startér).
+ */
+export function starterAccessFor(
+  scope: { any: boolean; own: boolean },
+  assigned: Corridor | null,
+  requested: unknown,
+): StarterAccess {
+  if (scope.own && !scope.any) {
     return assigned
       ? { ok: true, corridor: assigned, allowed: assigned, canSwitch: false }
       : { ok: false, error: "no-corridor" };
   }
-  if (isStaffRole(role)) {
+  if (scope.any) {
     return {
       ok: true,
       corridor: parseCorridor(requested) ?? assigned ?? 1,

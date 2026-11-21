@@ -4,7 +4,14 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 
 import { USER_ROLES } from "./roles";
-import { grantsFromLegacyRole, isStaffRoleCode, permissionsV2On, STAFF_ROLES } from "./staff-roles";
+import {
+  grantsFromLegacyRole,
+  isStaffRoleCode,
+  permissionsV2On,
+  primaryLegacyRole,
+  STAFF_ROLES,
+  validateGrantsChange,
+} from "./staff-roles";
 
 describe("staff roles (permissions v2)", () => {
   it("codes fit the VARCHAR(24) column and are unique", () => {
@@ -43,5 +50,46 @@ describe("staff roles (permissions v2)", () => {
     assert.equal(permissionsV2On("true"), false);
     assert.equal(permissionsV2On("1"), true);
     assert.equal(permissionsV2On(" 1 "), true);
+  });
+});
+
+describe("multiple roles per account (P5)", () => {
+  it("primary legacy role round-trips every legacy role", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(primaryLegacyRole(grantsFromLegacyRole(role)), role, role);
+    }
+  });
+
+  it("new roles only map to registrar, admin wins", () => {
+    assert.equal(primaryLegacyRole(["entries", "speaker"]), "registrar");
+    assert.equal(primaryLegacyRole(["entries", "starter"]), "starter");
+    assert.equal(primaryLegacyRole(["splitmaker", "admin"]), "admin");
+  });
+
+  const target = { id: 2, role: "organizer" as const, emailVerified: true };
+  const base = { actorId: 1, target, current: ["organizer_legacy" as const], adminCount: 2 };
+
+  it("accepts a new set and orders it", () => {
+    assert.deepEqual(validateGrantsChange({ ...base, next: ["speaker", "entries"] }), {
+      ok: true,
+      grants: ["entries", "speaker"],
+      role: "registrar",
+    });
+  });
+
+  it("keeps the safeguards", () => {
+    const err = (input: Partial<Parameters<typeof validateGrantsChange>[0]>) => {
+      const result = validateGrantsChange({ ...base, next: ["entries"], ...input });
+      return result.ok ? null : result.error;
+    };
+    assert.equal(err({ next: ["root"] }), "invalid_role");
+    assert.equal(err({ next: ["organizer_legacy"] }), "same_role");
+    assert.equal(err({ actorId: 2 }), "self_change");
+    assert.equal(
+      err({ target: { ...target, role: "admin" }, current: ["admin"], adminCount: 1 }),
+      "last_admin",
+    );
+    assert.equal(err({ target: { ...target, emailVerified: false } }), "unverified");
+    assert.equal(err({ target: { ...target, emailVerified: false }, next: [] }), null);
   });
 });

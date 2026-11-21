@@ -263,3 +263,15 @@ export function v2Allows(
 export function v2HasAdminHome(grants: readonly StaffRole[], overrides?: Overrides): boolean {
   return grants.length > 0 && SECTION_IDS.some((id) => v2Allows(grants, id, "read", overrides));
 }
+
+type Allows = (id: SectionId, level: AccessLevel) => boolean;
+
+/** Rozsah zápisu mezičasů: všechna stanoviště (řízení závodu), nebo jen přiřazená. */
+export function splitScope(allows: Allows): { all: boolean; own: boolean } {
+  return { all: allows("raceControl.live", "read"), own: allows("screens.splits", "write") };
+}
+
+/** Rozsah obrazovky startéra: libovolný koridor (řízení startu), nebo jen přiřazený. */
+export function starterScope(allows: Allows): { any: boolean; own: boolean } {
+  return { any: allows("raceControl.start", "read"), own: allows("screens.starter", "read") };
+}

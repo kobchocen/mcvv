@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 
 import { McvvResultboard } from "@/components/organisms/mcvv-resultboard";
 import type { Locale } from "@/i18n/routing";
-import { canViewSpeakerScreen } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
 import { getSession } from "@/lib/auth/session";
 import { onlineResultsCache } from "@/lib/live/online-results";
 import type { OnlineWire } from "@/lib/live/online-results-core";
@@ -58,7 +58,7 @@ export default async function ResultboardPage({ params, searchParams }: PageProp
   const query = await searchParams;
   const wantsTest = query.test === "1";
   const session = wantsTest ? await getSession() : null;
-  const test = wantsTest && session !== null && canViewSpeakerScreen(session.role);
+  const test = wantsTest && session !== null && (await canAccess("screens.resultboard", "read"));
   const online = `${siteUrl()}/vysledky/online`;
   const [cached, info, qrSvg] = await Promise.all([
     test ? resultboardTestCache.get() : onlineResultsCache.get(),

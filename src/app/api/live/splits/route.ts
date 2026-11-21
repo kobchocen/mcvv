@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
-import { allowedStationsFor } from "@/lib/live/assignment-core";
+import { stationsForScope } from "@/lib/live/assignment-core";
 import { getAssignedStations } from "@/lib/live/assignment";
 import { applyWebEntries, rejectWebEntries, type EntryResult } from "@/lib/live/ingest";
 import { sameOrigin, summarize, webBatchSchema } from "@/lib/live/ingest-core";
@@ -10,7 +10,8 @@ import { RateLimiter } from "@/lib/live/rate-limit";
 import { applyStartEntries, rejectStartEntries } from "@/lib/live/start-check";
 import { partitionStartEntries } from "@/lib/live/start-check-core";
 import { withStart } from "@/lib/live/stations";
-import { canAccessSplits } from "@/lib/auth/roles";
+import { allowsFor, can, getAccess } from "@/lib/admin/access";
+import { splitScope } from "@/lib/admin/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noStore });
-  if (!session || !canAccessSplits(session.role)) {
+  const access = await getAccess();
+  if (!can(access, "screens.splits", "write")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: noStore });
   }
   if (!limiter.take(`u${session.id}`)) {
@@ -61,9 +63,11 @@ export async function POST(request: NextRequest) {
   if (parsed.data.entries.some((entry) => !known.has(entry.split))) {
     return NextResponse.json({ error: "station" }, { status: 422, headers: noStore });
   }
-  // Splitmaker smí jen na přiřazená stanoviště; admin a organizer na všechna.
+  // Splitmaker smí jen na přiřazená stanoviště; admin a organizer (řízení závodu) na všechna.
   const allowed = new Set(
-    allowedStationsFor(session.role, assigned, stations).map((station) => station.code),
+    stationsForScope(splitScope(allowsFor(access)), assigned, stations).map(
+      (station) => station.code,
+    ),
   );
   try {
     const ctx = await getRaceContext();

@@ -2,23 +2,49 @@
  * Site settings stored in mcvv_setting (key → text). Pure helpers, no DB access.
  */
 export const STARTLIST_PUBLISHED_KEY = "startlist_published";
+/** Ročník, jehož losování startovky je potvrzené (#115, varianta A). */
+export const STARTLIST_DRAWN_KEY = "startlist_drawn_year";
 export const ONLINE_RESULTS_URL_KEY = "online_results_url";
 export const STATS_MOMENT_KEY = "stats.moment";
 
 export const SITE_SETTING_KEYS = [
   STARTLIST_PUBLISHED_KEY,
+  STARTLIST_DRAWN_KEY,
   ONLINE_RESULTS_URL_KEY,
   STATS_MOMENT_KEY,
 ] as const;
 
 export type SiteSettings = {
+  /**
+   * Startovka je vidět na webu. Zapne ji potvrzení losování; přepínač v nastavení slouží jen
+   * k nouzovému skrytí (a ručnímu zveřejnění bez generátoru).
+   */
   startlistPublished: boolean;
+  /** Ročník s potvrzeným losováním (null = zatím žádné). Mění ho jen potvrzení losování. */
+  startlistDrawnYear: number | null;
   onlineResultsUrl: string | null;
   statsMoment: string;
 };
 
 export const ONLINE_RESULTS_URL_MAX = 500;
 export const STATS_MOMENT_MAX = 2000;
+
+/**
+ * Losování startovky ročníku je potvrzené: čísla jsou pevná (generátor zamčený, žádné storno)
+ * a zaplacené pozdní přihlášky dostávají čísla hned. Platí i dřívější stav „zveřejněno“ bez
+ * záznamu losování. Nouzové skrytí startovky (přepínač) potvrzené losování neruší.
+ */
+export function startlistDrawConfirmed(
+  site: Pick<SiteSettings, "startlistPublished" | "startlistDrawnYear">,
+  year: number,
+): boolean {
+  return site.startlistPublished || site.startlistDrawnYear === year;
+}
+
+function parseYear(raw: string | null | undefined): number | null {
+  const value = Number.parseInt((raw ?? "").trim(), 10);
+  return Number.isInteger(value) && value >= 2000 && value <= 2100 ? value : null;
+}
 
 export function parseFlag(raw: string | null | undefined): boolean {
   return ["1", "true", "on", "yes"].includes((raw ?? "").trim().toLowerCase());
@@ -74,6 +100,7 @@ export function siteSettingsFromRows(rows: { key: string; text: string }[]): Sit
   const url = parseHttpUrl(map.get(ONLINE_RESULTS_URL_KEY));
   return {
     startlistPublished: parseFlag(map.get(STARTLIST_PUBLISHED_KEY)),
+    startlistDrawnYear: parseYear(map.get(STARTLIST_DRAWN_KEY)),
     onlineResultsUrl: url.ok ? url.value : null,
     statsMoment: normalizeMoment(map.get(STATS_MOMENT_KEY)),
   };

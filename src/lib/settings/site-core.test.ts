@@ -6,6 +6,7 @@ import {
   parseFlag,
   parseHttpUrl,
   siteSettingsFromRows,
+  startlistDrawConfirmed,
   splitMoment,
 } from "./site-core";
 
@@ -52,16 +53,41 @@ describe("site settings", () => {
   it("builds settings from rows, ignoring an invalid stored URL", () => {
     assert.deepEqual(siteSettingsFromRows([]), {
       startlistPublished: false,
+      startlistDrawnYear: null,
       onlineResultsUrl: null,
       statsMoment: "",
     });
     assert.deepEqual(
       siteSettingsFromRows([
         { key: "startlist_published", text: "1" },
+        { key: "startlist_drawn_year", text: "2026" },
         { key: "online_results_url", text: "javascript:alert(1)" },
         { key: "stats.moment", text: " Moment " },
       ]),
-      { startlistPublished: true, onlineResultsUrl: null, statsMoment: "Moment" },
+      {
+        startlistPublished: true,
+        startlistDrawnYear: 2026,
+        onlineResultsUrl: null,
+        statsMoment: "Moment",
+      },
+    );
+    assert.equal(
+      siteSettingsFromRows([{ key: "startlist_drawn_year", text: "abc" }]).startlistDrawnYear,
+      null,
+    );
+  });
+
+  it("draw confirmed: drawn year, or the legacy published flag; hiding keeps the draw", () => {
+    const hidden = { startlistPublished: false, startlistDrawnYear: 2026 };
+    assert.equal(startlistDrawConfirmed(hidden, 2026), true);
+    assert.equal(startlistDrawConfirmed(hidden, 2027), false);
+    assert.equal(
+      startlistDrawConfirmed({ startlistPublished: true, startlistDrawnYear: null }, 2026),
+      true,
+    );
+    assert.equal(
+      startlistDrawConfirmed({ startlistPublished: false, startlistDrawnYear: null }, 2026),
+      false,
     );
   });
 });

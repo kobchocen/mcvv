@@ -11,7 +11,7 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
 import { loadStartSettings } from "@/lib/race/startlist-load";
-import { getSiteSettings } from "@/lib/settings/site";
+import { getSiteSettings, startlistDrawConfirmed } from "@/lib/settings/site";
 
 import { onsiteWindow } from "./defaults";
 import { latePaidMailDedupeKey, latePaidStartFacts, pickLateBibs } from "./late-bib-core";
@@ -39,12 +39,14 @@ export async function isSubmittedLate(year: number, id: number): Promise<boolean
 }
 
 /**
- * Přidělí čísla běžcům zaplacené pozdní přihlášky, jen když je startovka zveřejněná.
+ * Přidělí čísla běžcům zaplacené pozdní přihlášky, jen když je losování potvrzené
+ * (`startlistDrawConfirmed`; nouzové skrytí startovky přidělování nezastaví). `published`
+ * ve výsledku = startovka je vidět (e-mail g pak čísla a časy uvede).
  * Pod zámkem databáze (GET_LOCK), aby dvě současné platby nedostaly stejné číslo.
  */
 export async function assignLateBibs(year: number, id: number): Promise<LateBibResult> {
   const site = await getSiteSettings();
-  if (!site.startlistPublished) return { published: false, assigned: [], missing: [] };
+  if (!startlistDrawConfirmed(site, year)) return { published: false, assigned: [], missing: [] };
   const settings = await loadStartSettings(year);
   const result = await prisma.$transaction(
     async (tx) => {
@@ -101,7 +103,7 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
           });
           assigned.push({ runnerId, ...pick });
         }
-        return { published: true, assigned, missing };
+        return { published: site.startlistPublished, assigned, missing };
       } finally {
         await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
       }

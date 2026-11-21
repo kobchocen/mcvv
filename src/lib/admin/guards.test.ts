@@ -19,7 +19,9 @@ function files(dir: string, match: (name: string) => boolean): string[] {
   });
 }
 
-const GUARD = /await require(Staff|Admin|RaceDay)\(\)/;
+// requireSection s rolí, kterou při vypnutém permissions.v2 nelze přeložit na jednu ze tří
+// stráží (např. „overview“ = kdokoli s adminem), zůstane ve zdroji jako requireSection.
+const GUARD = /await require(Staff|Admin|RaceDay)\(\)|await requireSection\("/;
 
 describe("admin guards", () => {
   it("every admin page calls a server-side guard", () => {

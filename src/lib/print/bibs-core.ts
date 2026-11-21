@@ -20,7 +20,7 @@ export const BIB_DEEP = "#031106";
 export const BIB_CREAM = "#eef4ee";
 
 export type BibSealKind = "veteran" | "winner";
-export type BibSealLabel = "STARTŮ" | "VÝHER";
+export type BibSealLabel = "STARTŮ" | "VÝHRA" | "VÝHRY" | "VÝHER";
 
 export type BibSeal = {
   kind: BibSealKind;
@@ -35,10 +35,26 @@ export type BibSeal = {
   placement: "primary" | "secondary";
 };
 
-/** Počet na pečeti je vždy dvouciferný (05, 35). Nad 99 se nechává trojciferný. */
+/** Počet na pečeti bez úvodní nuly (3, 35, 100). */
+export function sealCountText(count: number): string {
+  return String(Math.max(0, Math.round(count)));
+}
+
+/** @deprecated Použij sealCountText — bez úvodní nuly. */
 export function twoDigitCount(count: number): string {
+  return sealCountText(count);
+}
+
+/** Popisek pečeti výher: 1 VÝHRA, 2–4 VÝHRY, 5 a víc VÝHER. */
+export function winnerSealLabel(count: number): "VÝHRA" | "VÝHRY" | "VÝHER" {
   const n = Math.max(0, Math.round(count));
-  return n > 99 ? String(n) : String(n).padStart(2, "0");
+  if (n === 1) {
+    return "VÝHRA";
+  }
+  if (n >= 2 && n <= 4) {
+    return "VÝHRY";
+  }
+  return "VÝHER";
 }
 
 export type BibCard = {
@@ -192,7 +208,7 @@ export function bibAppearance(input: {
     seals.push({
       kind: "winner",
       count: winCount,
-      label: "VÝHER",
+      label: winnerSealLabel(winCount),
       fill: BIB_GOLD,
       placement: "primary",
     });

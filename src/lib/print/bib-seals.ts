@@ -11,7 +11,7 @@ import {
   BIB_GOLD,
   BIB_GREEN,
   BIB_ORANGE,
-  twoDigitCount,
+  sealCountText,
   type BibSeal,
 } from "./bibs-core";
 import { profilePoints, type CoursePoint } from "./course-profile";
@@ -101,7 +101,7 @@ export function sealSvg(
   profile: readonly CoursePoint[],
   fontDataUri: string,
 ): string {
-  const count = twoDigitCount(seal.count);
+  const count = sealCountText(seal.count);
   const ring = BIB_CREAM;
   const fill = seal.fill;
   const fillTop = BIB_CREAM;

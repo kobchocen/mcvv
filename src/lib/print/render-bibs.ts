@@ -11,7 +11,6 @@ import {
 } from "./bib-seals";
 import { BIB_FOREST, bibGivenNameFirst, type BibCard, participationHex } from "./bibs-core";
 import type { CoursePoint } from "./course-profile";
-import numberWave from "@/assets/print/number-wave.json";
 
 const FONT = "Oswald";
 
@@ -108,26 +107,6 @@ export function fitSize(doc: jsPDF, text: string, sizePt: number, maxWidthMm: nu
   doc.setFontSize(sizePt);
   const width = doc.getTextWidth(text);
   return width > maxWidthMm ? (sizePt * maxWidthMm) / width : sizePt;
-}
-
-function drawPolyline(
-  doc: jsPDF,
-  points: { x: number; y: number }[],
-  widthMm: number,
-  color: string,
-) {
-  if (points.length < 2) {
-    return;
-  }
-  doc.setDrawColor(color);
-  doc.setLineWidth(widthMm);
-  doc.setLineJoin("round");
-  doc.setLineCap("round");
-  doc.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i += 1) {
-    doc.lineTo(points[i].x, points[i].y);
-  }
-  doc.stroke();
 }
 
 /**
@@ -256,13 +235,6 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
     doc.text(card.category, pxToMm(190), numberBaseline, { angle: 90, align: "left" });
     doc.setCharSpace(0);
   }
-
-  // Oficiální bib15 polyline (stroke 26, body 590,931.9 … 1890,886.3)
-  const line = (numberWave as [number, number][]).map(([x, y]) => ({
-    x: pxToMm(x),
-    y: ym(y),
-  }));
-  drawPolyline(doc, line, pxToMm(26), "#ffffff");
 
   if (card.blank) {
     const lineY = ym(cssBaseline(1200, 40));

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { sealNumberPlacement, sealSvg } from "./bib-seals";
-import { bibAppearance, twoDigitCount } from "./bibs-core";
+import { bibAppearance, sealCountText } from "./bibs-core";
 import type { CoursePoint } from "./course-profile";
 
 const profile: CoursePoint[] = [
@@ -12,18 +12,18 @@ const profile: CoursePoint[] = [
 ];
 
 describe("bib seals", () => {
-  it("puts a two-digit count and STARTŮ / VÝHER into the SVG", () => {
+  it("puts the start count and STARTŮ / VÝHRY into the SVG", () => {
     const veteran = bibAppearance({ isDefender: false, winCount: null, veteranStarts: 5 }).seals[0];
     const winner = bibAppearance({ isDefender: false, winCount: 3, veteranStarts: null }).seals[0];
     assert.ok(veteran);
     assert.ok(winner);
     const veteranSvg = sealSvg(veteran, profile, "data:font/ttf;base64,AA==");
     const winnerSvg = sealSvg(winner, profile, "data:font/ttf;base64,AA==");
-    assert.equal(twoDigitCount(5), "05");
-    assert.match(veteranSvg, /id="cut-veteran-05"/);
+    assert.equal(sealCountText(5), "5");
+    assert.match(veteranSvg, /id="cut-veteran-5"/);
     assert.match(veteranSvg, />STARTŮ</);
-    assert.match(winnerSvg, /id="cut-winner-03"/);
-    assert.match(winnerSvg, />VÝHER</);
+    assert.match(winnerSvg, /id="cut-winner-3"/);
+    assert.match(winnerSvg, />VÝHRY</);
     assert.match(winnerSvg, />MCVV</);
     assert.match(veteranSvg, /<path /);
     assert.match(winnerSvg, /stroke-width="4\.75"/);
@@ -43,5 +43,13 @@ describe("bib seals", () => {
     assert.match(svg, /translate\(24\.232,0\)/);
     assert.match(svg, /stroke-width="4\.75"/);
     assert.match(svg, /<path /);
+  });
+
+  it("centres a single-digit count with the official place_number algorithm", () => {
+    const placed = sealNumberPlacement("3");
+    const cx = (placed.bounds[0] + placed.bounds[2]) / 2;
+    const cy = (placed.bounds[1] + placed.bounds[3]) / 2;
+    assert.ok(Math.abs(cx - 120) < 0.05, `cx ${cx}`);
+    assert.ok(Math.abs(cy - 117.3) < 0.05, `cy ${cy}`);
   });
 });

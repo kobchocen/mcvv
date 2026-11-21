@@ -12,7 +12,9 @@ import {
   parseBibList,
   parseBibPrintParams,
   bibAppearance,
+  sealCountText,
   twoDigitCount,
+  winnerSealLabel,
   sortBibRows,
   veteranMinStarts,
   type BuildBibOptions,
@@ -92,7 +94,7 @@ describe("bib cards", () => {
     );
     assert.equal(historic.color, "orange");
     assert.equal(historic.winCount, 3);
-    assert.equal(historic.seals[0]?.label, "VÝHER");
+    assert.equal(historic.seals[0]?.label, "VÝHRY");
   });
 
   it("blank cards have no name and the title without year", () => {
@@ -188,7 +190,7 @@ describe("category label and participation colours", () => {
         placement: s.placement,
         count: s.count,
       })),
-      [{ kind: "winner", label: "VÝHER", placement: "primary", count: 3 }],
+      [{ kind: "winner", label: "VÝHRY", placement: "primary", count: 3 }],
     );
 
     const defender = bibAppearance({ isDefender: true, winCount: 2, veteranStarts: null });
@@ -200,7 +202,7 @@ describe("category label and participation colours", () => {
         placement: s.placement,
         count: s.count,
       })),
-      [{ kind: "winner", label: "VÝHER", placement: "primary", count: 2 }],
+      [{ kind: "winner", label: "VÝHRY", placement: "primary", count: 2 }],
     );
 
     const defenderNoResults = bibAppearance({
@@ -222,7 +224,7 @@ describe("category label and participation colours", () => {
         count: s.count,
       })),
       [
-        { kind: "winner", label: "VÝHER", placement: "primary", count: 3 },
+        { kind: "winner", label: "VÝHRY", placement: "primary", count: 3 },
         { kind: "veteran", label: "STARTŮ", placement: "secondary", count: 35 },
       ],
     );
@@ -232,7 +234,7 @@ describe("category label and participation colours", () => {
     assert.deepEqual(
       bothDefender.seals.map((s) => ({ kind: s.kind, label: s.label, placement: s.placement })),
       [
-        { kind: "winner", label: "VÝHER", placement: "primary" },
+        { kind: "winner", label: "VÝHRY", placement: "primary" },
         { kind: "veteran", label: "STARTŮ", placement: "secondary" },
       ],
     );
@@ -242,10 +244,26 @@ describe("category label and participation colours", () => {
     assert.deepEqual(plain.seals, []);
   });
 
-  it("prints seal counts with two digits", () => {
-    assert.equal(twoDigitCount(5), "05");
-    assert.equal(twoDigitCount(35), "35");
-    assert.equal(twoDigitCount(100), "100");
+  it("prints seal counts without a leading zero", () => {
+    assert.equal(sealCountText(3), "3");
+    assert.equal(sealCountText(5), "5");
+    assert.equal(sealCountText(35), "35");
+    assert.equal(sealCountText(100), "100");
+    assert.equal(twoDigitCount(3), "3");
+  });
+
+  it("declines the winner-seal caption in Czech", () => {
+    assert.equal(winnerSealLabel(1), "VÝHRA");
+    assert.equal(winnerSealLabel(2), "VÝHRY");
+    assert.equal(winnerSealLabel(3), "VÝHRY");
+    assert.equal(winnerSealLabel(4), "VÝHRY");
+    assert.equal(winnerSealLabel(5), "VÝHER");
+    assert.equal(winnerSealLabel(35), "VÝHER");
+    const one = bibAppearance({ isDefender: true, winCount: null, veteranStarts: null });
+    assert.equal(one.seals[0]?.label, "VÝHRA");
+    assert.equal(one.seals[0]?.count, 1);
+    const five = bibAppearance({ isDefender: false, winCount: 5, veteranStarts: null });
+    assert.equal(five.seals[0]?.label, "VÝHER");
   });
 });
 

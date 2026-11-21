@@ -5,7 +5,7 @@ import {
   pragueCalendarYear,
   zonedCivilToUtc,
 } from "@/lib/date/race-schedule";
-import { isoWithOffset } from "@/lib/ofeed/iof-xml";
+import { isoWithOffset } from "@/lib/date/iso-offset";
 
 import { parsePragueLocal } from "./admin-core";
 
@@ -13,8 +13,9 @@ import { parsePragueLocal } from "./admin-core";
  * Testovací běh nad produkcí (#186) – čistá logika bez DB.
  *
  * Admin v `/admin/den-zavodu/zive` spustí test a zvolí nulu (za 5 minut, přesný čas, dnes
- * v nulový čas ročníku – st_nula_s, výchozí 10:15 – nebo večerní generálka 20:15). Po dobu testu je nula závodu přepsaná (zkušební nula), splitmakeři, Start,
- * obd-klient i OFeed (jen testovací profil) fungují jako v den závodu. Test se sám ukončí po
+ * v nulový čas ročníku – st_nula_s, výchozí 10:15 – nebo večerní generálka 20:15). Po dobu testu
+ * je nula závodu přepsaná (zkušební nula), splitmakeři, Start a ruční časy fungují jako v den
+ * závodu. Test se sám ukončí po
  * 3 h (`expiresAt`), nejpozději ale v den závodu 00:00 (Q70). Úklid je automatický (Q71).
  */
 
@@ -36,7 +37,7 @@ export type TestRun = {
   expiresAt: Date;
   /** Admin, který test spustil (null = neznámý). */
   startedBy: number | null;
-  /** Klíče zařízení vytvořené během testu – při úklidu se zneplatní. */
+  /** Historicky klíče zařízení OBD vytvořené během testu; drží se jen kvůli uloženému stavu. */
   tokenIds: number[];
 };
 
@@ -150,8 +151,7 @@ export function resolveTestZero(
   }
 }
 
-export type TestStartError =
-  "zero" | "zeroPast" | "zeroFar" | "raceDay" | "active" | "ofeedProfile" | "ofeedTestMissing";
+export type TestStartError = "zero" | "zeroPast" | "zeroFar" | "raceDay" | "active";
 
 /** Konec testu: 3 h od nuly (nebo od spuštění), nejpozději den závodu 00:00. */
 export function testRunExpiry(startedAt: Date, zero: Date, cutoff: Date): Date {
@@ -168,15 +168,10 @@ export function validateTestStart(input: {
   zero: Date | null;
   cutoff: Date;
   active: TestRun | null;
-  ofeedProfile: "live" | "test";
-  ofeedTestEventId: string | null | undefined;
 }): TestStartError | null {
   const { now, zero, cutoff, active } = input;
   if (testRunBlocked(now, cutoff)) return "raceDay";
   if (active && !testRunExpired(active, now)) return "active";
-  // Pojistka OFeed: test jen s testovací akcí, ostrá akce nesmí dostat testovací data.
-  if (!input.ofeedTestEventId) return "ofeedTestMissing";
-  if (input.ofeedProfile !== "test") return "ofeedProfile";
   if (!zero) return "zero";
   if (zero.getTime() < now.getTime() - TEST_ZERO_PAST_TOLERANCE_MS) return "zeroPast";
   if (zero.getTime() > now.getTime() + TEST_ZERO_MAX_AHEAD_MS) return "zeroFar";
@@ -191,14 +186,6 @@ export function validateTestStart(input: {
 export function testDataWindow(run: TestRun, now: Date, cutoff: Date): { from: Date; until: Date } {
   const until = Math.max(Math.min(now.getTime(), cutoff.getTime()), run.startedAt.getTime());
   return { from: run.startedAt, until: new Date(until) };
-}
-
-/**
- * Identita datové sady pro obd-klient (Q72): změní se s novým testem i s novou nulou;
- * klient pak sám vynuluje state.json a pošle soubor znovu.
- */
-export function dataEpoch(run: TestRun | null, zero: Date): string {
-  return `${run ? `test-${run.id}` : "live"}@${zero.toISOString()}`;
 }
 
 /**

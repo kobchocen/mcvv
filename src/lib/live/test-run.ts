@@ -5,7 +5,6 @@ import type { Prisma } from "@prisma/client";
 import { writeAudit, type AuditActor } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
-import { OFEED_STATE } from "@/lib/ofeed/settings";
 
 import { snapshotRows } from "./clear-core";
 import { LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
@@ -37,7 +36,6 @@ export type TestCleanup = {
   splitEntries: number;
   starts: number;
   startEntries: number;
-  tokensRevoked: number;
   zeroCleared: boolean;
 };
 
@@ -82,14 +80,13 @@ export async function peekStoredTestRun(
   return { run, cutoff };
 }
 
-/** Tick plánovače (OFeed, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
+/** Interní tick (`live/scheduler`, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
 export async function expireTestRunIfDue(now = new Date()): Promise<void> {
   await getActiveTestRun(now);
 }
 
 /**
- * Spustí test: uloží stav, nastaví zkušební nulu a smaže otisk posledního uploadu do OFeed
- * (první běh pošle čistá data do testovací akce). Kontroly dělá volající (validateTestStart).
+ * Spustí test: uloží stav a nastaví zkušební nulu. Kontroly dělá volající (validateTestStart).
  */
 export async function startTestRun(
   zero: Date,
@@ -118,7 +115,6 @@ export async function startTestRun(
       update: { text: zeroText },
       create: { key: LIVE_ZERO_OVERRIDE_KEY, text: zeroText },
     });
-    await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
     await writeAudit(
       {
         actor,
@@ -136,18 +132,9 @@ export async function startTestRun(
   return run;
 }
 
-/** Klíč zařízení vytvořený během testu je testovací – při úklidu se zneplatní. */
-export async function registerTestToken(tokenId: number): Promise<boolean> {
-  const run = await getActiveTestRun();
-  if (!run) return false;
-  const text = serializeTestRun({ ...run, tokenIds: [...run.tokenIds, tokenId] });
-  await prisma.setting.update({ where: { key: TEST_RUN_KEY }, data: { text } });
-  return true;
-}
-
 /**
- * Ukončí test a automaticky uklidí (Q71): testovací mezičasy a deník, evidenci startu,
- * zkušební nulu a testovací klíče zařízení. Maže jen záznamy vzniklé během testu (okno od
+ * Ukončí test a automaticky uklidí (Q71): testovací mezičasy a deník, evidenci startu
+ * a zkušební nulu. Maže jen záznamy vzniklé během testu (okno od
  * spuštění do konce, nikdy přes den závodu 00:00), takže ostrá data zůstanou. Audit se
  * snímkem smazaných řádků. Bez aktivního testu nic nedělá (vrací null).
  */
@@ -179,13 +166,6 @@ export async function endTestRun(
       const startEntries = await tx.startCheckEntry.deleteMany({
         where: { year, receivedAt: range },
       });
-      const tokens =
-        run.tokenIds.length > 0
-          ? await tx.ingestToken.updateMany({
-              where: { id: { in: run.tokenIds }, revokedAt: null },
-              data: { revokedAt: now },
-            })
-          : { count: 0 };
       // Zkušební nulu mažeme jen tehdy, když je to pořád nula tohoto testu.
       const zeroRow = await tx.setting.findUnique({
         where: { key: LIVE_ZERO_OVERRIDE_KEY },
@@ -196,14 +176,12 @@ export async function endTestRun(
         await tx.setting.delete({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
         zeroCleared = true;
       }
-      await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
 
       const result: TestCleanup = {
         splits: splits.count,
         splitEntries: splitEntries.count,
         starts: starts.count,
         startEntries: startEntries.count,
-        tokensRevoked: tokens.count,
         zeroCleared,
       };
       await writeAudit(

@@ -23,7 +23,7 @@ import {
 
 /**
  * Evidence startu (#203) – zápis a přehled. Jen tabulky `mcvv_start_check` (aktuální stav
- * čísla) a `mcvv_start_check_entry` (deník). `mcvv_split`, výsledky, OFeed ani OBD se nemění.
+ * čísla) a `mcvv_start_check_entry` (deník). `mcvv_split` ani výsledky se nemění.
  */
 
 type Tx = Prisma.TransactionClient;

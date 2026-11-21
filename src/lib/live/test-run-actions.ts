@@ -6,7 +6,6 @@ import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { requireAdmin } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
-import { getOfeedSettings } from "@/lib/ofeed/settings";
 
 import {
   endTestRun,
@@ -32,15 +31,11 @@ async function back(query: Record<string, string>): Promise<never> {
   throw new Error("unreachable");
 }
 
-/** „Spustit test“ (#186, Q69): jen admin, jen před dnem závodu, jen s testovacím profilem OFeed. */
+/** „Spustit test“ (#186, Q69): jen admin, jen před dnem závodu. */
 export async function startTestRunAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const now = new Date();
-  const [active, cutoff, ofeed] = await Promise.all([
-    getActiveTestRun(now),
-    getTestCutoff(now),
-    getOfeedSettings(),
-  ]);
+  const [active, cutoff] = await Promise.all([getActiveTestRun(now), getTestCutoff(now)]);
   const zero = resolveTestZero(
     String(formData.get("zeroChoice") ?? ""),
     String(formData.get("zeroCustom") ?? ""),
@@ -52,8 +47,6 @@ export async function startTestRunAction(formData: FormData): Promise<void> {
     zero,
     cutoff,
     active,
-    ofeedProfile: ofeed.profile,
-    ofeedTestEventId: ofeed.profiles.test.eventId,
   });
   if (error) await back({ testError: error });
   await startTestRun(zero!, session, now);

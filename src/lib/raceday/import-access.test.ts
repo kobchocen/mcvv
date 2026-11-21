@@ -1,5 +1,5 @@
 /**
- * Importy z OBD v adminu (#119 po prezentaci, #123 výsledky, PR #143) smí nahrát admin,
+ * Import z OBD po prezentaci v adminu (#119, PR #143) smí nahrát admin,
  * organizer i Časomíra (`timing`, LuM). Ostatní role ne. Kontroluje stránky, server actions
  * (jiné API pro importy není), proxy i cíl po přihlášení.
  */
@@ -19,7 +19,7 @@ import {
 import { loginTarget } from "@/lib/auth/safe-next";
 
 const ROOT = join(import.meta.dirname, "..", "..");
-const IMPORT_PATHS = ["/admin/den-zavodu/prezentace", "/admin/den-zavodu/vysledky"] as const;
+const IMPORT_PATHS = ["/admin/den-zavodu/prezentace"] as const;
 const ALLOWED: readonly UserRole[] = ["admin", "organizer", "timing"];
 
 describe("OBD imports – access for admin, organizer and Časomíra (timing)", () => {
@@ -54,7 +54,7 @@ describe("OBD imports – access for admin, organizer and Časomíra (timing)", 
   });
 
   it("import pages are guarded by requireRaceDay, not a staff-only guard", () => {
-    for (const sub of ["prezentace", "vysledky"]) {
+    for (const sub of ["prezentace"]) {
       const page = readFileSync(
         join(ROOT, `app/[locale]/admin/den-zavodu/${sub}/page.tsx`),
         "utf8",
@@ -70,7 +70,7 @@ describe("OBD imports – access for admin, organizer and Časomíra (timing)", 
     const bodies = source.split(/\nexport async function /).slice(1);
     assert.deepEqual(
       bodies.map((body) => body.slice(0, body.indexOf("("))),
-      ["presentationImportAction", "resultsImportAction"],
+      ["presentationImportAction"],
     );
     for (const body of bodies) {
       const guard = body.indexOf("await requireRaceDay()");
@@ -78,7 +78,7 @@ describe("OBD imports – access for admin, organizer and Časomíra (timing)", 
     }
   });
 
-  it("the race-day hub links both imports for every race-day role", () => {
+  it("the race-day hub links the import for every race-day role", () => {
     const hub = readFileSync(join(ROOT, "app/[locale]/admin/den-zavodu/page.tsx"), "utf8");
     for (const path of IMPORT_PATHS) {
       const link = hub.indexOf(`href="${path}"`);

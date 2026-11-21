@@ -65,7 +65,7 @@ export function splitObdLines(text: string): ObdLine[] {
   return out;
 }
 
-export type ObdFileKind = "cis_bezec" | "cis_klub" | "start" | "kon_vysl";
+export type ObdFileKind = "cis_bezec" | "cis_klub" | "start";
 
 export type ObdRowErrorCode =
   | "columns"
@@ -74,7 +74,6 @@ export type ObdRowErrorCode =
   | "category"
   | "year"
   | "bib"
-  | "time"
   | "name_empty"
   | "name_long"
   | "duplicate_runner"
@@ -157,7 +156,7 @@ export type RaceRow = {
   clubId: string;
   categoryId: string;
   year: number;
-  /** start.csv: startovní číslo; kon_vysl.csv: čas v sekundách. */
+  /** start.csv: startovní číslo. */
   value: number;
 };
 
@@ -167,14 +166,9 @@ function parseInt16(raw: string): number | null {
   return value >= 1 && value <= SMALLINT_MAX ? value : null;
 }
 
-/**
- * `start.csv`: `bezec_id;klub_id;kateg_id;rok;cislo`
- * `kon_vysl.csv`: `bezec_id;rok;klub_id;kateg_id;time_s` (pořadí podle INSERT v legacy
- * importres.php; potvrzeno daty – legacy bug s `data[1]` jako klubem nechal všechny
- * `klub_name` v mcvv_time prázdné, tedy `data[1]` je rok).
- */
+/** `start.csv`: `bezec_id;klub_id;kateg_id;rok;cislo` */
 export function parseRaceFile(
-  file: "start" | "kon_vysl",
+  file: "start",
   lines: ObdLine[],
   context: { year: number; categoryIds: ReadonlySet<string> },
 ): { rows: RaceRow[]; errors: ObdRowError[] } {
@@ -187,8 +181,7 @@ export function parseRaceFile(
       errors.push({ file, line, code: "columns", value: fields.join(";") });
       continue;
     }
-    const [runnerId = "", a = "", b = "", c = "", last = ""] = fields;
-    const [clubId, categoryId, yearRaw] = file === "start" ? [a, b, c] : [b, c, a];
+    const [runnerId = "", clubId = "", categoryId = "", yearRaw = "", last = ""] = fields;
     const push = (code: ObdRowErrorCode, value: string) => errors.push({ file, line, code, value });
     if (!RUNNER_ID.test(runnerId)) {
       push("runner_id", runnerId);
@@ -208,14 +201,14 @@ export function parseRaceFile(
     }
     const value = parseInt16(last);
     if (value === null) {
-      push(file === "start" ? "bib" : "time", last);
+      push("bib", last);
       continue;
     }
     if (runners.has(runnerId)) {
       push("duplicate_runner", runnerId);
       continue;
     }
-    if (file === "start" && values.has(value)) {
+    if (values.has(value)) {
       push("duplicate_bib", String(value));
       continue;
     }

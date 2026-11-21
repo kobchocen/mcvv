@@ -55,7 +55,7 @@ const MAX_ROWS = 400;
 /**
  * Evidence startu (#203): kdo opravdu odstartoval, kdo ne (kandidáti DNS) a časy. Přehled
  * vidí admin i pořadatel; zápis, opravu a mazání jen admin. Čas startu je jen evidence –
- * výsledky, OFeed ani OBD ho nepoužívají.
+ * výsledky ho nepoužívají.
  */
 export default async function StartCheckPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;

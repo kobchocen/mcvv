@@ -79,11 +79,6 @@ async function routeAccess(
   return { ok: true, session };
 }
 
-/** Route handlery „Den závodu“ (export / importy OBD): timing, organizer, admin. */
-export async function raceDayAccess(): Promise<RouteAccess> {
-  return routeAccess(canAccessRaceDay);
-}
-
 /**
  * Route handlery jen pro plnou administraci (organizer, admin) – tiskové sestavy a PDF.
  * `forbidden` zachovává dosavadní odpověď konkrétní cesty (tisk 404, PDF startovky 401).

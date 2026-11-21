@@ -21,7 +21,6 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { deadlineCountdown } from "@/lib/slots/core";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
-import { getOfeedSettings, onlineResultsOverrideUrl } from "@/lib/ofeed/settings";
 import { getUnreadCount } from "@/lib/messages/store";
 import type { McvvHeroCta } from "@/components/organisms/mcvv-hero-section";
 
@@ -46,9 +45,8 @@ export async function McvvHomepageTemplate({
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
   const { year, open, raceDate, startModel, slots, standardEnd } = await currentRaceYear();
-  const [settings, ofeed, { resultsCount, startlistCount, entriesCount }] = await Promise.all([
+  const [settings, { resultsCount, startlistCount, entriesCount }] = await Promise.all([
     getSiteSettings(),
-    getOfeedSettings().catch(() => null),
     // cached per replica for a minute, revalidated by registrations and imports (DB load)
     getHomeCounts(year),
   ]);
@@ -65,9 +63,8 @@ export async function McvvHomepageTemplate({
     entriesCount,
     startlistCount,
     resultsCount,
-    // vlastní /vysledky/online (Q116); ručně zadaná URL je nouzové přebití, při testovací
-    // akci OFeed web na OFeed neodkazuje (Q33)
-    onlineResultsUrl: onlineResultsOverrideUrl(settings.onlineResultsUrl, ofeed),
+    // vlastní /vysledky/online (Q116); ručně zadaná URL je nouzové přebití
+    onlineResultsUrl: settings.onlineResultsUrl,
   });
   // Odpočet do konce standardních přihlášek (ze slotu, jinak konec dne uzávěrky), v pozdním
   // termínu do konce pozdních přihlášek – s rozlišeným textem (Q401).

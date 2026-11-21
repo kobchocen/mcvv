@@ -6,17 +6,6 @@ import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
-import { runOfeedPublish } from "@/lib/ofeed/publisher";
-import {
-  getOfeedSettings,
-  parseEventId,
-  parsePassword,
-  parseProfile,
-  saveOfeedSettings,
-  switchOfeedProfile,
-  type OfeedProfileInput,
-} from "@/lib/ofeed/settings";
-
 import { parsePragueLocal } from "./admin-core";
 import { saveAssignment } from "./assignment";
 import { assignmentFromForm } from "./assignment-core";
@@ -60,9 +49,7 @@ import {
   parseStations,
   withStart,
 } from "./stations";
-import { getActiveTestRun, registerTestToken } from "./test-run";
-import { createDeviceToken, revokeDeviceToken } from "./tokens";
-import { normalizeAuthor, normalizeTokenSplits } from "./tokens-core";
+import { getActiveTestRun } from "./test-run";
 
 const PAGE = "/admin/den-zavodu/zive" as const;
 const SPLITS_PAGE = "/admin/den-zavodu/zive/casy" as const;
@@ -80,56 +67,6 @@ async function back(
 
 async function put(key: string, text: string) {
   await prisma.setting.upsert({ where: { key }, update: { text }, create: { key, text } });
-}
-
-/** Pole jednoho profilu z formuláře (`prefix` = "" pro ostrou akci, "test" pro testovací). */
-async function ofeedProfileFromForm(
-  formData: FormData,
-  prefix: "" | "test",
-): Promise<OfeedProfileInput> {
-  const field = (name: string) =>
-    prefix ? `${prefix}${name[0].toUpperCase()}${name.slice(1)}` : name;
-  const eventIdRaw = String(formData.get(field("eventId")) ?? "").trim();
-  const eventId = eventIdRaw ? parseEventId(eventIdRaw) : null;
-  if (eventIdRaw && !eventId) await back({ error: field("eventId") });
-  const passwordRaw = String(formData.get(field("password")) ?? "");
-  let password: string | null | undefined = undefined;
-  if (formData.get(field("clearPassword")) === "on") password = null;
-  else if (passwordRaw.trim()) {
-    password = parsePassword(passwordRaw);
-    if (!password) await back({ error: field("password") });
-  }
-  return { eventId, password };
-}
-
-export async function saveOfeedAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const live = await ofeedProfileFromForm(formData, "");
-  const test = await ofeedProfileFromForm(formData, "test");
-  await saveOfeedSettings({ enabled: formData.get("enabled") === "on", live, test });
-  revalidatePath("/[locale]", "page");
-  await back({ saved: "ofeed" });
-}
-
-/** Přepnutí testovací ↔ ostrá akce OFeed (Q33). Do testu jen s vyplněným ID testovací akce. */
-export async function switchOfeedProfileAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  const profile = parseProfile(String(formData.get("profile") ?? ""));
-  if (!profile) await back({ error: "ofeedProfile" });
-  if (profile === "test" && !(await getOfeedSettings()).profiles.test.eventId) {
-    await back({ error: "ofeedTestMissing" });
-  }
-  // Pojistka testovacího běhu (#186): během testu nejde přepnout na ostrou akci.
-  if (profile === "live" && (await getActiveTestRun())) await back({ error: "ofeedTestRun" });
-  await switchOfeedProfile(profile!, user);
-  revalidatePath("/[locale]", "page");
-  await back({ saved: "ofeedProfile" });
-}
-
-export async function publishNowAction(): Promise<void> {
-  await requireAdmin();
-  const result = await runOfeedPublish("manual");
-  await back({ published: result.status });
 }
 
 /** Doba z formuláře (90, 2 min, 1:30 …) → sekundy do nastavení; prázdné pole klíč smaže. */
@@ -166,48 +103,6 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
     await prisma.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
   }
   await back({ saved: "setup" });
-}
-
-export type CreateTokenState = { token?: string; label?: string; error?: string; test?: boolean };
-
-export async function createTokenAction(
-  _previous: CreateTokenState,
-  formData: FormData,
-): Promise<CreateTokenState> {
-  const session = await requireAdmin();
-  const label = String(formData.get("label") ?? "")
-    .trim()
-    .slice(0, 64);
-  const splits = normalizeTokenSplits(String(formData.get("splits") ?? "9"));
-  const author = normalizeAuthor(String(formData.get("author") ?? "LuM"));
-  const validFrom = parsePragueLocal(String(formData.get("validFrom") ?? ""));
-  const validUntil = parsePragueLocal(String(formData.get("validUntil") ?? ""));
-  if (!label) return { error: "label" };
-  if (!splits) return { error: "splits" };
-  if (!author) return { error: "author" };
-  if (!validFrom || !validUntil || validUntil <= validFrom) return { error: "window" };
-  if (validUntil.getTime() - validFrom.getTime() > 3 * 86_400_000) return { error: "window" };
-  const ctx = await getRaceContext();
-  const created = await createDeviceToken({
-    label,
-    year: ctx.year,
-    splits,
-    author,
-    validFrom,
-    validUntil,
-    createdBy: session.id,
-  });
-  // Klíč vytvořený během testovacího běhu je testovací: při ukončení testu se zneplatní.
-  const test = await registerTestToken(created.id);
-  revalidatePath("/[locale]/admin/den-zavodu/zive", "page");
-  return { token: created.token, label, test };
-}
-
-export async function revokeTokenAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const id = Number(formData.get("id"));
-  if (Number.isInteger(id) && id > 0) await revokeDeviceToken(id);
-  await back({ saved: "token" });
 }
 
 export async function resolveConflictAction(formData: FormData): Promise<void> {
@@ -250,7 +145,6 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     ctx.year,
     filter!,
     {
-      revokeTokens: formData.get("revokeTokens") === "on",
       clearZeroOverride: formData.get("clearZeroOverride") === "on",
     },
     session,
@@ -259,7 +153,6 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     {
       cleared: String(result.splitsTotal),
       entries: String(result.entries),
-      tokens: String(result.tokensRevoked),
     },
     SPLITS_PAGE,
   );

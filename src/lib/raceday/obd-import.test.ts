@@ -14,10 +14,8 @@ import {
 import {
   clubKey,
   planPresentationImport,
-  planResultsImport,
   presentationHasChanges,
   type PresentationSnapshot,
-  type ResultsSnapshot,
 } from "./obd-import";
 
 /* Syntetická data (žádní skuteční účastníci). */
@@ -136,25 +134,6 @@ describe("race files", () => {
       ["duplicate_bib", "category", "year", "bib", "duplicate_runner", "columns"],
     );
   });
-
-  it("kon_vysl.csv: bezec;rok;klub;kateg;time (same time allowed twice)", () => {
-    const parsed = parseRaceFile(
-      "kon_vysl",
-      lines("90000001;2026;TST;D;1234\n90000002;2026;TST;H;1234\n90000003;2026;TST;H;1,5"),
-      context,
-    );
-    assert.deepEqual(
-      parsed.rows.map((row) => [row.runnerId, row.clubId, row.categoryId, row.value]),
-      [
-        ["90000001", "TST", "D", 1234],
-        ["90000002", "TST", "H", 1234],
-      ],
-    );
-    assert.deepEqual(
-      parsed.errors.map((error) => error.code),
-      ["time"],
-    );
-  });
 });
 
 describe("planPresentationImport", () => {
@@ -246,83 +225,5 @@ describe("planPresentationImport", () => {
       { starts: starts.rows },
     );
     assert.notEqual(plan.hash, other.hash);
-  });
-});
-
-describe("planResultsImport", () => {
-  const snapshot: ResultsSnapshot = {
-    ...presentationSnapshot(),
-    categories: new Map([
-      ["D", "Ženy"],
-      ["H", "Muži"],
-    ]),
-    startBibs: new Map([
-      ["90000001", 601],
-      ["90000002", 1],
-    ]),
-    finishTimes: new Map([[601, 1230]]),
-    currentResults: [],
-  };
-  const context = { year: YEAR, categoryIds: new Set(snapshot.categories.keys()) };
-
-  it("fills club names (legacy bug) and compares with finish splits", () => {
-    const parsed = parseRaceFile(
-      "kon_vysl",
-      lines("90000001;2026;TST;D;1234\n90000002;2026;OLD;H;1500"),
-      context,
-    );
-    const plan = planResultsImport(snapshot, parsed.rows);
-    assert.deepEqual(plan.errors, []);
-    assert.deepEqual(
-      plan.rows.map((row) => [row.runnerName, row.clubName, row.time]),
-      [
-        ["Testová Žofie", "Testovací klub", 1234],
-        ["Příkladný Šimon", "Starý klub", 1500],
-      ],
-    );
-    assert.deepEqual(plan.copiedClubs, [{ id: "OLD", name: "Starý klub" }]);
-    assert.deepEqual(plan.splitDiffs, [
-      { runnerId: "90000001", bib: 601, official: 1234, split: 1230 },
-    ]);
-    assert.equal(plan.withoutSplit, 1);
-    assert.deepEqual(
-      plan.perCategory.map((c) => [c.categoryId, c.count]),
-      [
-        ["D", 1],
-        ["H", 1],
-      ],
-    );
-    assert.equal(plan.unchanged, false);
-  });
-
-  it("is idempotent against already imported results", () => {
-    const parsed = parseRaceFile("kon_vysl", lines("90000001;2026;TST;D;1234"), context);
-    const plan = planResultsImport(
-      {
-        ...snapshot,
-        currentResults: [
-          {
-            runnerId: "90000001",
-            clubId: "TST",
-            categoryId: "D",
-            time: 1234,
-            runnerName: "Testová Žofie",
-            clubName: "Testovací klub",
-          },
-        ],
-      },
-      parsed.rows,
-    );
-    assert.equal(plan.unchanged, true);
-    assert.equal(plan.replaced, 1);
-  });
-
-  it("reports runners missing from the register and from the start list", () => {
-    const parsed = parseRaceFile("kon_vysl", lines("90000077;2026;TST;H;999"), context);
-    const plan = planResultsImport(snapshot, parsed.rows);
-    assert.deepEqual(
-      plan.errors.map((error) => error.code),
-      ["unknown_runner"],
-    );
   });
 });

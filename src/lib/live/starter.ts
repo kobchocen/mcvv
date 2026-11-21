@@ -26,7 +26,7 @@ import {
 
 /**
  * Startér – zápis a snímek pro obrazovku `/start`. Jen `mcvv_start_check` (aktuální stav čísla)
- * a deník `mcvv_start_check_entry`; `mcvv_split`, výsledky, OFeed ani OBD se nemění. Do
+ * a deník `mcvv_start_check_entry`; `mcvv_split` ani výsledky se nemění. Do
  * `started_at` jde vždy plánovaný start ze startovky (ten platí pro výsledky), skutečný
  * okamžik pozdního startu a příznak pozdě jsou jen informace.
  */

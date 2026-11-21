@@ -2,7 +2,7 @@ import { parsePragueLocal } from "./admin-core";
 import { MAX_BIB, MAX_RACE_SECONDS } from "./ingest-core";
 import { startInstant } from "./start-time";
 import { FINISH_SPLIT, isSplitCode } from "./stations";
-import { isoWithOffset } from "@/lib/ofeed/iof-xml";
+import { isoWithOffset } from "@/lib/date/iso-offset";
 
 /**
  * Ruční zápis a oprava mezičasů adminem (návrh (c)) – čistá logika bez DB.

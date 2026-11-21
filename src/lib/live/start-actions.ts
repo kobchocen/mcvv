@@ -5,7 +5,7 @@ import { getLocale } from "next-intl/server";
 
 import { redirect } from "@/i18n/routing";
 import { requireAdmin } from "@/lib/admin/staff";
-import { isoWithOffset } from "@/lib/ofeed/iof-xml";
+import { isoWithOffset } from "@/lib/date/iso-offset";
 
 import { clearBlocked, confirmationMatches } from "./clear-core";
 import { isValidBib, normalizeReason } from "./manual-core";

@@ -13,8 +13,22 @@ operátor 1,3 / 2,7 km / cíl ─▶ /mezicasy (web, offline fronta) ─▶ POST
 Integrace s OBD (LuM: klient `obd-klient`, API `/api/race/{rok}/splits`, export prihl2obd,
 import `kon_vysl.csv`) a publikace do OFeed byly odstraněny (listopad 2026). Kód je v archivu:
 tag `archive-obd-ofeed-2026-11`, větev `archive/obd-ofeed` (návod na obnovu v `ARCHIVE.md`).
-Zůstává jen import po prezentaci z OBD (`/admin/den-zavodu/prezentace`), než ho nahradí
-startovka přímo z přihlášek.
+Import po prezentaci z OBD zmizel také: startovka je jediná a bere se přímo z přihlášek.
+
+## Startovka (jediný zdroj)
+
+- `src/lib/race/roster.ts` (`loadRoster`, `rosterHasBib`): řádek přihlášky s číslem
+  (`mcvv_prihlaska_radek.cislo > 0`) na **zaplacené** přihlášce (`isEntryValid` – nezrušená,
+  s běžci, zaplacená / potvrzená pořadatelem / 0 Kč). Nezaplacená přihláška do startovky nepatří,
+  ani když má číslo.
+- Čtou ji: veřejná startovka a PDF, tisk čísel, úvodní stránka, Start (startér, kontrola startu,
+  `autoMarkStart`), příjem mezičasů (`unknown-bib`), ruční časy, speaker, online výsledky,
+  tombola a mezičasy ve výsledcích.
+- `mcvv_start` je jen archiv ročníků do 2025 (`ROSTER_SINCE = 2026`), nic do něj nezapisuje.
+- Potvrzení losování ve Startovce (uložení návrhu) startovku hned zveřejní
+  (`startlist_drawn_year` + `startlist_published` v `mcvv_setting`). Přepínač v nastavení je jen
+  nouzové skrytí; potvrzené losování (zámek generátoru, čísla pro zaplacené pozdní přihlášky)
+  skrytí neruší. Po losování žádné storno – čísla zůstávají obsazená.
 
 ## Data
 

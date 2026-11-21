@@ -264,7 +264,7 @@ Klient: `src/lib/db/client.ts` — Prisma 7 driver adapter, singleton na `global
 | `Registration`     | `mcvv_prihlaska`       | nepoužito v UI                                               |
 | `RegistrationLine` | `mcvv_prihlaska_radek` | nepoužito v UI                                               |
 | `Payment`          | `mcvv_platba`          | `registrationId` je `Char(3)`, **bez FK**                    |
-| `StartEntry`       | `mcvv_start`           | mapování bib → mezičasy                                      |
+| `StartEntry`       | `mcvv_start`           | archiv startovek do 2025 (od 2026 startovka z přihlášek)     |
 | `Result`           | `mcvv_time`            | časy v sekundách                                             |
 | `Split`            | `mcvv_split`           | mezičasy; split `"9"` se na archivu zahazuje                 |
 | `User`             | `users`                | legacy admin, plaintext                                      |

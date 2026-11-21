@@ -4,8 +4,8 @@
  * - `registrar` – běžný přihlašující (výchozí role po registraci),
  * - `organizer` – pořadatel, plná administrace kromě nastavení a správy uživatelů,
  * - `admin` – vše včetně nastavení a správy rolí,
- * - `timing` – „Časomíra“ (externí dodavatel OBD): jen sekce „Den závodu“
- *   (export podkladů pro OBD, importy z OBD),
+ * - `timing` – „Časomíra“: jen přehled „Den závodu“ (dřív export a importy OBD; role se
+ *   v navazujícím PR rozdělí na Měření a Hlavního rozhodčího),
  * - `splitmaker` – obsluha mezičasových kontrol: žádná administrace, jen stránka
  *   mezičasů (#121), kterou spouští podle role,
  * - `race_office` – „Závodní kancelář“ (#207): žádná administrace, jen pokladna
@@ -37,7 +37,7 @@ export function isStaffRole(role: UserRole): boolean {
   return role === "organizer" || role === "admin";
 }
 
-/** Sekce „Den závodu“ (export pro OBD, importy z OBD). */
+/** Sekce „Den závodu“ (přehled dne závodu). */
 export function canAccessRaceDay(role: UserRole): boolean {
   return role === "timing" || isStaffRole(role);
 }

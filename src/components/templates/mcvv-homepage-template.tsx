@@ -18,6 +18,7 @@ import { adminAccess, getSession } from "@/lib/auth/session";
 import { adminHomeHref } from "@/lib/auth/roles";
 import { getHomeCounts } from "@/lib/home/cached";
 import { currentRaceYear } from "@/lib/entries/year";
+import { loadLiveWindow } from "@/lib/race/official";
 import { deadlineCountdown } from "@/lib/slots/core";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
@@ -45,18 +46,22 @@ export async function McvvHomepageTemplate({
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
   const { year, open, raceDate, startModel, slots, standardEnd } = await currentRaceYear();
-  const [settings, { resultsCount, startlistCount, entriesCount }] = await Promise.all([
+  const now = new Date();
+  const [settings, { resultsCount, startlistCount, entriesCount }, live] = await Promise.all([
     getSiteSettings(),
     // cached per replica for a minute, revalidated by registrations and imports (DB load)
     getHomeCounts(year),
+    // okno živých výsledků (#337): ruční přebití a zveřejnění oficiálních výsledků
+    loadLiveWindow(now),
   ]);
   const raceStart = raceStartFor(raceDate, year, startModel.zeroSeconds);
-  const now = new Date();
   const phase = resolveHeroPhase({
     now,
     raceStart,
     startlistPublished: settings.startlistPublished,
     resultsCount,
+    liveWindow: live.mode,
+    published: live.state === "published",
   });
   const buttons = heroButtons({
     phase,

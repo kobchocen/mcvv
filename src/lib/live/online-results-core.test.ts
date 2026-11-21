@@ -10,6 +10,7 @@ import {
   decodeOnline,
   effectiveDnsGrace,
   encodeOnline,
+  gateOnline,
   findCategoryBySlug,
   hasStarted,
   isDns,
@@ -273,4 +274,46 @@ test("clubDictionary groups clubs by id and skips runners without a club", () =>
   assert.equal(indexOf({ id: "CHC2", name: "K.O.B. Choceň" }), 2);
   assert.equal(indexOf({ id: "000", name: "neregistrovaný" }), null);
   assert.equal(indexOf(undefined), null);
+});
+
+test("gateOnline hides live times outside the race window (#337)", () => {
+  const snapshot = {
+    year: 2026,
+    dnsGraceS: 300,
+    categories: [{ id: "A", name: "muži", sex: "M", slug: "muzi", short: "Muži" }],
+    runners: [
+      {
+        bib: 1,
+        name: "Jan",
+        cat: "A",
+        start: 1000,
+        m1: 300,
+        m2: 600,
+        fin: 900,
+        started: true,
+        late: 20,
+        club: null,
+      },
+    ],
+    tr: [{ bib: 1, kind: "tr" }] as never[],
+    clubs: [],
+  };
+  const open = gateOnline(snapshot, "open");
+  assert.equal(open.window, "open");
+  assert.equal(open.runners[0].fin, 900);
+  for (const state of ["before", "closed", "published"] as const) {
+    const gated = gateOnline(snapshot, state);
+    assert.equal(gated.window, state);
+    assert.deepEqual(
+      [gated.runners[0].m1, gated.runners[0].m2, gated.runners[0].fin, gated.runners[0].late],
+      [null, null, null, null],
+    );
+    assert.deepEqual(gated.tr, []);
+    assert.equal(gated.runners[0].bib, 1);
+  }
+  assert.equal(gateOnline(snapshot, "published").officialUrl, "/results/2026");
+  assert.equal(gateOnline(snapshot, "closed").officialUrl, undefined);
+  const wire = JSON.stringify(encodeOnline(gateOnline(snapshot, "published")));
+  assert.match(wire, /"window":"published"/);
+  assert.ok(!wire.includes("900"));
 });

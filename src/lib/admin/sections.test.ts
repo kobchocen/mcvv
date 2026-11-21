@@ -111,6 +111,7 @@ describe("admin sections registry", () => {
       "raceControl",
       "raceControl.overview",
       "raceControl.finish",
+      "raceControl.official",
       "screens",
       "screens.finish",
     ]);

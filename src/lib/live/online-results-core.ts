@@ -12,6 +12,7 @@ import { clubIdSlug, clubKey, isNoClub } from "@/lib/clubs/core";
 
 import type { OnlineClub } from "./follow-core";
 import type { TrMark } from "./records-live-core";
+import { officialResultsPath, type LiveWindowState } from "@/lib/race/official-core";
 import {
   categoryState,
   hasRecord,
@@ -62,7 +63,32 @@ export type OnlineSnapshot = {
   tr: TrMark[];
   /** Číselník klubů startovky (podle id, Q178); závodník na něj odkazuje indexem. */
   clubs: OnlineClub[];
+  /** Okno veřejných živých výsledků (#337); chybí = otevřeno (starší snímek). */
+  window?: LiveWindowState;
+  /** Po zveřejnění oficiálních výsledků: kam přesměrovat (bez locale). */
+  officialUrl?: string;
 };
+
+/**
+ * Veřejný snímek podle okna živých výsledků (#337): mimo okno žádné časy ani traťové rekordy
+ * (startovka zůstává kvůli tabuli v cíli), po zveřejnění navíc cíl přesměrování.
+ */
+export function gateOnline(snapshot: OnlineSnapshot, state: LiveWindowState): OnlineSnapshot {
+  if (state === "open") return { ...snapshot, window: "open" };
+  return {
+    ...snapshot,
+    window: state,
+    ...(state === "published" ? { officialUrl: officialResultsPath(snapshot.year) } : {}),
+    tr: [],
+    runners: snapshot.runners.map((runner) => ({
+      ...runner,
+      m1: null,
+      m2: null,
+      fin: null,
+      late: null,
+    })),
+  };
+}
 
 /**
  * Kompaktní podoba snímku na drátě (`/api/live/results`): závodník jako n-tice

@@ -1,7 +1,12 @@
 import type { NextRequest } from "next/server";
 
 import { NO_STORE } from "@/lib/http/no-store";
-import { ONLINE_RESULTS_CACHE_CONTROL, onlineResultsCache } from "@/lib/live/online-results";
+import {
+  isGatedBody,
+  ONLINE_RESULTS_CACHE_CONTROL,
+  ONLINE_RESULTS_CLOSED_CACHE_CONTROL,
+  onlineResultsCache,
+} from "@/lib/live/online-results";
 import { etagMatches } from "@/lib/live/speaker-cache";
 import { env } from "@/lib/env";
 import { clientIp, createRateLimiter, liveResultsRateLimit } from "@/lib/security/rate-limit";
@@ -36,7 +41,10 @@ export async function GET(request: NextRequest) {
     ETag: cached.etag,
     // sdílené cache (CDN, proxy, prohlížeč) smí odpověď držet 5 s (= TTL snímku) a chvíli
     // ještě vydat starou, než ji na pozadí obnoví; ověření přes ETag → 304
-    "Cache-Control": ONLINE_RESULTS_CACHE_CONTROL,
+    // mimo okno živých výsledků (#337) bez sdílené cache – po zveřejnění hned přesměrování
+    "Cache-Control": isGatedBody(cached.body)
+      ? ONLINE_RESULTS_CLOSED_CACHE_CONTROL
+      : ONLINE_RESULTS_CACHE_CONTROL,
     "X-Robots-Tag": "noindex",
   };
   if (etagMatches(request.headers.get("if-none-match"), cached.etag)) {

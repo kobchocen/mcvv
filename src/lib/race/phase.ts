@@ -23,6 +23,10 @@ export type HeroPhaseInput = {
   raceStart: Date;
   startlistPublished: boolean;
   resultsCount: number;
+  /** Ruční přebití okna živých výsledků (#337); výchozí automatika od nuly. */
+  liveWindow?: "auto" | "open" | "closed";
+  /** Oficiální výsledky ročníku zveřejněny (#337). */
+  published?: boolean;
 };
 
 export function resolveHeroPhase({
@@ -30,11 +34,16 @@ export function resolveHeroPhase({
   raceStart,
   startlistPublished,
   resultsCount,
+  liveWindow = "auto",
+  published = false,
 }: HeroPhaseInput): HeroPhase {
-  if (resultsCount > 0) {
+  if (resultsCount > 0 || published) {
     return "D";
   }
-  if (now.getTime() >= raceStart.getTime()) {
+  if (liveWindow === "closed") {
+    return startlistPublished ? "B" : "A";
+  }
+  if (liveWindow === "open" || now.getTime() >= raceStart.getTime()) {
     return "C";
   }
   if (startlistPublished) {

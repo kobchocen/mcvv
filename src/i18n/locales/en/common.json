@@ -1548,7 +1548,10 @@
     "lateState_draftCancelledTitle": "Unsubmitted entry cancelled automatically {at}.",
     "lateState_cancelled": "cancelled",
     "lateAwaitingSummary": "{count, plural, one {# late entry is} other {# late entries are}} waiting for payment.",
-    "lateAwaitingShow": "Show late entries"
+    "lateAwaitingShow": "Show late entries",
+    "toolsIntro": "Your race-day screens and sections. They open full screen.",
+    "navSplitEntry": "Split times – checkpoint entry",
+    "navStarter": "Starter"
   },
   "Stats": {
     "overview": {

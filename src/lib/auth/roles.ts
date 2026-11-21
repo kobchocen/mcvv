@@ -93,26 +93,46 @@ export function canMergeClubs(role: UserRole): boolean {
   return role === "admin";
 }
 
-/** Úroveň přístupu do /admin: plná, jen „Den závodu“, nebo žádná. */
-export type AdminAccess = "full" | "raceday" | "none";
+/**
+ * Úroveň přístupu do /admin:
+ * - `full` – plná administrace (organizer, admin),
+ * - `raceday` – rozcestník a „Den závodu“ (timing),
+ * - `tools` – jen rozcestník `/admin` s odkazy na vlastní obrazovku dne závodu
+ *   (splitmaker → mezičasy, race_office → pokladna, starter → start); obrazovky samotné
+ *   leží mimo /admin a hlídají si přístup samy,
+ * - `none` – závodník (`registrar`), bez kolečka a bez administrace.
+ */
+export type AdminAccess = "full" | "raceday" | "tools" | "none";
 
 export function adminAccess(role: UserRole): AdminAccess {
   if (isStaffRole(role)) return "full";
   if (canAccessRaceDay(role)) return "raceday";
-  return "none";
+  if (role === "registrar") return "none";
+  return "tools";
 }
 
+/** Má účet ozubené kolečko a rozcestník administrace? Všichni kromě závodníka. */
+export function hasAdminHome(role: UserRole): boolean {
+  return adminAccess(role) !== "none";
+}
+
+export const ADMIN_HOME_PATH = "/admin";
 export const RACE_DAY_PATH = "/admin/den-zavodu";
 
-/** Kam vede odkaz „Administrace“ v hlavičce. */
-export function adminHomeHref(role: UserRole): string {
-  return adminAccess(role) === "raceday" ? RACE_DAY_PATH : "/admin";
+/** Kam vede ozubené kolečko v hlavičce: vždy rozcestník administrace. */
+export function adminHomeHref(): string {
+  return ADMIN_HOME_PATH;
 }
 
 /** Smí účet s danou úrovní přístupu otevřít admin cestu (bez locale, bez query)? */
 export function adminPathAllowed(access: AdminAccess, path: string): boolean {
-  if (access === "full") return path === "/admin" || path.startsWith("/admin/");
-  if (access === "raceday") return path === RACE_DAY_PATH || path.startsWith(`${RACE_DAY_PATH}/`);
+  if (access === "full") return path === ADMIN_HOME_PATH || path.startsWith(`${ADMIN_HOME_PATH}/`);
+  if (access === "raceday") {
+    return (
+      path === ADMIN_HOME_PATH || path === RACE_DAY_PATH || path.startsWith(`${RACE_DAY_PATH}/`)
+    );
+  }
+  if (access === "tools") return path === ADMIN_HOME_PATH;
   return false;
 }
 

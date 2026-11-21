@@ -69,6 +69,13 @@ test("an account without admin access is redirected, staff and timing pass", () 
     adminGate({ ...base, pathname: "/cs/admin/den-zavodu", cookieRole: "timing" }).kind,
     "pass",
   );
+  for (const role of ["splitmaker", "starter", "race_office"] as const) {
+    assert.equal(
+      adminGate({ ...base, pathname: "/cs/admin", cookieRole: role }).kind,
+      "pass",
+      role,
+    );
+  }
 });
 
 test("server actions, RSC navigation and POSTs are not redirected by the proxy", () => {

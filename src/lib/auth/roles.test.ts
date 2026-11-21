@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   adminAccess,
   adminHomeHref,
+  hasAdminHome,
   adminPathAllowed,
   canAccessRaceDay,
   canAccessSplits,
@@ -44,7 +45,7 @@ describe("role permissions", () => {
     }
     assert.equal(canMarkSalePaidBank("organizer"), false);
     assert.equal(canChangeSaleStatus("race_office", "paid_bank"), false);
-    assert.equal(adminAccess("race_office"), "none");
+    assert.equal(adminAccess("race_office"), "tools");
     assert.equal(isStaffRole("race_office"), false);
     assert.equal(canAccessSplits("race_office"), false);
     assert.equal(requiresVerifiedEmail("race_office"), true);
@@ -74,8 +75,8 @@ describe("role permissions", () => {
     assert.ok(!canAccessSplits("timing"));
     assert.ok(adminPathAllowed("raceday", "/admin/den-zavodu"));
     assert.ok(adminPathAllowed("raceday", "/admin/den-zavodu/import"));
+    assert.ok(adminPathAllowed("raceday", "/admin"));
     for (const path of [
-      "/admin",
       "/admin/prihlasky",
       "/admin/platby",
       "/admin/nastaveni",
@@ -86,22 +87,36 @@ describe("role permissions", () => {
     ]) {
       assert.ok(!adminPathAllowed("raceday", path), path);
     }
-    assert.equal(adminHomeHref("timing"), "/admin/den-zavodu");
+    assert.equal(adminHomeHref(), "/admin");
   });
-  it("splitmaker and registrar have no administration", () => {
-    for (const role of ["splitmaker", "registrar"] as const) {
-      assert.equal(adminAccess(role), "none");
-      assert.ok(!canAccessRaceDay(role));
-      assert.ok(!adminPathAllowed(adminAccess(role), "/admin/den-zavodu"));
+  it("registrar has no administration and no gear", () => {
+    assert.equal(adminAccess("registrar"), "none");
+    assert.ok(!hasAdminHome("registrar"));
+    assert.ok(!adminPathAllowed("none", "/admin"));
+  });
+  it("splitmaker, starter and race office get the gear and only the /admin home", () => {
+    for (const role of ["splitmaker", "starter", "race_office"] as const) {
+      assert.equal(adminAccess(role), "tools", role);
+      assert.ok(hasAdminHome(role), role);
+      assert.equal(adminHomeHref(), "/admin", role);
+      assert.ok(!canAccessRaceDay(role), role);
+      assert.ok(adminPathAllowed(adminAccess(role), "/admin"), role);
+      assert.ok(!adminPathAllowed(adminAccess(role), "/admin/den-zavodu"), role);
+      assert.ok(!adminPathAllowed(adminAccess(role), "/admin/prihlasky"), role);
     }
     assert.ok(canAccessSplits("splitmaker"));
+  });
+  it("everybody except a runner has the gear", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(hasAdminHome(role), role !== "registrar", role);
+    }
   });
   it("organizer and admin keep full access including race day", () => {
     for (const role of ["organizer", "admin"] as const) {
       assert.equal(adminAccess(role), "full");
       assert.ok(canAccessRaceDay(role));
       assert.ok(canAccessSplits(role));
-      assert.equal(adminHomeHref(role), "/admin");
+      assert.equal(adminHomeHref(), "/admin");
     }
   });
   it("new restricted roles need a verified e-mail like registrar", () => {

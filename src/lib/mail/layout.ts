@@ -84,6 +84,8 @@ export type BrandedEmailInput = {
   htmlBlocks: string[];
   text: string;
   footer?: string;
+  /** Jazyk dokumentu (atribut lang), výchozí cs. */
+  locale?: string;
 };
 
 /** Same frame as renderTransactionalEmail, but with free-form content (entry confirmation etc.). */
@@ -92,7 +94,7 @@ export function renderBrandedEmail(input: BrandedEmailInput): { html: string; te
   const footer =
     input.footer ?? "Tento e-mail jste dostali, protože jste se přihlásili na závod MCVV na";
   const html = `<!doctype html>
-<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.subject)}</title></head>
+<html lang="${escapeHtml(input.locale ?? "cs")}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.subject)}</title></head>
 <body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f6f1"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff">

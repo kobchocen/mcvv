@@ -11,7 +11,13 @@ import { McvvPollRefresh } from "@/components/organisms/mcvv-poll-refresh";
 import { Link, type Locale } from "@/i18n/routing";
 import { canAccess } from "@/lib/admin/access";
 import { BANK_ACCOUNT, BANK_IBAN, spdPaymentQrSvg } from "@/lib/entries/spd";
-import { cancelSale, markSalePaidBank, markSalePaidCash } from "@/lib/sales/actions";
+import {
+  cancelSale,
+  markSalePaidBank,
+  markSalePaidCash,
+  sendSaleReceiptAction,
+} from "@/lib/sales/actions";
+import { RECEIPT_LOCALES } from "@/lib/sales/receipt-mail";
 import { saleQrMessage } from "@/lib/sales/core";
 import { cashDeskPageSession } from "@/lib/sales/guard";
 import { getSale } from "@/lib/sales/sales";
@@ -32,8 +38,8 @@ const when = (d: Date | null) =>
   d ? d.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" }) : "–";
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
-const FLASH_OK = new Set(["paid_cash", "paid_bank", "cancelled"]);
-const FLASH_ERR = new Set(["forbidden", "not_found", "not_unpaid"]);
+const FLASH_OK = new Set(["paid_cash", "paid_bank", "cancelled", "receipt"]);
+const FLASH_ERR = new Set(["forbidden", "not_found", "not_unpaid", "invalid_email", "no_email"]);
 
 /** Detail prodejky (#207): QR platba, stav, „Zaplaceno hotově“, storno. */
 export default async function SaleDetailPage({ params, searchParams }: PageProps) {
@@ -65,6 +71,7 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
             className="border border-emerald-500/60 bg-emerald-500/10 p-3 text-sm font-semibold"
           >
             {t(`flash_${ok}`)}
+            {one(query.uctenka) === "1" ? ` ${t("flash_receiptAuto")}` : ""}
           </p>
         ) : null}
         {FLASH_ERR.has(err) ? (
@@ -177,6 +184,51 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
             </tbody>
           </table>
         </section>
+
+        <form
+          action={sendSaleReceiptAction}
+          className="grid gap-2 border border-race-line/60 bg-race-surface p-3"
+          data-testid="sale-receipt"
+        >
+          <input type="hidden" name="id" value={sale.id} />
+          <label className="text-sm font-semibold" htmlFor="receipt-email">
+            {t("receiptTitle")}
+          </label>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <input
+              id="receipt-email"
+              name="email"
+              type="email"
+              maxLength={128}
+              defaultValue={sale.email ?? ""}
+              placeholder={t("receiptEmailPlaceholder")}
+              className="h-11 border border-race-line/60 bg-race-deep px-2 text-sm"
+            />
+            <select
+              name="locale"
+              defaultValue={sale.locale ?? "cs"}
+              aria-label={t("receiptLocale")}
+              className="h-11 border border-race-line/60 bg-race-deep px-2 text-sm"
+            >
+              {RECEIPT_LOCALES.map((code) => (
+                <option key={code} value={code}>
+                  {code.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </div>
+          {sale.receiptSentAt ? (
+            <p className="text-xs text-race-muted">
+              {t("receiptSent", { at: when(sale.receiptSentAt) })}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            className="h-11 border border-race-line bg-race-surface text-sm font-semibold"
+          >
+            {sale.receiptSentAt ? t("receiptResend") : t("receiptSend")}
+          </button>
+        </form>
 
         {unpaid ? (
           <section className="grid gap-3" aria-label={t("actions")}>

@@ -1107,6 +1107,12 @@ model Sale {
   /// Zaplacení prodejky = platba přihlášky, storno = zrušení přihlášky a uvolnění čísla.
   registrationId Int?      @map("prihlaska_id") @db.SmallInt
   updatedAt      DateTime  @updatedAt @map("updated_at")
+  /// E-mail pro účtenku (#223), volitelný.
+  email          String?   @map("email") @db.VarChar(128)
+  /// Jazyk účtenky (cs | en | de | pl | uk), prázdné = cs.
+  locale         String?   @map("jazyk") @db.VarChar(2)
+  /// Kdy naposledy odešla účtenka e-mailem (do fronty).
+  receiptSentAt  DateTime? @map("uctenka_odeslana_at")
 
   lines SaleLine[]
 

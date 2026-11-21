@@ -7,6 +7,7 @@ import { redirect } from "@/i18n/routing";
 import { formInt, formString } from "@/lib/admin/parse";
 import { currentRaceYear } from "@/lib/entries/year";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
+import { normalizeEmail } from "@/lib/newsletter/core";
 
 import { parseSaleItemInput } from "./core";
 import { cashDeskActionSession, saleStatusSection } from "./guard";
@@ -16,6 +17,7 @@ import {
   changeSaleStatus,
   createSale,
   createSaleItem,
+  sendSaleReceipt,
   updateSaleItem,
   type CreateSaleResult,
 } from "./sales";
@@ -89,15 +91,20 @@ export async function suggestOnsiteBibAction(
 /** Pokladna: vytvořit prodejku z vybraných položek (ceny počítá server). */
 export async function createSaleAction(input: {
   lines: ReadonlyArray<{ itemId: number; quantity: number }>;
-}): Promise<CreateSaleResult | { ok: false; error: "forbidden" }> {
+  email?: string;
+  locale?: string;
+}): Promise<CreateSaleResult | { ok: false; error: "forbidden" | "invalid_email" }> {
   const session = await cashDeskActionSession();
   if (!session) return { ok: false, error: "forbidden" };
   const lines = Array.isArray(input?.lines) ? input.lines.slice(0, 100) : [];
   const { year } = await currentRaceYear();
+  const email = typeof input?.email === "string" ? input.email.trim().slice(0, 128) : "";
+  if (email && !normalizeEmail(email)) return { ok: false, error: "invalid_email" };
   const result = await createSale(
     session,
     year,
     lines.map((l) => ({ itemId: Number(l?.itemId), quantity: Number(l?.quantity) })),
+    { email, locale: typeof input?.locale === "string" ? input.locale : null },
   );
   if (result.ok) revalidate();
   return result;
@@ -121,6 +128,11 @@ async function changeStatus(formData: FormData, to: "paid_cash" | "paid_bank" | 
   revalidate();
   if (result === "ok") revalidateEntries();
   if (result !== "ok") return toSale(id, { chyba: result });
+  // Účtenka (#223): po zaplacení ji pošleme automaticky, pokud prodejka má e-mail.
+  if (to !== "cancelled") {
+    const receipt = await sendSaleReceipt(session, id);
+    if (receipt === "ok") return toSale(id, { ok: to, uctenka: "1" });
+  }
   return toSale(id, { ok: to });
 }
 
@@ -175,4 +187,19 @@ export async function toggleSaleItem(formData: FormData): Promise<void> {
   const ok = await updateSaleItem(session, id, { active });
   revalidate();
   return toItems(ok ? { ok: active ? "activated" : "deactivated" } : { chyba: "not_found" });
+}
+
+/** Poslat (znovu) účtenku e-mailem z detailu prodejky (#223). */
+export async function sendSaleReceiptAction(formData: FormData): Promise<void> {
+  const session = await cashDeskActionSession();
+  const id = formInt(formData, "id");
+  if (!id) return;
+  if (!session) return toSale(id, { chyba: "forbidden" });
+  const result = await sendSaleReceipt(session, id, {
+    email: formString(formData, "email"),
+    locale: formString(formData, "locale"),
+  });
+  revalidate();
+  if (result !== "ok") return toSale(id, { chyba: result });
+  return toSale(id, { ok: "receipt" });
 }

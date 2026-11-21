@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 
 import { useRouter } from "@/i18n/routing";
 import { createSaleAction } from "@/lib/sales/actions";
+import { RECEIPT_LOCALES } from "@/lib/sales/receipt-mail";
 import { cartTotal, SALE_QTY_MAX } from "@/lib/sales/core";
 
 type Item = { id: number; name: string; price: number };
@@ -20,6 +21,8 @@ export function McvvCashDeskClient({ items }: { items: Item[] }) {
   const router = useRouter();
   const [qty, setQty] = useState<Record<number, number>>({});
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [locale, setLocale] = useState<string>("cs");
   const [pending, startTransition] = useTransition();
 
   const total = useMemo(() => cartTotal(items, qty), [items, qty]);
@@ -39,9 +42,10 @@ export function McvvCashDeskClient({ items }: { items: Item[] }) {
       .filter(([, q]) => q > 0)
       .map(([itemId, quantity]) => ({ itemId: Number(itemId), quantity }));
     startTransition(async () => {
-      const result = await createSaleAction({ lines });
+      const result = await createSaleAction({ lines, email, locale });
       if (result.ok) {
         setQty({});
+        setEmail("");
         router.push({ pathname: "/kancelar/prodejky/[id]", params: { id: String(result.id) } });
       } else {
         setError(t(`error_${result.error}`));
@@ -121,6 +125,32 @@ export function McvvCashDeskClient({ items }: { items: Item[] }) {
           >
             {czk(total)}
           </span>
+        </div>
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="off"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            maxLength={128}
+            placeholder={t("receiptEmailPlaceholder")}
+            aria-label={t("receiptEmail")}
+            className="h-11 border border-race-line/60 bg-race-surface px-2 text-sm"
+            data-testid="receipt-email"
+          />
+          <select
+            value={locale}
+            onChange={(event) => setLocale(event.target.value)}
+            aria-label={t("receiptLocale")}
+            className="h-11 border border-race-line/60 bg-race-surface px-2 text-sm"
+          >
+            {RECEIPT_LOCALES.map((code) => (
+              <option key={code} value={code}>
+                {code.toUpperCase()}
+              </option>
+            ))}
+          </select>
         </div>
         {error ? (
           <p role="alert" className="text-sm font-semibold text-red-600 dark:text-red-400">

@@ -48,6 +48,8 @@ export type AuditAction =
   | "sale.paid_cash"
   | "sale.paid_bank_manual"
   | "sale.cancelled"
+  // E-mailová účtenka k prodejce (#223).
+  | "sale.receipt_sent"
   | "sale_item.created"
   | "sale_item.updated"
   // Ruční sloučení id klubů (#104). `club.merge` přepisuje data (Q45), detail = stav před

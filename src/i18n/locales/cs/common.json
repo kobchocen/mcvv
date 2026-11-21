@@ -2267,7 +2267,19 @@
     "onsiteBibSuggested": "Navržené nejbližší volné číslo v okně kategorie. Pokud ho mezitím obsadí jiná pokladna, při uložení se přidělí další volné.",
     "onsiteBibSuggestedOutside": "Okno kategorie je plné – navrženo nejbližší volné číslo mimo něj (stejná startovní řada).",
     "onsiteBibOverride": "Ručně zadané číslo (návrh byl {bib}).",
-    "onsite_no_bib": "Pro tuto kategorii není volné žádné číslo – zadejte číslo ručně."
+    "onsite_no_bib": "Pro tuto kategorii není volné žádné číslo – zadejte číslo ručně.",
+    "receiptEmail": "E-mail pro účtenku",
+    "receiptEmailPlaceholder": "E-mail pro účtenku (nepovinné)",
+    "receiptLocale": "Jazyk účtenky",
+    "receiptTitle": "Účtenka e-mailem",
+    "receiptSend": "Poslat účtenku",
+    "receiptResend": "Poslat účtenku znovu",
+    "receiptSent": "Naposledy odesláno {at}.",
+    "flash_receipt": "Účtenka je ve frontě k odeslání.",
+    "flash_receiptAuto": "Účtenka odešla na uložený e-mail.",
+    "flashError_invalid_email": "Neplatný e-mail.",
+    "flashError_no_email": "Zadejte e-mail pro účtenku.",
+    "error_invalid_email": "Neplatný e-mail pro účtenku."
   },
   "AdminUsers": {
     "title": "Uživatelé a role",

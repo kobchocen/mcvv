@@ -8,8 +8,7 @@ import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
-import { canMergeClubs } from "@/lib/auth/roles";
+import { canAccess, requireSection } from "@/lib/admin/access";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -26,7 +25,8 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireStaff();
+  await requireSection("dictionaries.clubs", "read");
+  const canMerge = await canAccess("dictionaries.clubs.merge", "write");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const cleanup = await getTranslations({ locale, namespace: "ClubCleanup" });
   const { rok } = await searchParams;
@@ -55,7 +55,7 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
               merge: copy("clubsSubnavMerge"),
               orphans: cleanup("title"),
             },
-            canMergeClubs(session.role),
+            canMerge,
             "list",
           )}
         />

@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {} from "node:fs";
 import { test } from "node:test";
+import { readGuardSource } from "@/lib/admin/guard-source";
 
 // The actions module needs the Next.js request context, so its guards are checked in the source.
-const source = readFileSync(new URL("./club-merge-actions.ts", import.meta.url), "utf8");
-const page = readFileSync(
+const source = readGuardSource(new URL("./club-merge-actions.ts", import.meta.url));
+const page = readGuardSource(
   new URL("../../app/[locale]/admin/ciselniky/kluby/slouceni/page.tsx", import.meta.url),
-  "utf8",
 );
 
 function body(name: string): string {
@@ -39,7 +39,7 @@ test("manual preview takes the main and merged id directly (Q245)", () => {
 });
 
 test("the merge page hides preview and merge controls from non-admins", () => {
-  assert.match(page, /const canMerge = canMergeClubs\(session\.role\);/);
+  assert.match(page, /const canMerge = await canAccess\("dictionaries\.clubs\.merge", "write"\);/);
   assert.match(page, /canMerge && query\.hlavni && query\.sloucit/);
   assert.match(page, /canMerge \? \(\s*<PendingSubmitButton formAction=\{previewClubMergeAction\}/);
   // The manual picker (club list incl. names) is only built for admins.

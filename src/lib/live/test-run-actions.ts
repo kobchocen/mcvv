@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { redirect } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
 
 import {
@@ -33,7 +33,7 @@ async function back(query: Record<string, string>): Promise<never> {
 
 /** „Spustit test“ (#186, Q69): jen admin, jen před dnem závodu. */
 export async function startTestRunAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.testRun", "write");
   const now = new Date();
   const [active, cutoff] = await Promise.all([getActiveTestRun(now), getTestCutoff(now)]);
   const zero = resolveTestZero(
@@ -55,7 +55,7 @@ export async function startTestRunAction(formData: FormData): Promise<void> {
 
 /** „Ukončit test“: ukončí a automaticky uklidí (Q71), bez dalšího potvrzení. */
 export async function endTestRunAction(): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.testRun", "write");
   const result = await endTestRun("manual", session);
   await back(result ? { test: "ended" } : { testError: "notActive" });
 }

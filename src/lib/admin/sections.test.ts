@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, it } from "node:test";
 
@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/roles";
 
 import { ADMIN_SECTIONS, backHref, locate, navTree, visibleSections } from "./sections";
+import { readGuardSource } from "@/lib/admin/guard-source";
 
 const ADMIN_DIR = join(process.cwd(), "src", "app", "[locale]", "admin");
 
@@ -24,7 +25,7 @@ function adminPages(): { path: string; source: string }[] {
       if (statSync(full).isDirectory()) walk(full);
       else if (name === "page.tsx") {
         const rel = relative(ADMIN_DIR, dir).split(sep).filter(Boolean).join("/");
-        pages.push({ path: rel ? `/admin/${rel}` : "/admin", source: readFileSync(full, "utf8") });
+        pages.push({ path: rel ? `/admin/${rel}` : "/admin", source: readGuardSource(full) });
       }
     }
   };

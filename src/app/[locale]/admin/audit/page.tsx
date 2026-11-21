@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import type { AuditChange } from "@/lib/audit/diff";
 import {
   AUDIT_GROUPS,
@@ -45,7 +45,7 @@ export default async function AdminAuditPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("audit", "read");
   const copy = await getTranslations({ locale, namespace: "AdminAudit" });
   const filters = parseAuditFilters(await searchParams);
   const where = auditWhere(filters);

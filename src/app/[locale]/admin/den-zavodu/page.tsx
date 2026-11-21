@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
-import { requireRaceDay } from "@/lib/admin/staff";
-import { canManageLiveResults, canViewSpeakerScreen, isStaffRole } from "@/lib/auth/roles";
+import { canAccess, requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { Link, type Locale } from "@/i18n/routing";
@@ -54,7 +53,13 @@ export default async function RaceDayPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireRaceDay();
+  await requireSection("raceControl.overview", "read");
+  const [showStart, showLive, showSpeaker, showResultboard] = await Promise.all([
+    canAccess("raceControl.start", "read"),
+    canAccess("raceControl.live", "write"),
+    canAccess("screens.speaker", "read"),
+    canAccess("screens.resultboard", "read"),
+  ]);
   const copy = await getTranslations({ locale, namespace: "RaceDay" });
 
   const [{ year }, history] = await Promise.all([
@@ -80,7 +85,7 @@ export default async function RaceDayPage({ params }: PageProps) {
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{copy("intro")}</p>
 
-        {isStaffRole(session.role) ? (
+        {showStart ? (
           <section
             className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
             data-testid="start-check-link"
@@ -95,7 +100,7 @@ export default async function RaceDayPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        {canManageLiveResults(session.role) ? (
+        {showLive ? (
           <section
             className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
             data-testid="live-results-link"
@@ -110,7 +115,7 @@ export default async function RaceDayPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        {canViewSpeakerScreen(session.role) ? (
+        {showSpeaker ? (
           <section
             className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
             data-testid="speaker-link"
@@ -125,7 +130,7 @@ export default async function RaceDayPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        {canViewSpeakerScreen(session.role) ? (
+        {showResultboard ? (
           <section
             className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
             data-testid="resultboard-link"

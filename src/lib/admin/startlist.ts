@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString } from "@/lib/admin/parse";
 import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
@@ -70,7 +70,7 @@ async function setLock(year: number, runnerIds: string[], locked: boolean) {
  * dostane jen informaci. Ručně změněné číslo se zamkne (generátor ho nemění).
  */
 export async function setStartBib(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("startlist.list", "write");
   const year = yearOf(formData);
   const runnerId = formString(formData, "runnerId");
   if (!year || !runnerId) {
@@ -144,7 +144,7 @@ export async function setStartBib(formData: FormData): Promise<void> {
 
 /** Prohození dvou čísel (druhé může být volné = přesun). Obě čísla se zamknou. */
 export async function swapStartBibs(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("startlist.list", "write");
   const year = yearOf(formData);
   const a = formInt(formData, "bibA");
   const b = formInt(formData, "bibB");
@@ -197,7 +197,7 @@ export async function swapStartBibs(formData: FormData): Promise<void> {
 }
 
 export async function toggleStartLock(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("startlist.list", "write");
   const year = yearOf(formData);
   const runnerId = formString(formData, "runnerId");
   if (!year || !runnerId) {
@@ -226,7 +226,7 @@ export async function toggleStartLock(formData: FormData): Promise<void> {
  * i na serveru (`startListProposalLock`), ruční úpravy řádků zůstávají povolené.
  */
 export async function applyStartListProposal(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("startlist.list", "write");
   const year = yearOf(formData);
   if (!year) {
     return;

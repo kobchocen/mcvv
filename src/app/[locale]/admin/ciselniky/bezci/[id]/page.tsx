@@ -18,7 +18,7 @@ import { renameRunnerAction } from "@/lib/admin/runner-rename-actions";
 import { keptOtherNames, RUNNER_NAME_MAX, splitRunnerName } from "@/lib/admin/runner-rename-core";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
 import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { countryName, isCountryCode } from "@/lib/runner/nationality";
@@ -65,7 +65,7 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
   const { locale: requestedLocale, id } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("dictionaries.runners", "read");
   const [copy, nationalityCopy, nationalityOptions, query, runner, { year: currentYear }] =
     await Promise.all([
       getTranslations({ locale, namespace: "AdminRunners" }),

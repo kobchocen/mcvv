@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
+import { readGuardSource } from "@/lib/admin/guard-source";
 
 /**
  * Admin layout pouští dovnitř i omezenou roli Časomíra (timing), proto se musí každá
@@ -24,26 +25,26 @@ describe("admin guards", () => {
   it("every admin page calls a server-side guard", () => {
     const pages = files(join(ROOT, "app/[locale]/admin"), (name) => name === "page.tsx");
     assert.ok(pages.length > 10);
-    const missing = pages.filter((path) => !GUARD.test(readFileSync(path, "utf8")));
+    const missing = pages.filter((path) => !GUARD.test(readGuardSource(path)));
     assert.deepEqual(missing, []);
   });
 
   it("race-day page uses the race-day guard, the rest full staff", () => {
-    const raceDay = readFileSync(join(ROOT, "app/[locale]/admin/den-zavodu/page.tsx"), "utf8");
+    const raceDay = readGuardSource(join(ROOT, "app/[locale]/admin/den-zavodu/page.tsx"));
     assert.match(raceDay, /await requireRaceDay\(\)/);
-    const users = readFileSync(join(ROOT, "app/[locale]/admin/uzivatele/page.tsx"), "utf8");
+    const users = readGuardSource(join(ROOT, "app/[locale]/admin/uzivatele/page.tsx"));
     assert.match(users, /await requireAdmin\(\)/);
     // Auditní log (#107) obsahuje e-maily a stavy před / po – jen admin.
-    const audit = readFileSync(join(ROOT, "app/[locale]/admin/audit/page.tsx"), "utf8");
+    const audit = readGuardSource(join(ROOT, "app/[locale]/admin/audit/page.tsx"));
     assert.match(audit, /await requireAdmin\(\)/);
   });
 
   it("every exported admin server action calls a guard", () => {
     const actionFiles = ["lib/admin", "lib/raceday"]
       .flatMap((dir) => files(join(ROOT, dir), (name) => name.endsWith(".ts")))
-      .filter((path) => readFileSync(path, "utf8").startsWith('"use server"'));
+      .filter((path) => readGuardSource(path).startsWith('"use server"'));
     for (const path of actionFiles) {
-      const source = readFileSync(path, "utf8");
+      const source = readGuardSource(path);
       const bodies = source.split(/\nexport async function /).slice(1);
       for (const body of bodies) {
         const name = body.slice(0, body.indexOf("("));

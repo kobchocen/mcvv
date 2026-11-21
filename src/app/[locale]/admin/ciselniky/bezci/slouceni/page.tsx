@@ -26,7 +26,7 @@ import {
   type RunnerMergeIndexRow,
 } from "@/lib/admin/runner-merge-index";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { formatDateTime } from "@/lib/format/date";
 
@@ -76,7 +76,7 @@ export default async function AdminRunnerMergePage({ params, searchParams }: Pag
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("dictionaries.runners.merge", "read");
   const [copy, admin, runners] = await Promise.all([
     getTranslations({ locale, namespace: "AdminRunnerMerge" }),
     getTranslations({ locale, namespace: "Admin" }),

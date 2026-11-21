@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
@@ -64,7 +64,7 @@ function formSlot(data: FormData, current: Slot, onsite: { from: Date; to: Date 
  * a startovné online / na místě v `mcvv_info` se synchronizují, aby starší místa seděla.
  */
 export async function saveEditionSlots(formData: FormData): Promise<void> {
-  const actor = await requireStaff();
+  const actor = await requireSection("editions", "write");
   const locale = await getLocale();
   const id = formInt(formData, "id");
   const edition = id ? await prisma.edition.findUnique({ where: { id } }) : null;

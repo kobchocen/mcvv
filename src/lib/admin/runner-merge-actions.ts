@@ -3,9 +3,9 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { applyRunnerMerge } from "@/lib/admin/runner-merge";
 import { formString } from "@/lib/admin/parse";
-import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -17,7 +17,7 @@ const PATHNAME = "/admin/ciselniky/bezci/slouceni" as const;
 
 /** Náhled: jen přesměrování na stránku s vybranou dvojicí (výpočet dělá stránka). */
 export async function previewRunnerMergeAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireSection("dictionaries.runners.merge", "write");
   const main = formString(formData, "main");
   const other = formString(formData, "other");
   const locale = await getLocale();
@@ -29,7 +29,7 @@ export async function previewRunnerMergeAction(formData: FormData): Promise<void
 
 /** Sloučení (#261): jen admin, potvrzení „nevratné“, vše v jedné transakci + audit runner.merge. */
 export async function mergeRunnersAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("dictionaries.runners.merge", "write");
   const main = formString(formData, "main");
   const other = formString(formData, "other");
   const locale = await getLocale();

@@ -15,7 +15,7 @@ import {
   specialStartFlash,
   specialStartValue,
 } from "@/lib/admin/special-start-view";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import {
   formatOffset,
@@ -52,7 +52,7 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("entries.special", "read");
   const t = await getTranslations({ locale, namespace: "SpecialStart" });
   const query = await searchParams;
   const parsedYear = Number.parseInt(query.rok ?? "", 10);

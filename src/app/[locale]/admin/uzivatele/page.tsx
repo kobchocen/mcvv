@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { changeStartCorridor } from "@/lib/admin/users";
 import { isRoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
@@ -47,7 +47,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const actor = await requireAdmin();
+  const actor = await requireSection("users", "read");
   const copy = await getTranslations({ locale, namespace: "AdminUsers" });
   const sp = await searchParams;
 

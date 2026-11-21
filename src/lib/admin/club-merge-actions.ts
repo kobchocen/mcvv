@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireAdmin, requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
 import { clubKey, clubPair } from "@/lib/clubs";
@@ -44,7 +44,7 @@ async function back(query: Record<string, string> = {}): Promise<never> {
  * - návrh: dvojice `idA` / `idB` a povinná volba hlavního id (`main` = "a" | "b").
  */
 export async function previewClubMergeAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireSection("dictionaries.clubs.merge", "write");
   if (formData.has("hlavni") || formData.has("sloucit")) {
     const main = clubKey(formString(formData, "hlavni"));
     const other = clubKey(formString(formData, "sloucit"));
@@ -75,7 +75,7 @@ export async function previewClubMergeAction(formData: FormData): Promise<void> 
  * audit s úplným stavem před sloučením. Vyžaduje zaškrtnuté potvrzení nevratnosti.
  */
 export async function confirmClubMerge(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("dictionaries.clubs.merge", "write");
   const main = clubKey(formString(formData, "hlavni"));
   const other = clubKey(formString(formData, "sloucit"));
   if (!main || !other || main === other) {
@@ -116,7 +116,7 @@ export async function confirmClubMerge(formData: FormData): Promise<void> {
 
 /** Zamítne návrh: dvojice id se už nebude nabízet. */
 export async function rejectClubMerge(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("dictionaries.clubs", "write");
   const [clubIdA, clubIdB] = clubPair(formString(formData, "idA"), formString(formData, "idB"));
   if (!clubIdA || !clubIdB || clubIdA === clubIdB) {
     return back({ chyba: "ids" });
@@ -138,7 +138,7 @@ export async function rejectClubMerge(formData: FormData): Promise<void> {
 
 /** Vrátí zamítnutý návrh zpět mezi návrhy. */
 export async function restoreClubMerge(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("dictionaries.clubs", "write");
   const [clubIdA, clubIdB] = clubPair(formString(formData, "idA"), formString(formData, "idB"));
   await prisma.$transaction(async (tx) => {
     await tx.clubMergeRejection.deleteMany({ where: { clubIdA, clubIdB } });

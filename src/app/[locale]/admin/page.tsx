@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { can, getAccess, requireSection, type Access } from "@/lib/admin/access";
 import { requireStaff } from "@/lib/admin/staff";
-import {
-  adminAccess,
-  canAccessRaceDay,
-  canAccessSplits,
-  canAccessStarter,
-  canUseCashDesk,
-  type UserRole,
-} from "@/lib/auth/roles";
-import { getSession } from "@/lib/auth/session";
+import { adminAccess } from "@/lib/auth/roles";
 import { mailPolicy } from "@/lib/mail/queue";
 import { mailStats } from "@/lib/mail/queue-store";
 import { staffUnreadCount } from "@/lib/messages/store";
@@ -31,14 +24,21 @@ export default async function AdminPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const current = await getSession();
-  const access = current ? adminAccess(current.role) : "none";
-  if (current && (access === "raceday" || access === "tools")) {
-    // Role dne závodu (timing, splitmaker, startér, kancelář): rozcestník jen s jejich
-    // sekcemi a obrazovkami (dřív je přihlášení přesměrovalo rovnou na ně).
-    return <RaceDayHome locale={locale} role={current.role} />;
+  const access = await getAccess();
+  if (access.v2) {
+    // Engine oprávnění: přehled zpráv a pošty jen s právem na Zprávy, jinak rozcestník.
+    await requireSection("overview", "read");
+    if (!can(access, "messages", "read")) return <RaceDayHome locale={locale} access={access} />;
+  } else {
+    const current = access.session;
+    const level = current ? adminAccess(current.role) : "none";
+    if (current && (level === "raceday" || level === "tools")) {
+      // Role dne závodu (timing, splitmaker, startér, kancelář): rozcestník jen s jejich
+      // sekcemi a obrazovkami (dřív je přihlášení přesměrovalo rovnou na ně).
+      return <RaceDayHome locale={locale} access={access} />;
+    }
+    await requireStaff();
   }
-  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const [mail, policy] = await Promise.all([mailStats().catch(() => null), mailPolicy()]);
   const unreadThreads = await staffUnreadCount().catch(() => null);
@@ -91,13 +91,18 @@ export default async function AdminPage({ params }: PageProps) {
 type RaceDayHref = "/admin/den-zavodu" | "/mezicasy" | "/start" | "/kancelar";
 
 /** Rozcestník pro role dne závodu bez plné administrace. */
-async function RaceDayHome({ locale, role }: { locale: Locale; role: UserRole }) {
+async function RaceDayHome({ locale, access }: { locale: Locale; access: Access }) {
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const tiles: { href: RaceDayHref; title: string }[] = [];
-  if (canAccessRaceDay(role)) tiles.push({ href: "/admin/den-zavodu", title: copy("navRaceDay") });
-  if (canAccessSplits(role)) tiles.push({ href: "/mezicasy", title: copy("navSplitEntry") });
-  if (canAccessStarter(role)) tiles.push({ href: "/start", title: copy("navStarter") });
-  if (canUseCashDesk(role)) tiles.push({ href: "/kancelar", title: copy("navCashDesk") });
+  // Flag vypnutý: can() = canAccessRaceDay / canAccessSplits / canAccessStarter / canUseCashDesk.
+  if (can(access, "raceControl.overview", "read"))
+    tiles.push({ href: "/admin/den-zavodu", title: copy("navRaceDay") });
+  if (can(access, "screens.splits", "read"))
+    tiles.push({ href: "/mezicasy", title: copy("navSplitEntry") });
+  if (can(access, "screens.starter", "read"))
+    tiles.push({ href: "/start", title: copy("navStarter") });
+  if (can(access, "raceOffice.cash", "read"))
+    tiles.push({ href: "/kancelar", title: copy("navCashDesk") });
   return (
     <main className="px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">

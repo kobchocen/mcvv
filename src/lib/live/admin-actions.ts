@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { redirect } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 import { rosterHasBib } from "@/lib/race/roster";
 import { parsePragueLocal } from "./admin-core";
@@ -85,7 +85,7 @@ async function saveDuration(formData: FormData, field: string, key: string): Pro
 }
 
 export async function saveRaceSetupAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireSection("raceControl.live", "write");
   const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
   await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
   // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
@@ -107,7 +107,7 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
 }
 
 export async function resolveConflictAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.live", "write");
   const id = Number(formData.get("id"));
   const decision = String(formData.get("decision") ?? "");
   let result: string = "missing";
@@ -124,7 +124,7 @@ export async function resolveConflictAction(formData: FormData): Promise<void> {
  * nuly ročníku). Potvrzení = opsaný ročník. Maže mcvv_split i deník včetně konfliktů.
  */
 export async function clearSplitsAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.live", "write");
   const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
   const filter = parseClearFilter(
     {
@@ -161,7 +161,7 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
 
 /** Společné načtení formuláře ruční editace (číslo, split, očekávaná hodnota, důvod). */
 async function manualForm(formData: FormData) {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.manual", "write");
   const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
   const bib = Number(formData.get("bib"));
   const split = String(formData.get("split") ?? "");
@@ -234,7 +234,7 @@ export async function deleteSplitAction(formData: FormData): Promise<void> {
  * Prázdný výběr = splitmaker nezapisuje nic.
  */
 export async function saveSplitmakerStationsAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.live", "write");
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId < 1) await back({ error: "assignment" });
   const stations = withStart(await getStations());
@@ -249,7 +249,7 @@ export async function saveSplitmakerStationsAction(formData: FormData): Promise<
  * fáze neoznačeného (0–120 s) a okno pruhu Nevyběhli (1 s – 6 h). Prázdné pole = výchozí.
  */
 export async function saveStarterSettingsAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireSection("raceControl.live", "write");
   const sound = String(formData.get("starterSound") ?? "");
   if (!(STARTER_SOUND_MODES as readonly string[]).includes(sound)) {
     await back({ error: "starterSound" });

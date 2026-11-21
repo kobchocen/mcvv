@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { currentRaceYear } from "@/lib/entries/year";
 import { loadTombolaPool, tombolaYears } from "@/lib/raceday/tombola";
 import {
@@ -48,7 +48,7 @@ export default async function AfterRacePage({ params, searchParams }: PageProps)
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("afterRace", "read");
   const t = await getTranslations({ locale, namespace: "AfterRace" });
   const query = await searchParams;
 

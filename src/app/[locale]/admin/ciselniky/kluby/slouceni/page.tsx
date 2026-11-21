@@ -12,8 +12,7 @@ import {
   rejectClubMerge,
   restoreClubMerge,
 } from "@/lib/admin/club-merge-actions";
-import { requireStaff } from "@/lib/admin/staff";
-import { canMergeClubs } from "@/lib/auth/roles";
+import { canAccess, requireSection } from "@/lib/admin/access";
 import { clubUsage, createClubResolver, suggestClubMerges, type ClubUsage } from "@/lib/clubs";
 import { previewClubMerge, type ClubMergePreview } from "@/lib/clubs/merge-apply";
 import {
@@ -87,9 +86,9 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireStaff();
+  await requireSection("dictionaries.clubs.merge", "read");
   // Q47: an organizer sees the suggestions and may reject them; preview and merge are admin only.
-  const canMerge = canMergeClubs(session.role);
+  const canMerge = await canAccess("dictionaries.clubs.merge", "write");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const cleanup = await getTranslations({ locale, namespace: "ClubCleanup" });
   const query = await searchParams;

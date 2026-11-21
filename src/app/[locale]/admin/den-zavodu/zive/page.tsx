@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
-import { canManageLiveResults } from "@/lib/auth/roles";
+import { canAccess, requireSection } from "@/lib/admin/access";
 import { formatStartClock } from "@/lib/date/race-schedule";
 import { currentRaceYear } from "@/lib/entries/year";
 import { formatDateTime } from "@/lib/format/date";
@@ -68,11 +67,11 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const { saved, error, test, testError } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireStaff();
+  await requireSection("raceControl.live", "read");
   const t = await getTranslations({ locale, namespace: "LiveResults" });
   const admin = await getTranslations({ locale, namespace: "Admin" });
   // Q143: nastavení resultboardu smí i pořadatel – ten vidí jen tuto sekci.
-  if (!canManageLiveResults(session.role)) {
+  if (!(await canAccess("raceControl.live", "write"))) {
     return (
       <main className="px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-4xl gap-8">

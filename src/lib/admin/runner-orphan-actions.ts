@@ -3,6 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { formString } from "@/lib/admin/parse";
 import { deleteOrphanRunners } from "@/lib/admin/runner-orphans";
 import {
@@ -10,7 +11,6 @@ import {
   runnerDeleteAuditDetail,
   selectedRunnerIds,
 } from "@/lib/admin/runner-orphans-core";
-import { requireAdmin } from "@/lib/admin/staff";
 import { writeAudit, type AuditActor } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
@@ -64,7 +64,7 @@ function revalidateRunners() {
 
 /** Smazání jednoho běžce z detailu (potvrzovací dialog). */
 export async function deleteRunnerAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("dictionaries.runners.merge", "write");
   const locale = await getLocale();
   const runnerId = formString(formData, "runnerId");
   if (!isRunnerId(runnerId)) {
@@ -95,7 +95,7 @@ export async function deleteRunnerAction(formData: FormData): Promise<void> {
 
 /** Hromadné smazání vybraných sirotků (seznam se zaškrtnutím → potvrzení). */
 export async function confirmRunnerOrphanCleanup(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("dictionaries.runners.merge", "write");
   const locale = await getLocale();
   const back = (query: Record<string, string>) =>
     redirect({ href: { pathname: "/admin/ciselniky/bezci/sirotci", query }, locale });

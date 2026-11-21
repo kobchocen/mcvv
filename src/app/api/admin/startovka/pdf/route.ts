@@ -1,4 +1,4 @@
-import { staffAccess } from "@/lib/admin/staff";
+import { sectionRouteAccess } from "@/lib/admin/access";
 import { FIRST_EDITION_YEAR } from "@/lib/entries/year";
 import { NO_STORE, pdfResponse } from "@/lib/print/http";
 import { parseStartListOrder, sortStartList } from "@/lib/print/presentation-core";
@@ -21,7 +21,10 @@ export const dynamic = "force-dynamic";
  * Jen pro pořadatele / administrátory; zveřejnění startovky na webu na tom nezávisí.
  */
 export async function GET(request: Request): Promise<Response> {
-  const access = await staffAccess({ status: 401, body: "Unauthorized" });
+  const access = await sectionRouteAccess("startlist.list", "read", {
+    status: 401,
+    body: "Unauthorized",
+  });
   if (!access.ok) {
     return access.response;
   }

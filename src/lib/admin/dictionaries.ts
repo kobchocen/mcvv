@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
 import { diffFields } from "@/lib/audit/diff";
@@ -18,7 +18,7 @@ function revalidateDicts() {
 }
 
 export async function saveCategory(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("dictionaries.categories", "write");
   const id = formString(formData, "id").slice(0, 1);
   if (!id) {
     return;
@@ -65,7 +65,7 @@ export async function saveCategory(formData: FormData): Promise<void> {
 
 /** Ruční přepočet rekordů kategorií ze všech výsledků (#129), stejně jako po importu. */
 export async function recalculateRecords(): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("dictionaries.categories", "write");
   const locale = await getLocale();
   const records = await prisma.$transaction(async (tx) => {
     const changes = await recalculateCategoryRecords(tx);
@@ -91,7 +91,7 @@ export async function recalculateRecords(): Promise<void> {
 }
 
 export async function saveClub(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("dictionaries.clubs", "write");
   const id = formString(formData, "id").slice(0, CLUB_ID_MAX_LENGTH).toUpperCase();
   const year = formInt(formData, "year");
   const name = formString(formData, "name").slice(0, 50);

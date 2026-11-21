@@ -375,12 +375,22 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
 
 /** Navigace viditelná pro roli: jen povolené položky, prázdné kapitoly a skupiny zmizí. */
 export function visibleSections(role: UserRole): AdminGroup[] {
+  return visibleSectionsBy((item) => item.allowed?.(role) ?? false);
+}
+
+/**
+ * Navigace podle libovolného „smí číst“ (P4: engine oprávnění při zapnutém `permissions.v2`).
+ * Kapitola bez vlastní stránky (bez `href`) se ukáže jen kvůli povoleným podkapitolám.
+ */
+export function visibleSectionsBy(
+  canRead: (item: { id: string; allowed?: (role: UserRole) => boolean }) => boolean,
+): AdminGroup[] {
   const groups: AdminGroup[] = [];
   for (const group of ADMIN_SECTIONS) {
     const chapters: AdminChapter[] = [];
     for (const chapter of group.chapters) {
-      const children = chapter.children?.filter((child) => child.allowed(role));
-      const ownPage = chapter.href !== undefined && (chapter.allowed?.(role) ?? false);
+      const children = chapter.children?.filter((child) => canRead(child));
+      const ownPage = chapter.href !== undefined && canRead(chapter);
       if (!ownPage && !children?.length) continue;
       chapters.push({
         ...chapter,

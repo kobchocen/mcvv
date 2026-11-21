@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminPartnerForm } from "@/components/organisms/mcvv-admin-partner-form";
 import { type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { logoErrorMessage } from "@/lib/partners/logo-error";
 
 type PageProps = Readonly<{
@@ -22,7 +22,7 @@ export default async function AdminNewPartnerPage({ params, searchParams }: Page
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("partners", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
 
   return (

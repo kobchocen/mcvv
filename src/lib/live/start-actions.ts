@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { redirect } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
 import { isoWithOffset } from "@/lib/date/iso-offset";
 
 import { clearBlocked, confirmationMatches } from "./clear-core";
@@ -29,7 +29,7 @@ async function back(query: Record<string, string>): Promise<never> {
 }
 
 async function startForm(formData: FormData) {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.start", "write");
   const ctx = await getRaceContext();
   const bib = Number(formData.get("bib"));
   const edit = Number.isInteger(bib) ? String(bib) : "";
@@ -69,7 +69,7 @@ export async function deleteStartAction(formData: FormData): Promise<void> {
 
 /** Hromadné vyčištění evidence startu ročníku (jen admin, jen před nulou, opsaný ročník). */
 export async function clearStartsAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.start", "write");
   const ctx = await getRaceContext();
   if (clearBlocked(new Date(), ctx.officialZero)) await back({ error: "blocked" });
   if (String(formData.get("year") ?? "") !== String(ctx.year)) await back({ error: "year" });

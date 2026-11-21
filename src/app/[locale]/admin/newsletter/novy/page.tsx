@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { loadBannerOptions } from "@/lib/newsletter/banner-store";
 import { audienceHints } from "@/lib/newsletter/hints";
 import { McvvAdminNewsletterForm } from "@/components/organisms/mcvv-admin-newsletter-form";
@@ -26,7 +26,7 @@ Tým pořadatelů z K.O.B. Choceň`;
 export default async function AdminNewsletterNewPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
-  await requireStaff();
+  await requireSection("newsletter", "read");
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">

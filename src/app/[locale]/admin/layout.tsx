@@ -1,15 +1,15 @@
 import { Suspense, type ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { adminAccess, getSession } from "@/lib/auth/session";
 import {
   McvvAdminShell,
   McvvFooter,
   McvvLoginNextRedirect,
   McvvPublicNavbar,
 } from "@/components/organisms";
-import { navTree, visibleSections } from "@/lib/admin/sections";
-import { isStaffRole } from "@/lib/auth/roles";
+import { can, canOpenAdmin, getAccess } from "@/lib/admin/access";
+import { isSectionId } from "@/lib/admin/permissions";
+import { navTree, visibleSectionsBy } from "@/lib/admin/sections";
 import { staffUnreadCount } from "@/lib/messages/store";
 import { withFooterYear, type McvvHomepageContent } from "@/components/templates";
 import { prisma } from "@/lib/db/client";
@@ -24,8 +24,9 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await getSession();
-  if (!session || adminAccess(session.role) === "none") {
+  const access = await getAccess();
+  const session = access.session;
+  if (!session || !canOpenAdmin(access)) {
     return (
       <Suspense fallback={null}>
         <McvvLoginNextRedirect />
@@ -35,8 +36,14 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const navCopy = await getTranslations({ locale, namespace: "AdminNav" });
-  const unreadMessages = isStaffRole(session.role) ? await staffUnreadCount().catch(() => 0) : 0;
-  const groups = navTree(visibleSections(session.role), (key) => navCopy(key), {
+  const unreadMessages = can(access, "messages", "read")
+    ? await staffUnreadCount().catch(() => 0)
+    : 0;
+  // Flag vypnutý: can() = dnešní predikáty rolí, navigace je stejná jako dřív.
+  const visible = visibleSectionsBy((item) =>
+    isSectionId(item.id) ? can(access, item.id, "read") : (item.allowed?.(session.role) ?? false),
+  );
+  const groups = navTree(visible, (key) => navCopy(key), {
     unreadMessages,
   });
   const latestYearRow = await prisma.result.findFirst({

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { BANNER_ERROR_MESSAGES, bannerChoiceValue, campaignBanner } from "@/lib/newsletter/banner";
 import { loadBannerOptions } from "@/lib/newsletter/banner-store";
@@ -58,7 +58,7 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
       ? BANNER_ERROR_MESSAGES[bannerErrorKey as keyof typeof BANNER_ERROR_MESSAGES]
       : null;
   setRequestLocale(locale as Locale);
-  const session = await requireStaff();
+  const session = await requireSection("newsletter", "read");
   const id = Number.parseInt(rawId, 10);
   const campaign = Number.isFinite(id)
     ? await prisma.newsletterCampaign.findUnique({ where: { id } })

@@ -83,19 +83,6 @@ export default async function RaceDayPage({ params }: PageProps) {
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{copy("intro")}</p>
 
-        <section
-          className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
-          data-testid="obd-imports"
-        >
-          <h2 className="font-display text-xl font-semibold">{copy("importsTitle")}</h2>
-          <p className="text-sm leading-6 text-race-muted">{copy("importsIntro")}</p>
-          <div className="flex flex-wrap gap-3">
-            <Link className={buttonClass} href="/admin/den-zavodu/prezentace">
-              {copy("importPresentation")}
-            </Link>
-          </div>
-        </section>
-
         {isStaffRole(session.role) ? (
           <section
             className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"

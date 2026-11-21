@@ -185,16 +185,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 <>
                   {editionInfo.date && (
                     <p className="mt-1 text-sm text-race-muted">
-                      {translated ? "" : "Datum: "}
-                      {new Date(editionInfo.date).toLocaleDateString(
-                        translated ? intlTag(locale) : "cs-CZ",
-                        {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        },
-                      )}
+                      {isCs ? "Datum: " : ""}
+                      {new Date(editionInfo.date).toLocaleDateString(intlTag(locale), {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
                     </p>
                   )}
                   <p className="mt-1 text-sm text-race-muted">

@@ -1,5 +1,5 @@
 import { forbidden } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getLocale } from "next-intl/server";
 import { cache } from "react";
 
@@ -25,11 +25,19 @@ import {
   type SectionId,
   type StoredLevel,
 } from "@/lib/admin/permissions";
+import {
+  decodeViewAs,
+  VIEW_AS_COOKIE,
+  viewAsFor,
+  viewAsSessionRole,
+  type ViewAsMode,
+} from "@/lib/admin/view-as-core";
 import { REQUEST_PATH_HEADER } from "@/lib/auth/admin-gate";
 import { loginHref } from "@/lib/auth/login-next";
-import { hasAdminHome } from "@/lib/auth/roles";
+import { hasAdminHome, isUserRole, type UserRole } from "@/lib/auth/roles";
 import { safeNext } from "@/lib/auth/safe-next";
 import { getSession, type SessionUser } from "@/lib/auth/session";
+import { usableSessionSecret } from "@/lib/auth/session-token";
 import {
   grantsFromLegacyRole,
   isStaffRoleCode,
@@ -38,6 +46,7 @@ import {
   type StaffRole,
 } from "@/lib/auth/staff-roles";
 import { prisma } from "@/lib/db/client";
+import { env } from "@/lib/env";
 import { NO_STORE } from "@/lib/http/no-store";
 import { redirect } from "@/i18n/routing";
 
@@ -46,11 +55,35 @@ import { redirect } from "@/i18n/routing";
  * nebo při chybě DB platí dnešní role (`v2: false`) – chování je beze změny.
  */
 export type Access = {
+  /** Účet, jak ho vidí administrace; v náhledu role s `role` podle vybraných rolí. */
   session: SessionUser | null;
   v2: boolean;
   grants: StaffRole[];
   overrides: Overrides;
+  /** Náhled očima jiné role (jen admin): vybrané role a skutečný účet. Jinak chybí. */
+  preview?: AccessPreview;
 };
+
+export type AccessPreview = {
+  mode: ViewAsMode;
+  roles: string[];
+  /** Při vypnutém flagu: vybrané dnešní role (oprávnění = sjednocení jejich predikátů). */
+  legacyRoles: UserRole[];
+  realSession: SessionUser;
+  exp: number;
+};
+
+/** Cookie náhledu pro tento účet a režim (bez DB; podpis tajemstvím session). */
+async function viewAsCookie(userId: number, mode: ViewAsMode) {
+  const secret = usableSessionSecret(env.SESSION_SECRET);
+  if (!secret) return null;
+  const token = (await cookies()).get(VIEW_AS_COOKIE)?.value;
+  return token ? viewAsFor(decodeViewAs(token, secret), userId, mode) : null;
+}
+
+function previewSession(session: SessionUser, mode: ViewAsMode, roles: string[]): SessionUser {
+  return { ...session, role: viewAsSessionRole(mode, roles) };
+}
 
 /** Přepínač se čte z DB nejvýš jednou za 15 s na repliku (API mezičasů je na trati časté). */
 const FLAG_TTL_MS = 15_000;
@@ -74,6 +107,23 @@ export const getAccess = cache(async (): Promise<Access> => {
   const session = await getSession();
   const v2 = session ? await readFlag() : false;
   if (!session || !v2) {
+    // Náhled při vypnutém flagu: jen skutečný admin (sloupec role).
+    const view = session?.role === "admin" ? await viewAsCookie(session.id, "legacy") : null;
+    if (session && view) {
+      return {
+        session: previewSession(session, "legacy", view.roles),
+        v2: false,
+        grants: [],
+        overrides: new Map(),
+        preview: {
+          mode: "legacy",
+          roles: view.roles,
+          legacyRoles: view.roles.filter(isUserRole),
+          realSession: session,
+          exp: view.exp,
+        },
+      };
+    }
     return { session, v2: false, grants: [], overrides: new Map() };
   }
   try {
@@ -90,6 +140,26 @@ export const getAccess = cache(async (): Promise<Access> => {
         overrides.set(overrideKey(row.role, row.sectionId), row.level);
       }
     }
+    // Náhled se zapnutým flagem: jen admin (role admin v mcvv_user_role nebo ve sloupci).
+    const view =
+      grants.includes("admin") || session.role === "admin"
+        ? await viewAsCookie(session.id, "v2")
+        : null;
+    if (view) {
+      return {
+        session: previewSession(session, "v2", view.roles),
+        v2: true,
+        grants: view.roles.filter(isStaffRoleCode),
+        overrides,
+        preview: {
+          mode: "v2",
+          roles: view.roles,
+          legacyRoles: [],
+          realSession: session,
+          exp: view.exp,
+        },
+      };
+    }
     return { session, v2: true, grants, overrides };
   } catch (error) {
     console.error("[access] role grants read failed – using legacy roles", error);
@@ -100,7 +170,11 @@ export const getAccess = cache(async (): Promise<Access> => {
 /** Smí účet sekci číst / upravovat? */
 export function can(access: Access, id: SectionId, level: AccessLevel): boolean {
   if (!access.session) return false;
-  if (!access.v2) return legacyAllows(access.session.role, id, level);
+  if (!access.v2) {
+    if (access.preview)
+      return access.preview.legacyRoles.some((role) => legacyAllows(role, id, level));
+    return legacyAllows(access.session.role, id, level);
+  }
   return v2Allows(access.grants, id, level, access.overrides);
 }
 
@@ -117,7 +191,10 @@ export function allowsFor(access: Access): (id: SectionId, level: AccessLevel) =
 /** Má účet kolečko a rozcestník administrace? */
 export function canOpenAdmin(access: Access): boolean {
   if (!access.session) return false;
-  if (!access.v2) return hasAdminHome(access.session.role);
+  if (!access.v2) {
+    if (access.preview) return access.preview.legacyRoles.some(hasAdminHome);
+    return hasAdminHome(access.session.role);
+  }
   return v2HasAdminHome(access.grants, access.overrides);
 }
 
@@ -128,7 +205,8 @@ export function canOpenAdmin(access: Access): boolean {
  */
 export async function requireSection(id: SectionId, level: AccessLevel): Promise<SessionUser> {
   const access = await getAccess();
-  if (!access.v2) {
+  // V náhledu rozhoduje engine nad vybranými rolemi (i při vypnutém flagu), ne skutečná role.
+  if (!access.v2 && !access.preview) {
     const guard = legacyGuard(id, level);
     if (guard === "staff") return requireStaff();
     if (guard === "admin") return requireAdmin();
@@ -153,7 +231,7 @@ export async function sectionRouteAccess(
   forbiddenResponse?: { status: number; body: string },
 ): Promise<RouteAccess> {
   const access = await getAccess();
-  if (!access.v2) {
+  if (!access.v2 && !access.preview) {
     const guard = legacyGuard(id, level);
     if (guard === "staff") return staffAccess(forbiddenResponse);
     if (guard === "admin" && !forbiddenResponse) return adminRouteAccess();
@@ -173,4 +251,30 @@ export async function sectionRouteAccess(
     };
   }
   return { ok: true, session: access.session };
+}
+
+/**
+ * Skutečný admin pro zapnutí / ukončení náhledu (nezávisle na náhledu): sloupec role admin,
+ * nebo při zapnutém flagu role admin v `mcvv_user_role`.
+ */
+export async function realAdminSession(): Promise<{
+  session: SessionUser;
+  mode: ViewAsMode;
+} | null> {
+  const session = await getSession();
+  if (!session) return null;
+  const v2 = await readFlag();
+  const mode: ViewAsMode = v2 ? "v2" : "legacy";
+  if (session.role === "admin") return { session, mode };
+  if (!v2) return null;
+  try {
+    const grant = await prisma.userRoleGrant.findFirst({
+      where: { userId: session.id, role: "admin" },
+      select: { userId: true },
+    });
+    return grant ? { session, mode } : null;
+  } catch (error) {
+    console.error("[access] admin grant read failed", error);
+    return null;
+  }
 }

@@ -5,6 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
 import { getAccess, requireSection } from "@/lib/admin/access";
+import { viewAsRolesFor } from "@/lib/admin/view-as-core";
+import { McvvAdminViewAsForm } from "@/components/organisms/mcvv-admin-view-as";
 import { changeStartCorridor, changeUserRoles } from "@/lib/admin/users";
 import { isRoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
@@ -27,6 +29,8 @@ type SearchParams = {
   mail?: string;
   /** Uložen koridor startéra (id účtu). */
   corridor?: string;
+  /** Náhled role: nevybraná žádná role. */
+  nahled?: string;
 };
 
 type PageProps = Readonly<{
@@ -51,6 +55,15 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   const actor = await requireSection("users", "read");
   const access = await getAccess();
   const copy = await getTranslations({ locale, namespace: "AdminUsers" });
+  const viewCopy = await getTranslations({ locale, namespace: "AdminViewAs" });
+  // Náhled očima jiné role: na stránku Uživatelé smí jen admin; během náhledu se nenabízí.
+  const viewAsMode = access.v2 ? "v2" : "legacy";
+  const viewAsRoles = access.preview
+    ? []
+    : viewAsRolesFor(viewAsMode).map((role) => ({
+        value: role,
+        label: copy(`${viewAsMode === "v2" ? "staffRole" : "role"}_${role}` as "role_admin"),
+      }));
   const sp = await searchParams;
 
   const roleFilter = isUserRole(sp.role) ? sp.role : undefined;
@@ -158,6 +171,21 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
             </span>
           ))}
         </p>
+
+        {viewAsRoles.length ? (
+          <McvvAdminViewAsForm
+            locale={locale}
+            roles={viewAsRoles}
+            empty={sp.nahled === "prazdny"}
+            copy={{
+              title: viewCopy("title"),
+              intro: viewCopy("intro"),
+              mode: viewCopy(viewAsMode === "v2" ? "modeV2" : "modeLegacy"),
+              submit: viewCopy("submit"),
+              empty: viewCopy("empty"),
+            }}
+          />
+        ) : null}
 
         {errorKey ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">

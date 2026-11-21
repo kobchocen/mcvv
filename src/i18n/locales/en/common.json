@@ -3354,5 +3354,16 @@
   "AdminSectionNav": {
     "title": "On this page",
     "startlist": "Start list"
+  },
+  "AdminViewAs": {
+    "title": "View as role",
+    "intro": "Shows the admin the way the selected roles see it: panel, sections, read and edit rights. The preview is read-only – the server saves no changes. Starting and ending it is recorded in the audit log.",
+    "modeLegacy": "Based on current roles (permissions.v2 off).",
+    "modeV2": "Based on the permission matrix (permissions.v2 on).",
+    "submit": "View as selected roles",
+    "empty": "Select at least one role.",
+    "barTitle": "Viewing as: {roles}",
+    "barReadOnly": "Read-only – changes are not saved. The preview ends automatically within 2 hours.",
+    "stop": "End preview"
   }
 }

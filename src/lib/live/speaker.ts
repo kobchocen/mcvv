@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client";
+import { loadRoster } from "@/lib/race/roster";
 
 import { getRaceContext, getStations, type RaceContext } from "./race-context";
 import { getRecordBaselines } from "./records-live";
@@ -55,18 +56,7 @@ export async function loadRaceRunners(
       orderBy: { sort: "asc" },
       select: { id: true, name: true, sex: true, age: true },
     }),
-    prisma.startEntry.findMany({
-      where: { year: ctx.year, bib: { gt: 0 } },
-      select: {
-        bib: true,
-        runnerId: true,
-        runnerName: true,
-        clubId: true,
-        clubName: true,
-        categoryId: true,
-        runner: { select: { name: true } },
-      },
-    }),
+    loadRoster(ctx.year),
     prisma.split.findMany({
       where: { year: ctx.year },
       select: { bib: true, split: true, time: true, created: true },
@@ -93,7 +83,7 @@ export async function loadRaceRunners(
   }
   const withIds = [...byBib.values()].map((s) => ({
     bib: s.bib,
-    name: (s.runnerName || s.runner.name).trim(),
+    name: s.runnerName.trim(),
     cat: s.categoryId,
     start: Math.round(
       startInstant(ctx.zero, s.bib, ctx.intervalS, ctx.secondStartFrom).getTime() / 1000,

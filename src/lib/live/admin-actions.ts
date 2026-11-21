@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
+import { rosterHasBib } from "@/lib/race/roster";
 import { parsePragueLocal } from "./admin-core";
 import { saveAssignment } from "./assignment";
 import { assignmentFromForm } from "./assignment-core";
@@ -195,10 +196,7 @@ export async function setSplitAction(formData: FormData): Promise<void> {
       ? clockToRaceTime(raw, ctx.zero, bib, ctx.intervalS, ctx.secondStartFrom)
       : parseRaceTime(raw);
   if (time === null) await back({ edit, error: "time" }, SPLITS_PAGE);
-  const known = await prisma.startEntry.findFirst({
-    where: { year: ctx.year, bib },
-    select: { bib: true },
-  });
+  const known = await rosterHasBib(prisma, ctx.year, bib);
   if (!known && formData.get("force") !== "on") {
     await back({ edit, error: "unknownBib" }, SPLITS_PAGE);
   }

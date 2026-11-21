@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import { notifyRoleChange } from "@/lib/admin/role-change-notify";
 import type { RoleChange, RoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { requireAdmin } from "@/lib/admin/staff";
+import { syncLegacyRoleGrants } from "@/lib/admin/role-grants";
 import { writeAudit } from "@/lib/audit/log";
 import { isUserRole, validateRoleChange, type RoleChangeError } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db/client";
@@ -53,6 +54,12 @@ export async function changeUserRole(formData: FormData): Promise<void> {
         return { ok: false, error: check.error };
       }
       await tx.user.update({ where: { id: target.id }, data: { role: check.role } });
+      await syncLegacyRoleGrants(tx, {
+        userId: target.id,
+        from: target.role,
+        to: check.role,
+        actorId: actor.id,
+      });
       await writeAudit(
         {
           actor,

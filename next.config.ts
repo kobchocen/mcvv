@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/prihlasky/[rok]/[id]/doklad": ["./src/assets/fonts/*.ttf"],
     "/api/admin/startovka/pdf": ["./src/assets/fonts/*.ttf"],
-    "/api/admin/tisk/cisla": ["./src/assets/fonts/*.ttf"],
+    "/api/admin/tisk/cisla": ["./src/assets/fonts/*.ttf", "./src/assets/print/*"],
     "/api/statistiky/[slug]/pdf": ["./src/assets/fonts/*.ttf"],
   },
   poweredByHeader: false,

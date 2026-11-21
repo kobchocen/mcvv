@@ -34,6 +34,8 @@ export function bibRowsFromStartList(
       runnerId: row.runnerId,
       name: row.name,
       categoryId: row.categoryId,
+      categoryName: row.categoryName || row.categoryId,
+      birthYear: row.birthYear || null,
       registrationId: registrationOf.get(row.runnerId) ?? null,
     }));
 }

@@ -9,8 +9,8 @@ import { partnerLogoSrc } from "@/lib/partners/logos";
 import { BIB_PARTNER_CATEGORIES } from "./bibs-core";
 import type { BibLogo } from "./render-bibs";
 
-/** Výška rastru loga v px (pruh 28 mm ≈ 400 dpi) – ostré i při tisku. */
-const LOGO_HEIGHT_PX = 440;
+/** Výška rastru loga v px (pruh 305 px na A5 @300 dpi, 2× pro ostrost). */
+const LOGO_HEIGHT_PX = 610;
 
 async function logoBytes(row: {
   image: string | null;

@@ -26,12 +26,12 @@ const card = "border border-race-line/55 bg-race-surface p-5";
 function ChampionField({ value }: { value: string }) {
   return (
     <label className={label}>
-      Červená čísla (obhájci)
+      Zlaté číslo (obhájci mužů a žen)
       <input
         name="red"
         defaultValue={value}
         className={`${input} w-40`}
-        aria-label="Červená čísla obhájců"
+        aria-label="Čísla obhájců mužů a žen"
       />
     </label>
   );
@@ -67,14 +67,29 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
           Tisk startovních čísel {year}
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-race-muted">
-          PDF na A4, dvě čísla na stránku (tisk 100 %, bez přizpůsobení). Číslo černě, veterán
-          zeleně s počtem startů, obhájci červeně. Čárový kód Code 128 svisle stejně jako legacy
-          tisk. Reklamní pruh: logo partnera kategorie 1–2 podle čísla % počet log (
-          {partners.length} {partners.length === 1 ? "logo" : "log"}
+          PDF na A5 na šířku, jedno číslo na stránku (tisk 100 %, bez přizpůsobení, Pretex). Základ
+          je černé číslo. Veteráni MCVV mají zelené číslo a zelenou pečeť s počtem startů (STARTŮ).
+          Historičtí absolutní vítězové mužů a žen (ze statistik) mají oranžové číslo a zlatou pečeť
+          s počtem výher (VÝHER). Obhájci loňského vítězství mužů a žen mají zlaté číslo a stejnou
+          zlatou pečeť. Kdo je vítěz i veterán, má barvu podle vítězství a obě pečeti (veteránská je
+          menší, mezi standardní pečetí a QR). Přes číslo vede bílá linka profilu tratě. QR kód
+          (MCVV
+          {year}-číslo) se skenuje na startu a v cíli. Reklamní pruh: logo partnera kategorie 1–2
+          podle čísla % počet log ({partners.length} {partners.length === 1 ? "logo" : "log"}
           {partners.length ? `: ${partners.map((p) => p.name).join(", ")}` : ""}). Startovní čas
           podle nastavení ročníku: nula {formatClock(model.zeroSeconds)}, 2. start od čísla{" "}
           {model.secondStartFrom}, interval {model.intervalSeconds} s.
         </p>
+        {numbered === 0 ? (
+          <p
+            className="mt-4 max-w-3xl border border-race-line bg-race-surface p-3 text-sm text-foreground"
+            role="status"
+          >
+            Ve startovce ročníku {year} zatím nejsou žádná přidělená startovní čísla, tisk celé
+            startovky proto nic nevytvoří. Nejprve přidělte čísla ve Startovce, nebo tiskněte
+            prázdná čísla (rezerva). Vybraná čísla lze stáhnout, jen pokud už ve startovce jsou.
+          </p>
+        ) : null}
 
         <section className={`mt-8 ${card}`}>
           <h2 className="font-display text-xl font-semibold">Celá startovka (po dávkách)</h2>
@@ -149,7 +164,7 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
         <section className={`mt-6 ${card}`}>
           <h2 className="font-display text-xl font-semibold">Prázdná čísla (rezerva)</h2>
           <p className="mt-1 text-sm text-race-muted">
-            Čísla bez jména pro přihlášky na místě: číslo, start, čárový kód a místo na jméno.
+            Čísla bez jména pro přihlášky na místě: číslo, start, QR kód a místo na jméno.
           </p>
           <form action={ACTION} method="get" className="mt-4 flex flex-wrap items-end gap-4">
             <input type="hidden" name="mode" value="blank" />

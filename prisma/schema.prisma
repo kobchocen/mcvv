@@ -842,6 +842,75 @@ model ContactReply {
   @@map("mcvv_contact_reply")
 }
 
+/// Testovací režim závodu (B+, bod 6 nočního balíku): jeden test. Průběh testu (start,
+/// mezičasy, cíl) jde do stínového ročníku 9026 ve stávajících tabulkách, startovka
+/// a dohlášky testu do `mcvv_test_*`. Ostré přihlášky, běžce a kluby test jen čte.
+model TestModeRun {
+  id        Int       @id @default(autoincrement())
+  /// planned | running | ended | cleaned
+  status    String    @default("planned") @map("stav") @db.VarChar(10)
+  /// Stínový ročník (9026).
+  year      Int       @default(9026) @map("rok") @db.SmallInt
+  zeroAt    DateTime  @map("nula_at")
+  endAt     DateTime  @map("konec_at")
+  cleanupAt DateTime  @map("likvidace_at")
+  /// draw | copy
+  roster    String    @default("draw") @map("startovka") @db.VarChar(5)
+  fictional Int       @default(0) @map("fiktivnich") @db.SmallInt
+  /// Konfigurace platná při založení (JSON) – pro report.
+  config    String    @db.Text
+  /// Výsledek kontrol konzistence (JSON), report jen v administraci.
+  report    String?   @db.MediumText
+  createdBy String    @map("zalozil") @db.VarChar(80)
+  createdAt DateTime  @default(now()) @map("created_at")
+  startedAt DateTime? @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+  cleanedAt DateTime? @map("cleaned_at")
+
+  starts  TestModeStart[]
+  onsites TestModeOnsite[]
+
+  @@index([status, zeroAt])
+  @@map("mcvv_test_run")
+}
+
+/// Testovací startovka (losování nebo kopie ostré startovky) – snímek jména, kategorie a klubu,
+/// bez FK a bez id ostrého běžce (sloučení běžců se testu netýká; data testu se likvidují).
+model TestModeStart {
+  testRunId  Int     @map("test_run_id")
+  bib        Int     @map("cislo") @db.SmallInt
+  name       String  @map("jmeno") @db.VarChar(80)
+  categoryId String  @map("kategorie") @db.Char(1)
+  club       String? @map("klub") @db.VarChar(80)
+  fictional  Boolean @default(false) @map("fiktivni")
+
+  testRun TestModeRun @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+
+  @@id([testRunId, bib])
+  @@map("mcvv_test_start")
+}
+
+/// Testovací dohláška na místě – žádná přihláška, běžec, prodejka ani platba; platba jen simulovaná.
+model TestModeOnsite {
+  id         Int      @id @default(autoincrement())
+  testRunId  Int      @map("test_run_id")
+  bib        Int      @map("cislo") @db.SmallInt
+  name       String   @map("jmeno") @db.VarChar(80)
+  birthYear  Int?     @map("rocnik") @db.SmallInt
+  sex        String?  @map("pohlavi") @db.VarChar(1)
+  categoryId String   @map("kategorie") @db.Char(1)
+  club       String?  @map("klub") @db.VarChar(80)
+  /// sim_cash | sim_qr
+  payment    String   @default("sim_cash") @map("platba") @db.VarChar(10)
+  createdBy  String   @map("zalozil") @db.VarChar(80)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  testRun TestModeRun @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+
+  @@unique([testRunId, bib])
+  @@map("mcvv_test_onsite")
+}
+
 /// Vlákno zpráv: buď k přihlášce (rok + prihlaska_id), nebo obecné k účtu (user_id, bez přihlášky).
 /// Přístup přihlašujícího k vláknu přihlášky = e-mail přihlášky se shoduje s e-mailem účtu.
 model MessageThread {

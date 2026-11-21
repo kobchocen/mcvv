@@ -111,6 +111,7 @@ export type AuditAction =
   // P7: nastavení mimo stránku Nastavení (diff klíčů jako settings.changed).
   | "raceday.setup_changed"
   | "raceday.starter_settings_changed"
+  | "raceday.testmode_config_changed"
   | "raceday.resultboard_changed"
   // P7: newsletter – rozeslání, opakování selhaných, smazání konceptu.
   | "newsletter.started"

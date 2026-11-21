@@ -2052,7 +2052,8 @@
     "starterDnsWindowHint": "Pruh ukazuje jen nevyběhlé za poslední dobu (výchozí 5 min), starší jsou v „Všichni“ a celé startovce.",
     "publicSplitsShown": "Na veřejných výstupech (živé výsledky, tabule, speaker): {list}.",
     "publicSplitsOver": "Další veřejné mezičasy se nezobrazí – zobrazují se první {slots} podle pozice na trati (výstupy umí nejvýš 3).",
-    "publicSplitsMax": "Nejvýš veřejných mezičasů"
+    "publicSplitsMax": "Nejvýš veřejných mezičasů",
+    "openTestMode": "Testovací režim – nastavení"
   },
   "LiveSplits": {
     "title": "Mezičasy ročníku",
@@ -3660,5 +3661,44 @@
     "skipsTitle": "Vynechané kontroly ({count})",
     "skipsNone": "Nikdo nevynechal kontrolu.",
     "skipRow": "{bib} {name} ({category}) – na „{at}“ bez: {missing}"
+  },
+  "TestMode": {
+    "title": "Testovací režim – nastavení",
+    "intro": "Základ testovacího režimu podle návrhu B+: průběh testu jde do stínového ročníku {year}, startovka a dohlášky testu do vlastních tabulek; ostré přihlášky, běžce a kluby test jen čte. Tady jsou výchozí hodnoty testů. Spouštění testů zatím zůstává na stránce Živě.",
+    "backToLive": "← Den závodu – živě",
+    "saved": "Nastavení testovacího režimu uloženo.",
+    "configTitle": "Výchozí hodnoty testu",
+    "fictionalRunners": "Fiktivní běžci navíc",
+    "fictionalRunnersHint": "Přidají se k zaplaceným přihláškám (0 = jen ostré přihlášky). Jména začínají „TEST“.",
+    "copyLiveFrom": "Kopírovat ostrou startovku od (MM-DD)",
+    "copyLiveFromHint": "Od tohoto dne v roce závodu test převezme vylosovanou ostrou startovku, dřív losuje vlastní.",
+    "times": "Časy testů (Europe/Prague)",
+    "timesHint": "HH:MM oddělené čárkou, nejvýš 6.",
+    "blockBeforeRace": "Blokovat i dva dny před závodem (den závodu je blokovaný vždy)",
+    "durationH": "Konec testu (hodin od nuly)",
+    "cleanupAfterH": "Likvidace dat (hodin od nuly)",
+    "durationHint": "Likvidace nesmí být dřív než konec testu.",
+    "fixedTitle": "Pevná pravidla testu",
+    "fixed": {
+      "paidOnly": "Losují se jen zaplacené přihlášky.",
+      "simulatedPayments": "Platby dohlášek jsou jen simulované (bez FIO).",
+      "lateEntryCutoff": "V testu neplatí uzávěrka dohlášek.",
+      "mainScenario": "Hlavní scénář: cíl se stopkami a čísly (#{value}).",
+      "reportInAdminOnly": "Report po testu jen v administraci, bez e-mailu."
+    },
+    "runsTitle": "Testy ve stínovém ročníku",
+    "runsEmpty": "Zatím žádný test.",
+    "runZero": "Nula",
+    "runStatus": "Stav",
+    "runRoster": "Startovka",
+    "runCounts": "Startovka / dohlášky",
+    "runCleanup": "Likvidace",
+    "error": {
+      "fictionalRunners": "Počet fiktivních běžců musí být 0–300.",
+      "copyLiveFrom": "Datum zadej jako MM-DD.",
+      "times": "Časy zadej jako HH:MM oddělené čárkou.",
+      "durationH": "Konec testu musí být 1–6 hodin od nuly.",
+      "cleanupAfterH": "Likvidace musí být nejdřív s koncem testu a nejvýš 24 hodin od nuly."
+    }
   }
 }

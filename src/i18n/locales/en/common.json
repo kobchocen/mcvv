@@ -2052,7 +2052,8 @@
     "starterDnsWindowHint": "The strip only shows non-starters from this recent period (default 5 min); older ones are under “All” and in the full list.",
     "publicSplitsShown": "On public outputs (live results, board, speaker): {list}.",
     "publicSplitsOver": "Further public splits are not shown – the first {slots} by course position are shown (outputs support at most 3).",
-    "publicSplitsMax": "Maximum public splits"
+    "publicSplitsMax": "Maximum public splits",
+    "openTestMode": "Test mode – settings"
   },
   "LiveSplits": {
     "title": "Edition splits",
@@ -3660,5 +3661,44 @@
     "skipsTitle": "Skipped checkpoints ({count})",
     "skipsNone": "Nobody skipped a checkpoint.",
     "skipRow": "{bib} {name} ({category}) – at “{at}” without: {missing}"
+  },
+  "TestMode": {
+    "title": "Test mode – settings",
+    "intro": "Foundation of the test mode (design B+): the test run goes into the shadow edition {year}, the test start list and on-site entries into their own tables; live entries, runners and clubs are read only. These are the test defaults. Starting a test still happens on the Live page.",
+    "backToLive": "← Race day – live",
+    "saved": "Test mode settings saved.",
+    "configTitle": "Test defaults",
+    "fictionalRunners": "Extra fictional runners",
+    "fictionalRunnersHint": "Added to paid entries (0 = live entries only). Names start with “TEST”.",
+    "copyLiveFrom": "Copy the live start list from (MM-DD)",
+    "copyLiveFromHint": "From this day of the race year the test takes over the drawn live start list; before that it draws its own.",
+    "times": "Test times (Europe/Prague)",
+    "timesHint": "HH:MM separated by commas, at most 6.",
+    "blockBeforeRace": "Also block the two days before the race (race day is always blocked)",
+    "durationH": "Test end (hours after zero)",
+    "cleanupAfterH": "Data cleanup (hours after zero)",
+    "durationHint": "Cleanup cannot come before the test end.",
+    "fixedTitle": "Fixed test rules",
+    "fixed": {
+      "paidOnly": "Only paid entries are drawn.",
+      "simulatedPayments": "On-site entry payments are simulated only (no FIO).",
+      "lateEntryCutoff": "No on-site entry cutoff in the test.",
+      "mainScenario": "Main scenario: finish with stopwatches and bibs (#{value}).",
+      "reportInAdminOnly": "Post-test report in the admin only, no e-mail."
+    },
+    "runsTitle": "Tests in the shadow edition",
+    "runsEmpty": "No test yet.",
+    "runZero": "Zero",
+    "runStatus": "Status",
+    "runRoster": "Start list",
+    "runCounts": "Start list / on-site",
+    "runCleanup": "Cleanup",
+    "error": {
+      "fictionalRunners": "Fictional runners must be 0–300.",
+      "copyLiveFrom": "Enter the date as MM-DD.",
+      "times": "Enter times as HH:MM separated by commas.",
+      "durationH": "Test end must be 1–6 hours after zero.",
+      "cleanupAfterH": "Cleanup must be no earlier than the test end and at most 24 hours after zero."
+    }
   }
 }

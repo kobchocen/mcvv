@@ -80,6 +80,7 @@ export default defineRouting({
     "/admin/prihlasky/spec-starty": "/admin/prihlasky/spec-starty",
     // den závodu: živé mezičasy (#120, #121)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
+    "/admin/den-zavodu/test-rezim": "/admin/den-zavodu/test-rezim",
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
     // cíl: párování stopek a čísel (#252)
     "/admin/den-zavodu/zive/cil": "/admin/den-zavodu/zive/cil",

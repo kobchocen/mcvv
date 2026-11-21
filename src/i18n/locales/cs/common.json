@@ -2365,7 +2365,8 @@
     "group_sale": "Závodní kancelář – prodejky",
     "group_sale_item": "Závodní kancelář – ceník",
     "group_startlist": "Startovka (čísla, zámky, skupiny)",
-    "group_partner": "Partneři"
+    "group_partner": "Partneři",
+    "group_newsletter": "Newsletter"
   },
   "RaceDay": {
     "title": "Den závodu",

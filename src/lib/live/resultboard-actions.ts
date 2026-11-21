@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireSection } from "@/lib/admin/access";
+import { withSettingsAudit } from "@/lib/audit/settings-audit";
 import { redirect } from "@/i18n/routing";
 import { prisma } from "@/lib/db/client";
 
@@ -16,7 +17,7 @@ import { RESULTBOARD_CONFIG_KEY, parseResultboardConfig } from "./resultboard-co
  * načtou do 30 s (na této replice hned – cache se smaže).
  */
 export async function saveResultboardAction(formData: FormData): Promise<void> {
-  await requireSection("raceControl.resultboard", "write");
+  const session = await requireSection("raceControl.resultboard", "write");
   const raw = String(formData.get("config") ?? "").slice(0, 20_000);
   let parsed: unknown = null;
   try {
@@ -33,11 +34,13 @@ export async function saveResultboardAction(formData: FormData): Promise<void> {
     return;
   }
   const text = JSON.stringify(parseResultboardConfig(parsed));
-  await prisma.setting.upsert({
-    where: { key: RESULTBOARD_CONFIG_KEY },
-    update: { text },
-    create: { key: RESULTBOARD_CONFIG_KEY, text },
-  });
+  await withSettingsAudit(session, "raceday.resultboard_changed", [RESULTBOARD_CONFIG_KEY], () =>
+    prisma.setting.upsert({
+      where: { key: RESULTBOARD_CONFIG_KEY },
+      update: { text },
+      create: { key: RESULTBOARD_CONFIG_KEY, text },
+    }),
+  );
   resultboardInfoCache.clear();
   revalidatePath("/[locale]/admin/den-zavodu/zive", "page");
   redirect({

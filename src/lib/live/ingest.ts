@@ -182,7 +182,13 @@ async function applyWebEntry(
   if (written.outcome === "applied") {
     await autoMarkStart(
       tx,
-      { year: ctx.year, bib: entry.bib, split: entry.split, splitAt: new Date(punchedAt) },
+      {
+        year: ctx.year,
+        bib: entry.bib,
+        split: entry.split,
+        splitAt: new Date(punchedAt),
+        userId: user.id,
+      },
       ctx,
     );
   }
@@ -318,6 +324,7 @@ export async function resolveConflict(
       bib: entry.bib,
       split: entry.split,
       splitAt: entry.punchedAt ?? new Date(),
+      userId: entry.userId,
     });
     await tx.splitEntry.updateMany({
       where: {

@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { auditMetaRow, type AuditMetaInput } from "@/lib/audit/meta-core";
 
 /** Akce zapisované do auditu (mcvv_audit_log). */
 export type AuditAction =
@@ -94,6 +95,14 @@ export type AuditAction =
   | "club.updated"
   // Uložení Nastavení: změněné klíče mcvv_setting (zveřejnění startovky, URL výsledků…).
   | "settings.changed"
+  // P7: nastavení mimo stránku Nastavení (diff klíčů jako settings.changed).
+  | "raceday.setup_changed"
+  | "raceday.starter_settings_changed"
+  | "raceday.resultboard_changed"
+  // P7: newsletter – rozeslání, opakování selhaných, smazání konceptu.
+  | "newsletter.started"
+  | "newsletter.retried"
+  | "newsletter.deleted"
   // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu. Cíl
   // `startlist:<rok>/<bezec>` nebo `startlist:<rok>`; detail `changes` (u více řádků klíče
   // `<bezec>.bib` / `.locked`). Skupiny startu nahradil spec. start „spolu s“ (Q225) – starší
@@ -115,7 +124,44 @@ export type AuditAction =
 /** Kdo akci provedl. Účet nemusí existovat (např. automatický job: id null). */
 export type AuditActor = Pick<SessionUser, "email" | "role"> & { id: number | null };
 
-type Db = Pick<PrismaClient, "auditLog"> | Prisma.TransactionClient;
+type Db =
+  | (Pick<PrismaClient, "auditLog"> & Partial<Pick<PrismaClient, "auditMeta" | "userRoleGrant">>)
+  | Prisma.TransactionClient;
+
+/** Role aktéra pro `actor_roles`: z `mcvv_user_role`, jinak jeho jediná role. */
+async function actorRoles(db: Db, actor: AuditActor): Promise<string[]> {
+  if (actor.id !== null && db.userRoleGrant) {
+    const rows = await db.userRoleGrant.findMany({
+      where: { userId: actor.id },
+      select: { role: true },
+    });
+    if (rows.length) return rows.map((row) => row.role).sort();
+  }
+  return [actor.role];
+}
+
+/**
+ * Metadata do `mcvv_audit_meta` (P7). Selhání nesmí shodit vlastní změnu ani audit:
+ * chyba se jen zaloguje (MySQL transakce po chybě jednoho příkazu pokračuje).
+ */
+async function writeAuditMeta(
+  db: Db,
+  auditId: number,
+  entry: { actor: AuditActor; action: string; target?: string; meta?: AuditMetaInput },
+): Promise<void> {
+  if (!db.auditMeta) return;
+  try {
+    const row = auditMetaRow({
+      action: entry.action,
+      target: entry.target,
+      meta: entry.meta,
+      actorRoles: await actorRoles(db, entry.actor),
+    });
+    await db.auditMeta.create({ data: { auditId, ...row } });
+  } catch (error) {
+    console.error("[audit] meta write failed", error);
+  }
+}
 
 /**
  * Zapíše auditní záznam (kdo, kdy, co, na čem, detail). V transakci předejte `tx`,
@@ -127,10 +173,12 @@ export async function writeAudit(
     action: AuditAction;
     target?: string;
     detail?: Prisma.InputJsonValue;
+    /** Ročník / číslo / entita / zdroj, pokud nejdou odvodit z `target` (P7). */
+    meta?: AuditMetaInput;
   },
   db: Db = prisma,
 ): Promise<void> {
-  await db.auditLog.create({
+  const created = await db.auditLog.create({
     data: {
       actorUserId: entry.actor.id,
       actorEmail: entry.actor.email,
@@ -139,5 +187,15 @@ export async function writeAudit(
       target: entry.target ?? null,
       detail: entry.detail,
     },
+    select: { id: true },
   });
+  await writeAuditMeta(db, created.id, entry);
+}
+
+/**
+ * Metadata pro přímý zápis automatického jobu (`tx.auditLog.create({ data: { …, meta } })`):
+ * pojmenovaný systémový aktér `system:<job>` v `actor_roles`, zdroj `system`.
+ */
+export function systemAuditMeta(job: string, action: string, target?: string) {
+  return { create: auditMetaRow({ action, target, systemJob: job }) };
 }

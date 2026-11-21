@@ -7,8 +7,6 @@ import { getTranslations } from "next-intl/server";
 import { requireRaceDay } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
-import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
-import { formatRaceTime } from "@/lib/utils";
 
 import {
   decodeObdFile,
@@ -23,16 +21,13 @@ import {
 } from "./obd-csv";
 import {
   planPresentationImport,
-  planResultsImport,
   presentationHasChanges,
   type PresentationFiles,
 } from "./obd-import";
 import {
   applyPresentationPlan,
-  applyResultsPlan,
   loadCategoryIds,
   loadPresentationSnapshot,
-  loadResultsSnapshot,
 } from "./obd-import-data";
 import { section, type ImportState, type ImportView } from "./import-view";
 
@@ -252,97 +247,4 @@ export async function presentationImportAction(
   revalidatePath("/[locale]/startovka", "page");
   revalidateTag(HOME_COUNTS_TAG, "max");
   return { status: "done", message: t("donePresentation"), view };
-}
-
-/**
- * Import oficiálních výsledků kon_vysl.csv do mcvv_time (#123). Stejný postup
- * náhled → potvrzení (hash) jako u importu po prezentaci.
- */
-export async function resultsImportAction(
-  _prev: ImportState,
-  formData: FormData,
-): Promise<ImportState> {
-  const session = await requireRaceDay();
-  const t = await getTranslations("RaceDayImport");
-  const intent = formData.get("intent") === "commit" ? "commit" : "preview";
-  const upload = await readUpload(formData, "kon_vysl", t);
-  if (typeof upload === "string") return { status: "error", message: upload };
-  if (!upload) return { status: "error", message: t("errNoFile") };
-
-  const { year } = await currentRaceYear();
-  const snapshot = await loadResultsSnapshot(year);
-  const parsed = parseRaceFile("kon_vysl", splitObdLines(upload.text), {
-    year,
-    categoryIds: new Set(snapshot.categories.keys()),
-  });
-  const plan = planResultsImport(snapshot, parsed.rows);
-  const errors = [...parsed.errors, ...plan.errors].map((error) => rowError(t, error));
-  const warnings = encodingWarnings(t, [upload]);
-  if (plan.copiedClubs.length > 0) {
-    warnings.push(
-      t("warnCopiedClubs", { clubs: plan.copiedClubs.map((c) => `${c.id} ${c.name}`).join(", ") }),
-    );
-  }
-  if (plan.withoutSplit > 0) warnings.push(t("warnWithoutSplit", { count: plan.withoutSplit }));
-  const name = (id: string) => snapshot.runners.get(id) ?? "";
-  const time = (seconds: number) =>
-    `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-  const view: ImportView = {
-    summary: [
-      { label: t("sumYear"), value: year },
-      {
-        label: t("sumResults"),
-        value: plan.unchanged
-          ? t("sumStartUnchanged", { count: plan.rows.length })
-          : t("sumStartReplace", { count: plan.rows.length, replaced: plan.replaced }),
-      },
-      ...plan.perCategory.map((c) => ({ label: `${c.categoryId} ${c.name}`, value: c.count })),
-    ],
-    errors,
-    warnings,
-    sections: [
-      section(
-        t("secSplitDiffs"),
-        [t("colBib"), t("colId"), t("colName"), t("colOfficial"), t("colSplit"), t("colDiff")],
-        plan.splitDiffs.map((d) => [
-          d.bib,
-          d.runnerId,
-          name(d.runnerId),
-          time(d.official),
-          time(d.split),
-          `${d.official - d.split > 0 ? "+" : ""}${d.official - d.split} s`,
-        ]),
-      ),
-      section(
-        t("secWithoutStart"),
-        [t("colId"), t("colName")],
-        plan.withoutStart.map((id) => [id, name(id)]),
-      ),
-    ].filter((item) => item.rows.length > 0),
-    unchanged: plan.unchanged && plan.copiedClubs.length === 0,
-  };
-
-  if (errors.length > 0) {
-    return { status: "error", message: t("errInvalid", { count: errors.length }), view };
-  }
-  if (intent === "preview") return { status: "preview", hash: plan.hash, view };
-  if (formData.get("hash") !== plan.hash) {
-    return { status: "error", message: t("errChanged"), view };
-  }
-  if (view.unchanged) return { status: "done", message: t("doneUnchanged"), view };
-  const records = await applyResultsPlan(plan, session, {
-    name: upload.name,
-    sha256: upload.sha256,
-    rows: parsed.rows.length,
-  });
-  revalidateTag(STATS_CACHE_TAG, "max");
-  revalidatePath("/[locale]/results", "layout");
-  revalidatePath("/[locale]/vysledky", "page");
-  revalidatePath("/[locale]/statistiky", "layout");
-  revalidatePath("/[locale]/admin/den-zavodu", "layout");
-  const done = t("doneResults", { count: plan.rows.length });
-  const recordsNote = records.length
-    ? t("doneRecords", { list: records.map((r) => `${r.id} ${formatRaceTime(r.to)}`).join(", ") })
-    : t("doneRecordsUnchanged");
-  return { status: "done", message: `${done} ${recordsNote}`, view };
 }

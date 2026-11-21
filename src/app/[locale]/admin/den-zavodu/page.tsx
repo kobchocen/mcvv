@@ -93,9 +93,6 @@ export default async function RaceDayPage({ params }: PageProps) {
             <Link className={buttonClass} href="/admin/den-zavodu/prezentace">
               {copy("importPresentation")}
             </Link>
-            <Link className={buttonClass} href="/admin/den-zavodu/vysledky">
-              {copy("importResults")}
-            </Link>
           </div>
         </section>
 

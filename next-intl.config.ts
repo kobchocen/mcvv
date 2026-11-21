@@ -65,7 +65,6 @@ export default defineRouting({
     "/admin/audit": "/admin/audit",
     "/admin/den-zavodu": "/admin/den-zavodu",
     "/admin/den-zavodu/prezentace": "/admin/den-zavodu/prezentace",
-    "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",
     // po závodě: tombola (#128)
     "/admin/po-zavode": "/admin/po-zavode",
     // závodní kancelář: pokladna a prodejky (#207)

@@ -36,7 +36,7 @@ describe("admin guards", () => {
     // Auditní log (#107) obsahuje e-maily a stavy před / po – jen admin.
     const audit = readFileSync(join(ROOT, "app/[locale]/admin/audit/page.tsx"), "utf8");
     assert.match(audit, /await requireAdmin\(\)/);
-    for (const sub of ["prezentace", "vysledky"]) {
+    for (const sub of ["prezentace"]) {
       const page = readFileSync(
         join(ROOT, `app/[locale]/admin/den-zavodu/${sub}/page.tsx`),
         "utf8",

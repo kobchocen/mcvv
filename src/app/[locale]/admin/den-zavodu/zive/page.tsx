@@ -23,7 +23,7 @@ import { parseAssignment } from "@/lib/live/assignment-core";
 import { OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
 import { loadOnlineSnapshot } from "@/lib/live/online-results";
-import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { getPublicSplitsMax, getRaceContext, getStations } from "@/lib/live/race-context";
 import { loadBoardPartners, loadResultboardConfig } from "@/lib/live/resultboard";
 import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "@/lib/live/online-results-core";
 import {
@@ -33,7 +33,14 @@ import {
 import { formatRaceTime } from "@/lib/live/start-time";
 import { loadStarterSettings } from "@/lib/live/starter";
 import { STARTER_SOUND_MODES } from "@/lib/live/starter-core";
-import { FINISH_SPLIT, formatStations, LIVE_STATIONS_MAX, withStart } from "@/lib/live/stations";
+import {
+  FINISH_SPLIT,
+  formatStations,
+  LIVE_STATIONS_MAX,
+  PUBLIC_OUTPUT_SLOTS,
+  publicStations,
+  withStart,
+} from "@/lib/live/stations";
 import {
   getActiveTestRun,
   getTestCutoff,
@@ -100,12 +107,13 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const ctx = await getRaceContext();
   // Nulový čas ročníku (st_nula_s) pro nápovědy a předvolbu testu.
   const zeroClock = formatStartClock((await currentRaceYear()).startModel.zeroSeconds);
-  const [stations, overview, site, splitmakers, starter] = await Promise.all([
+  const [stations, overview, site, splitmakers, starter, publicMax] = await Promise.all([
     getStations(),
     raceDayOverview(ctx.year),
     getSiteSettings(),
     listSplitmakers(),
     loadStarterSettings(),
+    getPublicSplitsMax(),
   ]);
   const now = new Date();
   const testBlocked = testRunBlocked(now, testCutoff);
@@ -415,6 +423,29 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                 className="min-h-20 bg-race-surface font-mono text-sm"
               />
               <p className="text-xs text-race-muted">{t("stationsHint")}</p>
+              <p className="text-xs text-race-muted" data-testid="public-splits">
+                {t("publicSplitsShown", {
+                  list:
+                    publicStations(stations, Math.min(publicMax, PUBLIC_OUTPUT_SLOTS))
+                      .map((s) => s.label)
+                      .join(", ") || "–",
+                })}
+                {publicStations(stations, 99).length > Math.min(publicMax, PUBLIC_OUTPUT_SLOTS)
+                  ? ` ${t("publicSplitsOver", { slots: PUBLIC_OUTPUT_SLOTS })}`
+                  : ""}
+              </p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="publicMax">{t("publicSplitsMax")}</Label>
+              <Input
+                id="publicMax"
+                name="publicMax"
+                type="number"
+                min={0}
+                max={9}
+                defaultValue={publicMax}
+                className="h-10 w-24 bg-race-surface"
+              />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="zeroOverride">{t("zeroOverride")}</Label>

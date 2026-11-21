@@ -42,6 +42,7 @@ export type AdminNavLabel =
   | "finish"
   | "finishStations"
   | "official"
+  | "course"
   | "screens"
   | "starter"
   | "splits"
@@ -101,6 +102,7 @@ export type AdminNavHref =
   | "/admin/den-zavodu/zive/casy"
   | "/admin/den-zavodu/zive/cil"
   | "/admin/den-zavodu/vysledky"
+  | "/admin/den-zavodu/trat"
   | "/cil"
   | "/start"
   | "/mezicasy"
@@ -241,6 +243,12 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
             id: "raceControl.official",
             label: "official",
             href: "/admin/den-zavodu/vysledky",
+            allowed: canAccessRaceDay,
+          },
+          {
+            id: "raceControl.course",
+            label: "course",
+            href: "/admin/den-zavodu/trat",
             allowed: canAccessRaceDay,
           },
         ],

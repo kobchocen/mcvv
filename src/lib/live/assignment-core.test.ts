@@ -15,7 +15,7 @@ const stations = [
 
 test("parseAssignment keeps valid station codes only (never the finish)", () => {
   assert.deepEqual(parseAssignment("31"), ["1", "3"]);
-  assert.deepEqual(parseAssignment("19x"), ["1"]);
+  assert.deepEqual(parseAssignment("19X%"), ["1"]);
   // "0" = start (#203)
   assert.deepEqual(parseAssignment("10"), ["0", "1"]);
   assert.deepEqual(parseAssignment(null), []);

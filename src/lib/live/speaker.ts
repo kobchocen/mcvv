@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { loadRoster } from "@/lib/race/roster";
 
-import { getRaceContext, getStations, type RaceContext } from "./race-context";
+import { getRaceContext, getPublicStations, type RaceContext } from "./race-context";
 import { getRecordBaselines } from "./records-live";
 import { liveRecordMarks, type TrMark } from "./records-live-core";
 import { createBodyCache } from "./speaker-cache";
@@ -21,7 +21,7 @@ export const SPEAKER_CACHE_MS = 3000;
 export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnapshot> {
   const [ctx, stations, testRun] = await Promise.all([
     getRaceContext(),
-    getStations(),
+    getPublicStations(),
     getActiveTestRun(now),
   ]);
   const { categories, runners, tr } = await loadRaceRunners(ctx, stations);
@@ -63,9 +63,10 @@ export async function loadRaceRunners(
     }),
     getRecordBaselines(ctx.year),
   ]);
-  // M1 / M2 = první dvě stanoviště z nastavení (výchozí 1 = 1,3 km, 3 = 2,7 km), Cíl = 9.
-  const m1 = stations[0]?.code ?? "1";
-  const m2 = stations[1]?.code ?? "3";
+  // M1 / M2 = první dva veřejné mezičasy podle pozice (#316; výchozí 1 = 1,3 km, 3 = 2,7 km),
+  // Cíl = 9. Volající předává už vybrané veřejné mezičasy (`getPublicStations`).
+  const m1 = stations[0]?.code ?? null;
+  const m2 = stations[1]?.code ?? null;
   const times = new Map<number, { m1: number | null; m2: number | null; fin: number | null }>();
   for (const s of splits) {
     const key =

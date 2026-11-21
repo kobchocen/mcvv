@@ -4,7 +4,15 @@ import { raceStartFor } from "@/lib/race/phase";
 
 import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "./online-results-core";
 import { durationFromSetting, startOffsetLimitFromSetting } from "./splits-screen-core";
-import { LIVE_STATIONS_KEY, parseStations, type Station } from "./stations";
+import {
+  LIVE_PUBLIC_SPLITS_MAX_KEY,
+  LIVE_STATIONS_KEY,
+  parsePublicMax,
+  parseStations,
+  PUBLIC_OUTPUT_SLOTS,
+  publicStations,
+  type Station,
+} from "./stations";
 
 export const LIVE_ZERO_OVERRIDE_KEY = "live_zero_override";
 /** Práh odchylky na Startu v sekundách (#187, Q80); chybí → 2 min. */
@@ -85,4 +93,22 @@ export async function getStations(): Promise<Station[]> {
     select: { text: true },
   });
   return parseStations(row?.text);
+}
+
+/** Nastavený strop veřejných mezičasů (#316, výchozí 3). */
+export async function getPublicSplitsMax(): Promise<number> {
+  const row = await prisma.setting.findUnique({
+    where: { key: LIVE_PUBLIC_SPLITS_MAX_KEY },
+    select: { text: true },
+  });
+  return parsePublicMax(row?.text);
+}
+
+/**
+ * Mezičasy pro veřejné výstupy (živé výsledky, tabule, speaker): veřejné podle pozice, nejvýš
+ * nastavený strop a nejvýš tolik, kolik výstupy umí (M1, M2).
+ */
+export async function getPublicStations(): Promise<Station[]> {
+  const [stations, max] = await Promise.all([getStations(), getPublicSplitsMax()]);
+  return publicStations(stations, Math.min(max, PUBLIC_OUTPUT_SLOTS));
 }

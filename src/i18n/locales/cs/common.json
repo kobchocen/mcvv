@@ -2019,7 +2019,7 @@
     "onlineLinkOverride": "nouzová URL z Nastavení přebíjí vlastní online výsledky",
     "setupTitle": "Stanoviště a zkouška nanečisto",
     "stations": "Stanoviště splitmakerů",
-    "stationsHint": "Řádky kód=popis, kód 1–8 (9 = cíl). Výchozí 1=1,3 km a 3=2,7 km.",
+    "stationsHint": "Řádky kód=popis | pozice | veřejný/interní. Kód 1–8 nebo a–z (9 = cíl), pozice ve stovkách metrů (15 = 1,5 km). Výchozí 1=1,3 km | 13 | veřejný a 3=2,7 km | 27 | veřejný.",
     "zeroOverride": "Zkušební nula (generálka)",
     "zeroOverrideHint": "Prázdné = den závodu {time}. Pro zkoušku nastavte např. dnešek a čas. Po zkoušce smažte!",
     "startLimit": "Práh odchylky na Startu",
@@ -2049,7 +2049,10 @@
     "starterRedPhase": "Červená fáze neoznačeného (s)",
     "starterRedPhaseHint": "Jak dlouho po startu svítí neoznačený červeně (ťuk = vyběhl včas), pak sjede do Nevyběhli. Výchozí 5 s.",
     "starterDnsWindow": "Okno pruhu Nevyběhli",
-    "starterDnsWindowHint": "Pruh ukazuje jen nevyběhlé za poslední dobu (výchozí 5 min), starší jsou v „Všichni“ a celé startovce."
+    "starterDnsWindowHint": "Pruh ukazuje jen nevyběhlé za poslední dobu (výchozí 5 min), starší jsou v „Všichni“ a celé startovce.",
+    "publicSplitsShown": "Na veřejných výstupech (živé výsledky, tabule, speaker): {list}.",
+    "publicSplitsOver": "Další veřejné mezičasy se nezobrazí – výstupy zatím umí nejvýš {slots}.",
+    "publicSplitsMax": "Nejvýš veřejných mezičasů"
   },
   "LiveSplits": {
     "title": "Mezičasy ročníku",
@@ -2488,7 +2491,8 @@
     "finishIntro": "Stanice Stopky a Čísla v cíli, párování časů s čísly a jeho opravy. Po kontrole hlavním rozhodčím zveřejnění oficiálních výsledků.",
     "finishStations": "Stanice v cíli",
     "finishPairing": "Párování cíle",
-    "officialOpen": "Oficiální výsledky"
+    "officialOpen": "Oficiální výsledky",
+    "courseOpen": "Přehled trati"
   },
   "AfterRace": {
     "title": "Po závodě – tombola",
@@ -3382,7 +3386,8 @@
     "pin": "Připnout",
     "unpin": "Odepnout",
     "permissions": "Oprávnění rolí",
-    "official": "Oficiální výsledky"
+    "official": "Oficiální výsledky",
+    "course": "Přehled trati"
   },
   "AdminPermissions": {
     "title": "Oprávnění rolí",
@@ -3623,5 +3628,26 @@
       "window-open": "Živé výsledky ručně otevřeny.",
       "window-closed": "Živé výsledky ručně zavřeny."
     }
+  },
+  "CourseAdmin": {
+    "title": "Přehled trati",
+    "heading": "Přehled trati {year}",
+    "intro": "Kolik závodníků prošlo kterou kontrolou. Kdo se objevil na mezičase nebo v cíli bez průchodu všemi předchozími kontrolami, je zvýrazněný. Obnovuje se každých 15 s.",
+    "back": "Den závodu",
+    "roster": "Ve startovce",
+    "started": "Odstartovalo",
+    "anyCheckpoint": "Prošlo kontrolou",
+    "finished": "V cíli",
+    "pointsTitle": "Kontroly podle pozice na trati",
+    "colPoint": "Kontrola",
+    "colPosition": "Pozice",
+    "colPassed": "Prošlo",
+    "colPublic": "Zobrazení",
+    "public": "veřejný",
+    "internal": "interní",
+    "finish": "Cíl",
+    "skipsTitle": "Vynechané kontroly ({count})",
+    "skipsNone": "Nikdo nevynechal kontrolu.",
+    "skipRow": "{bib} {name} ({category}) – na „{at}“ bez: {missing}"
   }
 }

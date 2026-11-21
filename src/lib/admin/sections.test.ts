@@ -112,6 +112,7 @@ describe("admin sections registry", () => {
       "raceControl.overview",
       "raceControl.finish",
       "raceControl.official",
+      "raceControl.course",
       "screens",
       "screens.finish",
     ]);

@@ -9,7 +9,7 @@ import {
   gateOnline,
   type OnlineSnapshot,
 } from "./online-results-core";
-import { getRaceContext, getStations } from "./race-context";
+import { getPublicStations, getRaceContext } from "./race-context";
 import { createBodyCache } from "./speaker-cache";
 import { loadRaceRunners } from "./speaker";
 import { startOffsetSeconds } from "./start-check-core";
@@ -43,7 +43,7 @@ export async function loadOnlineSnapshot(
 ): Promise<OnlineSnapshot> {
   const [rawCtx, stations, { run, cutoff }] = await Promise.all([
     getRaceContext(),
-    getStations(),
+    getPublicStations(),
     peekStoredTestRun(now),
   ]);
   const hidden = options.includeTest ? null : publicHiddenWindow(run, cutoff);

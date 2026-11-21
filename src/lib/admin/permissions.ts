@@ -77,6 +77,8 @@ export const SECTION_RULES = {
   "raceControl.official": { read: "raceday", write: "admin" },
   /** Kontrola výsledků hlavním rozhodčím před zveřejněním (dnes admin). */
   "raceControl.officialCheck": { read: "raceday", write: "admin" },
+  /** Přehled trati pro šéfa trati (#316): průchody kontrolami, vynechané kontroly. */
+  "raceControl.course": { read: "raceday", write: "raceday" },
   "screens.starter": { read: "starter", write: "starter" },
   "screens.splits": { read: "splits", write: "splits" },
   /** Cíl (#252): stanice Stopky a Čísla. */
@@ -190,6 +192,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.finish": "write",
     "raceControl.official": "write",
     "raceControl.officialCheck": "read",
+    "raceControl.course": "write",
     "screens.starter": "write",
     "screens.finish": "write",
     "screens.splits": "write",
@@ -206,6 +209,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.finish": "read",
     "raceControl.official": "write",
     "raceControl.officialCheck": "write",
+    "raceControl.course": "read",
     "screens.speaker": "read",
     "screens.resultboard": "read",
     "startlist.list": "read",
@@ -216,6 +220,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
   course_chief: {
     overview: "write",
     "raceControl.overview": "read",
+    "raceControl.course": "read",
     "raceControl.live": "read",
     "screens.splits": "read",
     "screens.speaker": "read",

@@ -60,7 +60,7 @@ export default async function RaceDayPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireSection("raceControl.overview", "read");
-  const [showStart, showLive, showSpeaker, showResultboard, showFinish, showOfficial] =
+  const [showStart, showLive, showSpeaker, showResultboard, showFinish, showOfficial, showCourse] =
     await Promise.all([
       canAccess("raceControl.start", "read"),
       canAccess("raceControl.live", "write"),
@@ -68,6 +68,7 @@ export default async function RaceDayPage({ params }: PageProps) {
       canAccess("screens.resultboard", "read"),
       canAccess("raceControl.finish", "read"),
       canAccess("raceControl.official", "read"),
+      canAccess("raceControl.course", "read"),
     ]);
   const copy = await getTranslations({ locale, namespace: "RaceDay" });
 
@@ -124,7 +125,7 @@ export default async function RaceDayPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        {showFinish || showOfficial ? (
+        {showFinish || showOfficial || showCourse ? (
           <section
             className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
             data-testid="finish-official-link"
@@ -141,6 +142,11 @@ export default async function RaceDayPage({ params }: PageProps) {
                     {copy("finishPairing")}
                   </Link>
                 </>
+              ) : null}
+              {showCourse ? (
+                <Link className={buttonClass} href="/admin/den-zavodu/trat">
+                  {copy("courseOpen")}
+                </Link>
               ) : null}
               {showOfficial ? (
                 <Link className={buttonClass} href="/admin/den-zavodu/vysledky">

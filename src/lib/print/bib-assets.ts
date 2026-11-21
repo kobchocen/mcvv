@@ -83,7 +83,7 @@ function yearBadgeSvg(year: number, wave: readonly CoursePoint[], fontDataUri: s
   const line = wave.map(([x, y]) => `${x},${y}`).join(" ");
   const clip = `-105,260 ${line} 560,260`;
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${YEAR_BADGE_W}" height="${YEAR_BADGE_H}" viewBox="${YEAR_BADGE_VIEWBOX}" overflow="visible">
+<svg xmlns="http://www.w3.org/2000/svg" width="${YEAR_BADGE_W * YEAR_BADGE_SCALE}" height="${YEAR_BADGE_H * YEAR_BADGE_SCALE}" viewBox="${YEAR_BADGE_VIEWBOX}" overflow="hidden">
   <style>@font-face{font-family:Oswald;src:url('${fontDataUri}');font-weight:700}</style>
   <defs>
     <clipPath id="yb"><polygon points="${clip}"/></clipPath>
@@ -96,6 +96,14 @@ function yearBadgeSvg(year: number, wave: readonly CoursePoint[], fontDataUri: s
       <text x="225" y="225" fill="#fb5d1e">${year}</text>
     </g>
   </g>
+  <clipPath id="yg">
+    <g transform="translate(225,0) skewX(-12) translate(-225,0)" font-family="Oswald" font-weight="700" font-size="215" text-anchor="middle" letter-spacing="2">
+      <text x="225" y="225">${year}</text>
+    </g>
+  </clipPath>
+  <g clip-path="url(#yg)">
+    <polyline fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" points="${line}"/>
+  </g>
 </svg>`;
 }
 
@@ -106,14 +114,25 @@ export function loadYearBadge(year: number, root: string = process.cwd()): Promi
     return cached;
   }
   const pending = (async () => {
+    // Oficiální v15 rok je raster z Chrome (bib15-veteran.html). Sharp/librsvg
+    // kreslí stejné SVG o ~12 % menší, proto pro 2026 bereme přiložený PNG.
+    const officialPng = path.join(root, PRINT_ASSET_DIR, `year-badge-${year}.png`);
+    try {
+      const { data, info } = await sharp(officialPng)
+        .ensureAlpha()
+        .png()
+        .toBuffer({ resolveWithObject: true });
+      return { data: new Uint8Array(data), width: info.width, height: info.height };
+    } catch {
+      // jiné ročníky: fallback přes SVG
+    }
     const [font, wave] = await Promise.all([
       readFile(path.join(root, RECEIPT_FONT_DIR, "Oswald-Bold.ttf")),
       loadYearWave(root),
     ]);
     const fontDataUri = `data:font/ttf;base64,${font.toString("base64")}`;
     const svg = Buffer.from(yearBadgeSvg(year, wave, fontDataUri));
-    const { data, info } = await sharp(svg, { density: 192 })
-      .resize({ width: YEAR_BADGE_W * YEAR_BADGE_SCALE })
+    const { data, info } = await sharp(svg, { density: 72 })
       .png()
       .toBuffer({ resolveWithObject: true });
     return { data: new Uint8Array(data), width: info.width, height: info.height };

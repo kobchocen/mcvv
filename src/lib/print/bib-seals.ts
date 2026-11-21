@@ -25,7 +25,6 @@ export const SEAL_RIGHT_PX = 100;
 /** Horní okraj primární pečeti: spodek 1186 sedí u účaří čísla (1172). */
 export const SEAL_PRIMARY_TOP_PX = 918;
 export const SEAL_VB = 240;
-const SKEW_DEG = -12;
 const NUMBER_SIZE = 128;
 const PROFILE_FLAT = 0.48;
 const COURSE_U0 = 0.22;
@@ -79,7 +78,14 @@ function flattenedWave(
   return pts;
 }
 
-export type SealNumberLayout = { yb: number; tx: number; adv: number; bounds: number[] };
+export type SealNumberLayout = {
+  yb: number;
+  tx: number;
+  adv: number;
+  bounds: number[];
+  d: string;
+  transform: string;
+};
 
 /** Oficiální v15 place_number: vycentrovaný ink bbox mezi MCVV a popiskem. */
 export function sealNumberPlacement(count: string): SealNumberLayout {
@@ -100,7 +106,8 @@ export function sealSvg(
   const fill = seal.fill;
   const fillTop = BIB_CREAM;
   const fillBot = seal.kind === "veteran" ? BIB_ORANGE : BIB_FOREST;
-  const gap = 2.6;
+  // Oficiální bib15.py: gap = 2.6 / 70 * fs (ne 2.6 z kroužku).
+  const gap = (2.6 / 70) * NUMBER_SIZE;
   const uid = `cut-${seal.kind}-${count}`;
   const placed = sealNumberPlacement(count);
   const [x0, , x1] = placed.bounds;
@@ -109,27 +116,25 @@ export function sealSvg(
   const px0 = wave[0].x;
   const px1 = wave[wave.length - 1].x;
   const poly = `${line} ${px1.toFixed(2)},${placed.yb + 36} ${px0.toFixed(2)},${placed.yb + 36}`;
-  const skew = `translate(${placed.tx},0) translate(120,0) skewX(${SKEW_DEG}) translate(-120,0)`;
   const label = escapeXml(seal.label);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${SEAL_VB}" height="${SEAL_VB}" viewBox="0 0 ${SEAL_VB} ${SEAL_VB}">
   <style>@font-face{font-family:Oswald;src:url('${fontDataUri}');font-weight:600 700}</style>
   <defs>
     <clipPath id="${uid}"><polygon points="${poly}"/></clipPath>
+    <clipPath id="${uid}-g"><path transform="${placed.transform}" d="${placed.d}"/></clipPath>
   </defs>
   <circle cx="120" cy="120" r="120" fill="${fill}"/>
   <circle cx="120" cy="120" r="111" fill="none" stroke="${ring}" stroke-width="2.6"/>
   <circle cx="120" cy="120" r="104" fill="none" stroke="${ring}" stroke-width="1" opacity=".55"/>
   <text x="120" y="50" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="15" letter-spacing="4.5" fill="${ring}">MCVV</text>
-  <g transform="${skew}" font-family="Oswald" font-weight="700" font-size="${NUMBER_SIZE}" text-anchor="middle">
-    <text x="120" y="${placed.yb}" fill="${fillTop}">${count}</text>
-  </g>
+  <g transform="${placed.transform}"><path d="${placed.d}" fill="${fillTop}"/></g>
   <g clip-path="url(#${uid})">
-    <g transform="${skew}" font-family="Oswald" font-weight="700" font-size="${NUMBER_SIZE}" text-anchor="middle">
-      <text x="120" y="${placed.yb}" fill="${fillBot}">${count}</text>
-    </g>
+    <g transform="${placed.transform}"><path d="${placed.d}" fill="${fillBot}"/></g>
   </g>
-  <polyline fill="none" stroke="${fill}" stroke-width="${gap}" stroke-linecap="round" stroke-linejoin="round" points="${line}"/>
+  <g clip-path="url(#${uid}-g)">
+    <polyline fill="none" stroke="${fill}" stroke-width="${gap.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" points="${line}"/>
+  </g>
   <text x="120" y="204" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="18" letter-spacing="3.2" fill="${ring}">${label}</text>
 </svg>`;
 }

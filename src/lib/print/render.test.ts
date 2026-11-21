@@ -271,7 +271,7 @@ describe("italic skew and start-number colours", () => {
     assert.equal(TIME_SIZE_PX, 176);
     assert.equal(TIME_LABEL_SIZE_PX, 44);
     assert.equal(TIME_NAME_SIZE_PX, 30);
-    assert.equal(TIME_BASELINE_PX, 1654);
+    assert.equal(TIME_BASELINE_PX, 1650);
     assert.equal(NAME_BASELINE_PX, 1699);
     const row = {
       runnerId: "r",

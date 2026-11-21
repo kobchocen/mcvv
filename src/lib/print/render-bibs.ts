@@ -10,7 +10,8 @@ import {
   sealCacheKey,
 } from "./bib-seals";
 import { BIB_FOREST, bibGivenNameFirst, type BibCard, participationHex } from "./bibs-core";
-import { profilePoints, type CoursePoint } from "./course-profile";
+import type { CoursePoint } from "./course-profile";
+import numberWave from "@/assets/print/number-wave.json";
 
 const FONT = "Oswald";
 
@@ -34,6 +35,21 @@ export function cssBaseline(topPx: number, fontSizePx: number, lineHeight = 1): 
   return topPx + (halfLeading + OSWALD_ASCEND) * fontSizePx;
 }
 
+/** typografický střed čísla v oficiálním SVG. */
+export const NUMBER_CENTER_PX = 1240;
+/**
+ * jsPDF getTextWidth/align u Oswald + letter-spacing -20 posune inkoust
+ * trojčíslí o 21 px doleva vůči Chrome. Kompenzace, aby inkoust seděl na v15.
+ */
+export const NUMBER_INK_NUDGE_PX = 21;
+/** typografický pravý okraj času (CSS right 100). */
+export const TIME_RIGHT_PX = 2380;
+/**
+ * Stejný nesoulad jsPDF Tc u pravého zarovnání: jméno i levý okraj času
+ * jsou na v15 o 31 px vlevo (měřeno na 173 @ 300 dpi).
+ */
+export const TIME_INK_NUDGE_PX = 31;
+export const TIME_WIDTH_PAD_PX = 13;
 export const SURNAME_MAX_PX = 1400;
 export const SURNAME_SIZE_PX = 228;
 export type BibLogo = { data: Uint8Array; width: number; height: number };
@@ -56,7 +72,7 @@ export const ITALIC_SKEW_DEG = -12;
 export const TIME_SIZE_PX = 176;
 export const TIME_LABEL_SIZE_PX = 44;
 export const TIME_NAME_SIZE_PX = 30;
-export const TIME_BASELINE_PX = 1654;
+export const TIME_BASELINE_PX = 1650;
 export const NAME_BASELINE_PX = 1699;
 export const TIME_GAP_PX = 18;
 export const TIME_TRACKING_EM = 0.02;
@@ -64,7 +80,7 @@ export const TIME_LABEL_TRACKING_EM = 0.08;
 export const TIME_NAME_TRACKING_EM = 0.1;
 export const YEAR_LOGO_GAP_PX = 6;
 export const YEAR_MARGIN_LEFT_PX = -110;
-export const YEAR_MARGIN_TOP_PX = -40;
+export const YEAR_MARGIN_TOP_PX = -20;
 /** Musí odpovídat plátnu v bib-assets (oficiální v15 + rezerva na šikmou dvojku). */
 export const YEAR_BADGE_W_PX = 720;
 export const YEAR_BADGE_H_PX = 250;
@@ -194,10 +210,11 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
 
   // Logo partnera nahoře
   if (card.logoIndex !== null && assets.logos[card.logoIndex]) {
+    // Oficiální .zone: left/right 100 (šířka 2280), img height 305, max-width 1900, centrované.
     drawContainedImage(doc, assets.logos[card.logoIndex], `partner-${card.logoIndex}`, {
       x: margin,
       y: ym(10) + (pxToMm(350) - pxToMm(305)) / 2,
-      w: pxToMm(1900),
+      w: pxToMm(2280),
       h: pxToMm(305),
     });
   }
@@ -222,7 +239,12 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
   doc.setFontSize(pxToPt(990));
   doc.setCharSpace(pxToMm(-20));
   doc.setTextColor(participationHex(card.color));
-  doc.text(number, pxToMm(1240), numberBaseline, { align: "center" });
+  const numberWidth = doc.getTextWidth(number);
+  doc.text(
+    number,
+    pxToMm(NUMBER_CENTER_PX + NUMBER_INK_NUDGE_PX) - numberWidth / 2,
+    numberBaseline,
+  );
   doc.setCharSpace(0);
 
   // Kategorie slovy, 90° proti směru hodin
@@ -235,19 +257,11 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
     doc.setCharSpace(0);
   }
 
-  // Bílá vlnitá linka profilu tratě přes číslo
-  const top = 372;
-  const base = 1172;
-  const height = base - top;
-  const line = profilePoints(
-    assets.profile,
-    30,
-    ym(top + 0.5 * height),
-    ym(top + 0.7 * height),
-    pxToMm(590),
-    pxToMm(1890),
-    5,
-  );
+  // Oficiální bib15 polyline (stroke 26, body 590,931.9 … 1890,886.3)
+  const line = (numberWave as [number, number][]).map(([x, y]) => ({
+    x: pxToMm(x),
+    y: ym(y),
+  }));
   drawPolyline(doc, line, pxToMm(26), "#ffffff");
 
   if (card.blank) {
@@ -293,20 +307,29 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
 
   // START V + čas vpravo, pod tím celé jméno a ročník (sazba v15)
   const timeBaseline = ym(TIME_BASELINE_PX);
-  const timeX = pxToMm(2380);
+  const timeX = pxToMm(TIME_RIGHT_PX - TIME_INK_NUDGE_PX);
   const timeTracking = pxToMm(TIME_SIZE_PX * TIME_TRACKING_EM);
   const labelTracking = pxToMm(TIME_LABEL_SIZE_PX * TIME_LABEL_TRACKING_EM);
   const nameTracking = pxToMm(TIME_NAME_SIZE_PX * TIME_NAME_TRACKING_EM);
+  // jsPDF align:right + setCharSpace posune inkoust za pravý okraj
+  // (šířka pro align nebere Tc stejně jako kresba). Kreslíme zleva od
+  // (pravý okraj − getTextWidth), typografický pravý okraj zůstává 2380.
   doc.setFont(FONT, "bold");
   doc.setFontSize(pxToPt(TIME_SIZE_PX));
   doc.setCharSpace(timeTracking);
   const timeWidth = doc.getTextWidth(card.startTime);
+  // getTextWidth + Tc je u času o ~13 px užší než Chrome (v15 inkoust 844 px).
+  // Necháme levý okraj a jméno, tracking do kresby přidáme, aby narostl doprava.
+  const timeGaps = Math.max(card.startTime.length - 1, 1);
+  const timeStart = timeX - timeWidth;
+  doc.setCharSpace(timeTracking + pxToMm(TIME_WIDTH_PAD_PX) / timeGaps);
   doc.setTextColor(BIB_FOREST);
-  doc.text(card.startTime, timeX, timeBaseline, { align: "right" });
+  doc.text(card.startTime, timeStart, timeBaseline);
   doc.setFont(FONT, "medium");
   doc.setFontSize(pxToPt(TIME_LABEL_SIZE_PX));
   doc.setCharSpace(labelTracking);
-  doc.text("START V:", timeX - timeWidth - pxToMm(TIME_GAP_PX), timeBaseline, { align: "right" });
+  const labelWidth = doc.getTextWidth("START V:");
+  doc.text("START V:", timeX - timeWidth - pxToMm(TIME_GAP_PX) - labelWidth, timeBaseline);
   doc.setCharSpace(0);
 
   if (!card.blank) {
@@ -316,7 +339,8 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
     doc.setFontSize(pxToPt(TIME_NAME_SIZE_PX));
     doc.setCharSpace(nameTracking);
     doc.setTextColor(0, 0, 0);
-    doc.text(who, timeX, ym(NAME_BASELINE_PX), { align: "right" });
+    const whoWidth = doc.getTextWidth(who);
+    doc.text(who, timeX - whoWidth, ym(NAME_BASELINE_PX));
     doc.setCharSpace(0);
   }
 }

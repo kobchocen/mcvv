@@ -14,3 +14,5 @@ dumps
 .env.development.local
 .env.test.local
 .env.production.local
+src/assets/print/seal-number-layout.json
+src/assets/print/number-wave.json

@@ -20,11 +20,13 @@ describe("bib seals", () => {
     const veteranSvg = sealSvg(veteran, profile, "data:font/ttf;base64,AA==");
     const winnerSvg = sealSvg(winner, profile, "data:font/ttf;base64,AA==");
     assert.equal(twoDigitCount(5), "05");
-    assert.match(veteranSvg, />05</);
+    assert.match(veteranSvg, /id="cut-veteran-05"/);
     assert.match(veteranSvg, />STARTŮ</);
-    assert.match(winnerSvg, />03</);
+    assert.match(winnerSvg, /id="cut-winner-03"/);
     assert.match(winnerSvg, />VÝHER</);
     assert.match(winnerSvg, />MCVV</);
+    assert.match(veteranSvg, /<path /);
+    assert.match(winnerSvg, /stroke-width="4\.75"/);
   });
 
   it("centres the two-digit count with the official v15 place_number transform", () => {
@@ -38,7 +40,8 @@ describe("bib seals", () => {
     const veteran = bibAppearance({ isDefender: false, winCount: null, veteranStarts: 35 })
       .seals[0];
     const svg = sealSvg(veteran!, profile, "data:font/ttf;base64,AA==");
-    assert.match(svg, /translate\(24\.2324,0\)/);
-    assert.match(svg, /y="168\.948"/);
+    assert.match(svg, /translate\(24\.232,0\)/);
+    assert.match(svg, /stroke-width="4\.75"/);
+    assert.match(svg, /<path /);
   });
 });

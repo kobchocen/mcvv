@@ -52,7 +52,7 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
         SELECT GET_LOCK(${BIB_LOCK}, 10) AS ok`;
       if (Number(lock[0]?.ok ?? 0) !== 1) throw new Error("late bib lock timeout");
       try {
-        const [own, lines, imported] = await Promise.all([
+        const [own, lines] = await Promise.all([
           tx.registrationLine.findMany({
             where: { year, registrationId: id },
             select: { runnerId: true, categoryId: true, bib: true },
@@ -62,11 +62,9 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
             where: { year, bib: { gt: 0 } },
             select: { bib: true },
           }),
-          tx.startEntry.findMany({ where: { year, bib: { gt: 0 } }, select: { bib: true } }),
         ]);
         const taken = new Set<number>([
           ...lines.map((line) => line.bib!),
-          ...imported.map((row) => row.bib),
           ...[settings.champions.men, settings.champions.women].filter(
             (bib): bib is number => bib != null && bib > 0,
           ),

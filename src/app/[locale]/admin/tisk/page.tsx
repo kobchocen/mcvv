@@ -52,7 +52,7 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
       select: { id: true, name: true },
     }),
   ]);
-  const { year, settings, source } = startList;
+  const { year, settings } = startList;
   const { model } = settings;
   const numbered = startList.rows.length;
   const champions = championBibList(settings.champions).join(", ");
@@ -81,11 +81,8 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
         <section className={`mt-8 ${card}`}>
           <h2 className="font-display text-xl font-semibold">Celá startovka (po dávkách)</h2>
           <p className="mt-1 text-sm text-race-muted">
-            Čísel ve startovce ročníku {year}: <strong>{numbered}</strong> (
-            {source === "start"
-              ? "startovka z importu prezentace OBD"
-              : "čísla z přihlášek, spravovaná ve Startovce"}
-            ).
+            Čísel ve startovce ročníku {year}: <strong>{numbered}</strong> (jen zaplacené přihlášky
+            s číslem, spravované ve Startovce).
           </p>
           <form action={ACTION} method="get" className="mt-4 flex flex-wrap items-end gap-4">
             <input type="hidden" name="mode" value="all" />

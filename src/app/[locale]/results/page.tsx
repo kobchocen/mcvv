@@ -15,6 +15,7 @@ import { createClubResolver } from "@/lib/clubs/core";
 import { getResultYearCounts } from "@/lib/results/cached";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
+import { yearStartEntries } from "@/lib/race/roster";
 import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
@@ -120,10 +121,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   });
 
   // Bibs and splits for mezičasy support (like in per-year)
-  const startEntries = await prisma.startEntry.findMany({
-    where: { year: defaultYear },
-    select: { runnerId: true, bib: true },
-  });
+  const startEntries = await yearStartEntries(defaultYear);
   const bibByRunner = new Map(startEntries.map((s) => [s.runnerId, s.bib]));
 
   const splitsRaw = await prisma.split.findMany({

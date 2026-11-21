@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/client";
 import { countValidRunners } from "@/lib/entries/status";
+import { countRoster } from "@/lib/race/roster";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 
 import {
@@ -53,7 +54,7 @@ export const getHomeResultsSummary = unstable_cache(
 async function loadHomeCounts(year: number): Promise<HomeCounts> {
   const [resultsCount, startlistCount, entriesCount] = await Promise.all([
     prisma.result.count({ where: { year } }),
-    prisma.startEntry.count({ where: { year } }),
+    countRoster(year),
     countValidRunners(year),
   ]);
   return { resultsCount, startlistCount, entriesCount };

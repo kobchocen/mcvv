@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { rosterHasBib } from "@/lib/race/roster";
 
 import {
   checkPunch,
@@ -33,9 +34,9 @@ function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
+/** Číslo je ve startovce ročníku (zaplacená přihláška s číslem, `race/roster`). */
 async function knownBib(tx: Tx, year: number, bib: number): Promise<boolean> {
-  const row = await tx.startEntry.findFirst({ where: { year, bib }, select: { bib: true } });
-  return row !== null;
+  return rosterHasBib(tx, year, bib);
 }
 
 /** Zapíše řádek mcvv_split podle pravidla `decideWrite`. */

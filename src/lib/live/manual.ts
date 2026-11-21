@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { loadRoster } from "@/lib/race/roster";
 
 import { OWNING_OUTCOMES } from "./ingest-core";
 import { MANUAL_AUTHOR, MANUAL_SOURCE, normalizeReason } from "./manual-core";
@@ -30,10 +31,7 @@ export type SplitTableRow = {
 /** Startovka + mezičasy ročníku po číslech (pro výpis v adminu). */
 export async function loadSplitTable(year: number): Promise<SplitTableRow[]> {
   const [starts, splits, owners, conflicts] = await Promise.all([
-    prisma.startEntry.findMany({
-      where: { year },
-      select: { bib: true, runnerName: true, categoryId: true, runner: { select: { name: true } } },
-    }),
+    loadRoster(year),
     prisma.split.findMany({ where: { year } }),
     prisma.splitEntry.findMany({
       where: { year, outcome: { in: OWNING_OUTCOMES } },
@@ -55,7 +53,7 @@ export async function loadSplitTable(year: number): Promise<SplitTableRow[]> {
     if (start.bib < 1) continue;
     rows.set(start.bib, {
       bib: start.bib,
-      name: start.runnerName || start.runner.name,
+      name: start.runnerName,
       categoryId: start.categoryId,
       known: true,
       cells: {},

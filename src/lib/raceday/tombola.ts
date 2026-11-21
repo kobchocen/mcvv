@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/client";
 import { FINISH_SPLIT } from "@/lib/live/stations";
+import { yearStartEntries } from "@/lib/race/roster";
 
 import type { TombolaEntrant } from "./tombola-core";
 
@@ -15,8 +16,8 @@ export async function tombolaYears(): Promise<number[]> {
 }
 
 /**
- * Doběhnuvší ročníku: po importu výsledků `mcvv_time` (čas > 0), jinak čísla s průchodem
- * cílem (`mcvv_split`, split 9) dohledaná ve startovce (`mcvv_start`).
+ * Doběhnuvší ročníku: po zveřejnění výsledků `mcvv_time` (čas > 0), jinak čísla s průchodem
+ * cílem (`mcvv_split`, split 9) dohledaná ve startovce (`yearStartEntries`).
  */
 export async function loadTombolaPool(year: number): Promise<TombolaPool> {
   const results = await prisma.result.findMany({
@@ -46,24 +47,17 @@ export async function loadTombolaPool(year: number): Promise<TombolaPool> {
     select: { bib: true },
   });
   if (finished.length === 0) return { source: "none", entrants: [] };
-  const start = await prisma.startEntry.findMany({
-    where: { year, bib: { in: finished.map((row) => row.bib) } },
-    select: {
-      runnerId: true,
-      runnerName: true,
-      clubId: true,
-      clubName: true,
-      runner: { select: { name: true } },
-      club: { select: { name: true } },
-    },
-  });
+  const start = await yearStartEntries(
+    year,
+    finished.map((row) => row.bib),
+  );
   return {
     source: "splits",
     entrants: start.map((row) => ({
       runnerId: row.runnerId,
-      name: row.runnerName || row.runner.name,
+      name: row.runnerName,
       clubId: row.clubId,
-      club: row.clubName || row.club.name,
+      club: row.clubName,
     })),
   };
 }

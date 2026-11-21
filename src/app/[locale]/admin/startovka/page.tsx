@@ -20,7 +20,7 @@ import {
   specialStartPartnerText,
 } from "@/lib/admin/special-start-view";
 import { specialRangeText } from "@/lib/race/special-start";
-import { getSiteSettings } from "@/lib/settings/site";
+import { getSiteSettings, startlistDrawConfirmed } from "@/lib/settings/site";
 import { formatInterval } from "@/lib/race/start-settings";
 import {
   checkStartList,
@@ -127,8 +127,10 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const valid = allRows.filter((row) => row.valid);
   const withBib = valid.filter((row) => row.bib != null).length;
 
-  // Po zveřejnění je návrh zakázaný (UI i server action); náhled se ani nepočítá.
-  const proposalLocked = startListProposalLock(site).locked;
+  // Po potvrzení losování je návrh zakázaný (UI i server action); náhled se ani nepočítá.
+  const proposalLock = startListProposalLock(site, year);
+  const proposalLocked = proposalLock.locked;
+  const drawHidden = !site.startlistPublished && startlistDrawConfirmed(site, year);
   const showProposal = query.navrh === "1" && !proposalLocked;
   const input = showProposal ? await buildGeneratorInput(year, settings, allRows) : null;
   const proposal = input ? generateStartList(input) : null;
@@ -239,6 +241,8 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("errBlocking");
       case "published":
         return t("proposeLockedPublished");
+      case "drawn":
+        return t("proposeLockedDrawn");
       default:
         return null;
     }
@@ -308,7 +312,11 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                 : "text-race-muted"
             }
           >
-            {site.startlistPublished ? t("published") : t("unpublished")}
+            {site.startlistPublished
+              ? t("published")
+              : drawHidden
+                ? t("drawnHidden")
+                : t("unpublished")}
           </span>{" "}
           <Link href="/admin/nastaveni" className={linkButton}>
             {t("publishLink")}
@@ -430,7 +438,9 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
               data-testid="startlist-propose-locked"
               className="mt-2 max-w-4xl border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm"
             >
-              {t("proposeLockedPublished")}{" "}
+              {proposalLock.locked && proposalLock.reason === "drawn"
+                ? t("proposeLockedDrawn")
+                : t("proposeLockedPublished")}{" "}
               <Link href="/admin/nastaveni" className={linkButton}>
                 {t("publishLink")}
               </Link>
@@ -494,7 +504,8 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
               </div>
               {proposal.changed === 0 ? (
                 <p className="text-sm text-race-muted">{t("proposalNoChange")}</p>
-              ) : (
+              ) : null}
+              {proposal.changed > 0 ? (
                 <>
                   <p className="text-sm font-semibold">
                     {t("proposalSummary", { changed: proposal.changed })}
@@ -539,23 +550,29 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
                       </tbody>
                     </table>
                   </div>
-                  {proposal.blocking ? (
-                    <p className="text-sm font-semibold text-red-700 dark:text-red-400">
-                      {t("proposalBlocked")}
-                    </p>
-                  ) : (
-                    <form action={applyStartListProposal}>
-                      <input type="hidden" name="year" value={year} />
-                      <input type="hidden" name="fingerprint" value={fingerprint} />
-                      <Button
-                        type="submit"
-                        className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
-                      >
-                        {t("proposalApply")}
-                      </Button>
-                    </form>
-                  )}
                 </>
+              ) : null}
+              {proposal.blocking ? (
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                  {t("proposalBlocked")}
+                </p>
+              ) : (
+                <form action={applyStartListProposal} className="grid gap-2">
+                  <p className="max-w-4xl border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm">
+                    {t("proposalApplyHint")}
+                  </p>
+                  <div>
+                    <input type="hidden" name="year" value={year} />
+                    <input type="hidden" name="fingerprint" value={fingerprint} />
+                    <Button
+                      type="submit"
+                      data-testid="startlist-confirm-draw"
+                      className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
+                    >
+                      {t("proposalApply")}
+                    </Button>
+                  </div>
+                </form>
               )}
             </div>
           ) : null}

@@ -34,8 +34,6 @@ export async function loadVeterans(): Promise<Map<string, number>> {
 export type PrintStartList = {
   year: number;
   settings: StartSettings;
-  /** Zdroj čísel: `start` = mcvv_start po importu z prezentace, jinak řádky přihlášek. */
-  source: "start" | "registrations";
   rows: BibEntryRow[];
 };
 
@@ -43,13 +41,13 @@ export type PrintStartList = {
 export async function loadPrintStartList(): Promise<PrintStartList> {
   const { year } = await currentRaceYear();
   const settings = await loadStartSettings(year);
-  const { rows, source } = await loadPublicStartList(year, settings.model);
+  const { rows } = await loadPublicStartList(year, settings.model);
   const lines = await prisma.registrationLine.findMany({
     where: { year, runnerId: { in: rows.map((row) => row.runnerId) } },
     select: { runnerId: true, registrationId: true },
   });
   const registrationOf = new Map(lines.map((line) => [line.runnerId, line.registrationId]));
-  return { year, settings, source, rows: bibRowsFromStartList(rows, registrationOf) };
+  return { year, settings, rows: bibRowsFromStartList(rows, registrationOf) };
 }
 
 export async function loadBibCards(

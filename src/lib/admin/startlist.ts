@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
@@ -9,6 +9,7 @@ import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { lineChanges, startLineTarget, startListTarget } from "@/lib/audit/startlist";
 import { prisma } from "@/lib/db/client";
+import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { outsideCategory } from "@/lib/race/startlist-check";
 import { startListProposalLock } from "@/lib/race/startlist-proposal-lock";
 import { generateStartList } from "@/lib/race/startlist-generator";
@@ -18,7 +19,7 @@ import {
   loadAdminStartRows,
   loadStartSettings,
 } from "@/lib/race/startlist-load";
-import { getSiteSettings } from "@/lib/settings/site";
+import { confirmStartlistDraw, getSiteSettings } from "@/lib/settings/site";
 import { redirect } from "@/i18n/routing";
 
 const MAX_BIB = 9999;
@@ -26,6 +27,8 @@ const MAX_BIB = 9999;
 function revalidateStartList() {
   revalidatePath("/[locale]/admin/startovka", "page");
   revalidatePath("/[locale]/startovka", "page");
+  revalidatePath("/[locale]", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
 }
 
 async function back(year: number, query: Record<string, string> = {}): Promise<never> {
@@ -216,10 +219,11 @@ export async function toggleStartLock(formData: FormData): Promise<void> {
 }
 
 /**
- * Uložení návrhu „Navrhnout startovku“ (#115). Návrh se přepočítá na serveru a uloží jen nad
- * stejnými daty, jaká byla v náhledu (otisk) – ochrana proti dvojímu odeslání i souběhu.
- * Nic se nezveřejňuje; zveřejnění zůstává přepínačem v nastavení. Po zveřejnění je návrh
- * zakázaný i na serveru (`startListProposalLock`), ruční úpravy řádků zůstávají povolené.
+ * Potvrzení losování = uložení návrhu „Navrhnout startovku“ (#115). Návrh se přepočítá na
+ * serveru a uloží jen nad stejnými daty, jaká byla v náhledu (otisk) – ochrana proti dvojímu
+ * odeslání i souběhu. Potvrzení startovku hned zveřejní (varianta A, Pavel 21. 11. 2026);
+ * přepínač v nastavení slouží už jen k nouzovému skrytí. Po potvrzení je návrh zakázaný
+ * i na serveru (`startListProposalLock`), ruční úpravy řádků zůstávají povolené.
  */
 export async function applyStartListProposal(formData: FormData): Promise<void> {
   const session = await requireStaff();
@@ -227,8 +231,9 @@ export async function applyStartListProposal(formData: FormData): Promise<void> 
   if (!year) {
     return;
   }
-  if (startListProposalLock(await getSiteSettings()).locked) {
-    await back(year, { chyba: "published" });
+  const lock = startListProposalLock(await getSiteSettings(), year);
+  if (lock.locked) {
+    await back(year, { chyba: lock.reason });
   }
   const [settings, rows] = await Promise.all([loadStartSettings(year), loadAdminStartRows(year)]);
   const input = await buildGeneratorInput(year, settings, rows);
@@ -272,6 +277,13 @@ export async function applyStartListProposal(formData: FormData): Promise<void> 
       },
     });
   }
+  await confirmStartlistDraw(year);
+  await writeAudit({
+    actor: session,
+    action: "startlist.draw_confirmed",
+    target: startListTarget(year),
+    detail: { year, changed: changes.length, published: true },
+  });
   revalidateStartList();
   await back(year, { ok: "applied", n: String(changes.length) });
 }

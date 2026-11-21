@@ -1,6 +1,6 @@
 /**
- * Číslo pro zaplacenou pozdní přihlášku po zveřejnění startovky (NAVRH 2.3/5, Q326) – bez DB.
- * - Volné číslo = nikomu nepřidělené (řádky přihlášek, startovka z prezentace) a není to
+ * Číslo pro zaplacenou pozdní přihlášku po potvrzení losování (NAVRH 2.3/5, Q326) – bez DB.
+ * - Volné číslo = nikomu nepřidělené (žádný řádek přihlášky ho nemá) a není to
  *   číslo obhájce titulu.
  * - Přednostně náhodné volné číslo z okna kategorie ročníku.
  * - Když v kategorii žádné volné není → nejbližší volné nižší číslo mimo kategorii.

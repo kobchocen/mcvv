@@ -102,6 +102,8 @@ export type AuditAction =
   | "startlist.bibs_swapped"
   | "startlist.lock_changed"
   | "startlist.proposal_applied"
+  // Potvrzení losování (varianta A): startovka se tím zveřejní, cíl `startlist:<rok>`.
+  | "startlist.draw_confirmed"
   // Spec. start běžce (pořadatel / brzy / pozdě / spolu s), cíl `startlist:<rok>/<bezec>`.
   | "startlist.special_set"
   | "startlist.special_cleared"

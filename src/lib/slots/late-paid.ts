@@ -11,7 +11,7 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
 import { loadStartSettings } from "@/lib/race/startlist-load";
-import { getSiteSettings } from "@/lib/settings/site";
+import { getSiteSettings, startlistDrawConfirmed } from "@/lib/settings/site";
 
 import { onsiteWindow } from "./defaults";
 import { latePaidMailDedupeKey, latePaidStartFacts, pickLateBibs } from "./late-bib-core";
@@ -39,12 +39,14 @@ export async function isSubmittedLate(year: number, id: number): Promise<boolean
 }
 
 /**
- * Přidělí čísla běžcům zaplacené pozdní přihlášky, jen když je startovka zveřejněná.
+ * Přidělí čísla běžcům zaplacené pozdní přihlášky, jen když je losování potvrzené
+ * (`startlistDrawConfirmed`; nouzové skrytí startovky přidělování nezastaví). `published`
+ * ve výsledku = startovka je vidět (e-mail g pak čísla a časy uvede).
  * Pod zámkem databáze (GET_LOCK), aby dvě současné platby nedostaly stejné číslo.
  */
 export async function assignLateBibs(year: number, id: number): Promise<LateBibResult> {
   const site = await getSiteSettings();
-  if (!site.startlistPublished) return { published: false, assigned: [], missing: [] };
+  if (!startlistDrawConfirmed(site, year)) return { published: false, assigned: [], missing: [] };
   const settings = await loadStartSettings(year);
   const result = await prisma.$transaction(
     async (tx) => {
@@ -52,7 +54,7 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
         SELECT GET_LOCK(${BIB_LOCK}, 10) AS ok`;
       if (Number(lock[0]?.ok ?? 0) !== 1) throw new Error("late bib lock timeout");
       try {
-        const [own, lines, imported] = await Promise.all([
+        const [own, lines] = await Promise.all([
           tx.registrationLine.findMany({
             where: { year, registrationId: id },
             select: { runnerId: true, categoryId: true, bib: true },
@@ -62,11 +64,9 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
             where: { year, bib: { gt: 0 } },
             select: { bib: true },
           }),
-          tx.startEntry.findMany({ where: { year, bib: { gt: 0 } }, select: { bib: true } }),
         ]);
         const taken = new Set<number>([
           ...lines.map((line) => line.bib!),
-          ...imported.map((row) => row.bib),
           ...[settings.champions.men, settings.champions.women].filter(
             (bib): bib is number => bib != null && bib > 0,
           ),
@@ -103,7 +103,7 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
           });
           assigned.push({ runnerId, ...pick });
         }
-        return { published: true, assigned, missing };
+        return { published: site.startlistPublished, assigned, missing };
       } finally {
         await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
       }

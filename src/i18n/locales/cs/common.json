@@ -48,6 +48,7 @@
     },
     "hero": {
       "kicker": "Tradiční lesní kros",
+      "edition": "{n}. ročník",
       "place": "Choceň · každou první prosincovou neděli",
       "titleLine1": "MALÁ CENA",
       "titleLine2": "VELKÉ VERANDY",

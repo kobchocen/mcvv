@@ -68,10 +68,11 @@ describe("date formatting in de, pl and uk", () => {
   it("uses each language's own conventions", () => {
     assert.equal(plain(formatDate(race, "de")), "6.12.2026");
     assert.equal(plain(formatRaceDate(race, "de")), "Sonntag 6. Dezember 2026");
-    assert.equal(plain(formatRaceDay(race, "de")), "Sonntag, 6. Dezember");
+    assert.equal(plain(formatRaceDay(race, "de")), "Sonntag, 6. Dezember 2026");
     assert.equal(plain(formatDateTime(race, "de")), "6.12.2026, 10:00");
     assert.equal(plain(formatRaceDate(race, "pl")), "Niedziela 6 grudnia 2026");
-    assert.equal(plain(formatRaceDay(race, "uk")), "Неділя, 6 грудня");
+    assert.equal(plain(formatRaceDay(race, "uk")), "Неділя, 6 грудня 2026 р.");
+    assert.equal(plain(formatRaceDay(race, "pl")), "Niedziela, 6 grudnia 2026");
   });
 
   it("writes entry deadlines as phrases", () => {

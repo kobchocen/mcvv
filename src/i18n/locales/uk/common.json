@@ -2,8 +2,8 @@
   "Home": {
     "brand": {
       "mark": "V",
-      "top": "MALA CENA",
-      "bottom": "VELKE VERANDY"
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
     },
     "nav": {
       "register": "Увійти",
@@ -48,9 +48,10 @@
     },
     "hero": {
       "kicker": "Традиційний лісовий крос",
+      "edition": "{n}-й забіг",
       "place": "Choceň · щороку в першу неділю грудня",
-      "titleLine1": "MALA CENA",
-      "titleLine2": "VELKE VERANDY",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
       "memorial": "Меморіал Їржі Швадлени",
       "claim": "Лісовий крос, що випробує тебе на кожному підйомі. Коротка, інтенсивна й безжальна траса, повна крутих підйомів і швидких технічних спусків.",
       "primaryCta": "Реєстрація",

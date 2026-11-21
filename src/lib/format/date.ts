@@ -48,12 +48,13 @@ export function formatRaceDate(value: Date, locale: string): string {
   return capitalize(text);
 }
 
-/** Race day without year: cs "Neděle 6. prosince", en "Sunday, 6 December". */
+/** Race day with year: cs "Neděle 6. prosince 2026", en "Sunday, 6 December 2026". */
 export function formatRaceDay(value: Date, locale: string): string {
   const text = new Intl.DateTimeFormat(tag(locale), {
     weekday: "long",
     day: "numeric",
     month: "long",
+    year: "numeric",
     timeZone: TIME_ZONE,
   }).format(value);
   return capitalize(locale === "cs" ? text.replace(/,/g, "") : text);

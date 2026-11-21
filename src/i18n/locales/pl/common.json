@@ -2,8 +2,8 @@
   "Home": {
     "brand": {
       "mark": "V",
-      "top": "MALA CENA",
-      "bottom": "VELKE VERANDY"
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
     },
     "nav": {
       "register": "Zaloguj się",
@@ -48,9 +48,10 @@
     },
     "hero": {
       "kicker": "Tradycyjny bieg przełajowy w lesie",
+      "edition": "{n}. edycja",
       "place": "Choceň · co roku w pierwszą niedzielę grudnia",
-      "titleLine1": "MALA CENA",
-      "titleLine2": "VELKE VERANDY",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
       "memorial": "Memoriał Jirki Švadleny",
       "claim": "Leśny przełaj, który sprawdzi cię na każdym podbiegu. Krótka, intensywna i bezlitosna trasa pełna stromych podbiegów i szybkich, technicznych zbiegów.",
       "primaryCta": "Zapisy",

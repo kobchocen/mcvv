@@ -1224,3 +1224,49 @@ model CategoryMeta {
 
   @@map("mcvv_kateg_meta")
 }
+
+// ============================================
+// Cíl: stopky a čísla (#252)
+// ============================================
+
+/// Klik na stopkách v cíli (#252): okamžik průběhu cílovou čárou podle zařízení po korekci
+/// hodin. Pořadí kliků = pořadí doběhu; s čísly se páruje podle pořadí (`mcvv_finish_bib`).
+/// Nic se nemaže: oprava = příznak `smazano` (přebytečný klik) nebo nový ruční klik.
+model FinishPunch {
+  id        Int      @id @default(autoincrement())
+  /// Idempotenční klíč: UUID zápisu z offline fronty stanice, u ručního zápisu `adm:…`.
+  entryKey  String   @unique @map("entry_key") @db.VarChar(80)
+  year      Int      @map("rok") @db.SmallInt
+  punchedAt DateTime @map("punched_at") @db.DateTime(3)
+  /// watch (stanice stopky) | admin (ručně doplněný klik)
+  source    String   @db.VarChar(8)
+  deleted   Boolean  @default(false) @map("smazano")
+  note      String?  @db.VarChar(255)
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([year, punchedAt])
+  @@map("mcvv_finish_punch")
+}
+
+/// Opsané číslo v cíli (#252) v pořadí doběhu. Pořadí určuje `poradi` (na začátku okamžik
+/// opsání v ms); prohození = výměna pořadí, chybějící číslo = vložení mezi sousedy.
+model FinishBib {
+  id        Int      @id @default(autoincrement())
+  entryKey  String   @unique @map("entry_key") @db.VarChar(80)
+  year      Int      @map("rok") @db.SmallInt
+  bib       Int      @map("cislo") @db.SmallInt
+  readAt    DateTime @map("read_at") @db.DateTime(3)
+  sortKey   Float    @map("poradi")
+  /// bibs (stanice čísla) | admin (ručně vložené)
+  source    String   @db.VarChar(8)
+  deleted   Boolean  @default(false) @map("smazano")
+  note      String?  @db.VarChar(255)
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([year, sortKey])
+  @@map("mcvv_finish_bib")
+}

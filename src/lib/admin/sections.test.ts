@@ -106,7 +106,14 @@ describe("admin sections registry", () => {
       "raceOffice.cash",
       "raceOffice.sales",
     ]);
-    assert.deepEqual(ids("timing"), ["overview", "raceControl", "raceControl.overview"]);
+    assert.deepEqual(ids("timing"), [
+      "overview",
+      "raceControl",
+      "raceControl.overview",
+      "raceControl.finish",
+      "screens",
+      "screens.finish",
+    ]);
   });
 
   it("organizer misses only the admin-only items", () => {

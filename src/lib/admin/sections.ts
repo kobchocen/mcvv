@@ -39,6 +39,8 @@ export type AdminNavLabel =
   | "start"
   | "liveResults"
   | "manualTimes"
+  | "finish"
+  | "finishStations"
   | "screens"
   | "starter"
   | "splits"
@@ -96,6 +98,8 @@ export type AdminNavHref =
   | "/admin/den-zavodu/start"
   | "/admin/den-zavodu/zive"
   | "/admin/den-zavodu/zive/casy"
+  | "/admin/den-zavodu/zive/cil"
+  | "/cil"
   | "/start"
   | "/mezicasy"
   | "/mezicasy/speaker"
@@ -225,6 +229,12 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
             href: "/admin/den-zavodu/zive/casy",
             allowed: isAdmin,
           },
+          {
+            id: "raceControl.finish",
+            label: "finish",
+            href: "/admin/den-zavodu/zive/cil",
+            allowed: canAccessRaceDay,
+          },
         ],
       },
       {
@@ -245,6 +255,13 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
             href: "/mezicasy",
             external: true,
             allowed: canAccessSplits,
+          },
+          {
+            id: "screens.finish",
+            label: "finishStations",
+            href: "/cil",
+            external: true,
+            allowed: canAccessRaceDay,
           },
           {
             id: "screens.speaker",

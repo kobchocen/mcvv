@@ -22,6 +22,9 @@ export type AuditAction =
   | "raceday.split_deleted"
   | "raceday.split_conflict_resolved"
   | "raceday.split_conflict_dismissed"
+  // Cíl (#252): zápis cílových časů z párování stopek a čísel a ruční opravy párování.
+  | "raceday.finish_sync"
+  | "raceday.finish_correction"
   // Evidence startu (#203): ruční zápis / smazání adminem a hromadné vyčištění ročníku.
   | "raceday.start_set"
   | "raceday.start_deleted"

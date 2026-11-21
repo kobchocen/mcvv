@@ -81,9 +81,13 @@ export default defineRouting({
     // den závodu: živé mezičasy (#120, #121)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
+    // cíl: párování stopek a čísel (#252)
+    "/admin/den-zavodu/zive/cil": "/admin/den-zavodu/zive/cil",
     // evidence startu (#203)
     "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
+    // cíl: stanice Stopky a Čísla (#252)
+    "/cil": "/cil",
     "/mezicasy/speaker": "/mezicasy/speaker",
     "/start": "/start",
     // velké obrazovky v cíli – náhrada OFB (veřejné, bez přihlášení, Q134 / Q144)

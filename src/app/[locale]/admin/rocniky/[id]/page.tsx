@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
 import { McvvAdminEditionSlots } from "@/components/organisms/mcvv-admin-edition-slots";
 import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
@@ -53,7 +52,6 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="mb-8 font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("edit")} — {edition.id}
         </h1>

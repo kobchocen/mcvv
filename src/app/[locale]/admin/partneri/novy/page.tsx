@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPartnerForm } from "@/components/organisms/mcvv-admin-partner-form";
 import { type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/lib/admin/staff";
@@ -29,7 +28,6 @@ export default async function AdminNewPartnerPage({ params, searchParams }: Page
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="mb-8 font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("new")} — {copy("partnersTitle")}
         </h1>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { clubsSubnav, McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { McvvAdminPendingSubmit } from "@/components/organisms/mcvv-admin-pending-submit";
 import { confirmOrphanCleanup } from "@/lib/admin/club-orphan-actions";
@@ -48,7 +47,6 @@ export default async function ClubOrphansPage({ params, searchParams }: PageProp
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <McvvAdminDictsSubnav
           backLabel={admin("dictsTitle")}
           label={admin("dictsClubs")}

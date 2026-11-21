@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink } from "@/components/molecules";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { clubsSubnav, McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { saveClub } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
@@ -47,7 +46,6 @@ export default async function AdminClubsPage({ params, searchParams }: PageProps
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <McvvAdminDictsSubnav
           backLabel={copy("dictsTitle")}
           label={copy("dictsClubs")}

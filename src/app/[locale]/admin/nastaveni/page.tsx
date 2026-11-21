@@ -25,7 +25,6 @@ import {
   resolveMailPolicy,
 } from "@/lib/settings/mail";
 import { mailStats } from "@/lib/mail/queue-store";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +67,6 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("settingsTitle")}
         </h1>

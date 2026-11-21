@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { staffThreadCopy } from "@/components/organisms/mcvv-message-copy";
 import { McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { Link, type Locale } from "@/i18n/routing";
@@ -44,7 +43,6 @@ export default async function AdminMessageThreadPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <p className="mb-4">
           <Link
             href="/admin/zpravy"

@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink } from "@/components/molecules";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import {
   applyStartListProposal,
@@ -90,7 +89,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   setRequestLocale(locale);
   await requireStaff();
   const t = await getTranslations({ locale, namespace: "StartAdmin" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
   const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
   const query = await searchParams;
   const parsedYear = Number.parseInt(query.rok ?? "", 10);
@@ -257,7 +255,6 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {t("title", { year })}

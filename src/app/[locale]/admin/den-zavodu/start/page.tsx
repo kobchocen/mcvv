@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,6 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
   const session = await requireStaff();
   const isAdmin = session.role === "admin";
   const t = await getTranslations({ locale, namespace: "StartCheck" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
   const ctx = await getRaceContext();
   const editBib = isAdmin && /^\d{1,3}$/.test(sp.edit ?? "") ? Number(sp.edit) : null;
   const [overview, recent, history, clearPreview] = await Promise.all([
@@ -107,7 +105,6 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl gap-8">
         <div>
-          <McvvAdminHomeLink label={admin("title")} />
           <McvvTestRunBanner locale={locale} leftovers className="mb-4" />
           <p className="mt-2 text-sm">
             <Link href="/admin/den-zavodu" className="text-race-accent hover:underline">

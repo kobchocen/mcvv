@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { deactivatePartner } from "@/lib/admin/partners";
 import { prisma } from "@/lib/db/client";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,6 @@ export default async function AdminPartnersPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {copy("partnersTitle")}

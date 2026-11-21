@@ -4,7 +4,6 @@ import { setRequestLocale } from "next-intl/server";
 import { requireStaff } from "@/lib/admin/staff";
 import { loadBannerOptions } from "@/lib/newsletter/banner-store";
 import { audienceHints } from "@/lib/newsletter/hints";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminNewsletterForm } from "@/components/organisms/mcvv-admin-newsletter-form";
 import { type Locale } from "@/i18n/routing";
 
@@ -31,7 +30,6 @@ export default async function AdminNewsletterNewPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label="Administrace" />
         <h1 className="mb-8 font-display text-3xl font-bold text-foreground dark:text-white">
           Nová kampaň — Newsletter
         </h1>

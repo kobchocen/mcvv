@@ -150,8 +150,7 @@ export function resolveTestZero(
   }
 }
 
-export type TestStartError =
-  "zero" | "zeroPast" | "zeroFar" | "raceDay" | "active" | "ofeedProfile" | "ofeedTestMissing";
+export type TestStartError = "zero" | "zeroPast" | "zeroFar" | "raceDay" | "active";
 
 /** Konec testu: 3 h od nuly (nebo od spuštění), nejpozději den závodu 00:00. */
 export function testRunExpiry(startedAt: Date, zero: Date, cutoff: Date): Date {
@@ -168,15 +167,10 @@ export function validateTestStart(input: {
   zero: Date | null;
   cutoff: Date;
   active: TestRun | null;
-  ofeedProfile: "live" | "test";
-  ofeedTestEventId: string | null | undefined;
 }): TestStartError | null {
   const { now, zero, cutoff, active } = input;
   if (testRunBlocked(now, cutoff)) return "raceDay";
   if (active && !testRunExpired(active, now)) return "active";
-  // Pojistka OFeed: test jen s testovací akcí, ostrá akce nesmí dostat testovací data.
-  if (!input.ofeedTestEventId) return "ofeedTestMissing";
-  if (input.ofeedProfile !== "test") return "ofeedProfile";
   if (!zero) return "zero";
   if (zero.getTime() < now.getTime() - TEST_ZERO_PAST_TOLERANCE_MS) return "zeroPast";
   if (zero.getTime() > now.getTime() + TEST_ZERO_MAX_AHEAD_MS) return "zeroFar";

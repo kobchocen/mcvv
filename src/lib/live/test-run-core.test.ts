@@ -116,19 +116,15 @@ test("testRunExpiry: 3 h from zero (or start), never past race day 00:00", () =>
   );
 });
 
-test("validateTestStart: OFeed safeguard, active test, zero bounds, race day", () => {
+test("validateTestStart: active test, zero bounds, race day", () => {
   const now = new Date("2026-11-02T08:00:00.000Z");
   const base = {
     now,
     zero: new Date("2026-11-02T08:05:00.000Z"),
     cutoff: CUTOFF_2026,
     active: null,
-    ofeedProfile: "test" as const,
-    ofeedTestEventId: "123",
   };
   assert.equal(validateTestStart(base), null);
-  assert.equal(validateTestStart({ ...base, ofeedTestEventId: null }), "ofeedTestMissing");
-  assert.equal(validateTestStart({ ...base, ofeedProfile: "live" }), "ofeedProfile");
   assert.equal(
     validateTestStart({ ...base, active: run({ expiresAt: new Date(now.getTime() + H) }) }),
     "active",

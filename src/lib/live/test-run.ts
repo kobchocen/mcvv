@@ -5,7 +5,6 @@ import type { Prisma } from "@prisma/client";
 import { writeAudit, type AuditActor } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
-import { OFEED_STATE } from "@/lib/ofeed/settings";
 
 import { snapshotRows } from "./clear-core";
 import { LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
@@ -118,7 +117,6 @@ export async function startTestRun(
       update: { text: zeroText },
       create: { key: LIVE_ZERO_OVERRIDE_KEY, text: zeroText },
     });
-    await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
     await writeAudit(
       {
         actor,
@@ -196,7 +194,6 @@ export async function endTestRun(
         await tx.setting.delete({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
         zeroCleared = true;
       }
-      await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
 
       const result: TestCleanup = {
         splits: splits.count,

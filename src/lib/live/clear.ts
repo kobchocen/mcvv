@@ -3,7 +3,6 @@ import type { Prisma } from "@prisma/client";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { OFEED_STATE } from "@/lib/ofeed/publisher";
 
 import { formatClearSource, snapshotRows, splitRowKey, type ClearFilter } from "./clear-core";
 import { OWNING_OUTCOMES } from "./ingest-core";
@@ -125,7 +124,6 @@ export async function clearSplits(
         const deleted = await tx.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
         zeroCleared = deleted.count > 0;
       }
-      await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
 
       const counts = countBySplit(rows);
       await writeAudit(

@@ -17,11 +17,8 @@ import { currentRaceYear } from "@/lib/entries/year";
 import { formatDateTime } from "@/lib/format/date";
 import {
   createTokenAction,
-  publishNowAction,
   resolveConflictAction,
   revokeTokenAction,
-  saveOfeedAction,
-  switchOfeedProfileAction,
   saveRaceSetupAction,
   saveSplitmakerStationsAction,
   saveStarterSettingsAction,
@@ -51,14 +48,6 @@ import {
 import { endTestRunAction, startTestRunAction } from "@/lib/live/test-run-actions";
 import { listDeviceTokens } from "@/lib/live/tokens";
 import { tokenState } from "@/lib/live/tokens-core";
-import { ofeedStatus } from "@/lib/ofeed/publisher";
-import {
-  getOfeedSettings,
-  OFEED_BOARD_URL,
-  ofeedPublicUrl,
-  passwordExpiresAt,
-  onlineResultsOverrideUrl,
-} from "@/lib/ofeed/settings";
 import { getSiteSettings } from "@/lib/settings/site";
 
 type PageProps = Readonly<{
@@ -66,7 +55,6 @@ type PageProps = Readonly<{
   searchParams: Promise<{
     saved?: string;
     error?: string;
-    published?: string;
     test?: string;
     testError?: string;
   }>;
@@ -83,7 +71,7 @@ const legend = "px-1 font-display text-lg font-semibold";
 
 export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
-  const { saved, error, published, test, testError } = await searchParams;
+  const { saved, error, test, testError } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const session = await requireStaff();
@@ -120,24 +108,19 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const ctx = await getRaceContext();
   // Nulový čas ročníku (st_nula_s) pro nápovědy a předvolbu testu.
   const zeroClock = formatStartClock((await currentRaceYear()).startModel.zeroSeconds);
-  const [stations, ofeed, status, tokens, overview, site, splitmakers, starter] = await Promise.all(
-    [
-      getStations(),
-      getOfeedSettings(),
-      ofeedStatus(),
-      listDeviceTokens(ctx.year),
-      raceDayOverview(ctx.year),
-      getSiteSettings(),
-      listSplitmakers(),
-      loadStarterSettings(),
-    ],
-  );
+  const [stations, tokens, overview, site, splitmakers, starter] = await Promise.all([
+    getStations(),
+    listDeviceTokens(ctx.year),
+    raceDayOverview(ctx.year),
+    getSiteSettings(),
+    listSplitmakers(),
+    loadStarterSettings(),
+  ]);
   const now = new Date();
   const testBlocked = testRunBlocked(now, testCutoff);
-  const testOfeedReady = ofeed.profile === "test" && Boolean(ofeed.profiles.test.eventId);
   const window = defaultTokenWindow(ctx.zero);
   // Q116: web vede na vlastní /vysledky/online, ručně zadaná URL je nouzové přebití
-  const onlineOverride = onlineResultsOverrideUrl(site.onlineResultsUrl, ofeed);
+  const onlineOverride = site.onlineResultsUrl;
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
   const stationName = (code: string) =>
     code === FINISH_SPLIT ? t("finish") : (stations.find((s) => s.code === code)?.label ?? code);
@@ -180,24 +163,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             >
               {t("openResultboard")}
             </Link>
-            <a
-              href={OFEED_BOARD_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-race-accent hover:underline"
-            >
-              {t("openBoard")}
-            </a>
-            {ofeed.eventId ? (
-              <a
-                href={ofeedPublicUrl(ofeed.eventId)}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-race-accent hover:underline"
-              >
-                {t(ofeed.profile === "test" ? "openOfeedTest" : "openOfeed")}
-              </a>
-            ) : null}
           </p>
           {error ? (
             <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
@@ -206,10 +171,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
           ) : saved ? (
             <p role="status" className="mt-4 text-sm text-race-accent">
               {t(saved === "resultboard" ? "resultboardSaved" : "saved")}
-            </p>
-          ) : published ? (
-            <p role="status" className="mt-4 text-sm text-race-accent" data-testid="publish-result">
-              {t(`publish.${published}` as never)}
             </p>
           ) : null}
         </div>
@@ -243,9 +204,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             <p className="text-sm font-semibold">{tt("blocked", { cutoff: fmt(testCutoff) })}</p>
           ) : (
             <form action={startTestRunAction} className="grid gap-3">
-              {!testOfeedReady ? (
-                <p className="text-sm text-amber-700 dark:text-amber-300">{tt("requiresOfeed")}</p>
-              ) : null}
               <fieldset className="flex flex-wrap items-center gap-4 text-sm">
                 <legend className="mb-2 text-sm font-medium">{tt("zeroLabel")}</legend>
                 {TEST_ZERO_CHOICES.map((choice, index) => (
@@ -278,7 +236,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               </fieldset>
               <Button
                 type="submit"
-                disabled={!testOfeedReady}
                 className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
               >
                 {tt("start")}
@@ -384,195 +341,25 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
 
         <ResultboardSection locale={locale} />
 
-        <fieldset className={box}>
-          <legend className={legend}>{t("ofeedTitle")}</legend>
-          <p className="text-sm text-race-muted">{t("ofeedIntro")}</p>
-          {status.dryRun ? (
-            <p
-              className="border border-amber-500/60 bg-amber-500/10 p-2 text-sm"
-              data-testid="ofeed-dry-run"
-            >
-              {t("ofeedDryRun")}
-            </p>
-          ) : null}
-          <div
-            className={
-              ofeed.profile === "test"
-                ? "grid gap-2 border border-amber-500/60 bg-amber-500/10 p-3 text-sm"
-                : "grid gap-2 border border-race-line/60 p-3 text-sm"
-            }
-            data-testid="ofeed-profile"
-            data-profile={ofeed.profile}
-          >
-            <p>
-              <strong>{t(`ofeedProfileActive.${ofeed.profile}`)}</strong>{" "}
-              {ofeed.eventId ? <code className="text-xs">{ofeed.eventId}</code> : null}
-            </p>
-            <p className="text-race-muted">{t(`ofeedProfileHint.${ofeed.profile}`)}</p>
-            <form action={switchOfeedProfileAction}>
-              <input
-                type="hidden"
-                name="profile"
-                value={ofeed.profile === "test" ? "live" : "test"}
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                className="h-9"
-                data-testid="ofeed-profile-switch"
-                disabled={testRun !== null && ofeed.profile === "test"}
-                title={
-                  testRun !== null && ofeed.profile === "test" ? t("error.ofeedTestRun") : undefined
-                }
-              >
-                {t(ofeed.profile === "test" ? "ofeedSwitchToLive" : "ofeedSwitchToTest")}
-              </Button>
-            </form>
-          </div>
-          <form action={saveOfeedAction} className="grid gap-4">
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                name="enabled"
-                defaultChecked={ofeed.enabled}
-                className="mt-0.5 size-4"
-              />
-              <span>
-                <span className="font-medium">{t("ofeedEnabled")}</span>
-                <span className="mt-1 block text-race-muted">{t("ofeedEnabledHint")}</span>
-              </span>
-            </label>
-            {(["live", "test"] as const).map((profile) => {
-              const data = ofeed.profiles[profile];
-              const prefix = profile === "test" ? "test" : "";
-              const name = (field: string) =>
-                prefix ? `${prefix}${field[0].toUpperCase()}${field.slice(1)}` : field;
-              const until = passwordExpiresAt(data.passwordSetAt);
-              return (
-                <fieldset
-                  key={profile}
-                  className="grid gap-3 border border-race-line/50 p-3"
-                  data-testid={`ofeed-fields-${profile}`}
+        <fieldset className={box} data-testid="online-link">
+          <legend className={legend}>{t("onlineLink")}</legend>
+          <p className="text-sm text-race-muted">
+            {onlineOverride ? (
+              `${onlineOverride} (${t("onlineLinkOverride")})`
+            ) : (
+              <>
+                <a
+                  href={`/${locale}/vysledky/online`}
+                  target="_blank"
+                  rel="noopener"
+                  className="underline underline-offset-2"
                 >
-                  <legend className="px-1 text-sm font-semibold">
-                    {t(`ofeedProfileName.${profile}`)}
-                    {ofeed.profile === profile ? ` · ${t("ofeedProfileCurrent")}` : ""}
-                  </legend>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={name("eventId")}>{t("ofeedEventId")}</Label>
-                    <Input
-                      id={name("eventId")}
-                      name={name("eventId")}
-                      defaultValue={data.eventId ?? ""}
-                      maxLength={64}
-                      autoComplete="off"
-                      className="h-10 bg-race-surface font-mono"
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={name("password")}>{t("ofeedPassword")}</Label>
-                    <Input
-                      id={name("password")}
-                      name={name("password")}
-                      type="password"
-                      autoComplete="new-password"
-                      maxLength={200}
-                      placeholder={data.hasPassword ? t("ofeedPasswordKeep") : ""}
-                      className="h-10 bg-race-surface"
-                    />
-                    <p
-                      className="text-xs text-race-muted"
-                      data-testid={
-                        profile === "live" ? "ofeed-password-state" : "ofeed-test-password-state"
-                      }
-                    >
-                      {data.hasPassword
-                        ? t("ofeedPasswordSet", { at: fmt(data.passwordSetAt), until: fmt(until) })
-                        : t("ofeedPasswordMissing")}
-                      {until && until < now ? ` ${t("ofeedPasswordExpired")}` : ""}
-                    </p>
-                    {data.hasPassword ? (
-                      <label className="flex items-center gap-2 text-xs">
-                        <input type="checkbox" name={name("clearPassword")} className="size-4" />{" "}
-                        {t("ofeedPasswordClear")}
-                      </label>
-                    ) : null}
-                  </div>
-                </fieldset>
-              );
-            })}
-            <Button
-              type="submit"
-              className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
-            >
-              {admin("save")}
-            </Button>
-          </form>
-          <div className="grid gap-2 text-sm" data-testid="ofeed-status">
-            <p>
-              {t("ofeedLastOk")}: <strong>{fmt(status.lastOkAt)}</strong>
-            </p>
-            {status.lastError ? (
-              <p className="text-red-600 dark:text-red-400">
-                {t("ofeedLastError")}: {fmt(status.lastError.startedAt)} – {status.lastError.error}
-              </p>
-            ) : null}
-            <p className="text-race-muted">
-              {t("onlineLink")}:{" "}
-              {onlineOverride ? (
-                `${onlineOverride} (${t("onlineLinkOverride")})`
-              ) : (
-                <>
-                  <a
-                    href={`/${locale}/vysledky/online`}
-                    target="_blank"
-                    rel="noopener"
-                    className="underline underline-offset-2"
-                  >
-                    /{locale}/vysledky/online
-                  </a>{" "}
-                  ({t("onlineLinkOwn")})
-                </>
-              )}
-              {ofeed.profile === "test" && site.onlineResultsUrl && !onlineOverride
-                ? ` ${t("onlineLinkHiddenTest")}`
-                : ""}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <form action={publishNowAction}>
-                <Button type="submit" variant="outline" className="h-9">
-                  {t("publishNow")}
-                </Button>
-              </form>
-              <form method="get" action="/api/admin/ofeed/xml">
-                <Button type="submit" variant="outline" className="h-9">
-                  {t("downloadXml")}
-                </Button>
-              </form>
-            </div>
-            {status.runs.length > 0 ? (
-              <table className="mt-2 w-full text-left text-xs">
-                <thead className="text-race-muted">
-                  <tr>
-                    <th className="py-1">{t("colTime")}</th>
-                    <th>{t("colMode")}</th>
-                    <th>{t("colCompetitors")}</th>
-                    <th>{t("colOutcome")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {status.runs.map((run, index) => (
-                    <tr key={index} className="border-t border-race-line/40">
-                      <td className="py-1">{fmt(run.startedAt)}</td>
-                      <td>{run.mode}</td>
-                      <td>{run.fetched}</td>
-                      <td>{run.ok === null ? "…" : run.ok ? "OK" : (run.error ?? "chyba")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : null}
-          </div>
+                  /{locale}/vysledky/online
+                </a>{" "}
+                ({t("onlineLinkOwn")})
+              </>
+            )}
+          </p>
         </fieldset>
 
         <fieldset className={box}>

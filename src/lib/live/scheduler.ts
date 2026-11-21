@@ -1,5 +1,4 @@
 import { env } from "@/lib/env";
-import { runOfeedPublish } from "@/lib/ofeed/publisher";
 
 import { expireTestRunIfDue } from "./test-run";
 
@@ -16,11 +15,7 @@ declare global {
  * Vypnutí: `LIVE_SCHEDULER=false`.
  */
 export function startLiveScheduler(): void {
-  if (
-    env.LIVE_SCHEDULER === "false" ||
-    env.OFEED_SCHEDULER === "false" ||
-    globalThis.mcvvLiveScheduler
-  ) {
+  if (env.LIVE_SCHEDULER === "false" || globalThis.mcvvLiveScheduler) {
     return;
   }
   let running = false;
@@ -28,10 +23,7 @@ export function startLiveScheduler(): void {
     if (running) return;
     running = true;
     try {
-      await expireTestRunIfDue().catch((error: unknown) =>
-        console.error("[test-run] expiry failed", error instanceof Error ? error.message : error),
-      );
-      await runOfeedPublish("scheduler");
+      await expireTestRunIfDue();
     } catch (error) {
       console.error("[live] scheduler tick failed", error instanceof Error ? error.message : error);
     } finally {

@@ -13,7 +13,7 @@ import {
   type MailPolicy,
 } from "./queue-core";
 import { prismaMailQueueStore } from "./queue-store";
-import { postResendEmail } from "./resend";
+import { postProviderEmail } from "./provider";
 
 export type MailInput = {
   to: string;
@@ -71,7 +71,7 @@ async function drain(ids?: number[], limit = 25): Promise<DrainOutcome> {
     limit,
     ids,
     send: (mail) =>
-      postResendEmail(
+      postProviderEmail(
         {
           to: mail.toEmail,
           subject: mail.subject,
@@ -107,7 +107,7 @@ async function alertCapOnce(quota: boolean, policy: MailPolicy) {
       limit: 1,
       ids: [id],
       send: (m) =>
-        postResendEmail(
+        postProviderEmail(
           { to: m.toEmail, subject: m.subject, html: m.html, text: m.text },
           { dryRun: mailDryRun(), idempotencyKey: `mcvv-mail-${m.id}` },
         ),

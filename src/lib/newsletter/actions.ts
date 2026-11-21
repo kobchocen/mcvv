@@ -209,7 +209,10 @@ export async function sendNewsletterTest(
     return { ok: false, message: "Zadejte platný e-mail." };
   }
   if (!newsletterMailConfigured()) {
-    return { ok: false, message: "Resend není nakonfigurován (RESEND_API_KEY, MAIL_FROM)." };
+    return {
+      ok: false,
+      message: "E-mailový poskytovatel není nakonfigurován (MAIL_FROM a SES/Resend).",
+    };
   }
   const campaign = await prisma.newsletterCampaign.findUnique({ where: { id } });
   if (!campaign) return { ok: false, message: "Kampaň nenalezena." };

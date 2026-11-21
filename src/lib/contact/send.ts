@@ -1,6 +1,7 @@
 import { mailAllowlist, maskRecipient, recipientAllowed } from "@/lib/mail/allowlist";
 import { env } from "@/lib/env";
 import { escapeHtml } from "@/lib/mail/layout";
+import { mailConfigured } from "@/lib/mail/configured";
 import { sendResendEmail } from "@/lib/mail/resend";
 
 export type ContactPayload = {
@@ -21,7 +22,7 @@ export type ContactTransport = {
 
 export class ContactNotConfiguredError extends Error {
   constructor() {
-    super("Contact form has no mail transport (RESEND_API_KEY + MAIL_FROM or SMTP_HOST).");
+    super("Contact form has no mail transport (MAIL_FROM + provider credentials, or SMTP_HOST).");
   }
 }
 
@@ -44,14 +45,14 @@ export async function sendContactMessage(
   const to = recipient ?? env.CONTACT_TO;
   const { subject, text, html } = buildContactMail(payload);
 
-  if (env.RESEND_API_KEY && env.MAIL_FROM) {
+  if (mailConfigured()) {
     const ok = await transport.resend({ to, subject, html, text, replyTo: payload.email });
-    if (!ok) throw new Error("Resend delivery failed");
+    if (!ok) throw new Error("Odeslání e-mailu selhalo");
     return { delivered: true };
   }
 
   if (env.SMTP_HOST) {
-    // Q347: SMTP záloha respektuje MAIL_ALLOWED_RECIPIENTS stejně jako Resend.
+    // Q347: SMTP záloha respektuje MAIL_ALLOWED_RECIPIENTS stejně jako hlavní poskytovatel.
     if (!recipientAllowed(to, mailAllowlist())) {
       console.info(`[contact] skipped (MAIL_ALLOWED_RECIPIENTS): ${maskRecipient(to)}`);
       return { delivered: true };

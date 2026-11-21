@@ -274,6 +274,29 @@ test("stale claims (crash mid-send) are failed, not re-sent", async () => {
   assert.equal(outcome.done, true);
 });
 
+test("processBatch keeps already sent recipients on a partial retryable failure", async () => {
+  const { store, rows } = memoryStore(["a@x.cz", "b@x.cz", "c@x.cz"]);
+  const outcome = await processBatch({
+    campaignId: 1,
+    batchSize: 10,
+    store,
+    send: async () => ({
+      ok: false,
+      retryable: true,
+      error: "SES 429",
+      sentProviderIds: ["id-1", undefined, undefined],
+    }),
+    render,
+    claimToken: "partial",
+  });
+  assert.equal(outcome.sent, 1);
+  assert.equal(outcome.done, false);
+  assert.ok((outcome.retryAfterMs ?? 0) > 0);
+  assert.equal(rows[0]?.status, "sent");
+  assert.equal(rows[1]?.status, "pending");
+  assert.equal(rows[2]?.status, "pending");
+});
+
 test("currentEntrantEmails: contact + authors, skips cancelled and empty applications", () => {
   const out = currentEntrantEmails([
     { email: "Kontakt@x.cz", author: "autor@x.cz", status: 2, lines: [{ author: "radek@x.cz" }] },

@@ -4,11 +4,12 @@ import { ArrowRight } from "lucide-react";
 
 import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
 import { McvvGuideSteps, type GuideStep } from "@/components/organisms/mcvv-guide-steps";
-import type { McvvHomepageContent } from "@/components/templates";
+import { type McvvHomepageContent, withFooterYear } from "@/components/templates";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 import { formatStartClock } from "@/lib/date/race-schedule";
 import { currentRaceYear } from "@/lib/entries/year";
+import { getHomeResultsSummary } from "@/lib/home/cached";
 import { formatWeekdayDate, formatWeekdayDateTime } from "@/lib/format/date";
 import { slotOf } from "@/lib/slots/core";
 
@@ -102,6 +103,7 @@ export default async function GuidePage({ params }: PageProps) {
     copy.raw("steps") as GuideStep[],
     copy.raw("faq") as FaqItem[],
   );
+  const latestYear = (await getHomeResultsSummary())?.year ?? null;
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -196,7 +198,10 @@ export default async function GuidePage({ params }: PageProps) {
         </div>
       </section>
       <McvvFooter
-        content={{ brand, footer: home.raw("footer") as McvvHomepageContent["footer"] }}
+        content={{
+          brand,
+          footer: withFooterYear(home.raw("footer") as McvvHomepageContent["footer"], latestYear),
+        }}
       />
     </main>
   );

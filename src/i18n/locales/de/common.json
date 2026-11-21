@@ -2,8 +2,8 @@
   "Home": {
     "brand": {
       "mark": "V",
-      "top": "MALA CENA",
-      "bottom": "VELKE VERANDY"
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
     },
     "nav": {
       "register": "Anmelden",
@@ -48,9 +48,10 @@
     },
     "hero": {
       "kicker": "Traditioneller Waldcrosslauf",
+      "edition": "{n}. Ausgabe",
       "place": "Choceň · jeden ersten Sonntag im Dezember",
-      "titleLine1": "MALA CENA",
-      "titleLine2": "VELKE VERANDY",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
       "memorial": "Jirka-Švadlena-Gedenklauf",
       "claim": "Ein Waldcross, der dich an jedem Anstieg prüft. Kurz, intensiv und gnadenlos – mit steilen Anstiegen und schnellen, technischen Abstiegen.",
       "primaryCta": "Anmeldungen",

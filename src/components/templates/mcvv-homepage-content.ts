@@ -102,6 +102,8 @@ export type McvvHomepageContent = {
   };
   hero: {
     kicker: string;
+    /** e.g. "34. ročník" / "34th edition", from edition data. */
+    edition?: string;
     place: string;
     titleLine1: string;
     titleLine2: string;

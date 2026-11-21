@@ -2,8 +2,8 @@
   "Home": {
     "brand": {
       "mark": "V",
-      "top": "MALA CENA",
-      "bottom": "VELKE VERANDY"
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
     },
     "nav": {
       "register": "Sign in",
@@ -48,9 +48,10 @@
     },
     "hero": {
       "kicker": "Traditional forest cross",
-      "place": "Chocen · every first Sunday in December",
-      "titleLine1": "MALA CENA",
-      "titleLine2": "VELKE VERANDY",
+      "edition": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
+      "place": "Choceň · every first Sunday in December",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
       "memorial": "Jirka Švadlena Memorial",
       "claim": "A forest cross that tests you on every climb. Short, intense, and unforgiving, with steep uphills and fast technical descents.",
       "primaryCta": "Entries",
@@ -94,7 +95,7 @@
       "eyebrow": "01 — About",
       "title": "It is not just a run. It is a challenge.",
       "body": [
-        "Mala cena Velke Verandy is a traditional forest cross in the heart of the Chocen woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
+        "Malá cena Velké Verandy is a traditional forest cross in the heart of the Choceň woods. In just 4300 meters you get everything that makes trail racing memorable: steep climbs, technical descents, and roots underfoot.",
         "The short distance tempts you to underestimate it. The profile corrects that quickly. This is a race with character for hobby runners and seasoned racers alike."
       ],
       "actions": [
@@ -326,7 +327,7 @@
       "guide": "How to enter"
     },
     "footer": {
-      "description": "A traditional forest cross in Chocen. 4300 meters, 200 meters of elevation gain, and a character you will remember.",
+      "description": "A traditional forest cross in Choceň. 4300 meters, 200 meters of elevation gain, and a character you will remember.",
       "columns": [
         {
           "title": "Race",
@@ -384,7 +385,7 @@
           ]
         }
       ],
-      "copyright": "© 2026 Mala cena Velke Verandy · K.O.B. Chocen, z.s.",
+      "copyright": "© 2026 Malá cena Velké Verandy · K.O.B. Choceň, z.s.",
       "made": "Made with respect for the forest."
     },
     "backToTop": "Back to top"
@@ -393,7 +394,7 @@
     "header": {
       "eyebrow": "K.O.B. Choceň · {year}",
       "title": "Race notice",
-      "lead": "{n}. edition of Malá cena Velké Verandy"
+      "lead": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition of Malá cena Velké Verandy"
     },
     "tocTitle": "On this page",
     "emptyCategories": "Categories will be added.",

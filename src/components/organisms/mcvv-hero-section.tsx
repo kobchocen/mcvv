@@ -97,6 +97,11 @@ export function McvvHeroSection({
                 <Trees className="size-4" aria-hidden="true" />
                 {content.hero.kicker}
               </span>
+              {content.hero.edition ? (
+                <span className="inline-flex items-center bg-white/10 px-3 py-2 font-display text-xs font-semibold uppercase text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+                  {content.hero.edition}
+                </span>
+              ) : null}
               <span className="text-sm font-medium text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
                 {content.hero.place}
               </span>

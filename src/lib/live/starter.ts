@@ -256,7 +256,8 @@ export async function applyStarterEntries(
  */
 export async function autoMarkStart(
   tx: Tx,
-  input: { year: number; bib: number; split: string; splitAt: Date },
+  /** `userId` = autor zápisu mezičasu (P7: do deníku startu, aktuální stav zůstává bez autora). */
+  input: { year: number; bib: number; split: string; splitAt: Date; userId?: number | null },
   plan?: StarterPlan,
 ): Promise<boolean> {
   const key = { year_bib: { year: input.year, bib: input.bib } };
@@ -296,6 +297,7 @@ export async function autoMarkStart(
       action: "auto",
       outcome: "applied",
       note: `split=${input.split}`,
+      userId: input.userId ?? null,
     },
   });
   return true;

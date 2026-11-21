@@ -6,6 +6,7 @@
  */
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { startLineTarget } from "@/lib/audit/startlist";
+import { systemAuditMeta } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
@@ -93,6 +94,11 @@ export async function assignLateBibs(year: number, id: number): Promise<LateBibR
               ...SYSTEM_ACTOR,
               action: "startlist.bib_set",
               target: startLineTarget(year, runnerId),
+              meta: systemAuditMeta(
+                "late-paid",
+                "startlist.bib_set",
+                startLineTarget(year, runnerId),
+              ),
               detail: {
                 changes: { bib: { from: null, to: pick.bib }, locked: { from: false, to: true } },
                 auto: "late_paid",

@@ -2365,7 +2365,8 @@
     "group_sale": "Race office – sales",
     "group_sale_item": "Race office – price list",
     "group_startlist": "Start list (bibs, locks, groups)",
-    "group_partner": "Partners"
+    "group_partner": "Partners",
+    "group_newsletter": "Newsletter"
   },
   "RaceDay": {
     "title": "Race day",

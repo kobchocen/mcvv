@@ -126,7 +126,13 @@ export async function setManualSplit(
       // Ruční mezičas bez záznamu startu: doplnit start jako u ostatních splitů.
       await autoMarkStart(
         tx,
-        { year: input.year, bib: input.bib, split: input.split, splitAt: now },
+        {
+          year: input.year,
+          bib: input.bib,
+          split: input.split,
+          splitAt: now,
+          userId: input.actor.id,
+        },
         input.plan,
       );
     } else {

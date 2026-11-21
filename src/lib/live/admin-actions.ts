@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireSection } from "@/lib/admin/access";
+import { withSettingsAudit } from "@/lib/audit/settings-audit";
 import { redirect } from "@/i18n/routing";
 import { prisma } from "@/lib/db/client";
 import { rosterHasBib } from "@/lib/race/roster";
@@ -84,26 +85,37 @@ async function saveDuration(formData: FormData, field: string, key: string): Pro
   await put(key, String(seconds));
 }
 
+const RACE_SETUP_KEYS = [
+  LIVE_STATIONS_KEY,
+  LIVE_START_OFFSET_LIMIT_KEY,
+  LIVE_DNS_GRACE_KEY,
+  LIVE_DNS_GRACE_FALLBACK_KEY,
+  LIVE_ZERO_OVERRIDE_KEY,
+];
+
 export async function saveRaceSetupAction(formData: FormData): Promise<void> {
-  await requireSection("raceControl.live", "write");
-  const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
-  await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
-  // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
-  // prázdné = výchozí hodnota (klíč se smaže).
-  await saveDuration(formData, "startLimit", LIVE_START_OFFSET_LIMIT_KEY);
-  await saveDuration(formData, "dnsGrace", LIVE_DNS_GRACE_KEY);
-  await saveDuration(formData, "dnsGraceFallback", LIVE_DNS_GRACE_FALLBACK_KEY);
-  // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
-  if (await getActiveTestRun()) await back({ saved: "setup" });
-  const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();
-  if (zeroRaw) {
-    const zero = parsePragueLocal(zeroRaw);
-    if (!zero) await back({ error: "zero" });
-    await put(LIVE_ZERO_OVERRIDE_KEY, zero!.toISOString());
-  } else {
-    await prisma.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
-  }
-  await back({ saved: "setup" });
+  const session = await requireSection("raceControl.live", "write");
+  // P7: audit změn (stanoviště, nula, prahy a lhůty DNS) i při návratu přesměrováním.
+  await withSettingsAudit(session, "raceday.setup_changed", RACE_SETUP_KEYS, async () => {
+    const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
+    await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
+    // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
+    // prázdné = výchozí hodnota (klíč se smaže).
+    await saveDuration(formData, "startLimit", LIVE_START_OFFSET_LIMIT_KEY);
+    await saveDuration(formData, "dnsGrace", LIVE_DNS_GRACE_KEY);
+    await saveDuration(formData, "dnsGraceFallback", LIVE_DNS_GRACE_FALLBACK_KEY);
+    // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
+    if (await getActiveTestRun()) await back({ saved: "setup" });
+    const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();
+    if (zeroRaw) {
+      const zero = parsePragueLocal(zeroRaw);
+      if (!zero) await back({ error: "zero" });
+      await put(LIVE_ZERO_OVERRIDE_KEY, zero!.toISOString());
+    } else {
+      await prisma.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
+    }
+    await back({ saved: "setup" });
+  });
 }
 
 export async function resolveConflictAction(formData: FormData): Promise<void> {
@@ -249,27 +261,34 @@ export async function saveSplitmakerStationsAction(formData: FormData): Promise<
  * fáze neoznačeného (0–120 s) a okno pruhu Nevyběhli (1 s – 6 h). Prázdné pole = výchozí.
  */
 export async function saveStarterSettingsAction(formData: FormData): Promise<void> {
-  await requireSection("raceControl.live", "write");
-  const sound = String(formData.get("starterSound") ?? "");
-  if (!(STARTER_SOUND_MODES as readonly string[]).includes(sound)) {
-    await back({ error: "starterSound" });
-  }
-  const redRaw = String(formData.get("starterRedPhase") ?? "").trim();
-  const red = redRaw === "" ? null : Number(redRaw);
-  if (red !== null && !(Number.isInteger(red) && red >= 0 && red <= RED_PHASE_MAX_S)) {
-    await back({ error: "starterRedPhase" });
-  }
-  const windowRaw = String(formData.get("starterDnsWindow") ?? "")
-    .slice(0, 32)
-    .trim();
-  const windowS = windowRaw === "" ? null : parseStartOffsetLimit(windowRaw);
-  if (windowRaw !== "" && windowS === null) await back({ error: "starterDnsWindow" });
+  const session = await requireSection("raceControl.live", "write");
+  await withSettingsAudit(
+    session,
+    "raceday.starter_settings_changed",
+    [STARTER_SOUND_KEY, STARTER_RED_PHASE_KEY, STARTER_DNS_WINDOW_KEY],
+    async () => {
+      const sound = String(formData.get("starterSound") ?? "");
+      if (!(STARTER_SOUND_MODES as readonly string[]).includes(sound)) {
+        await back({ error: "starterSound" });
+      }
+      const redRaw = String(formData.get("starterRedPhase") ?? "").trim();
+      const red = redRaw === "" ? null : Number(redRaw);
+      if (red !== null && !(Number.isInteger(red) && red >= 0 && red <= RED_PHASE_MAX_S)) {
+        await back({ error: "starterRedPhase" });
+      }
+      const windowRaw = String(formData.get("starterDnsWindow") ?? "")
+        .slice(0, 32)
+        .trim();
+      const windowS = windowRaw === "" ? null : parseStartOffsetLimit(windowRaw);
+      if (windowRaw !== "" && windowS === null) await back({ error: "starterDnsWindow" });
 
-  await put(STARTER_SOUND_KEY, sound);
-  if (red === null) await prisma.setting.deleteMany({ where: { key: STARTER_RED_PHASE_KEY } });
-  else await put(STARTER_RED_PHASE_KEY, String(red));
-  if (windowS === null) {
-    await prisma.setting.deleteMany({ where: { key: STARTER_DNS_WINDOW_KEY } });
-  } else await put(STARTER_DNS_WINDOW_KEY, String(windowS));
-  await back({ saved: "starter" });
+      await put(STARTER_SOUND_KEY, sound);
+      if (red === null) await prisma.setting.deleteMany({ where: { key: STARTER_RED_PHASE_KEY } });
+      else await put(STARTER_RED_PHASE_KEY, String(red));
+      if (windowS === null) {
+        await prisma.setting.deleteMany({ where: { key: STARTER_DNS_WINDOW_KEY } });
+      } else await put(STARTER_DNS_WINDOW_KEY, String(windowS));
+      await back({ saved: "starter" });
+    },
+  );
 }

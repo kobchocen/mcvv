@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { requireSection } from "@/lib/admin/access";
+import { writeAudit } from "@/lib/audit/log";
 import { formChecked, formInt, formString } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "@/i18n/routing";
@@ -241,7 +242,7 @@ export async function startNewsletter(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requireSection("newsletter", "write");
+  const session = await requireSection("newsletter", "write");
   const id = formInt(formData, "id");
   const confirm = formInt(formData, "confirmCount");
   if (!id) return { ok: false, message: "Chybí kampaň." };
@@ -275,6 +276,13 @@ export async function startNewsletter(
       skipDuplicates: true,
     });
   }
+  await writeAudit({
+    actor: session,
+    action: "newsletter.started",
+    target: `newsletter:${id}`,
+    detail: { subject: campaign.subject, recipients: audience.emails.length },
+    meta: { entity: "newsletter" },
+  }).catch((error) => console.error("[audit] newsletter.started", error));
   revalidateNewsletter(id);
   return { ok: true, message: `Zařazeno ${audience.emails.length} příjemců.` };
 }
@@ -288,7 +296,7 @@ export async function sendNewsletterBatchAction(id: number): Promise<BatchOutcom
 
 /** Re-queue failed recipients (explicit admin decision; may re-send interrupted ones). */
 export async function retryFailedNewsletter(formData: FormData): Promise<void> {
-  await requireSection("newsletter", "write");
+  const session = await requireSection("newsletter", "write");
   const id = formInt(formData, "id");
   if (!id) return;
   const result = await prisma.newsletterRecipient.updateMany({
@@ -300,18 +308,36 @@ export async function retryFailedNewsletter(formData: FormData): Promise<void> {
       where: { id },
       data: { status: "sending", sentAt: null },
     });
+    await writeAudit({
+      actor: session,
+      action: "newsletter.retried",
+      target: `newsletter:${id}`,
+      detail: { recipients: result.count },
+    }).catch((error) => console.error("[audit] newsletter.retried", error));
   }
   revalidateNewsletter(id);
 }
 
 export async function deleteNewsletterDraft(formData: FormData): Promise<void> {
-  await requireSection("newsletter", "write");
+  const session = await requireSection("newsletter", "write");
   const id = formInt(formData, "id");
   const locale = await getLocale();
   if (id) {
-    await prisma.newsletterCampaign.deleteMany({
+    const draft = await prisma.newsletterCampaign.findUnique({
+      where: { id },
+      select: { subject: true },
+    });
+    const deleted = await prisma.newsletterCampaign.deleteMany({
       where: { id, status: { in: ["draft", "test_sent"] } },
     });
+    if (deleted.count > 0) {
+      await writeAudit({
+        actor: session,
+        action: "newsletter.deleted",
+        target: `newsletter:${id}`,
+        detail: { subject: draft?.subject ?? null },
+      }).catch((error) => console.error("[audit] newsletter.deleted", error));
+    }
   }
   revalidateNewsletter();
   redirect({ href: "/admin/newsletter", locale });

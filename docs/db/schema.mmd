@@ -1,0 +1,550 @@
+%% MCVV databáze – aktuální stav (origin/develop, včetně #321)
+%% 51 tabulek. U každé jen PK, FK a 2–4 klíčové sloupce.
+%% Plná čára = Prisma/DB relace (@relation / FK).
+%% Čárkovaná čára = logická vazba bez FK v DB (rok, číslo, user_id, …).
+%% Zdroj: prisma/schema.prisma na origin/develop.
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#F4F1EA",
+    "primaryTextColor": "#1B1B1B",
+    "primaryBorderColor": "#4A5568",
+    "lineColor": "#3E4A5A",
+    "secondaryColor": "#E6EEF7",
+    "tertiaryColor": "#F7F7F7",
+    "fontFamily": "DejaVu Sans, Liberation Sans, Noto Sans, sans-serif",
+    "fontSize": "14px"
+  },
+  "er": {
+    "layoutDirection": "TB",
+    "minEntityWidth": 200,
+    "minEntityHeight": 70,
+    "entityPadding": 12,
+    "useMaxWidth": false
+  }
+}}%%
+erDiagram
+
+  %% ============================================================
+  %% Uživatelé a role
+  %% ============================================================
+
+  %% tabulka mcvv_user — role je zatím jediná platná; víc rolí až s permissions.v2
+  User {
+    int id PK
+    string email UK
+    string name
+    enum role
+  }
+
+  %% tabulka mcvv_user_role — víc rolí na účet (zatím se nečte)
+  UserRoleGrant {
+    int user_id PK "FK"
+    string role PK
+    int created_by
+    datetime created_at
+  }
+
+  %% tabulka mcvv_role_section — odchylky práv role × sekce
+  RoleSection {
+    string role PK
+    string section_id PK
+    string level
+    int updated_by
+  }
+
+  %% tabulka mcvv_user_pin — připnuté položky adminu
+  UserPin {
+    int user_id PK "FK"
+    string section_id PK
+    int pos
+  }
+
+  %% tabulka mcvv_email_token
+  EmailVerificationToken {
+    int id PK
+    int user_id FK
+    enum purpose
+    datetime expires_at
+  }
+
+  %% ============================================================
+  %% Přihlášky a platby
+  %% ============================================================
+
+  %% tabulka mcvv_prihlaska
+  Registration {
+    int rok PK
+    int id PK
+    string email
+    string name
+    int status
+  }
+
+  %% tabulka mcvv_prihlaska_radek
+  RegistrationLine {
+    int rok PK "FK"
+    string bezec_id PK "FK"
+    int prihlaska_id FK
+    string klub_id FK
+    string kateg_id FK
+    int cislo
+  }
+
+  %% tabulka mcvv_prihlaska_meta — 1:1 doplněk, legacy mcvv_prihlaska se nemění
+  RegistrationMeta {
+    int rok PK
+    int id PK
+    enum slot
+    datetime pay_until
+    datetime auto_zruseno_at
+  }
+
+  %% tabulka mcvv_prihl_slot
+  RegistrationSlot {
+    int rok PK
+    enum typ PK
+    datetime od
+    datetime do
+    int cena_dospeli
+    int cena_mladez
+  }
+
+  %% tabulka mcvv_platba — prihlaska_id je legacy char(3), bez přísného FK
+  Payment {
+    int id PK
+    int rok
+    string prihlaska_id
+    int castka
+    date datum
+  }
+
+  %% tabulka mcvv_bank_tx
+  BankTx {
+    int id PK
+    string vs
+    decimal amount
+    enum status
+    int rok
+    int prihlaska_id
+    int payment_id
+  }
+
+  %% tabulka mcvv_sale
+  Sale {
+    int id PK
+    int rok
+    string vs UK
+    int total
+    string status
+    int bank_tx_id
+  }
+
+  %% tabulka mcvv_sale_item
+  SaleItem {
+    int id PK
+    int rok
+    string name
+    int price
+  }
+
+  %% tabulka mcvv_sale_line
+  SaleLine {
+    int id PK
+    int prodejka_id FK
+    int polozka_id FK
+    int cena
+    int kusy
+  }
+
+  %% tabulka mcvv_message_thread — k přihlášce (rok+id) nebo k účtu
+  MessageThread {
+    int id PK
+    int user_id FK
+    int rok
+    int prihlaska_id
+    enum status
+  }
+
+  %% tabulka mcvv_message
+  Message {
+    int id PK
+    int thread_id FK
+    int author_user_id FK
+    enum side
+    string body
+  }
+
+  %% ============================================================
+  %% Startovka a čísla (včetně číselníků běžců, klubů, kategorií)
+  %% ============================================================
+
+  %% tabulka cis_bezec
+  Runner {
+    string id PK
+    string jmeno
+    string statni_prislusnost
+  }
+
+  %% tabulka cis_klub — identita je id napříč ročníky, jméno platí v roce
+  Club {
+    string id PK
+    int rok PK
+    string jmeno
+  }
+
+  %% tabulka mcvv_klub_navrh_zamitnuty
+  ClubMergeRejection {
+    string klub_id_a PK
+    string klub_id_b PK
+    datetime created_at
+  }
+
+  %% tabulka cis_mcvv_kateg
+  Category {
+    string id PK
+    string jmeno
+    string sex
+    int cislo_od
+    int cislo_do
+  }
+
+  %% tabulka mcvv_kateg_meta — doplněk, legacy číselník se nemění
+  CategoryMeta {
+    string kateg_id PK
+    enum skupina
+  }
+
+  %% tabulka mcvv_kateg_rocnik — rozsah čísel kategorie v roce
+  CategoryBibRange {
+    int rok PK
+    string kateg_id PK
+    int cislo_od
+    int cislo_do
+  }
+
+  %% tabulka mcvv_start
+  StartEntry {
+    int rok PK
+    string bezec_id PK "FK"
+    int cislo
+    string klub_id FK
+    string kateg_id FK
+  }
+
+  %% tabulka mcvv_start_radek — zamčené číslo; group_id je legacy
+  StartLineMeta {
+    int rok PK
+    string bezec_id PK "FK"
+    bool locked
+    int group_id FK
+  }
+
+  %% tabulka mcvv_spec_start — organizer / early / late / with
+  SpecialStart {
+    int rok PK
+    string bezec_id PK "FK"
+    enum kind
+    string partner_id FK
+    int offset_seconds
+  }
+
+  %% tabulka mcvv_start_skupina — NEPOUŽÍVÁ SE (nahradil SpecialStart „with“)
+  StartGroup {
+    int id PK
+    int rok
+    enum kind
+    string note
+  }
+
+  %% ============================================================
+  %% Den závodu a měření
+  %% ============================================================
+
+  %% tabulka mcvv_split — aktuální mezičas 1:1 (legacy)
+  Split {
+    int cislo PK
+    int rok PK
+    string split PK
+    int time
+    string autor
+  }
+
+  %% tabulka mcvv_split_entry — deník zápisů mezičasů
+  SplitEntry {
+    int id PK
+    string entry_key UK
+    int rok
+    int cislo
+    string split
+    int time
+    int user_id
+    int token_id
+  }
+
+  %% tabulka mcvv_start_check — kdo opravdu odstartoval
+  StartCheck {
+    int rok PK
+    int cislo PK
+    datetime started_at
+    int user_id
+    bool late
+  }
+
+  %% tabulka mcvv_start_check_entry — deník evidence startu
+  StartCheckEntry {
+    int id PK
+    string entry_key UK
+    int rok
+    int cislo
+    int user_id
+  }
+
+  %% tabulka mcvv_ingest_token — API klíč cílového PC / OBD
+  IngestToken {
+    int id PK
+    int rok
+    string label
+    string splits
+    datetime valid_until
+  }
+
+  %% ============================================================
+  %% Výsledky
+  %% ============================================================
+
+  %% tabulka mcvv_time — výsledný čas v sekundách
+  Result {
+    int rok PK
+    string bezec_id PK "FK"
+    int time
+    string kateg_id FK
+    string klub_id FK
+  }
+
+  %% ============================================================
+  %% Obsah a nastavení
+  %% ============================================================
+
+  %% tabulka mcvv_info — ročník; id je typicky rok
+  Edition {
+    int id PK
+    date datum
+    int st_nula_s
+    datetime prihl_otevreni
+  }
+
+  %% tabulka mcvv_setting
+  Setting {
+    string klic PK
+    text text
+  }
+
+  %% tabulka mcvv_news
+  News {
+    int id PK
+    datetime date
+    string title
+    int webImageId FK
+  }
+
+  %% tabulka mcvv_fotky
+  Photo {
+    int id PK
+    int rok
+    string location_id FK
+    string author_id
+  }
+
+  %% tabulka cis_fotka_autor — bez Prisma relace z Photo
+  PhotoAuthor {
+    string id PK
+    string popis
+  }
+
+  %% tabulka cis_fotka_kde
+  PhotoLocation {
+    string id PK
+    string popis
+  }
+
+  %% tabulka mcvv_bezec_fotka
+  RunnerPhoto {
+    int fotka_id PK "FK"
+    string bezec_id PK "FK"
+    int poradi
+  }
+
+  %% tabulka webimages
+  WebImage {
+    int id PK
+    int typ_id FK
+    string bezec_id FK
+    int rok
+    string popis
+  }
+
+  %% tabulka cis_typ_webimages
+  WebImageType {
+    int id PK
+    string popis
+  }
+
+  %% tabulka sponsors
+  Sponsor {
+    int id PK
+    string name
+    int category
+    bool active
+  }
+
+  %% tabulka mcvv_newsletter
+  NewsletterCampaign {
+    int id PK
+    string subject
+    enum status
+    int created_by FK
+    int banner_image_id FK
+  }
+
+  %% tabulka mcvv_newsletter_recipient
+  NewsletterRecipient {
+    int id PK
+    int campaign_id FK
+    string email
+    enum status
+  }
+
+  %% tabulka mcvv_newsletter_optout
+  NewsletterOptOut {
+    int id PK
+    string email UK
+    string token UK
+  }
+
+  %% tabulka mcvv_mail_queue
+  MailQueue {
+    int id PK
+    enum kind
+    string to_email
+    enum status
+  }
+
+  %% tabulka mcvv_mail_day
+  MailDay {
+    date day PK
+    datetime quota_exceeded_at
+  }
+
+  %% tabulka mcvv_job_state
+  JobState {
+    string name PK
+    string value
+    datetime updated_at
+  }
+
+  %% ============================================================
+  %% Audit
+  %% ============================================================
+
+  %% tabulka mcvv_audit_log
+  AuditLog {
+    int id PK
+    int actor_user_id FK
+    string action
+    string target
+    datetime created_at
+  }
+
+  %% tabulka mcvv_audit_meta — 1:1 doplněk, mcvv_audit_log se nemění
+  AuditMeta {
+    int audit_id PK "FK"
+    int rok
+    int cislo
+    string entity
+    string source
+  }
+
+  %% tabulka mcvv_job_run
+  JobRun {
+    int id PK
+    string job
+    datetime started_at
+    bool ok
+  }
+
+  %% ---------- FK (plná čára) ----------
+  User ||--o{ UserRoleGrant : "user_id"
+  User ||--o{ UserPin : "user_id"
+  User ||--o{ EmailVerificationToken : "user_id"
+  User |o--o{ AuditLog : "actor_user_id"
+  User |o--o{ NewsletterCampaign : "created_by"
+  User |o--o{ MessageThread : "user_id"
+  User |o--o{ Message : "author_user_id"
+
+  Runner ||--o{ RegistrationLine : "bezec_id"
+  Runner ||--o{ StartEntry : "bezec_id"
+  Runner ||--o{ Result : "bezec_id"
+  Runner ||--o{ StartLineMeta : "bezec_id"
+  Runner ||--o{ SpecialStart : "bezec_id"
+  Runner |o--o{ SpecialStart : "partner_id"
+  Runner ||--o{ RunnerPhoto : "bezec_id"
+  Runner |o--o{ WebImage : "bezec_id"
+
+  Club ||--o{ RegistrationLine : "klub_id+rok"
+  Club ||--o{ StartEntry : "klub_id+rok"
+  Club ||--o{ Result : "klub_id+rok"
+
+  Category ||--o{ RegistrationLine : "kateg_id"
+  Category ||--o{ StartEntry : "kateg_id"
+  Category ||--o{ Result : "kateg_id"
+
+  Registration ||--o{ RegistrationLine : "rok+prihlaska_id"
+
+  PhotoLocation ||--o{ Photo : "location_id"
+  Photo ||--o{ RunnerPhoto : "fotka_id"
+
+  WebImageType ||--o{ WebImage : "typ_id"
+  WebImage ||--o{ News : "webImageId"
+  WebImage |o--o{ NewsletterCampaign : "banner_image_id"
+
+  NewsletterCampaign ||--o{ NewsletterRecipient : "campaign_id"
+
+  MessageThread ||--o{ Message : "thread_id"
+
+  AuditLog ||--o| AuditMeta : "audit_id"
+
+  Sale ||--o{ SaleLine : "prodejka_id"
+  SaleItem |o--o{ SaleLine : "polozka_id"
+
+  StartGroup |o--o{ StartLineMeta : "group_id"
+
+  %% ---------- logické vazby bez FK (čárkovaně) ----------
+  Registration ||..o| RegistrationMeta : "rok+id"
+  Registration ||..o{ Payment : "rok+prihlaska_id"
+  Registration ||..o{ BankTx : "rok+prihlaska_id"
+  Registration ||..o{ MessageThread : "rok+prihlaska_id"
+  Payment |o..o{ BankTx : "payment_id"
+  Sale }o..o| BankTx : "bank_tx_id"
+  Sale }o..o| User : "created_by / paid_by"
+  Category ||..o| CategoryMeta : "kateg_id"
+  Category ||..o{ CategoryBibRange : "kateg_id"
+  Club ||..o{ ClubMergeRejection : "id klubu"
+  Photo }o..o| PhotoAuthor : "author_id"
+  StartEntry ||..o{ Split : "rok+cislo"
+  StartEntry ||..o{ SplitEntry : "rok+cislo"
+  StartEntry ||..o{ StartCheck : "rok+cislo"
+  StartEntry ||..o{ StartCheckEntry : "rok+cislo"
+  StartEntry ||..o| StartLineMeta : "rok+bezec_id"
+  StartEntry ||..o| SpecialStart : "rok+bezec_id"
+  StartEntry ||..o| Result : "rok+bezec_id"
+  SplitEntry }o..o| User : "user_id"
+  SplitEntry }o..o| IngestToken : "token_id"
+  StartCheck }o..o| User : "user_id"
+  StartCheckEntry }o..o| User : "user_id"
+  IngestToken }o..o| User : "created_by"
+  Edition ||..o{ Registration : "id = rok"
+  Edition ||..o{ RegistrationSlot : "id = rok"
+  Edition ||..o{ StartEntry : "id = rok"
+  UserRoleGrant }o..o| User : "created_by"
+  RoleSection }o..o| User : "updated_by"

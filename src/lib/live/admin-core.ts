@@ -1,5 +1,5 @@
 import { zonedCivilToUtc } from "@/lib/date/race-schedule";
-import { isoWithOffset } from "@/lib/ofeed/iof-xml";
+import { isoWithOffset } from "@/lib/date/iso-offset";
 
 /** `<input type="datetime-local">` (Europe/Prague) → instant; nesmysl → null. */
 export function parsePragueLocal(raw: string | null | undefined): Date | null {

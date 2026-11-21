@@ -11,6 +11,8 @@
  * kompletní stav a posílá ho jen server webu (jeden zapisovatel).
  */
 
+import { isoWithOffset } from "@/lib/date/iso-offset";
+
 export const IOF_NAMESPACE = "http://www.orienteering.org/datastandard/3.0";
 
 export type IofCompetitor = {
@@ -60,26 +62,6 @@ export function escapeXml(value: string): string {
       // znaky, které XML 1.0 nepovoluje
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
   );
-}
-
-/** `YYYY-MM-DDTHH:mm:ss+01:00` v dané zóně (OFeed vyžaduje offset, ofeed#116). */
-export function isoWithOffset(date: Date, timeZone = "Europe/Prague"): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-    timeZoneName: "longOffset",
-  }).formatToParts(date);
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-  const zone = get("timeZoneName").replace("GMT", "");
-  const offset = zone === "" ? "+00:00" : zone.length === 3 ? `${zone}:00` : zone;
-  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}${offset}`;
 }
 
 /** „Příjmení Jméno Druhé“ → Family „Příjmení“, Given „Jméno Druhé“. */

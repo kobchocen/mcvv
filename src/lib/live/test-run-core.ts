@@ -5,7 +5,7 @@ import {
   pragueCalendarYear,
   zonedCivilToUtc,
 } from "@/lib/date/race-schedule";
-import { isoWithOffset } from "@/lib/ofeed/iof-xml";
+import { isoWithOffset } from "@/lib/date/iso-offset";
 
 import { parsePragueLocal } from "./admin-core";
 

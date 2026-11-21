@@ -9,7 +9,6 @@ import {
   buildResultListXml,
   competitorStatus,
   escapeXml,
-  isoWithOffset,
   sexFromRunnerId,
   splitName,
   type ResultListInput,
@@ -76,12 +75,6 @@ function sample(now = new Date("2026-12-06T10:00:00.000Z")): ResultListInput {
     ],
   };
 }
-
-test("isoWithOffset uses the Prague offset (winter +01:00, summer +02:00)", () => {
-  assert.equal(isoWithOffset(zero), "2026-12-06T10:15:00+01:00");
-  assert.equal(isoWithOffset(new Date("2026-07-01T08:00:00Z")), "2026-07-01T10:00:00+02:00");
-  assert.equal(isoWithOffset(new Date("2026-07-01T08:00:00Z"), "UTC"), "2026-07-01T08:00:00+00:00");
-});
 
 test("name, sex and escaping helpers", () => {
   assert.deepEqual(splitName(" Novák  Jan Petr "), { family: "Novák", given: "Jan Petr" });

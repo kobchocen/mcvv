@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
-import { requireSection } from "@/lib/admin/access";
+import { getAccess, requireSection } from "@/lib/admin/access";
+import type { UnifiedSearchParams } from "@/lib/audit/unified-core";
 import type { AuditChange } from "@/lib/audit/diff";
 import {
   AUDIT_GROUPS,
@@ -16,9 +17,11 @@ import { prisma } from "@/lib/db/client";
 import { formatDateTime } from "@/lib/format/date";
 import { Link, type Locale } from "@/i18n/routing";
 
+import { AuditV2 } from "./audit-v2";
+
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<AuditSearchParams>;
+  searchParams: Promise<AuditSearchParams & UnifiedSearchParams>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -46,8 +49,11 @@ export default async function AdminAuditPage({ params, searchParams }: PageProps
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireSection("audit", "read");
+  const sp = await searchParams;
+  // Audit v2 (P9) jen při zapnutém permissions.v2; jinak dosavadní přehled beze změny.
+  if ((await getAccess()).v2) return <AuditV2 locale={locale} searchParams={sp} />;
   const copy = await getTranslations({ locale, namespace: "AdminAudit" });
-  const filters = parseAuditFilters(await searchParams);
+  const filters = parseAuditFilters(sp);
   const where = auditWhere(filters);
 
   const [total, entries, actions] = await Promise.all([

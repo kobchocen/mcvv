@@ -37,7 +37,7 @@ export type TestRun = {
   expiresAt: Date;
   /** Admin, který test spustil (null = neznámý). */
   startedBy: number | null;
-  /** Klíče zařízení vytvořené během testu – při úklidu se zneplatní. */
+  /** Historicky klíče zařízení OBD vytvořené během testu; drží se jen kvůli uloženému stavu. */
   tokenIds: number[];
 };
 

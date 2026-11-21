@@ -1,8 +1,8 @@
 import { DEFAULT_START_MODEL, startSlot } from "@/lib/race/start-time";
 
 /**
- * Startovní čas z čísla pro živé moduly (ingest, online výsledky, mezičasy, speaker, start,
- * OFeed) – bez DB. Pravidlo i hranici bere ze společného modelu startu ročníku (#114,
+ * Startovní čas z čísla pro živé moduly (ingest, online výsledky, mezičasy, speaker, start)
+ * – bez DB. Pravidlo i hranici bere ze společného modelu startu ročníku (#114,
  * `src/lib/race/start-time.ts`):
  *
  *   n' = číslo >= první číslo 2. startu ? číslo − (první číslo 2. startu − 1) : číslo

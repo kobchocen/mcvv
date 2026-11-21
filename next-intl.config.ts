@@ -75,7 +75,7 @@ export default defineRouting({
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
     "/admin/prihlasky/spec-starty": "/admin/prihlasky/spec-starty",
-    // den závodu: živé mezičasy a OFeed (#120–#122)
+    // den závodu: živé mezičasy (#120, #121)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
     // evidence startu (#203)

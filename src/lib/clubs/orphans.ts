@@ -7,7 +7,7 @@
  * účet má jen volný text `club_name`, předvyplnění bere klub z poslední přihlášky).
  *
  * Řádky aktuálního (a budoucího) ročníku se nikdy nemažou: klub se může přihlásit až později
- * a OBD / OFeed při prezentaci nabízí kluby z číselníku.
+ * a při prezentaci se nabízí kluby z číselníku.
  */
 import { clubKey } from "./core";
 

@@ -80,14 +80,13 @@ export async function peekStoredTestRun(
   return { run, cutoff };
 }
 
-/** Tick plánovače (OFeed, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
+/** Interní tick (`live/scheduler`, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
 export async function expireTestRunIfDue(now = new Date()): Promise<void> {
   await getActiveTestRun(now);
 }
 
 /**
- * Spustí test: uloží stav, nastaví zkušební nulu a smaže otisk posledního uploadu do OFeed
- * (první běh pošle čistá data do testovací akce). Kontroly dělá volající (validateTestStart).
+ * Spustí test: uloží stav a nastaví zkušební nulu. Kontroly dělá volající (validateTestStart).
  */
 export async function startTestRun(
   zero: Date,

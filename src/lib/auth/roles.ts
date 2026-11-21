@@ -83,7 +83,7 @@ export function canChangeSaleStatus(
   return to === "paid_bank" ? canMarkSalePaidBank(role) : canUseCashDesk(role);
 }
 
-/** Správa živých výsledků (#120–#122): opravy a konflikty mezičasů, OFeed, API klíče zařízení. */
+/** Správa živých výsledků (#120, #121): opravy a konflikty mezičasů, stanoviště, testovací běh. */
 export function canManageLiveResults(role: UserRole): boolean {
   return role === "admin";
 }

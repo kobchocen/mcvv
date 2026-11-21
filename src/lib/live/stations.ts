@@ -15,7 +15,7 @@ export const DEFAULT_STATIONS: Station[] = [
 
 /**
  * Stanoviště „Start“ (#203): evidence, kdo opravdu odstartoval. Kód "0" není kód splitu –
- * zápisy ze startu nejdou do `mcvv_split` (výsledky, OFeed, OBD), ale do `mcvv_start_check`.
+ * zápisy ze startu nejdou do `mcvv_split` (výsledky), ale do `mcvv_start_check`.
  * Je vestavěné (není v `live_stations`), splitmakerovi se přiřazuje jako ostatní stanoviště.
  */
 export const START_STATION = "0";

@@ -7,7 +7,7 @@ import { isStartStation } from "./stations";
  *
  * Splitmaker na stanovišti „Start“ zadá startovní číslo stejně jako u mezičasů; systém uloží
  * okamžik, kdy číslo odstartovalo. Je to jen evidence (kdo opravdu vyběhl, kandidáti DNS):
- * výsledky, OFeed ani export / import OBD s tímhle časem nepracují, dál platí plánovaný start
+ * výsledky s tímhle časem nepracují, dál platí plánovaný start
  * ze startovky. Proto má start vlastní tabulky (`mcvv_start_check`, `mcvv_start_check_entry`)
  * a do `mcvv_split` se nikdy nezapisuje.
  */

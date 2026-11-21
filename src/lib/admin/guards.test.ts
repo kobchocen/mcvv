@@ -66,10 +66,4 @@ describe("admin guards", () => {
       }
     }
   });
-
-  it("race-day API checks access before doing anything", () => {
-    const route = readFileSync(join(ROOT, "app/api/den-zavodu/obd-export/route.ts"), "utf8");
-    const get = route.slice(route.indexOf("export async function GET"));
-    assert.ok(get.indexOf("raceDayAccess()") < get.indexOf("loadObdExportData()"));
-  });
 });

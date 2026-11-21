@@ -438,7 +438,17 @@ export type RecipientCounts = {
 export type OutgoingMessage = RenderedEmail & { to: string; headers: Record<string, string> };
 
 export type BatchSendResult =
-  { ok: true; providerIds: (string | null)[] } | { ok: false; retryable: boolean; error: string };
+  | { ok: true; providerIds: (string | null)[] }
+  | {
+      ok: false;
+      retryable: boolean;
+      error: string;
+      /**
+       * Stejné pořadí jako odesílané zprávy. `string | null` = poskytovatel zprávu přijal
+       * (označit jako odeslanou), `undefined` = neodešla (uvolnit nebo označit jako chybu).
+       */
+      sentProviderIds?: (string | null | undefined)[];
+    };
 
 export interface NewsletterStore {
   /** Atomically move up to `limit` pending rows to `sending` under `claimToken`. */
@@ -508,15 +518,29 @@ export async function processBatch(input: {
             now,
           );
           sent = ready.length;
-        } else if (result.retryable) {
-          await store.release(ready.map((r) => r.id));
-          retryAfterMs = 2000;
-          error = result.error;
         } else {
-          await store.markFailed(
-            ready.map((r) => r.id),
-            result.error.slice(0, 500),
+          const already = result.sentProviderIds;
+          const succeeded = ready.flatMap((r, i) =>
+            already && already[i] !== undefined
+              ? [{ id: r.id, providerId: already[i] ?? null }]
+              : [],
           );
+          const rest = ready.filter((_, i) => !already || already[i] === undefined);
+          if (succeeded.length > 0) {
+            await store.markSent(succeeded, now);
+            sent = succeeded.length;
+          }
+          if (rest.length > 0) {
+            if (result.retryable) {
+              await store.release(rest.map((r) => r.id));
+              retryAfterMs = 2000;
+            } else {
+              await store.markFailed(
+                rest.map((r) => r.id),
+                result.error.slice(0, 500),
+              );
+            }
+          }
           error = result.error;
         }
       }

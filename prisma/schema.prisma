@@ -608,7 +608,7 @@ model NewsletterRecipient {
   error      String?                   @db.VarChar(500)
   claimToken String?                   @map("claim_token") @db.VarChar(36)
   claimedAt  DateTime?                 @map("claimed_at")
-  providerId String?                   @map("provider_id") @db.VarChar(64)
+  providerId String?                   @map("provider_id") @db.VarChar(255)
   sentAt     DateTime?                 @map("sent_at")
   createdAt  DateTime                  @default(now()) @map("created_at")
 
@@ -650,7 +650,7 @@ enum MailQueueStatus {
   failed
 }
 
-/// Fronta odchozích e-mailů (denní limit Resend). Newsletter má vlastní tabulku příjemců,
+/// Fronta odchozích e-mailů (denní limit). Newsletter má vlastní tabulku příjemců,
 /// ale počítá se do stejného denního limitu.
 model MailQueue {
   id         Int             @id @default(autoincrement())
@@ -670,7 +670,7 @@ model MailQueue {
   claimToken String?         @map("claim_token") @db.VarChar(36)
   claimedAt  DateTime?       @map("claimed_at")
   lastError  String?         @map("last_error") @db.VarChar(500)
-  providerId String?         @map("provider_id") @db.VarChar(64)
+  providerId String?         @map("provider_id") @db.VarChar(255)
   sentAt     DateTime?       @map("sent_at")
   createdAt  DateTime        @default(now()) @map("created_at")
 

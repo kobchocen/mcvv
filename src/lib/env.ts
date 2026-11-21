@@ -31,6 +31,14 @@ const envSchema = z.object({
   ORGANIZER_NAME: emptyToUndefined,
   RESEND_API_KEY: emptyToUndefined,
   MAIL_FROM: emptyToUndefined,
+  MAIL_PROVIDER: z.enum(["ses", "resend"]).optional(),
+  AWS_REGION: emptyToUndefined,
+  AWS_ACCESS_KEY_ID: emptyToUndefined,
+  AWS_SECRET_ACCESS_KEY: emptyToUndefined,
+  MAIL_SES_MAX_PER_SECOND: z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .optional(),
   NEWSLETTER_DRY_RUN: z.enum(["true", "false"]).optional(),
   MAIL_DRY_RUN: z.enum(["true", "false"]).optional(),
   MAIL_ALLOWED_RECIPIENTS: emptyToUndefined,
@@ -84,6 +92,11 @@ const parsedEnv = envSchema.safeParse({
   ORGANIZER_NAME: process.env.ORGANIZER_NAME,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   MAIL_FROM: process.env.MAIL_FROM,
+  MAIL_PROVIDER: process.env.MAIL_PROVIDER || undefined,
+  AWS_REGION: process.env.AWS_REGION,
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+  MAIL_SES_MAX_PER_SECOND: process.env.MAIL_SES_MAX_PER_SECOND || undefined,
   NEWSLETTER_DRY_RUN: process.env.NEWSLETTER_DRY_RUN || undefined,
   MAIL_DRY_RUN: process.env.MAIL_DRY_RUN || undefined,
   MAIL_ALLOWED_RECIPIENTS: process.env.MAIL_ALLOWED_RECIPIENTS,

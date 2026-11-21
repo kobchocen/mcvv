@@ -4,6 +4,12 @@ Všechny odchozí e-maily (ověření účtu, reset hesla, kontaktní formulář
 alerty, později připomínky a souhrny plateb) jdou přes tabulku `mcvv_mail_queue`.
 Newsletter má vlastní tabulku příjemců, ale počítá se do stejného denního rozpočtu.
 
+Poskytovatel se volí jen ručně přepínačem `MAIL_PROVIDER` (`resend` výchozí, nebo `ses`).
+Žádný automatický failover: když zvolený poskytovatel selže, záznam zůstane ve frontě.
+Amazon SES používá API `SendEmail` (ne SMTP, ne `SendBulkEmail`); newsletter jde po jednom
+s rychlostí výchozí 10/s (strop 14, `MAIL_SES_MAX_PER_SECOND`). Odesílatel je vždy `MAIL_FROM`.
+Bounce a stížnosti aplikace nezpracovává.
+
 ## Pravidla
 
 - Den = UTC (tak resetuje kvótu Resend). Strop `MAIL_DAILY_CAP` (90), rezerva `MAIL_PRIORITY_RESERVE` (15).

@@ -28,6 +28,7 @@
     "chart:check": "node scripts/release/check-chart.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1173.0",
     "@hookform/resolvers": "6.0.2",
     "@prisma/adapter-mariadb": "^7.10.1",
     "@prisma/client": "7.10.1",

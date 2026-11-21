@@ -19,6 +19,7 @@ import {
   ScrollText,
   Search,
   Settings,
+  Star,
   Store,
   Users,
   type LucideIcon,
@@ -62,7 +63,47 @@ export type McvvAdminShellCopy = {
   breadcrumb: string;
   detail: string;
   external: string;
+  /** Připnuté (P6) – jen když panel dostane `pins`. */
+  pinned?: string;
+  pinEdit?: string;
+  pinDone?: string;
+  pin?: string;
+  unpin?: string;
 };
+
+export type McvvAdminPins = {
+  /** Id připnutých sekcí v pořadí. */
+  ids: string[];
+  /** Server action: připnout / odepnout `sectionId`. */
+  toggle: (formData: FormData) => Promise<void>;
+};
+
+function PinButton({
+  id,
+  pinned,
+  pins,
+  copy,
+}: {
+  id: string;
+  pinned: boolean;
+  pins: McvvAdminPins;
+  copy: McvvAdminShellCopy;
+}) {
+  return (
+    <form action={pins.toggle} className="flex shrink-0 items-center">
+      <input type="hidden" name="sectionId" value={id} />
+      <button
+        type="submit"
+        aria-label={pinned ? copy.unpin : copy.pin}
+        title={pinned ? copy.unpin : copy.pin}
+        className="flex size-10 items-center justify-center text-race-accent"
+        data-testid={`admin-pin-${id}`}
+      >
+        <Star className={cn("size-4", pinned && "fill-current")} aria-hidden="true" />
+      </button>
+    </form>
+  );
+}
 
 function stripLocale(pathname: string): string {
   return pathname.replace(/^\/(cs|en|de|pl|uk)(?=\/|$)/, "") || "/";
@@ -135,12 +176,40 @@ function NavLink({
 export function McvvAdminShell({
   groups,
   copy,
+  pins,
   children,
 }: {
   groups: AdminNavGroup[];
   copy: McvvAdminShellCopy;
+  /** Připnuté položky (P6, jen při zapnutém `permissions.v2`); bez nich panel jako dřív. */
+  pins?: McvvAdminPins;
   children: ReactNode;
 }) {
+  const [editPins, setEditPins] = useState(false);
+  const allItems = useMemo(
+    () =>
+      groups.flatMap((group) =>
+        group.chapters.flatMap((chapter) => [chapter, ...(chapter.children ?? [])]),
+      ),
+    [groups],
+  );
+  const pinnedItems = useMemo(
+    () =>
+      (pins?.ids ?? [])
+        .map((id) => allItems.find((item) => item.id === id))
+        .filter((item): item is AdminNavItem => item !== undefined),
+    [pins, allItems],
+  );
+  /** V režimu úprav přidá před řádek hvězdičku; jinak řádek beze změny. */
+  const withPin = (id: string, row: ReactNode): ReactNode =>
+    pins && editPins ? (
+      <div className="flex items-stretch">
+        <PinButton id={id} pinned={pins.ids.includes(id)} pins={pins} copy={copy} />
+        <div className="min-w-0 flex-1">{row}</div>
+      </div>
+    ) : (
+      row
+    );
   const path = stripLocale(usePathname() ?? "/admin");
   const [query, setQuery] = useState("");
   const isIndex = path === "/admin" || path === "/admin/";
@@ -202,6 +271,43 @@ export function McvvAdminShell({
               data-testid="admin-nav-search"
             />
           </label>
+          {pins && !query.trim() ? (
+            <section className="mb-5" data-testid="admin-pinned">
+              <div className="flex items-center justify-between px-2 pb-1.5">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-race-muted">
+                  {copy.pinned}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setEditPins((value) => !value)}
+                  className="text-xs font-semibold text-race-accent"
+                  data-testid="admin-pin-edit"
+                >
+                  {editPins ? copy.pinDone : copy.pinEdit}
+                </button>
+              </div>
+              {pinnedItems.length ? (
+                <ul className="overflow-hidden rounded-[12px] border border-race-line/45 bg-race-surface">
+                  {pinnedItems.map((item) => (
+                    <li key={item.id} className="border-b border-race-line/35 last:border-b-0">
+                      {withPin(
+                        item.id,
+                        <NavLink
+                          item={item}
+                          active={path === item.href}
+                          external={copy.external}
+                          className="flex min-h-11 items-center gap-3 px-3 py-2 text-[15px] text-foreground/90 transition-colors hover:bg-race-accent/10"
+                        >
+                          <Star className="size-4 shrink-0 text-race-accent" aria-hidden="true" />
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        </NavLink>,
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ) : null}
           {shown.length === 0 ? (
             <p className="px-2 text-sm text-race-muted">{copy.noResults}</p>
           ) : null}
@@ -218,61 +324,67 @@ export function McvvAdminShell({
                   const expanded = activeChapter || query.trim().length > 0;
                   return (
                     <li key={item.id} className="border-b border-race-line/35 last:border-b-0">
-                      <NavLink
-                        item={item}
-                        active={Boolean(activeExact)}
-                        external={copy.external}
-                        className={cn(
-                          "flex min-h-11 items-center gap-3 px-3 py-2 text-[15px] transition-colors hover:bg-race-accent/10",
-                          activeChapter
-                            ? "font-semibold text-foreground dark:text-white"
-                            : "text-foreground/90",
-                          activeExact && "bg-race-accent/15",
-                        )}
-                      >
-                        {Icon ? (
-                          <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-race-accent/15 text-race-accent">
-                            <Icon className="size-4" aria-hidden="true" />
-                          </span>
-                        ) : null}
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                        {item.badge ? (
-                          <span
-                            className="rounded-full bg-race-accent-solid px-2 py-0.5 text-xs font-semibold text-white"
-                            data-testid={`admin-nav-badge-${item.id}`}
-                          >
-                            {item.badge}
-                          </span>
-                        ) : null}
-                        {item.children?.length ? (
-                          <ChevronRight
-                            className={cn(
-                              "size-4 text-race-muted transition-transform",
-                              expanded && "lg:rotate-90",
-                            )}
-                            aria-hidden="true"
-                          />
-                        ) : null}
-                      </NavLink>
+                      {withPin(
+                        item.id,
+                        <NavLink
+                          item={item}
+                          active={Boolean(activeExact)}
+                          external={copy.external}
+                          className={cn(
+                            "flex min-h-11 items-center gap-3 px-3 py-2 text-[15px] transition-colors hover:bg-race-accent/10",
+                            activeChapter
+                              ? "font-semibold text-foreground dark:text-white"
+                              : "text-foreground/90",
+                            activeExact && "bg-race-accent/15",
+                          )}
+                        >
+                          {Icon ? (
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-race-accent/15 text-race-accent">
+                              <Icon className="size-4" aria-hidden="true" />
+                            </span>
+                          ) : null}
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          {item.badge ? (
+                            <span
+                              className="rounded-full bg-race-accent-solid px-2 py-0.5 text-xs font-semibold text-white"
+                              data-testid={`admin-nav-badge-${item.id}`}
+                            >
+                              {item.badge}
+                            </span>
+                          ) : null}
+                          {item.children?.length ? (
+                            <ChevronRight
+                              className={cn(
+                                "size-4 text-race-muted transition-transform",
+                                expanded && "lg:rotate-90",
+                              )}
+                              aria-hidden="true"
+                            />
+                          ) : null}
+                        </NavLink>,
+                      )}
                       {item.children?.length ? (
                         <ul className={cn("pb-1", expanded ? "block" : "block lg:hidden")}>
                           {item.children.map((child) => {
                             const active = location?.subsectionId === child.id;
                             return (
                               <li key={child.id}>
-                                <NavLink
-                                  item={child}
-                                  active={active}
-                                  external={copy.external}
-                                  className={cn(
-                                    "flex min-h-10 items-center gap-2 py-1.5 pl-[3.25rem] pr-3 text-sm transition-colors hover:bg-race-accent/10",
-                                    active
-                                      ? "bg-race-accent/15 font-semibold text-foreground dark:text-white"
-                                      : "text-race-muted",
-                                  )}
-                                >
-                                  <span className="min-w-0 flex-1 truncate">{child.label}</span>
-                                </NavLink>
+                                {withPin(
+                                  child.id,
+                                  <NavLink
+                                    item={child}
+                                    active={active}
+                                    external={copy.external}
+                                    className={cn(
+                                      "flex min-h-10 items-center gap-2 py-1.5 pl-[3.25rem] pr-3 text-sm transition-colors hover:bg-race-accent/10",
+                                      active
+                                        ? "bg-race-accent/15 font-semibold text-foreground dark:text-white"
+                                        : "text-race-muted",
+                                    )}
+                                  >
+                                    <span className="min-w-0 flex-1 truncate">{child.label}</span>
+                                  </NavLink>,
+                                )}
                               </li>
                             );
                           })}

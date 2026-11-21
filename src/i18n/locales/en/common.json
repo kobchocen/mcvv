@@ -3277,6 +3277,11 @@
     "runners": "Runners",
     "users": "Users and roles",
     "settings": "Settings",
-    "audit": "Audit"
+    "audit": "Audit",
+    "pinned": "★ Pinned",
+    "pinEdit": "Edit pins",
+    "pinDone": "Done",
+    "pin": "Pin",
+    "unpin": "Unpin"
   }
 }

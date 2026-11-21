@@ -9,6 +9,8 @@ import {
 } from "@/components/organisms";
 import { can, canOpenAdmin, getAccess } from "@/lib/admin/access";
 import { isSectionId } from "@/lib/admin/permissions";
+import { togglePin } from "@/lib/admin/pin-actions";
+import { defaultPins, storedPins } from "@/lib/admin/pins";
 import { navTree, visibleSectionsBy } from "@/lib/admin/sections";
 import { staffUnreadCount } from "@/lib/messages/store";
 import { withFooterYear, type McvvHomepageContent } from "@/components/templates";
@@ -46,6 +48,16 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   const groups = navTree(visible, (key) => navCopy(key), {
     unreadMessages,
   });
+  // Připnuté (P6): jen při zapnutém permissions.v2, jinak panel beze změny.
+  let pins: string[] | null = null;
+  if (access.v2) {
+    const rows = await prisma.userPin
+      .findMany({ where: { userId: session.id }, select: { sectionId: true, pos: true } })
+      .catch(() => []);
+    pins = (storedPins(rows) ?? defaultPins(access.grants)).filter(
+      (id) => isSectionId(id) && can(access, id, "read"),
+    );
+  }
   const latestYearRow = await prisma.result.findFirst({
     orderBy: { year: "desc" },
     select: { year: true },
@@ -71,7 +83,13 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
           breadcrumb: navCopy("breadcrumb"),
           detail: navCopy("detail"),
           external: navCopy("external"),
+          pinned: navCopy("pinned"),
+          pinEdit: navCopy("pinEdit"),
+          pinDone: navCopy("pinDone"),
+          pin: navCopy("pin"),
+          unpin: navCopy("unpin"),
         }}
+        pins={pins ? { ids: pins, toggle: togglePin } : undefined}
       >
         {children}
       </McvvAdminShell>

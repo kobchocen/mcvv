@@ -3277,6 +3277,11 @@
     "runners": "Běžci",
     "users": "Uživatelé a role",
     "settings": "Nastavení",
-    "audit": "Audit"
+    "audit": "Audit",
+    "pinned": "★ Připnuté",
+    "pinEdit": "Upravit připnuté",
+    "pinDone": "Hotovo",
+    "pin": "Připnout",
+    "unpin": "Odepnout"
   }
 }

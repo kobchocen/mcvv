@@ -406,30 +406,102 @@ model User {
   messageThreads MessageThread[]
   messages       Message[]
   auditEntries   AuditLog[]
+  roleGrants     UserRoleGrant[]
+  pins           UserPin[]
 
   @@map("mcvv_user")
+}
+
+/// Role účtu (návrh administrace v2): účet může mít víc rolí, práva se sčítají.
+/// Závodník (`registrar`) je implicitní a sem se nezapisuje. Platí až se zapnutým
+/// nastavením `permissions.v2`; do té doby rozhoduje `mcvv_user.role` (zůstává jako záloha).
+/// Kódy rolí validuje aplikace (VARCHAR, ne enum – nová role nepotřebuje migraci).
+model UserRoleGrant {
+  userId    Int      @map("user_id")
+  role      String   @db.VarChar(24)
+  createdAt DateTime @default(now()) @map("created_at")
+  /// Kdo roli přidělil (null = migrace / seed).
+  createdBy Int?     @map("created_by")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, role])
+  @@index([role])
+  @@map("mcvv_user_role")
+}
+
+/// Odchylky matice oprávnění role × sekce od výchozích hodnot v kódu
+/// (`src/lib/admin/sections.ts`). Chybějící řádek = výchozí hodnota z kódu.
+/// Admin má vždy vše a sem se nezapisuje.
+model RoleSection {
+  role      String   @db.VarChar(24)
+  /// Id podkapitoly z registru sekcí, např. `entries.payments`.
+  sectionId String   @map("section_id") @db.VarChar(48)
+  /// none | read | write
+  level     String   @db.VarChar(5)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy Int?     @map("updated_by")
+
+  @@id([role, sectionId])
+  @@map("mcvv_role_section")
+}
+
+/// Vlastní připnuté položky administrace (★). Bez řádků = výchozí připnuté podle rolí.
+model UserPin {
+  userId    Int    @map("user_id")
+  sectionId String @map("section_id") @db.VarChar(48)
+  pos       Int    @db.TinyInt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, sectionId])
+  @@map("mcvv_user_pin")
 }
 
 /// Auditní záznam akcí v administraci (#107): změny rolí, exporty a importy dne závodu.
 /// Jméno a e-mail aktéra se ukládají i jako text, aby záznam přežil smazání účtu.
 model AuditLog {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now()) @map("created_at")
-  actorUserId Int?     @map("actor_user_id")
-  actorEmail  String   @map("actor_email") @db.VarChar(255)
-  actorRole   String   @map("actor_role") @db.VarChar(20)
+  id          Int        @id @default(autoincrement())
+  createdAt   DateTime   @default(now()) @map("created_at")
+  actorUserId Int?       @map("actor_user_id")
+  actorEmail  String     @map("actor_email") @db.VarChar(255)
+  actorRole   String     @map("actor_role") @db.VarChar(20)
   /// Např. "user.role_change", "raceday.obd_export".
-  action      String   @db.VarChar(64)
+  action      String     @db.VarChar(64)
   /// Cíl akce (např. "user:12", "year:2026").
-  target      String?  @db.VarChar(128)
+  target      String?    @db.VarChar(128)
   /// Strukturované detaily (z čeho na co, počty řádků…). Bez osobních údajů navíc.
   detail      Json?
-
-  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actor       User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  meta        AuditMeta?
 
   @@index([action, createdAt])
   @@index([actorUserId, createdAt])
   @@map("mcvv_audit_log")
+}
+
+/// Doplňkové údaje auditního záznamu pro filtry a přehledy auditu (návrh v2). Samostatná
+/// tabulka 1:1, aby migrace jen přidávala tabulky a `mcvv_audit_log` zůstal beze změny.
+model AuditMeta {
+  auditId    Int      @id @map("audit_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  /// Ročník a startovní číslo, jsou-li známé (filtr „historie čísla“).
+  year       Int?     @db.SmallInt
+  bib        Int?     @db.SmallInt
+  /// Typ cíle akce (např. "start", "split", "finish", "settings", "registration").
+  entity     String?  @db.VarChar(24)
+  /// web | device | system
+  source     String?  @db.VarChar(8)
+  /// Všechny role aktéra v okamžiku akce (čárkou oddělené).
+  actorRoles String?  @map("actor_roles") @db.VarChar(160)
+  /// Id požadavku – spojí víc záznamů jedné akce.
+  requestId  String?  @map("request_id") @db.Char(16)
+
+  audit AuditLog @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([year, bib, createdAt])
+  @@index([entity, createdAt])
+  @@map("mcvv_audit_meta")
 }
 
 enum EmailTokenPurpose {

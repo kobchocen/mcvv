@@ -260,7 +260,7 @@ Klient: `src/lib/db/client.ts` — Prisma 7 driver adapter, singleton na `global
 | `Photo`            | `mcvv_fotky`           | galerie (BLOB `Bytes`)                                       |
 | `RunnerPhoto`      | `mcvv_bezec_fotka`     | nepoužito v UI                                               |
 | `News`             | `mcvv_news`            | nepoužito                                                    |
-| `WebImage`         | `webimages`            | jen `/api/test/webimage`                                     |
+| `WebImage`         | `webimages`            | portréty běžců (`/api/bezec-foto`), newsletter banner        |
 | `Registration`     | `mcvv_prihlaska`       | nepoužito v UI                                               |
 | `RegistrationLine` | `mcvv_prihlaska_radek` | nepoužito v UI                                               |
 | `Payment`          | `mcvv_platba`          | `registrationId` je `Char(3)`, **bez FK**                    |
@@ -289,11 +289,10 @@ Veřejné (locale prefix):
 
 Interní / dluh:
 
-| URL                                      | Účel                                                                                                                                       |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/api/test/fotka?id=`                    | Servíruje BLOB z `mcvv_fotky`. **Produkčně používané** galerií, přesto `test` v cestě. Povolené v `next.config.ts` `images.localPatterns`. |
-| `/api/test/webimage`                     | Ověření importu `webimages`.                                                                                                               |
-| `/test`, `/test/fotka`, `/test/webimage` | Dev stránky, bez locale, bez auth.                                                                                                         |
+| URL                    | Účel                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/api/test/fotka?id=`  | Servíruje BLOB z `mcvv_fotky`. **Produkčně používané** galerií, přesto `test` v cestě. Povolené v `next.config.ts` `images.localPatterns`. |
+| `/test`, `/test/fotka` | Dev stránky, bez locale, bez auth.                                                                                                         |
 
 Assety:
 

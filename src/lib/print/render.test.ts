@@ -17,12 +17,19 @@ import {
   type BuildBibOptions,
 } from "./bibs-core";
 import {
+  CUT_LINE_COLOR,
   fitSize,
   ITALIC_SKEW_DEG,
+  NAME_BASELINE_PX,
   pdfSkewXMatrix,
   renderBibsPdf,
+  renderBibsPreviewA4,
   SURNAME_MAX_PX,
   SURNAME_SIZE_PX,
+  TIME_BASELINE_PX,
+  TIME_LABEL_SIZE_PX,
+  TIME_NAME_SIZE_PX,
+  TIME_SIZE_PX,
   pxToMm,
   pxToPt,
 } from "./render-bibs";
@@ -258,6 +265,46 @@ describe("italic skew and start-number colours", () => {
     for (const match of cms) {
       assert.ok(Number(match[1]) > 0, `shear ${match[1]} should be positive in PDF space`);
     }
+  });
+
+  it("keeps official v15 time typography and draws an A4 cut line between the two A5 bibs", async () => {
+    assert.equal(TIME_SIZE_PX, 176);
+    assert.equal(TIME_LABEL_SIZE_PX, 44);
+    assert.equal(TIME_NAME_SIZE_PX, 30);
+    assert.equal(TIME_BASELINE_PX, 1654);
+    assert.equal(NAME_BASELINE_PX, 1699);
+    const row = {
+      runnerId: "r",
+      name: "Novák Jan",
+      categoryId: "M",
+      categoryName: "muži nad 40 let",
+      birthYear: "1984",
+      registrationId: 1,
+    };
+    const cards = [
+      buildBibCard({ ...row, bib: 41 }, options),
+      buildBibCard({ ...row, bib: 173 }, { ...options, veterans: new Map([["r", 35]]) }),
+    ];
+    const [fonts, mcvvLogo, profile, yearBadge] = await Promise.all([
+      loadBibFonts(),
+      loadMcvvLogo(),
+      loadCourseProfileData(),
+      loadYearBadge(2026),
+    ]);
+    const pdf = renderBibsPreviewA4(
+      cards,
+      { fonts, logos: [], mcvvLogo, profile, yearBadge, year: 2026 },
+      { title: "cut" },
+    );
+    const latin = Buffer.from(pdf).toString("latin1");
+    const box = /\/MediaBox\s*\[\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*\]/.exec(latin);
+    assert.ok(box);
+    const width = Number(box[3]) - Number(box[1]);
+    const height = Number(box[4]) - Number(box[2]);
+    // A4 portrait ≈ 210 × 297 mm in points
+    assert.ok(Math.abs(width - 595.28) < 2);
+    assert.ok(Math.abs(height - 841.89) < 2);
+    assert.equal(CUT_LINE_COLOR.toLowerCase(), "#a7a7a7");
   });
 });
 

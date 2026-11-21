@@ -15,6 +15,7 @@ import {
   type BibSeal,
 } from "./bibs-core";
 import { profilePoints, type CoursePoint } from "./course-profile";
+import sealNumberLayout from "../../assets/print/seal-number-layout.json";
 
 /** Velikost primární pečeti na A5 @ 300 dpi (v15). */
 export const SEAL_SIZE_PX = 268;
@@ -26,7 +27,6 @@ export const SEAL_PRIMARY_TOP_PX = 918;
 export const SEAL_VB = 240;
 const SKEW_DEG = -12;
 const NUMBER_SIZE = 128;
-const NUMBER_BASELINE = 163;
 const PROFILE_FLAT = 0.48;
 const COURSE_U0 = 0.22;
 const COURSE_U1 = 0.78;
@@ -79,6 +79,17 @@ function flattenedWave(
   return pts;
 }
 
+export type SealNumberLayout = { yb: number; tx: number; adv: number; bounds: number[] };
+
+/** Oficiální v15 place_number: vycentrovaný ink bbox mezi MCVV a popiskem. */
+export function sealNumberPlacement(count: string): SealNumberLayout {
+  const entry = (sealNumberLayout as { layout: Record<string, SealNumberLayout> }).layout[count];
+  if (!entry) {
+    throw new Error(`Missing official seal layout for ${count}`);
+  }
+  return entry;
+}
+
 export function sealSvg(
   seal: BibSeal,
   profile: readonly CoursePoint[],
@@ -91,12 +102,14 @@ export function sealSvg(
   const fillBot = seal.kind === "veteran" ? BIB_ORANGE : BIB_FOREST;
   const gap = 2.6;
   const uid = `cut-${seal.kind}-${count}`;
-  const wave = flattenedWave(profile, 48, 192, NUMBER_BASELINE, NUMBER_SIZE);
+  const placed = sealNumberPlacement(count);
+  const [x0, , x1] = placed.bounds;
+  const wave = flattenedWave(profile, x0 - 6, x1 + 6, placed.yb, NUMBER_SIZE);
   const line = wave.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
   const px0 = wave[0].x;
   const px1 = wave[wave.length - 1].x;
-  const poly = `${line} ${px1.toFixed(2)},${NUMBER_BASELINE + 36} ${px0.toFixed(2)},${NUMBER_BASELINE + 36}`;
-  const skew = `translate(120,0) skewX(${SKEW_DEG}) translate(-120,0)`;
+  const poly = `${line} ${px1.toFixed(2)},${placed.yb + 36} ${px0.toFixed(2)},${placed.yb + 36}`;
+  const skew = `translate(${placed.tx},0) translate(120,0) skewX(${SKEW_DEG}) translate(-120,0)`;
   const label = escapeXml(seal.label);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${SEAL_VB}" height="${SEAL_VB}" viewBox="0 0 ${SEAL_VB} ${SEAL_VB}">
@@ -109,11 +122,11 @@ export function sealSvg(
   <circle cx="120" cy="120" r="104" fill="none" stroke="${ring}" stroke-width="1" opacity=".55"/>
   <text x="120" y="50" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="15" letter-spacing="4.5" fill="${ring}">MCVV</text>
   <g transform="${skew}" font-family="Oswald" font-weight="700" font-size="${NUMBER_SIZE}" text-anchor="middle">
-    <text x="120" y="${NUMBER_BASELINE}" fill="${fillTop}">${count}</text>
+    <text x="120" y="${placed.yb}" fill="${fillTop}">${count}</text>
   </g>
   <g clip-path="url(#${uid})">
     <g transform="${skew}" font-family="Oswald" font-weight="700" font-size="${NUMBER_SIZE}" text-anchor="middle">
-      <text x="120" y="${NUMBER_BASELINE}" fill="${fillBot}">${count}</text>
+      <text x="120" y="${placed.yb}" fill="${fillBot}">${count}</text>
     </g>
   </g>
   <polyline fill="none" stroke="${fill}" stroke-width="${gap}" stroke-linecap="round" stroke-linejoin="round" points="${line}"/>

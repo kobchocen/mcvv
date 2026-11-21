@@ -52,6 +52,30 @@ export type BibRenderAssets = {
 /** CSS/SVG skewX angle of the MCVV logo italic (top of the letters to the right). */
 export const ITALIC_SKEW_DEG = -12;
 
+/** Oficiální v15 / schválený testtisk: typografie a sazba spodního bloku (300 dpi). */
+export const TIME_SIZE_PX = 176;
+export const TIME_LABEL_SIZE_PX = 44;
+export const TIME_NAME_SIZE_PX = 30;
+export const TIME_BASELINE_PX = 1654;
+export const NAME_BASELINE_PX = 1699;
+export const TIME_GAP_PX = 18;
+export const TIME_TRACKING_EM = 0.02;
+export const TIME_LABEL_TRACKING_EM = 0.08;
+export const TIME_NAME_TRACKING_EM = 0.1;
+export const YEAR_LOGO_GAP_PX = 6;
+export const YEAR_MARGIN_LEFT_PX = -110;
+export const YEAR_MARGIN_TOP_PX = -40;
+/** Musí odpovídat plátnu v bib-assets (oficiální v15 + rezerva na šikmou dvojku). */
+export const YEAR_BADGE_W_PX = 720;
+export const YEAR_BADGE_H_PX = 250;
+export const YEAR_BADGE_EXTRA_LEFT_PX = 40;
+
+/** Čárkovaná linka na rozstřižení 2×A5 na A4 (jako ve schváleném testtisku). */
+export const CUT_LINE_COLOR = "#A7A7A7";
+export const CUT_LINE_WIDTH_PX = 4;
+export const CUT_LINE_DASH_PX = 24;
+export const CUT_LINE_GAP_PX = 16;
+
 function registerFonts(doc: jsPDF, fonts: BibFonts) {
   doc.addFileToVFS("Oswald-Regular.ttf", fonts.regular);
   doc.addFont("Oswald-Regular.ttf", FONT, "normal");
@@ -260,38 +284,40 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm 
   const logoY = bottomMid - logoH / 2;
   drawContainedImage(doc, assets.mcvvLogo, "mcvv-logo", { x: logoX, y: logoY, w: logoW, h: logoH });
 
-  const yearW = pxToMm(550);
-  const yearH = pxToMm(290);
-  const yearX = logoX + logoW + pxToMm(6) + pxToMm(-45) - pxToMm(50);
-  const yearY = bottomMid - pxToMm(250) / 2 + pxToMm(-40) - pxToMm(20);
+  const yearW = pxToMm(YEAR_BADGE_W_PX);
+  const yearH = pxToMm(YEAR_BADGE_H_PX);
+  const yearX =
+    logoX + logoW + pxToMm(YEAR_LOGO_GAP_PX + YEAR_MARGIN_LEFT_PX - YEAR_BADGE_EXTRA_LEFT_PX);
+  const yearY = bottomMid - pxToMm(YEAR_BADGE_H_PX) / 2 + pxToMm(YEAR_MARGIN_TOP_PX);
   doc.addImage(assets.yearBadge.data, "PNG", yearX, yearY, yearW, yearH, "year-badge", "FAST");
 
-  // START V + čas vpravo, pod tím celé jméno a ročník
-  const timeBaseline = bottomMid + pxToMm(20);
-  doc.setFont(FONT, "medium");
-  doc.setFontSize(pxToPt(44));
-  doc.setTextColor(BIB_FOREST);
-  const timeWidth = (() => {
-    doc.setFont(FONT, "bold");
-    doc.setFontSize(pxToPt(176));
-    return doc.getTextWidth(card.startTime);
-  })();
+  // START V + čas vpravo, pod tím celé jméno a ročník (sazba v15)
+  const timeBaseline = ym(TIME_BASELINE_PX);
   const timeX = pxToMm(2380);
+  const timeTracking = pxToMm(TIME_SIZE_PX * TIME_TRACKING_EM);
+  const labelTracking = pxToMm(TIME_LABEL_SIZE_PX * TIME_LABEL_TRACKING_EM);
+  const nameTracking = pxToMm(TIME_NAME_SIZE_PX * TIME_NAME_TRACKING_EM);
   doc.setFont(FONT, "bold");
-  doc.setFontSize(pxToPt(176));
+  doc.setFontSize(pxToPt(TIME_SIZE_PX));
+  doc.setCharSpace(timeTracking);
+  const timeWidth = doc.getTextWidth(card.startTime);
   doc.setTextColor(BIB_FOREST);
   doc.text(card.startTime, timeX, timeBaseline, { align: "right" });
   doc.setFont(FONT, "medium");
-  doc.setFontSize(pxToPt(44));
-  doc.text("START V:", timeX - timeWidth - pxToMm(18), timeBaseline, { align: "right" });
+  doc.setFontSize(pxToPt(TIME_LABEL_SIZE_PX));
+  doc.setCharSpace(labelTracking);
+  doc.text("START V:", timeX - timeWidth - pxToMm(TIME_GAP_PX), timeBaseline, { align: "right" });
+  doc.setCharSpace(0);
 
   if (!card.blank) {
     const whoName = bibGivenNameFirst(card.fullName);
     const who = card.birthYear ? `${whoName} · ${card.birthYear}` : whoName;
     doc.setFont(FONT, "normal");
-    doc.setFontSize(pxToPt(30));
+    doc.setFontSize(pxToPt(TIME_NAME_SIZE_PX));
+    doc.setCharSpace(nameTracking);
     doc.setTextColor(0, 0, 0);
-    doc.text(who, timeX, timeBaseline + pxToMm(36), { align: "right" });
+    doc.text(who, timeX, ym(NAME_BASELINE_PX), { align: "right" });
+    doc.setCharSpace(0);
   }
 }
 
@@ -353,9 +379,23 @@ export function renderBibsPreviewA4(
   }
   cards.forEach((card, index) => {
     if (index > 0 && index % 2 === 0) {
+      drawA4CutLine(doc);
       doc.addPage();
     }
     drawCard(doc, card, assets, (index % 2) * BIB_PAGE_H_MM);
   });
+  if (cards.length > 0) {
+    drawA4CutLine(doc);
+  }
   return new Uint8Array(doc.output("arraybuffer"));
+}
+
+function drawA4CutLine(doc: jsPDF) {
+  const y = BIB_PAGE_H_MM;
+  doc.setDrawColor(CUT_LINE_COLOR);
+  doc.setLineWidth(pxToMm(CUT_LINE_WIDTH_PX));
+  doc.setLineCap("butt");
+  doc.setLineDashPattern([pxToMm(CUT_LINE_DASH_PX), pxToMm(CUT_LINE_GAP_PX)], 0);
+  doc.line(0, y, BIB_PAGE_W_MM, y);
+  doc.setLineDashPattern([], 0);
 }

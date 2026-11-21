@@ -13,11 +13,18 @@ export const PRINT_ASSET_DIR = path.join("src", "assets", "print");
 /** Logo MCVV 2A světlé (maska), rastr 2× šířky 720 px na čísle. */
 const LOGO_WIDTH_PX = 1440;
 
-/** Odznak roku včetně přesahu šikmých číslic (bib12 overflow:visible). */
-export const YEAR_BADGE_PAD_X = 50;
-export const YEAR_BADGE_PAD_Y = 20;
-export const YEAR_BADGE_W = 450 + 50 + 50;
-export const YEAR_BADGE_H = 250 + 20 + 20;
+/**
+ * Rok jako v oficiálním v15 HTML: viewBox "-65 0 580 250", overflow:visible.
+ * Levá a pravá rezerva, aby šikmá dvojka (jinak vypadá jako jednička) a vlna
+ * nebyly oříznuté rastrováním. Při kreslení se image posune o YEAR_BADGE_EXTRA_LEFT.
+ */
+export const YEAR_BADGE_OFFICIAL_MIN_X = -65;
+export const YEAR_BADGE_PAD_LEFT = 40; // viewBox začíná na -105
+export const YEAR_BADGE_PAD_RIGHT = 100;
+export const YEAR_BADGE_W = 580 + 40 + 100; // 720
+export const YEAR_BADGE_H = 250;
+export const YEAR_BADGE_EXTRA_LEFT = 40;
+export const YEAR_BADGE_VIEWBOX = `${-65 - 40} 0 ${580 + 40 + 100} 250`;
 const YEAR_BADGE_SCALE = 2;
 
 let logoCache: Promise<BibLogo> | null = null;
@@ -76,7 +83,7 @@ function yearBadgeSvg(year: number, wave: readonly CoursePoint[], fontDataUri: s
   const line = wave.map(([x, y]) => `${x},${y}`).join(" ");
   const clip = `-105,260 ${line} 560,260`;
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${YEAR_BADGE_W}" height="${YEAR_BADGE_H}" viewBox="-50 -20 ${YEAR_BADGE_W} ${YEAR_BADGE_H}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${YEAR_BADGE_W}" height="${YEAR_BADGE_H}" viewBox="${YEAR_BADGE_VIEWBOX}" overflow="visible">
   <style>@font-face{font-family:Oswald;src:url('${fontDataUri}');font-weight:700}</style>
   <defs>
     <clipPath id="yb"><polygon points="${clip}"/></clipPath>
@@ -89,7 +96,6 @@ function yearBadgeSvg(year: number, wave: readonly CoursePoint[], fontDataUri: s
       <text x="225" y="225" fill="#fb5d1e">${year}</text>
     </g>
   </g>
-  <polyline fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" points="${line}"/>
 </svg>`;
 }
 

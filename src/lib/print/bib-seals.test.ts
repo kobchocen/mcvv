@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { sealSvg } from "./bib-seals";
+import { sealNumberPlacement, sealSvg } from "./bib-seals";
 import { bibAppearance, twoDigitCount } from "./bibs-core";
 import type { CoursePoint } from "./course-profile";
 
@@ -25,5 +25,20 @@ describe("bib seals", () => {
     assert.match(winnerSvg, />03</);
     assert.match(winnerSvg, />VÝHER</);
     assert.match(winnerSvg, />MCVV</);
+  });
+
+  it("centres the two-digit count with the official v15 place_number transform", () => {
+    const placed = sealNumberPlacement("35");
+    assert.ok(Math.abs(placed.tx - 24.2324) < 1e-3);
+    assert.ok(Math.abs(placed.yb - 168.948) < 1e-3);
+    const cx = (placed.bounds[0] + placed.bounds[2]) / 2;
+    const cy = (placed.bounds[1] + placed.bounds[3]) / 2;
+    assert.ok(Math.abs(cx - 120) < 0.05, `cx ${cx}`);
+    assert.ok(Math.abs(cy - 117.3) < 0.05, `cy ${cy}`);
+    const veteran = bibAppearance({ isDefender: false, winCount: null, veteranStarts: 35 })
+      .seals[0];
+    const svg = sealSvg(veteran!, profile, "data:font/ttf;base64,AA==");
+    assert.match(svg, /translate\(24\.2324,0\)/);
+    assert.match(svg, /y="168\.948"/);
   });
 });

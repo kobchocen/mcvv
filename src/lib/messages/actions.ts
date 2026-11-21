@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireSection } from "@/lib/admin/access";
 import { formInt } from "@/lib/admin/parse";
-import { requireStaff } from "@/lib/admin/staff";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getMessageSettings } from "@/lib/settings/messages";
@@ -113,7 +113,7 @@ export async function postStaffMessage(
   _prev: MessageFormState,
   formData: FormData,
 ): Promise<MessageFormState> {
-  const session = await requireStaff();
+  const session = await requireSection("messages", "write");
   const body = normalizeMessageBody(formData.get("body"));
   if (!body) return { status: "error", error: "invalid" };
   let threadId = formInt(formData, "threadId");
@@ -151,7 +151,7 @@ export async function postStaffMessage(
 }
 
 export async function markReadByStaff(formData: FormData): Promise<void> {
-  await requireStaff();
+  await requireSection("messages", "write");
   const threadId = formInt(formData, "threadId");
   if (threadId === null) return;
   const thread = await prisma.messageThread.findUnique({ where: { id: threadId } });
@@ -162,7 +162,7 @@ export async function markReadByStaff(formData: FormData): Promise<void> {
 
 /** Vyřešit / znovu otevřít vlákno (jen pořadatel). */
 export async function setThreadStatus(formData: FormData): Promise<void> {
-  await requireStaff();
+  await requireSection("messages", "write");
   const threadId = formInt(formData, "threadId");
   const status = String(formData.get("status") ?? "");
   if (threadId === null || (status !== "open" && status !== "resolved")) return;

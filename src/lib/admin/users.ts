@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { notifyRoleChange } from "@/lib/admin/role-change-notify";
 import type { RoleChange, RoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
-import { requireAdmin } from "@/lib/admin/staff";
 import { syncLegacyRoleGrants } from "@/lib/admin/role-grants";
 import { writeAudit } from "@/lib/audit/log";
 import { isUserRole, validateRoleChange, type RoleChangeError } from "@/lib/auth/roles";
@@ -25,7 +25,7 @@ type Outcome =
  * odeslání změnu role neblokuje, jen se zobrazí adminovi (`mail` v query).
  */
 export async function changeUserRole(formData: FormData): Promise<void> {
-  const actor = await requireAdmin();
+  const actor = await requireSection("users", "write");
   const locale = await getLocale();
   const userId = Number.parseInt(String(formData.get("userId") ?? ""), 10);
   const newRole = String(formData.get("role") ?? "");
@@ -114,7 +114,7 @@ function backQuery(back: string): Record<string, string> {
  * odebere (startér pak obrazovku /start neotevře). Změna se zapíše do auditu.
  */
 export async function changeStartCorridor(formData: FormData): Promise<void> {
-  const actor = await requireAdmin();
+  const actor = await requireSection("users", "write");
   const locale = await getLocale();
   const userId = Number.parseInt(String(formData.get("userId") ?? ""), 10);
   const raw = String(formData.get("corridor") ?? "");

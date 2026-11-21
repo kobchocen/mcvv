@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formatDateTime, formatShortDateTime } from "@/lib/format/date";
 import { parseAdminThreadFilters, sortAdminThreads } from "@/lib/messages/core";
 import { listAdminThreads } from "@/lib/messages/store";
@@ -26,7 +26,7 @@ export default async function AdminMessagesPage({ params, searchParams }: PagePr
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("messages", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const filters = parseAdminThreadFilters(await searchParams);
   const [threads, settings] = await Promise.all([listAdminThreads(filters), getMessageSettings()]);

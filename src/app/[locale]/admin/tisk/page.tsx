@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { championBibList } from "@/lib/print/bib-start";
@@ -40,7 +40,7 @@ function ChampionField({ value }: { value: string }) {
 export default async function AdminPrintBibsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
-  await requireStaff();
+  await requireSection("startlist.print", "read");
   const t = await getTranslations({ locale: locale as Locale, namespace: "PrintReports" });
   const lang = staffLocale(locale);
   const [startList, partners] = await Promise.all([

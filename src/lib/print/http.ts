@@ -1,4 +1,4 @@
-import { staffAccess } from "@/lib/admin/staff";
+import { sectionRouteAccess } from "@/lib/admin/access";
 import { NO_STORE } from "@/lib/http/no-store";
 
 export { NO_STORE };
@@ -8,7 +8,10 @@ export { NO_STORE };
  * Nepřihlášený 401, jiná role 404 (sestava pro ni „neexistuje“).
  */
 export async function staffOnly(): Promise<Response | null> {
-  const access = await staffAccess({ status: 404, body: "Not found" });
+  const access = await sectionRouteAccess("startlist.print", "read", {
+    status: 404,
+    body: "Not found",
+  });
   return access.ok ? null : access.response;
 }
 

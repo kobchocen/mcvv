@@ -11,7 +11,7 @@ import { RUNNER_SEARCH_LIMIT, RUNNER_SEARCH_MIN } from "@/lib/admin/runner-direc
 import { searchRunners } from "@/lib/admin/runner-directory";
 import { isRunnerId } from "@/lib/admin/runner-orphans-core";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { countryName } from "@/lib/runner/nationality";
 
 type PageProps = Readonly<{
@@ -33,7 +33,7 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("dictionaries.runners", "read");
   const [admin, copy] = await Promise.all([
     getTranslations({ locale, namespace: "Admin" }),
     getTranslations({ locale, namespace: "AdminRunners" }),

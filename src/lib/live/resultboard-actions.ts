@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { redirect } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 
 import { resultboardInfoCache } from "./resultboard";
@@ -16,7 +16,7 @@ import { RESULTBOARD_CONFIG_KEY, parseResultboardConfig } from "./resultboard-co
  * načtou do 30 s (na této replice hned – cache se smaže).
  */
 export async function saveResultboardAction(formData: FormData): Promise<void> {
-  await requireStaff();
+  await requireSection("raceControl.resultboard", "write");
   const raw = String(formData.get("config") ?? "").slice(0, 20_000);
   let parsed: unknown = null;
   try {

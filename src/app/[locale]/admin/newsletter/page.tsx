@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function AdminNewsletterPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
-  await requireStaff();
+  await requireSection("newsletter", "read");
   const rows = await prisma.newsletterCampaign.findMany({
     orderBy: { id: "desc" },
     include: { createdBy: { select: { name: true } }, _count: { select: { recipients: true } } },

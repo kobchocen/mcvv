@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formatDateTime } from "@/lib/format/date";
 import { clearSplitsAction, deleteSplitAction, setSplitAction } from "@/lib/live/admin-actions";
 import { OUTCOME_LABELS_CS } from "@/lib/live/admin-core";
@@ -65,7 +65,7 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
   const sp = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("raceControl.manual", "read");
   const t = await getTranslations({ locale, namespace: "LiveSplits" });
   const live = await getTranslations({ locale, namespace: "LiveResults" });
   const ctx = await getRaceContext();

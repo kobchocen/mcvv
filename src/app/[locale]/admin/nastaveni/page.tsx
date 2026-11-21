@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { saveSettings } from "@/lib/admin/settings";
 import { formatStartClock } from "@/lib/date/race-schedule";
 import { getFreeEntryEmailsText } from "@/lib/entries/settings";
@@ -47,7 +47,7 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   const { saved, error } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("settings", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const [emails, site, messages, receipt, organizerRegEmail, mail, mailToday, raceYear] =
     await Promise.all([

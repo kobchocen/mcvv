@@ -8,7 +8,7 @@ import {
 import { McvvAdminRunnerOrphans } from "@/components/organisms/mcvv-admin-runner-orphans";
 import { loadRunnerOrphans } from "@/lib/admin/runner-orphans";
 import { birthYearOf } from "@/lib/admin/runner-sex-core";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/format/date";
 import { type Locale } from "@/i18n/routing";
@@ -35,7 +35,7 @@ export default async function RunnerOrphansPage({ params, searchParams }: PagePr
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("dictionaries.runners.merge", "read");
   const [admin, runners, copy, query] = await Promise.all([
     getTranslations({ locale, namespace: "Admin" }),
     getTranslations({ locale, namespace: "AdminRunners" }),

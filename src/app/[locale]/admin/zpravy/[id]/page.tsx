@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { staffThreadCopy } from "@/components/organisms/mcvv-message-copy";
 import { McvvMessageThread } from "@/components/organisms/mcvv-message-thread";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { markReadByStaff, postStaffMessage, setThreadStatus } from "@/lib/messages/actions";
 import { loadThread } from "@/lib/messages/store";
@@ -22,7 +22,7 @@ export default async function AdminMessageThreadPage({ params }: PageProps) {
   const { locale: requestedLocale, id: rawId } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("messages", "read");
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(id)) notFound();
   const thread = await loadThread(id);

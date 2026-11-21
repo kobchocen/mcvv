@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -22,7 +22,7 @@ export default async function AdminPartnersPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("partners", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const rows = await prisma.sponsor.findMany({
     omit: { logo: true },

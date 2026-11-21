@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {} from "node:fs";
 import { test } from "node:test";
+import { readGuardSource } from "@/lib/admin/guard-source";
 
 // Server actions / pages need the Next.js request context, so guards are checked in the source.
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+const read = (path: string) => readGuardSource(new URL(path, import.meta.url));
 const action = read("./runner-rename-actions.ts");
 const apply = read("./runner-rename.ts");
 
@@ -45,7 +46,8 @@ test("runner pages are admin only; registration shortcut only for admins (Q249)"
     assert.match(read(path), /await requireAdmin\(\);/, path);
   }
   const registration = read("../../app/[locale]/admin/prihlasky/[rok]/[id]/page.tsx");
-  assert.match(registration, /session\.role === "admin" \? \(\s*<Link/);
+  assert.match(registration, /canAccess\("dictionaries\.runners", "write"\)/);
+  assert.match(registration, /canRenameRunner \? \(\s*<Link/);
   assert.match(registration, /pathname: "\/admin\/ciselniky\/bezci\/\[id\]"/);
   const dictionaries = read("../../app/[locale]/admin/ciselniky/page.tsx");
   assert.match(dictionaries, /\.\.\.\(isAdmin\s*\?\s*\[\s*\{\s*href: "\/admin\/ciselniky\/bezci"/);

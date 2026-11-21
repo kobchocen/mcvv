@@ -10,7 +10,7 @@ import { prisma } from "@/lib/db/client";
 import { loadStartSettings } from "@/lib/race/startlist-load";
 import { startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { standardPayUntil } from "@/lib/slots/core";
 import { slotsWithDefaults } from "@/lib/slots/defaults";
 import { loadSlots } from "@/lib/slots/load";
@@ -30,7 +30,7 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
   const { locale: requestedLocale, id: rawId } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("editions", "read");
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(id)) {
     notFound();

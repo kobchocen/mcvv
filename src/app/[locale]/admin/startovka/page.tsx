@@ -10,7 +10,7 @@ import {
   swapStartBibs,
   toggleStartLock,
 } from "@/lib/admin/startlist";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
 import {
   specialCheckState,
@@ -87,7 +87,7 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("startlist.list", "read");
   const t = await getTranslations({ locale, namespace: "StartAdmin" });
   const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
   const query = await searchParams;

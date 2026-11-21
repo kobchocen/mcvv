@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import {
@@ -53,7 +53,7 @@ const td = "py-2 pr-4 align-top";
 export default async function AdminPaymentsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
-  await requireStaff();
+  await requireSection("entries.payments", "read");
   const [unmatchedAll, overpaid, recent, lastRuns, dryRunRows, entryRefunds] = await Promise.all([
     prisma.bankTx.findMany({ where: { status: "unmatched" }, orderBy: { date: "desc" } }),
     prisma.bankTx.findMany({

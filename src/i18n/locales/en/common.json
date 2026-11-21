@@ -3349,5 +3349,9 @@
     "detail": "detail",
     "prev": "Newer",
     "next": "Older"
+  },
+  "AdminSectionNav": {
+    "title": "On this page",
+    "startlist": "Start list"
   }
 }

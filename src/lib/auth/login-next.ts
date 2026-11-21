@@ -73,7 +73,7 @@ function adminHref(next: string) {
 
 /** Po přihlášení: bezpečný `next`, jinak výchozí cíl podle role (viz `loginTarget`). */
 export function redirectAfterLogin(next: string | null, role: UserRole, locale: Locale): never {
-  const target = loginTarget(next, adminAccess(role), role);
+  const target = loginTarget(next, adminAccess(role));
   if (target.kind === "admin") {
     redirect({ href: adminHref(target.next), locale });
   }
@@ -86,6 +86,9 @@ export function redirectAfterLogin(next: string | null, role: UserRole, locale: 
       href: Object.keys(query).length ? { pathname: target.path, query } : target.path,
       locale,
     });
+  }
+  if (target.kind === "home") {
+    redirect({ href: "/", locale });
   }
   redirect({ href: "/prihlasky", locale });
   throw new Error("redirect");

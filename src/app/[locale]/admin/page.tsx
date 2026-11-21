@@ -2,13 +2,20 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { requireStaff } from "@/lib/admin/staff";
-import { adminAccess } from "@/lib/auth/roles";
+import {
+  adminAccess,
+  canAccessRaceDay,
+  canAccessSplits,
+  canAccessStarter,
+  canUseCashDesk,
+  type UserRole,
+} from "@/lib/auth/roles";
 import { getSession } from "@/lib/auth/session";
 import { mailPolicy } from "@/lib/mail/queue";
 import { mailStats } from "@/lib/mail/queue-store";
 import { staffUnreadCount } from "@/lib/messages/store";
 import buildInfo from "@/lib/build-info.json";
-import { Link, redirect, type Locale } from "@/i18n/routing";
+import { Link, type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -25,9 +32,11 @@ export default async function AdminPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const current = await getSession();
-  if (current && adminAccess(current.role) === "raceday") {
-    // Časomíra (timing) vidí jen „Den závodu“.
-    redirect({ href: "/admin/den-zavodu", locale });
+  const access = current ? adminAccess(current.role) : "none";
+  if (current && (access === "raceday" || access === "tools")) {
+    // Role dne závodu (timing, splitmaker, startér, kancelář): rozcestník jen s jejich
+    // sekcemi a obrazovkami (dřív je přihlášení přesměrovalo rovnou na ně).
+    return <RaceDayHome locale={locale} role={current.role} />;
   }
   const session = await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
@@ -131,6 +140,41 @@ export default async function AdminPage({ params }: PageProps) {
                   {tile.detail}
                 </p>
               ) : null}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+type RaceDayHref = "/admin/den-zavodu" | "/mezicasy" | "/start" | "/kancelar";
+
+/** Rozcestník pro role dne závodu bez plné administrace. */
+async function RaceDayHome({ locale, role }: { locale: Locale; role: UserRole }) {
+  const copy = await getTranslations({ locale, namespace: "Admin" });
+  const tiles: { href: RaceDayHref; title: string }[] = [];
+  if (canAccessRaceDay(role)) tiles.push({ href: "/admin/den-zavodu", title: copy("navRaceDay") });
+  if (canAccessSplits(role)) tiles.push({ href: "/mezicasy", title: copy("navSplitEntry") });
+  if (canAccessStarter(role)) tiles.push({ href: "/start", title: copy("navStarter") });
+  if (canUseCashDesk(role)) tiles.push({ href: "/kancelar", title: copy("navCashDesk") });
+  return (
+    <main className="px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <h1 className="font-display text-4xl font-bold text-foreground dark:text-white">
+          {copy("title")}
+        </h1>
+        <p className="mt-4 max-w-xl text-base leading-7 text-race-muted">{copy("toolsIntro")}</p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2" data-testid="raceday-home">
+          {tiles.map((tile) => (
+            <Link
+              key={tile.href}
+              href={tile.href}
+              className="border border-race-line/55 bg-race-surface p-6 transition-colors hover:border-race-accent/50"
+            >
+              <p className="font-display text-2xl font-semibold text-foreground dark:text-white">
+                {tile.title} {tile.href.startsWith("/admin") ? "" : "↗"}
+              </p>
             </Link>
           ))}
         </div>

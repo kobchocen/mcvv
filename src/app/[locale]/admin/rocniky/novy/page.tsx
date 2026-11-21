@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
 import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
 import { startModelCopy } from "@/components/organisms/mcvv-admin-start-model-copy";
@@ -40,7 +39,6 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="mb-2 font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("new")} — {copy("editionsTitle")}
         </h1>

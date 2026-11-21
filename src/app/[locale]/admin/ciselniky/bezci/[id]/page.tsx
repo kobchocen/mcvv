@@ -4,7 +4,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CountryFlag } from "@/components/atoms";
 import { NationalityFlagSelect } from "@/components/molecules/nationality-flag-select";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPendingSubmit } from "@/components/organisms/mcvv-admin-pending-submit";
 import { McvvAdminRunnerDelete } from "@/components/organisms/mcvv-admin-runner-delete";
 import { Button } from "@/components/ui/button";
@@ -67,9 +66,8 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireAdmin();
-  const [admin, copy, nationalityCopy, nationalityOptions, query, runner, { year: currentYear }] =
+  const [copy, nationalityCopy, nationalityOptions, query, runner, { year: currentYear }] =
     await Promise.all([
-      getTranslations({ locale, namespace: "Admin" }),
       getTranslations({ locale, namespace: "AdminRunners" }),
       getTranslations({ locale, namespace: "Nationality" }),
       nationalityField(locale),
@@ -114,7 +112,6 @@ export default async function AdminRunnerDetailPage({ params, searchParams }: Pa
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <div className="flex flex-wrap gap-4 text-sm font-semibold">
           <Link href="/admin/ciselniky/bezci" className="text-race-accent hover:underline">
             ← {copy("title")}

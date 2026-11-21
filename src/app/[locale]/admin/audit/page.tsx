@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/staff";
 import type { AuditChange } from "@/lib/audit/diff";
@@ -48,7 +47,6 @@ export default async function AdminAuditPage({ params, searchParams }: PageProps
   setRequestLocale(locale);
   await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "AdminAudit" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
   const filters = parseAuditFilters(await searchParams);
   const where = auditWhere(filters);
 
@@ -72,7 +70,6 @@ export default async function AdminAuditPage({ params, searchParams }: PageProps
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>

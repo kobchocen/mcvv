@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { requireRaceDay } from "@/lib/admin/staff";
 import { canManageLiveResults, canViewSpeakerScreen, isStaffRole } from "@/lib/auth/roles";
@@ -57,7 +56,6 @@ export default async function RaceDayPage({ params }: PageProps) {
   setRequestLocale(locale);
   const session = await requireRaceDay();
   const copy = await getTranslations({ locale, namespace: "RaceDay" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
 
   const [{ year }, history] = await Promise.all([
     currentRaceYear(),
@@ -76,7 +74,6 @@ export default async function RaceDayPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        {isStaffRole(session.role) ? <McvvAdminHomeLink label={admin("title")} /> : null}
         <McvvTestRunBanner locale={locale} leftovers className="mb-4" />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("heading", { year })}

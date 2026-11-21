@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import {
   McvvAdminDictsSubnav,
   runnersSubnav,
@@ -52,7 +51,6 @@ export default async function RunnerOrphansPage({ params, searchParams }: PagePr
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <McvvAdminDictsSubnav
           backLabel={admin("dictsTitle")}
           label={runners("title")}

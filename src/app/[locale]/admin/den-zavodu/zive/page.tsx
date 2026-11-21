@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvResultboardSettings } from "@/components/organisms/mcvv-resultboard-settings";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
       <main className="px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-4xl gap-8">
           <div>
-            <McvvAdminHomeLink label={admin("title")} />
             <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
               {t("title")}
             </h1>
@@ -122,7 +120,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-4xl gap-8">
         <div>
-          <McvvAdminHomeLink label={admin("title")} />
           <McvvTestRunBanner locale={locale} leftovers className="mb-4" />
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {t("title")} {ctx.year}

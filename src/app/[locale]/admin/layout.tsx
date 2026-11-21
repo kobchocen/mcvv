@@ -2,7 +2,15 @@ import { Suspense, type ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { adminAccess, getSession } from "@/lib/auth/session";
-import { McvvFooter, McvvLoginNextRedirect, McvvPublicNavbar } from "@/components/organisms";
+import {
+  McvvAdminShell,
+  McvvFooter,
+  McvvLoginNextRedirect,
+  McvvPublicNavbar,
+} from "@/components/organisms";
+import { navTree, visibleSections } from "@/lib/admin/sections";
+import { isStaffRole } from "@/lib/auth/roles";
+import { staffUnreadCount } from "@/lib/messages/store";
 import { withFooterYear, type McvvHomepageContent } from "@/components/templates";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
@@ -26,6 +34,11 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   }
 
   const home = await getTranslations({ locale, namespace: "Home" });
+  const navCopy = await getTranslations({ locale, namespace: "AdminNav" });
+  const unreadMessages = isStaffRole(session.role) ? await staffUnreadCount().catch(() => 0) : 0;
+  const groups = navTree(visibleSections(session.role), (key) => navCopy(key), {
+    unreadMessages,
+  });
   const latestYearRow = await prisma.result.findFirst({
     orderBy: { year: "desc" },
     select: { year: true },
@@ -40,7 +53,21 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   return (
     <div className="min-h-screen bg-race-deep text-foreground">
       <McvvPublicNavbar content={{ brand, nav }} variant="solid" />
-      {children}
+      <McvvAdminShell
+        groups={groups}
+        copy={{
+          home: navCopy("home"),
+          navLabel: navCopy("navLabel"),
+          search: navCopy("search"),
+          noResults: navCopy("noResults"),
+          back: navCopy("back"),
+          breadcrumb: navCopy("breadcrumb"),
+          detail: navCopy("detail"),
+          external: navCopy("external"),
+        }}
+      >
+        {children}
+      </McvvAdminShell>
       <McvvFooter content={{ brand, footer }} />
     </div>
   );

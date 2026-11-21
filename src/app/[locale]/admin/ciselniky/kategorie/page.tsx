@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { recalculateRecords, saveCategory } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
@@ -32,7 +31,6 @@ export default async function AdminCategoriesPage({ params, searchParams }: Page
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("dictsCategories")}
         </h1>

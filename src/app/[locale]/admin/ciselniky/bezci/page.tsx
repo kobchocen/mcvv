@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CountryFlag } from "@/components/atoms";
-import { McvvAdminDictsSubnav, McvvAdminHomeLink, runnersSubnav } from "@/components/organisms";
+import { McvvAdminDictsSubnav, runnersSubnav } from "@/components/organisms";
 import { McvvAdminRunnerSearch } from "@/components/organisms/mcvv-admin-runner-search";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -46,7 +46,6 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <McvvAdminDictsSubnav
           backLabel={admin("dictsTitle")}
           label={copy("title")}

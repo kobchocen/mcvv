@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
@@ -89,7 +88,6 @@ export default async function AdminPaymentsPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label="Administrace" />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           Platby (Fio)
         </h1>

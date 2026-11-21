@@ -17,7 +17,6 @@ import {
   McvvNewsletterStartForm,
   McvvNewsletterTestForm,
 } from "@/components/organisms/mcvv-admin-newsletter";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminNewsletterForm } from "@/components/organisms/mcvv-admin-newsletter-form";
 import {
   McvvNewsletterBannerDraftProvider,
@@ -102,7 +101,6 @@ export default async function AdminNewsletterDetailPage({ params, searchParams }
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label="Administrace" />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {campaign.subject}
         </h1>

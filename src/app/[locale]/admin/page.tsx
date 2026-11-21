@@ -38,56 +38,10 @@ export default async function AdminPage({ params }: PageProps) {
     // sekcemi a obrazovkami (dřív je přihlášení přesměrovalo rovnou na ně).
     return <RaceDayHome locale={locale} role={current.role} />;
   }
-  const session = await requireStaff();
+  await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const audit = await getTranslations({ locale, namespace: "AdminAudit" });
   const [mail, policy] = await Promise.all([mailStats().catch(() => null), mailPolicy()]);
   const unreadThreads = await staffUnreadCount().catch(() => null);
-
-  const tiles: {
-    href:
-      | "/admin/partneri"
-      | "/admin/rocniky"
-      | "/admin/ciselniky"
-      | "/admin/prihlasky"
-      | "/admin/startovka"
-      | "/admin/newsletter"
-      | "/admin/platby"
-      | "/admin/tisk"
-      | "/admin/zpravy"
-      | "/admin/nastaveni"
-      | "/admin/den-zavodu"
-      | "/admin/po-zavode"
-      | "/admin/uzivatele"
-      | "/admin/audit"
-      | "/kancelar";
-    title: string;
-    detail?: string;
-    highlight?: boolean;
-  }[] = [
-    {
-      href: "/admin/zpravy",
-      title: copy("navMessages"),
-      detail: unreadThreads === null ? undefined : copy("messagesTile", { count: unreadThreads }),
-      highlight: (unreadThreads ?? 0) > 0,
-    },
-    { href: "/admin/partneri", title: copy("navPartners") },
-    { href: "/admin/rocniky", title: copy("navEditions") },
-    { href: "/admin/ciselniky", title: copy("navDictionaries") },
-    { href: "/admin/prihlasky", title: copy("navRegistrations") },
-    { href: "/admin/startovka", title: copy("navStartList") },
-    { href: "/admin/newsletter", title: copy("navNewsletter") },
-    { href: "/admin/platby", title: copy("navPayments") },
-    { href: "/admin/den-zavodu", title: copy("navRaceDay") },
-    { href: "/admin/po-zavode", title: copy("navAfterRace") },
-    { href: "/kancelar", title: copy("navCashDesk") },
-    { href: "/admin/tisk", title: copy("navPrintBibs") },
-  ];
-  if (session.role === "admin") {
-    tiles.push({ href: "/admin/uzivatele", title: copy("navUsers") });
-    tiles.push({ href: "/admin/nastaveni", title: copy("navSettings") });
-    tiles.push({ href: "/admin/audit", title: audit("nav") });
-  }
 
   return (
     <main className="px-4 py-16 sm:px-6 lg:px-8">
@@ -115,34 +69,20 @@ export default async function AdminPage({ params }: PageProps) {
             {mail.quotaExceeded ? ` ${copy("mailQuotaExceeded")}` : ""}
           </p>
         ) : null}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {tiles.map((tile) => (
-            <Link
-              key={tile.href}
-              href={tile.href}
-              className={
-                tile.highlight
-                  ? "border border-race-accent bg-race-surface p-5 transition-colors hover:border-race-accent"
-                  : "border border-race-line/55 bg-race-surface p-5 transition-colors hover:border-race-accent/50"
-              }
-            >
-              <p className="font-display text-xl font-semibold text-foreground dark:text-white">
-                {tile.title}
-              </p>
-              {tile.detail ? (
-                <p
-                  className={
-                    tile.highlight
-                      ? "mt-1 text-sm font-semibold text-race-accent"
-                      : "mt-1 text-sm text-race-muted"
-                  }
-                >
-                  {tile.detail}
-                </p>
-              ) : null}
-            </Link>
-          ))}
-        </div>
+        {(unreadThreads ?? 0) > 0 ? (
+          <Link
+            href="/admin/zpravy"
+            className="mt-8 block max-w-xl border border-race-accent bg-race-surface p-5"
+            data-testid="admin-unread"
+          >
+            <p className="font-display text-xl font-semibold text-foreground dark:text-white">
+              {copy("navMessages")}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-race-accent">
+              {copy("messagesTile", { count: unreadThreads ?? 0 })}
+            </p>
+          </Link>
+        ) : null}
       </div>
     </main>
   );

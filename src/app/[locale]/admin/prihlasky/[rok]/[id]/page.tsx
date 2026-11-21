@@ -24,7 +24,6 @@ import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import {
   McvvAdminSexChange,
   type McvvAdminSexChangeCopy,
@@ -218,7 +217,6 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-12">
         <div>
-          <McvvAdminHomeLink label={copy("title")} />
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {copy("regsTitle")} {year}/{id}
           </h1>

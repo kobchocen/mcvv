@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/staff";
@@ -50,7 +49,6 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   setRequestLocale(locale);
   const actor = await requireAdmin();
   const copy = await getTranslations({ locale, namespace: "AdminUsers" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
   const sp = await searchParams;
 
   const roleFilter = isUserRole(sp.role) ? sp.role : undefined;
@@ -131,7 +129,6 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -89,7 +88,6 @@ export default async function AfterRacePage({ params, searchParams }: PageProps)
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <McvvAdminHomeLink label={t("adminHome")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {t("heading", { year })}
         </h1>

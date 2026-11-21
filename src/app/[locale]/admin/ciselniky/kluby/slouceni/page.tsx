@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LinkPendingLabel } from "@/components/molecules/link-pending-label";
 import { PendingSubmitButton } from "@/components/molecules/pending-submit-button";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { clubsSubnav, McvvAdminDictsSubnav } from "@/components/organisms/mcvv-admin-dicts-subnav";
 import { McvvAdminMergePicker } from "@/components/organisms/mcvv-admin-merge-picker";
 import { Link, type Locale } from "@/i18n/routing";
@@ -341,7 +340,6 @@ export default async function AdminClubMergePage({ params, searchParams }: PageP
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <McvvAdminDictsSubnav
           backLabel={copy("dictsTitle")}
           label={copy("dictsClubs")}

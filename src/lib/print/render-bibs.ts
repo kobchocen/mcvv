@@ -1,15 +1,15 @@
 import { jsPDF } from "jspdf";
 
 import type { BibFonts } from "./bib-fonts";
-import { bibQrMatrix } from "./bib-qr";
+import { BIB_QR_RIGHT_PX, BIB_QR_SIZE_PX, BIB_QR_TOP_PX } from "./bib-qr";
 import {
-  BIB_FOREST,
-  BIB_ORANGE,
-  bibGivenNameFirst,
-  type BibCard,
-  type BibColor,
-  participationHex,
-} from "./bibs-core";
+  SEAL_PRIMARY_TOP_PX,
+  SEAL_RIGHT_PX,
+  SEAL_SIZE_PX,
+  SEAL_SMALL_PX,
+  sealCacheKey,
+} from "./bib-seals";
+import { BIB_FOREST, bibGivenNameFirst, type BibCard, participationHex } from "./bibs-core";
 import { profilePoints, type CoursePoint } from "./course-profile";
 
 const FONT = "Oswald";
@@ -36,23 +36,6 @@ export function cssBaseline(topPx: number, fontSizePx: number, lineHeight = 1): 
 
 export const SURNAME_MAX_PX = 1400;
 export const SURNAME_SIZE_PX = 228;
-/**
- * Pravý ink odznaku má mít alespoň 60 px rezervu (jako „35“ ve v12).
- * BADGE_RIGHT_PX je pravý okraj cesty, zmenšený o polovinu tloušťky obrysu.
- */
-export const BADGE_MARGIN_PX = 60;
-const BADGE_STROKE_PX = 5;
-export const BADGE_RIGHT_PX = 2480 - BADGE_MARGIN_PX - Math.ceil(BADGE_STROKE_PX / 2);
-export const BADGE_NUMBER_SIZE_PX = 128;
-export const BADGE_LABEL_SIZE_PX = 26;
-export const BADGE_LABEL = "ÚČASTÍ";
-const BADGE_PAD_X_PX = 34;
-const BADGE_PAD_Y_PX = 20;
-const BADGE_GAP_PX = 6;
-const BADGE_RADIUS_PX = 28;
-/** Svislý střed odznaku – vedle těla startovního čísla, pod QR (spodek QR = 610). */
-const BADGE_CENTER_Y_PX = 880;
-
 export type BibLogo = { data: Uint8Array; width: number; height: number };
 
 export type BibRenderAssets = {
@@ -62,12 +45,8 @@ export type BibRenderAssets = {
   profile: readonly CoursePoint[];
   yearBadge: BibLogo;
   year: number;
-};
-
-const NUMBER_COLORS: Record<BibColor, string> = {
-  black: "#000000",
-  forest: BIB_FOREST,
-  orange: BIB_ORANGE,
+  qrs?: ReadonlyMap<number, BibLogo>;
+  seals?: ReadonlyMap<string, BibLogo>;
 };
 
 /** CSS/SVG skewX angle of the MCVV logo italic (top of the letters to the right). */
@@ -141,23 +120,6 @@ function withSkewX(doc: jsPDF, degrees: number, originYMm: number, draw: () => v
   doc.restoreGraphicsState();
 }
 
-function drawQr(doc: jsPDF, year: number, bib: number, xMm: number, yMm: number, sizeMm: number) {
-  const matrix = bibQrMatrix(year, bib);
-  const quiet = 2;
-  const cells = matrix.size + quiet * 2;
-  const cell = sizeMm / cells;
-  doc.setFillColor(255, 255, 255);
-  doc.rect(xMm, yMm, sizeMm, sizeMm, "F");
-  doc.setFillColor(0, 0, 0);
-  for (let row = 0; row < matrix.size; row += 1) {
-    for (let col = 0; col < matrix.size; col += 1) {
-      if (matrix.darkAt(row, col)) {
-        doc.rect(xMm + (col + quiet) * cell, yMm + (row + quiet) * cell, cell, cell, "F");
-      }
-    }
-  }
-}
-
 function drawContainedImage(
   doc: jsPDF,
   logo: BibLogo,
@@ -179,93 +141,63 @@ function drawContainedImage(
   );
 }
 
-function drawParticipationBadge(doc: jsPDF, count: number, hex: string) {
-  const label = BADGE_LABEL;
-  const numberText = String(count);
-  doc.setFont(FONT, "bold");
-  doc.setFontSize(pxToPt(BADGE_NUMBER_SIZE_PX));
-  doc.setCharSpace(0);
-  const numberWidthPx = doc.getTextWidth(numberText) / MM;
-  const italicOverhangPx =
-    Math.tan((-ITALIC_SKEW_DEG * Math.PI) / 180) * OSWALD_ASCEND * BADGE_NUMBER_SIZE_PX;
-  doc.setFontSize(pxToPt(BADGE_LABEL_SIZE_PX));
-  const labelWidthPx = doc.getTextWidth(label) / MM;
-  const innerWidthPx = Math.max(numberWidthPx + italicOverhangPx, labelWidthPx);
-  const widthPx = innerWidthPx + 2 * BADGE_PAD_X_PX;
-  const heightPx =
-    BADGE_PAD_Y_PX +
-    OSWALD_ASCEND * BADGE_NUMBER_SIZE_PX +
-    BADGE_GAP_PX +
-    (OSWALD_ASCEND + OSWALD_DESCEND) * BADGE_LABEL_SIZE_PX +
-    BADGE_PAD_Y_PX;
-  const leftPx = BADGE_RIGHT_PX - widthPx;
-  const topPx = BADGE_CENTER_Y_PX - heightPx / 2;
-  const numberBaselinePx = topPx + BADGE_PAD_Y_PX + OSWALD_ASCEND * BADGE_NUMBER_SIZE_PX;
-  const labelBaselinePx = numberBaselinePx + BADGE_GAP_PX + OSWALD_ASCEND * BADGE_LABEL_SIZE_PX;
-  const centerXPx = leftPx + widthPx / 2;
-
-  doc.setDrawColor(hex);
-  doc.setLineWidth(pxToMm(BADGE_STROKE_PX));
-  doc.setLineJoin("round");
-  doc.setLineCap("round");
-  doc.roundedRect(
-    pxToMm(leftPx),
-    pxToMm(topPx),
-    pxToMm(widthPx),
-    pxToMm(heightPx),
-    pxToMm(BADGE_RADIUS_PX),
-    pxToMm(BADGE_RADIUS_PX),
-    "S",
-  );
-
-  const numberBaseline = pxToMm(numberBaselinePx);
-  withSkewX(doc, ITALIC_SKEW_DEG, numberBaseline, () => {
-    doc.setFont(FONT, "bold");
-    doc.setFontSize(pxToPt(BADGE_NUMBER_SIZE_PX));
-    doc.setTextColor(hex);
-    doc.setCharSpace(0);
-    doc.text(numberText, pxToMm(centerXPx), numberBaseline, { align: "center" });
-  });
-
-  doc.setFont(FONT, "semibold");
-  doc.setFontSize(pxToPt(BADGE_LABEL_SIZE_PX));
-  doc.setTextColor(hex);
-  doc.setCharSpace(pxToMm(2));
-  doc.text(label, pxToMm(centerXPx), pxToMm(labelBaselinePx), { align: "center" });
-  doc.setCharSpace(0);
+function drawSeals(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm = 0) {
+  if (card.blank || card.seals.length === 0 || !assets.seals) {
+    return;
+  }
+  for (const seal of card.seals) {
+    const image = assets.seals.get(sealCacheKey(seal));
+    if (!image) {
+      continue;
+    }
+    const sizePx = seal.placement === "secondary" ? SEAL_SMALL_PX : SEAL_SIZE_PX;
+    const leftPx = 2480 - SEAL_RIGHT_PX - sizePx;
+    const topPx =
+      seal.placement === "primary" ? SEAL_PRIMARY_TOP_PX : BIB_QR_TOP_PX + BIB_QR_SIZE_PX + 8;
+    drawContainedImage(doc, image, `seal-${sealCacheKey(seal)}`, {
+      x: pxToMm(leftPx),
+      y: pxToMm(topPx) + offsetYMm,
+      w: pxToMm(sizePx),
+      h: pxToMm(sizePx),
+    });
+  }
 }
 
-function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
+function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets, offsetYMm = 0) {
   const year = assets.year;
+  const ym = (px: number) => pxToMm(px) + offsetYMm;
   const margin = pxToMm(100);
 
   // Logo partnera nahoře
   if (card.logoIndex !== null && assets.logos[card.logoIndex]) {
     drawContainedImage(doc, assets.logos[card.logoIndex], `partner-${card.logoIndex}`, {
       x: margin,
-      y: pxToMm(10) + (pxToMm(350) - pxToMm(305)) / 2,
+      y: ym(10) + (pxToMm(350) - pxToMm(305)) / 2,
       w: pxToMm(1900),
       h: pxToMm(305),
     });
   }
 
-  // QR vpravo nahoře (místo čárového kódu)
-  drawQr(doc, year, card.bib, pxToMm(2480 - 100 - 230), pxToMm(380), pxToMm(230));
-
-  const numberBaseline = pxToMm(1172);
-
-  // Počet účastí jako obrysový odznak vpravo vedle čísla (pod QR)
-  if (!card.blank && card.veteranStarts !== null) {
-    const hex = participationHex(card.color) ?? NUMBER_COLORS.forest;
-    drawParticipationBadge(doc, card.veteranStarts, hex);
+  // QR vpravo nahoře (375 px, oranžové rohy, logo V; payload MCVV{rok}-{číslo})
+  const qr = assets.qrs?.get(card.bib);
+  if (qr) {
+    drawContainedImage(doc, qr, `qr-${year}-${card.bib}`, {
+      x: pxToMm(2480 - BIB_QR_RIGHT_PX - BIB_QR_SIZE_PX),
+      y: ym(BIB_QR_TOP_PX),
+      w: pxToMm(BIB_QR_SIZE_PX),
+      h: pxToMm(BIB_QR_SIZE_PX),
+    });
   }
 
-  // Startovní číslo vzpřímené; barva jako počet účastí (veterán forest, obhájce oranžová)
+  const numberBaseline = ym(1172);
+  drawSeals(doc, card, assets, offsetYMm);
+
+  // Startovní číslo vzpřímené: černá / zelená / oranžová / zlatá
   const number = String(card.bib);
   doc.setFont(FONT, "bold");
   doc.setFontSize(pxToPt(990));
   doc.setCharSpace(pxToMm(-20));
-  doc.setTextColor(NUMBER_COLORS[card.color]);
+  doc.setTextColor(participationHex(card.color));
   doc.text(number, pxToMm(1240), numberBaseline, { align: "center" });
   doc.setCharSpace(0);
 
@@ -286,8 +218,8 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   const line = profilePoints(
     assets.profile,
     30,
-    pxToMm(top + 0.5 * height),
-    pxToMm(top + 0.7 * height),
+    ym(top + 0.5 * height),
+    ym(top + 0.7 * height),
     pxToMm(590),
     pxToMm(1890),
     5,
@@ -295,7 +227,7 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   drawPolyline(doc, line, pxToMm(26), "#ffffff");
 
   if (card.blank) {
-    const lineY = pxToMm(cssBaseline(1200, 40));
+    const lineY = ym(cssBaseline(1200, 40));
     doc.setDrawColor(150, 150, 150);
     doc.setLineWidth(0.3);
     doc.line(margin, lineY, pxToMm(1400), lineY);
@@ -306,7 +238,7 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   } else {
     // Příjmení pod číslem, kurzívou, centrované; dlouhá jména se zmenší
     const surnameSize = fitSize(doc, card.surname, pxToPt(SURNAME_SIZE_PX), pxToMm(SURNAME_MAX_PX));
-    const surnameBaseline = pxToMm(cssBaseline(1200, surnameSize / PT /* px */));
+    const surnameBaseline = ym(cssBaseline(1200, surnameSize / PT /* px */));
     withSkewX(doc, ITALIC_SKEW_DEG, surnameBaseline, () => {
       doc.setFont(FONT, "bold");
       doc.setFontSize(surnameSize);
@@ -316,12 +248,12 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   }
 
   // Spodní řádek pod černou linkou
-  const ruleY = pxToMm(1442);
+  const ruleY = ym(1442);
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(pxToMm(4));
   doc.line(margin, ruleY, pxToMm(2380), ruleY);
 
-  const bottomMid = (pxToMm(1442 + 4 + 22) + pxToMm(1748 - 22)) / 2;
+  const bottomMid = (ym(1442 + 4 + 22) + ym(1748 - 22)) / 2;
   const logoW = pxToMm(720);
   const logoH = logoW * (assets.mcvvLogo.height / assets.mcvvLogo.width);
   const logoX = margin;
@@ -337,29 +269,29 @@ function drawCard(doc: jsPDF, card: BibCard, assets: BibRenderAssets) {
   // START V + čas vpravo, pod tím celé jméno a ročník
   const timeBaseline = bottomMid + pxToMm(20);
   doc.setFont(FONT, "medium");
-  doc.setFontSize(pxToPt(34));
+  doc.setFontSize(pxToPt(44));
   doc.setTextColor(BIB_FOREST);
   const timeWidth = (() => {
     doc.setFont(FONT, "bold");
-    doc.setFontSize(pxToPt(128));
+    doc.setFontSize(pxToPt(176));
     return doc.getTextWidth(card.startTime);
   })();
   const timeX = pxToMm(2380);
   doc.setFont(FONT, "bold");
-  doc.setFontSize(pxToPt(128));
+  doc.setFontSize(pxToPt(176));
   doc.setTextColor(BIB_FOREST);
   doc.text(card.startTime, timeX, timeBaseline, { align: "right" });
   doc.setFont(FONT, "medium");
-  doc.setFontSize(pxToPt(34));
+  doc.setFontSize(pxToPt(44));
   doc.text("START V:", timeX - timeWidth - pxToMm(18), timeBaseline, { align: "right" });
 
   if (!card.blank) {
     const whoName = bibGivenNameFirst(card.fullName);
     const who = card.birthYear ? `${whoName} · ${card.birthYear}` : whoName;
     doc.setFont(FONT, "normal");
-    doc.setFontSize(pxToPt(26));
+    doc.setFontSize(pxToPt(30));
     doc.setTextColor(0, 0, 0);
-    doc.text(who, timeX, timeBaseline + pxToMm(32), { align: "right" });
+    doc.text(who, timeX, timeBaseline + pxToMm(36), { align: "right" });
   }
 }
 
@@ -391,6 +323,39 @@ export function renderBibsPdf(
       doc.addPage();
     }
     drawCard(doc, card, assets);
+  });
+  return new Uint8Array(doc.output("arraybuffer"));
+}
+
+/** Náhled A4 na výšku, dvě A5 čísla pod sebou (tisková zkouška). Ostrý tisk zůstává 1× A5. */
+export function renderBibsPreviewA4(
+  cards: BibCard[],
+  assets: BibRenderAssets,
+  meta: { title: string },
+): Uint8Array {
+  const doc = new jsPDF({
+    unit: "mm",
+    format: "a4",
+    orientation: "portrait",
+    compress: true,
+  });
+  registerFonts(doc, assets.fonts);
+  doc.setProperties({
+    title: meta.title,
+    subject: "Náhled startovních čísel 2×A5",
+    creator: "www.mcvv.org",
+  });
+  if (cards.length === 0) {
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(14);
+    doc.setTextColor(BIB_FOREST);
+    doc.text("Žádná čísla k tisku.", 20, 30);
+  }
+  cards.forEach((card, index) => {
+    if (index > 0 && index % 2 === 0) {
+      doc.addPage();
+    }
+    drawCard(doc, card, assets, (index % 2) * BIB_PAGE_H_MM);
   });
   return new Uint8Array(doc.output("arraybuffer"));
 }

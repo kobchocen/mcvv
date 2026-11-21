@@ -1,4 +1,5 @@
 import { loadBibFonts } from "@/lib/print/bib-fonts";
+import { prepareBibArtwork } from "@/lib/print/bib-artwork";
 import { loadCourseProfileData, loadMcvvLogo, loadYearBadge } from "@/lib/print/bib-assets";
 import { bibFilename, parseBibPrintParams } from "@/lib/print/bibs-core";
 import { NO_STORE, pdfResponse, staffOnly } from "@/lib/print/http";
@@ -29,7 +30,10 @@ export async function GET(request: Request): Promise<Response> {
     loadCourseProfileData(),
   ]);
   const { year, cards } = await loadBibCards(params, logos.length);
-  const yearBadge = await loadYearBadge(year);
+  const [yearBadge, artwork] = await Promise.all([
+    loadYearBadge(year),
+    prepareBibArtwork(cards, year, profile),
+  ]);
   const pdf = renderBibsPdf(
     cards,
     {
@@ -39,6 +43,8 @@ export async function GET(request: Request): Promise<Response> {
       profile,
       yearBadge,
       year,
+      qrs: artwork.qrs,
+      seals: artwork.seals,
     },
     { title: `Startovní čísla MCVV ${year}` },
   );

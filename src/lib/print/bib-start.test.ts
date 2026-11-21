@@ -87,6 +87,7 @@ describe("print adapter: start list → bib cards", () => {
       model,
       championBibs: championBibList({ men: 501, women: null }),
       veterans: new Map(),
+      winnerCounts: new Map(),
       logoCount: 0,
     };
     const [first, second] = bibRowsFromStartList(
@@ -96,6 +97,6 @@ describe("print adapter: start list → bib cards", () => {
     assert.equal(first.startTime, "10:01:00");
     assert.equal(first.registrationId, null);
     assert.equal(second.startTime, "10:00:00");
-    assert.equal(second.color, "orange");
+    assert.equal(second.color, "gold");
   });
 });

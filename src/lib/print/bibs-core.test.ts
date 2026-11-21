@@ -11,7 +11,8 @@ import {
   buildBlankBibCard,
   parseBibList,
   parseBibPrintParams,
-  participationColor,
+  bibAppearance,
+  twoDigitCount,
   sortBibRows,
   veteranMinStarts,
   type BuildBibOptions,
@@ -23,6 +24,7 @@ const options: BuildBibOptions = {
   model: DEFAULT_START_MODEL,
   championBibs: [400, 950],
   veterans: new Map([["19750101", 33]]),
+  winnerCounts: new Map(),
   logoCount: 15,
 };
 
@@ -53,7 +55,7 @@ describe("start time on the bib (legacy tiskcisel.php / #114)", () => {
 });
 
 describe("bib cards", () => {
-  it("colours: veteran forest with starts, champion orange, otherwise black", () => {
+  it("colours: veteran green with STARTŮ seal, defender gold, otherwise black", () => {
     const row = {
       runnerId: "19750101",
       name: "Švadlena  Pavel",
@@ -63,16 +65,34 @@ describe("bib cards", () => {
       registrationId: 7,
     };
     const veteran = buildBibCard({ ...row, bib: 131 }, options);
-    assert.equal(veteran.color, "forest");
+    assert.equal(veteran.color, "green");
     assert.equal(veteran.veteranStarts, 33);
+    assert.deepEqual(
+      veteran.seals.map((s) => ({
+        kind: s.kind,
+        count: s.count,
+        label: s.label,
+        placement: s.placement,
+      })),
+      [{ kind: "veteran", count: 33, label: "STARTŮ", placement: "primary" }],
+    );
     assert.equal(veteran.surname, "ŠVADLENA");
     assert.equal(veteran.fullName, "ŠVADLENA PAVEL");
     assert.equal(veteran.category, "MUŽI NAD 50 LET");
     assert.equal(veteran.birthYear, "1975");
     assert.equal(veteran.startTime, "10:47:30");
     assert.equal(veteran.logoIndex, 131 % 15);
-    assert.equal(buildBibCard({ ...row, bib: 400 }, options).color, "orange");
+    const defender = buildBibCard({ ...row, bib: 400 }, options);
+    assert.equal(defender.color, "gold");
+    assert.equal(defender.isDefender, true);
     assert.equal(buildBibCard({ ...row, runnerId: "x", bib: 41 }, options).color, "black");
+    const historic = buildBibCard(
+      { ...row, bib: 131, runnerId: "19800101" },
+      { ...options, veterans: new Map(), winnerCounts: new Map([["19800101", 3]]) },
+    );
+    assert.equal(historic.color, "orange");
+    assert.equal(historic.winCount, 3);
+    assert.equal(historic.seals[0]?.label, "VÝHER");
   });
 
   it("blank cards have no name and the title without year", () => {
@@ -146,11 +166,86 @@ describe("category label and participation colours", () => {
     assert.equal(bibGivenNameFirst("Cher"), "CHER");
   });
 
-  it("colours the number and participation count: forest for veterans, orange for men's/women's champions", () => {
-    assert.equal(participationColor(false, 35), "forest");
-    assert.equal(participationColor(true, 35), "orange");
-    assert.equal(participationColor(true, null), "orange");
-    assert.equal(participationColor(false, null), "black");
+  it("assigns colours and seals including winner + veteran", () => {
+    const veteran = bibAppearance({ isDefender: false, winCount: null, veteranStarts: 35 });
+    assert.equal(veteran.color, "green");
+    assert.deepEqual(
+      veteran.seals.map((s) => ({
+        kind: s.kind,
+        label: s.label,
+        placement: s.placement,
+        count: s.count,
+      })),
+      [{ kind: "veteran", label: "STARTŮ", placement: "primary", count: 35 }],
+    );
+
+    const winner = bibAppearance({ isDefender: false, winCount: 3, veteranStarts: null });
+    assert.equal(winner.color, "orange");
+    assert.deepEqual(
+      winner.seals.map((s) => ({
+        kind: s.kind,
+        label: s.label,
+        placement: s.placement,
+        count: s.count,
+      })),
+      [{ kind: "winner", label: "VÝHER", placement: "primary", count: 3 }],
+    );
+
+    const defender = bibAppearance({ isDefender: true, winCount: 2, veteranStarts: null });
+    assert.equal(defender.color, "gold");
+    assert.deepEqual(
+      defender.seals.map((s) => ({
+        kind: s.kind,
+        label: s.label,
+        placement: s.placement,
+        count: s.count,
+      })),
+      [{ kind: "winner", label: "VÝHER", placement: "primary", count: 2 }],
+    );
+
+    const defenderNoResults = bibAppearance({
+      isDefender: true,
+      winCount: null,
+      veteranStarts: null,
+    });
+    assert.equal(defenderNoResults.color, "gold");
+    assert.equal(defenderNoResults.winCount, 1);
+    assert.equal(defenderNoResults.seals[0]?.count, 1);
+
+    const bothWinner = bibAppearance({ isDefender: false, winCount: 3, veteranStarts: 35 });
+    assert.equal(bothWinner.color, "orange");
+    assert.deepEqual(
+      bothWinner.seals.map((s) => ({
+        kind: s.kind,
+        label: s.label,
+        placement: s.placement,
+        count: s.count,
+      })),
+      [
+        { kind: "winner", label: "VÝHER", placement: "primary", count: 3 },
+        { kind: "veteran", label: "STARTŮ", placement: "secondary", count: 35 },
+      ],
+    );
+
+    const bothDefender = bibAppearance({ isDefender: true, winCount: 2, veteranStarts: 35 });
+    assert.equal(bothDefender.color, "gold");
+    assert.deepEqual(
+      bothDefender.seals.map((s) => ({ kind: s.kind, label: s.label, placement: s.placement })),
+      [
+        { kind: "winner", label: "VÝHER", placement: "primary" },
+        { kind: "veteran", label: "STARTŮ", placement: "secondary" },
+      ],
+    );
+
+    const plain = bibAppearance({ isDefender: false, winCount: null, veteranStarts: null });
+    assert.equal(plain.color, "black");
+    assert.deepEqual(plain.seals, []);
+  });
+
+  it("prints seal counts with two digits", () => {
+    assert.equal(twoDigitCount(5), "05");
+    assert.equal(twoDigitCount(35), "35");
+    assert.equal(twoDigitCount(100), "100");
   });
 });
 

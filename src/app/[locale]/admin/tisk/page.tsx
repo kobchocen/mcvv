@@ -26,7 +26,7 @@ const card = "border border-race-line/55 bg-race-surface p-5";
 function ChampionField({ value }: { value: string }) {
   return (
     <label className={label}>
-      Oranžové číslo a počet účastí (obhájci mužů a žen)
+      Zlaté číslo (obhájci mužů a žen)
       <input
         name="red"
         defaultValue={value}
@@ -67,12 +67,15 @@ export default async function AdminPrintBibsPage({ params }: PageProps) {
           Tisk startovních čísel {year}
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-race-muted">
-          PDF na A5 na šířku, jedno číslo na stránku (tisk 100 %, bez přizpůsobení). Startovní číslo
-          i počet účastí (obrysový odznak vpravo u čísla) jsou u členů klubu veteránů forest zelené,
-          u obhájců loňského vítězství mužů a žen oranžové (při shodě oranžová); jinak je číslo
-          černé. Přes číslo vede bílá linka profilu tratě. Místo čárového kódu je QR (MCVV
-          {year}-číslo). Reklamní pruh: logo partnera kategorie 1–2 podle čísla % počet log (
-          {partners.length} {partners.length === 1 ? "logo" : "log"}
+          PDF na A5 na šířku, jedno číslo na stránku (tisk 100 %, bez přizpůsobení, Pretex). Základ
+          je černé číslo. Veteráni MCVV mají zelené číslo a zelenou pečeť s počtem startů (STARTŮ).
+          Historičtí absolutní vítězové mužů a žen (ze statistik) mají oranžové číslo a zlatou pečeť
+          s počtem výher (VÝHER). Obhájci loňského vítězství mužů a žen mají zlaté číslo a stejnou
+          zlatou pečeť. Kdo je vítěz i veterán, má barvu podle vítězství a obě pečeti (veteránská je
+          menší, mezi standardní pečetí a QR). Přes číslo vede bílá linka profilu tratě. QR kód
+          (MCVV
+          {year}-číslo) se skenuje na startu a v cíli. Reklamní pruh: logo partnera kategorie 1–2
+          podle čísla % počet log ({partners.length} {partners.length === 1 ? "logo" : "log"}
           {partners.length ? `: ${partners.map((p) => p.name).join(", ")}` : ""}). Startovní čas
           podle nastavení ročníku: nula {formatClock(model.zeroSeconds)}, 2. start od čísla{" "}
           {model.secondStartFrom}, interval {model.intervalSeconds} s.

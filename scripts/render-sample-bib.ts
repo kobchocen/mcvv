@@ -1,20 +1,21 @@
 /**
- * Ukázková startovní čísla (schválený vizuál) – Jan Novák, 173.
- * Varianty: veterán (forest), obhájce (oranžová), běžné (černé).
+ * Náhled startovních čísel bez DB: A4 na výšku, dvě A5 pod sebou.
+ * Pět vzorků (Pavel 21. 11. 2026): černé, zelené veterán, oranžové vítěz,
+ * zlaté obhájce, vítěz + veterán.
  * Spuštění z kořene webu: node --import tsx scripts/render-sample-bib.ts [výstupní-složka]
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { prepareBibArtwork } from "@/lib/print/bib-artwork";
 import { loadCourseProfileData, loadMcvvLogo, loadYearBadge } from "@/lib/print/bib-assets";
 import { loadBibFonts } from "@/lib/print/bib-fonts";
 import { buildBibCard, type BuildBibOptions } from "@/lib/print/bibs-core";
 import { rasterizeLogo } from "@/lib/print/partner-logos";
-import { renderBibsPdf } from "@/lib/print/render-bibs";
+import { renderBibsPreviewA4 } from "@/lib/print/render-bibs";
 import { DEFAULT_START_MODEL } from "@/lib/race/start-time";
 
-const row = {
-  bib: 173,
+const runner = {
   runnerId: "19840101",
   name: "Novák Jan",
   categoryId: "B",
@@ -23,36 +24,70 @@ const row = {
   registrationId: 1,
 };
 
-const base: Omit<BuildBibOptions, "championBibs" | "veterans"> = {
+const base: Omit<BuildBibOptions, "championBibs" | "veterans" | "winnerCounts"> = {
   mode: "all",
   year: 2026,
   model: DEFAULT_START_MODEL,
   logoCount: 1,
 };
 
-const variants: { file: string; title: string; options: BuildBibOptions }[] = [
+const empty = new Map<string, number>();
+
+const variants = [
   {
-    file: "mcvv-2026-cislo-173-novak-veteran.pdf",
-    title: "Startovní číslo MCVV 2026 – veterán 173",
-    options: {
-      ...base,
-      championBibs: [],
-      veterans: new Map([["19840101", 35]]),
-    },
+    title: "Černé — běžný závodník",
+    card: buildBibCard(
+      { ...runner, bib: 41, runnerId: "19900101" },
+      { ...base, championBibs: [], veterans: empty, winnerCounts: empty },
+    ),
   },
   {
-    file: "mcvv-2026-cislo-173-novak-obhajce.pdf",
-    title: "Startovní číslo MCVV 2026 – obhájce 173",
-    options: {
-      ...base,
-      championBibs: [173],
-      veterans: new Map([["19840101", 35]]),
-    },
+    title: "Zelené — veterán 35 startů",
+    card: buildBibCard(
+      { ...runner, bib: 173 },
+      {
+        ...base,
+        championBibs: [],
+        veterans: new Map([["19840101", 35]]),
+        winnerCounts: empty,
+      },
+    ),
   },
   {
-    file: "mcvv-2026-cislo-173-novak-bezny.pdf",
-    title: "Startovní číslo MCVV 2026 – běžné 173",
-    options: { ...base, championBibs: [], veterans: new Map() },
+    title: "Oranžové — historický vítěz, 3 výhry",
+    card: buildBibCard(
+      { ...runner, bib: 131, runnerId: "19820101" },
+      {
+        ...base,
+        championBibs: [],
+        veterans: empty,
+        winnerCounts: new Map([["19820101", 3]]),
+      },
+    ),
+  },
+  {
+    title: "Zlaté — obhájce, 2 výhry",
+    card: buildBibCard(
+      { ...runner, bib: 400, runnerId: "19830101" },
+      {
+        ...base,
+        championBibs: [400],
+        veterans: empty,
+        winnerCounts: new Map([["19830101", 2]]),
+      },
+    ),
+  },
+  {
+    title: "Oranžové — vítěz 3 výhry + veterán 35 startů",
+    card: buildBibCard(
+      { ...runner, bib: 250 },
+      {
+        ...base,
+        championBibs: [],
+        veterans: new Map([["19840101", 35]]),
+        winnerCounts: new Map([["19840101", 3]]),
+      },
+    ),
   },
 ];
 
@@ -70,14 +105,31 @@ async function main() {
   if (!partner) {
     throw new Error("Nepodařilo se vyrastrovat logo PM consulting");
   }
-  const assets = { fonts, logos: [partner], mcvvLogo, profile, yearBadge, year: 2026 };
+  const cards = variants.map((variant) => variant.card);
+  const artwork = await prepareBibArtwork(cards, 2026, profile);
+  const pdf = renderBibsPreviewA4(
+    cards,
+    {
+      fonts,
+      logos: [partner],
+      mcvvLogo,
+      profile,
+      yearBadge,
+      year: 2026,
+      qrs: artwork.qrs,
+      seals: artwork.seals,
+    },
+    { title: "Náhled startovních čísel MCVV 2026 — 2×A5" },
+  );
+  const pdfPath = path.join(outDir, "mcvv-2026-cisla-nahled-a4-2xA5.pdf");
+  await writeFile(pdfPath, pdf);
+  console.log(pdfPath);
   for (const variant of variants) {
-    const pdf = renderBibsPdf([buildBibCard(row, variant.options)], assets, {
-      title: variant.title,
-    });
-    const pdfPath = path.join(outDir, variant.file);
-    await writeFile(pdfPath, pdf);
-    console.log(pdfPath);
+    console.log(
+      `${variant.card.bib}\t${variant.card.color}\t${variant.title}\tseals=${variant.card.seals
+        .map((s) => `${s.placement}:${s.label}:${s.count}`)
+        .join(",")}`,
+    );
   }
 }
 

@@ -3,12 +3,43 @@ import { startTimeForBib, type StartModel } from "@/lib/race/start-time";
 /** Režim tisku: celá startovka (po dávkách), vybraná čísla, prázdná čísla (rezerva). */
 export type BibPrintMode = "all" | "selected" | "blank";
 
-/** Barva startovního čísla a počtu účastí: forest = člen klubu veteránů, orange = obhájce mužů/žen, black = bez vyznačení. */
-export type BibColor = "black" | "forest" | "orange";
+/**
+ * Barva velkého startovního čísla (Pavel 21. 11. 2026):
+ * černá základ, zelená veterán, oranžová historický absolutní vítěz, zlatá obhájce.
+ */
+export type BibColor = "black" | "green" | "orange" | "gold";
 
+/** Forest zůstává inkoustem typografie (logo, START V), ne barvou čísla. */
 export const BIB_FOREST = "#07210e";
+/** Světlejší zelená z brandmanuálu – jasně jiná než černá i než forest. K potvrzení na Pretexu. */
+export const BIB_GREEN = "#294B31";
 export const BIB_ORANGE = "#fb5d1e";
+/** Zlato na čísle i v pečeti vítězů/obhájců. Není v brandmanuálu – k potvrzení na Pretexu. */
+export const BIB_GOLD = "#A07C1A";
 export const BIB_DEEP = "#031106";
+export const BIB_CREAM = "#eef4ee";
+
+export type BibSealKind = "veteran" | "winner";
+export type BibSealLabel = "STARTŮ" | "VÝHER";
+
+export type BibSeal = {
+  kind: BibSealKind;
+  /** Skutečný počet startů / výher; na pečeti se tiskne dvouciferně. */
+  count: number;
+  label: BibSealLabel;
+  fill: string;
+  /**
+   * `primary` sedí na účaří velkého čísla.
+   * `secondary` je zmenšená veteránská pečeť mezi standardní pečetí a QR.
+   */
+  placement: "primary" | "secondary";
+};
+
+/** Počet na pečeti je vždy dvouciferný (05, 35). Nad 99 se nechává trojciferný. */
+export function twoDigitCount(count: number): string {
+  const n = Math.max(0, Math.round(count));
+  return n > 99 ? String(n) : String(n).padStart(2, "0");
+}
 
 export type BibCard = {
   bib: number;
@@ -23,8 +54,13 @@ export type BibCard = {
   category: string;
   startTime: string;
   registrationId: number | null;
-  /** Počet startů veterána (vpravo u čísla), jinak null. */
+  /** Počet startů veterána (v pečeti STARTŮ), jinak null. */
   veteranStarts: number | null;
+  /** Počet historických absolutních vítězství (v pečeti VÝHER), jinak null. */
+  winCount: number | null;
+  /** Loňský vítěz mužů/žen – má rezervované zlaté číslo obhájce. */
+  isDefender: boolean;
+  seals: BibSeal[];
   /** Ročník narození (první 4 znaky bezec_id), jinak null. */
   birthYear: string | null;
   /** Index loga partnera: `cislo % počet_log` (legacy `cislo % počet_reklam`). */
@@ -124,22 +160,66 @@ export function bibGivenNameFirst(name: string): string {
   return space > 0 ? `${full.slice(space + 1)} ${full.slice(0, space)}` : full;
 }
 
-/** Barva čísla i počtu účastí: obhájce (jen muži/ženy) má přednost před veteránem. */
-export function participationColor(isChampion: boolean, veteranStarts: number | null): BibColor {
-  if (isChampion) {
-    return "orange";
+/**
+ * Přiřazení barvy čísla a pečetí.
+ * Priorita barvy: obhájce (zlato) → historický vítěz (oranž) → veterán (zeleň) → černá.
+ * Obhájce i historický vítěz mají zlatou pečeť VÝHER; veterán zelenou STARTŮ.
+ * Když je vítěz i veterán, zůstává barva podle vítězství a přidá se zmenšená veteránská pečeť.
+ */
+export function bibAppearance(input: {
+  isDefender: boolean;
+  winCount: number | null;
+  veteranStarts: number | null;
+}): { color: BibColor; seals: BibSeal[]; winCount: number | null } {
+  const veteranStarts = input.veteranStarts;
+  const isVeteran = veteranStarts != null && veteranStarts > 0;
+  const historicalWins = input.winCount != null && input.winCount > 0 ? input.winCount : 0;
+  // Obhájce je loňský vítěz: když výsledky výhru nemají, na pečeti ukážeme alespoň 1.
+  const winCount = input.isDefender ? Math.max(historicalWins, 1) : historicalWins || null;
+  const isWinner = input.isDefender || historicalWins > 0;
+
+  let color: BibColor = "black";
+  if (input.isDefender) {
+    color = "gold";
+  } else if (historicalWins > 0) {
+    color = "orange";
+  } else if (isVeteran) {
+    color = "green";
   }
-  return veteranStarts !== null ? "forest" : "black";
+
+  const seals: BibSeal[] = [];
+  if (isWinner && winCount) {
+    seals.push({
+      kind: "winner",
+      count: winCount,
+      label: "VÝHER",
+      fill: BIB_GOLD,
+      placement: "primary",
+    });
+  }
+  if (isVeteran && veteranStarts) {
+    seals.push({
+      kind: "veteran",
+      count: veteranStarts,
+      label: "STARTŮ",
+      fill: BIB_GREEN,
+      placement: isWinner ? "secondary" : "primary",
+    });
+  }
+  return { color, seals, winCount };
 }
 
-export function participationHex(color: BibColor): string | null {
-  if (color === "forest") {
-    return BIB_FOREST;
+export function participationHex(color: BibColor): string {
+  if (color === "green") {
+    return BIB_GREEN;
   }
   if (color === "orange") {
     return BIB_ORANGE;
   }
-  return null;
+  if (color === "gold") {
+    return BIB_GOLD;
+  }
+  return "#000000";
 }
 
 export type BuildBibOptions = {
@@ -149,6 +229,8 @@ export type BuildBibOptions = {
   championBibs: readonly number[];
   /** bezec_id → počet startů (jen veteráni). */
   veterans: ReadonlyMap<string, number>;
+  /** bezec_id → počet historických absolutních vítězství. */
+  winnerCounts: ReadonlyMap<string, number>;
   logoCount: number;
 };
 
@@ -167,16 +249,25 @@ function base(bib: number, options: BuildBibOptions) {
 
 export function buildBibCard(row: BibEntryRow, options: BuildBibOptions): BibCard {
   const starts = options.veterans.get(row.runnerId) ?? null;
-  const isChampion = options.championBibs.includes(row.bib);
+  const isDefender = options.championBibs.includes(row.bib);
+  const rawWins = options.winnerCounts.get(row.runnerId) ?? null;
+  const appearance = bibAppearance({
+    isDefender,
+    winCount: rawWins,
+    veteranStarts: starts,
+  });
   return {
     ...base(row.bib, options),
     blank: false,
-    color: participationColor(isChampion, starts),
+    color: appearance.color,
     surname: bibSurname(row.name),
     fullName: upper(row.name),
     category: bibCategoryLabel(row.categoryName || row.categoryId),
     registrationId: row.registrationId,
     veteranStarts: starts,
+    winCount: appearance.winCount,
+    isDefender,
+    seals: appearance.seals,
     birthYear: row.birthYear,
   };
 }
@@ -191,6 +282,9 @@ export function buildBlankBibCard(bib: number, options: BuildBibOptions): BibCar
     category: "",
     registrationId: null,
     veteranStarts: null,
+    winCount: null,
+    isDefender: false,
+    seals: [],
     birthYear: null,
   };
 }

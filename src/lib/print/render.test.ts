@@ -9,7 +9,8 @@ import { STAT_SLUGS } from "@/lib/stats/core";
 import { loadCourseProfileData, loadMcvvLogo, loadYearBadge } from "./bib-assets";
 import { loadBibFonts } from "./bib-fonts";
 import {
-  BIB_FOREST,
+  BIB_GOLD,
+  BIB_GREEN,
   BIB_ORANGE,
   buildBibCard,
   buildBlankBibCard,
@@ -17,8 +18,6 @@ import {
 } from "./bibs-core";
 import {
   fitSize,
-  BADGE_MARGIN_PX,
-  BADGE_RIGHT_PX,
   ITALIC_SKEW_DEG,
   pdfSkewXMatrix,
   renderBibsPdf,
@@ -37,6 +36,7 @@ const options: BuildBibOptions = {
   model: DEFAULT_START_MODEL,
   championBibs: [400],
   veterans: new Map(),
+  winnerCounts: new Map(),
   logoCount: 0,
 };
 
@@ -131,7 +131,7 @@ describe("italic skew and start-number colours", () => {
     assert.ok(xAt(10, yBaseline + 50) > 10);
   });
 
-  it("colours the start number forest for veterans and orange for champions", async () => {
+  it("colours the start number green, orange, gold or black", async () => {
     const row = {
       runnerId: "19840101",
       name: "Novák Jan",
@@ -188,14 +188,26 @@ describe("italic skew and start-number colours", () => {
       assets,
       { title: "veteran" },
     );
-    close(colourBeforeNumber(veteran), hexRgb(BIB_FOREST));
+    close(colourBeforeNumber(veteran), hexRgb(BIB_GREEN));
+
+    const winner = renderBibsPdf(
+      [
+        buildBibCard(
+          { ...row, bib: 131 },
+          { ...options, winnerCounts: new Map([["19840101", 3]]) },
+        ),
+      ],
+      assets,
+      { title: "winner" },
+    );
+    close(colourBeforeNumber(winner), hexRgb(BIB_ORANGE));
 
     const champion = renderBibsPdf(
       [buildBibCard({ ...row, bib: 400 }, { ...options, veterans: new Map([["19840101", 35]]) })],
       assets,
       { title: "champion" },
     );
-    close(colourBeforeNumber(champion), hexRgb(BIB_ORANGE));
+    close(colourBeforeNumber(champion), hexRgb(BIB_GOLD));
 
     const regular = renderBibsPdf(
       [buildBibCard({ ...row, runnerId: "x", bib: 41 }, options)],
@@ -246,11 +258,6 @@ describe("italic skew and start-number colours", () => {
     for (const match of cms) {
       assert.ok(Number(match[1]) > 0, `shear ${match[1]} should be positive in PDF space`);
     }
-  });
-
-  it("keeps the participation badge 60 px from the right edge, like v12", () => {
-    assert.equal(BADGE_MARGIN_PX, 60);
-    assert.ok(BADGE_RIGHT_PX <= 2480 - BADGE_MARGIN_PX);
   });
 });
 

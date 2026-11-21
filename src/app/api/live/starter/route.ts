@@ -2,12 +2,14 @@ import { createHash } from "node:crypto";
 
 import { NextResponse, type NextRequest } from "next/server";
 
+import { allowsFor, getAccess } from "@/lib/admin/access";
+import { starterScope } from "@/lib/admin/permissions";
 import { getSession } from "@/lib/auth/session";
 import { sameOrigin } from "@/lib/live/ingest-core";
 import { getRaceContext } from "@/lib/live/race-context";
 import { RateLimiter } from "@/lib/live/rate-limit";
 import { applyStarterEntries, getStartCorridor, loadStarterSnapshot } from "@/lib/live/starter";
-import { starterAccess, starterBatchSchema } from "@/lib/live/starter-api-core";
+import { starterAccessFor, starterBatchSchema } from "@/lib/live/starter-api-core";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +24,11 @@ async function access(requested: unknown) {
       error: NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noStore }),
     };
   }
-  const result = starterAccess(session.role, await getStartCorridor(session.id), requested);
+  const result = starterAccessFor(
+    starterScope(allowsFor(await getAccess())),
+    await getStartCorridor(session.id),
+    requested,
+  );
   if (!result.ok) {
     return {
       error: NextResponse.json(

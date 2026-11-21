@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
-import { canChangeSaleStatus } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
+import { saleStatusSection } from "@/lib/sales/guard";
 import type { SessionUser } from "@/lib/auth/session";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
@@ -122,7 +123,7 @@ export async function changeSaleStatus(
   note?: string,
 ): Promise<SaleChangeResult> {
   // Pojistka i mimo server action: ruční převod jen admin (#207).
-  if (!canChangeSaleStatus(session.role, to)) return "forbidden";
+  if (!(await canAccess(saleStatusSection(to), "write"))) return "forbidden";
   const now = new Date();
   const name = actorName(session);
   return prisma.$transaction(async (db) => {

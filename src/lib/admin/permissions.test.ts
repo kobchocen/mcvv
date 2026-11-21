@@ -8,12 +8,16 @@ import {
   SYSTEM_ONLY_SECTIONS,
   legacyAllows,
   overrideKey,
+  splitScope,
+  starterScope,
   v2Allows,
   v2HasAdminHome,
   type AccessLevel,
 } from "@/lib/admin/permissions";
 import { ADMIN_SECTIONS } from "@/lib/admin/sections";
-import { hasAdminHome, type UserRole } from "@/lib/auth/roles";
+import { hasAdminHome, isStaffRole, type UserRole } from "@/lib/auth/roles";
+import { stationsForScope, allowedStationsFor } from "@/lib/live/assignment-core";
+import { starterAccess, starterAccessFor } from "@/lib/live/starter-api-core";
 import { grantsFromLegacyRole } from "@/lib/auth/staff-roles";
 
 const ROLES: UserRole[] = [
@@ -121,4 +125,31 @@ describe("permissions engine – úpravy matice", () => {
     assert.equal(v2Allows(["speaker", "entries"], "entries.list", "write"), true);
     assert.equal(v2Allows(["speaker"], "entries.list", "write"), false);
   });
+});
+
+describe("screens outside /admin (P5) – flag off = today", () => {
+  const stations = [
+    { code: "A", name: "A" },
+    { code: "B", name: "B" },
+  ] as unknown as Parameters<typeof stationsForScope>[2];
+  for (const role of ROLES) {
+    const legacy = (id: (typeof SECTION_IDS)[number], level: AccessLevel) =>
+      legacyAllows(role, id, level);
+    it(`splits and starter scope for ${role}`, () => {
+      assert.deepEqual(
+        stationsForScope(splitScope(legacy), "A", stations),
+        allowedStationsFor(role, "A", stations),
+      );
+      for (const assigned of [null, 1, 2] as const) {
+        for (const requested of [undefined, "2"]) {
+          assert.deepEqual(
+            starterAccessFor(starterScope(legacy), assigned, requested),
+            starterAccess(role, assigned, requested),
+            `${role} ${assigned} ${requested}`,
+          );
+        }
+      }
+      assert.equal(splitScope(legacy).all, isStaffRole(role));
+    });
+  }
 });

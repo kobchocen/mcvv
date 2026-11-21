@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import type { UserRole } from "@/lib/auth/roles";
-import { grantsFromLegacyRole } from "@/lib/auth/staff-roles";
+import { grantsFromLegacyRole, type StaffRole } from "@/lib/auth/staff-roles";
 
 /**
  * Drží `mcvv_user_role` v souladu se starým sloupcem `mcvv_user.role` při změně role
@@ -22,6 +22,22 @@ export async function syncLegacyRoleGrants(
   if (add.length) {
     await tx.userRoleGrant.createMany({
       data: add.map((role) => ({ userId: input.userId, role, createdBy: input.actorId })),
+      skipDuplicates: true,
+    });
+  }
+}
+
+/** Nastaví účtu přesně danou sadu rolí v `mcvv_user_role` (P5, víc rolí na účet). */
+export async function setUserGrants(
+  tx: Prisma.TransactionClient,
+  input: { userId: number; grants: readonly StaffRole[]; actorId: number | null },
+): Promise<void> {
+  await tx.userRoleGrant.deleteMany({
+    where: { userId: input.userId, role: { notIn: [...input.grants] } },
+  });
+  if (input.grants.length) {
+    await tx.userRoleGrant.createMany({
+      data: input.grants.map((role) => ({ userId: input.userId, role, createdBy: input.actorId })),
       skipDuplicates: true,
     });
   }

@@ -33,8 +33,24 @@ export function allowedStationsFor(
   assigned: string | null | undefined,
   stations: Station[],
 ): Station[] {
-  if (isStaffRole(role)) return stations;
-  if (role !== "splitmaker") return [];
+  return stationsForScope(
+    { all: isStaffRole(role), own: role === "splitmaker" },
+    assigned,
+    stations,
+  );
+}
+
+/**
+ * Totéž podle práv (P5, engine oprávnění): `all` = všechna stanoviště (dnes admin a pořadatel),
+ * `own` = jen přiřazená (dnes splitmaker).
+ */
+export function stationsForScope(
+  scope: { all: boolean; own: boolean },
+  assigned: string | null | undefined,
+  stations: Station[],
+): Station[] {
+  if (scope.all) return stations;
+  if (!scope.own) return [];
   const codes = new Set(parseAssignment(assigned));
   return stations.filter((station) => codes.has(station.code));
 }

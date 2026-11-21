@@ -9,7 +9,7 @@ import {
 } from "@/components/organisms/mcvv-cash-desk-nav";
 import { McvvPollRefresh } from "@/components/organisms/mcvv-poll-refresh";
 import { Link, type Locale } from "@/i18n/routing";
-import { canMarkSalePaidBank } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
 import { BANK_ACCOUNT, BANK_IBAN, spdPaymentQrSvg } from "@/lib/entries/spd";
 import { cancelSale, markSalePaidBank, markSalePaidCash } from "@/lib/sales/actions";
 import { saleQrMessage } from "@/lib/sales/core";
@@ -178,7 +178,7 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
                 {t("markCash")}
               </button>
             </form>
-            {canMarkSalePaidBank(session.role) ? (
+            {(await canAccess("raceOffice.bankPaid", "write")) ? (
               <form action={markSalePaidBank} className="grid gap-2 border border-race-line/60 p-3">
                 <input type="hidden" name="id" value={sale.id} />
                 <label className="text-xs text-race-muted" htmlFor="note">

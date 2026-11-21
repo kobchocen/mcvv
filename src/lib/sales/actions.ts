@@ -5,11 +5,10 @@ import { getLocale } from "next-intl/server";
 
 import { redirect } from "@/i18n/routing";
 import { formInt, formString } from "@/lib/admin/parse";
-import { canChangeSaleStatus, canManageSaleItems } from "@/lib/auth/roles";
 import { currentRaceYear } from "@/lib/entries/year";
 
 import { parseSaleItemInput } from "./core";
-import { cashDeskActionSession } from "./guard";
+import { cashDeskActionSession, saleStatusSection } from "./guard";
 import {
   changeSaleStatus,
   createSale,
@@ -49,7 +48,7 @@ async function toSale(id: number, query: Record<string, string>): Promise<never>
 }
 
 async function changeStatus(formData: FormData, to: "paid_cash" | "paid_bank" | "cancelled") {
-  const session = await cashDeskActionSession((role) => canChangeSaleStatus(role, to));
+  const session = await cashDeskActionSession(saleStatusSection(to));
   const id = formInt(formData, "id");
   if (!id) return;
   if (!session) return toSale(id, { chyba: "forbidden" });
@@ -79,7 +78,7 @@ async function toItems(query: Record<string, string>): Promise<never> {
 
 /** Ceník: nová položka nebo úprava (id). Jen admin. */
 export async function saveSaleItem(formData: FormData): Promise<void> {
-  const session = await cashDeskActionSession(canManageSaleItems);
+  const session = await cashDeskActionSession("raceOffice.items");
   if (!session) return toItems({ chyba: "forbidden" });
   const parsed = parseSaleItemInput({
     name: formString(formData, "name") ?? "",
@@ -102,7 +101,7 @@ export async function saveSaleItem(formData: FormData): Promise<void> {
 
 /** Ceník: aktivovat / deaktivovat položku (neaktivní se v pokladně nenabízí). Jen admin. */
 export async function toggleSaleItem(formData: FormData): Promise<void> {
-  const session = await cashDeskActionSession(canManageSaleItems);
+  const session = await cashDeskActionSession("raceOffice.items");
   if (!session) return toItems({ chyba: "forbidden" });
   const id = formInt(formData, "id");
   if (!id) return toItems({ chyba: "not_found" });

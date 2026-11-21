@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvSpeakerScreen } from "@/components/organisms/mcvv-speaker-screen";
 import { Link, redirect, type Locale } from "@/i18n/routing";
-import { canViewSpeakerScreen } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
 import { getSession } from "@/lib/auth/session";
 import { resultboardInfoCache, type ResultboardInfo } from "@/lib/live/resultboard";
 import { speakerCache } from "@/lib/live/speaker";
@@ -36,7 +36,7 @@ export default async function SpeakerPage({ params }: PageProps) {
     return null;
   }
   const t = await getTranslations({ locale, namespace: "Speaker" });
-  if (!canViewSpeakerScreen(session.role)) {
+  if (!(await canAccess("screens.speaker", "read"))) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
         <div className="mx-auto max-w-md" data-testid="speaker-forbidden">

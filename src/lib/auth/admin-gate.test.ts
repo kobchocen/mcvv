@@ -93,3 +93,14 @@ test("other pages are not touched", () => {
     kind: "none",
   });
 });
+
+test("staff cookie flag (P5) lets a registrar with new roles through, old cookies unchanged", () => {
+  const page = { ...base, pathname: "/cs/admin" };
+  assert.equal(adminGate({ ...page, cookieRole: "registrar" }).kind, "redirect");
+  assert.equal(
+    adminGate({ ...page, cookieRole: "registrar", cookieStaff: false }).kind,
+    "redirect",
+  );
+  assert.equal(adminGate({ ...page, cookieRole: "registrar", cookieStaff: true }).kind, "pass");
+  assert.equal(adminGate({ ...page, cookieRole: null, cookieStaff: true }).kind, "redirect");
+});

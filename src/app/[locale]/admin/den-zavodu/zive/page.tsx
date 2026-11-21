@@ -431,7 +431,7 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
                       .join(", ") || "–",
                 })}
                 {publicStations(stations, 99).length > Math.min(publicMax, PUBLIC_OUTPUT_SLOTS)
-                  ? ` ${t("publicSplitsOver", { slots: PUBLIC_OUTPUT_SLOTS })}`
+                  ? ` ${t("publicSplitsOver", { slots: Math.min(publicMax, PUBLIC_OUTPUT_SLOTS) })}`
                   : ""}
               </p>
             </div>

@@ -85,7 +85,7 @@ export function McvvResultboardSettings({ initial, categories, partners }: Props
   const togglePoint = (k: PointKey) =>
     setCfg((c) => {
       const has = c.leader.points.includes(k);
-      const points = (["m1", "m2", "fin"] as const).filter((p) =>
+      const points = (["m1", "m2", "m3", "fin"] as const).filter((p) =>
         p === k ? !has : c.leader.points.includes(p),
       );
       return { ...c, leader: { ...c.leader, points } };
@@ -364,7 +364,7 @@ export function McvvResultboardSettings({ initial, categories, partners }: Props
             {t("leaderResultboard")}
           </label>
           <span className="text-race-muted">{t("leaderPoints")}</span>
-          {(["m1", "m2", "fin"] as const).map((k) => (
+          {(["m1", "m2", "m3", "fin"] as const).map((k) => (
             <label key={k} className="flex items-center gap-2">
               <input
                 type="checkbox"

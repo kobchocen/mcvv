@@ -42,7 +42,8 @@ import {
   formatMinutes,
   lastPoint,
   nextPoint,
-  POINTS,
+  pointsFor,
+  type PointKey,
 } from "@/lib/live/speaker-core";
 
 import s from "./mcvv-resultboard.module.css";
@@ -87,6 +88,8 @@ export function McvvResultboard(props: Props) {
   const { config } = info;
   const data = useMemo(() => decodeOnline(wire), [wire]);
   const grouped = useMemo(() => byCategory(data.runners), [data]);
+  // aktivní body = veřejné mezičasy (nejvýš 3, #316) + cíl
+  const outPoints = useMemo(() => pointsFor(data.pts?.length), [data.pts]);
   const now = Math.floor(nowMs / 1000);
   const monitor = config.monitors[props.tv - 1] ?? null;
   const cats = useMemo(
@@ -230,6 +233,7 @@ export function McvvResultboard(props: Props) {
                   config={config}
                   alert={alerts.get(c.id)}
                   badges={records.badges}
+                  points={outPoints}
                 />
               ))}
             </div>
@@ -258,6 +262,7 @@ function CategoryBox({
   config,
   alert,
   badges,
+  points,
 }: Readonly<{
   category: OnlineCategory;
   runners: OnlineRunner[];
@@ -267,8 +272,11 @@ function CategoryBox({
   config: ResultboardConfig;
   alert: LeaderAlert | undefined;
   badges: ReadonlyMap<number, "tr" | "eq">;
+  points: readonly PointKey[];
 }>) {
   const t = useTranslations("Resultboard");
+  const splitPoints = points.filter((k) => k !== "fin");
+  const span = 3 + points.length;
   const state = onlineCategoryState(runners, now, graceS);
   const items = boardItems(state, config);
   // pevně nahoře prvních N řádků výsledků (bez oddělovačů), zbytek do posuvného okna
@@ -292,7 +300,7 @@ function CategoryBox({
             key={`div-${it.variant}`}
             className={cx(s.div, it.variant === "wait" && s.wait, it.variant === "dns" && s.dnsd)}
           >
-            <td colSpan={6}>
+            <td colSpan={span}>
               <div>
                 {it.variant === "run"
                   ? t("divRunning")
@@ -312,7 +320,7 @@ function CategoryBox({
             <td className={s.rk} />
             <td className={cx(s.bib, s.num)}>{it.runner.bib}</td>
             <td className={s.nm}>{it.runner.name}</td>
-            <td className={s.ws} colSpan={3}>
+            <td className={s.ws} colSpan={points.length}>
               {it.kind === "wait" ? (
                 t.rich("waitStart", {
                   b: (ch) => <b className={s.num}>{ch}</b>,
@@ -354,7 +362,7 @@ function CategoryBox({
             <RecordBadge kind={badges.get(r.bib)} />
             {r.name}
           </td>
-          {timeCells(r, row.recent || isLeader, now)}
+          {timeCells(r, row.recent || isLeader, now, points)}
         </tr>
       );
     });
@@ -376,8 +384,9 @@ function CategoryBox({
       <col className={s.cRk} />
       <col className={s.cBib} />
       <col />
-      <col className={s.cT} />
-      <col className={s.cT} />
+      {splitPoints.map((k) => (
+        <col key={k} className={s.cT} />
+      ))}
       <col className={s.cF} />
     </colgroup>
   );
@@ -407,8 +416,9 @@ function CategoryBox({
             <th>{t("colRank")}</th>
             <th>{t("colBib")}</th>
             <th className={s.l}>{t("colName")}</th>
-            <th>{t("colM1")}</th>
-            <th>{t("colM2")}</th>
+            {splitPoints.map((k) => (
+              <th key={k}>{k === "m1" ? t("colM1") : k === "m2" ? t("colM2") : t("colM3")}</th>
+            ))}
             <th>{t("colFin")}</th>
           </tr>
         </thead>
@@ -417,7 +427,7 @@ function CategoryBox({
             render(fixed)
           ) : (
             <tr>
-              <td colSpan={6} className={s.empty}>
+              <td colSpan={span} className={s.empty}>
                 {t("catEmpty")}
               </td>
             </tr>
@@ -435,10 +445,10 @@ function CategoryBox({
   );
 }
 
-function timeCells(r: OnlineRunner, hit: boolean, now: number) {
+function timeCells(r: OnlineRunner, hit: boolean, now: number, points: readonly PointKey[]) {
   const cur = lastPoint(r);
-  const next = nextPoint(r);
-  return POINTS.map((k) => {
+  const next = nextPoint(r, points);
+  return points.map((k) => {
     const value = r[k];
     if (value != null) {
       return (

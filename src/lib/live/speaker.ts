@@ -5,7 +5,12 @@ import { getRaceContext, getPublicStations, type RaceContext } from "./race-cont
 import { getRecordBaselines } from "./records-live";
 import { liveRecordMarks, type TrMark } from "./records-live-core";
 import { createBodyCache } from "./speaker-cache";
-import type { SpeakerCategory, SpeakerRunner, SpeakerSnapshot } from "./speaker-core";
+import {
+  MAX_PUBLIC_POINTS,
+  type SpeakerCategory,
+  type SpeakerRunner,
+  type SpeakerSnapshot,
+} from "./speaker-core";
 import { startInstant } from "./start-time";
 import { FINISH_SPLIT, type Station } from "./stations";
 import { getActiveTestRun } from "./test-run";
@@ -24,13 +29,15 @@ export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnap
     getPublicStations(),
     getActiveTestRun(now),
   ]);
-  const { categories, runners, tr } = await loadRaceRunners(ctx, stations);
+  const { categories, runners, tr, pts, pp } = await loadRaceRunners(ctx, stations);
   return {
     year: ctx.year,
     test: testRun !== null,
     categories: categories.map((c) => ({ id: c.id, name: c.name, sex: c.sex })),
     runners,
     tr,
+    pts,
+    pp,
   };
 }
 
@@ -50,6 +57,10 @@ export async function loadRaceRunners(
   tr: TrMark[];
   /** Klub podle čísla ze startovky (id + název ročníku) – jen pro online výsledky, ne speaker. */
   clubs: Map<number, { id: string; name: string | null }>;
+  /** Popisky veřejných mezičasů M1–M3 (#316). */
+  pts: string[];
+  /** Jejich pozice ve stovkách metrů. */
+  pp: (number | null)[];
 }> {
   const [categories, starts, splits, baselines] = await Promise.all([
     prisma.category.findMany({
@@ -63,16 +74,22 @@ export async function loadRaceRunners(
     }),
     getRecordBaselines(ctx.year),
   ]);
-  // M1 / M2 = první dva veřejné mezičasy podle pozice (#316; výchozí 1 = 1,3 km, 3 = 2,7 km),
-  // Cíl = 9. Volající předává už vybrané veřejné mezičasy (`getPublicStations`).
-  const m1 = stations[0]?.code ?? null;
-  const m2 = stations[1]?.code ?? null;
-  const times = new Map<number, { m1: number | null; m2: number | null; fin: number | null }>();
+  // M1 / M2 / M3 = veřejné mezičasy podle pozice na trati (#316; výchozí 1 = 1,3 km,
+  // 3 = 2,7 km), Cíl = 9. Volající předává už vybrané veřejné mezičasy (`getPublicStations`).
+  const publicPoints = stations.slice(0, MAX_PUBLIC_POINTS);
+  const keyOf = new Map<string, "m1" | "m2" | "m3" | "fin">(
+    publicPoints.map((s, i) => [s.code, (["m1", "m2", "m3"] as const)[i]]),
+  );
+  keyOf.set(FINISH_SPLIT, "fin");
+  const hasM3 = publicPoints.length >= 3;
+  type Times = { m1: number | null; m2: number | null; m3?: number | null; fin: number | null };
+  const empty = (): Times =>
+    hasM3 ? { m1: null, m2: null, m3: null, fin: null } : { m1: null, m2: null, fin: null };
+  const times = new Map<number, Times>();
   for (const s of splits) {
-    const key =
-      s.split === m1 ? "m1" : s.split === m2 ? "m2" : s.split === FINISH_SPLIT ? "fin" : null;
+    const key = keyOf.get(s.split) ?? null;
     if (!key || s.time < 0 || skipSplit?.(s.created)) continue;
-    const row = times.get(s.bib) ?? { m1: null, m2: null, fin: null };
+    const row = times.get(s.bib) ?? empty();
     row[key] = s.time;
     times.set(s.bib, row);
   }
@@ -89,7 +106,7 @@ export async function loadRaceRunners(
     start: Math.round(
       startInstant(ctx.zero, s.bib, ctx.intervalS, ctx.secondStartFrom).getTime() / 1000,
     ),
-    ...(times.get(s.bib) ?? { m1: null, m2: null, fin: null }),
+    ...(times.get(s.bib) ?? empty()),
     runnerId: s.runnerId,
   }));
   const tr = liveRecordMarks(withIds, categories, baselines, ctx.year);
@@ -101,12 +118,20 @@ export async function loadRaceRunners(
     start: r.start,
     m1: r.m1,
     m2: r.m2,
+    ...(hasM3 ? { m3: r.m3 ?? null } : {}),
     fin: r.fin,
   }));
   const clubs = new Map(
     [...byBib.values()].map((s) => [s.bib, { id: s.clubId, name: s.clubName }]),
   );
-  return { categories, runners, tr, clubs };
+  return {
+    categories,
+    runners,
+    tr,
+    clubs,
+    pts: publicPoints.map((s) => s.label),
+    pp: publicPoints.map((s) => s.position ?? null),
+  };
 }
 
 /** Sdílená cache snímku na replice (viz `createBodyCache`). */

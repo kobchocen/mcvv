@@ -9,8 +9,20 @@
 
 import type { TrMark } from "./records-live-core";
 
-export type PointKey = "m1" | "m2" | "fin";
+export type PointKey = "m1" | "m2" | "m3" | "fin";
+/** Výchozí body (dva veřejné mezičasy) – když snímek neříká jinak. */
 export const POINTS: readonly PointKey[] = ["m1", "m2", "fin"];
+/** Všechny body, které výstupy umí (nejvýš tři veřejné mezičasy, #316). */
+export const ALL_POINTS: readonly PointKey[] = ["m1", "m2", "m3", "fin"];
+export const MAX_PUBLIC_POINTS = 3;
+const SPLIT_KEYS: readonly PointKey[] = ["m1", "m2", "m3"];
+
+/** Aktivní body podle počtu veřejných mezičasů (0–3) + cíl. */
+export function pointsFor(count: number | undefined): readonly PointKey[] {
+  if (count === undefined) return POINTS;
+  const n = Math.max(0, Math.min(MAX_PUBLIC_POINTS, Math.trunc(count)));
+  return [...SPLIT_KEYS.slice(0, n), "fin"];
+}
 
 export type SpeakerRunner = {
   bib: number;
@@ -21,6 +33,8 @@ export type SpeakerRunner = {
   start: number;
   m1: number | null;
   m2: number | null;
+  /** Třetí veřejný mezičas (#316); chybí = není nastavený. */
+  m3?: number | null;
   fin: number | null;
 };
 
@@ -35,6 +49,10 @@ export type SpeakerSnapshot = {
   runners: SpeakerRunner[];
   /** Kdo dnes drží / vyrovnal traťový rekord (viz `records-live-core.ts`). */
   tr: TrMark[];
+  /** Popisky veřejných mezičasů v pořadí M1, M2, M3 (#316); chybí = výchozí dva. */
+  pts?: string[];
+  /** Pozice veřejných mezičasů ve stovkách metrů (null = neuvedena), souběžně s `pts`. */
+  pp?: (number | null)[];
 };
 
 export const TOP = 10;
@@ -42,23 +60,23 @@ export const TOP = 10;
 export const RECENT_S = 60;
 export const RECENT_PASSAGES = 6;
 
-const LEVEL: Record<PointKey, number> = { m1: 1, m2: 2, fin: 3 };
-const KEY_AT: readonly (PointKey | null)[] = [null, "m1", "m2", "fin"];
+const LEVEL: Record<PointKey, number> = { m1: 1, m2: 2, m3: 3, fin: 4 };
+const KEY_AT: readonly (PointKey | null)[] = [null, "m1", "m2", "m3", "fin"];
 
-/** Nejdál dosažený bod se záznamem (cíl > M2 > M1), nebo null. */
+/** Nejdál dosažený bod se záznamem (cíl > M3 > M2 > M1), nebo null. */
 export function lastPoint(r: SpeakerRunner): PointKey | null {
   if (r.fin != null) return "fin";
+  if (r.m3 != null) return "m3";
   if (r.m2 != null) return "m2";
   if (r.m1 != null) return "m1";
   return null;
 }
 
-/** Další bod, na který běžec ještě nedoběhl (null = v cíli). */
-export function nextPoint(r: SpeakerRunner): PointKey | null {
+/** Další aktivní bod, na který běžec ještě nedoběhl (null = v cíli). */
+export function nextPoint(r: SpeakerRunner, points: readonly PointKey[] = POINTS): PointKey | null {
   if (r.fin != null) return null;
-  if (r.m2 != null) return "fin";
-  if (r.m1 != null) return "m2";
-  return "m1";
+  const reached = level(r);
+  return points.find((p) => LEVEL[p] > reached) ?? "fin";
 }
 
 export function level(r: SpeakerRunner): number {
@@ -107,14 +125,14 @@ export function beats(a: SpeakerRunner, x: SpeakerRunner, now: number): boolean 
 /**
  * Jeden společný seznam kategorie (bez dělení na doběhlé a běžce na trati). Porovnání
  * `beats` není tranzitivní (A v cíli > C na M1 > B na M2 > A), proto se neřadí přes sort(),
- * ale deterministicky po úrovních: doběhlí podle cílového času, pak běžci na M2 podle M2
- * a nakonec na M1 podle M1; každý se vloží těsně NAD prvního v dosavadním seznamu, kterého
+ * ale deterministicky po úrovních: doběhlí podle cílového času, pak běžci na M3 podle M3,
+ * na M2 podle M2 a nakonec na M1 podle M1; každý se vloží těsně NAD prvního v dosavadním seznamu, kterého
  * na společném bodu porazí (jinak na konec). Pořadí dál dobězlých se tím nemění.
  * Do seznamu patří jen běžci s aspoň jedním záznamem.
  */
 export function combinedOrder(runners: readonly SpeakerRunner[], now: number): SpeakerRunner[] {
   const list: SpeakerRunner[] = [];
-  for (const L of [3, 2, 1]) {
+  for (const L of [4, 3, 2, 1]) {
     const k = KEY_AT[L] as PointKey;
     const group = runners
       .filter((r) => level(r) === L)
@@ -244,7 +262,7 @@ export function recentPassages(
 ): Passage[] {
   const all: Omit<Passage, "rank">[] = [];
   for (const runner of runners) {
-    for (const point of POINTS) {
+    for (const point of ALL_POINTS) {
       const time = runner[point];
       if (time == null) continue;
       const at = runner.start + time;
@@ -338,6 +356,7 @@ export function runnerStatus(
   r: SpeakerRunner,
   catRunners: readonly SpeakerRunner[],
   now: number,
+  points: readonly PointKey[] = POINTS,
 ): RunnerStatus {
   const finTimes = catRunners.filter((x) => x.fin != null).map((x) => x.fin as number);
   if (r.fin != null) {
@@ -358,7 +377,7 @@ export function runnerStatus(
     last: k
       ? { point: k, time: r[k] as number, rank: rankAt(catRunners, k, r[k] as number) }
       : null,
-    next: nextPoint(r) as PointKey,
+    next: nextPoint(r, points) as PointKey,
     virtualRank: virtualRank(finTimes, live),
     start: r.start,
   };

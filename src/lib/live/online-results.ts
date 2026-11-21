@@ -50,7 +50,7 @@ export async function loadOnlineSnapshot(
   const ctx = options.includeTest
     ? rawCtx
     : { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
-  const [{ categories, runners, tr, clubs: clubOf }, allStartChecks] = await Promise.all([
+  const [{ categories, runners, tr, clubs: clubOf, pts, pp }, allStartChecks] = await Promise.all([
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
@@ -106,6 +106,8 @@ export async function loadOnlineSnapshot(
     }),
     tr,
     clubs,
+    pts,
+    pp,
   };
 }
 

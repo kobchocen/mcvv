@@ -8,8 +8,8 @@ export const LIVE_STATIONS_MAX = 2000;
 /** Kolik mezičasů smí být veřejných (živé výsledky, tabule, speaker), #316. */
 export const LIVE_PUBLIC_SPLITS_MAX_KEY = "live_public_splits_max";
 export const DEFAULT_PUBLIC_SPLITS_MAX = 3;
-/** Kolik veřejných mezičasů dnes umí veřejné výstupy (M1, M2). */
-export const PUBLIC_OUTPUT_SLOTS = 2;
+/** Kolik veřejných mezičasů umí veřejné výstupy (M1, M2, M3 – živé výsledky, tabule, speaker). */
+export const PUBLIC_OUTPUT_SLOTS = 3;
 
 /**
  * Mezičas (#316): kód splitu, popis, pozice na trati ve stovkách metrů (15 = 1,5 km) a jestli je

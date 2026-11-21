@@ -8,6 +8,7 @@ import {
   McvvPublicNavbar,
 } from "@/components/organisms";
 import { can, canOpenAdmin, getAccess } from "@/lib/admin/access";
+import { McvvAdminViewAsBar } from "@/components/organisms/mcvv-admin-view-as";
 import { isSectionId } from "@/lib/admin/permissions";
 import { togglePin } from "@/lib/admin/pin-actions";
 import { defaultPins, storedPins } from "@/lib/admin/pins";
@@ -67,6 +68,26 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
     orderBy: { year: "desc" },
     select: { year: true },
   });
+  // Náhled očima jiné role: viditelný pruh s ukončením (role podle režimu náhledu).
+  let viewAsBar: ReactNode = null;
+  if (access.preview) {
+    const usersCopy = await getTranslations({ locale, namespace: "AdminUsers" });
+    const viewCopy = await getTranslations({ locale, namespace: "AdminViewAs" });
+    const preview = access.preview;
+    const labels = preview.roles.map((role) =>
+      usersCopy.has(`${preview.mode === "v2" ? "staffRole" : "role"}_${role}`)
+        ? usersCopy(`${preview.mode === "v2" ? "staffRole" : "role"}_${role}` as "role_admin")
+        : role,
+    );
+    viewAsBar = (
+      <McvvAdminViewAsBar
+        locale={locale}
+        title={viewCopy("barTitle", { roles: labels.join(", ") })}
+        readOnly={viewCopy("barReadOnly")}
+        stop={viewCopy("stop")}
+      />
+    );
+  }
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];
   const footer = withFooterYear(
@@ -76,6 +97,7 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-race-deep text-foreground">
+      {viewAsBar}
       <McvvPublicNavbar content={{ brand, nav }} variant="solid" />
       <McvvAdminShell
         groups={groups}

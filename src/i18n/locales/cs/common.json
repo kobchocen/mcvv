@@ -3354,5 +3354,16 @@
   "AdminSectionNav": {
     "title": "Na této stránce",
     "startlist": "Seznam startujících"
+  },
+  "AdminViewAs": {
+    "title": "Náhled očima role",
+    "intro": "Zobrazí administraci tak, jak ji vidí vybrané role: panel, sekce, čtení i úpravy. Náhled je jen pro čtení – server žádnou změnu neuloží. Zapnutí i ukončení se zapíše do auditu.",
+    "modeLegacy": "Podle dnešních rolí (permissions.v2 vypnutý).",
+    "modeV2": "Podle matice oprávnění (permissions.v2 zapnutý).",
+    "submit": "Zobrazit jako vybrané role",
+    "empty": "Vyberte aspoň jednu roli.",
+    "barTitle": "Náhled jako: {roles}",
+    "barReadOnly": "Jen čtení – změny se neuloží. Náhled skončí sám nejpozději za 2 hodiny.",
+    "stop": "Ukončit náhled"
   }
 }

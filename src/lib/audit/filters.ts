@@ -20,6 +20,7 @@ export const AUDIT_GROUPS = [
   "startlist",
   "partner",
   "newsletter",
+  "permissions",
 ] as const;
 
 export type AuditGroup = (typeof AUDIT_GROUPS)[number];

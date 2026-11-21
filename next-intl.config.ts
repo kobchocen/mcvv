@@ -63,6 +63,8 @@ export default defineRouting({
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
     "/admin/uzivatele": "/admin/uzivatele",
     "/admin/audit": "/admin/audit",
+    // editor oprávnění rolí (P8, jen při zapnutém permissions.v2)
+    "/admin/opravneni": "/admin/opravneni",
     "/admin/den-zavodu": "/admin/den-zavodu",
     // po závodě: tombola (#128)
     "/admin/po-zavode": "/admin/po-zavode",

@@ -19,6 +19,7 @@ import {
   ScrollText,
   Search,
   Settings,
+  ShieldCheck,
   Star,
   Store,
   Users,
@@ -51,6 +52,7 @@ const ICONS: Record<AdminNavIcon, LucideIcon> = {
   dictionaries: BookOpen,
   users: Users,
   settings: Settings,
+  permissions: ShieldCheck,
   audit: ScrollText,
 };
 

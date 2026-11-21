@@ -7,7 +7,13 @@ import {
   SECTION_RULES,
   SYSTEM_ONLY_SECTIONS,
   legacyAllows,
+  EDITABLE_ROLES,
+  EDITABLE_SECTIONS,
+  matrixField,
   overrideKey,
+  parseMatrixForm,
+  planMatrixChange,
+  resetChanges,
   splitScope,
   starterScope,
   v2Allows,
@@ -152,4 +158,59 @@ describe("screens outside /admin (P5) – flag off = today", () => {
       assert.equal(splitScope(legacy).all, isStaffRole(role));
     });
   }
+});
+
+describe("permissions editor (P8)", () => {
+  it("editable cells exclude admin, overview and admin-only sections", () => {
+    assert.ok(!EDITABLE_ROLES.includes("admin"));
+    for (const id of ["overview", "users", "settings", "permissions"] as const) {
+      assert.ok(!EDITABLE_SECTIONS.includes(id), id);
+    }
+  });
+
+  it("parses the form and drops anything unexpected", () => {
+    const parsed = parseMatrixForm([
+      [matrixField("speaker", "newsletter"), "read"],
+      ["m|admin|newsletter", "none"],
+      ["m|speaker|users", "write"],
+      ["m|speaker|newsletter|x", "write"],
+      [matrixField("entries", "entries.list"), "root"],
+      ["other", "write"],
+    ]);
+    assert.deepEqual([...parsed], [[overrideKey("speaker", "newsletter"), "read"]]);
+  });
+
+  it("stores only differences from defaults and audits effective changes", () => {
+    const overrides = new Map([[overrideKey("comms", "partners"), "write" as const]]);
+    const submitted = new Map([
+      [overrideKey("speaker", "newsletter"), "read" as const], // new override
+      [overrideKey("comms", "partners"), "none" as const], // back to default → delete
+      [overrideKey("entries", "entries.list"), "write" as const], // unchanged default
+    ]);
+    const plan = planMatrixChange(overrides, submitted);
+    assert.deepEqual(plan.upserts, [{ role: "speaker", sectionId: "newsletter", level: "read" }]);
+    assert.deepEqual(plan.deletes, [{ role: "comms", sectionId: "partners" }]);
+    assert.deepEqual(plan.changes, {
+      "comms/partners": { before: "write", after: "none" },
+      "speaker/newsletter": { before: "none", after: "read" },
+    });
+  });
+
+  it("reset reports every override that differs from the default", () => {
+    const overrides = new Map([
+      [overrideKey("comms", "partners"), "write" as const],
+      [overrideKey("entries", "entries.list"), "write" as const],
+    ]);
+    assert.deepEqual(resetChanges(overrides), {
+      "comms/partners": { before: "write", after: "none" },
+    });
+  });
+
+  it("the editor page is an admin-only nav item", () => {
+    for (const role of ROLES) {
+      assert.equal(legacyAllows(role, "permissions", "read"), role === "admin", role);
+    }
+    const overrides = new Map([[overrideKey("organizer_legacy", "permissions"), "write" as const]]);
+    assert.equal(v2Allows(["organizer_legacy"], "permissions", "read", overrides), false);
+  });
 });

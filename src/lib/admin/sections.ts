@@ -58,6 +58,7 @@ export type AdminNavLabel =
   | "runners"
   | "users"
   | "settings"
+  | "permissions"
   | "audit";
 
 export type AdminNavGroupLabel =
@@ -79,6 +80,7 @@ export type AdminNavIcon =
   | "dictionaries"
   | "users"
   | "settings"
+  | "permissions"
   | "audit";
 
 /** Cesty, na které panel odkazuje (všechny jsou v `next-intl.config.ts` pathnames). */
@@ -111,6 +113,7 @@ export type AdminNavHref =
   | "/admin/ciselniky/bezci"
   | "/admin/uzivatele"
   | "/admin/nastaveni"
+  | "/admin/opravneni"
   | "/admin/audit";
 
 export type AdminSubsection = {
@@ -366,6 +369,13 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
         label: "settings",
         icon: "settings",
         href: "/admin/nastaveni",
+        allowed: isAdmin,
+      },
+      {
+        id: "permissions",
+        label: "permissions",
+        icon: "permissions",
+        href: "/admin/opravneni",
         allowed: isAdmin,
       },
       { id: "audit", label: "audit", icon: "audit", href: "/admin/audit", allowed: isAdmin },

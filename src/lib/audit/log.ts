@@ -103,6 +103,9 @@ export type AuditAction =
   | "newsletter.started"
   | "newsletter.retried"
   | "newsletter.deleted"
+  // P8: editor oprávnění rolí (platná úroveň před / po pro každou buňku).
+  | "permissions.changed"
+  | "permissions.reset"
   // Startovka (#107): ruční číslo, prohození, zámek, uložení návrhu. Cíl
   // `startlist:<rok>/<bezec>` nebo `startlist:<rok>`; detail `changes` (u více řádků klíče
   // `<bezec>.bib` / `.locked`). Skupiny startu nahradil spec. start „spolu s“ (Q225) – starší

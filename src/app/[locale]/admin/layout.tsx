@@ -42,8 +42,13 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
     ? await staffUnreadCount().catch(() => 0)
     : 0;
   // Flag vypnutý: can() = dnešní predikáty rolí, navigace je stejná jako dřív.
+  // Editor oprávnění (P8) jen při zapnutém přepínači.
   const visible = visibleSectionsBy((item) =>
-    isSectionId(item.id) ? can(access, item.id, "read") : (item.allowed?.(session.role) ?? false),
+    item.id === "permissions" && !access.v2
+      ? false
+      : isSectionId(item.id)
+        ? can(access, item.id, "read")
+        : (item.allowed?.(session.role) ?? false),
   );
   const groups = navTree(visible, (key) => navCopy(key), {
     unreadMessages,

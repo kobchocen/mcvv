@@ -61,6 +61,8 @@ export default defineRouting({
     "/admin/tisk": "/admin/tisk",
     "/admin/zpravy": "/admin/zpravy",
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
+    "/admin/zpravy/dotazy": "/admin/zpravy/dotazy",
+    "/admin/zpravy/dotazy/[id]": "/admin/zpravy/dotazy/[id]",
     "/admin/uzivatele": "/admin/uzivatele",
     "/admin/audit": "/admin/audit",
     // editor oprávnění rolí (P8, jen při zapnutém permissions.v2)

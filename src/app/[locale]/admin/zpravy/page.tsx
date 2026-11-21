@@ -5,6 +5,7 @@ import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 import { requireSection } from "@/lib/admin/access";
+import { countNewQuestions } from "@/lib/contact/questions";
 import { formatDateTime, formatShortDateTime } from "@/lib/format/date";
 import { parseAdminThreadFilters, sortAdminThreads } from "@/lib/messages/core";
 import { listAdminThreads } from "@/lib/messages/store";
@@ -29,7 +30,11 @@ export default async function AdminMessagesPage({ params, searchParams }: PagePr
   await requireSection("messages", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const filters = parseAdminThreadFilters(await searchParams);
-  const [threads, settings] = await Promise.all([listAdminThreads(filters), getMessageSettings()]);
+  const [threads, settings, newQuestions] = await Promise.all([
+    listAdminThreads(filters),
+    getMessageSettings(),
+    countNewQuestions(),
+  ]);
   const sorted = sortAdminThreads(threads);
 
   return (
@@ -39,6 +44,20 @@ export default async function AdminMessagesPage({ params, searchParams }: PagePr
           {copy("msgTitle")}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-race-muted">{copy("msgIntro")}</p>
+        <p className="mt-3 text-sm">
+          <Link
+            href="/admin/zpravy/dotazy"
+            className="font-medium text-race-accent hover:underline"
+            data-testid="admin-contact-questions-link"
+          >
+            {copy("qLink")}
+          </Link>
+          {newQuestions > 0 ? (
+            <span className="ml-2 border border-race-accent px-2 py-0.5 text-xs font-medium text-race-accent">
+              {copy("qNewCount", { count: newQuestions })}
+            </span>
+          ) : null}
+        </p>
         {!settings.enabled ? (
           <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">{copy("msgDisabled")}</p>
         ) : null}

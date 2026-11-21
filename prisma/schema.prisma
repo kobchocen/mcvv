@@ -800,6 +800,48 @@ enum MessageSide {
   staff
 }
 
+/// Dotaz z kontaktního formuláře od nepřihlášeného návštěvníka (#205). Pořadatel ho vidí
+/// v administraci (Zprávy → Dotazy), odpovídá e-mailem přes frontu pošty.
+model ContactQuestion {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(100)
+  email       String    @db.VarChar(254)
+  message     String    @db.Text
+  /// Jazyk webu při odeslání (cs | en | de | pl | uk) – jazyk obálky odpovědi.
+  locale      String    @default("cs") @map("jazyk") @db.VarChar(2)
+  /// new | answered | closed
+  status      String    @default("new") @map("stav") @db.VarChar(10)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  lastReplyAt DateTime? @map("last_reply_at")
+  closedAt    DateTime? @map("closed_at")
+  /// Kdy odešlo upozornění pořadateli (null = nepodařilo se, dotaz je jen v databázi).
+  notifiedAt  DateTime? @map("notified_at")
+
+  replies ContactReply[]
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("mcvv_contact_question")
+}
+
+/// Odpověď pořadatele na dotaz z kontaktního formuláře (#205).
+model ContactReply {
+  id          Int      @id @default(autoincrement())
+  questionId  Int      @map("question_id")
+  body        String   @db.Text
+  authorId    Int?     @map("author_id")
+  authorName  String   @map("author_name") @db.VarChar(80)
+  /// Řádek fronty pošty s odpovědí.
+  mailQueueId Int?     @map("mail_queue_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  question ContactQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("mcvv_contact_reply")
+}
+
 /// Vlákno zpráv: buď k přihlášce (rok + prihlaska_id), nebo obecné k účtu (user_id, bez přihlášky).
 /// Přístup přihlašujícího k vláknu přihlášky = e-mail přihlášky se shoduje s e-mailem účtu.
 model MessageThread {

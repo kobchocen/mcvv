@@ -11,6 +11,7 @@ import {
   validateContactInput,
   verifyFormToken,
 } from "@/lib/contact/guard";
+import { createContactQuestion, markQuestionNotified } from "@/lib/contact/questions";
 import { sendContactMessage } from "@/lib/contact/send";
 import { env } from "@/lib/env";
 import { clientIp as proxyClientIp } from "@/lib/security/rate-limit";
@@ -89,11 +90,21 @@ export async function submitContact(
     return botOk;
   }
 
+  // #205: dotaz se nejdřív uloží do databáze (administrace → Zprávy → Dotazy), pak jde
+  // pořadateli upozornění e-mailem jako dosud. Uložený dotaz = úspěch i při chybě e-mailu.
+  let questionId: number | null = null;
   try {
-    await sendContactMessage(input, undefined, await getOrganizerEmail());
+    questionId = (await createContactQuestion(input, await getLocale())).id;
+  } catch (error) {
+    console.error("[contact] store failed", error);
+  }
+
+  try {
+    await sendContactMessage(input, undefined, await getOrganizerEmail(), questionId);
+    if (questionId !== null) await markQuestionNotified(questionId).catch(() => undefined);
     return { status: "ok" };
   } catch (error) {
     console.error("[contact] send failed", error);
-    return { status: "error", message: "send" };
+    return questionId !== null ? { status: "ok" } : { status: "error", message: "send" };
   }
 }

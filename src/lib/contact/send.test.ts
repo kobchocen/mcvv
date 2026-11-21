@@ -38,3 +38,18 @@ test("adresát z nastavení (getOrganizerEmail) má přednost před CONTACT_TO",
   );
   assert.equal(calls[0].to, "poradatel@example.cz");
 });
+
+test("upozornění na uložený dotaz (#205) odkazuje do administrace", async () => {
+  const { sendContactMessage, buildContactMail } = await import("./send");
+  const calls: Array<Record<string, string | undefined>> = [];
+  await sendContactMessage(
+    { name: "X Y", email: "a@b.cz", message: "0123456789" },
+    { resend: async (input) => (calls.push(input), true) },
+    "poradatel@example.cz",
+    17,
+  );
+  assert.match(calls[0].text ?? "", /\/cs\/admin\/zpravy\/dotazy\/17/);
+  assert.match(calls[0].html ?? "", /\/cs\/admin\/zpravy\/dotazy\/17/);
+  assert.equal(calls[0].replyTo, "a@b.cz");
+  assert.doesNotMatch(buildContactMail({ name: "a", email: "b", message: "c" }).text, /admin/);
+});

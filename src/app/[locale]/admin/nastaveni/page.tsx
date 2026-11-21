@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { requireSection } from "@/lib/admin/access";
+import { getAccess, requireSection } from "@/lib/admin/access";
 import { saveSettings } from "@/lib/admin/settings";
 import { formatStartClock } from "@/lib/date/race-schedule";
 import { getFreeEntryEmailsText } from "@/lib/entries/settings";
@@ -26,6 +26,7 @@ import {
 } from "@/lib/settings/mail";
 import { mailStats } from "@/lib/mail/queue-store";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
+import { McvvAdminSectionFrame } from "@/components/organisms/mcvv-admin-section-frame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,8 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
   setRequestLocale(locale);
   await requireSection("settings", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const navCopy = await getTranslations({ locale, namespace: "AdminSectionNav" });
+  const access = await getAccess();
   const [emails, site, messages, receipt, organizerRegEmail, mail, mailToday, raceYear] =
     await Promise.all([
       getFreeEntryEmailsText(),
@@ -66,317 +69,356 @@ export default async function AdminSettingsPage({ params, searchParams }: PagePr
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
-          {copy("settingsTitle")}
-        </h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-race-muted">{copy("settingsIntro")}</p>
-        {error === "url" ? (
-          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {copy("settingsOnlineUrlInvalid")}
-          </p>
-        ) : error === "organizerRegistrationEmail" ? (
-          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {copy("settingsOrganizerRegistrationEmailInvalid")}
-          </p>
-        ) : error === "mailCap" ? (
-          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {copy("settingsMailCapInvalid", { max: MAIL_LIMIT_MAX })}
-          </p>
-        ) : error === "mailReserve" ? (
-          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {copy("settingsMailReserveInvalid")}
-          </p>
-        ) : error === "email" ? (
-          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {copy("settingsOrganizerEmailInvalid")}
-          </p>
-        ) : saved === "1" ? (
-          <p role="status" className="mt-4 text-sm text-race-accent">
-            {copy("settingsSaved")}
-          </p>
-        ) : null}
-        <form action={saveSettings} className="mt-8 grid gap-8">
-          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
-            <legend className="px-1 font-display text-lg font-semibold">
-              {copy("settingsRaceDay")}
-            </legend>
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                name="startlistPublished"
-                defaultChecked={site.startlistPublished}
-                className="mt-0.5 size-4"
-              />
-              <span>
-                <span className="font-medium">{copy("settingsStartlistPublished")}</span>
-                <span className="mt-1 block text-race-muted">
-                  {copy("settingsStartlistPublishedHint")}
-                </span>
-              </span>
-            </label>
-            <div className="grid gap-1.5">
-              <Label htmlFor="onlineResultsUrl">{copy("settingsOnlineUrl")}</Label>
-              <Input
-                id="onlineResultsUrl"
-                name="onlineResultsUrl"
-                type="url"
-                inputMode="url"
-                placeholder="https://"
-                pattern="https?://.+"
-                maxLength={ONLINE_RESULTS_URL_MAX}
-                defaultValue={site.onlineResultsUrl ?? ""}
-                aria-describedby="onlineResultsUrlHint"
-                className="h-10 bg-race-surface"
-              />
-              <p id="onlineResultsUrlHint" className="text-xs text-race-muted">
-                {copy("settingsOnlineUrlHint", {
-                  time: formatStartClock(raceYear.startModel.zeroSeconds),
-                })}
-              </p>
-            </div>
-          </fieldset>
-
-          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
-            <legend className="px-1 font-display text-lg font-semibold">
-              {copy("settingsStats")}
-            </legend>
-            <AdminField name="statsMoment" label={copy("settingsStatsMoment")}>
-              <Textarea
-                id="statsMoment"
-                name="statsMoment"
-                maxLength={STATS_MOMENT_MAX}
-                defaultValue={site.statsMoment}
-                aria-describedby="statsMomentHint"
-                className="min-h-28 bg-race-surface"
-              />
-            </AdminField>
-            <p id="statsMomentHint" className="-mt-2 text-xs text-race-muted">
-              {copy("settingsStatsMomentHint")}
+      <McvvAdminSectionFrame
+        title={navCopy("title")}
+        items={
+          access.v2
+            ? [
+                { id: "den-zavodu", label: copy("settingsRaceDay") },
+                { id: "statistiky", label: copy("settingsStats") },
+                { id: "zpravy", label: copy("settingsMessages") },
+                { id: "maily", label: copy("settingsMail") },
+                { id: "prodejky", label: copy("settingsReceipt") },
+                { id: "prihlasky", label: copy("settingsEntries") },
+              ]
+            : null
+        }
+      >
+        <div className="mx-auto max-w-3xl">
+          <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
+            {copy("settingsTitle")}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-race-muted">{copy("settingsIntro")}</p>
+          {error === "url" ? (
+            <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {copy("settingsOnlineUrlInvalid")}
             </p>
-          </fieldset>
-
-          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
-            <legend className="px-1 font-display text-lg font-semibold">
-              {copy("settingsMessages")}
-            </legend>
-            <div className="grid gap-1.5">
-              <Label htmlFor="organizerEmail">{copy("settingsOrganizerEmail")}</Label>
-              <Input
-                id="organizerEmail"
-                name="organizerEmail"
-                type="email"
-                maxLength={254}
-                placeholder={organizerFallback}
-                defaultValue={messages.organizerEmail}
-                aria-describedby="organizerEmailHint"
-                className="h-10 bg-race-surface"
-              />
-              <p id="organizerEmailHint" className="text-xs text-race-muted">
-                {copy("settingsOrganizerEmailHint", { fallback: organizerFallback })}
-              </p>
-            </div>
-            {(
-              [
-                [
-                  "messagesEnabled",
-                  messages.enabled,
-                  "settingsMessagesEnabled",
-                  "settingsMessagesEnabledHint",
-                ],
-                [
-                  "messagesNotifyOrganizer",
-                  messages.notifyOrganizer,
-                  "settingsNotifyOrganizer",
-                  "settingsNotifyOrganizerHint",
-                ],
-                [
-                  "messagesNotifyUser",
-                  messages.notifyUser,
-                  "settingsNotifyUser",
-                  "settingsNotifyUserHint",
-                ],
-                [
-                  "entriesNotifyChanges",
-                  messages.notifyChanges,
-                  "settingsNotifyChanges",
-                  "settingsNotifyChangesHint",
-                ],
-              ] as const
-            ).map(([name, checked, label, hint]) => (
-              <label key={name} className="flex items-start gap-3 text-sm">
+          ) : error === "organizerRegistrationEmail" ? (
+            <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {copy("settingsOrganizerRegistrationEmailInvalid")}
+            </p>
+          ) : error === "mailCap" ? (
+            <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {copy("settingsMailCapInvalid", { max: MAIL_LIMIT_MAX })}
+            </p>
+          ) : error === "mailReserve" ? (
+            <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {copy("settingsMailReserveInvalid")}
+            </p>
+          ) : error === "email" ? (
+            <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {copy("settingsOrganizerEmailInvalid")}
+            </p>
+          ) : saved === "1" ? (
+            <p role="status" className="mt-4 text-sm text-race-accent">
+              {copy("settingsSaved")}
+            </p>
+          ) : null}
+          <form action={saveSettings} className="mt-8 grid gap-8">
+            <fieldset
+              id="den-zavodu"
+              className="grid gap-4 scroll-mt-16 border border-race-line/60 bg-race-surface/40 p-4"
+            >
+              <legend className="px-1 font-display text-lg font-semibold">
+                {copy("settingsRaceDay")}
+              </legend>
+              <label className="flex items-start gap-3 text-sm">
                 <input
                   type="checkbox"
-                  name={name}
-                  defaultChecked={checked}
+                  name="startlistPublished"
+                  defaultChecked={site.startlistPublished}
                   className="mt-0.5 size-4"
                 />
                 <span>
-                  <span className="font-medium">{copy(label)}</span>
-                  <span className="mt-1 block text-race-muted">{copy(hint)}</span>
+                  <span className="font-medium">{copy("settingsStartlistPublished")}</span>
+                  <span className="mt-1 block text-race-muted">
+                    {copy("settingsStartlistPublishedHint")}
+                  </span>
                 </span>
               </label>
-            ))}
-          </fieldset>
+              <div className="grid gap-1.5">
+                <Label htmlFor="onlineResultsUrl">{copy("settingsOnlineUrl")}</Label>
+                <Input
+                  id="onlineResultsUrl"
+                  name="onlineResultsUrl"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://"
+                  pattern="https?://.+"
+                  maxLength={ONLINE_RESULTS_URL_MAX}
+                  defaultValue={site.onlineResultsUrl ?? ""}
+                  aria-describedby="onlineResultsUrlHint"
+                  className="h-10 bg-race-surface"
+                />
+                <p id="onlineResultsUrlHint" className="text-xs text-race-muted">
+                  {copy("settingsOnlineUrlHint", {
+                    time: formatStartClock(raceYear.startModel.zeroSeconds),
+                  })}
+                </p>
+              </div>
+            </fieldset>
 
-          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
-            <legend className="px-1 font-display text-lg font-semibold">
-              {copy("settingsMail")}
-            </legend>
-            {mailToday ? (
-              <p className="text-sm font-medium" data-testid="mail-today">
-                {mailPolicyNow.unlimited
-                  ? copy("settingsMailTodayUnlimited", { today: mailToday.today })
-                  : copy("settingsMailToday", {
-                      today: mailToday.today,
-                      cap: mailPolicyNow.cap,
-                    })}
-                {mailToday.quotaExceeded ? ` ${copy("mailQuotaExceeded")}` : ""}
+            <fieldset
+              id="statistiky"
+              className="grid gap-4 scroll-mt-16 border border-race-line/60 bg-race-surface/40 p-4"
+            >
+              <legend className="px-1 font-display text-lg font-semibold">
+                {copy("settingsStats")}
+              </legend>
+              <AdminField name="statsMoment" label={copy("settingsStatsMoment")}>
+                <Textarea
+                  id="statsMoment"
+                  name="statsMoment"
+                  maxLength={STATS_MOMENT_MAX}
+                  defaultValue={site.statsMoment}
+                  aria-describedby="statsMomentHint"
+                  className="min-h-28 bg-race-surface"
+                />
+              </AdminField>
+              <p id="statsMomentHint" className="-mt-2 text-xs text-race-muted">
+                {copy("settingsStatsMomentHint")}
               </p>
-            ) : null}
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                name="mailUnlimited"
-                defaultChecked={mail.unlimited}
-                className="mt-0.5 size-4"
-              />
-              <span>
-                <span className="font-medium">{copy("settingsMailUnlimited")}</span>
-                <span className="mt-1 block text-race-muted">
-                  {copy("settingsMailUnlimitedHint")}
+            </fieldset>
+
+            <fieldset
+              id="zpravy"
+              className="grid gap-4 scroll-mt-16 border border-race-line/60 bg-race-surface/40 p-4"
+            >
+              <legend className="px-1 font-display text-lg font-semibold">
+                {copy("settingsMessages")}
+              </legend>
+              <div className="grid gap-1.5">
+                <Label htmlFor="organizerEmail">{copy("settingsOrganizerEmail")}</Label>
+                <Input
+                  id="organizerEmail"
+                  name="organizerEmail"
+                  type="email"
+                  maxLength={254}
+                  placeholder={organizerFallback}
+                  defaultValue={messages.organizerEmail}
+                  aria-describedby="organizerEmailHint"
+                  className="h-10 bg-race-surface"
+                />
+                <p id="organizerEmailHint" className="text-xs text-race-muted">
+                  {copy("settingsOrganizerEmailHint", { fallback: organizerFallback })}
+                </p>
+              </div>
+              {(
+                [
+                  [
+                    "messagesEnabled",
+                    messages.enabled,
+                    "settingsMessagesEnabled",
+                    "settingsMessagesEnabledHint",
+                  ],
+                  [
+                    "messagesNotifyOrganizer",
+                    messages.notifyOrganizer,
+                    "settingsNotifyOrganizer",
+                    "settingsNotifyOrganizerHint",
+                  ],
+                  [
+                    "messagesNotifyUser",
+                    messages.notifyUser,
+                    "settingsNotifyUser",
+                    "settingsNotifyUserHint",
+                  ],
+                  [
+                    "entriesNotifyChanges",
+                    messages.notifyChanges,
+                    "settingsNotifyChanges",
+                    "settingsNotifyChangesHint",
+                  ],
+                ] as const
+              ).map(([name, checked, label, hint]) => (
+                <label key={name} className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    defaultChecked={checked}
+                    className="mt-0.5 size-4"
+                  />
+                  <span>
+                    <span className="font-medium">{copy(label)}</span>
+                    <span className="mt-1 block text-race-muted">{copy(hint)}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+
+            <fieldset
+              id="maily"
+              className="grid gap-4 scroll-mt-16 border border-race-line/60 bg-race-surface/40 p-4"
+            >
+              <legend className="px-1 font-display text-lg font-semibold">
+                {copy("settingsMail")}
+              </legend>
+              {mailToday ? (
+                <p className="text-sm font-medium" data-testid="mail-today">
+                  {mailPolicyNow.unlimited
+                    ? copy("settingsMailTodayUnlimited", { today: mailToday.today })
+                    : copy("settingsMailToday", {
+                        today: mailToday.today,
+                        cap: mailPolicyNow.cap,
+                      })}
+                  {mailToday.quotaExceeded ? ` ${copy("mailQuotaExceeded")}` : ""}
+                </p>
+              ) : null}
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="mailUnlimited"
+                  defaultChecked={mail.unlimited}
+                  className="mt-0.5 size-4"
+                />
+                <span>
+                  <span className="font-medium">{copy("settingsMailUnlimited")}</span>
+                  <span className="mt-1 block text-race-muted">
+                    {copy("settingsMailUnlimitedHint")}
+                  </span>
                 </span>
-              </span>
-            </label>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-1.5">
-                <Label htmlFor="mailDailyCap">{copy("settingsMailCap")}</Label>
-                <Input
-                  id="mailDailyCap"
-                  name="mailDailyCap"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={MAIL_LIMIT_MAX}
-                  step={1}
-                  placeholder={String(mailFallback.cap)}
-                  defaultValue={mail.dailyCap ?? ""}
-                  aria-describedby="mailDailyCapHint"
-                  className="h-10 bg-race-surface"
-                />
-                <p id="mailDailyCapHint" className="text-xs text-race-muted">
-                  {copy("settingsMailCapHint", { fallback: mailFallback.cap })}
-                </p>
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="mailDailyCap">{copy("settingsMailCap")}</Label>
+                  <Input
+                    id="mailDailyCap"
+                    name="mailDailyCap"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={MAIL_LIMIT_MAX}
+                    step={1}
+                    placeholder={String(mailFallback.cap)}
+                    defaultValue={mail.dailyCap ?? ""}
+                    aria-describedby="mailDailyCapHint"
+                    className="h-10 bg-race-surface"
+                  />
+                  <p id="mailDailyCapHint" className="text-xs text-race-muted">
+                    {copy("settingsMailCapHint", { fallback: mailFallback.cap })}
+                  </p>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="mailPriorityReserve">{copy("settingsMailReserve")}</Label>
+                  <Input
+                    id="mailPriorityReserve"
+                    name="mailPriorityReserve"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={MAIL_LIMIT_MAX}
+                    step={1}
+                    placeholder={String(mailFallback.reserve)}
+                    defaultValue={mail.priorityReserve ?? ""}
+                    aria-describedby="mailPriorityReserveHint"
+                    className="h-10 bg-race-surface"
+                  />
+                  <p id="mailPriorityReserveHint" className="text-xs text-race-muted">
+                    {copy("settingsMailReserveHint", { fallback: mailFallback.reserve })}
+                  </p>
+                </div>
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="mailPriorityReserve">{copy("settingsMailReserve")}</Label>
-                <Input
-                  id="mailPriorityReserve"
-                  name="mailPriorityReserve"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  max={MAIL_LIMIT_MAX}
-                  step={1}
-                  placeholder={String(mailFallback.reserve)}
-                  defaultValue={mail.priorityReserve ?? ""}
-                  aria-describedby="mailPriorityReserveHint"
-                  className="h-10 bg-race-surface"
-                />
-                <p id="mailPriorityReserveHint" className="text-xs text-race-muted">
-                  {copy("settingsMailReserveHint", { fallback: mailFallback.reserve })}
-                </p>
-              </div>
-            </div>
-          </fieldset>
+            </fieldset>
 
-          <fieldset className="grid gap-4 border border-race-line/60 bg-race-surface/40 p-4">
-            <legend className="px-1 font-display text-lg font-semibold">
-              {copy("settingsReceipt")}
-            </legend>
-            <p className="text-sm text-race-muted">{copy("settingsReceiptIntro")}</p>
-            {(
-              [
+            <fieldset
+              id="prodejky"
+              className="grid gap-4 scroll-mt-16 border border-race-line/60 bg-race-surface/40 p-4"
+            >
+              <legend className="px-1 font-display text-lg font-semibold">
+                {copy("settingsReceipt")}
+              </legend>
+              <p className="text-sm text-race-muted">{copy("settingsReceiptIntro")}</p>
+              {(
                 [
-                  "receiptIssuerName",
-                  "settingsReceiptName",
-                  receipt.name,
-                  DEFAULT_RECEIPT_ISSUER.name,
-                ],
-                ["receiptIssuerIco", "settingsReceiptIco", receipt.ico, DEFAULT_RECEIPT_ISSUER.ico],
-                [
-                  "receiptVatNote",
-                  "settingsReceiptVat",
-                  receipt.vatNote,
-                  DEFAULT_RECEIPT_ISSUER.vatNote,
-                ],
-              ] as const
-            ).map(([name, label, value, placeholder]) => (
-              <div key={name} className="grid gap-1.5">
-                <Label htmlFor={name}>{copy(label)}</Label>
-                <Input
-                  id={name}
-                  name={name}
-                  maxLength={RECEIPT_TEXT_MAX}
-                  placeholder={placeholder}
-                  defaultValue={value}
-                  className="h-10 bg-race-surface"
+                  [
+                    "receiptIssuerName",
+                    "settingsReceiptName",
+                    receipt.name,
+                    DEFAULT_RECEIPT_ISSUER.name,
+                  ],
+                  [
+                    "receiptIssuerIco",
+                    "settingsReceiptIco",
+                    receipt.ico,
+                    DEFAULT_RECEIPT_ISSUER.ico,
+                  ],
+                  [
+                    "receiptVatNote",
+                    "settingsReceiptVat",
+                    receipt.vatNote,
+                    DEFAULT_RECEIPT_ISSUER.vatNote,
+                  ],
+                ] as const
+              ).map(([name, label, value, placeholder]) => (
+                <div key={name} className="grid gap-1.5">
+                  <Label htmlFor={name}>{copy(label)}</Label>
+                  <Input
+                    id={name}
+                    name={name}
+                    maxLength={RECEIPT_TEXT_MAX}
+                    placeholder={placeholder}
+                    defaultValue={value}
+                    className="h-10 bg-race-surface"
+                  />
+                </div>
+              ))}
+              <div className="grid gap-1.5">
+                <Label htmlFor="receiptIssuerAddress">{copy("settingsReceiptAddress")}</Label>
+                <Textarea
+                  id="receiptIssuerAddress"
+                  name="receiptIssuerAddress"
+                  maxLength={RECEIPT_ADDRESS_MAX}
+                  placeholder={DEFAULT_RECEIPT_ISSUER.address}
+                  defaultValue={receipt.address}
+                  className="min-h-20 bg-race-surface"
                 />
               </div>
-            ))}
-            <div className="grid gap-1.5">
-              <Label htmlFor="receiptIssuerAddress">{copy("settingsReceiptAddress")}</Label>
+            </fieldset>
+
+            <fieldset
+              id="prihlasky"
+              className="grid gap-3 scroll-mt-16 border border-race-line/60 bg-race-surface/40 p-4"
+            >
+              <legend className="px-1 font-display text-lg font-semibold">
+                {copy("settingsEntries")}
+              </legend>
+              <Label htmlFor="emails">{copy("settingsFreeEmails")}</Label>
               <Textarea
-                id="receiptIssuerAddress"
-                name="receiptIssuerAddress"
-                maxLength={RECEIPT_ADDRESS_MAX}
-                placeholder={DEFAULT_RECEIPT_ISSUER.address}
-                defaultValue={receipt.address}
-                className="min-h-20 bg-race-surface"
+                id="emails"
+                name="emails"
+                defaultValue={emails}
+                className="min-h-48 bg-race-surface font-mono text-sm"
               />
-            </div>
-          </fieldset>
-
-          <fieldset className="grid gap-3 border border-race-line/60 bg-race-surface/40 p-4">
-            <legend className="px-1 font-display text-lg font-semibold">
-              {copy("settingsEntries")}
-            </legend>
-            <Label htmlFor="emails">{copy("settingsFreeEmails")}</Label>
-            <Textarea
-              id="emails"
-              name="emails"
-              defaultValue={emails}
-              className="min-h-48 bg-race-surface font-mono text-sm"
-            />
-            <div className="mt-3 grid gap-1.5">
-              <Label htmlFor="organizerRegistrationEmail">
-                {copy("settingsOrganizerRegistrationEmail")}
-              </Label>
-              <Input
-                id="organizerRegistrationEmail"
-                name="organizerRegistrationEmail"
-                type="email"
-                maxLength={254}
-                placeholder={DEFAULT_ORGANIZER_REGISTRATION_EMAIL}
-                defaultValue={organizerRegEmail}
-                aria-describedby="organizerRegistrationEmailHint"
-                className="h-10 bg-race-surface"
-              />
-              <p id="organizerRegistrationEmailHint" className="text-xs text-race-muted">
-                {copy("settingsOrganizerRegistrationEmailHint", {
-                  fallback: DEFAULT_ORGANIZER_REGISTRATION_EMAIL,
-                })}
-              </p>
-            </div>
-          </fieldset>
-          <Button
-            type="submit"
-            className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
-          >
-            {copy("save")}
-          </Button>
-        </form>
-      </div>
+              <div className="mt-3 grid gap-1.5">
+                <Label htmlFor="organizerRegistrationEmail">
+                  {copy("settingsOrganizerRegistrationEmail")}
+                </Label>
+                <Input
+                  id="organizerRegistrationEmail"
+                  name="organizerRegistrationEmail"
+                  type="email"
+                  maxLength={254}
+                  placeholder={DEFAULT_ORGANIZER_REGISTRATION_EMAIL}
+                  defaultValue={organizerRegEmail}
+                  aria-describedby="organizerRegistrationEmailHint"
+                  className="h-10 bg-race-surface"
+                />
+                <p id="organizerRegistrationEmailHint" className="text-xs text-race-muted">
+                  {copy("settingsOrganizerRegistrationEmailHint", {
+                    fallback: DEFAULT_ORGANIZER_REGISTRATION_EMAIL,
+                  })}
+                </p>
+              </div>
+            </fieldset>
+            <Button
+              type="submit"
+              className="h-10 w-fit bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
+            >
+              {copy("save")}
+            </Button>
+          </form>
+        </div>
+      </McvvAdminSectionFrame>
     </main>
   );
 }

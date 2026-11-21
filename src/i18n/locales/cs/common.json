@@ -3349,5 +3349,9 @@
     "detail": "detail",
     "prev": "Novější",
     "next": "Starší"
+  },
+  "AdminSectionNav": {
+    "title": "Na této stránce",
+    "startlist": "Seznam startujících"
   }
 }

@@ -75,7 +75,7 @@ export function parseAuditFilters(sp: AuditSearchParams): AuditFilters {
 }
 
 /** Začátek dne (Europe/Prague) daného `YYYY-MM-DD`, posunutý o `addDays`. */
-function pragueDayStart(value: string, addDays = 0): Date {
+export function pragueDayStart(value: string, addDays = 0): Date {
   const [year, month, day] = value.split("-").map(Number);
   const shifted = new Date(Date.UTC(year, month - 1, day + addDays));
   return zonedCivilToUtc(

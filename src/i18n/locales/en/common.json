@@ -2366,7 +2366,8 @@
     "group_sale_item": "Race office – price list",
     "group_startlist": "Start list (bibs, locks, groups)",
     "group_partner": "Partners",
-    "group_newsletter": "Newsletter"
+    "group_newsletter": "Newsletter",
+    "group_permissions": "Role permissions"
   },
   "RaceDay": {
     "title": "Race day",
@@ -3283,6 +3284,30 @@
     "pinEdit": "Edit pins",
     "pinDone": "Done",
     "pin": "Pin",
-    "unpin": "Unpin"
+    "unpin": "Unpin",
+    "permissions": "Role permissions"
+  },
+  "AdminPermissions": {
+    "title": "Role permissions",
+    "intro": "What each role may do in each section: – nothing, R read only, W edit (includes read). An account with several roles gets the highest level of its roles in each section. Highlighted cells differ from the defaults. Changes apply immediately and are audited.",
+    "colSection": "Section",
+    "levelRead": "R",
+    "levelWrite": "W",
+    "changedHint": "Changed, default: {level}",
+    "lockedNote": "The administrator can always edit everything. Users, Settings and Role permissions are administrator only and cannot be granted in the matrix.",
+    "save": "Save permissions",
+    "saved": "Saved, changed cells: {count}.",
+    "resetTitle": "Restore default permissions",
+    "resetIntro": "Deletes all matrix changes (currently {count}) and restores the defaults from code.",
+    "resetConfirm": "I understand the changes will be deleted.",
+    "resetButton": "Restore defaults",
+    "resetDone": "Permissions restored to defaults.",
+    "errorConfirm": "Tick the box to confirm.",
+    "sec_resultboard": "Race day › Resultboard settings",
+    "sec_testRun": "Race day › Test run",
+    "sec_bankPaid": "Race office › Paid by transfer",
+    "sec_clubsMerge": "Dictionaries › Clubs › Merge (apply)",
+    "sec_clubsOrphans": "Dictionaries › Clubs › Orphans",
+    "sec_runnersMerge": "Dictionaries › Runners › Merge and orphans"
   }
 }

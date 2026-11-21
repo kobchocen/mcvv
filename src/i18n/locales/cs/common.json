@@ -2366,7 +2366,8 @@
     "group_sale_item": "Závodní kancelář – ceník",
     "group_startlist": "Startovka (čísla, zámky, skupiny)",
     "group_partner": "Partneři",
-    "group_newsletter": "Newsletter"
+    "group_newsletter": "Newsletter",
+    "group_permissions": "Oprávnění rolí"
   },
   "RaceDay": {
     "title": "Den závodu",
@@ -3283,6 +3284,30 @@
     "pinEdit": "Upravit připnuté",
     "pinDone": "Hotovo",
     "pin": "Připnout",
-    "unpin": "Odepnout"
+    "unpin": "Odepnout",
+    "permissions": "Oprávnění rolí"
+  },
+  "AdminPermissions": {
+    "title": "Oprávnění rolí",
+    "intro": "Co která role smí v jednotlivých sekcích: – nic, Č jen čtení, Ú úpravy (zahrnuje čtení). Účet s více rolemi má v každé sekci nejvyšší úroveň ze svých rolí. Zvýrazněné buňky se liší od výchozího nastavení. Změny platí hned a zapisují se do auditu.",
+    "colSection": "Sekce",
+    "levelRead": "Č",
+    "levelWrite": "Ú",
+    "changedHint": "Upraveno, výchozí: {level}",
+    "lockedNote": "Administrátor má vždy úpravy všude. Uživatelé, Nastavení a Oprávnění rolí jsou jen pro administrátora a v matici nejdou povolit.",
+    "save": "Uložit oprávnění",
+    "saved": "Uloženo, změněných buněk: {count}.",
+    "resetTitle": "Vrátit výchozí oprávnění",
+    "resetIntro": "Smaže všechny úpravy matice (teď {count}) a vrátí výchozí nastavení z kódu.",
+    "resetConfirm": "Rozumím, úpravy se smažou.",
+    "resetButton": "Vrátit výchozí",
+    "resetDone": "Oprávnění vrácena na výchozí.",
+    "errorConfirm": "Potvrďte vrácení zaškrtnutím.",
+    "sec_resultboard": "Den závodu › Nastavení resultboardu",
+    "sec_testRun": "Den závodu › Testovací běh",
+    "sec_bankPaid": "Závodní kancelář › Zaplaceno převodem",
+    "sec_clubsMerge": "Číselníky › Kluby › Sloučení (provedení)",
+    "sec_clubsOrphans": "Číselníky › Kluby › Sirotci",
+    "sec_runnersMerge": "Číselníky › Běžci › Slučování a sirotci"
   }
 }

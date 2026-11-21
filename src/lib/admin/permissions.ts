@@ -23,7 +23,7 @@ import {
   isStaffRole,
   type UserRole,
 } from "@/lib/auth/roles";
-import type { StaffRole } from "@/lib/auth/staff-roles";
+import { STAFF_ROLES, type StaffRole } from "@/lib/auth/staff-roles";
 
 export type AccessLevel = "read" | "write";
 export type StoredLevel = "none" | AccessLevel;
@@ -91,6 +91,7 @@ export const SECTION_RULES = {
   "dictionaries.runners": { read: "admin", write: "admin" },
   "dictionaries.runners.merge": { read: "admin", write: "admin" },
   users: { read: "admin", write: "admin" },
+  permissions: { read: "admin", write: "admin" },
   settings: { read: "admin", write: "admin" },
   audit: { read: "admin", write: "admin" },
 } as const satisfies Record<string, Rule>;
@@ -99,7 +100,7 @@ export type SectionId = keyof typeof SECTION_RULES;
 export const SECTION_IDS = Object.keys(SECTION_RULES) as SectionId[];
 
 /** Sekce, které jsou vždy jen pro admina a v editoru oprávnění se nedají povolit jiné roli. */
-export const SYSTEM_ONLY_SECTIONS: readonly SectionId[] = ["users", "settings"];
+export const SYSTEM_ONLY_SECTIONS: readonly SectionId[] = ["users", "settings", "permissions"];
 
 export function isSectionId(value: unknown): value is SectionId {
   return typeof value === "string" && Object.hasOwn(SECTION_RULES, value);
@@ -274,4 +275,90 @@ export function splitScope(allows: Allows): { all: boolean; own: boolean } {
 /** Rozsah obrazovky startéra: libovolný koridor (řízení startu), nebo jen přiřazený. */
 export function starterScope(allows: Allows): { any: boolean; own: boolean } {
   return { any: allows("raceControl.start", "read"), own: allows("screens.starter", "read") };
+}
+
+// ---------------------------------------------------------------------------
+// Editor oprávnění (P8): úpravy matice rolí × sekcí v `mcvv_role_section`.
+
+/** Role, jejichž práva jdou upravit (admin má vždy úpravy). */
+export const EDITABLE_ROLES: readonly StaffRole[] = STAFF_ROLES.filter((role) => role !== "admin");
+
+/** Sekce v editoru: bez přehledu (rozcestník) a bez sekcí jen pro admina. */
+export const EDITABLE_SECTIONS: readonly SectionId[] = SECTION_IDS.filter(
+  (id) => id !== "overview" && !SYSTEM_ONLY_SECTIONS.includes(id),
+);
+
+const STORED_LEVELS: readonly StoredLevel[] = ["none", "read", "write"];
+
+/** Platná úroveň buňky: odchylka z DB, jinak výchozí. */
+export function effectiveCell(role: StaffRole, id: SectionId, overrides: Overrides): StoredLevel {
+  return overrides.get(overrideKey(role, id)) ?? defaultLevel(role, id);
+}
+
+/** Název pole formuláře editoru pro buňku. */
+export function matrixField(role: StaffRole, id: SectionId): string {
+  return `m|${role}|${id}`;
+}
+
+/** Odeslaný formulář editoru → buňky (klíč `overrideKey`); neplatné položky se zahodí. */
+export function parseMatrixForm(entries: Iterable<[string, unknown]>): Map<string, StoredLevel> {
+  const out = new Map<string, StoredLevel>();
+  for (const [name, value] of entries) {
+    const [prefix, role, id, extra] = name.split("|");
+    if (prefix !== "m" || extra !== undefined) continue;
+    if (!EDITABLE_ROLES.includes(role as StaffRole)) continue;
+    if (!isSectionId(id) || !EDITABLE_SECTIONS.includes(id)) continue;
+    if (!STORED_LEVELS.includes(value as StoredLevel)) continue;
+    out.set(overrideKey(role!, id), value as StoredLevel);
+  }
+  return out;
+}
+
+export type MatrixPlan = {
+  upserts: { role: StaffRole; sectionId: SectionId; level: StoredLevel }[];
+  deletes: { role: StaffRole; sectionId: SectionId }[];
+  /** `role/sekce` → platná úroveň před a po (pro audit `permissions.changed`). */
+  changes: Record<string, { before: StoredLevel; after: StoredLevel }>;
+};
+
+/**
+ * Co zapsat: do DB jen odchylky od výchozí matice (hodnota rovná výchozí = řádek smazat).
+ * Buňky, které formulář neposlal, se nemění.
+ */
+export function planMatrixChange(
+  overrides: Overrides,
+  submitted: ReadonlyMap<string, StoredLevel>,
+): MatrixPlan {
+  const plan: MatrixPlan = { upserts: [], deletes: [], changes: {} };
+  for (const role of EDITABLE_ROLES) {
+    for (const sectionId of EDITABLE_SECTIONS) {
+      const key = overrideKey(role, sectionId);
+      const next = submitted.get(key);
+      if (next === undefined) continue;
+      const stored = overrides.get(key);
+      const before = stored ?? defaultLevel(role, sectionId);
+      if (next === defaultLevel(role, sectionId)) {
+        if (stored !== undefined) plan.deletes.push({ role, sectionId });
+      } else if (stored !== next) {
+        plan.upserts.push({ role, sectionId, level: next });
+      }
+      if (before !== next) plan.changes[`${role}/${sectionId}`] = { before, after: next };
+    }
+  }
+  return plan;
+}
+
+/** Návrat k výchozí matici: změny pro audit `permissions.reset`. */
+export function resetChanges(overrides: Overrides): MatrixPlan["changes"] {
+  const changes: MatrixPlan["changes"] = {};
+  for (const role of EDITABLE_ROLES) {
+    for (const sectionId of EDITABLE_SECTIONS) {
+      const stored = overrides.get(overrideKey(role, sectionId));
+      const fallback = defaultLevel(role, sectionId);
+      if (stored !== undefined && stored !== fallback) {
+        changes[`${role}/${sectionId}`] = { before: stored, after: fallback };
+      }
+    }
+  }
+  return changes;
 }

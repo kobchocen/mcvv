@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  dataEpoch,
   inHiddenWindow,
   parseTestRun,
   publicHiddenWindow,
@@ -170,14 +169,6 @@ test("testRunExpired and testDataWindow never reach past race day", () => {
     from: late.startedAt,
     until: CUTOFF_2026,
   });
-});
-
-test("dataEpoch changes with a new test run and with a new zero (Q72)", () => {
-  const zero = new Date("2026-11-02T09:15:00.000Z");
-  assert.equal(dataEpoch(null, zero), "live@2026-11-02T09:15:00.000Z");
-  assert.equal(dataEpoch(run(), zero), "test-abc123def0@2026-11-02T09:15:00.000Z");
-  assert.notEqual(dataEpoch(run({ id: "other12345" }), zero), dataEpoch(run(), zero));
-  assert.notEqual(dataEpoch(null, new Date(zero.getTime() + 1000)), dataEpoch(null, zero));
 });
 
 test("public online results hide everything written during a stored test (Q117)", () => {

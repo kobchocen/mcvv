@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvAdminHomeLink } from "@/components/organisms";
-import { McvvAdminTokenForm } from "@/components/organisms/mcvv-admin-token-form";
 import { McvvResultboardSettings } from "@/components/organisms/mcvv-resultboard-settings";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
@@ -16,16 +15,14 @@ import { formatStartClock } from "@/lib/date/race-schedule";
 import { currentRaceYear } from "@/lib/entries/year";
 import { formatDateTime } from "@/lib/format/date";
 import {
-  createTokenAction,
   resolveConflictAction,
-  revokeTokenAction,
   saveRaceSetupAction,
   saveSplitmakerStationsAction,
   saveStarterSettingsAction,
 } from "@/lib/live/admin-actions";
 import { listSplitmakers } from "@/lib/live/assignment";
 import { parseAssignment } from "@/lib/live/assignment-core";
-import { defaultTokenWindow, OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
+import { OUTCOME_LABELS_CS, toPragueLocalInput } from "@/lib/live/admin-core";
 import { raceDayOverview } from "@/lib/live/ingest";
 import { loadOnlineSnapshot } from "@/lib/live/online-results";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
@@ -46,8 +43,6 @@ import {
   TEST_ZERO_CHOICES,
 } from "@/lib/live/test-run";
 import { endTestRunAction, startTestRunAction } from "@/lib/live/test-run-actions";
-import { listDeviceTokens } from "@/lib/live/tokens";
-import { tokenState } from "@/lib/live/tokens-core";
 import { getSiteSettings } from "@/lib/settings/site";
 
 type PageProps = Readonly<{
@@ -108,9 +103,8 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   const ctx = await getRaceContext();
   // Nulový čas ročníku (st_nula_s) pro nápovědy a předvolbu testu.
   const zeroClock = formatStartClock((await currentRaceYear()).startModel.zeroSeconds);
-  const [stations, tokens, overview, site, splitmakers, starter] = await Promise.all([
+  const [stations, overview, site, splitmakers, starter] = await Promise.all([
     getStations(),
-    listDeviceTokens(ctx.year),
     raceDayOverview(ctx.year),
     getSiteSettings(),
     listSplitmakers(),
@@ -118,7 +112,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
   ]);
   const now = new Date();
   const testBlocked = testRunBlocked(now, testCutoff);
-  const window = defaultTokenWindow(ctx.zero);
   // Q116: web vede na vlastní /vysledky/online, ručně zadaná URL je nouzové přebití
   const onlineOverride = site.onlineResultsUrl;
   const fmt = (date: Date | null | undefined) => (date ? formatDateTime(date, locale) : "–");
@@ -192,7 +185,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               <p className="font-semibold" data-testid="test-run-active">
                 {tt("active", { zero: fmt(testRun.zero), expires: fmt(testRun.expiresAt) })}
               </p>
-              <p className="text-xs text-race-muted">{tt("tokenHint")}</p>
               <form action={endTestRunAction} className="flex flex-wrap items-center gap-3">
                 <Button type="submit" variant="destructive" className="h-10 font-semibold">
                   {tt("end")}
@@ -360,47 +352,6 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
               </>
             )}
           </p>
-        </fieldset>
-
-        <fieldset className={box}>
-          <legend className={legend}>{t("devicesTitle")}</legend>
-          <p className="text-sm text-race-muted">{t("devicesIntro", { year: ctx.year })}</p>
-          {tokens.length > 0 ? (
-            <ul className="grid gap-2 text-sm" data-testid="tokens">
-              {tokens.map((token) => {
-                const state = tokenState(token, now);
-                return (
-                  <li
-                    key={token.id}
-                    className="flex flex-wrap items-center justify-between gap-2 border border-race-line/50 p-2"
-                  >
-                    <span>
-                      <strong>{token.label}</strong>{" "}
-                      <code className="text-xs">{token.prefix}…</code> ·{" "}
-                      {t("tokenSplitsShort", { splits: token.splits })} · {fmt(token.validFrom)} –{" "}
-                      {fmt(token.validUntil)} · {t(`tokenState.${state}` as never)}
-                      {token.lastUsedAt
-                        ? ` · ${t("tokenLastUsed", { at: fmt(token.lastUsedAt) })}`
-                        : ""}
-                    </span>
-                    {state !== "revoked" ? (
-                      <form action={revokeTokenAction}>
-                        <input type="hidden" name="id" value={token.id} />
-                        <Button type="submit" variant="outline" className="h-8 px-3 text-xs">
-                          {t("tokenRevoke")}
-                        </Button>
-                      </form>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-          <McvvAdminTokenForm
-            action={createTokenAction}
-            defaultFrom={toPragueLocalInput(window.from)}
-            defaultUntil={toPragueLocalInput(window.until)}
-          />
         </fieldset>
 
         <fieldset className={box} data-testid="splitmakers">

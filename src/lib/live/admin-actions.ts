@@ -49,9 +49,7 @@ import {
   parseStations,
   withStart,
 } from "./stations";
-import { getActiveTestRun, registerTestToken } from "./test-run";
-import { createDeviceToken, revokeDeviceToken } from "./tokens";
-import { normalizeAuthor, normalizeTokenSplits } from "./tokens-core";
+import { getActiveTestRun } from "./test-run";
 
 const PAGE = "/admin/den-zavodu/zive" as const;
 const SPLITS_PAGE = "/admin/den-zavodu/zive/casy" as const;
@@ -107,48 +105,6 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
   await back({ saved: "setup" });
 }
 
-export type CreateTokenState = { token?: string; label?: string; error?: string; test?: boolean };
-
-export async function createTokenAction(
-  _previous: CreateTokenState,
-  formData: FormData,
-): Promise<CreateTokenState> {
-  const session = await requireAdmin();
-  const label = String(formData.get("label") ?? "")
-    .trim()
-    .slice(0, 64);
-  const splits = normalizeTokenSplits(String(formData.get("splits") ?? "9"));
-  const author = normalizeAuthor(String(formData.get("author") ?? "LuM"));
-  const validFrom = parsePragueLocal(String(formData.get("validFrom") ?? ""));
-  const validUntil = parsePragueLocal(String(formData.get("validUntil") ?? ""));
-  if (!label) return { error: "label" };
-  if (!splits) return { error: "splits" };
-  if (!author) return { error: "author" };
-  if (!validFrom || !validUntil || validUntil <= validFrom) return { error: "window" };
-  if (validUntil.getTime() - validFrom.getTime() > 3 * 86_400_000) return { error: "window" };
-  const ctx = await getRaceContext();
-  const created = await createDeviceToken({
-    label,
-    year: ctx.year,
-    splits,
-    author,
-    validFrom,
-    validUntil,
-    createdBy: session.id,
-  });
-  // Klíč vytvořený během testovacího běhu je testovací: při ukončení testu se zneplatní.
-  const test = await registerTestToken(created.id);
-  revalidatePath("/[locale]/admin/den-zavodu/zive", "page");
-  return { token: created.token, label, test };
-}
-
-export async function revokeTokenAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const id = Number(formData.get("id"));
-  if (Number.isInteger(id) && id > 0) await revokeDeviceToken(id);
-  await back({ saved: "token" });
-}
-
 export async function resolveConflictAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const id = Number(formData.get("id"));
@@ -189,7 +145,6 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     ctx.year,
     filter!,
     {
-      revokeTokens: formData.get("revokeTokens") === "on",
       clearZeroOverride: formData.get("clearZeroOverride") === "on",
     },
     session,
@@ -198,7 +153,6 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     {
       cleared: String(result.splitsTotal),
       entries: String(result.entries),
-      tokens: String(result.tokensRevoked),
     },
     SPLITS_PAGE,
   );

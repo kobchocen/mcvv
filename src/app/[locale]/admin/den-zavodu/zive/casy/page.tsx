@@ -27,7 +27,6 @@ import { formatRaceTime } from "@/lib/live/start-time";
 import { prisma } from "@/lib/db/client";
 import { getRaceContext, getStations } from "@/lib/live/race-context";
 import { FINISH_SPLIT } from "@/lib/live/stations";
-import { listDeviceTokens } from "@/lib/live/tokens";
 
 type SearchParams = {
   splits?: string | string[];
@@ -36,7 +35,6 @@ type SearchParams = {
   error?: string;
   cleared?: string;
   entries?: string;
-  tokens?: string;
   q?: string;
   all?: string;
   edit?: string;
@@ -74,9 +72,8 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
   const admin = await getTranslations({ locale, namespace: "Admin" });
   const ctx = await getRaceContext();
   const editBib = /^\d{1,3}$/.test(sp.edit ?? "") ? Number(sp.edit) : null;
-  const [stations, tokens, overview, table, history] = await Promise.all([
+  const [stations, overview, table, history] = await Promise.all([
     getStations(),
-    listDeviceTokens(ctx.year),
     raceDayOverview(ctx.year),
     loadSplitTable(ctx.year),
     editBib
@@ -132,10 +129,7 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
     if (value === "all") return t("sourceAll");
     if (value === "web") return t("sourceWeb");
     if (value === "obd") return t("sourceObd");
-    if (value === "admin") return t("sourceAdmin");
-    const id = Number(value.split(":")[1]);
-    const token = tokens.find((row) => row.id === id);
-    return t("sourceToken", { label: token ? `${token.label} (${token.prefix}…)` : `#${id}` });
+    return t("sourceAdmin");
   };
 
   return (
@@ -168,7 +162,6 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
               {t("clearDone", {
                 splits: Number(sp.cleared) || 0,
                 entries: Number(sp.entries) || 0,
-                tokens: Number(sp.tokens) || 0,
               })}
             </p>
           ) : null}
@@ -515,13 +508,7 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
                     defaultValue={sourceValue}
                     className={selectClass}
                   >
-                    {[
-                      "all",
-                      "web",
-                      "obd",
-                      "admin",
-                      ...tokens.map((token) => `token:${token.id}`),
-                    ].map((value) => (
+                    {["all", "web", "obd", "admin"].map((value) => (
                       <option key={value} value={value}>
                         {sourceLabel(value)}
                       </option>
@@ -563,10 +550,6 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
               ))}
               <input type="hidden" name="source" value={sourceValue} />
               <input type="hidden" name="year" value={ctx.year} />
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="revokeTokens" className="size-4" />
-                {t("optionRevokeTokens")}
-              </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"

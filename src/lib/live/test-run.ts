@@ -36,7 +36,6 @@ export type TestCleanup = {
   splitEntries: number;
   starts: number;
   startEntries: number;
-  tokensRevoked: number;
   zeroCleared: boolean;
 };
 
@@ -134,18 +133,9 @@ export async function startTestRun(
   return run;
 }
 
-/** Klíč zařízení vytvořený během testu je testovací – při úklidu se zneplatní. */
-export async function registerTestToken(tokenId: number): Promise<boolean> {
-  const run = await getActiveTestRun();
-  if (!run) return false;
-  const text = serializeTestRun({ ...run, tokenIds: [...run.tokenIds, tokenId] });
-  await prisma.setting.update({ where: { key: TEST_RUN_KEY }, data: { text } });
-  return true;
-}
-
 /**
- * Ukončí test a automaticky uklidí (Q71): testovací mezičasy a deník, evidenci startu,
- * zkušební nulu a testovací klíče zařízení. Maže jen záznamy vzniklé během testu (okno od
+ * Ukončí test a automaticky uklidí (Q71): testovací mezičasy a deník, evidenci startu
+ * a zkušební nulu. Maže jen záznamy vzniklé během testu (okno od
  * spuštění do konce, nikdy přes den závodu 00:00), takže ostrá data zůstanou. Audit se
  * snímkem smazaných řádků. Bez aktivního testu nic nedělá (vrací null).
  */
@@ -177,13 +167,6 @@ export async function endTestRun(
       const startEntries = await tx.startCheckEntry.deleteMany({
         where: { year, receivedAt: range },
       });
-      const tokens =
-        run.tokenIds.length > 0
-          ? await tx.ingestToken.updateMany({
-              where: { id: { in: run.tokenIds }, revokedAt: null },
-              data: { revokedAt: now },
-            })
-          : { count: 0 };
       // Zkušební nulu mažeme jen tehdy, když je to pořád nula tohoto testu.
       const zeroRow = await tx.setting.findUnique({
         where: { key: LIVE_ZERO_OVERRIDE_KEY },
@@ -200,7 +183,6 @@ export async function endTestRun(
         splitEntries: splitEntries.count,
         starts: starts.count,
         startEntries: startEntries.count,
-        tokensRevoked: tokens.count,
         zeroCleared,
       };
       await writeAudit(

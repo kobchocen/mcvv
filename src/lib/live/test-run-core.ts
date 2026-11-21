@@ -13,8 +13,9 @@ import { parsePragueLocal } from "./admin-core";
  * Testovací běh nad produkcí (#186) – čistá logika bez DB.
  *
  * Admin v `/admin/den-zavodu/zive` spustí test a zvolí nulu (za 5 minut, přesný čas, dnes
- * v nulový čas ročníku – st_nula_s, výchozí 10:15 – nebo večerní generálka 20:15). Po dobu testu je nula závodu přepsaná (zkušební nula), splitmakeři, Start,
- * obd-klient i OFeed (jen testovací profil) fungují jako v den závodu. Test se sám ukončí po
+ * v nulový čas ročníku – st_nula_s, výchozí 10:15 – nebo večerní generálka 20:15). Po dobu testu
+ * je nula závodu přepsaná (zkušební nula), splitmakeři, Start a ruční časy fungují jako v den
+ * závodu. Test se sám ukončí po
  * 3 h (`expiresAt`), nejpozději ale v den závodu 00:00 (Q70). Úklid je automatický (Q71).
  */
 
@@ -185,14 +186,6 @@ export function validateTestStart(input: {
 export function testDataWindow(run: TestRun, now: Date, cutoff: Date): { from: Date; until: Date } {
   const until = Math.max(Math.min(now.getTime(), cutoff.getTime()), run.startedAt.getTime());
   return { from: run.startedAt, until: new Date(until) };
-}
-
-/**
- * Identita datové sady pro obd-klient (Q72): změní se s novým testem i s novou nulou;
- * klient pak sám vynuluje state.json a pošle soubor znovu.
- */
-export function dataEpoch(run: TestRun | null, zero: Date): string {
-  return `${run ? `test-${run.id}` : "live"}@${zero.toISOString()}`;
 }
 
 /**

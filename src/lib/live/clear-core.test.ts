@@ -12,17 +12,18 @@ import {
   splitRowKey,
 } from "./clear-core";
 
-test("parseClearSource accepts all, web, obd and token ids only", () => {
+test("parseClearSource accepts all, web, obd and admin only", () => {
   assert.deepEqual(parseClearSource(undefined), { kind: "all" });
   assert.deepEqual(parseClearSource(""), { kind: "all" });
   assert.deepEqual(parseClearSource("web"), { kind: "source", source: "web" });
   assert.deepEqual(parseClearSource("obd"), { kind: "source", source: "obd" });
-  assert.deepEqual(parseClearSource("token:12"), { kind: "token", tokenId: 12 });
+  assert.equal(parseClearSource("token:12"), null);
   assert.equal(parseClearSource("token:0"), null);
   assert.equal(parseClearSource("token:abc"), null);
   assert.deepEqual(parseClearSource("admin"), { kind: "source", source: "admin" });
   assert.equal(parseClearSource("lum"), null);
-  assert.equal(formatClearSource({ kind: "token", tokenId: 3 }), "token:3");
+  assert.equal(formatClearSource({ kind: "all" }), "all");
+  assert.equal(formatClearSource({ kind: "source", source: "obd" }), "obd");
 });
 
 test("parseClearFilter: empty selection = all offered splits, unknown split rejected", () => {

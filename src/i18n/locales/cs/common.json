@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "Novinka {n}. ročníku",
+      "title": "Soutěž týmů",
+      "body": "Od letoška bodují vedle jednotlivců i týmy napříč kategoriemi. Rozhoduje výkon, ne počet lidí v klubu. Odměna pro vítězný tým.",
+      "linkLabel": "Pravidla soutěže týmů"
+    },
     "overview": {
       "eyebrow": "01 — O závodě",
       "title": "Není to jen běh. Je to výzva.",

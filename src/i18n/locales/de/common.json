@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "Neuheit der {n}. Ausgabe",
+      "title": "Teamwertung",
+      "body": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Eine Prämie für das Siegerteam.",
+      "linkLabel": "Regeln der Teamwertung"
+    },
     "overview": {
       "eyebrow": "01 — Über das Rennen",
       "title": "Das ist nicht nur ein Lauf. Das ist eine Herausforderung.",

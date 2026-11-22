@@ -1,0 +1,56 @@
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+
+import { McvvFinishClient } from "@/components/organisms/mcvv-finish-client";
+import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
+import { Link, redirect, type Locale } from "@/i18n/routing";
+import { can, getAccess } from "@/lib/admin/access";
+import { getSession } from "@/lib/auth/session";
+import { getRaceContext } from "@/lib/live/race-context";
+
+type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale: locale as Locale, namespace: "Finish" });
+  return { title: t("metaTitle"), robots: { index: false, follow: false } };
+}
+
+/** Stanice v cíli (#252): Stopky a Čísla. */
+export default async function FinishPage({ params }: PageProps) {
+  const { locale: requestedLocale } = await params;
+  const locale = requestedLocale as Locale;
+  setRequestLocale(locale);
+  const session = await getSession();
+  if (!session) {
+    redirect({ href: { pathname: "/prihlaseni", query: { next: "/cil" } }, locale });
+    return null;
+  }
+  const t = await getTranslations({ locale, namespace: "Finish" });
+  const access = await getAccess();
+  if (!can(access, "screens.finish", "read")) {
+    return (
+      <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
+        <div className="mx-auto max-w-md">
+          <h1 className="font-display text-2xl font-bold">{t("forbiddenTitle")}</h1>
+          <p className="mt-3 text-sm text-race-muted">{t("forbiddenText")}</p>
+          <Link
+            href="/"
+            className="mt-6 inline-block text-sm font-medium text-race-accent hover:underline"
+          >
+            {t("home")}
+          </Link>
+        </div>
+      </main>
+    );
+  }
+  const ctx = await getRaceContext();
+  return (
+    <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvTestRunBanner locale={locale} />
+      <McvvFinishClient year={ctx.year} userId={session.id} userName={session.name} />
+    </main>
+  );
+}
+
+export const dynamic = "force-dynamic";

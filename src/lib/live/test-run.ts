@@ -36,6 +36,9 @@ export type TestCleanup = {
   splitEntries: number;
   starts: number;
   startEntries: number;
+  /** Cíl (#252): kliky stopek a opsaná čísla z testu. */
+  finishPunches: number;
+  finishBibs: number;
   zeroCleared: boolean;
 };
 
@@ -166,6 +169,11 @@ export async function endTestRun(
       const startEntries = await tx.startCheckEntry.deleteMany({
         where: { year, receivedAt: range },
       });
+      // Cíl (#252): kliky a čísla z testu, jinak by v den závodu posunuly párování.
+      const finishPunches = await tx.finishPunch.deleteMany({
+        where: { year, createdAt: range },
+      });
+      const finishBibs = await tx.finishBib.deleteMany({ where: { year, createdAt: range } });
       // Zkušební nulu mažeme jen tehdy, když je to pořád nula tohoto testu.
       const zeroRow = await tx.setting.findUnique({
         where: { key: LIVE_ZERO_OVERRIDE_KEY },
@@ -182,6 +190,8 @@ export async function endTestRun(
         splitEntries: splitEntries.count,
         starts: starts.count,
         startEntries: startEntries.count,
+        finishPunches: finishPunches.count,
+        finishBibs: finishBibs.count,
         zeroCleared,
       };
       await writeAudit(

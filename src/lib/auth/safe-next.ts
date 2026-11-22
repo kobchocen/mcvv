@@ -29,6 +29,7 @@ export const USER_NEXT_PATHS = [
   "/zpravy",
   "/mezicasy",
   "/mezicasy/speaker",
+  "/cil",
   "/start",
   "/kancelar",
   "/kancelar/prodejky",

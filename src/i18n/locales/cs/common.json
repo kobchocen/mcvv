@@ -2483,7 +2483,15 @@
     "resultboardTitle": "Resultboard – obrazovky v cíli",
     "resultboardIntro": "Průběžné výsledky na televizích v cíli (náhrada tabule OFB). Veřejné adresy bez přihlášení; rozdělení kategorií a další nastavení v Živých výsledcích.",
     "resultboardOpen": "Otevřít resultboard",
-    "resultboardSettings": "Nastavení resultboardu"
+    "resultboardSettings": "Nastavení resultboardu",
+    "action_finish_sync": "zápis cílových časů z párování",
+    "action_finish_correction": "oprava párování cíle",
+    "action_live_window": "změna okna živých výsledků",
+    "finishTitle": "Cíl a oficiální výsledky",
+    "finishIntro": "Stanice Stopky a Čísla v cíli, párování časů s čísly a jeho opravy. Po kontrole hlavním rozhodčím zveřejnění oficiálních výsledků.",
+    "finishStations": "Stanice v cíli",
+    "finishPairing": "Párování cíle",
+    "officialOpen": "Oficiální výsledky"
   },
   "AfterRace": {
     "title": "Po závodě – tombola",
@@ -2992,7 +3000,13 @@
     "unknownRunner": "Neznámý běžec (č. {bib})",
     "unknownSub": "není v letošních datech",
     "unknownGroup": "Mimo letošní data",
-    "unknownRemove": "Odebrat"
+    "unknownRemove": "Odebrat",
+    "closedEyebrow": "Online výsledky",
+    "beforeTitle": "Závod ještě nezačal",
+    "beforeText": "Průběžné výsledky se tady objeví se startem závodu.",
+    "closedTitle": "Online výsledky jsou teď nedostupné",
+    "closedText": "Průběžné výsledky jsou dočasně vypnuté. Oficiální výsledky zveřejníme po kontrole rozhodčím.",
+    "closedLink": "Startovní listina"
   },
   "Leader": {
     "m1": "M1",
@@ -3370,7 +3384,8 @@
     "pinDone": "Hotovo",
     "pin": "Připnout",
     "unpin": "Odepnout",
-    "permissions": "Oprávnění rolí"
+    "permissions": "Oprávnění rolí",
+    "official": "Oficiální výsledky"
   },
   "AdminPermissions": {
     "title": "Oprávnění rolí",
@@ -3539,5 +3554,77 @@
     "deletedPunch": "Klik {time}",
     "deletedBib": "Číslo {bib} ({time})",
     "restore": "Obnovit"
+  },
+  "OfficialAdmin": {
+    "title": "Oficiální výsledky",
+    "heading": "Oficiální výsledky {year}",
+    "intro": "Výsledky se berou z cílových časů (čistý čas od startu podle startovky, pozdní start se neopravuje). Hlavní rozhodčí zkontroluje náhled a potvrdí ho; zveřejnění zapíše výsledky ročníku, přepočítá rekordy a zavře veřejné živé výsledky.",
+    "back": "Den závodu",
+    "windowTitle": "Veřejné živé výsledky",
+    "windowIntro": "Automaticky se otevřou v nule závodu a zavřou zveřejněním oficiálních výsledků. Ruční otevření a nouzové zavření se zapisují do auditu.",
+    "windowState": {
+      "before": "Zatím zavřeno (před startem)",
+      "open": "Otevřeno",
+      "closed": "Zavřeno ručně",
+      "published": "Ukončeno – oficiální výsledky zveřejněny"
+    },
+    "windowMode": {
+      "auto": "automaticky",
+      "open": "ručně otevřeno",
+      "closed": "ručně zavřeno"
+    },
+    "windowSet": {
+      "auto": "Automaticky",
+      "open": "Otevřít teď",
+      "closed": "Zavřít teď"
+    },
+    "previewTitle": "Náhled",
+    "roster": "Ve startovce",
+    "finishers": "S cílovým časem",
+    "noFinish": "Bez cílového času",
+    "issues": "Upozornění",
+    "issue": {
+      "too-fast": "Číslo {bib} ({name}): podezřele rychlý čas {time}",
+      "too-long": "Číslo {bib} ({name}): podezřele dlouhý čas {time}",
+      "not-on-roster": "Číslo {bib}: cílový čas {time}, ale není ve startovce – do výsledků nepůjde",
+      "started-no-finish": "Číslo {bib}: odstartoval, ale nemá cílový čas"
+    },
+    "toFinish": "Opravit v párování cíle →",
+    "rowsToggle": "Zobrazit všech {count} výsledků",
+    "colBib": "Číslo",
+    "colName": "Jméno",
+    "colCategory": "Kat.",
+    "colClub": "Klub",
+    "colTime": "Čas",
+    "checkTitle": "Kontrola hlavním rozhodčím",
+    "checkNone": "Zatím nezkontrolováno.",
+    "checkDone": "Zkontroloval(a) {by}, {at}.",
+    "checkStale": "Kontrola od {by} ({at}) propadla – časy se od té doby změnily. Je potřeba zkontrolovat znovu.",
+    "checkSubmit": "Potvrdit kontrolu ({count} výsledků)",
+    "publishTitle": "Zveřejnění",
+    "publishIntro": "Zveřejnění je jednorázové: zapíše výsledky ročníku, přepočítá rekordy kategorií, z úvodní stránky zmizí odkaz na živé výsledky a /vysledky/online začne přesměrovávat na oficiální výsledky.",
+    "publishConfirm": "Potvrzuji zveřejnění {count} oficiálních výsledků",
+    "publishSubmit": "Zveřejnit oficiální výsledky",
+    "publishNoRight": "Zveřejnit může Měření nebo hlavní rozhodčí (dnes administrátor).",
+    "publishedInfo": "Zveřejnil(a) {by}, {at} ({count} výsledků).",
+    "toResults": "Oficiální výsledky →",
+    "error": {
+      "confirm": "Zveřejnění je potřeba potvrdit zaškrtnutím.",
+      "changed": "Časy se mezitím změnily – zkontrolujte náhled znovu.",
+      "published": "Oficiální výsledky už jsou zveřejněné.",
+      "has_results": "Ročník už má výsledky v databázi – zveřejnit znovu nejde.",
+      "empty": "Zatím žádný cílový čas.",
+      "no_check": "Před zveřejněním je potřeba kontrola hlavním rozhodčím.",
+      "stale_check": "Kontrola hlavním rozhodčím propadla (časy se změnily).",
+      "test_running": "Běží testovací běh – nejdřív ho ukončete.",
+      "invalid": "Neplatný požadavek."
+    },
+    "saved": {
+      "checked": "Kontrola potvrzena.",
+      "published": "Oficiální výsledky zveřejněny.",
+      "window-auto": "Okno živých výsledků: automaticky.",
+      "window-open": "Živé výsledky ručně otevřeny.",
+      "window-closed": "Živé výsledky ručně zavřeny."
+    }
   }
 }

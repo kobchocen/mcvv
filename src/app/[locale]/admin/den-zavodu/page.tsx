@@ -31,6 +31,9 @@ const ACTION_KEYS: Record<
   | "action_start_set"
   | "action_start_deleted"
   | "action_starts_cleared"
+  | "action_finish_sync"
+  | "action_finish_correction"
+  | "action_live_window"
 > = {
   "raceday.obd_export": "action_obd_export",
   "raceday.import_presentation": "action_import_presentation",
@@ -44,6 +47,9 @@ const ACTION_KEYS: Record<
   "raceday.start_set": "action_start_set",
   "raceday.start_deleted": "action_start_deleted",
   "raceday.starts_cleared": "action_starts_cleared",
+  "raceday.finish_sync": "action_finish_sync",
+  "raceday.finish_correction": "action_finish_correction",
+  "raceday.live_window": "action_live_window",
 };
 
 const buttonClass =
@@ -54,12 +60,15 @@ export default async function RaceDayPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireSection("raceControl.overview", "read");
-  const [showStart, showLive, showSpeaker, showResultboard] = await Promise.all([
-    canAccess("raceControl.start", "read"),
-    canAccess("raceControl.live", "write"),
-    canAccess("screens.speaker", "read"),
-    canAccess("screens.resultboard", "read"),
-  ]);
+  const [showStart, showLive, showSpeaker, showResultboard, showFinish, showOfficial] =
+    await Promise.all([
+      canAccess("raceControl.start", "read"),
+      canAccess("raceControl.live", "write"),
+      canAccess("screens.speaker", "read"),
+      canAccess("screens.resultboard", "read"),
+      canAccess("raceControl.finish", "read"),
+      canAccess("raceControl.official", "read"),
+    ]);
   const copy = await getTranslations({ locale, namespace: "RaceDay" });
 
   const [{ year }, history] = await Promise.all([
@@ -111,6 +120,33 @@ export default async function RaceDayPage({ params }: PageProps) {
               <Link className={buttonClass} href="/admin/den-zavodu/zive">
                 {copy("liveOpen")}
               </Link>
+            </div>
+          </section>
+        ) : null}
+
+        {showFinish || showOfficial ? (
+          <section
+            className="mt-8 grid gap-4 border border-race-line/60 bg-race-surface/40 p-5"
+            data-testid="finish-official-link"
+          >
+            <h2 className="font-display text-xl font-semibold">{copy("finishTitle")}</h2>
+            <p className="text-sm leading-6 text-race-muted">{copy("finishIntro")}</p>
+            <div className="flex flex-wrap gap-3">
+              {showFinish ? (
+                <>
+                  <Link className={buttonClass} href="/cil">
+                    {copy("finishStations")}
+                  </Link>
+                  <Link className={buttonClass} href="/admin/den-zavodu/zive/cil">
+                    {copy("finishPairing")}
+                  </Link>
+                </>
+              ) : null}
+              {showOfficial ? (
+                <Link className={buttonClass} href="/admin/den-zavodu/vysledky">
+                  {copy("officialOpen")}
+                </Link>
+              ) : null}
             </div>
           </section>
         ) : null}

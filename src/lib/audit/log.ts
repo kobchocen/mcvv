@@ -25,6 +25,11 @@ export type AuditAction =
   // Cíl (#252): zápis cílových časů z párování stopek a čísel a ruční opravy párování.
   | "raceday.finish_sync"
   | "raceday.finish_correction"
+  // Okno veřejných živých výsledků (#337): ruční otevření / nouzové zavření.
+  | "raceday.live_window"
+  // Oficiální výsledky (#337): kontrola hlavním rozhodčím a zveřejnění.
+  | "results.official_checked"
+  | "results.official_published"
   // Evidence startu (#203): ruční zápis / smazání adminem a hromadné vyčištění ročníku.
   | "raceday.start_set"
   | "raceday.start_deleted"

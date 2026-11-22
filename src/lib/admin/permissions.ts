@@ -73,6 +73,10 @@ export const SECTION_RULES = {
   "raceControl.manual": { read: "admin", write: "admin" },
   /** Cíl (#252): párování stopek a čísel a jeho opravy (Měření, řízení závodu). */
   "raceControl.finish": { read: "raceday", write: "raceday" },
+  /** Oficiální výsledky (#337): náhled a zveřejnění (Měření / hlavní rozhodčí, dnes admin). */
+  "raceControl.official": { read: "raceday", write: "admin" },
+  /** Kontrola výsledků hlavním rozhodčím před zveřejněním (dnes admin). */
+  "raceControl.officialCheck": { read: "raceday", write: "admin" },
   "screens.starter": { read: "starter", write: "starter" },
   "screens.splits": { read: "splits", write: "splits" },
   /** Cíl (#252): stanice Stopky a Čísla. */
@@ -184,6 +188,8 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.testRun": "write",
     "raceControl.manual": "write",
     "raceControl.finish": "write",
+    "raceControl.official": "write",
+    "raceControl.officialCheck": "read",
     "screens.starter": "write",
     "screens.finish": "write",
     "screens.splits": "write",
@@ -198,6 +204,8 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.live": "read",
     "raceControl.manual": "read",
     "raceControl.finish": "read",
+    "raceControl.official": "write",
+    "raceControl.officialCheck": "write",
     "screens.speaker": "read",
     "screens.resultboard": "read",
     "startlist.list": "read",

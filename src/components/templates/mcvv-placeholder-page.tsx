@@ -9,7 +9,7 @@ export type McvvPlaceholderPageProps = {
   title: string;
   status: string;
   /** Optional link under the status (e.g. results archive); none by default. */
-  link?: { label: string; href: "/results" | "/program" } | null;
+  link?: { label: string; href: "/results" | "/program" | "/startovka" } | null;
   /** Banner above the title (race day: link to the online results, Q116). */
   banner?: {
     title: string;

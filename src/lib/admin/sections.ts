@@ -41,6 +41,7 @@ export type AdminNavLabel =
   | "manualTimes"
   | "finish"
   | "finishStations"
+  | "official"
   | "screens"
   | "starter"
   | "splits"
@@ -99,6 +100,7 @@ export type AdminNavHref =
   | "/admin/den-zavodu/zive"
   | "/admin/den-zavodu/zive/casy"
   | "/admin/den-zavodu/zive/cil"
+  | "/admin/den-zavodu/vysledky"
   | "/cil"
   | "/start"
   | "/mezicasy"
@@ -233,6 +235,12 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
             id: "raceControl.finish",
             label: "finish",
             href: "/admin/den-zavodu/zive/cil",
+            allowed: canAccessRaceDay,
+          },
+          {
+            id: "raceControl.official",
+            label: "official",
+            href: "/admin/den-zavodu/vysledky",
             allowed: canAccessRaceDay,
           },
         ],

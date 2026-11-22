@@ -159,6 +159,20 @@ export function McvvOnlineResults({
     stale,
   } = useLiveSnapshot<OnlineWire>("/api/live/results", initial, initialEtag, serverNowMs);
   const snapshot = useMemo(() => decodeOnline(wire), [wire]);
+  // Okno živých výsledků (#337): po zveřejnění oficiálních výsledků otevřená záložka přejde
+  // sama na oficiální výsledky, po nouzovém zavření se znovu načte (hláška ze serveru).
+  useEffect(() => {
+    if (snapshot.window === "published" && snapshot.officialUrl) {
+      window.location.replace(`/${locale}${snapshot.officialUrl}`);
+    } else if (snapshot.window === "closed" || snapshot.window === "before") {
+      // pojistka proti smyčce (repliky s rozdílným snímkem): nejvýš jednou za minutu
+      const last = Number(window.sessionStorage.getItem("mcvv-online-reload") ?? 0);
+      if (Date.now() - last > 60_000) {
+        window.sessionStorage.setItem("mcvv-online-reload", String(Date.now()));
+        window.location.reload();
+      }
+    }
+  }, [snapshot.window, snapshot.officialUrl, locale]);
   const records = useRecordAlerts({
     marks: snapshot.tr,
     updatedMs,

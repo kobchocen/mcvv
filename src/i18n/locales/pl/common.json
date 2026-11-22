@@ -1389,7 +1389,13 @@
     "unknownRunner": "Nieznany zawodnik (nr {bib})",
     "unknownSub": "brak w tegorocznych danych",
     "unknownGroup": "Brak w tegorocznych danych",
-    "unknownRemove": "Usuń"
+    "unknownRemove": "Usuń",
+    "closedEyebrow": "Wyniki online",
+    "beforeTitle": "Bieg jeszcze się nie rozpoczął",
+    "beforeText": "Wyniki na żywo pojawią się tutaj wraz ze startem biegu.",
+    "closedTitle": "Wyniki online są teraz niedostępne",
+    "closedText": "Wyniki na żywo są tymczasowo wyłączone. Oficjalne wyniki opublikujemy po weryfikacji przez sędziego.",
+    "closedLink": "Lista startowa"
   },
   "Leader": {
     "m1": "M1",

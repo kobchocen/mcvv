@@ -83,6 +83,8 @@ export default defineRouting({
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
     // cíl: párování stopek a čísel (#252)
     "/admin/den-zavodu/zive/cil": "/admin/den-zavodu/zive/cil",
+    // oficiální výsledky: kontrola rozhodčím a zveřejnění (#337)
+    "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",
     // evidence startu (#203)
     "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",

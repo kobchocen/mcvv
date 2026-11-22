@@ -2483,7 +2483,15 @@
     "resultboardTitle": "Resultboard – finish area screens",
     "resultboardIntro": "Live results on the TVs at the finish (replaces the OFB board). Public addresses without login; category split and other settings in Live results.",
     "resultboardOpen": "Open resultboard",
-    "resultboardSettings": "Resultboard settings"
+    "resultboardSettings": "Resultboard settings",
+    "action_finish_sync": "finish times written from pairing",
+    "action_finish_correction": "finish pairing corrected",
+    "action_live_window": "live results window changed",
+    "finishTitle": "Finish and official results",
+    "finishIntro": "Stopwatch and bib stations at the finish, pairing times with bibs and corrections. After the chief referee's check, publishing the official results.",
+    "finishStations": "Finish stations",
+    "finishPairing": "Finish pairing",
+    "officialOpen": "Official results"
   },
   "AfterRace": {
     "title": "After the race – raffle",
@@ -2992,7 +3000,13 @@
     "unknownRunner": "Unknown runner (no. {bib})",
     "unknownSub": "not in this year's data",
     "unknownGroup": "Not in this year's data",
-    "unknownRemove": "Remove"
+    "unknownRemove": "Remove",
+    "closedEyebrow": "Online results",
+    "beforeTitle": "The race has not started yet",
+    "beforeText": "Live results will appear here when the race starts.",
+    "closedTitle": "Online results are unavailable right now",
+    "closedText": "Live results are temporarily switched off. Official results will be published after the referee's check.",
+    "closedLink": "Start list"
   },
   "Leader": {
     "m1": "S1",
@@ -3370,7 +3384,8 @@
     "pinDone": "Done",
     "pin": "Pin",
     "unpin": "Unpin",
-    "permissions": "Role permissions"
+    "permissions": "Role permissions",
+    "official": "Official results"
   },
   "AdminPermissions": {
     "title": "Role permissions",
@@ -3539,5 +3554,77 @@
     "deletedPunch": "Tap {time}",
     "deletedBib": "Bib {bib} ({time})",
     "restore": "Restore"
+  },
+  "OfficialAdmin": {
+    "title": "Official results",
+    "heading": "Official results {year}",
+    "intro": "Results come from the finish times (net time from the start-list slot, late starts are not corrected). The chief referee checks and confirms the preview; publishing writes the year's results, recalculates records and closes the public live results.",
+    "back": "Race day",
+    "windowTitle": "Public live results",
+    "windowIntro": "They open automatically at race zero and close when official results are published. Manual opening and emergency closing are audited.",
+    "windowState": {
+      "before": "Closed for now (before the start)",
+      "open": "Open",
+      "closed": "Closed manually",
+      "published": "Finished – official results published"
+    },
+    "windowMode": {
+      "auto": "automatic",
+      "open": "opened manually",
+      "closed": "closed manually"
+    },
+    "windowSet": {
+      "auto": "Automatic",
+      "open": "Open now",
+      "closed": "Close now"
+    },
+    "previewTitle": "Preview",
+    "roster": "On the start list",
+    "finishers": "With finish time",
+    "noFinish": "Without finish time",
+    "issues": "Warnings",
+    "issue": {
+      "too-fast": "Bib {bib} ({name}): suspiciously fast time {time}",
+      "too-long": "Bib {bib} ({name}): suspiciously long time {time}",
+      "not-on-roster": "Bib {bib}: finish time {time} but not on the start list – not included",
+      "started-no-finish": "Bib {bib}: started but has no finish time"
+    },
+    "toFinish": "Fix in finish pairing →",
+    "rowsToggle": "Show all {count} results",
+    "colBib": "Bib",
+    "colName": "Name",
+    "colCategory": "Cat.",
+    "colClub": "Club",
+    "colTime": "Time",
+    "checkTitle": "Chief referee check",
+    "checkNone": "Not checked yet.",
+    "checkDone": "Checked by {by}, {at}.",
+    "checkStale": "The check by {by} ({at}) expired – times have changed since. Please check again.",
+    "checkSubmit": "Confirm check ({count} results)",
+    "publishTitle": "Publishing",
+    "publishIntro": "Publishing is one-off: it writes the year's results, recalculates category records, removes the live results link from the homepage and /vysledky/online starts redirecting to the official results.",
+    "publishConfirm": "I confirm publishing {count} official results",
+    "publishSubmit": "Publish official results",
+    "publishNoRight": "Timing or the chief referee can publish (today the administrator).",
+    "publishedInfo": "Published by {by}, {at} ({count} results).",
+    "toResults": "Official results →",
+    "error": {
+      "confirm": "Please confirm publishing with the checkbox.",
+      "changed": "Times have changed meanwhile – please check the preview again.",
+      "published": "Official results are already published.",
+      "has_results": "The year already has results in the database – cannot publish again.",
+      "empty": "No finish time yet.",
+      "no_check": "The chief referee must check before publishing.",
+      "stale_check": "The chief referee check expired (times changed).",
+      "test_running": "A test run is active – end it first.",
+      "invalid": "Invalid request."
+    },
+    "saved": {
+      "checked": "Check confirmed.",
+      "published": "Official results published.",
+      "window-auto": "Live results window: automatic.",
+      "window-open": "Live results opened manually.",
+      "window-closed": "Live results closed manually."
+    }
   }
 }

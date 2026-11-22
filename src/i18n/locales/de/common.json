@@ -1389,7 +1389,13 @@
     "unknownRunner": "Unbekannter Läufer (Nr. {bib})",
     "unknownSub": "nicht in den Daten dieses Jahres",
     "unknownGroup": "Nicht in den Daten dieses Jahres",
-    "unknownRemove": "Entfernen"
+    "unknownRemove": "Entfernen",
+    "closedEyebrow": "Online-Ergebnisse",
+    "beforeTitle": "Das Rennen hat noch nicht begonnen",
+    "beforeText": "Die Live-Ergebnisse erscheinen hier mit dem Start des Rennens.",
+    "closedTitle": "Online-Ergebnisse sind gerade nicht verfügbar",
+    "closedText": "Die Live-Ergebnisse sind vorübergehend abgeschaltet. Die offiziellen Ergebnisse veröffentlichen wir nach der Prüfung durch das Schiedsgericht.",
+    "closedLink": "Startliste"
   },
   "Leader": {
     "m1": "Z1",

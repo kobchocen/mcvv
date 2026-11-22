@@ -584,7 +584,12 @@
     "colBirth": "Year",
     "colClub": "Club",
     "colStarts": "Starts",
-    "colRecord": "PB"
+    "colRecord": "PB",
+    "clubMetaTitle": "{club} · entered runners",
+    "clubMetaDescription": "Entered runners of {club} in the {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition of Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# entered runner} other {# entered runners}}",
+    "clubProfile": "Club profile",
+    "backToList": "Entered runners"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# message} other {# messages}}",

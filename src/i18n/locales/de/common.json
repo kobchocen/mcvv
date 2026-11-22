@@ -584,7 +584,12 @@
     "colBirth": "Jahrgang",
     "colClub": "Verein",
     "colStarts": "Starts",
-    "colRecord": "PB"
+    "colRecord": "PB",
+    "clubMetaTitle": "{club} · angemeldete Läufer",
+    "clubMetaDescription": "Angemeldete Läufer des Vereins {club} in der {n}. Ausgabe von Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# angemeldeter Läufer} other {# angemeldete Läufer}}",
+    "clubProfile": "Vereinsprofil",
+    "backToList": "Angemeldete Läufer"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# Nachricht} other {# Nachrichten}}",

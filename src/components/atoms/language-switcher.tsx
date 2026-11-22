@@ -53,6 +53,16 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
       );
       return;
     }
+    if (pathname === "/prihlaseni-zavodnici/klub/[slug]") {
+      router.replace(
+        {
+          pathname: "/prihlaseni-zavodnici/klub/[slug]",
+          params: { slug: String(params.slug ?? "") },
+        },
+        { locale: nextLocale },
+      );
+      return;
+    }
     if (pathname === "/statistiky/[slug]") {
       router.replace(
         { pathname: "/statistiky/[slug]", params: { slug: String(params.slug ?? "") } },

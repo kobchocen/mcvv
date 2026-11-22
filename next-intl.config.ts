@@ -12,6 +12,7 @@ export default defineRouting({
     "/pokyny": "/pokyny",
     "/startovka": "/startovka",
     "/prihlaseni-zavodnici": "/prihlaseni-zavodnici",
+    "/prihlaseni-zavodnici/klub/[slug]": "/prihlaseni-zavodnici/klub/[slug]",
     "/kontakt": "/kontakt",
     "/zpravy": "/zpravy",
     "/zpravy/[id]": "/zpravy/[id]",

@@ -584,7 +584,12 @@
     "colBirth": "Rocznik",
     "colClub": "Klub",
     "colStarts": "Starty",
-    "colRecord": "PB"
+    "colRecord": "PB",
+    "clubMetaTitle": "{club} · zapisani zawodnicy",
+    "clubMetaDescription": "Zapisani zawodnicy klubu {club} na {n}. edycję Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# zapisany zawodnik} few {# zapisanych zawodników} many {# zapisanych zawodników} other {# zapisanego zawodnika}}",
+    "clubProfile": "Profil klubu",
+    "backToList": "Zapisani zawodnicy"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# wiadomość} few {# wiadomości} many {# wiadomości} other {# wiadomości}}",

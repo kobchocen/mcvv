@@ -584,7 +584,12 @@
     "colBirth": "Ročník",
     "colClub": "Klub",
     "colStarts": "Starty",
-    "colRecord": "OR"
+    "colRecord": "OR",
+    "clubMetaTitle": "{club} · přihlášení závodníci",
+    "clubMetaDescription": "Přihlášení závodníci klubu {club} na {n}. ročník Malé ceny Velké Verandy.",
+    "clubTotal": "{count, plural, one {# přihlášený} few {# přihlášení} other {# přihlášených}}",
+    "clubProfile": "Profil klubu",
+    "backToList": "Přihlášení závodníci"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# zpráva} few {# zprávy} other {# zpráv}}",

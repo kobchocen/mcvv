@@ -5,7 +5,9 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { loadRoster, rosterHasBib } from "@/lib/race/roster";
 
-import { getRaceContext, type RaceContext } from "./race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
+
+import type { RaceContext } from "./race-context";
 import { checkStartPunch, START_OWNING } from "./start-check-core";
 import {
   corridorOf,
@@ -264,7 +266,7 @@ export async function autoMarkStart(
   const existing = await tx.startCheck.findUnique({ where: key, select: { source: true } });
   if (decideAutoMark(existing) === "skip") return false;
   if (!(await rosterHasBib(tx, input.year, input.bib))) return false;
-  const ctx = plan ?? (await getRaceContext());
+  const ctx = plan ?? (await getLiveRaceContext());
   if (ctx.year !== input.year) return false;
   const planned = new Date(
     plannedStartMs(ctx.zero.getTime(), input.bib, ctx.intervalS, ctx.secondStartFrom),

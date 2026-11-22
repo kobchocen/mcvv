@@ -6,7 +6,8 @@ import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { can, getAccess } from "@/lib/admin/access";
 import { getSession } from "@/lib/auth/session";
-import { getRaceContext } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -44,9 +45,10 @@ export default async function FinishPage({ params }: PageProps) {
       </main>
     );
   }
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <McvvTestRunBanner locale={locale} />
       <McvvFinishClient year={ctx.year} userId={session.id} userName={session.name} />
     </main>

@@ -19,6 +19,8 @@ export function isShadowYear(year: number): boolean {
 export const TEST_MODE_CONFIG_KEY = "testmode_config";
 
 export type TestModeConfig = {
+  /** Automatické spouštění podle `times`. Výchozí vypnuto – zapíná se v administraci. */
+  enabled: boolean;
   /** Q2: kolik fiktivních běžců přidat k zaplaceným přihláškám (0 = jen ostré přihlášky). */
   fictionalRunners: number;
   /** Q3: od kterého dne (MM-DD, ročník závodu) test kopíruje ostrou startovku místo losování. */
@@ -47,6 +49,7 @@ export const TEST_MODE_FIXED = {
 } as const;
 
 export const DEFAULT_TEST_MODE_CONFIG: TestModeConfig = {
+  enabled: false,
   fictionalRunners: 30,
   copyLiveFrom: "12-03",
   times: ["10:15", "20:15"],
@@ -92,6 +95,7 @@ export function parseTestModeConfig(raw: unknown): TestModeConfig {
   const durationH = int(v.durationH, 1, 6, d.durationH);
   const cleanupAfterH = int(v.cleanupAfterH, durationH, 24, Math.max(d.cleanupAfterH, durationH));
   return {
+    enabled: typeof v.enabled === "boolean" ? v.enabled : d.enabled,
     fictionalRunners: int(v.fictionalRunners, 0, FICTIONAL_MAX, d.fictionalRunners),
     copyLiveFrom:
       typeof v.copyLiveFrom === "string" && MMDD.test(v.copyLiveFrom.trim())
@@ -110,7 +114,12 @@ export function serializeTestModeConfig(config: TestModeConfig): string {
 
 /* ---------- plán jednoho testu ---------- */
 
+/** Nula testu (start) = T + 60 min; mezi T a nulou je „kancelář“ (dohlášky). */
+export const TEST_START_OFFSET_MIN = 60;
+
 export type TestPlan = {
+  /** T – losování / kopie startovky, začátek kanceláře. */
+  at: Date;
   zero: Date;
   endAt: Date;
   cleanupAt: Date;
@@ -147,21 +156,81 @@ export function testDayBlocked(at: Date, raceDate: Date, config: TestModeConfig)
   return config.blockBeforeRace && day >= race - 2 * DAY;
 }
 
+/** Plán testu od T: nula T+1h, konec T+`durationH`, likvidace T+`cleanupAfterH`. */
 export function planTestRun(input: {
-  zero: Date;
+  at: Date;
   raceDate: Date;
   config: TestModeConfig;
   liveStartListDrawn: boolean;
 }): TestPlan {
-  const { zero, raceDate, config } = input;
+  const { at, raceDate, config } = input;
   const copyFrom = dayOf(raceDate.getUTCFullYear(), config.copyLiveFrom);
+  const t = at.getTime();
   return {
-    zero,
-    endAt: new Date(zero.getTime() + config.durationH * 3_600_000),
-    cleanupAt: new Date(zero.getTime() + config.cleanupAfterH * 3_600_000),
-    roster: input.liveStartListDrawn && pragueDay(zero) >= copyFrom ? "copy" : "draw",
-    blocked: testDayBlocked(zero, raceDate, config),
+    at,
+    zero: new Date(t + TEST_START_OFFSET_MIN * 60_000),
+    endAt: new Date(t + config.durationH * 3_600_000),
+    cleanupAt: new Date(t + config.cleanupAfterH * 3_600_000),
+    roster: input.liveStartListDrawn && pragueDay(at) >= copyFrom ? "copy" : "draw",
+    blocked: testDayBlocked(at, raceDate, config),
   };
+}
+
+/* ---------- fáze a plánovač ---------- */
+
+export type TestPhase = "office" | "race" | "ended" | "cleanup";
+
+/** Fáze běžícího testu: kancelář (T…nula), závod (nula…konec), konec (zápisy zamčené), likvidace. */
+export function testPhase(
+  run: { zeroAt: Date; endAt: Date; cleanupAt: Date },
+  now: Date,
+): TestPhase {
+  const n = now.getTime();
+  if (n >= run.cleanupAt.getTime()) return "cleanup";
+  if (n >= run.endAt.getTime()) return "ended";
+  if (n >= run.zeroAt.getTime()) return "race";
+  return "office";
+}
+
+/** Pražský čas „HH:MM“ okamžiku. */
+export function pragueClock(at: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Prague",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(at);
+}
+
+/** Okno, ve kterém plánovač test ještě spustí (dohnání po výpadku ticku). */
+export const AUTO_START_WINDOW_MIN = 5;
+
+/**
+ * Má plánovač teď spustit test? Zapnuté automatické spouštění, čas z `times` před nejvýš
+ * `AUTO_START_WINDOW_MIN` minutami, den není blokovaný, žádný test není aktivní (nezlikvidovaný)
+ * a v tomto okně ještě žádný nezačal. Vrací plánovaný okamžik T, nebo null.
+ */
+export function dueAutoStart(input: {
+  now: Date;
+  config: TestModeConfig;
+  raceDate: Date;
+  activeRun: boolean;
+  lastStartedAt: Date | null;
+}): Date | null {
+  const { now, config } = input;
+  if (!config.enabled || input.activeRun) return null;
+  if (testDayBlocked(now, input.raceDate, config)) return null;
+  const [h, m] = pragueClock(now).split(":").map(Number);
+  const minutes = h * 60 + m;
+  for (const time of config.times) {
+    const [th, tm] = time.split(":").map(Number);
+    const diff = minutes - (th * 60 + tm);
+    if (diff < 0 || diff >= AUTO_START_WINDOW_MIN) continue;
+    const slot = new Date(Math.floor(now.getTime() / 60_000) * 60_000 - diff * 60_000);
+    if (input.lastStartedAt && input.lastStartedAt.getTime() >= slot.getTime()) return null;
+    return slot;
+  }
+  return null;
 }
 
 /* ---------- formulář administrace ---------- */
@@ -200,6 +269,7 @@ export function configFromForm(
   return {
     ok: true,
     config: {
+      enabled: get("enabled") === "on",
       fictionalRunners,
       copyLiveFrom,
       times,

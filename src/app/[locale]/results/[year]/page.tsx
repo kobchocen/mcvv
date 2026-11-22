@@ -19,6 +19,7 @@ import { DownloadResultsButton } from "@/components/results/DownloadResultsButto
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
+import { isPublicYear } from "@/lib/testmode/public-year";
 
 type PageProps = {
   params: Promise<{ locale: string; year: string }>;
@@ -44,7 +45,8 @@ export default async function ResultsYearPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const year = parseInt(yearParam, 10);
-  if (isNaN(year)) notFound();
+  // Stínový ročník testovacího režimu (≥ 9000) nikdy veřejně.
+  if (!isPublicYear(year)) notFound();
 
   // Check year exists
   const hasData = await prisma.result.count({ where: { year } });

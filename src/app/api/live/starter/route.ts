@@ -6,7 +6,7 @@ import { allowsFor, getAccess } from "@/lib/admin/access";
 import { starterScope } from "@/lib/admin/permissions";
 import { getSession } from "@/lib/auth/session";
 import { sameOrigin } from "@/lib/live/ingest-core";
-import { getRaceContext } from "@/lib/live/race-context";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 import { RateLimiter } from "@/lib/live/rate-limit";
 import { applyStarterEntries, getStartCorridor, loadStarterSnapshot } from "@/lib/live/starter";
 import { starterAccessFor, starterBatchSchema } from "@/lib/live/starter-api-core";
@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "rate-limited" }, { status: 429, headers: noStore });
   }
   try {
-    const ctx = await getRaceContext();
+    const ctx = await getLiveRaceContext();
+    enterLiveTestContext(ctx);
     const snapshot = await loadStarterSnapshot(ctx, auth.access.corridor);
     const body = JSON.stringify({ ...snapshot, canSwitch: auth.access.canSwitch });
     const etag = `"${createHash("sha1").update(body).digest("base64url")}"`;
@@ -100,7 +101,8 @@ export async function POST(request: NextRequest) {
     );
   }
   try {
-    const ctx = await getRaceContext();
+    const ctx = await getLiveRaceContext();
+    enterLiveTestContext(ctx);
     const results = await applyStarterEntries(
       parsed.data.entries,
       ctx,

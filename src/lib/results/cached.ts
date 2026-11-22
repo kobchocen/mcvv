@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/client";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
+import { PUBLIC_YEAR_WHERE } from "@/lib/testmode/public-year";
 
 export type ResultYearCount = { year: number; count: number };
 
@@ -14,6 +15,7 @@ export const getResultYearCounts = unstable_cache(
   async (): Promise<ResultYearCount[]> => {
     const rows = await prisma.result.groupBy({
       by: ["year"],
+      where: { year: PUBLIC_YEAR_WHERE },
       _count: { runnerId: true },
       orderBy: { year: "desc" },
     });

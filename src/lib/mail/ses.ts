@@ -9,6 +9,7 @@ import { env } from "@/lib/env";
 import { mailAllowlist, maskRecipient, recipientAllowed, SKIPPED_PROVIDER_ID } from "./allowlist";
 import { sesConfigured } from "./configured";
 import type { SendResult } from "./queue-core";
+import { mailBlockedInTest } from "./test-block";
 
 export const DEFAULT_SES_REGION = "eu-central-1";
 export const DEFAULT_SES_MAX_PER_SECOND = 10;
@@ -184,6 +185,8 @@ export async function sendSesBatch(
     rateLimit?: () => Promise<void>;
   },
 ): Promise<ProviderBatchResult> {
+  // Blok pošty v testovacím režimu: jako dry run, nic neodejde.
+  if (mailBlockedInTest("newsletter")) options = { ...options, dryRun: true };
   const providerIds: (string | null | undefined)[] = messages.map(() => undefined);
   let firstError: { retryable: boolean; error: string } | null = null;
   let sent = 0;

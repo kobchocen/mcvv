@@ -2053,7 +2053,8 @@
     "publicSplitsShown": "Na veřejných výstupech (živé výsledky, tabule, speaker): {list}.",
     "publicSplitsOver": "Další veřejné mezičasy se nezobrazí – zobrazují se první {slots} podle pozice na trati (výstupy umí nejvýš 3).",
     "publicSplitsMax": "Nejvýš veřejných mezičasů",
-    "openTestMode": "Testovací režim – nastavení"
+    "openTestMode": "Testovací režim – nastavení",
+    "testModeBanner": "TEST – běží testovací režim (stínový ročník {year}). Zápisy jdou jen do testu."
   },
   "LiveSplits": {
     "title": "Mezičasy ročníku",
@@ -3699,6 +3700,69 @@
       "times": "Časy zadej jako HH:MM oddělené čárkou.",
       "durationH": "Konec testu musí být 1–6 hodin od nuly.",
       "cleanupAfterH": "Likvidace musí být nejdřív s koncem testu a nejvýš 24 hodin od nuly."
+    },
+    "enabled": "Spouštět testy automaticky v nastavených časech",
+    "activeTitle": "Aktivní test",
+    "noActive": "Žádný test neběží.",
+    "startNow": "Spustit test teď (nula za 60 min)",
+    "endNow": "Ukončit test teď",
+    "cleanupNow": "Zlikvidovat data testu teď",
+    "activeInfo": "Fáze: {phase}. Nula {zero}, konec {end}, likvidace {cleanup}. Startovka {runners} běžců, dohlášek {onsite}.",
+    "phase": {
+      "office": "kancelář (dohlášky)",
+      "race": "závod",
+      "ended": "skončil – zápisy zamčené",
+      "cleanup": "likvidace"
+    },
+    "runDone": {
+      "started": "Test spuštěn.",
+      "ended": "Test ukončen, report spočítán.",
+      "cleaned": "Data testu zlikvidována, report zůstal v historii."
+    },
+    "runError": {
+      "blocked": "Test teď nejde spustit – den závodu nebo dva dny před ním.",
+      "active": "Už běží jiný test.",
+      "legacy_active": "Běží starý testovací běh ze stránky Živě – nejdřív ho ukonči.",
+      "empty": "Startovka testu by byla prázdná (žádné zaplacené přihlášky ani fiktivní běžci).",
+      "blocking": "Losování testu nejde (nedostatek čísel nebo kategorie bez rozsahu).",
+      "state": "Test je v jiném stavu – obnov stránku."
+    },
+    "runReport": "Report",
+    "reportSummary": "startovka {roster}, start {started}, cíl {finished}, problémů {issues}",
+    "reportCounts": "Dohlášek {onsite}, mezičasů {splits}, kliků cíle {punches}, opsaných čísel {bibs}.",
+    "issue": {
+      "duplicate_bib": "č. {bib}: duplicitní číslo ve startovce",
+      "unknown_bib": "č. {bib}: mezičas {split} pro číslo mimo startovku",
+      "negative_time": "č. {bib}: záporný čas ({split})",
+      "not_increasing": "č. {bib}: čas na {split} není větší než předchozí",
+      "finish_without_start": "č. {bib}: cíl bez evidence startu",
+      "missing_split": "č. {bib}: chybí mezičas {split}",
+      "started_no_finish": "č. {bib}: odstartoval, ale nemá cíl"
+    },
+    "onsiteTitle": "TEST – testovací dohláška",
+    "onsiteIntro": "Běží testovací režim. Tahle dohláška jde jen do testu (stínový ročník): žádná ostrá přihláška, prodejka, platba ani e-mail. Prázdné číslo = nejbližší volné ve startovní řadě kategorie.",
+    "onsiteLastName": "Příjmení",
+    "onsiteFirstName": "Jméno",
+    "onsiteBirthYear": "Ročník",
+    "onsiteSex": "Pohlaví",
+    "onsiteCategory": "Kategorie",
+    "onsiteClub": "Klub",
+    "onsiteBib": "Startovní číslo (nepovinné)",
+    "onsitePayment": "Platba (simulovaná)",
+    "payment": {
+      "sim_cash": "Hotově (TEST)",
+      "sim_qr": "QR (TEST, neplatit)"
+    },
+    "onsiteCreate": "Zapsat testovací dohlášku",
+    "onsiteDone": "Testovací dohláška zapsána, číslo {bib}.",
+    "onsiteError": {
+      "forbidden": "Nemáš přístup k pokladně.",
+      "invalid": "Zkontroluj vyplněné údaje.",
+      "no_test": "Test neběží.",
+      "closed": "Test skončil – dohlášky jsou zavřené.",
+      "category": "Kategorie neodpovídá ročníku a pohlaví.",
+      "bib_taken": "Číslo už v testu někdo má.",
+      "no_bib": "Pro kategorii není volné číslo – zadej ho ručně."
     }
   }
 }

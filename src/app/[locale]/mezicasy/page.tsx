@@ -7,10 +7,12 @@ import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
 import { stationsForScope } from "@/lib/live/assignment-core";
-import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { getStations } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
 import { withStart } from "@/lib/live/stations";
 import { allowsFor, can, getAccess } from "@/lib/admin/access";
 import { splitScope } from "@/lib/admin/permissions";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -49,7 +51,7 @@ export default async function SplitsPage({ params }: PageProps) {
     );
   }
   const [ctx, allStations, assigned] = await Promise.all([
-    getRaceContext(),
+    getLiveRaceContext(),
     getStations(),
     getAssignedStations(session.id),
   ]);
@@ -78,6 +80,7 @@ export default async function SplitsPage({ params }: PageProps) {
   }
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <McvvTestRunBanner locale={locale} />
       <McvvSplitsClient
         stations={stations}

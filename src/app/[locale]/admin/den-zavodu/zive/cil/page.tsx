@@ -7,8 +7,9 @@ import { canAccess, requireSection } from "@/lib/admin/access";
 import { finishCorrectionAction } from "@/lib/live/finish-actions";
 import { loadFinishState } from "@/lib/live/finish";
 import type { FinishIssue, FinishPair } from "@/lib/live/finish-core";
-import { getRaceContext } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
 import { formatRaceTime } from "@/lib/live/start-time";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -52,7 +53,7 @@ export default async function FinishAdminPage({ params, searchParams }: PageProp
   await requireSection("raceControl.finish", "read");
   const canWrite = await canAccess("raceControl.finish", "write");
   const t = await getTranslations({ locale, namespace: "FinishAdmin" });
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
   const state = await loadFinishState(ctx);
   const showAll = sp.vse === "1";
   const pairs = showAll
@@ -66,6 +67,7 @@ export default async function FinishAdminPage({ params, searchParams }: PageProp
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <div className="mx-auto grid max-w-5xl gap-8">
         <div>
           <McvvTestRunBanner locale={locale} leftovers className="mb-4" />

@@ -41,6 +41,7 @@ export async function listTestModeRuns(take = 10) {
       cleanupAt: true,
       roster: true,
       fictional: true,
+      report: true,
       _count: { select: { starts: true, onsites: true } },
     },
   });

@@ -54,6 +54,7 @@ import {
   withStart,
 } from "./stations";
 import { getActiveTestRun } from "./test-run";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 
 const PAGE = "/admin/den-zavodu/zive" as const;
 const SPLITS_PAGE = "/admin/den-zavodu/zive/casy" as const;
@@ -184,7 +185,7 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
 /** Společné načtení formuláře ruční editace (číslo, split, očekávaná hodnota, důvod). */
 async function manualForm(formData: FormData) {
   const session = await requireSection("raceControl.manual", "write");
-  const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
+  const [ctx, stations] = await Promise.all([getLiveRaceContext(), getStations()]);
   const bib = Number(formData.get("bib"));
   const split = String(formData.get("split") ?? "");
   const expected = parseExpected(String(formData.get("expected") ?? ""));
@@ -212,6 +213,7 @@ async function manualForm(formData: FormData) {
  */
 export async function setSplitAction(formData: FormData): Promise<void> {
   const { session, ctx, bib, split, expected, reason, edit } = await manualForm(formData);
+  enterLiveTestContext(ctx);
   const raw = String(formData.get("value") ?? "");
   const time =
     formData.get("mode") === "clock"
@@ -239,6 +241,7 @@ export async function setSplitAction(formData: FormData): Promise<void> {
 /** Ruční smazání jednoho mezičasu (důvod povinný). */
 export async function deleteSplitAction(formData: FormData): Promise<void> {
   const { session, ctx, bib, split, expected, reason, edit } = await manualForm(formData);
+  enterLiveTestContext(ctx);
   const result = await deleteManualSplit({
     year: ctx.year,
     bib,

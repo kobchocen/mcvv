@@ -6,6 +6,7 @@ import { mailProvider } from "./configured";
 import type { SendResult } from "./queue-core";
 import { postResendEmail, type ResendMessage } from "./resend";
 import { postSesEmail } from "./ses";
+import { mailBlockedInTest } from "./test-block";
 
 export { mailConfigured, mailProvider } from "./configured";
 
@@ -15,6 +16,7 @@ export async function postProviderEmail(
   input: ProviderMessage,
   options: { dryRun: boolean; idempotencyKey?: string; fetchImpl?: typeof fetch },
 ): Promise<SendResult> {
+  if (mailBlockedInTest("provider")) return { ok: true, providerId: null };
   if (mailProvider() === "ses") {
     return postSesEmail(input, { dryRun: options.dryRun });
   }

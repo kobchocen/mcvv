@@ -1,5 +1,7 @@
 import { env } from "@/lib/env";
 
+import { runTestModeScheduler } from "@/lib/testmode/run";
+
 import { expireTestRunIfDue } from "./test-run";
 
 /** Interval interního ticku dne závodu. */
@@ -24,6 +26,8 @@ export function startLiveScheduler(): void {
     running = true;
     try {
       await expireTestRunIfDue();
+      // Testovací režim B+: konec T+3h, likvidace T+5h, automatické spuštění podle nastavení.
+      await runTestModeScheduler();
     } catch (error) {
       console.error("[live] scheduler tick failed", error instanceof Error ? error.message : error);
     } finally {

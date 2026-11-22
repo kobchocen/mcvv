@@ -9,7 +9,7 @@ import { redirect } from "@/i18n/routing";
 import { toPragueLocalInput } from "./admin-core";
 import { correctFinish, type FinishCorrection } from "./finish";
 import { FINISH_BIB_MAX, parseFinishClock } from "./finish-core";
-import { getRaceContext } from "./race-context";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 
 const PAGE = "/admin/den-zavodu/zive/cil" as const;
 
@@ -37,7 +37,8 @@ function bibOf(formData: FormData, name = "bib"): number | null {
  */
 export async function finishCorrectionAction(formData: FormData): Promise<void> {
   const session = await requireSection("raceControl.finish", "write");
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
+  enterLiveTestContext(ctx);
   const op = String(formData.get("op") ?? "");
   const id = int(formData, "id");
   let correction: FinishCorrection | null = null;

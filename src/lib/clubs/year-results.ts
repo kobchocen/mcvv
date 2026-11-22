@@ -1,8 +1,11 @@
 /**
- * Results of one club in one edition (#197): the club profile's "click on a year". Overall
- * and category ranks are computed from the whole edition, then only the club's rows are kept.
- * Pure; ties share a rank (as on /results/[year]).
+ * Results of one club in one edition (#197): the club profile's "click on a year".
+ * Overall ranks are computed within each sex from the whole edition, category ranks
+ * from the category; then only the club's rows are kept. Pure; ties share a rank
+ * (as on /results/[year]).
  */
+import { runnerSex } from "@/lib/stats/core";
+
 import type { ClubResolver } from "./core";
 
 export type EditionResultRow = {
@@ -19,8 +22,9 @@ export type ClubYearResult = {
   runnerId: string;
   name: string;
   time: number;
-  /** Overall rank in the edition (all runners, both sexes). */
+  /** Overall rank within the runner's sex (all finishers of that sex in the edition). */
   rank: number;
+  sex: "M" | "F";
   categoryId: string;
   categoryName: string;
   categoryRank: number;
@@ -43,12 +47,17 @@ export function computeClubYearResults(
   mainId: string,
   year: number,
 ): ClubYearResult[] {
-  const overall = ranks(edition);
+  const bySex: Record<"M" | "F", EditionResultRow[]> = { M: [], F: [] };
   const byCategory = new Map<string, EditionResultRow[]>();
   for (const row of edition) {
+    bySex[runnerSex(row.runnerId)].push(row);
     const group = byCategory.get(row.categoryId) ?? [];
     group.push(row);
     byCategory.set(row.categoryId, group);
+  }
+  const overall = new Map<EditionResultRow, number>();
+  for (const group of Object.values(bySex)) {
+    for (const [row, rank] of ranks(group)) overall.set(row, rank);
   }
   const categoryRank = new Map<EditionResultRow, number>();
   for (const group of byCategory.values()) {
@@ -61,6 +70,7 @@ export function computeClubYearResults(
       name: row.runnerName || "—",
       time: row.time,
       rank: overall.get(row)!,
+      sex: runnerSex(row.runnerId),
       categoryId: row.categoryId,
       categoryName: row.categoryName || row.categoryId,
       categoryRank: categoryRank.get(row)!,

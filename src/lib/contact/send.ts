@@ -3,6 +3,9 @@ import { env } from "@/lib/env";
 import { escapeHtml } from "@/lib/mail/layout";
 import { mailConfigured } from "@/lib/mail/configured";
 import { sendResendEmail } from "@/lib/mail/resend";
+import { siteUrl } from "@/lib/site/url";
+
+import { questionAdminUrl } from "./questions-core";
 
 export type ContactPayload = {
   name: string;
@@ -26,10 +29,15 @@ export class ContactNotConfiguredError extends Error {
   }
 }
 
-export function buildContactMail(payload: ContactPayload) {
+export function buildContactMail(payload: ContactPayload, adminUrl?: string | null) {
   const subject = `MCVV kontakt: ${payload.name}`;
-  const text = `Jméno: ${payload.name}\nE-mail: ${payload.email}\n\n${payload.message}`;
-  const html = `<p><strong>Jméno:</strong> ${escapeHtml(payload.name)}<br><strong>E-mail:</strong> ${escapeHtml(payload.email)}</p><p style="white-space:pre-wrap">${escapeHtml(payload.message)}</p>`;
+  // #205: odkaz na dotaz v administraci, kde se dá odpovědět a sledovat stav
+  const link = adminUrl ? `\n\nOdpovědět v administraci: ${adminUrl}` : "";
+  const text = `Jméno: ${payload.name}\nE-mail: ${payload.email}\n\n${payload.message}${link}`;
+  const linkHtml = adminUrl
+    ? `<p><a href="${escapeHtml(adminUrl)}">Odpovědět v administraci</a></p>`
+    : "";
+  const html = `<p><strong>Jméno:</strong> ${escapeHtml(payload.name)}<br><strong>E-mail:</strong> ${escapeHtml(payload.email)}</p><p style="white-space:pre-wrap">${escapeHtml(payload.message)}</p>${linkHtml}`;
   return { subject, text, html };
 }
 
@@ -41,9 +49,12 @@ export async function sendContactMessage(
   payload: ContactPayload,
   transport: ContactTransport = { resend: (m) => sendResendEmail({ ...m, kind: "contact" }) },
   recipient?: string,
+  /** Id uloženého dotazu (#205) – upozornění pak odkazuje do administrace. */
+  questionId?: number | null,
 ) {
   const to = recipient ?? env.CONTACT_TO;
-  const { subject, text, html } = buildContactMail(payload);
+  const adminUrl = questionId != null ? questionAdminUrl(siteUrl(), questionId) : null;
+  const { subject, text, html } = buildContactMail(payload, adminUrl);
 
   if (mailConfigured()) {
     const ok = await transport.resend({ to, subject, html, text, replyTo: payload.email });

@@ -67,6 +67,10 @@ export type OnlineSnapshot = {
   window?: LiveWindowState;
   /** Po zveřejnění oficiálních výsledků: kam přesměrovat (bez locale). */
   officialUrl?: string;
+  /** Popisky veřejných mezičasů M1–M3 (#316); chybí = výchozí dva (1,3 km, 2,7 km). */
+  pts?: string[];
+  /** Pozice veřejných mezičasů ve stovkách metrů (null = neuvedena), souběžně s `pts`. */
+  pp?: (number | null)[];
 };
 
 /**
@@ -84,6 +88,7 @@ export function gateOnline(snapshot: OnlineSnapshot, state: LiveWindowState): On
       ...runner,
       m1: null,
       m2: null,
+      ...("m3" in runner ? { m3: null } : {}),
       fin: null,
       late: null,
     })),
@@ -107,6 +112,8 @@ export type OnlineWireRunner = [
   0 | 1,
   number | null,
   number | null,
+  /** M3 (#316), jen když je nastavený třetí veřejný mezičas. */
+  (number | null)?,
 ];
 
 export type OnlineWire = Omit<OnlineSnapshot, "runners" | "clubs"> & {
@@ -118,18 +125,23 @@ export function encodeOnline({ runners, clubs, ...rest }: OnlineSnapshot): Onlin
   return {
     ...rest,
     k: clubs.map((c) => [c.id, c.name]),
-    r: runners.map((x) => [
-      x.bib,
-      x.name,
-      x.cat,
-      x.start,
-      x.m1,
-      x.m2,
-      x.fin,
-      x.started ? 1 : 0,
-      x.late,
-      x.club,
-    ]),
+    r: runners.map((x): OnlineWireRunner => {
+      const row: OnlineWireRunner = [
+        x.bib,
+        x.name,
+        x.cat,
+        x.start,
+        x.m1,
+        x.m2,
+        x.fin,
+        x.started ? 1 : 0,
+        x.late,
+        x.club,
+      ];
+      // M3 (#316) jen při třetím veřejném mezičasu – jinak drát beze změny
+      if (x.m3 !== undefined) row.push(x.m3);
+      return row;
+    }),
   };
 }
 
@@ -137,13 +149,14 @@ export function decodeOnline({ r, k, ...rest }: OnlineWire): OnlineSnapshot {
   return {
     ...rest,
     clubs: (k ?? []).map(([id, name]) => ({ id, name, slug: clubIdSlug(id, name) })),
-    runners: r.map(([bib, name, cat, start, m1, m2, fin, started, late, club]) => ({
+    runners: r.map(([bib, name, cat, start, m1, m2, fin, started, late, club, m3]) => ({
       bib,
       name,
       cat,
       start,
       m1,
       m2,
+      ...(m3 !== undefined ? { m3 } : {}),
       fin,
       started: started === 1,
       late,

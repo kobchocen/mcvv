@@ -9,8 +9,8 @@
 
 import { byCategory, type PointKey, type SpeakerRunner } from "./speaker-core";
 
-/** Pořadí důležitosti bodů: cíl > M2 > M1. */
-const PRIORITY: Record<PointKey, number> = { m1: 1, m2: 2, fin: 3 };
+/** Pořadí důležitosti bodů: cíl > M3 > M2 > M1. */
+const PRIORITY: Record<PointKey, number> = { m1: 1, m2: 2, m3: 3, fin: 4 };
 
 /** Cíl: 4 silné pulzy po 1,2 s. */
 export const LEADER_PULSE_FIN_MS = 4800;
@@ -48,7 +48,7 @@ export const leaderKey = (cat: string, point: PointKey): LeaderKey => `${cat}|${
  */
 export function leadersOf(
   runners: readonly SpeakerRunner[],
-  points: readonly PointKey[] = ["m1", "m2", "fin"],
+  points: readonly PointKey[] = ["m1", "m2", "m3", "fin"],
 ): LeaderMap {
   const map: LeaderMap = new Map();
   for (const r of runners) {

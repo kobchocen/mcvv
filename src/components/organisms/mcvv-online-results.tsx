@@ -57,7 +57,7 @@ import {
   highlightRanges,
   lastPoint,
   nextPoint,
-  POINTS,
+  pointsFor,
   rankAt,
   recentPassages,
   searchRunners,
@@ -249,7 +249,7 @@ export function McvvOnlineResults({
   for (const bib of followed.list) {
     const r = runnerByBib.get(bib);
     if (!r) continue;
-    followSnaps.set(bib, { m1: r.m1, m2: r.m2, fin: r.fin, final: !!rowOf(r)?.final });
+    followSnaps.set(bib, { m1: r.m1, m2: r.m2, m3: r.m3, fin: r.fin, final: !!rowOf(r)?.final });
   }
 
   const selectCategory = useCallback(
@@ -339,8 +339,25 @@ export function McvvOnlineResults({
     ok: (chunks: ReactNode) => <b className={s.lgOk}>{chunks}</b>,
     i: (chunks: ReactNode) => <i>{chunks}</i>,
   };
+  // aktivní body = veřejné mezičasy (nejvýš 3, #316) + cíl; popisky km z pozice na trati
+  const points = pointsFor(snapshot.pts?.length);
+  const splitPoints = points.filter((k) => k !== "fin");
   const pointLabel = (k: PointKey) =>
-    k === "m1" ? t("pointM1") : k === "m2" ? t("pointM2") : t("pointFin");
+    k === "m1"
+      ? t("pointM1")
+      : k === "m2"
+        ? t("pointM2")
+        : k === "m3"
+          ? t("pointM3")
+          : t("pointFin");
+  const colLabel = (k: PointKey) =>
+    k === "m1" ? t("colM1") : k === "m2" ? t("colM2") : t("colM3");
+  const kmLabel = (k: PointKey) => {
+    const i = k === "m1" ? 0 : k === "m2" ? 1 : 2;
+    const pos = snapshot.pp?.[i];
+    if (pos != null) return t("kmAt", { km: pos / 10 });
+    return snapshot.pts?.[i] ?? (i === 0 ? t("km1") : t("km2"));
+  };
 
   /* ---------- ★ sledovaní (#206) ---------- */
   const eventShort = (e: FollowEvent, r: OnlineRunner) => {
@@ -614,8 +631,8 @@ export function McvvOnlineResults({
 
   const timeCells = (r: OnlineRunner, hit: boolean) => {
     const cur = lastPoint(r);
-    const next = nextPoint(r);
-    return POINTS.map((k) => {
+    const next = nextPoint(r, points);
+    return points.map((k) => {
       const value = r[k];
       if (value != null) {
         return (
@@ -648,7 +665,7 @@ export function McvvOnlineResults({
   };
 
   const renderTable = (S: OnlineCategoryState) => {
-    const cols = mobile ? 6 : 9;
+    const cols = (mobile ? 3 : 6) + points.length;
     const vr = (r: OnlineRunner) => (
       <span className={cx(s.vrk, s.num)}>
         <small>{t("ifNow")}</small>
@@ -734,8 +751,9 @@ export function McvvOnlineResults({
           <col className={s["c-bib"]} />
           <col />
           {mobile ? null : <col className={s["c-st"]} />}
-          <col className={s["c-t"]} />
-          <col className={s["c-t"]} />
+          {splitPoints.map((k) => (
+            <col key={k} className={s["c-t"]} />
+          ))}
           <col className={s["c-f"]} />
           {mobile ? null : (
             <>
@@ -750,14 +768,12 @@ export function McvvOnlineResults({
             <th>{t("colBib")}</th>
             <th className={s.l}>{t("colName")}</th>
             {mobile ? null : <th>{t("colStart")}</th>}
-            <th>
-              {t("colM1")}
-              {mobile ? null : <small>{t("km1")}</small>}
-            </th>
-            <th>
-              {t("colM2")}
-              {mobile ? null : <small>{t("km2")}</small>}
-            </th>
+            {splitPoints.map((k) => (
+              <th key={k}>
+                {colLabel(k)}
+                {mobile ? null : <small>{kmLabel(k)}</small>}
+              </th>
+            ))}
             <th>{t("colFin")}</th>
             {mobile ? null : (
               <>
@@ -811,7 +827,7 @@ export function McvvOnlineResults({
                       ) : null}
                     </td>
                     {mobile ? null : <td className={cx(s.st, s.num)}>{formatDayTime(r.start)}</td>}
-                    <td className={s.ws} colSpan={mobile ? 3 : 5}>
+                    <td className={s.ws} colSpan={points.length + (mobile ? 0 : 2)}>
                       {d > 0 ? (
                         t.rich("startsIn", { ...tags, time: formatMinutes(d) })
                       ) : (
@@ -850,7 +866,7 @@ export function McvvOnlineResults({
                     ) : null}
                   </td>
                   {mobile ? null : <td className={cx(s.st, s.num)}>{formatDayTime(r.start)}</td>}
-                  <td className={s.ws} colSpan={mobile ? 3 : 5}>
+                  <td className={s.ws} colSpan={points.length + (mobile ? 0 : 2)}>
                     <span className={cx(s.chip, s.dnsc)}>DNS</span>
                     {mobile ? null : (
                       <>
@@ -878,7 +894,7 @@ export function McvvOnlineResults({
             .map((b) => runnerByBib.get(b))
             .filter((r): r is OnlineRunner => r !== undefined);
     const inList = new Set(list.map((r) => r.bib));
-    const cols = mobile ? 6 : 9;
+    const cols = (mobile ? 3 : 6) + points.length;
     const cnt = { fin: 0, run: 0, wait: 0, dns: 0 };
     const body: ReactNode[] = [];
     for (const c of categories) {
@@ -987,7 +1003,7 @@ export function McvvOnlineResults({
                 )}
               </>
             ) : (
-              <td className={s.ws} colSpan={mobile ? 3 : 5}>
+              <td className={s.ws} colSpan={points.length + (mobile ? 0 : 2)}>
                 {status}
               </td>
             )}
@@ -1016,7 +1032,7 @@ export function McvvOnlineResults({
               {mobile ? <span className={s.m2l}>{t("unknownSub")}</span> : null}
             </td>
             {mobile ? null : <td className={s.st} />}
-            <td className={s.ws} colSpan={mobile ? 3 : 5}>
+            <td className={s.ws} colSpan={points.length + (mobile ? 0 : 2)}>
               {mobile ? null : <span className={s.funkSub}>{t("unknownSub")}</span>}
               <button
                 type="button"
@@ -1076,8 +1092,9 @@ export function McvvOnlineResults({
             <col className={s["c-bib"]} />
             <col />
             {mobile ? null : <col className={s["c-st"]} />}
-            <col className={s["c-t"]} />
-            <col className={s["c-t"]} />
+            {splitPoints.map((k) => (
+              <col key={k} className={s["c-t"]} />
+            ))}
             <col className={s["c-f"]} />
             {mobile ? null : (
               <>
@@ -1095,8 +1112,9 @@ export function McvvOnlineResults({
               <th>{t("colBib")}</th>
               <th className={s.l}>{t("colName")}</th>
               {mobile ? null : <th>{t("colStart")}</th>}
-              <th>{t("colM1")}</th>
-              <th>{t("colM2")}</th>
+              {splitPoints.map((k) => (
+                <th key={k}>{colLabel(k)}</th>
+              ))}
               <th>{t("colFin")}</th>
               {mobile ? null : (
                 <>
@@ -1278,7 +1296,7 @@ export function McvvOnlineResults({
     const row = rowOf(r);
     const club = r.club != null ? snapshot.clubs[r.club] : undefined;
     const on = fset.has(r.bib);
-    const next = nextPoint(r);
+    const next = nextPoint(r, points);
     const catRunners = grouped.get(r.cat) ?? [];
     const rank = row?.rank;
     return (
@@ -1317,7 +1335,7 @@ export function McvvOnlineResults({
             : null}
         </div>
         <div className={s.rdpts}>
-          {POINTS.map((k) => {
+          {points.map((k) => {
             const v = r[k];
             return (
               <div key={k}>
@@ -1401,7 +1419,7 @@ export function McvvOnlineResults({
       return (
         <>
           <div className={s.ftk}>
-            {t("toastSplit", { point: pointLabel(k), km: k === "m1" ? t("km1") : t("km2") })}
+            {t("toastSplit", { point: pointLabel(k), km: kmLabel(k) })}
             <span className={s.fttm}>{at(k)}</span>
           </div>
           {who}

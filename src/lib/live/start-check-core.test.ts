@@ -29,7 +29,7 @@ test("web schema accepts the start station but not finish-only codes outside 0â€
   const base = { action: "create", id: "a1b2c3d4e5f6", bib: 5, punchedAt: 1 };
   assert.equal(webEntrySchema.safeParse({ ...base, split: "0" }).success, true);
   assert.equal(webEntrySchema.safeParse({ ...base, split: "3" }).success, true);
-  assert.equal(webEntrySchema.safeParse({ ...base, split: "x" }).success, false);
+  assert.equal(webEntrySchema.safeParse({ ...base, split: "X" }).success, false);
 });
 
 test("partitionStartEntries keeps start entries away from splits", () => {

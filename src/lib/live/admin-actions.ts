@@ -46,8 +46,10 @@ import {
 } from "./starter-core";
 import {
   formatStations,
+  LIVE_PUBLIC_SPLITS_MAX_KEY,
   LIVE_STATIONS_KEY,
   LIVE_STATIONS_MAX,
+  parsePublicMax,
   parseStations,
   withStart,
 } from "./stations";
@@ -87,6 +89,7 @@ async function saveDuration(formData: FormData, field: string, key: string): Pro
 
 const RACE_SETUP_KEYS = [
   LIVE_STATIONS_KEY,
+  LIVE_PUBLIC_SPLITS_MAX_KEY,
   LIVE_START_OFFSET_LIMIT_KEY,
   LIVE_DNS_GRACE_KEY,
   LIVE_DNS_GRACE_FALLBACK_KEY,
@@ -99,6 +102,13 @@ export async function saveRaceSetupAction(formData: FormData): Promise<void> {
   await withSettingsAudit(session, "raceday.setup_changed", RACE_SETUP_KEYS, async () => {
     const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
     await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
+    // Strop veřejných mezičasů (#316): prázdné = výchozí 3 (klíč se smaže).
+    const publicMaxRaw = String(formData.get("publicMax") ?? "").trim();
+    if (publicMaxRaw === "") {
+      await prisma.setting.deleteMany({ where: { key: LIVE_PUBLIC_SPLITS_MAX_KEY } });
+    } else {
+      await put(LIVE_PUBLIC_SPLITS_MAX_KEY, String(parsePublicMax(publicMaxRaw)));
+    }
     // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
     // prázdné = výchozí hodnota (klíč se smaže).
     await saveDuration(formData, "startLimit", LIVE_START_OFFSET_LIMIT_KEY);

@@ -2019,7 +2019,7 @@
     "onlineLinkOverride": "emergency URL from Settings overrides the own online results",
     "setupTitle": "Stations and rehearsal",
     "stations": "Split stations",
-    "stationsHint": "Lines code=label, code 1–8 (9 = finish). Default 1=1,3 km and 3=2,7 km.",
+    "stationsHint": "Lines code=label | position | public/internal. Code 1–8 or a–z (9 = finish), position in hundreds of metres (15 = 1.5 km). Default 1=1,3 km | 13 | public and 3=2,7 km | 27 | public.",
     "zeroOverride": "Test zero time (rehearsal)",
     "zeroOverrideHint": "Empty = race day {time}. For a rehearsal set e.g. today and a time. Clear it afterwards!",
     "startLimit": "Start offset threshold",
@@ -2049,7 +2049,10 @@
     "starterRedPhase": "Red phase of an unmarked runner (s)",
     "starterRedPhaseHint": "How long an unmarked runner stays red after the start (tap = started on time) before moving to Not started. Default 5 s.",
     "starterDnsWindow": "Not-started strip window",
-    "starterDnsWindowHint": "The strip only shows non-starters from this recent period (default 5 min); older ones are under “All” and in the full list."
+    "starterDnsWindowHint": "The strip only shows non-starters from this recent period (default 5 min); older ones are under “All” and in the full list.",
+    "publicSplitsShown": "On public outputs (live results, board, speaker): {list}.",
+    "publicSplitsOver": "Further public splits are not shown – the first {slots} by course position are shown (outputs support at most 3).",
+    "publicSplitsMax": "Maximum public splits"
   },
   "LiveSplits": {
     "title": "Edition splits",
@@ -2491,7 +2494,8 @@
     "finishIntro": "Stopwatch and bib stations at the finish, pairing times with bibs and corrections. After the chief referee's check, publishing the official results.",
     "finishStations": "Finish stations",
     "finishPairing": "Finish pairing",
-    "officialOpen": "Official results"
+    "officialOpen": "Official results",
+    "courseOpen": "Course overview"
   },
   "AfterRace": {
     "title": "After the race – raffle",
@@ -2795,6 +2799,7 @@
     "colName": "name",
     "colM1": "M1",
     "colM2": "M2",
+    "colM3": "M3",
     "colFin": "Fin",
     "count": "fin <b>{fin}</b> · on course <b>{on}</b>",
     "catFinal": "✓ FINAL",
@@ -2833,6 +2838,7 @@
     "cardFoot": "<k>Enter</k> or <k>Esc</k> back to search · updates live",
     "pointM1": "M1",
     "pointM2": "M2",
+    "pointM3": "M3",
     "pointFin": "Fin",
     "brandMark": "V",
     "countDone": "fin <b>{fin}</b>",
@@ -2880,11 +2886,13 @@
     "colStart": "Start",
     "colM1": "S1",
     "colM2": "S2",
+    "colM3": "S3",
     "colFin": "Finish",
     "colLoss": "Behind",
     "colIfNow": "If now",
     "km1": "1.3 km",
     "km2": "2.7 km",
+    "kmAt": "{km, number} km",
     "ifNow": "now",
     "late": "late start +{offset}",
     "lateShort": "+{offset} late",
@@ -2919,6 +2927,7 @@
     "recentEmpty": "No passage yet.",
     "pointM1": "S1",
     "pointM2": "S2",
+    "pointM3": "S3",
     "pointFin": "FIN",
     "note": "Live results are computed from the splits (1.3 km, 2.7 km) and the finish. Official results will be published after the race at <link>Results {year}</link>.",
     "footerStartlist": "Start list",
@@ -3011,6 +3020,7 @@
   "Leader": {
     "m1": "S1",
     "m2": "S2",
+    "m3": "S3",
     "fin": "Finish",
     "chipFin": "NEW LEADER",
     "chipSplit": "LEADER {point}",
@@ -3087,6 +3097,7 @@
     "colName": "name",
     "colM1": "S1",
     "colM2": "S2",
+    "colM3": "S3",
     "colFin": "Finish",
     "partners": "Race partners",
     "qrTitle": "Results on your phone",
@@ -3139,6 +3150,7 @@
     "point": {
       "m1": "S1",
       "m2": "S2",
+      "m3": "S3",
       "fin": "Finish"
     },
     "partnersTitle": "Partners",
@@ -3385,7 +3397,8 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "permissions": "Role permissions",
-    "official": "Official results"
+    "official": "Official results",
+    "course": "Course overview"
   },
   "AdminPermissions": {
     "title": "Role permissions",
@@ -3626,5 +3639,26 @@
       "window-open": "Live results opened manually.",
       "window-closed": "Live results closed manually."
     }
+  },
+  "CourseAdmin": {
+    "title": "Course overview",
+    "heading": "Course overview {year}",
+    "intro": "How many runners passed each checkpoint. Anyone who appeared at a split or the finish without passing all previous checkpoints is highlighted. Refreshes every 15 s.",
+    "back": "Race day",
+    "roster": "On the start list",
+    "started": "Started",
+    "anyCheckpoint": "Passed a checkpoint",
+    "finished": "Finished",
+    "pointsTitle": "Checkpoints by course position",
+    "colPoint": "Checkpoint",
+    "colPosition": "Position",
+    "colPassed": "Passed",
+    "colPublic": "Visibility",
+    "public": "public",
+    "internal": "internal",
+    "finish": "Finish",
+    "skipsTitle": "Skipped checkpoints ({count})",
+    "skipsNone": "Nobody skipped a checkpoint.",
+    "skipRow": "{bib} {name} ({category}) – at “{at}” without: {missing}"
   }
 }

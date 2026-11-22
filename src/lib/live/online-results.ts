@@ -9,7 +9,7 @@ import {
   gateOnline,
   type OnlineSnapshot,
 } from "./online-results-core";
-import { getRaceContext, getStations } from "./race-context";
+import { getPublicStations, getRaceContext } from "./race-context";
 import { createBodyCache } from "./speaker-cache";
 import { loadRaceRunners } from "./speaker";
 import { startOffsetSeconds } from "./start-check-core";
@@ -43,14 +43,14 @@ export async function loadOnlineSnapshot(
 ): Promise<OnlineSnapshot> {
   const [rawCtx, stations, { run, cutoff }] = await Promise.all([
     getRaceContext(),
-    getStations(),
+    getPublicStations(),
     peekStoredTestRun(now),
   ]);
   const hidden = options.includeTest ? null : publicHiddenWindow(run, cutoff);
   const ctx = options.includeTest
     ? rawCtx
     : { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
-  const [{ categories, runners, tr, clubs: clubOf }, allStartChecks] = await Promise.all([
+  const [{ categories, runners, tr, clubs: clubOf, pts, pp }, allStartChecks] = await Promise.all([
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
@@ -106,6 +106,8 @@ export async function loadOnlineSnapshot(
     }),
     tr,
     clubs,
+    pts,
+    pp,
   };
 }
 

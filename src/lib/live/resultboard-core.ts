@@ -58,7 +58,7 @@ export const DEFAULT_RESULTBOARD_CONFIG: ResultboardConfig = {
   showRunning: true,
   showWaiting: true,
   showDns: true,
-  leader: { speaker: true, resultboard: true, points: ["m1", "m2", "fin"] },
+  leader: { speaker: true, resultboard: true, points: ["m1", "m2", "m3", "fin"] },
   partners: { show: true, rotateS: 8, qr: true },
 };
 
@@ -105,7 +105,7 @@ export function parseResultboardConfig(raw: unknown): ResultboardConfig {
   }
   const leader = isRecord(value.leader) ? value.leader : {};
   const points = Array.isArray(leader.points)
-    ? (["m1", "m2", "fin"] as const).filter((k) => (leader.points as unknown[]).includes(k))
+    ? (["m1", "m2", "m3", "fin"] as const).filter((k) => (leader.points as unknown[]).includes(k))
     : d.leader.points;
   const partners = isRecord(value.partners) ? value.partners : {};
   return {

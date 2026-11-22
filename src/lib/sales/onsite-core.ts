@@ -48,12 +48,19 @@ export const onsiteEntrySchema = z.object({
     .transform((value) => value === "1"),
   /** Nepovinný e-mail běžce (doklad / potvrzení); prázdný = přihláška bez e-mailu. */
   email: optionalEmail,
+  /**
+   * E-mail pro účtenku prodejky (#223). Formulář ho předvyplní e-mailem běžce, pokladní ho smí
+   * změnit nebo smazat; prázdný = prodejka bez e-mailu (účtenka se pak neposílá).
+   */
+  receiptEmail: optionalEmail,
+  /** Jazyk účtenky (cs | en | de | pl | uk); neznámý nebo prázdný = cs. */
+  receiptLocale: z.string().trim().max(5).optional().default(""),
 });
 
 export type OnsiteEntryInput = z.infer<typeof onsiteEntrySchema>;
 
 export type OnsiteEntryField =
-  "name" | "birthYear" | "sex" | "category" | "nationality" | "bib" | "email";
+  "name" | "birthYear" | "sex" | "category" | "nationality" | "bib" | "email" | "receiptEmail";
 
 export type OnsiteEntryParse =
   { ok: true; data: OnsiteEntryInput } | { ok: false; error: "invalid"; field: OnsiteEntryField };
@@ -69,7 +76,17 @@ const FIELD_OF: Record<string, OnsiteEntryField> = {
   bib: "bib",
   bibAuto: "bib",
   email: "email",
+  receiptEmail: "receiptEmail",
+  receiptLocale: "receiptEmail",
 };
+
+/**
+ * E-mail pro účtenku ve formuláři dohlášky: dokud ho pokladní nezměnil (`override` null),
+ * kopíruje e-mail běžce; po ruční změně (i smazání na prázdný) platí hodnota pokladní.
+ */
+export function onsiteReceiptEmail(entryEmail: string, override: string | null): string {
+  return override ?? entryEmail;
+}
 
 export function parseOnsiteEntryInput(raw: Record<string, unknown>): OnsiteEntryParse {
   const result = onsiteEntrySchema.safeParse(raw);

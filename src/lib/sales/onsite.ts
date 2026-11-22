@@ -11,12 +11,14 @@ import { resolveClub } from "@/lib/entries/club";
 import { nextRegistrationId } from "@/lib/entries/ensure-core";
 import { resolveRunner } from "@/lib/entries/runner";
 import { ENTRY_STATUS, nextStatus } from "@/lib/entries/status";
+import { normalizeEmail } from "@/lib/newsletter/core";
 import { loadStartSettings } from "@/lib/race/startlist-load";
 import { slotFee, slotOf } from "@/lib/slots/core";
 import { BIB_LOCK } from "@/lib/slots/late-paid";
 import { categoryFeeGroup, loadSlots } from "@/lib/slots/load";
 
 import { saleVs, SALE_NUMBER_MAX } from "./core";
+import { receiptLocale } from "./receipt-mail";
 import { suggestOnsiteBib, type OnsiteBibSuggestion } from "./onsite-bib-core";
 import {
   checkOnsiteBib,
@@ -131,6 +133,13 @@ export async function createOnsiteEntry(
   const auto = input.bib === undefined || input.bibAuto;
   const author = actorName(session);
   const email = input.email ? input.email.toLowerCase() : null;
+  // Účtenka (#223): e-mail z formuláře (předvyplněný e-mailem běžce, pokladní ho může změnit
+  // nebo smazat). Zaplacení prodejky pak účtenku na tento e-mail pošle automaticky.
+  const receiptEmail = normalizeEmail(input.receiptEmail);
+  const receipt = {
+    email: receiptEmail,
+    locale: receiptEmail ? receiptLocale(input.receiptLocale) : null,
+  };
 
   // Stejná logika zámku jako přidělení čísel pozdním přihláškám (late-paid, #348): GET_LOCK,
   // zamykací čtení čísel ročníku a opakování celé transakce při souběhu (db/tx-retry).
@@ -155,6 +164,7 @@ export async function createOnsiteEntry(
                 year,
                 author,
                 email,
+                receipt,
                 runner,
                 club,
                 category,
@@ -196,6 +206,7 @@ async function createInTx(
     year: number;
     author: string;
     email: string | null;
+    receipt: { email: string | null; locale: string | null };
     runner: { id: string; name: string; created: boolean };
     club: { id: string; name: string; created: boolean };
     category: { id: string; name: string };
@@ -302,6 +313,8 @@ async function createInTx(
       createdById: ctx.session.id,
       createdByName: ctx.author,
       registrationId: id,
+      email: ctx.receipt.email,
+      locale: ctx.receipt.locale,
       lines: {
         create: [
           {

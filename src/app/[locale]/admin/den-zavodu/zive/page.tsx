@@ -160,6 +160,13 @@ export default async function RaceDayPage({ params, searchParams }: PageProps) {
             >
               {t("openResultboard")}
             </Link>
+            <Link
+              href="/admin/den-zavodu/test-rezim"
+              className="font-medium text-race-accent hover:underline"
+              data-testid="open-testmode"
+            >
+              {t("openTestMode")}
+            </Link>
           </p>
           {error ? (
             <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">

@@ -20,7 +20,7 @@ import { redirect } from "@/i18n/routing";
  *   už proxy skutečným 307, sem dojde např. účet, kterému mezitím vzali roli).
  * - Přihlášený účet s omezenou rolí (`timing`), který nemá oprávnění k dané akci → 403.
  */
-async function requireRole(allowed: (role: UserRole) => boolean): Promise<SessionUser> {
+export async function requireRole(allowed: (role: UserRole) => boolean): Promise<SessionUser> {
   const session = await getSession();
   if (!session || adminAccess(session.role) === "none") {
     const locale = await getLocale();
@@ -59,7 +59,7 @@ export type RouteAccess = { ok: true; session: SessionUser } | { ok: false; resp
  * Varianta stráží pro route handlery: místo přesměrování vrací HTTP odpověď.
  * Nepřihlášený → 401; přihlášený bez oprávnění → `forbidden` (výchozí 403).
  */
-async function routeAccess(
+export async function routeAccess(
   allowed: (role: UserRole) => boolean,
   forbidden: { status: number; body: string } = { status: 403, body: "Forbidden" },
 ): Promise<RouteAccess> {
@@ -77,11 +77,6 @@ async function routeAccess(
     };
   }
   return { ok: true, session };
-}
-
-/** Route handlery „Den závodu“ (export / importy OBD): timing, organizer, admin. */
-export async function raceDayAccess(): Promise<RouteAccess> {
-  return routeAccess(canAccessRaceDay);
 }
 
 /**

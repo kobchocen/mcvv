@@ -102,6 +102,8 @@ export type McvvHomepageContent = {
   };
   hero: {
     kicker: string;
+    /** e.g. "34. ročník" / "34th edition", from edition data. */
+    edition?: string;
     place: string;
     titleLine1: string;
     titleLine2: string;
@@ -180,8 +182,12 @@ export type McvvHomepageContent = {
     venkuLine2Prefix: string;
     venkuLogoAria: string;
     organizer: string;
+    /** Group headings, keyed by partner group (sponsors.category 1 / 2 / 3). */
+    groups: { main: string; partners: string; prizes: string };
     items: {
       name: string;
+      /** sponsors.category: 1 = hlavní partneři, 2 = partneři, 3 = ceny. */
+      category?: number;
       href: string | null;
       logoSrc: string | null;
       /** SVG or DB-served logo: render with a plain <img>, not the image optimizer. */

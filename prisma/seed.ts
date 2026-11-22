@@ -278,7 +278,7 @@ async function seedStaffAccounts() {
       continue;
     }
     const passwordHash = await bcrypt.hash(account.password, 12);
-    await prisma.user.upsert({
+    const user = await prisma.user.upsert({
       where: { email: account.email.toLowerCase() },
       update: { name: account.name, role: account.role, passwordHash, emailVerified: new Date() },
       create: {
@@ -288,6 +288,15 @@ async function seedStaffAccounts() {
         passwordHash,
         emailVerified: new Date(),
       },
+    });
+    // Víc rolí (permissions v2): role odvozená ze sloupce role (admin → admin, organizer →
+    // organizer_legacy), stejně jako backfill v migraci 20261121150000_admin_permissions.
+    await prisma.userRoleGrant.createMany({
+      data: (account.role === "organizer" ? ["organizer_legacy"] : [account.role]).map((role) => ({
+        userId: user.id,
+        role,
+      })),
+      skipDuplicates: true,
     });
     console.log(`  upsert ${account.role}`);
   }

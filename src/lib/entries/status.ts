@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/db/client";
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { paidAmount } from "@/lib/entries/fee";
@@ -63,20 +65,26 @@ export async function recalculateRegistrationStatus(year: number, id: number): P
 
 /**
  * Registration ids of the given race year that count as registered (see isEntryValid).
+ * `ids` limits the check to the given applications (one bib on race day); `db` allows
+ * running inside a transaction.
  * Payment coverage is evaluated per application from the payments table, so a stale
  * stored status does not hide fully paid or 0 Kč applications.
  */
-export async function validRegistrationIds(year: number): Promise<Set<number>> {
+export async function validRegistrationIds(
+  year: number,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+  ids?: readonly number[],
+): Promise<Set<number>> {
   const [registrations, payments] = await Promise.all([
-    prisma.registration.findMany({
-      where: { year },
+    db.registration.findMany({
+      where: { year, ...(ids ? { id: { in: [...ids] } } : {}) },
       select: {
         id: true,
         status: true,
         lines: { select: { entryFee: true, category: { select: { entryFee: true } } } },
       },
     }),
-    prisma.payment.findMany({ where: { year }, select: { registrationId: true, amount: true } }),
+    db.payment.findMany({ where: { year }, select: { registrationId: true, amount: true } }),
   ]);
   const paidById = new Map<number, number>();
   for (const payment of payments) {

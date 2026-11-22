@@ -1,4 +1,5 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
+import { systemAuditMeta } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
 import { enqueueMail } from "@/lib/mail/queue";
@@ -94,6 +95,11 @@ export async function runFreeAutoConfirm(now = new Date()): Promise<FreeAutoConf
           ...SYSTEM_ACTOR,
           action: FREE_AUTO_CONFIRM_ACTION,
           target: `registration:${year}/${reg.id}`,
+          meta: systemAuditMeta(
+            "auto-confirm",
+            FREE_AUTO_CONFIRM_ACTION,
+            `registration:${year}/${reg.id}`,
+          ),
           detail: { year, registrationId: reg.id, runnerIds, fee: 0 },
         },
       });

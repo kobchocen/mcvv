@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { dateInputValue } from "@/lib/admin/parse";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -23,14 +22,13 @@ export default async function AdminEditionsPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("editions", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const rows = await prisma.edition.findMany({ orderBy: { id: "desc" } });
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {copy("editionsTitle")}

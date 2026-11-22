@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { formDate, formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
 import { computeLineFee, paidAmount } from "@/lib/entries/fee";
@@ -55,7 +55,7 @@ async function refreshLineFees(year: number, id: number, email: string): Promise
 }
 
 export async function saveRegistrationHeader(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   if (!year || id === null) {
@@ -101,7 +101,7 @@ export async function saveRegistrationHeader(formData: FormData): Promise<void> 
  * přepočte startovné řádků (zdarma zůstává zdarma) a stav přihlášky.
  */
 export async function saveRegistrationPrices(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   const feeAdult = formInt(formData, "feeAdult");
@@ -149,7 +149,7 @@ function validEntryPrice(value: number | null): value is number {
 }
 
 export async function savePayment(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const registrationId = formInt(formData, "registrationId");
   const paymentId = formInt(formData, "paymentId");
@@ -201,7 +201,7 @@ export async function savePayment(formData: FormData): Promise<void> {
 }
 
 export async function deletePayment(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const registrationId = formInt(formData, "registrationId");
   const paymentId = formInt(formData, "paymentId");
@@ -248,7 +248,7 @@ export async function deletePayment(formData: FormData): Promise<void> {
 }
 
 export async function cancelRegistration(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   if (!year || id === null) {
@@ -306,7 +306,7 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
 }
 
 export async function confirmRegistration(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   if (!year || id === null) {

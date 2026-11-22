@@ -9,12 +9,11 @@ import { confirmRegistration } from "@/lib/admin/registrations";
 import { ENTRY_STATUS } from "@/lib/entries/status";
 import { freeAutoConfirmedIds, showFreeAutoBadge } from "@/lib/entries/auto-confirm";
 import { isPromotionOptOut } from "@/lib/entries/promotion";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { registrationThreadSummaries, summaryKey } from "@/lib/messages/store";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { loadRegistrationTimeline } from "@/lib/admin/registration-timeline-data";
 import { McvvAdminRegistrationTimeline } from "@/components/organisms/mcvv-admin-registration-timeline";
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
@@ -95,7 +94,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("entries.list", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
   const { rok, stav, zrusene, prazdne, spec, termin } = await searchParams;
@@ -201,7 +200,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("regsTitle")} {selectedYear}
         </h1>

@@ -3,10 +3,10 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString } from "@/lib/admin/parse";
 import type { RunnerRenameMode } from "@/lib/admin/runner-rename-core";
 import { applyRunnerRename, type RunnerRenameFailure } from "@/lib/admin/runner-rename";
-import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
 import { PHOTOS_CACHE_TAG } from "@/lib/photos/queries";
 import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
@@ -23,7 +23,7 @@ function modeOf(value: string): RunnerRenameMode {
  * detail běžce v Číselnících.
  */
 export async function renameRunnerAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("dictionaries.runners", "write");
   const runnerId = formString(formData, "runnerId");
   const lastName = formString(formData, "prijmeni");
   const firstName = formString(formData, "jmeno");

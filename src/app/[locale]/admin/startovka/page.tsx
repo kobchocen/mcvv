@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink } from "@/components/molecules";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import {
   applyStartListProposal,
@@ -11,7 +10,8 @@ import {
   swapStartBibs,
   toggleStartLock,
 } from "@/lib/admin/startlist";
-import { requireStaff } from "@/lib/admin/staff";
+import { getAccess, requireSection } from "@/lib/admin/access";
+import { McvvAdminSectionFrame } from "@/components/organisms/mcvv-admin-section-frame";
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
 import {
   specialCheckState,
@@ -20,7 +20,7 @@ import {
   specialStartPartnerText,
 } from "@/lib/admin/special-start-view";
 import { specialRangeText } from "@/lib/race/special-start";
-import { getSiteSettings } from "@/lib/settings/site";
+import { getSiteSettings, startlistDrawConfirmed } from "@/lib/settings/site";
 import { formatInterval } from "@/lib/race/start-settings";
 import {
   checkStartList,
@@ -88,10 +88,11 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("startlist.list", "read");
   const t = await getTranslations({ locale, namespace: "StartAdmin" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
   const specialT = await getTranslations({ locale, namespace: "SpecialStart" });
+  const navCopy = await getTranslations({ locale, namespace: "AdminSectionNav" });
+  const access = await getAccess();
   const query = await searchParams;
   const parsedYear = Number.parseInt(query.rok ?? "", 10);
   const year =
@@ -127,8 +128,10 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
   const valid = allRows.filter((row) => row.valid);
   const withBib = valid.filter((row) => row.bib != null).length;
 
-  // Po zveřejnění je návrh zakázaný (UI i server action); náhled se ani nepočítá.
-  const proposalLocked = startListProposalLock(site).locked;
+  // Po potvrzení losování je návrh zakázaný (UI i server action); náhled se ani nepočítá.
+  const proposalLock = startListProposalLock(site, year);
+  const proposalLocked = proposalLock.locked;
+  const drawHidden = !site.startlistPublished && startlistDrawConfirmed(site, year);
   const showProposal = query.navrh === "1" && !proposalLocked;
   const input = showProposal ? await buildGeneratorInput(year, settings, allRows) : null;
   const proposal = input ? generateStartList(input) : null;
@@ -239,6 +242,8 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
         return t("errBlocking");
       case "published":
         return t("proposeLockedPublished");
+      case "drawn":
+        return t("proposeLockedDrawn");
       default:
         return null;
     }
@@ -252,511 +257,558 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <McvvAdminHomeLink label={admin("title")} />
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
-            {t("title", { year })}
-          </h1>
-          <a
-            href={`/api/admin/startovka/pdf?rok=${year}&lang=${locale}`}
-            className="inline-flex h-10 items-center bg-race-accent-solid px-4 font-display text-sm font-semibold text-white hover:bg-race-accent-solid-hover"
-            data-testid="startlist-pdf"
-          >
-            {t("pdf")}
-          </a>
-        </div>
-        <p className="mt-3 flex flex-wrap gap-3 text-sm">
-          {yearLinks.map((value) => (
-            <Link
-              key={value}
-              href={{ pathname: "/admin/startovka", query: { rok: String(value) } }}
+      <McvvAdminSectionFrame
+        title={navCopy("title")}
+        items={
+          access.v2
+            ? [
+                { id: "rezerva", label: t("reserveHeading") },
+                { id: "kontrola", label: t("issuesHeading") },
+                { id: "navrh", label: t("proposalHeading") },
+                { id: "prohozeni", label: t("swapHeading") },
+                { id: "seznam", label: navCopy("startlist") },
+              ]
+            : null
+        }
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
+              {t("title", { year })}
+            </h1>
+            <a
+              href={`/api/admin/startovka/pdf?rok=${year}&lang=${locale}`}
+              className="inline-flex h-10 items-center bg-race-accent-solid px-4 font-display text-sm font-semibold text-white hover:bg-race-accent-solid-hover"
+              data-testid="startlist-pdf"
+            >
+              {t("pdf")}
+            </a>
+          </div>
+          <p className="mt-3 flex flex-wrap gap-3 text-sm">
+            {yearLinks.map((value) => (
+              <Link
+                key={value}
+                href={{ pathname: "/admin/startovka", query: { rok: String(value) } }}
+                className={
+                  value === year
+                    ? "font-semibold text-race-accent"
+                    : "text-race-muted hover:text-foreground"
+                }
+              >
+                {value}
+              </Link>
+            ))}
+          </p>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{t("intro")}</p>
+          <p className="mt-3 text-sm text-foreground dark:text-white">
+            {t("modelLine", {
+              zero: formatClock(model.zeroSeconds),
+              interval: model.intervalSeconds,
+              second: model.secondStartFrom,
+              men: champions.men ?? "—",
+              women: champions.women ?? "—",
+            })}{" "}
+            ·{" "}
+            <Link href={editionLink} className={linkButton}>
+              {t("editModel")}
+            </Link>
+          </p>
+          {!settings.editionId ? (
+            <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
+              {t("noEdition", { year })}
+            </p>
+          ) : null}
+          <p className="mt-1 text-sm">
+            <span
               className={
-                value === year
-                  ? "font-semibold text-race-accent"
-                  : "text-race-muted hover:text-foreground"
+                site.startlistPublished
+                  ? "font-semibold text-emerald-700 dark:text-emerald-400"
+                  : "text-race-muted"
               }
             >
-              {value}
+              {site.startlistPublished
+                ? t("published")
+                : drawHidden
+                  ? t("drawnHidden")
+                  : t("unpublished")}
+            </span>{" "}
+            <Link href="/admin/nastaveni" className={linkButton}>
+              {t("publishLink")}
             </Link>
-          ))}
-        </p>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{t("intro")}</p>
-        <p className="mt-3 text-sm text-foreground dark:text-white">
-          {t("modelLine", {
-            zero: formatClock(model.zeroSeconds),
-            interval: model.intervalSeconds,
-            second: model.secondStartFrom,
-            men: champions.men ?? "—",
-            women: champions.women ?? "—",
-          })}{" "}
-          ·{" "}
-          <Link href={editionLink} className={linkButton}>
-            {t("editModel")}
-          </Link>
-        </p>
-        {!settings.editionId ? (
-          <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-            {t("noEdition", { year })}
           </p>
-        ) : null}
-        <p className="mt-1 text-sm">
-          <span
-            className={
-              site.startlistPublished
-                ? "font-semibold text-emerald-700 dark:text-emerald-400"
-                : "text-race-muted"
-            }
-          >
-            {site.startlistPublished ? t("published") : t("unpublished")}
-          </span>{" "}
-          <Link href="/admin/nastaveni" className={linkButton}>
-            {t("publishLink")}
-          </Link>
-        </p>
-        <p className="mt-1 text-sm text-race-muted">
-          {t("stats", { valid: valid.length, withBib, withoutBib: valid.length - withBib })} ·{" "}
-          <Link
-            href={{ pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year) } }}
-            className="font-medium text-race-accent hover:underline"
-          >
-            {specialT("overviewLink", { count: specialCount })}
-          </Link>
-        </p>
+          <p className="mt-1 text-sm text-race-muted">
+            {t("stats", { valid: valid.length, withBib, withoutBib: valid.length - withBib })} ·{" "}
+            <Link
+              href={{ pathname: "/admin/prihlasky/spec-starty", query: { rok: String(year) } }}
+              className="font-medium text-race-accent hover:underline"
+            >
+              {specialT("overviewLink", { count: specialCount })}
+            </Link>
+          </p>
 
-        {flash ? (
-          <p
-            role="status"
-            className="mt-6 border-l-4 border-emerald-600 bg-emerald-600/10 px-3 py-2 text-sm"
-          >
-            {flash}
-          </p>
-        ) : null}
-        {error ? (
-          <div
-            role="alert"
-            className="mt-6 flex flex-wrap items-center gap-3 border-l-4 border-red-600 bg-red-600/10 px-3 py-2 text-sm"
-          >
-            <span>{error}</span>
-            {duplicateRow?.bib != null && query.cislo ? (
-              <form action={swapStartBibs}>
-                <input type="hidden" name="year" value={year} />
-                <input type="hidden" name="bibA" value={duplicateRow.bib} />
-                <input type="hidden" name="bibB" value={query.cislo} />
-                <button type="submit" className={linkButton}>
-                  {t("errDuplicateSwap")} ({duplicateRow.bib} ↔ {query.cislo})
-                </button>
-              </form>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <section className={card} data-testid="startlist-reserve">
-            <h2 className={cardTitle}>{t("reserveHeading")}</h2>
-            <p className="mt-1 text-sm text-race-muted">{t("reserveHint")}</p>
-            <ul className="mt-3 grid gap-1 text-sm">
-              {reserve.map((item) => (
-                <li key={item.series}>
-                  <span className="font-semibold tabular-nums">
-                    {t("reserveSeries", {
-                      n: item.series,
-                      ranges: item.intervals.map(formatInterval).join(", ") || "—",
-                    })}
-                  </span>
-                  {item.used > 0 ? (
-                    <span className="text-race-muted">
-                      {" "}
-                      · {t("reserveUsed", { count: item.used })}
+          {flash ? (
+            <p
+              role="status"
+              className="mt-6 border-l-4 border-emerald-600 bg-emerald-600/10 px-3 py-2 text-sm"
+            >
+              {flash}
+            </p>
+          ) : null}
+          {error ? (
+            <div
+              role="alert"
+              className="mt-6 flex flex-wrap items-center gap-3 border-l-4 border-red-600 bg-red-600/10 px-3 py-2 text-sm"
+            >
+              <span>{error}</span>
+              {duplicateRow?.bib != null && query.cislo ? (
+                <form action={swapStartBibs}>
+                  <input type="hidden" name="year" value={year} />
+                  <input type="hidden" name="bibA" value={duplicateRow.bib} />
+                  <input type="hidden" name="bibB" value={query.cislo} />
+                  <button type="submit" className={linkButton}>
+                    {t("errDuplicateSwap")} ({duplicateRow.bib} ↔ {query.cislo})
+                  </button>
+                </form>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
+            <section
+              id="rezerva"
+              className={cn(card, "scroll-mt-16")}
+              data-testid="startlist-reserve"
+            >
+              <h2 className={cardTitle}>{t("reserveHeading")}</h2>
+              <p className="mt-1 text-sm text-race-muted">{t("reserveHint")}</p>
+              <ul className="mt-3 grid gap-1 text-sm">
+                {reserve.map((item) => (
+                  <li key={item.series}>
+                    <span className="font-semibold tabular-nums">
+                      {t("reserveSeries", {
+                        n: item.series,
+                        ranges: item.intervals.map(formatInterval).join(", ") || "—",
+                      })}
                     </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section className={card} data-testid="startlist-issues">
-            <h2 className={cardTitle}>{t("issuesHeading")}</h2>
-            {issues.length === 0 ? (
-              <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
-                {t("issuesNone")}
-              </p>
-            ) : (
-              <ul className="mt-2 grid max-h-48 gap-1 overflow-y-auto text-sm">
-                {issues.map((issue, index) => (
-                  <li
-                    key={index}
-                    className={
-                      issue.code === "duplicate"
-                        ? "font-semibold text-red-700 dark:text-red-400"
-                        : "text-amber-800 dark:text-amber-300"
-                    }
-                  >
-                    {issueText(issue)}
+                    {item.used > 0 ? (
+                      <span className="text-race-muted">
+                        {" "}
+                        · {t("reserveUsed", { count: item.used })}
+                      </span>
+                    ) : null}
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
-        </div>
-
-        <section className={cn(card, "mt-4")} data-testid="startlist-proposal">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className={cardTitle}>{t("proposalHeading")}</h2>
-            {showProposal ? (
-              <Link
-                href={{ pathname: "/admin/startovka", query: { rok: String(year) } }}
-                className="text-sm text-race-muted hover:underline"
-              >
-                {t("proposalCancel")}
-              </Link>
-            ) : (
-              <form method="get">
-                <input type="hidden" name="rok" value={year} />
-                <input type="hidden" name="navrh" value="1" />
-                <Button
-                  type="submit"
-                  disabled={proposalLocked}
-                  aria-describedby={proposalLocked ? "startlist-propose-locked" : undefined}
-                  data-testid="startlist-propose"
-                  className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
-                >
-                  {t("proposeButton")}
-                </Button>
-              </form>
-            )}
-          </div>
-          {proposalLocked ? (
-            <p
-              id="startlist-propose-locked"
-              data-testid="startlist-propose-locked"
-              className="mt-2 max-w-4xl border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm"
+            </section>
+            <section
+              id="kontrola"
+              className={cn(card, "scroll-mt-16")}
+              data-testid="startlist-issues"
             >
-              {t("proposeLockedPublished")}{" "}
-              <Link href="/admin/nastaveni" className={linkButton}>
-                {t("publishLink")}
-              </Link>
-            </p>
-          ) : null}
-          <p className="mt-1 max-w-4xl text-sm leading-6 text-race-muted">
-            {t("proposeHint", {
-              organizer: specialRangeText(model, "organizer"),
-              early: specialRangeText(model, "early"),
-              late: specialRangeText(model, "late"),
-            })}
-          </p>
-          {proposal ? (
-            <div className="mt-4 grid gap-4">
-              {proposal.warnings.length > 0 ? (
-                <ul className="grid gap-1 border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm">
-                  {proposal.warnings.map((warning, index) => (
-                    <li key={index}>{warningText(warning)}</li>
+              <h2 className={cardTitle}>{t("issuesHeading")}</h2>
+              {issues.length === 0 ? (
+                <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
+                  {t("issuesNone")}
+                </p>
+              ) : (
+                <ul className="mt-2 grid max-h-48 gap-1 overflow-y-auto text-sm">
+                  {issues.map((issue, index) => (
+                    <li
+                      key={index}
+                      className={
+                        issue.code === "duplicate"
+                          ? "font-semibold text-red-700 dark:text-red-400"
+                          : "text-amber-800 dark:text-amber-300"
+                      }
+                    >
+                      {issueText(issue)}
+                    </li>
                   ))}
                 </ul>
-              ) : null}
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                      <th className="py-2 pr-3">{t("colCategory")}</th>
-                      <th className="py-2 pr-3">{t("colRange")}</th>
-                      <th className="py-2 pr-3">{t("colTimes")}</th>
-                      <th className="py-2 pr-3">{t("colRunners")}</th>
-                      <th className="py-2 pr-3">{t("colSlots")}</th>
-                      <th className="py-2">{t("colAssigned")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {proposal.categories.map((row) => (
-                      <tr
-                        key={row.categoryId}
-                        className={cn(
-                          "border-b border-race-line/40",
-                          row.runners > row.slots && "text-red-700 dark:text-red-400",
-                        )}
-                      >
-                        <td className="py-1.5 pr-3">
-                          <span className="font-semibold">{row.categoryId}</span>{" "}
-                          {categoryName.get(row.categoryId)}
-                        </td>
-                        <td className="py-1.5 pr-3 tabular-nums">
-                          {row.bibFrom}–{row.bibTo}
-                        </td>
-                        <td className="py-1.5 pr-3 tabular-nums text-race-muted">
-                          {startTimeForBib(model, row.bibFrom)} –{" "}
-                          {startTimeForBib(model, row.bibTo)}
-                        </td>
-                        <td className="py-1.5 pr-3 tabular-nums">{row.runners}</td>
-                        <td className="py-1.5 pr-3 tabular-nums">{row.slots}</td>
-                        <td className="py-1.5 tabular-nums">{row.assigned}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {proposal.changed === 0 ? (
-                <p className="text-sm text-race-muted">{t("proposalNoChange")}</p>
+              )}
+            </section>
+          </div>
+
+          <section
+            id="navrh"
+            className={cn(card, "mt-4 scroll-mt-16")}
+            data-testid="startlist-proposal"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className={cardTitle}>{t("proposalHeading")}</h2>
+              {showProposal ? (
+                <Link
+                  href={{ pathname: "/admin/startovka", query: { rok: String(year) } }}
+                  className="text-sm text-race-muted hover:underline"
+                >
+                  {t("proposalCancel")}
+                </Link>
               ) : (
-                <>
-                  <p className="text-sm font-semibold">
-                    {t("proposalSummary", { changed: proposal.changed })}
-                  </p>
-                  <div className="max-h-96 overflow-auto border border-race-line/40">
-                    <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
-                      <thead className="sticky top-0 bg-race-surface">
-                        <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                          <th className="px-2 py-2">{t("colName")}</th>
-                          <th className="px-2 py-2">{t("colCategory")}</th>
-                          <th className="px-2 py-2">{t("colChange")}</th>
-                          <th className="px-2 py-2">{t("colTime")}</th>
-                          <th className="px-2 py-2">{t("colReason")}</th>
+                <form method="get">
+                  <input type="hidden" name="rok" value={year} />
+                  <input type="hidden" name="navrh" value="1" />
+                  <Button
+                    type="submit"
+                    disabled={proposalLocked}
+                    aria-describedby={proposalLocked ? "startlist-propose-locked" : undefined}
+                    data-testid="startlist-propose"
+                    className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
+                  >
+                    {t("proposeButton")}
+                  </Button>
+                </form>
+              )}
+            </div>
+            {proposalLocked ? (
+              <p
+                id="startlist-propose-locked"
+                data-testid="startlist-propose-locked"
+                className="mt-2 max-w-4xl border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm"
+              >
+                {proposalLock.locked && proposalLock.reason === "drawn"
+                  ? t("proposeLockedDrawn")
+                  : t("proposeLockedPublished")}{" "}
+                <Link href="/admin/nastaveni" className={linkButton}>
+                  {t("publishLink")}
+                </Link>
+              </p>
+            ) : null}
+            <p className="mt-1 max-w-4xl text-sm leading-6 text-race-muted">
+              {t("proposeHint", {
+                organizer: specialRangeText(model, "organizer"),
+                early: specialRangeText(model, "early"),
+                late: specialRangeText(model, "late"),
+              })}
+            </p>
+            {proposal ? (
+              <div className="mt-4 grid gap-4">
+                {proposal.warnings.length > 0 ? (
+                  <ul className="grid gap-1 border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm">
+                    {proposal.warnings.map((warning, index) => (
+                      <li key={index}>{warningText(warning)}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                        <th className="py-2 pr-3">{t("colCategory")}</th>
+                        <th className="py-2 pr-3">{t("colRange")}</th>
+                        <th className="py-2 pr-3">{t("colTimes")}</th>
+                        <th className="py-2 pr-3">{t("colRunners")}</th>
+                        <th className="py-2 pr-3">{t("colSlots")}</th>
+                        <th className="py-2">{t("colAssigned")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {proposal.categories.map((row) => (
+                        <tr
+                          key={row.categoryId}
+                          className={cn(
+                            "border-b border-race-line/40",
+                            row.runners > row.slots && "text-red-700 dark:text-red-400",
+                          )}
+                        >
+                          <td className="py-1.5 pr-3">
+                            <span className="font-semibold">{row.categoryId}</span>{" "}
+                            {categoryName.get(row.categoryId)}
+                          </td>
+                          <td className="py-1.5 pr-3 tabular-nums">
+                            {row.bibFrom}–{row.bibTo}
+                          </td>
+                          <td className="py-1.5 pr-3 tabular-nums text-race-muted">
+                            {startTimeForBib(model, row.bibFrom)} –{" "}
+                            {startTimeForBib(model, row.bibTo)}
+                          </td>
+                          <td className="py-1.5 pr-3 tabular-nums">{row.runners}</td>
+                          <td className="py-1.5 pr-3 tabular-nums">{row.slots}</td>
+                          <td className="py-1.5 tabular-nums">{row.assigned}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {proposal.lines
-                          .filter((line) => line.bib !== line.previousBib)
-                          .sort(
-                            (a, b) =>
-                              (a.bib ?? 99999) - (b.bib ?? 99999) ||
-                              nameOf(a.runnerId).localeCompare(nameOf(b.runnerId)),
-                          )
-                          .map((line) => (
-                            <tr key={line.runnerId} className="border-b border-race-line/30">
-                              <td className="px-2 py-1">{nameOf(line.runnerId)}</td>
-                              <td className="px-2 py-1">{byId.get(line.runnerId)?.categoryId}</td>
-                              <td className="px-2 py-1 tabular-nums">
-                                {line.previousBib ?? "—"} → <strong>{line.bib ?? "—"}</strong>
-                              </td>
-                              <td className="px-2 py-1 tabular-nums">
-                                {startTimeForBib(model, line.bib)}
-                              </td>
-                              <td className="px-2 py-1 text-race-muted">
-                                {t(`reason_${line.reason}`)}
-                                {line.outsideCategory ? (
-                                  <span className={outsideBadge}>{t("outsideBadge")}</span>
-                                ) : null}
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {proposal.blocking ? (
-                    <p className="text-sm font-semibold text-red-700 dark:text-red-400">
-                      {t("proposalBlocked")}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {proposal.changed === 0 ? (
+                  <p className="text-sm text-race-muted">{t("proposalNoChange")}</p>
+                ) : null}
+                {proposal.changed > 0 ? (
+                  <>
+                    <p className="text-sm font-semibold">
+                      {t("proposalSummary", { changed: proposal.changed })}
                     </p>
-                  ) : (
-                    <form action={applyStartListProposal}>
+                    <div className="max-h-96 overflow-auto border border-race-line/40">
+                      <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+                        <thead className="sticky top-0 bg-race-surface">
+                          <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                            <th className="px-2 py-2">{t("colName")}</th>
+                            <th className="px-2 py-2">{t("colCategory")}</th>
+                            <th className="px-2 py-2">{t("colChange")}</th>
+                            <th className="px-2 py-2">{t("colTime")}</th>
+                            <th className="px-2 py-2">{t("colReason")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {proposal.lines
+                            .filter((line) => line.bib !== line.previousBib)
+                            .sort(
+                              (a, b) =>
+                                (a.bib ?? 99999) - (b.bib ?? 99999) ||
+                                nameOf(a.runnerId).localeCompare(nameOf(b.runnerId)),
+                            )
+                            .map((line) => (
+                              <tr key={line.runnerId} className="border-b border-race-line/30">
+                                <td className="px-2 py-1">{nameOf(line.runnerId)}</td>
+                                <td className="px-2 py-1">{byId.get(line.runnerId)?.categoryId}</td>
+                                <td className="px-2 py-1 tabular-nums">
+                                  {line.previousBib ?? "—"} → <strong>{line.bib ?? "—"}</strong>
+                                </td>
+                                <td className="px-2 py-1 tabular-nums">
+                                  {startTimeForBib(model, line.bib)}
+                                </td>
+                                <td className="px-2 py-1 text-race-muted">
+                                  {t(`reason_${line.reason}`)}
+                                  {line.outsideCategory ? (
+                                    <span className={outsideBadge}>{t("outsideBadge")}</span>
+                                  ) : null}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : null}
+                {proposal.blocking ? (
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                    {t("proposalBlocked")}
+                  </p>
+                ) : (
+                  <form action={applyStartListProposal} className="grid gap-2">
+                    <p className="max-w-4xl border-l-4 border-amber-500 bg-amber-500/10 px-3 py-2 text-sm">
+                      {t("proposalApplyHint")}
+                    </p>
+                    <div>
                       <input type="hidden" name="year" value={year} />
                       <input type="hidden" name="fingerprint" value={fingerprint} />
                       <Button
                         type="submit"
+                        data-testid="startlist-confirm-draw"
                         className="h-10 bg-race-accent-solid font-display font-semibold text-white hover:bg-race-accent-solid-hover"
                       >
                         {t("proposalApply")}
                       </Button>
-                    </form>
-                  )}
-                </>
-              )}
-            </div>
-          ) : null}
-        </section>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          <section className={card}>
-            <h2 className={cardTitle}>{t("swapHeading")}</h2>
-            <form action={swapStartBibs} className="mt-3 flex flex-wrap items-end gap-2">
-              <input type="hidden" name="year" value={year} />
-              <label className="grid gap-1 text-sm">
-                <span className="text-race-muted">{t("swapA")}</span>
-                <input
-                  name="bibA"
-                  type="number"
-                  min={1}
-                  required
-                  className={cn(smallInput, "w-24")}
-                />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-race-muted">{t("swapB")}</span>
-                <input
-                  name="bibB"
-                  type="number"
-                  min={1}
-                  required
-                  className={cn(smallInput, "w-24")}
-                />
-              </label>
-              <Button type="submit" variant="outline" className="h-9 border-race-line">
-                {t("swapButton")}
-              </Button>
-            </form>
-            <p className="mt-2 text-xs text-race-muted">{t("swapHint")}</p>
+                    </div>
+                  </form>
+                )}
+              </div>
+            ) : null}
           </section>
-        </div>
 
-        <form method="get" className="mt-8 flex flex-wrap items-end gap-3">
-          <input type="hidden" name="rok" value={year} />
-          <label className="grid gap-1 text-sm">
-            <span className="text-race-muted">{t("filterCategory")}</span>
-            <select
-              name="kat"
-              defaultValue={category}
-              className="h-10 border border-race-line bg-race-surface px-2"
-            >
-              <option value="">{t("filterAll")}</option>
-              {settings.categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.id} – {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm">
-            <span className="text-race-muted">{t("filterSearch")}</span>
-            <input
-              name="q"
-              defaultValue={query.q ?? ""}
-              className="h-10 w-56 border border-race-line bg-race-surface px-2"
-            />
-          </label>
-          <label className="grid gap-1 text-sm">
-            <span className="text-race-muted">{t("sortBy")}</span>
-            <select
-              name="razeni"
-              defaultValue={sortByTime ? "cas" : "cislo"}
-              className="h-10 border border-race-line bg-race-surface px-2"
-            >
-              <option value="cislo">{t("sortBib")}</option>
-              <option value="cas">{t("sortTime")}</option>
-            </select>
-          </label>
-          <Button type="submit" variant="outline" className="h-10 border-race-line bg-race-surface">
-            {t("filter")}
-          </Button>
-          <span className="text-sm text-race-muted">
-            {t("shown", { count: visible.length, total: rows.length })}
-          </span>
-        </form>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <section id="prohozeni" className={cn(card, "scroll-mt-16")}>
+              <h2 className={cardTitle}>{t("swapHeading")}</h2>
+              <form action={swapStartBibs} className="mt-3 flex flex-wrap items-end gap-2">
+                <input type="hidden" name="year" value={year} />
+                <label className="grid gap-1 text-sm">
+                  <span className="text-race-muted">{t("swapA")}</span>
+                  <input
+                    name="bibA"
+                    type="number"
+                    min={1}
+                    required
+                    className={cn(smallInput, "w-24")}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-race-muted">{t("swapB")}</span>
+                  <input
+                    name="bibB"
+                    type="number"
+                    min={1}
+                    required
+                    className={cn(smallInput, "w-24")}
+                  />
+                </label>
+                <Button type="submit" variant="outline" className="h-9 border-race-line">
+                  {t("swapButton")}
+                </Button>
+              </form>
+              <p className="mt-2 text-xs text-race-muted">{t("swapHint")}</p>
+            </section>
+          </div>
 
-        {rows.length === 0 ? (
-          <p className="mt-6 text-sm text-race-muted">{t("empty")}</p>
-        ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table
-              className="w-full min-w-[80rem] border-collapse text-left text-sm"
-              data-testid="startlist-admin-table"
+          <form
+            id="seznam"
+            method="get"
+            className="mt-8 flex scroll-mt-16 flex-wrap items-end gap-3"
+          >
+            <input type="hidden" name="rok" value={year} />
+            <label className="grid gap-1 text-sm">
+              <span className="text-race-muted">{t("filterCategory")}</span>
+              <select
+                name="kat"
+                defaultValue={category}
+                className="h-10 border border-race-line bg-race-surface px-2"
+              >
+                <option value="">{t("filterAll")}</option>
+                {settings.categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.id} – {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm">
+              <span className="text-race-muted">{t("filterSearch")}</span>
+              <input
+                name="q"
+                defaultValue={query.q ?? ""}
+                className="h-10 w-56 border border-race-line bg-race-surface px-2"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              <span className="text-race-muted">{t("sortBy")}</span>
+              <select
+                name="razeni"
+                defaultValue={sortByTime ? "cas" : "cislo"}
+                className="h-10 border border-race-line bg-race-surface px-2"
+              >
+                <option value="cislo">{t("sortBib")}</option>
+                <option value="cas">{t("sortTime")}</option>
+              </select>
+            </label>
+            <Button
+              type="submit"
+              variant="outline"
+              className="h-10 border-race-line bg-race-surface"
             >
-              <thead>
-                <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                  <th className="py-2 pr-3">{t("colBib")}</th>
-                  <th className="py-2 pr-3">{t("colTime")}</th>
-                  <th className="py-2 pr-3">{t("colName")}</th>
-                  <th className="py-2 pr-3">{t("colBirth")}</th>
-                  <th className="py-2 pr-3">{t("colClub")}</th>
-                  <th className="py-2 pr-3">{t("colRegistration")}</th>
-                  <th className="py-2 pr-3">{t("colCategory")}</th>
-                  <th className="py-2 pr-3">{t("colSpecial")}</th>
-                  <th className="py-2 pr-3">{t("colLastYear")}</th>
-                  <th className="py-2 pr-3">{t("colBest")}</th>
-                  <th className="py-2 pr-3">{t("colLock")}</th>
-                  <th className="py-2">{t("colNote")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((row) => (
-                  <StartRow
-                    key={row.runnerId}
-                    row={row}
-                    year={year}
-                    time={startTimeForBib(model, row.bib)}
-                    highlighted={query.bezec === row.runnerId}
-                    champion={row.bib != null && championBibs.has(row.bib)}
-                    outside={
-                      !row.cancelled &&
-                      outsideCategory(model, ranges, champions, {
-                        ...row,
-                        specialKind: row.special?.kind ?? null,
-                      })
-                    }
-                    special={(() => {
-                      const check = row.special ? specialChecks.get(row.runnerId) : undefined;
-                      const partnerText = row.special
-                        ? specialStartPartnerText(specialT, row.special, (id) =>
-                            byId.has(id) ? nameOf(id) : null,
-                          )
-                        : null;
-                      return (
-                        <div className="grid justify-items-start gap-0.5">
-                          {row.special ? (
-                            // Nastavuje se jen v administraci přihlášek (Q229) – odkaz na detail.
-                            <Link
-                              href={{
-                                pathname: "/admin/prihlasky/[rok]/[id]",
-                                params: { rok: String(year), id: String(row.registrationId) },
-                                query: { bezec: row.runnerId },
-                              }}
-                              className="hover:opacity-80"
-                            >
-                              <McvvAdminSpecialStartBadge
-                                label={specialT(`kind_${row.special.kind}`)}
-                                state={check ? specialCheckState(check) : undefined}
-                                title={[
-                                  check
-                                    ? specialCheckText(specialT, model, check, row.special)
-                                    : null,
-                                  partnerText,
-                                  row.special.note,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              />
-                            </Link>
-                          ) : null}
-                          {partnerText ? (
-                            <span className="max-w-[10rem] truncate text-[0.6875rem] text-race-muted">
-                              {partnerText}
-                            </span>
-                          ) : null}
-                          {row.messageThreadId != null ? (
-                            <span className="flex items-center gap-2">
+              {t("filter")}
+            </Button>
+            <span className="text-sm text-race-muted">
+              {t("shown", { count: visible.length, total: rows.length })}
+            </span>
+          </form>
+
+          {rows.length === 0 ? (
+            <p className="mt-6 text-sm text-race-muted">{t("empty")}</p>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table
+                className="w-full min-w-[80rem] border-collapse text-left text-sm"
+                data-testid="startlist-admin-table"
+              >
+                <thead>
+                  <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                    <th className="py-2 pr-3">{t("colBib")}</th>
+                    <th className="py-2 pr-3">{t("colTime")}</th>
+                    <th className="py-2 pr-3">{t("colName")}</th>
+                    <th className="py-2 pr-3">{t("colBirth")}</th>
+                    <th className="py-2 pr-3">{t("colClub")}</th>
+                    <th className="py-2 pr-3">{t("colRegistration")}</th>
+                    <th className="py-2 pr-3">{t("colCategory")}</th>
+                    <th className="py-2 pr-3">{t("colSpecial")}</th>
+                    <th className="py-2 pr-3">{t("colLastYear")}</th>
+                    <th className="py-2 pr-3">{t("colBest")}</th>
+                    <th className="py-2 pr-3">{t("colLock")}</th>
+                    <th className="py-2">{t("colNote")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((row) => (
+                    <StartRow
+                      key={row.runnerId}
+                      row={row}
+                      year={year}
+                      time={startTimeForBib(model, row.bib)}
+                      highlighted={query.bezec === row.runnerId}
+                      champion={row.bib != null && championBibs.has(row.bib)}
+                      outside={
+                        !row.cancelled &&
+                        outsideCategory(model, ranges, champions, {
+                          ...row,
+                          specialKind: row.special?.kind ?? null,
+                        })
+                      }
+                      special={(() => {
+                        const check = row.special ? specialChecks.get(row.runnerId) : undefined;
+                        const partnerText = row.special
+                          ? specialStartPartnerText(specialT, row.special, (id) =>
+                              byId.has(id) ? nameOf(id) : null,
+                            )
+                          : null;
+                        return (
+                          <div className="grid justify-items-start gap-0.5">
+                            {row.special ? (
+                              // Nastavuje se jen v administraci přihlášek (Q229) – odkaz na detail.
                               <Link
                                 href={{
-                                  pathname: "/admin/zpravy/[id]",
-                                  params: { id: String(row.messageThreadId) },
+                                  pathname: "/admin/prihlasky/[rok]/[id]",
+                                  params: { rok: String(year), id: String(row.registrationId) },
+                                  query: { bezec: row.runnerId },
                                 }}
-                                title={specialT("hasMessageTitle")}
-                                aria-label={specialT("hasMessage")}
-                                className="text-xs text-race-accent hover:opacity-80"
-                                data-testid={`has-message-${row.runnerId}`}
+                                className="hover:opacity-80"
                               >
-                                ✉
+                                <McvvAdminSpecialStartBadge
+                                  label={specialT(`kind_${row.special.kind}`)}
+                                  state={check ? specialCheckState(check) : undefined}
+                                  title={[
+                                    check
+                                      ? specialCheckText(specialT, model, check, row.special)
+                                      : null,
+                                    partnerText,
+                                    row.special.note,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                />
                               </Link>
-                            </span>
-                          ) : null}
-                        </div>
-                      );
-                    })()}
-                    labels={{
-                      save: t("save"),
-                      lock: t("lock"),
-                      unlock: t("unlock"),
-                      lockedTitle: t("lockedTitle"),
-                      invalidTitle: t("invalidTitle"),
-                      champion: t("championBadge"),
-                      outside: t("outsideBadge"),
-                      outsideTitle: t("outsideTitle", {
-                        range: rangeOf.get(row.categoryId)
-                          ? `${rangeOf.get(row.categoryId)!.bibFrom}–${rangeOf.get(row.categoryId)!.bibTo}`
-                          : "—",
-                      }),
-                    }}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                            ) : null}
+                            {partnerText ? (
+                              <span className="max-w-[10rem] truncate text-[0.6875rem] text-race-muted">
+                                {partnerText}
+                              </span>
+                            ) : null}
+                            {row.messageThreadId != null ? (
+                              <span className="flex items-center gap-2">
+                                <Link
+                                  href={{
+                                    pathname: "/admin/zpravy/[id]",
+                                    params: { id: String(row.messageThreadId) },
+                                  }}
+                                  title={specialT("hasMessageTitle")}
+                                  aria-label={specialT("hasMessage")}
+                                  className="text-xs text-race-accent hover:opacity-80"
+                                  data-testid={`has-message-${row.runnerId}`}
+                                >
+                                  ✉
+                                </Link>
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
+                      labels={{
+                        save: t("save"),
+                        lock: t("lock"),
+                        unlock: t("unlock"),
+                        lockedTitle: t("lockedTitle"),
+                        invalidTitle: t("invalidTitle"),
+                        champion: t("championBadge"),
+                        outside: t("outsideBadge"),
+                        outsideTitle: t("outsideTitle", {
+                          range: rangeOf.get(row.categoryId)
+                            ? `${rangeOf.get(row.categoryId)!.bibFrom}–${rangeOf.get(row.categoryId)!.bibTo}`
+                            : "—",
+                        }),
+                      }}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </McvvAdminSectionFrame>
     </main>
   );
 }

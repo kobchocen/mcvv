@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  dataEpoch,
   inHiddenWindow,
   parseTestRun,
   publicHiddenWindow,
@@ -116,23 +115,22 @@ test("testRunExpiry: 3 h from zero (or start), never past race day 00:00", () =>
   );
 });
 
-test("validateTestStart: OFeed safeguard, active test, zero bounds, race day", () => {
+test("validateTestStart: active test, zero bounds, race day", () => {
   const now = new Date("2026-11-02T08:00:00.000Z");
   const base = {
     now,
     zero: new Date("2026-11-02T08:05:00.000Z"),
     cutoff: CUTOFF_2026,
     active: null,
-    ofeedProfile: "test" as const,
-    ofeedTestEventId: "123",
   };
   assert.equal(validateTestStart(base), null);
-  assert.equal(validateTestStart({ ...base, ofeedTestEventId: null }), "ofeedTestMissing");
-  assert.equal(validateTestStart({ ...base, ofeedProfile: "live" }), "ofeedProfile");
   assert.equal(
     validateTestStart({ ...base, active: run({ expiresAt: new Date(now.getTime() + H) }) }),
     "active",
   );
+  // běžící nový testovací režim (9026) starý test nepustí
+  assert.equal(validateTestStart({ ...base, testModeActive: true }), "testMode");
+  assert.equal(validateTestStart({ ...base, testModeActive: false }), null);
   // vypršelý test nebrání novému
   assert.equal(validateTestStart({ ...base, active: run({ expiresAt: now }) }), null);
   assert.equal(validateTestStart({ ...base, zero: null }), "zero");
@@ -174,14 +172,6 @@ test("testRunExpired and testDataWindow never reach past race day", () => {
     from: late.startedAt,
     until: CUTOFF_2026,
   });
-});
-
-test("dataEpoch changes with a new test run and with a new zero (Q72)", () => {
-  const zero = new Date("2026-11-02T09:15:00.000Z");
-  assert.equal(dataEpoch(null, zero), "live@2026-11-02T09:15:00.000Z");
-  assert.equal(dataEpoch(run(), zero), "test-abc123def0@2026-11-02T09:15:00.000Z");
-  assert.notEqual(dataEpoch(run({ id: "other12345" }), zero), dataEpoch(run(), zero));
-  assert.notEqual(dataEpoch(null, new Date(zero.getTime() + 1000)), dataEpoch(null, zero));
 });
 
 test("public online results hide everything written during a stored test (Q117)", () => {

@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminRoleForm } from "@/components/organisms/mcvv-admin-role-form";
 import { Button } from "@/components/ui/button";
-import { requireAdmin } from "@/lib/admin/staff";
-import { changeStartCorridor } from "@/lib/admin/users";
+import { getAccess, requireSection } from "@/lib/admin/access";
+import { viewAsRolesFor } from "@/lib/admin/view-as-core";
+import { McvvAdminViewAsForm } from "@/components/organisms/mcvv-admin-view-as";
+import { changeStartCorridor, changeUserRoles } from "@/lib/admin/users";
 import { isRoleChangeMailOutcome } from "@/lib/admin/role-change-mail";
 import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
+import { isStaffRoleCode, STAFF_ROLES, type StaffRole } from "@/lib/auth/staff-roles";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/format/date";
 import { getRaceContext } from "@/lib/live/race-context";
@@ -27,6 +29,8 @@ type SearchParams = {
   mail?: string;
   /** Uložen koridor startéra (id účtu). */
   corridor?: string;
+  /** Náhled role: nevybraná žádná role. */
+  nahled?: string;
 };
 
 type PageProps = Readonly<{
@@ -48,9 +52,18 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const actor = await requireAdmin();
+  const actor = await requireSection("users", "read");
+  const access = await getAccess();
   const copy = await getTranslations({ locale, namespace: "AdminUsers" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
+  const viewCopy = await getTranslations({ locale, namespace: "AdminViewAs" });
+  // Náhled očima jiné role: na stránku Uživatelé smí jen admin; během náhledu se nenabízí.
+  const viewAsMode = access.v2 ? "v2" : "legacy";
+  const viewAsRoles = access.preview
+    ? []
+    : viewAsRolesFor(viewAsMode).map((role) => ({
+        value: role,
+        label: copy(`${viewAsMode === "v2" ? "staffRole" : "role"}_${role}` as "role_admin"),
+      }));
   const sp = await searchParams;
 
   const roleFilter = isUserRole(sp.role) ? sp.role : undefined;
@@ -101,6 +114,19 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
         _count: { _all: true },
       })
     : [];
+  // Víc rolí na účet (P5): jen při zapnutém permissions.v2, jinak se stránka nemění.
+  const grantRows =
+    access.v2 && users.length
+      ? await prisma.userRoleGrant.findMany({
+          where: { userId: { in: users.map((user) => user.id) } },
+          select: { userId: true, role: true },
+        })
+      : [];
+  const grantsByUser = new Map<number, StaffRole[]>();
+  for (const row of grantRows) {
+    if (!isStaffRoleCode(row.role)) continue;
+    grantsByUser.set(row.userId, [...(grantsByUser.get(row.userId) ?? []), row.role]);
+  }
   const countByEmail = new Map<string, number>();
   for (const row of registrationCounts) {
     const key = (row.email ?? "").toLowerCase();
@@ -131,7 +157,6 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
@@ -146,6 +171,21 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
             </span>
           ))}
         </p>
+
+        {viewAsRoles.length ? (
+          <McvvAdminViewAsForm
+            locale={locale}
+            roles={viewAsRoles}
+            empty={sp.nahled === "prazdny"}
+            copy={{
+              title: viewCopy("title"),
+              intro: viewCopy("intro"),
+              mode: viewCopy(viewAsMode === "v2" ? "modeV2" : "modeLegacy"),
+              submit: viewCopy("submit"),
+              empty: viewCopy("empty"),
+            }}
+          />
+        ) : null}
 
         {errorKey ? (
           <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
@@ -265,7 +305,43 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
                         back={back}
                       />
                     )}
-                    {user.role === "starter" ? (
+                    {access.v2 && user.id !== actor.id ? (
+                      <details className="mt-2" data-testid={`roles-form-${user.id}`}>
+                        <summary className="cursor-pointer text-xs font-semibold text-race-accent">
+                          {copy("multiTitle")}
+                          {grantsByUser.get(user.id)?.length
+                            ? `: ${grantsByUser
+                                .get(user.id)!
+                                .map((role) => copy(`staffRole_${role}`))
+                                .join(", ")}`
+                            : ""}
+                        </summary>
+                        <form action={changeUserRoles} className="mt-2 grid gap-1">
+                          <input type="hidden" name="userId" value={user.id} />
+                          <input type="hidden" name="back" value={back} />
+                          {STAFF_ROLES.map((role) => (
+                            <label key={role} className="flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                name="roles"
+                                value={role}
+                                defaultChecked={grantsByUser.get(user.id)?.includes(role) ?? false}
+                              />
+                              {copy(`staffRole_${role}`)}
+                            </label>
+                          ))}
+                          <p className="max-w-xs text-xs text-race-muted">{copy("multiHint")}</p>
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            className="h-9 w-fit border-race-line bg-race-surface px-3 text-xs"
+                          >
+                            {copy("multiSave")}
+                          </Button>
+                        </form>
+                      </details>
+                    ) : null}
+                    {user.role === "starter" || grantsByUser.get(user.id)?.includes("starter") ? (
                       <form
                         action={changeStartCorridor}
                         className="mt-2 flex flex-wrap items-center gap-2"

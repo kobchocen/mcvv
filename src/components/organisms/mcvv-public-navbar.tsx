@@ -29,7 +29,7 @@ export async function McvvPublicNavbar({
               name: session.name,
               email: session.email,
               staff: adminAccess(session.role) !== "none",
-              adminHref: adminHomeHref(session.role),
+              adminHref: adminHomeHref(),
               starter,
               messages,
             }

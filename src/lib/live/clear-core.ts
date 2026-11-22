@@ -10,10 +10,7 @@ import { FINISH_SPLIT, isSplitCode, type Station } from "./stations";
 export const CLEAR_SOURCES = ["web", "obd", "admin"] as const;
 export type ClearSourceKind = (typeof CLEAR_SOURCES)[number];
 
-export type ClearSource =
-  | { kind: "all" }
-  | { kind: "source"; source: ClearSourceKind }
-  | { kind: "token"; tokenId: number };
+export type ClearSource = { kind: "all" } | { kind: "source"; source: ClearSourceKind };
 
 export type ClearFilter = {
   /** Kódy splitů (1–9), vždy aspoň jeden, seřazené. */
@@ -21,22 +18,19 @@ export type ClearFilter = {
   source: ClearSource;
 };
 
-/** Hodnota `<select name="source">`: `all`, `web`, `obd` nebo `token:{id}`. */
+/** Hodnota `<select name="source">`: `all`, `web`, `obd` (historické zápisy klienta OBD) nebo `admin`. */
 export function parseClearSource(raw: string | null | undefined): ClearSource | null {
   const value = (raw ?? "all").trim() || "all";
   if (value === "all") return { kind: "all" };
   if ((CLEAR_SOURCES as readonly string[]).includes(value)) {
     return { kind: "source", source: value as ClearSourceKind };
   }
-  const token = /^token:(\d{1,9})$/.exec(value);
-  if (token && Number(token[1]) > 0) return { kind: "token", tokenId: Number(token[1]) };
   return null;
 }
 
 export function formatClearSource(source: ClearSource): string {
   if (source.kind === "all") return "all";
-  if (source.kind === "source") return source.source;
-  return `token:${source.tokenId}`;
+  return source.source;
 }
 
 /** Splity k výběru: stanoviště splitmakerů + cíl. */

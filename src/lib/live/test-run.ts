@@ -5,7 +5,6 @@ import type { Prisma } from "@prisma/client";
 import { writeAudit, type AuditActor } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
-import { OFEED_STATE } from "@/lib/ofeed/settings";
 
 import { snapshotRows } from "./clear-core";
 import { LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
@@ -37,7 +36,9 @@ export type TestCleanup = {
   splitEntries: number;
   starts: number;
   startEntries: number;
-  tokensRevoked: number;
+  /** Cíl (#252): kliky stopek a opsaná čísla z testu. */
+  finishPunches: number;
+  finishBibs: number;
   zeroCleared: boolean;
 };
 
@@ -82,14 +83,31 @@ export async function peekStoredTestRun(
   return { run, cutoff };
 }
 
-/** Tick plánovače (OFeed, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
+/** Interní tick (`live/scheduler`, ~30 s): ukončí vypršelý test i bez návštěvy stránky. */
 export async function expireTestRunIfDue(now = new Date()): Promise<void> {
   await getActiveTestRun(now);
 }
 
+/** Stavy běhu nového testovacího režimu, které brání spuštění starého testu (#186). */
+const TEST_MODE_ACTIVE = ["running", "ended"];
+
+/** Běží (nebo čeká na likvidaci) nový testovací režim (ročník 9026)? */
+export async function testModeRunActive(
+  db: Pick<Prisma.TransactionClient, "testModeRun"> = prisma,
+): Promise<boolean> {
+  return (await db.testModeRun.count({ where: { status: { in: TEST_MODE_ACTIVE } } })) > 0;
+}
+
+export class TestModeActiveError extends Error {
+  constructor() {
+    super("test mode run is active");
+    this.name = "TestModeActiveError";
+  }
+}
+
 /**
- * Spustí test: uloží stav, nastaví zkušební nulu a smaže otisk posledního uploadu do OFeed
- * (první běh pošle čistá data do testovací akce). Kontroly dělá volající (validateTestStart).
+ * Spustí test: uloží stav a nastaví zkušební nulu. Kontroly dělá volající (validateTestStart);
+ * běžící nový testovací režim zastaví start i tady (TestModeActiveError).
  */
 export async function startTestRun(
   zero: Date,
@@ -106,6 +124,7 @@ export async function startTestRun(
     tokenIds: [],
   };
   await prisma.$transaction(async (tx) => {
+    if (await testModeRunActive(tx)) throw new TestModeActiveError();
     const text = serializeTestRun(run);
     await tx.setting.upsert({
       where: { key: TEST_RUN_KEY },
@@ -118,7 +137,6 @@ export async function startTestRun(
       update: { text: zeroText },
       create: { key: LIVE_ZERO_OVERRIDE_KEY, text: zeroText },
     });
-    await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
     await writeAudit(
       {
         actor,
@@ -136,18 +154,9 @@ export async function startTestRun(
   return run;
 }
 
-/** Klíč zařízení vytvořený během testu je testovací – při úklidu se zneplatní. */
-export async function registerTestToken(tokenId: number): Promise<boolean> {
-  const run = await getActiveTestRun();
-  if (!run) return false;
-  const text = serializeTestRun({ ...run, tokenIds: [...run.tokenIds, tokenId] });
-  await prisma.setting.update({ where: { key: TEST_RUN_KEY }, data: { text } });
-  return true;
-}
-
 /**
- * Ukončí test a automaticky uklidí (Q71): testovací mezičasy a deník, evidenci startu,
- * zkušební nulu a testovací klíče zařízení. Maže jen záznamy vzniklé během testu (okno od
+ * Ukončí test a automaticky uklidí (Q71): testovací mezičasy a deník, evidenci startu
+ * a zkušební nulu. Maže jen záznamy vzniklé během testu (okno od
  * spuštění do konce, nikdy přes den závodu 00:00), takže ostrá data zůstanou. Audit se
  * snímkem smazaných řádků. Bez aktivního testu nic nedělá (vrací null).
  */
@@ -179,13 +188,11 @@ export async function endTestRun(
       const startEntries = await tx.startCheckEntry.deleteMany({
         where: { year, receivedAt: range },
       });
-      const tokens =
-        run.tokenIds.length > 0
-          ? await tx.ingestToken.updateMany({
-              where: { id: { in: run.tokenIds }, revokedAt: null },
-              data: { revokedAt: now },
-            })
-          : { count: 0 };
+      // Cíl (#252): kliky a čísla z testu, jinak by v den závodu posunuly párování.
+      const finishPunches = await tx.finishPunch.deleteMany({
+        where: { year, createdAt: range },
+      });
+      const finishBibs = await tx.finishBib.deleteMany({ where: { year, createdAt: range } });
       // Zkušební nulu mažeme jen tehdy, když je to pořád nula tohoto testu.
       const zeroRow = await tx.setting.findUnique({
         where: { key: LIVE_ZERO_OVERRIDE_KEY },
@@ -196,14 +203,14 @@ export async function endTestRun(
         await tx.setting.delete({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
         zeroCleared = true;
       }
-      await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
 
       const result: TestCleanup = {
         splits: splits.count,
         splitEntries: splitEntries.count,
         starts: starts.count,
         startEntries: startEntries.count,
-        tokensRevoked: tokens.count,
+        finishPunches: finishPunches.count,
+        finishBibs: finishBibs.count,
         zeroCleared,
       };
       await writeAudit(

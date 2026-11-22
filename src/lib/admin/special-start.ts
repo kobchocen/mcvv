@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString } from "@/lib/admin/parse";
-import { requireStaff } from "@/lib/admin/staff";
 import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { startLineTarget } from "@/lib/audit/startlist";
@@ -71,7 +71,7 @@ function yearOf(data: FormData): number | null {
  * / `startlist.special_cleared` s před / po.
  */
 export async function saveSpecialStart(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.special", "write");
   const year = yearOf(formData);
   const runnerId = formString(formData, "runnerId");
   if (!year || !/^\d{8}$/.test(runnerId)) {

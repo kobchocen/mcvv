@@ -24,7 +24,6 @@ import { isReceiptEligible, receiptHref } from "@/lib/receipts/receipt-core";
 import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import {
   McvvAdminSexChange,
   type McvvAdminSexChangeCopy,
@@ -39,7 +38,7 @@ import { showInternalNote } from "@/lib/messages/core";
 import { loadRegistrationThread } from "@/lib/messages/store";
 import { getMessageSettings } from "@/lib/settings/messages";
 import { Link } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { canAccess, requireSection } from "@/lib/admin/access";
 import { saveRunnerNationality } from "@/lib/admin/runner-nationality-actions";
 import { nationalityField } from "@/lib/runner/nationality-field";
 import { McvvAdminLatePanel } from "@/components/organisms/mcvv-admin-late-panel";
@@ -85,7 +84,8 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
   } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireStaff();
+  await requireSection("entries.list", "read");
+  const canRenameRunner = await canAccess("dictionaries.runners", "write");
   const year = Number.parseInt(rok, 10);
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(year) || !Number.isFinite(id)) {
@@ -218,7 +218,6 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-12">
         <div>
-          <McvvAdminHomeLink label={copy("title")} />
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {copy("regsTitle")} {year}/{id}
           </h1>
@@ -497,7 +496,7 @@ export default async function AdminRegistrationDetailPage({ params, searchParams
                           copy={sexCopy}
                         />
                         {/* Změna jména (#198, Q249) – jen admin, v Číselníky → Běžci. */}
-                        {session.role === "admin" ? (
+                        {canRenameRunner ? (
                           <Link
                             href={{
                               pathname: "/admin/ciselniky/bezci/[id]",

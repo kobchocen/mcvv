@@ -3,9 +3,9 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { applySexChange, previewSexChange, SexChangeError } from "@/lib/admin/runner-rekey";
 import type { SexChangePlan } from "@/lib/admin/runner-sex-core";
-import { requireStaff } from "@/lib/admin/staff";
 import { formInt, formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
@@ -36,7 +36,7 @@ function errorCode(error: unknown): SexChangeErrorCode {
 
 /** Read-only preview for the confirmation dialog (old → new id, categories, fees). */
 export async function previewRunnerSexChange(runnerId: string): Promise<SexChangePreviewResult> {
-  await requireStaff();
+  await requireSection("entries.list", "read");
   const { year } = await currentRaceYear();
   try {
     return { ok: true, plan: await previewSexChange(prisma, runnerId, year) };
@@ -49,7 +49,7 @@ export async function changeRunnerSex(
   _prev: SexChangeState,
   formData: FormData,
 ): Promise<SexChangeState> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const runnerId = formString(formData, "runnerId");
   const backYear = formInt(formData, "year");
   const backId = formInt(formData, "registrationId");

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
 import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
 import { startModelCopy } from "@/components/organisms/mcvv-admin-start-model-copy";
@@ -9,7 +8,7 @@ import { prisma } from "@/lib/db/client";
 import { loadStartSettings } from "@/lib/race/startlist-load";
 import { DEFAULT_CHAMPION_BIBS, startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -26,8 +25,9 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("editions", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const weatherCopy = await getTranslations({ locale, namespace: "Weather" });
   const latest = await prisma.edition.findFirst({ orderBy: { id: "desc" } });
   const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });
   const { chyba } = await searchParams;
@@ -40,7 +40,6 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="mb-2 font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("new")} — {copy("editionsTitle")}
         </h1>
@@ -68,8 +67,14 @@ export default async function AdminNewEditionPage({ params, searchParams }: Page
           copy={{
             date: copy("editionsDate"),
             reg: copy("editionsReg"),
-            weather: copy("editionsWeather"),
+            weather: copy("editionsWeatherNote"),
             temp: copy("editionsTemp"),
+            weatherKind: copy("editionsWeatherKind"),
+            weatherNone: copy("editionsWeatherNone"),
+            courseTags: copy("editionsCourseTags"),
+            tempHint: copy("editionsTempHint"),
+            kindLabel: (kind) => weatherCopy(`kind.${kind}`),
+            tagLabel: (tag) => weatherCopy(`tag.${tag}`),
             kidsMail: copy("editionsKidsMail"),
             kidsPlace: copy("editionsKidsPlace"),
             adultMail: copy("editionsAdultMail"),

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvMessageBubble } from "@/components/organisms/mcvv-message-thread";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
+import { countNewQuestions } from "@/lib/contact/questions";
 import { formatDateTime, formatShortDateTime } from "@/lib/format/date";
 import { parseAdminThreadFilters, sortAdminThreads } from "@/lib/messages/core";
 import { listAdminThreads } from "@/lib/messages/store";
@@ -27,20 +27,37 @@ export default async function AdminMessagesPage({ params, searchParams }: PagePr
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("messages", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const filters = parseAdminThreadFilters(await searchParams);
-  const [threads, settings] = await Promise.all([listAdminThreads(filters), getMessageSettings()]);
+  const [threads, settings, newQuestions] = await Promise.all([
+    listAdminThreads(filters),
+    getMessageSettings(),
+    countNewQuestions(),
+  ]);
   const sorted = sortAdminThreads(threads);
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("msgTitle")}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-race-muted">{copy("msgIntro")}</p>
+        <p className="mt-3 text-sm">
+          <Link
+            href="/admin/zpravy/dotazy"
+            className="font-medium text-race-accent hover:underline"
+            data-testid="admin-contact-questions-link"
+          >
+            {copy("qLink")}
+          </Link>
+          {newQuestions > 0 ? (
+            <span className="ml-2 border border-race-accent px-2 py-0.5 text-xs font-medium text-race-accent">
+              {copy("qNewCount", { count: newQuestions })}
+            </span>
+          ) : null}
+        </p>
         {!settings.enabled ? (
           <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">{copy("msgDisabled")}</p>
         ) : null}

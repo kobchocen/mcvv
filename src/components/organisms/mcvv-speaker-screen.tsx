@@ -26,7 +26,7 @@ import {
   highlightRanges,
   lastPoint,
   nextPoint,
-  POINTS,
+  pointsFor,
   rankAt,
   recentPassages,
   runnerStatus,
@@ -101,8 +101,19 @@ export function McvvSpeakerScreen({
   const index = useMemo(() => buildSearchIndex(snapshot.runners), [snapshot.runners]);
   const results = useMemo(() => searchRunners(index, query), [index, query]);
   const card = cardBib === null ? null : (snapshot.runners.find((r) => r.bib === cardBib) ?? null);
+  // aktivní body = veřejné mezičasy (nejvýš 3, #316) + cíl
+  const points = pointsFor(snapshot.pts?.length);
+  const splitPoints = points.filter((k) => k !== "fin");
   const pointLabel = (k: PointKey) =>
-    k === "m1" ? t("pointM1") : k === "m2" ? t("pointM2") : t("pointFin");
+    k === "m1"
+      ? t("pointM1")
+      : k === "m2"
+        ? t("pointM2")
+        : k === "m3"
+          ? t("pointM3")
+          : t("pointFin");
+  const colLabel = (k: PointKey) =>
+    k === "m1" ? t("colM1") : k === "m2" ? t("colM2") : t("colM3");
 
   const openCard = (r: SpeakerRunner) => {
     setCardBib(r.bib);
@@ -143,8 +154,8 @@ export function McvvSpeakerScreen({
 
   const timeCells = (r: SpeakerRunner, hit: boolean) => {
     const cur = lastPoint(r);
-    const next = nextPoint(r);
-    return POINTS.map((k) => {
+    const next = nextPoint(r, points);
+    return points.map((k) => {
       const value = r[k];
       if (value != null) {
         return (
@@ -182,7 +193,7 @@ export function McvvSpeakerScreen({
   };
 
   const statusShort = (r: SpeakerRunner) => {
-    const st = runnerStatus(r, grouped.get(r.cat) ?? [], now);
+    const st = runnerStatus(r, grouped.get(r.cat) ?? [], now, points);
     if (st.kind === "before-start") return t("acBefore", { time: formatDayTime(st.start) });
     if (st.kind === "finished") return t("acFinished", { rank: st.rank });
     if (st.last) {
@@ -210,7 +221,7 @@ export function McvvSpeakerScreen({
     const catRunners = grouped.get(r.cat) ?? [];
     const cat = catById.get(r.cat);
     const state = categoryState(catRunners, now);
-    const st = runnerStatus(r, catRunners, now);
+    const st = runnerStatus(r, catRunners, now, points);
     const sex = cat?.sex === "F" ? "F" : "M";
     let badge: ReactNode;
     let big: ReactNode;
@@ -257,8 +268,8 @@ export function McvvSpeakerScreen({
         </>
       );
     }
-    const next = nextPoint(r);
-    const pts = POINTS.map((k) => {
+    const next = nextPoint(r, points);
+    const pts = points.map((k) => {
       const value = r[k];
       if (value != null) {
         return (
@@ -429,8 +440,9 @@ export function McvvSpeakerScreen({
                     <col className={s.cRk} />
                     <col className={s.cBib} />
                     <col />
-                    <col className={s.cT} />
-                    <col className={s.cT} />
+                    {splitPoints.map((k) => (
+                      <col key={k} className={s.cT} />
+                    ))}
                     <col className={s.cF} />
                   </colgroup>
                   <thead>
@@ -438,8 +450,9 @@ export function McvvSpeakerScreen({
                       <th>{t("colRank")}</th>
                       <th>{t("colBib")}</th>
                       <th className={s.nmh}>{t("colName")}</th>
-                      <th>{t("colM1")}</th>
-                      <th>{t("colM2")}</th>
+                      {splitPoints.map((k) => (
+                        <th key={k}>{colLabel(k)}</th>
+                      ))}
                       <th>{t("colFin")}</th>
                     </tr>
                   </thead>

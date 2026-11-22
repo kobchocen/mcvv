@@ -5,8 +5,8 @@
  * - startovní čas na čísle = `startTimeForBib` z `@/lib/race/start-time` s modelem ročníku
  *   (`startModelFromEdition`: nula, interval, 1. číslo 2. startu z `mcvv_info`),
  * - čísla, jména a kategorie = stejný zdroj jako veřejná startovka a PDF startovky
- *   (`loadPublicStartList`): po importu z prezentace (#119) `mcvv_start`, předtím čísla
- *   z řádků přihlášek (`mcvv_prihlaska_radek.cislo`, zámky v `mcvv_start_radek`),
+ *   (`loadPublicStartList` → `loadRoster`): čísla z řádků zaplacených přihlášek
+ *   (`mcvv_prihlaska_radek.cislo`, zámky v `mcvv_start_radek`),
  * - výchozí červená čísla = čísla obhájců z ročníku (`st_obhajce_m`, `st_obhajce_z`).
  */
 import type { ChampionBibs } from "@/lib/race/start-settings";
@@ -21,7 +21,7 @@ export function championBibList(champions: ChampionBibs): number[] {
 
 /**
  * Řádky startovky → řádky tisku. Číslo přihlášky (pořadí „podle přihlášky“ a „(id)“ na
- * čísle) se dohledá podle běžce; běžec jen v `mcvv_start` (přihláška na místě) ho nemá.
+ * čísle) se dohledá podle běžce (i dohláška na místě má od #222 vlastní přihlášku).
  */
 export function bibRowsFromStartList(
   rows: readonly PublicStartRow[],
@@ -34,6 +34,8 @@ export function bibRowsFromStartList(
       runnerId: row.runnerId,
       name: row.name,
       categoryId: row.categoryId,
+      categoryName: row.categoryName || row.categoryId,
+      birthYear: row.birthYear || null,
       registrationId: registrationOf.get(row.runnerId) ?? null,
     }));
 }

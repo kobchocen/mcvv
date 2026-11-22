@@ -1,9 +1,18 @@
 import { Prisma } from "@prisma/client";
 
-import { canChangeSaleStatus } from "@/lib/auth/roles";
+import { canAccess } from "@/lib/admin/access";
+import { saleStatusSection } from "@/lib/sales/guard";
 import type { SessionUser } from "@/lib/auth/session";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
+import { entryTarget } from "@/lib/entries/changes-core";
+import { recalculateRegistrationStatus } from "@/lib/entries/status";
+import { BANK_ACCOUNT } from "@/lib/entries/spd";
+import { enqueueMail } from "@/lib/mail/queue";
+import { normalizeEmail } from "@/lib/newsletter/core";
+import { siteUrl } from "@/lib/site/url";
+
+import { receiptLocale, renderSaleReceipt } from "./receipt-mail";
 
 import {
   buildSaleLines,
@@ -13,6 +22,7 @@ import {
   type SaleFilter,
   type SaleItemPrice,
 } from "./core";
+import { payOnsiteRegistrationInTx, releaseOnsiteRegistrationInTx } from "./onsite";
 
 /**
  * Závodní kancelář (#207) – práce s DB. Oprávnění ověřují volající (stránky a server
@@ -46,7 +56,10 @@ export async function createSale(
   session: SessionUser,
   year: number,
   requested: ReadonlyArray<{ itemId: number; quantity: number }>,
+  /** Volitelný e-mail a jazyk účtenky (#223); neplatný e-mail se neuloží. */
+  receipt: { email?: string | null; locale?: string | null } = {},
 ): Promise<CreateSaleResult> {
+  const receiptEmail = normalizeEmail(receipt.email);
   const items: SaleItemPrice[] = await listSaleItems(year);
   const built = buildSaleLines(requested, items);
   if (!built.ok) return built;
@@ -68,6 +81,8 @@ export async function createSale(
             status: "unpaid",
             createdById: session.id,
             createdByName: actorName(session),
+            email: receiptEmail,
+            locale: receiptEmail ? receiptLocale(receipt.locale) : null,
             lines: {
               create: built.lines.map((line) => ({
                 itemId: line.itemId,
@@ -122,21 +137,63 @@ export async function changeSaleStatus(
   note?: string,
 ): Promise<SaleChangeResult> {
   // Pojistka i mimo server action: ruční převod jen admin (#207).
-  if (!canChangeSaleStatus(session.role, to)) return "forbidden";
+  if (!(await canAccess(saleStatusSection(to), "write"))) return "forbidden";
+  return applySaleStatusChange(session, id, to, note);
+}
+
+/**
+ * Změna stavu prodejky bez kontroly oprávnění (volá ji `changeSaleStatus` po ověření práva;
+ * samostatně jen pro testy proti DB).
+ */
+export async function applySaleStatusChange(
+  session: SessionUser,
+  id: number,
+  to: "paid_cash" | "paid_bank" | "cancelled",
+  note?: string,
+): Promise<Exclude<SaleChangeResult, "forbidden">> {
   const now = new Date();
   const name = actorName(session);
-  return prisma.$transaction(async (db) => {
+  const result = await prisma.$transaction(async (db) => {
     const sale = await db.sale.findUnique({
       where: { id },
-      select: { id: true, vs: true, total: true },
+      select: { id: true, year: true, vs: true, total: true, registrationId: true },
     });
-    if (!sale) return "not_found";
+    if (!sale) return { status: "not_found" as const };
     const data =
       to === "cancelled"
         ? { status: to, cancelledAt: now, cancelledBy: name }
         : { status: to, paidAt: now, paidByName: name, paidById: session.id };
     const changed = await db.sale.updateMany({ where: { id, status: "unpaid" }, data });
-    if (changed.count !== 1) return "not_unpaid";
+    if (changed.count !== 1) return { status: "not_unpaid" as const };
+    // Dohláška na místě (#222): platba přihlášky, nebo storno přihlášky a uvolnění čísla.
+    let onsite: Prisma.InputJsonValue | undefined;
+    if (sale.registrationId != null) {
+      if (to === "cancelled") {
+        const released = await releaseOnsiteRegistrationInTx(db, sale.year, sale.registrationId);
+        onsite = { registrationId: sale.registrationId, released };
+        await writeAudit(
+          {
+            actor: actor(session),
+            action: "entry.cancelled",
+            target: entryTarget(sale.year, sale.registrationId),
+            detail: { reason: "onsite_sale_cancelled", saleId: id, vs: sale.vs, released },
+          },
+          db,
+        );
+      } else {
+        const paymentId = await payOnsiteRegistrationInTx(db, sale, now);
+        onsite = { registrationId: sale.registrationId, paymentId };
+        await writeAudit(
+          {
+            actor: actor(session),
+            action: "payment.created",
+            target: entryTarget(sale.year, sale.registrationId),
+            detail: { paymentId, amount: sale.total, saleId: id, vs: sale.vs, source: to },
+          },
+          db,
+        );
+      }
+    }
     await writeAudit(
       {
         actor: actor(session),
@@ -147,12 +204,21 @@ export async function changeSaleStatus(
               ? "sale.paid_bank_manual"
               : "sale.cancelled",
         target: `sale:${id}`,
-        detail: { vs: sale.vs, total: sale.total, ...(note ? { note: note.slice(0, 200) } : {}) },
+        detail: {
+          vs: sale.vs,
+          total: sale.total,
+          ...(note ? { note: note.slice(0, 200) } : {}),
+          ...(onsite ? { onsite } : {}),
+        },
       },
       db,
     );
-    return "ok";
+    return { status: "ok" as const, year: sale.year, registrationId: sale.registrationId };
   });
+  if (result.status === "ok" && result.registrationId != null && to !== "cancelled") {
+    await recalculateRegistrationStatus(result.year, result.registrationId);
+  }
+  return result.status;
 }
 
 export async function getSale(id: number) {
@@ -255,4 +321,60 @@ export async function updateSaleItem(
     );
     return true;
   });
+}
+
+export type ReceiptResult = "ok" | "not_found" | "invalid_email" | "no_email";
+
+/** E-mail do auditu bez celé adresy (j…@domena.cz). */
+function maskEmail(email: string): string {
+  const [name, domain] = email.split("@");
+  return `${name.slice(0, 1)}…@${domain ?? ""}`;
+}
+
+/**
+ * Pošle účtenku prodejky e-mailem přes frontu pošty (#223). Bez `email` se použije e-mail
+ * uložený u prodejky; zadaný e-mail a jazyk se k prodejce uloží. Obsah: položky, kusy, ceny,
+ * celkem, způsob a stav platby, VS – v jazyce prodejky (výchozí cs).
+ */
+export async function sendSaleReceipt(
+  session: SessionUser,
+  id: number,
+  input: { email?: string | null; locale?: string | null } = {},
+  now = new Date(),
+): Promise<ReceiptResult> {
+  const sale = await getSale(id);
+  if (!sale) return "not_found";
+  const typed = input.email?.trim() ? normalizeEmail(input.email) : null;
+  if (input.email?.trim() && !typed) return "invalid_email";
+  const email = typed ?? sale.email;
+  if (!email) return "no_email";
+  const locale = receiptLocale(input.locale ?? sale.locale);
+  const mail = renderSaleReceipt({
+    sale,
+    locale,
+    site: siteUrl(),
+    account: `${BANK_ACCOUNT} (Fio)`,
+  });
+  await enqueueMail({
+    ...mail,
+    to: email,
+    kind: "other",
+    dedupeKey: `sale-receipt:${sale.id}:${sale.status}:${email}:${now.getTime()}`,
+  });
+  await prisma.$transaction(async (db) => {
+    await db.sale.update({
+      where: { id: sale.id },
+      data: { email, locale, receiptSentAt: now },
+    });
+    await writeAudit(
+      {
+        actor: actor(session),
+        action: "sale.receipt_sent",
+        target: `sale:${sale.id}`,
+        detail: { vs: sale.vs, to: maskEmail(email), locale, status: sale.status },
+      },
+      db,
+    );
+  });
+  return "ok";
 }

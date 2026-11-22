@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {} from "node:fs";
 import { test } from "node:test";
+import { readGuardSource } from "@/lib/admin/guard-source";
 
 // The actions module needs the Next.js request context, so its guards are checked in the source.
-const source = readFileSync(new URL("./runner-merge-actions.ts", import.meta.url), "utf8");
+const source = readGuardSource(new URL("./runner-merge-actions.ts", import.meta.url));
 
 function body(name: string): string {
   const start = source.indexOf(`export async function ${name}(`);
@@ -27,9 +28,8 @@ test("merging needs the explicit irreversible confirmation before touching the D
 });
 
 test("the merge page is admin only", () => {
-  const page = readFileSync(
+  const page = readGuardSource(
     new URL("../../app/[locale]/admin/ciselniky/bezci/slouceni/page.tsx", import.meta.url),
-    "utf8",
   );
   assert.match(page, /await requireAdmin\(\);/);
 });

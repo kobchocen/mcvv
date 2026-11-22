@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
-import { requireAdmin } from "@/lib/admin/staff";
+import { getAccess, requireSection } from "@/lib/admin/access";
+import type { UnifiedSearchParams } from "@/lib/audit/unified-core";
 import type { AuditChange } from "@/lib/audit/diff";
 import {
   AUDIT_GROUPS,
@@ -17,9 +17,11 @@ import { prisma } from "@/lib/db/client";
 import { formatDateTime } from "@/lib/format/date";
 import { Link, type Locale } from "@/i18n/routing";
 
+import { AuditV2 } from "./audit-v2";
+
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<AuditSearchParams>;
+  searchParams: Promise<AuditSearchParams & UnifiedSearchParams>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -46,10 +48,12 @@ export default async function AdminAuditPage({ params, searchParams }: PageProps
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("audit", "read");
+  const sp = await searchParams;
+  // Audit v2 (P9) jen při zapnutém permissions.v2; jinak dosavadní přehled beze změny.
+  if ((await getAccess()).v2) return <AuditV2 locale={locale} searchParams={sp} />;
   const copy = await getTranslations({ locale, namespace: "AdminAudit" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
-  const filters = parseAuditFilters(await searchParams);
+  const filters = parseAuditFilters(sp);
   const where = auditWhere(filters);
 
   const [total, entries, actions] = await Promise.all([
@@ -72,7 +76,6 @@ export default async function AdminAuditPage({ params, searchParams }: PageProps
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>

@@ -2,8 +2,8 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString, toPaymentRegistrationId } from "@/lib/admin/parse";
-import { requireStaff } from "@/lib/admin/staff";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
@@ -20,7 +20,7 @@ function revalidate() {
 
 /** Označit nespárovaný pohyb jako vyřízený bez platby (např. jiný příjem klubu, vráceno). */
 export async function ignoreBankTx(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.payments", "write");
   const id = formInt(formData, "id");
   if (!id) return;
   const note = formString(formData, "note")?.slice(0, 500) ?? null;
@@ -44,7 +44,7 @@ export async function ignoreBankTx(formData: FormData): Promise<void> {
  * Zrušenou přihlášku nelze obnovit platbou – takový pohyb jde k vrácení.
  */
 export async function assignBankTx(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.payments", "write");
   const id = formInt(formData, "id");
   const registrationId = formInt(formData, "registrationId");
   if (!id || !registrationId) return;
@@ -98,7 +98,7 @@ export async function assignBankTx(formData: FormData): Promise<void> {
 
 /** Přeplatek vrácen. */
 export async function markRefunded(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.payments", "write");
   const id = formInt(formData, "id");
   if (!id) return;
   const refunded = await prisma.bankTx.updateMany({
@@ -128,7 +128,7 @@ export async function markRefunded(formData: FormData): Promise<void> {
 
 /** Platba na zrušenou přihlášku (nespárovaný pohyb) vrácena plátci. */
 export async function refundCancelledBankTx(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.payments", "write");
   const id = formInt(formData, "id");
   if (!id) return;
   const refunded = await prisma.bankTx.updateMany({
@@ -164,7 +164,7 @@ export async function refundCancelledBankTx(formData: FormData): Promise<void> {
 
 /** Platby, které přišly před automatickým zrušením přihlášky, vráceny plátci. */
 export async function markEntryRefunded(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.payments", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "registrationId");
   if (!year || !id) return;

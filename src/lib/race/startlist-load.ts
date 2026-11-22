@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { ENTRY_STATUS, validRegistrationIds } from "@/lib/entries/status";
 
+import { loadRoster } from "./roster";
 import type { SpecialStartSpec } from "./special-start";
 import type { BibRange, ChampionBibs } from "./start-settings";
 import {
@@ -285,56 +286,29 @@ export type PublicStartRow = {
 };
 
 /**
- * Veřejná startovka / tisk: po importu z prezentace (#119) `mcvv_start`, předtím řádky
- * přihlášek s číslem (nezrušené přihlášky). Řazeno podle startovního času, obě vlny prolnuté.
+ * Veřejná startovka / tisk / PDF: startovka ročníku (`loadRoster` – jen zaplacené přihlášky
+ * s číslem). Řazeno podle startovního času, obě vlny prolnuté.
  */
 export async function loadPublicStartList(
   year: number,
   model: StartModel,
-): Promise<{ rows: PublicStartRow[]; source: "start" | "registrations" }> {
-  const categories = await prisma.category.findMany({ select: { id: true, name: true } });
+): Promise<{ rows: PublicStartRow[] }> {
+  const [categories, roster] = await Promise.all([
+    prisma.category.findMany({ select: { id: true, name: true } }),
+    loadRoster(year),
+  ]);
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
-  const imported = await prisma.startEntry.findMany({
-    where: { year, bib: { gt: 0 } },
-    include: { runner: { select: { name: true } }, club: { select: { name: true } } },
-  });
-  let rows: PublicStartRow[];
-  let source: "start" | "registrations";
-  if (imported.length > 0) {
-    source = "start";
-    rows = imported.map((row) => ({
-      bib: row.bib,
-      time: startTimeForBib(model, row.bib),
-      runnerId: row.runnerId,
-      name: row.runnerName || row.runner.name,
-      birthYear: row.runnerId.slice(0, 4),
-      club: row.clubName || row.club.name,
-      clubId: row.clubId,
-      categoryId: row.categoryId,
-      categoryName: categoryName.get(row.categoryId) ?? row.categoryId,
-    }));
-  } else {
-    source = "registrations";
-    const lines = await prisma.registrationLine.findMany({
-      where: {
-        year,
-        bib: { gt: 0 },
-        registration: { OR: [{ status: { not: ENTRY_STATUS.cancelled } }, { status: null }] },
-      },
-      include: { runner: { select: { name: true } }, club: { select: { name: true } } },
-    });
-    rows = lines.map((line) => ({
-      bib: line.bib!,
-      time: startTimeForBib(model, line.bib),
-      runnerId: line.runnerId,
-      name: line.runner.name,
-      birthYear: line.runnerId.slice(0, 4),
-      club: line.club.name,
-      clubId: line.clubId,
-      categoryId: line.categoryId,
-      categoryName: categoryName.get(line.categoryId) ?? line.categoryId,
-    }));
-  }
+  const rows: PublicStartRow[] = roster.map((entry) => ({
+    bib: entry.bib,
+    time: startTimeForBib(model, entry.bib),
+    runnerId: entry.runnerId,
+    name: entry.runnerName,
+    birthYear: entry.runnerId.slice(0, 4),
+    club: entry.clubName,
+    clubId: entry.clubId,
+    categoryId: entry.categoryId,
+    categoryName: categoryName.get(entry.categoryId) ?? entry.categoryId,
+  }));
   rows.sort((a, b) => compareByStart(model, a.bib, b.bib));
-  return { rows, source };
+  return { rows };
 }

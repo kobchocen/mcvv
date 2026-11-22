@@ -3,8 +3,11 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
+import { loadRoster, rosterHasBib } from "@/lib/race/roster";
 
-import { getRaceContext, type RaceContext } from "./race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
+
+import type { RaceContext } from "./race-context";
 import { checkStartPunch, START_OWNING } from "./start-check-core";
 import {
   corridorOf,
@@ -26,7 +29,7 @@ import {
 
 /**
  * Startér – zápis a snímek pro obrazovku `/start`. Jen `mcvv_start_check` (aktuální stav čísla)
- * a deník `mcvv_start_check_entry`; `mcvv_split`, výsledky, OFeed ani OBD se nemění. Do
+ * a deník `mcvv_start_check_entry`; `mcvv_split` ani výsledky se nemění. Do
  * `started_at` jde vždy plánovaný start ze startovky (ten platí pro výsledky), skutečný
  * okamžik pozdního startu a příznak pozdě jsou jen informace.
  */
@@ -78,11 +81,7 @@ export async function loadStarterSnapshot(
 ): Promise<StarterSnapshot> {
   const range = corridor === 1 ? { gte: 1, lt: ctx.secondStartFrom } : { gte: ctx.secondStartFrom };
   const [entries, checks, settings] = await Promise.all([
-    prisma.startEntry.findMany({
-      where: { year: ctx.year, bib: range },
-      select: { bib: true, runnerName: true, clubName: true, runner: { select: { name: true } } },
-      orderBy: { bib: "asc" },
-    }),
+    loadRoster(ctx.year, { bib: range }),
     prisma.startCheck.findMany({
       where: { year: ctx.year, bib: range },
       select: { bib: true, source: true, markedAt: true, late: true },
@@ -96,7 +95,7 @@ export async function loadStarterSnapshot(
     seen.add(entry.bib);
     runners.push({
       bib: entry.bib,
-      name: entry.runnerName || entry.runner?.name || "",
+      name: entry.runnerName,
       club: entry.clubName,
     });
   }
@@ -173,10 +172,7 @@ async function applyStarterEntry(
   if (allowed !== null && corridor !== allowed) return journal("rejected", `corridor=${corridor}`);
   const check = checkStartPunch(entry.at, now);
   if (!check.ok) return journal("rejected", check.reason);
-  const known = await tx.startEntry.findFirst({
-    where: { year: plan.year, bib: entry.bib },
-    select: { bib: true },
-  });
+  const known = await rosterHasBib(tx, plan.year, entry.bib);
   // Neznámé číslo: jen do deníku pro admina, řádek startu nevzniká.
   if (!known) return journal("unknown", "unknown-bib");
 
@@ -262,18 +258,15 @@ export async function applyStarterEntries(
  */
 export async function autoMarkStart(
   tx: Tx,
-  input: { year: number; bib: number; split: string; splitAt: Date },
+  /** `userId` = autor zápisu mezičasu (P7: do deníku startu, aktuální stav zůstává bez autora). */
+  input: { year: number; bib: number; split: string; splitAt: Date; userId?: number | null },
   plan?: StarterPlan,
 ): Promise<boolean> {
   const key = { year_bib: { year: input.year, bib: input.bib } };
   const existing = await tx.startCheck.findUnique({ where: key, select: { source: true } });
   if (decideAutoMark(existing) === "skip") return false;
-  const known = await tx.startEntry.findFirst({
-    where: { year: input.year, bib: input.bib },
-    select: { bib: true },
-  });
-  if (!known) return false;
-  const ctx = plan ?? (await getRaceContext());
+  if (!(await rosterHasBib(tx, input.year, input.bib))) return false;
+  const ctx = plan ?? (await getLiveRaceContext());
   if (ctx.year !== input.year) return false;
   const planned = new Date(
     plannedStartMs(ctx.zero.getTime(), input.bib, ctx.intervalS, ctx.secondStartFrom),
@@ -306,6 +299,7 @@ export async function autoMarkStart(
       action: "auto",
       outcome: "applied",
       note: `split=${input.split}`,
+      userId: input.userId ?? null,
     },
   });
   return true;

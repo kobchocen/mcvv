@@ -3,10 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { redirect } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
 import { currentRaceYear } from "@/lib/entries/year";
-import { getOfeedSettings } from "@/lib/ofeed/settings";
 
 import {
   endTestRun,
@@ -14,6 +13,8 @@ import {
   getTestCutoff,
   resolveTestZero,
   startTestRun,
+  TestModeActiveError,
+  testModeRunActive,
   validateTestStart,
 } from "./test-run";
 
@@ -32,14 +33,14 @@ async function back(query: Record<string, string>): Promise<never> {
   throw new Error("unreachable");
 }
 
-/** „Spustit test“ (#186, Q69): jen admin, jen před dnem závodu, jen s testovacím profilem OFeed. */
+/** „Spustit test“ (#186, Q69): jen admin, jen před dnem závodu. */
 export async function startTestRunAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.testRun", "write");
   const now = new Date();
-  const [active, cutoff, ofeed] = await Promise.all([
+  const [active, cutoff, testModeActive] = await Promise.all([
     getActiveTestRun(now),
     getTestCutoff(now),
-    getOfeedSettings(),
+    testModeRunActive(),
   ]);
   const zero = resolveTestZero(
     String(formData.get("zeroChoice") ?? ""),
@@ -52,17 +53,21 @@ export async function startTestRunAction(formData: FormData): Promise<void> {
     zero,
     cutoff,
     active,
-    ofeedProfile: ofeed.profile,
-    ofeedTestEventId: ofeed.profiles.test.eventId,
+    testModeActive,
   });
   if (error) await back({ testError: error });
-  await startTestRun(zero!, session, now);
+  try {
+    await startTestRun(zero!, session, now);
+  } catch (startError) {
+    if (startError instanceof TestModeActiveError) await back({ testError: "testMode" });
+    throw startError;
+  }
   await back({ test: "started" });
 }
 
 /** „Ukončit test“: ukončí a automaticky uklidí (Q71), bez dalšího potvrzení. */
 export async function endTestRunAction(): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.testRun", "write");
   const result = await endTestRun("manual", session);
   await back(result ? { test: "ended" } : { testError: "notActive" });
 }

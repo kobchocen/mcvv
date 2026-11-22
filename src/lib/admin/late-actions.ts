@@ -3,8 +3,8 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { formInt } from "@/lib/admin/parse";
-import { requireStaff } from "@/lib/admin/staff";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { cancellationDetail } from "@/lib/entries/cancel-core";
@@ -54,7 +54,7 @@ async function loadLate(year: number, id: number) {
 
 /** Admin: lhůta odeslané nezaplacené pozdní přihlášky +60 min (od pozdějšího z lhůty a teď). */
 export async function extendLatePayment(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   if (!year || id === null) return;
@@ -92,7 +92,7 @@ export async function extendLatePayment(formData: FormData): Promise<void> {
  * (platba nedorazila včas); před lhůtou bez e-mailu (Q381).
  */
 export async function cancelLateNow(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const year = formInt(formData, "year");
   const id = formInt(formData, "id");
   if (!year || id === null) return;

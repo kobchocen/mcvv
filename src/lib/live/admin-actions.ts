@@ -3,20 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
+import { withSettingsAudit } from "@/lib/audit/settings-audit";
 import { redirect } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/admin/staff";
 import { prisma } from "@/lib/db/client";
-import { runOfeedPublish } from "@/lib/ofeed/publisher";
-import {
-  getOfeedSettings,
-  parseEventId,
-  parsePassword,
-  parseProfile,
-  saveOfeedSettings,
-  switchOfeedProfile,
-  type OfeedProfileInput,
-} from "@/lib/ofeed/settings";
-
+import { rosterHasBib } from "@/lib/race/roster";
 import { parsePragueLocal } from "./admin-core";
 import { saveAssignment } from "./assignment";
 import { assignmentFromForm } from "./assignment-core";
@@ -55,14 +46,15 @@ import {
 } from "./starter-core";
 import {
   formatStations,
+  LIVE_PUBLIC_SPLITS_MAX_KEY,
   LIVE_STATIONS_KEY,
   LIVE_STATIONS_MAX,
+  parsePublicMax,
   parseStations,
   withStart,
 } from "./stations";
-import { getActiveTestRun, registerTestToken } from "./test-run";
-import { createDeviceToken, revokeDeviceToken } from "./tokens";
-import { normalizeAuthor, normalizeTokenSplits } from "./tokens-core";
+import { getActiveTestRun } from "./test-run";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 
 const PAGE = "/admin/den-zavodu/zive" as const;
 const SPLITS_PAGE = "/admin/den-zavodu/zive/casy" as const;
@@ -82,56 +74,6 @@ async function put(key: string, text: string) {
   await prisma.setting.upsert({ where: { key }, update: { text }, create: { key, text } });
 }
 
-/** Pole jednoho profilu z formuláře (`prefix` = "" pro ostrou akci, "test" pro testovací). */
-async function ofeedProfileFromForm(
-  formData: FormData,
-  prefix: "" | "test",
-): Promise<OfeedProfileInput> {
-  const field = (name: string) =>
-    prefix ? `${prefix}${name[0].toUpperCase()}${name.slice(1)}` : name;
-  const eventIdRaw = String(formData.get(field("eventId")) ?? "").trim();
-  const eventId = eventIdRaw ? parseEventId(eventIdRaw) : null;
-  if (eventIdRaw && !eventId) await back({ error: field("eventId") });
-  const passwordRaw = String(formData.get(field("password")) ?? "");
-  let password: string | null | undefined = undefined;
-  if (formData.get(field("clearPassword")) === "on") password = null;
-  else if (passwordRaw.trim()) {
-    password = parsePassword(passwordRaw);
-    if (!password) await back({ error: field("password") });
-  }
-  return { eventId, password };
-}
-
-export async function saveOfeedAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const live = await ofeedProfileFromForm(formData, "");
-  const test = await ofeedProfileFromForm(formData, "test");
-  await saveOfeedSettings({ enabled: formData.get("enabled") === "on", live, test });
-  revalidatePath("/[locale]", "page");
-  await back({ saved: "ofeed" });
-}
-
-/** Přepnutí testovací ↔ ostrá akce OFeed (Q33). Do testu jen s vyplněným ID testovací akce. */
-export async function switchOfeedProfileAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  const profile = parseProfile(String(formData.get("profile") ?? ""));
-  if (!profile) await back({ error: "ofeedProfile" });
-  if (profile === "test" && !(await getOfeedSettings()).profiles.test.eventId) {
-    await back({ error: "ofeedTestMissing" });
-  }
-  // Pojistka testovacího běhu (#186): během testu nejde přepnout na ostrou akci.
-  if (profile === "live" && (await getActiveTestRun())) await back({ error: "ofeedTestRun" });
-  await switchOfeedProfile(profile!, user);
-  revalidatePath("/[locale]", "page");
-  await back({ saved: "ofeedProfile" });
-}
-
-export async function publishNowAction(): Promise<void> {
-  await requireAdmin();
-  const result = await runOfeedPublish("manual");
-  await back({ published: result.status });
-}
-
 /** Doba z formuláře (90, 2 min, 1:30 …) → sekundy do nastavení; prázdné pole klíč smaže. */
 async function saveDuration(formData: FormData, field: string, key: string): Promise<void> {
   const raw = String(formData.get(field) ?? "")
@@ -146,72 +88,49 @@ async function saveDuration(formData: FormData, field: string, key: string): Pro
   await put(key, String(seconds));
 }
 
+const RACE_SETUP_KEYS = [
+  LIVE_STATIONS_KEY,
+  LIVE_PUBLIC_SPLITS_MAX_KEY,
+  LIVE_START_OFFSET_LIMIT_KEY,
+  LIVE_DNS_GRACE_KEY,
+  LIVE_DNS_GRACE_FALLBACK_KEY,
+  LIVE_ZERO_OVERRIDE_KEY,
+];
+
 export async function saveRaceSetupAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
-  await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
-  // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
-  // prázdné = výchozí hodnota (klíč se smaže).
-  await saveDuration(formData, "startLimit", LIVE_START_OFFSET_LIMIT_KEY);
-  await saveDuration(formData, "dnsGrace", LIVE_DNS_GRACE_KEY);
-  await saveDuration(formData, "dnsGraceFallback", LIVE_DNS_GRACE_FALLBACK_KEY);
-  // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
-  if (await getActiveTestRun()) await back({ saved: "setup" });
-  const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();
-  if (zeroRaw) {
-    const zero = parsePragueLocal(zeroRaw);
-    if (!zero) await back({ error: "zero" });
-    await put(LIVE_ZERO_OVERRIDE_KEY, zero!.toISOString());
-  } else {
-    await prisma.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
-  }
-  await back({ saved: "setup" });
-}
-
-export type CreateTokenState = { token?: string; label?: string; error?: string; test?: boolean };
-
-export async function createTokenAction(
-  _previous: CreateTokenState,
-  formData: FormData,
-): Promise<CreateTokenState> {
-  const session = await requireAdmin();
-  const label = String(formData.get("label") ?? "")
-    .trim()
-    .slice(0, 64);
-  const splits = normalizeTokenSplits(String(formData.get("splits") ?? "9"));
-  const author = normalizeAuthor(String(formData.get("author") ?? "LuM"));
-  const validFrom = parsePragueLocal(String(formData.get("validFrom") ?? ""));
-  const validUntil = parsePragueLocal(String(formData.get("validUntil") ?? ""));
-  if (!label) return { error: "label" };
-  if (!splits) return { error: "splits" };
-  if (!author) return { error: "author" };
-  if (!validFrom || !validUntil || validUntil <= validFrom) return { error: "window" };
-  if (validUntil.getTime() - validFrom.getTime() > 3 * 86_400_000) return { error: "window" };
-  const ctx = await getRaceContext();
-  const created = await createDeviceToken({
-    label,
-    year: ctx.year,
-    splits,
-    author,
-    validFrom,
-    validUntil,
-    createdBy: session.id,
+  const session = await requireSection("raceControl.live", "write");
+  // P7: audit změn (stanoviště, nula, prahy a lhůty DNS) i při návratu přesměrováním.
+  await withSettingsAudit(session, "raceday.setup_changed", RACE_SETUP_KEYS, async () => {
+    const stationsRaw = String(formData.get("stations") ?? "").slice(0, LIVE_STATIONS_MAX);
+    await put(LIVE_STATIONS_KEY, formatStations(parseStations(stationsRaw)));
+    // Strop veřejných mezičasů (#316): prázdné = výchozí 3 (klíč se smaže).
+    const publicMaxRaw = String(formData.get("publicMax") ?? "").trim();
+    if (publicMaxRaw === "") {
+      await prisma.setting.deleteMany({ where: { key: LIVE_PUBLIC_SPLITS_MAX_KEY } });
+    } else {
+      await put(LIVE_PUBLIC_SPLITS_MAX_KEY, String(parsePublicMax(publicMaxRaw)));
+    }
+    // Práh odchylky na Startu (#187, Q80) a lhůty DNS online výsledků (Q113, Q114):
+    // prázdné = výchozí hodnota (klíč se smaže).
+    await saveDuration(formData, "startLimit", LIVE_START_OFFSET_LIMIT_KEY);
+    await saveDuration(formData, "dnsGrace", LIVE_DNS_GRACE_KEY);
+    await saveDuration(formData, "dnsGraceFallback", LIVE_DNS_GRACE_FALLBACK_KEY);
+    // Během testovacího běhu (#186) drží zkušební nulu test – formulář ji nemění.
+    if (await getActiveTestRun()) await back({ saved: "setup" });
+    const zeroRaw = String(formData.get("zeroOverride") ?? "").trim();
+    if (zeroRaw) {
+      const zero = parsePragueLocal(zeroRaw);
+      if (!zero) await back({ error: "zero" });
+      await put(LIVE_ZERO_OVERRIDE_KEY, zero!.toISOString());
+    } else {
+      await prisma.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
+    }
+    await back({ saved: "setup" });
   });
-  // Klíč vytvořený během testovacího běhu je testovací: při ukončení testu se zneplatní.
-  const test = await registerTestToken(created.id);
-  revalidatePath("/[locale]/admin/den-zavodu/zive", "page");
-  return { token: created.token, label, test };
-}
-
-export async function revokeTokenAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const id = Number(formData.get("id"));
-  if (Number.isInteger(id) && id > 0) await revokeDeviceToken(id);
-  await back({ saved: "token" });
 }
 
 export async function resolveConflictAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.live", "write");
   const id = Number(formData.get("id"));
   const decision = String(formData.get("decision") ?? "");
   let result: string = "missing";
@@ -228,7 +147,7 @@ export async function resolveConflictAction(formData: FormData): Promise<void> {
  * nuly ročníku). Potvrzení = opsaný ročník. Maže mcvv_split i deník včetně konfliktů.
  */
 export async function clearSplitsAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.live", "write");
   const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
   const filter = parseClearFilter(
     {
@@ -250,7 +169,6 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     ctx.year,
     filter!,
     {
-      revokeTokens: formData.get("revokeTokens") === "on",
       clearZeroOverride: formData.get("clearZeroOverride") === "on",
     },
     session,
@@ -259,7 +177,6 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     {
       cleared: String(result.splitsTotal),
       entries: String(result.entries),
-      tokens: String(result.tokensRevoked),
     },
     SPLITS_PAGE,
   );
@@ -267,8 +184,8 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
 
 /** Společné načtení formuláře ruční editace (číslo, split, očekávaná hodnota, důvod). */
 async function manualForm(formData: FormData) {
-  const session = await requireAdmin();
-  const [ctx, stations] = await Promise.all([getRaceContext(), getStations()]);
+  const session = await requireSection("raceControl.manual", "write");
+  const [ctx, stations] = await Promise.all([getLiveRaceContext(), getStations()]);
   const bib = Number(formData.get("bib"));
   const split = String(formData.get("split") ?? "");
   const expected = parseExpected(String(formData.get("expected") ?? ""));
@@ -296,16 +213,14 @@ async function manualForm(formData: FormData) {
  */
 export async function setSplitAction(formData: FormData): Promise<void> {
   const { session, ctx, bib, split, expected, reason, edit } = await manualForm(formData);
+  enterLiveTestContext(ctx);
   const raw = String(formData.get("value") ?? "");
   const time =
     formData.get("mode") === "clock"
       ? clockToRaceTime(raw, ctx.zero, bib, ctx.intervalS, ctx.secondStartFrom)
       : parseRaceTime(raw);
   if (time === null) await back({ edit, error: "time" }, SPLITS_PAGE);
-  const known = await prisma.startEntry.findFirst({
-    where: { year: ctx.year, bib },
-    select: { bib: true },
-  });
+  const known = await rosterHasBib(prisma, ctx.year, bib);
   if (!known && formData.get("force") !== "on") {
     await back({ edit, error: "unknownBib" }, SPLITS_PAGE);
   }
@@ -326,6 +241,7 @@ export async function setSplitAction(formData: FormData): Promise<void> {
 /** Ruční smazání jednoho mezičasu (důvod povinný). */
 export async function deleteSplitAction(formData: FormData): Promise<void> {
   const { session, ctx, bib, split, expected, reason, edit } = await manualForm(formData);
+  enterLiveTestContext(ctx);
   const result = await deleteManualSplit({
     year: ctx.year,
     bib,
@@ -343,7 +259,7 @@ export async function deleteSplitAction(formData: FormData): Promise<void> {
  * Prázdný výběr = splitmaker nezapisuje nic.
  */
 export async function saveSplitmakerStationsAction(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("raceControl.live", "write");
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId < 1) await back({ error: "assignment" });
   const stations = withStart(await getStations());
@@ -358,27 +274,34 @@ export async function saveSplitmakerStationsAction(formData: FormData): Promise<
  * fáze neoznačeného (0–120 s) a okno pruhu Nevyběhli (1 s – 6 h). Prázdné pole = výchozí.
  */
 export async function saveStarterSettingsAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const sound = String(formData.get("starterSound") ?? "");
-  if (!(STARTER_SOUND_MODES as readonly string[]).includes(sound)) {
-    await back({ error: "starterSound" });
-  }
-  const redRaw = String(formData.get("starterRedPhase") ?? "").trim();
-  const red = redRaw === "" ? null : Number(redRaw);
-  if (red !== null && !(Number.isInteger(red) && red >= 0 && red <= RED_PHASE_MAX_S)) {
-    await back({ error: "starterRedPhase" });
-  }
-  const windowRaw = String(formData.get("starterDnsWindow") ?? "")
-    .slice(0, 32)
-    .trim();
-  const windowS = windowRaw === "" ? null : parseStartOffsetLimit(windowRaw);
-  if (windowRaw !== "" && windowS === null) await back({ error: "starterDnsWindow" });
+  const session = await requireSection("raceControl.live", "write");
+  await withSettingsAudit(
+    session,
+    "raceday.starter_settings_changed",
+    [STARTER_SOUND_KEY, STARTER_RED_PHASE_KEY, STARTER_DNS_WINDOW_KEY],
+    async () => {
+      const sound = String(formData.get("starterSound") ?? "");
+      if (!(STARTER_SOUND_MODES as readonly string[]).includes(sound)) {
+        await back({ error: "starterSound" });
+      }
+      const redRaw = String(formData.get("starterRedPhase") ?? "").trim();
+      const red = redRaw === "" ? null : Number(redRaw);
+      if (red !== null && !(Number.isInteger(red) && red >= 0 && red <= RED_PHASE_MAX_S)) {
+        await back({ error: "starterRedPhase" });
+      }
+      const windowRaw = String(formData.get("starterDnsWindow") ?? "")
+        .slice(0, 32)
+        .trim();
+      const windowS = windowRaw === "" ? null : parseStartOffsetLimit(windowRaw);
+      if (windowRaw !== "" && windowS === null) await back({ error: "starterDnsWindow" });
 
-  await put(STARTER_SOUND_KEY, sound);
-  if (red === null) await prisma.setting.deleteMany({ where: { key: STARTER_RED_PHASE_KEY } });
-  else await put(STARTER_RED_PHASE_KEY, String(red));
-  if (windowS === null) {
-    await prisma.setting.deleteMany({ where: { key: STARTER_DNS_WINDOW_KEY } });
-  } else await put(STARTER_DNS_WINDOW_KEY, String(windowS));
-  await back({ saved: "starter" });
+      await put(STARTER_SOUND_KEY, sound);
+      if (red === null) await prisma.setting.deleteMany({ where: { key: STARTER_RED_PHASE_KEY } });
+      else await put(STARTER_RED_PHASE_KEY, String(red));
+      if (windowS === null) {
+        await prisma.setting.deleteMany({ where: { key: STARTER_DNS_WINDOW_KEY } });
+      } else await put(STARTER_DNS_WINDOW_KEY, String(windowS));
+      await back({ saved: "starter" });
+    },
+  );
 }

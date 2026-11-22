@@ -13,6 +13,12 @@ export type SessionTokenPayload = {
   email: string;
   name: string;
   role: UserRole;
+  /**
+   * Účet má role z `mcvv_user_role` při zapnutém `permissions.v2` (P5), i když sloupec role
+   * je „registrar“. Jen pro proxy stráž adminu; práva se vždy ověřují v DB. Starší cookie
+   * příznak nemají (= false).
+   */
+  staff?: true;
   exp: number;
 };
 
@@ -67,6 +73,9 @@ export function decodeSessionToken(
     }
     if (!isUserRole(payload.role)) {
       return null;
+    }
+    if (payload.staff !== undefined && payload.staff !== true) {
+      delete payload.staff;
     }
     return payload;
   } catch {

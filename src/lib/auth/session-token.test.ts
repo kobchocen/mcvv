@@ -30,3 +30,18 @@ test("an unknown role is rejected", () => {
   const token = encodeSessionToken({ ...payload, role: "root" as never }, SECRET);
   assert.equal(decodeSessionToken(token, SECRET, 1_000), null);
 });
+
+test("staff flag (P5): kept only when true, old tokens decode without it", () => {
+  const withFlag = decodeSessionToken(
+    encodeSessionToken({ ...payload, staff: true }, SECRET),
+    SECRET,
+  );
+  assert.equal(withFlag?.staff, true);
+  const old = decodeSessionToken(encodeSessionToken(payload, SECRET), SECRET);
+  assert.equal(old?.staff, undefined);
+  const bogus = decodeSessionToken(
+    encodeSessionToken({ ...payload, staff: "yes" as never }, SECRET),
+    SECRET,
+  );
+  assert.equal(bogus?.staff, undefined);
+});

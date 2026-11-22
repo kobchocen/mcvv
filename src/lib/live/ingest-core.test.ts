@@ -1,18 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  checkPunch,
-  decideDeviceDelete,
-  decideDeviceWrite,
-  decideWrite,
-  deviceBatchSchema,
-  deviceEntryKey,
-  nextDeviceEntryKey,
-  sameOrigin,
-  summarize,
-  webBatchSchema,
-} from "./ingest-core";
+import { checkPunch, decideWrite, sameOrigin, summarize, webBatchSchema } from "./ingest-core";
 
 const now = new Date("2026-12-06T10:00:00.000Z");
 const start = new Date("2026-12-06T09:30:00.000Z");
@@ -79,7 +68,7 @@ test("web batch schema", () => {
   );
   assert.ok(
     !webBatchSchema.safeParse({
-      entries: [{ action: "create", id: "abcdefgh-1", split: "x", bib: 1, punchedAt: 1 }],
+      entries: [{ action: "create", id: "abcdefgh-1", split: "X", bib: 1, punchedAt: 1 }],
     }).success,
   );
   // start "0" (#203) je pro webového klienta platný kód stanoviště
@@ -90,14 +79,6 @@ test("web batch schema", () => {
   );
 });
 
-test("device batch schema defaults to the finish split", () => {
-  const parsed = deviceBatchSchema.parse({ items: [{ bib: 141, timeS: 1686 }] });
-  assert.equal(parsed.items[0].split, "9");
-  assert.ok(!deviceBatchSchema.safeParse({ items: [{ bib: 1000, timeS: 1 }] }).success);
-  assert.ok(!deviceBatchSchema.safeParse({ items: [{ bib: 1, timeS: -1 }] }).success);
-  assert.equal(deviceEntryKey(3, { bib: 141, split: "9", timeS: 1686 }), "dev3:9:141:1686");
-});
-
 test("summary and same-origin check", () => {
   assert.deepEqual(summarize(["applied", "applied", "conflict"]), { applied: 2, conflict: 1 });
   assert.ok(sameOrigin("https://mcvv.org", "mcvv.org"));
@@ -105,53 +86,4 @@ test("summary and same-origin check", () => {
   assert.ok(!sameOrigin("https://evil.example", "mcvv.org"));
   assert.ok(!sameOrigin(null, "mcvv.org"));
   assert.ok(!sameOrigin("not a url", "mcvv.org"));
-});
-
-test("device items default to set and accept delete (OBD snapshot)", () => {
-  const parsed = deviceBatchSchema.parse({
-    items: [
-      { bib: 141, timeS: 1686 },
-      { action: "delete", bib: 142, timeS: 1700 },
-    ],
-  });
-  assert.equal(parsed.items[0]!.action, "set");
-  assert.equal(parsed.items[0]!.replace, false);
-  assert.equal(parsed.items[1]!.action, "delete");
-  assert.ok(!deviceBatchSchema.safeParse({ items: [{ action: "x", bib: 1, timeS: 1 }] }).success);
-  assert.equal(
-    deviceEntryKey(3, { action: "delete", bib: 141, split: "9", timeS: 1686 }),
-    "dev3:del:9:141:1686",
-  );
-});
-
-test("decideDeviceWrite: first time wins by default (legacy), replace only behind the switch", () => {
-  assert.equal(decideDeviceWrite(null, 100), "insert");
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 100), "unchanged");
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: false }, 100), "unchanged");
-  // výchozí (Q22): oprava v OBD nic nepřepíše
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 101), "conflict");
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: false }, 101), "conflict");
-  // přepínač applyCorrections: jen hodnota z OBD
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: true }, 101, true), "replace");
-  assert.equal(decideDeviceWrite({ time: 100, ownedByObd: false }, 101, true), "conflict");
-});
-
-test("decideDeviceDelete: removed row deletes only the unchanged OBD value", () => {
-  assert.equal(decideDeviceDelete(null, 100), "missing");
-  assert.equal(decideDeviceDelete({ time: 101, ownedByObd: true }, 100), "missing");
-  assert.equal(decideDeviceDelete({ time: 100, ownedByObd: false }, 100), "not-owned");
-  assert.equal(decideDeviceDelete({ time: 100, ownedByObd: true }, 100), "delete");
-});
-
-test("nextDeviceEntryKey numbers re-sent values after delete/replace", () => {
-  assert.equal(nextDeviceEntryKey("dev3:9:141:1686", []), "dev3:9:141:1686");
-  assert.equal(nextDeviceEntryKey("dev3:9:141:1686", ["dev3:9:141:1686"]), "dev3:9:141:1686#2");
-  assert.equal(
-    nextDeviceEntryKey("dev3:9:141:1686", [
-      "dev3:9:141:1686#2",
-      "dev3:9:141:1686",
-      "dev3:9:141:16860",
-    ]),
-    "dev3:9:141:1686#3",
-  );
 });

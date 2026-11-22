@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Roboto_Condensed } from "next/font/google";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvOnlineResults } from "@/components/organisms/mcvv-online-results";
+import { McvvPlaceholderPage } from "@/components/templates/mcvv-placeholder-page";
+import type { McvvHomepageContent } from "@/components/templates";
 import type { Locale } from "@/i18n/routing";
 import { onlineResultsCache } from "@/lib/live/online-results";
 import { resultboardInfoCache, type ResultboardInfo } from "@/lib/live/resultboard";
@@ -62,6 +64,11 @@ export async function McvvOnlineResultsPage({
 }) {
   setRequestLocale(locale as Locale);
   const [{ wire, data, etag }, partnerList] = await Promise.all([snapshot(), partners()]);
+  // Okno živých výsledků (#337): po zveřejnění oficiální výsledky, mimo okno jen hláška.
+  if (data.window === "published" && data.officialUrl) redirect(`/${locale}${data.officialUrl}`);
+  if (data.window === "before" || data.window === "closed") {
+    return <OnlineResultsClosed locale={locale} state={data.window} />;
+  }
   if (slug !== null && !findCategoryBySlug(data.categories, slug)) notFound();
   return (
     <div className={robotoCondensed.variable}>
@@ -73,5 +80,27 @@ export async function McvvOnlineResultsPage({
         partners={partnerList}
       />
     </div>
+  );
+}
+
+/** Živé výsledky mimo okno závodu: před nulou nebo po nouzovém zavření (#337). */
+async function OnlineResultsClosed({
+  locale,
+  state,
+}: {
+  locale: string;
+  state: "before" | "closed";
+}) {
+  const home = await getTranslations({ locale: locale as Locale, namespace: "Home" });
+  const t = await getTranslations({ locale: locale as Locale, namespace: "OnlineResults" });
+  return (
+    <McvvPlaceholderPage
+      brand={home.raw("brand") as McvvHomepageContent["brand"]}
+      nav={home.raw("nav") as McvvHomepageContent["nav"]}
+      eyebrow={t("closedEyebrow")}
+      title={t(state === "before" ? "beforeTitle" : "closedTitle")}
+      status={t(state === "before" ? "beforeText" : "closedText")}
+      link={{ label: t("closedLink"), href: "/startovka" }}
+    />
   );
 }

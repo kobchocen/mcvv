@@ -3,8 +3,8 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
+import { requireSection } from "@/lib/admin/access";
 import { formInt, formString } from "@/lib/admin/parse";
-import { requireStaff } from "@/lib/admin/staff";
 import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
@@ -20,7 +20,7 @@ import { redirect } from "@/i18n/routing";
  * v Číselníku (`back=runner`, návrat s `?stat=ulozeno|chyba`, případně se zkratkou `z`).
  */
 export async function saveRunnerNationality(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("entries.list", "write");
   const runnerId = formString(formData, "runnerId");
   const raw = formString(formData, "nationality");
   const nationality = normalizeNationality(raw);

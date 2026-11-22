@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminEditionForm } from "@/components/organisms/mcvv-admin-edition-form";
 import { McvvAdminEditionSlots } from "@/components/organisms/mcvv-admin-edition-slots";
 import { McvvAdminStartModelFields } from "@/components/organisms/mcvv-admin-start-model-fields";
@@ -11,7 +10,7 @@ import { prisma } from "@/lib/db/client";
 import { loadStartSettings } from "@/lib/race/startlist-load";
 import { startModelFromEdition } from "@/lib/race/start-time";
 import { type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { standardPayUntil } from "@/lib/slots/core";
 import { slotsWithDefaults } from "@/lib/slots/defaults";
 import { loadSlots } from "@/lib/slots/load";
@@ -31,7 +30,7 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
   const { locale: requestedLocale, id: rawId } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("editions", "read");
   const id = Number.parseInt(rawId, 10);
   if (!Number.isFinite(id)) {
     notFound();
@@ -41,6 +40,7 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
     notFound();
   }
   const copy = await getTranslations({ locale, namespace: "Admin" });
+  const weatherCopy = await getTranslations({ locale, namespace: "Weather" });
   const startCopy = await getTranslations({ locale, namespace: "StartAdmin" });
   const settings = await loadStartSettings(edition.date.getUTCFullYear());
   const { chyba, terminy } = await searchParams;
@@ -53,7 +53,6 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="mb-8 font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("edit")} — {edition.id}
         </h1>
@@ -62,8 +61,14 @@ export default async function AdminEditEditionPage({ params, searchParams }: Pag
           copy={{
             date: copy("editionsDate"),
             reg: copy("editionsReg"),
-            weather: copy("editionsWeather"),
+            weather: copy("editionsWeatherNote"),
             temp: copy("editionsTemp"),
+            weatherKind: copy("editionsWeatherKind"),
+            weatherNone: copy("editionsWeatherNone"),
+            courseTags: copy("editionsCourseTags"),
+            tempHint: copy("editionsTempHint"),
+            kindLabel: (kind) => weatherCopy(`kind.${kind}`),
+            tagLabel: (tag) => weatherCopy(`tag.${tag}`),
             kidsMail: copy("editionsKidsMail"),
             kidsPlace: copy("editionsKidsPlace"),
             adultMail: copy("editionsAdultMail"),

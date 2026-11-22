@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formString } from "@/lib/admin/parse";
 import { writeAudit } from "@/lib/audit/log";
 import { isOrphanScope, orphanAuditDetail } from "@/lib/clubs/orphans";
@@ -26,7 +26,7 @@ async function back(query: Record<string, string>): Promise<never> {
 }
 
 export async function confirmOrphanCleanup(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("dictionaries.clubs.orphans", "write");
   const scope = formString(formData, "rozsah");
   if (!isOrphanScope(scope)) {
     return back({ chyba: "rozsah" });

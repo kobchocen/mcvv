@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 
@@ -21,7 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function AdminNewsletterPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
-  await requireStaff();
+  await requireSection("newsletter", "read");
   const rows = await prisma.newsletterCampaign.findMany({
     orderBy: { id: "desc" },
     include: { createdBy: { select: { name: true } }, _count: { select: { recipients: true } } },
@@ -29,7 +28,6 @@ export default async function AdminNewsletterPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label="Administrace" />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             Newsletter

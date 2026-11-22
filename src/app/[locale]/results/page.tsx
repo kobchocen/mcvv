@@ -15,10 +15,13 @@ import { createClubResolver } from "@/lib/clubs/core";
 import { getResultYearCounts } from "@/lib/results/cached";
 import { runnerNameFor } from "@/lib/format/runner-name";
 import { prisma } from "@/lib/db/client";
+import { yearStartEntries } from "@/lib/race/roster";
 import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
+import { publicYears } from "@/lib/testmode/public-year";
+import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -53,7 +56,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   // All years with participant counts + basic top info for summary cards
   const yearData = await getResultYearCounts();
 
-  const years = yearData.map((y) => y.year);
+  const years = publicYears(yearData.map((y) => y.year));
   const countMap = Object.fromEntries(yearData.map((y) => [y.year, y.count]));
 
   // Default to latest or selected
@@ -116,14 +119,11 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
         lt: new Date(defaultYear + 1, 0, 1),
       },
     },
-    select: { date: true, weather: true, temp: true },
+    select: { date: true, weather: true, temp: true, weatherKind: true, courseTags: true },
   });
 
   // Bibs and splits for mezičasy support (like in per-year)
-  const startEntries = await prisma.startEntry.findMany({
-    where: { year: defaultYear },
-    select: { runnerId: true, bib: true },
-  });
+  const startEntries = await yearStartEntries(defaultYear);
   const bibByRunner = new Map(startEntries.map((s) => [s.runnerId, s.bib]));
 
   const splitsRaw = await prisma.split.findMany({
@@ -214,6 +214,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
+  const weatherT = await getTranslations({ locale, namespace: "Weather" });
   const labels: McvvResultsTableLabels = {
     name: t("colName"),
     birth: t("colBirth"),
@@ -341,9 +342,10 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                   )}
                   {editionInfo && (
                     <div className="text-xs text-race-muted">
-                      {t("weather", {
-                        weather: editionInfo.weather || "—",
-                        temp: editionInfo.temp ?? "—",
+                      {t("weatherLine", {
+                        line:
+                          formatWeatherLine(weatherView(editionInfo), (key) => weatherT(key)) ||
+                          "—",
                       })}
                     </div>
                   )}

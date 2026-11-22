@@ -138,3 +138,23 @@ describe("heroButtons", () => {
     assert.equal(b.showCountdown, false);
   });
 });
+
+describe("resolveHeroPhase – live window (#337)", () => {
+  const raceStart = new Date("2026-12-06T09:15:00Z");
+  const before = new Date("2026-12-06T08:00:00Z");
+  const during = new Date("2026-12-06T10:00:00Z");
+  const base = { raceStart, startlistPublished: true, resultsCount: 0 };
+  it("manual open shows the online results before zero", () => {
+    assert.equal(resolveHeroPhase({ ...base, now: before, liveWindow: "open" }), "C");
+  });
+  it("emergency close hides them during the race", () => {
+    assert.equal(resolveHeroPhase({ ...base, now: during, liveWindow: "closed" }), "B");
+    assert.equal(
+      resolveHeroPhase({ ...base, now: during, liveWindow: "closed", startlistPublished: false }),
+      "A",
+    );
+  });
+  it("publication switches to results immediately", () => {
+    assert.equal(resolveHeroPhase({ ...base, now: during, published: true }), "D");
+  });
+});

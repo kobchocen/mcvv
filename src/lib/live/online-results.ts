@@ -6,14 +6,16 @@ import {
   categorySlugs,
   effectiveDnsGrace,
   encodeOnline,
+  gateOnline,
   type OnlineSnapshot,
 } from "./online-results-core";
-import { getRaceContext, getStations } from "./race-context";
+import { getPublicStations, getRaceContext } from "./race-context";
 import { createBodyCache } from "./speaker-cache";
 import { loadRaceRunners } from "./speaker";
 import { startOffsetSeconds } from "./start-check-core";
 import { countsAsStartRecord, publicLateOffset } from "./starter-core";
 import { inHiddenWindow, peekStoredTestRun, publicHiddenWindow, publicZero } from "./test-run";
+import { loadLiveWindow } from "@/lib/race/official";
 
 /**
  * Jak dlouho sdílí všichni diváci jeden snímek z DB (polling klienta je 5 s): na repliku
@@ -41,14 +43,14 @@ export async function loadOnlineSnapshot(
 ): Promise<OnlineSnapshot> {
   const [rawCtx, stations, { run, cutoff }] = await Promise.all([
     getRaceContext(),
-    getStations(),
+    getPublicStations(),
     peekStoredTestRun(now),
   ]);
   const hidden = options.includeTest ? null : publicHiddenWindow(run, cutoff);
   const ctx = options.includeTest
     ? rawCtx
     : { ...rawCtx, zero: publicZero(rawCtx, run, now, cutoff) };
-  const [{ categories, runners, tr, clubs: clubOf }, allStartChecks] = await Promise.all([
+  const [{ categories, runners, tr, clubs: clubOf, pts, pp }, allStartChecks] = await Promise.all([
     loadRaceRunners(ctx, stations, (created) => inHiddenWindow(created, hidden)),
     prisma.startCheck.findMany({
       where: { year: ctx.year },
@@ -104,11 +106,37 @@ export async function loadOnlineSnapshot(
     }),
     tr,
     clubs,
+    pts,
+    pp,
   };
+}
+
+/**
+ * Veřejný snímek s oknem živých výsledků (#337): před nulou / po ručním zavření bez časů,
+ * po zveřejnění oficiálních výsledků bez časů + cíl přesměrování.
+ */
+export async function loadPublicOnlineSnapshot(now = new Date()): Promise<OnlineSnapshot> {
+  const [snapshot, window] = await Promise.all([loadOnlineSnapshot(now), loadLiveWindow(now)]);
+  return gateOnline(snapshot, window.state);
 }
 
 /** Sdílená cache snímku na replice (viz `createBodyCache`). */
 export const onlineResultsCache = createBodyCache(
-  async () => encodeOnline(await loadOnlineSnapshot()),
+  async () => encodeOnline(await loadPublicOnlineSnapshot()),
   ONLINE_RESULTS_CACHE_MS,
 );
+
+/** Mimo okno (před startem, zavřeno, zveřejněno) nesmí CDN držet starý snímek. */
+export const ONLINE_RESULTS_CLOSED_CACHE_CONTROL = "no-store";
+
+let lastBody: string | null = null;
+let lastGated = false;
+
+/** Je snímek v těle mimo okno živých výsledků? (výsledek pro poslední tělo se pamatuje) */
+export function isGatedBody(body: string): boolean {
+  if (body !== lastBody) {
+    lastBody = body;
+    lastGated = /"window":"(before|closed|published)"/.test(body);
+  }
+  return lastGated;
+}

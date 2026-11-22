@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { loadRoster, rosterHasBib } from "@/lib/race/roster";
 
 import type { WebEntry } from "./ingest-core";
 import type { EntryResult } from "./ingest";
@@ -23,7 +24,7 @@ import {
 
 /**
  * Evidence startu (#203) – zápis a přehled. Jen tabulky `mcvv_start_check` (aktuální stav
- * čísla) a `mcvv_start_check_entry` (deník). `mcvv_split`, výsledky, OFeed ani OBD se nemění.
+ * čísla) a `mcvv_start_check_entry` (deník). `mcvv_split` ani výsledky se nemění.
  */
 
 type Tx = Prisma.TransactionClient;
@@ -51,9 +52,9 @@ function storedResult(row: JournalRow): EntryResult {
   };
 }
 
+/** Číslo je ve startovce ročníku (zaplacená přihláška s číslem, `race/roster`). */
 async function knownBib(tx: Tx, year: number, bib: number): Promise<boolean> {
-  const row = await tx.startEntry.findFirst({ where: { year, bib }, select: { bib: true } });
-  return row !== null;
+  return rosterHasBib(tx, year, bib);
 }
 
 /** Smaže řádek startu, jen když ho daný zápis opravdu vlastní (stejné číslo i čas). */
@@ -282,17 +283,7 @@ export async function rejectStartEntries(
 /** Přehled pro admina a pořadatele: startovka × záznamy startu + kdo zapsal. */
 export async function loadStartOverview(ctx: Ctx) {
   const [startList, records, journalCount] = await Promise.all([
-    prisma.startEntry.findMany({
-      where: { year: ctx.year },
-      select: {
-        bib: true,
-        runnerName: true,
-        clubName: true,
-        clubId: true,
-        categoryId: true,
-        runner: { select: { name: true } },
-      },
-    }),
+    loadRoster(ctx.year),
     prisma.startCheck.findMany({ where: { year: ctx.year } }),
     prisma.startCheckEntry.count({ where: { year: ctx.year } }),
   ]);
@@ -306,7 +297,7 @@ export async function loadStartOverview(ctx: Ctx) {
   const overview = buildStartOverview(
     startList.map((row) => ({
       bib: row.bib,
-      name: row.runnerName ?? row.runner?.name ?? null,
+      name: row.runnerName,
       club: row.clubName,
       clubId: row.clubId,
       categoryId: row.categoryId,

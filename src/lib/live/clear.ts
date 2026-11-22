@@ -3,7 +3,6 @@ import type { Prisma } from "@prisma/client";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { OFEED_STATE } from "@/lib/ofeed/publisher";
 
 import { formatClearSource, snapshotRows, splitRowKey, type ClearFilter } from "./clear-core";
 import { OWNING_OUTCOMES } from "./ingest-core";
@@ -24,7 +23,6 @@ export type ClearCounts = {
 function journalWhere(year: number, filter: ClearFilter): Prisma.SplitEntryWhereInput {
   const base: Prisma.SplitEntryWhereInput = { year, split: { in: filter.splits } };
   if (filter.source.kind === "source") return { ...base, source: filter.source.source };
-  if (filter.source.kind === "token") return { ...base, tokenId: filter.source.tokenId };
   return base;
 }
 
@@ -69,20 +67,17 @@ export async function previewClear(year: number, filter: ClearFilter): Promise<C
 }
 
 export type ClearOptions = {
-  /** Zneplatnit všechny klíče zařízení ročníku. */
-  revokeTokens: boolean;
   /** Smazat zkušební nulu. */
   clearZeroOverride: boolean;
 };
 
-export type ClearResult = ClearCounts & { tokensRevoked: number; zeroCleared: boolean };
+export type ClearResult = ClearCounts & { zeroCleared: boolean };
 
 const DELETE_CHUNK = 200;
 
 /**
  * Smaže výběr z mcvv_split i z deníku (včetně konfliktů) v jedné transakci a zapíše audit
- * `raceday.splits_cleared` se snímkem smazaných řádků. Vynuluje otisk posledního uploadu
- * do OFeed, aby se příští nahrání poslalo i bez dalších změn (čistý stav).
+ * `raceday.splits_cleared` se snímkem smazaných řádků.
  * Ochranu v den závodu (Q32) a potvrzení kontroluje volající (server action).
  */
 export async function clearSplits(
@@ -90,7 +85,6 @@ export async function clearSplits(
   filter: ClearFilter,
   options: ClearOptions,
   actor: SessionUser,
-  now = new Date(),
 ): Promise<ClearResult> {
   return prisma.$transaction(
     async (tx) => {
@@ -112,20 +106,11 @@ export async function clearSplits(
       const conflicts = await tx.splitEntry.count({ where: { ...where, outcome: "conflict" } });
       const removed = await tx.splitEntry.deleteMany({ where });
 
-      let tokensRevoked = 0;
-      if (options.revokeTokens) {
-        const revoked = await tx.ingestToken.updateMany({
-          where: { year, revokedAt: null },
-          data: { revokedAt: now },
-        });
-        tokensRevoked = revoked.count;
-      }
       let zeroCleared = false;
       if (options.clearZeroOverride) {
         const deleted = await tx.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
         zeroCleared = deleted.count > 0;
       }
-      await tx.jobState.deleteMany({ where: { name: OFEED_STATE.lastHash } });
 
       const counts = countBySplit(rows);
       await writeAudit(
@@ -139,7 +124,6 @@ export async function clearSplits(
             splitsTotal: rows.length,
             entries: removed.count,
             conflicts,
-            tokensRevoked,
             zeroCleared,
             // [číslo, split, čas, autor, created] – podklad pro případnou obnovu
             snapshot: snapshotRows(rows),
@@ -152,7 +136,6 @@ export async function clearSplits(
         splitsTotal: rows.length,
         entries: removed.count,
         conflicts,
-        tokensRevoked,
         zeroCleared,
       };
     },

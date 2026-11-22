@@ -30,9 +30,8 @@ function adminHref(next: string) {
   if (path === "/admin/nastaveni") return "/admin/nastaveni" as const;
   if (path === "/admin/uzivatele") return "/admin/uzivatele" as const;
   if (path === "/admin/audit") return "/admin/audit" as const;
+  if (path === "/admin/opravneni") return "/admin/opravneni" as const;
   if (path === "/admin/den-zavodu") return "/admin/den-zavodu" as const;
-  if (path === "/admin/den-zavodu/prezentace") return "/admin/den-zavodu/prezentace" as const;
-  if (path === "/admin/den-zavodu/vysledky") return "/admin/den-zavodu/vysledky" as const;
   if (path === "/admin/den-zavodu/zive") return "/admin/den-zavodu/zive" as const;
   if (path === "/admin/den-zavodu/zive/casy") return "/admin/den-zavodu/zive/casy" as const;
   if (path === "/admin/den-zavodu/start") return "/admin/den-zavodu/start" as const;
@@ -75,7 +74,7 @@ function adminHref(next: string) {
 
 /** Po přihlášení: bezpečný `next`, jinak výchozí cíl podle role (viz `loginTarget`). */
 export function redirectAfterLogin(next: string | null, role: UserRole, locale: Locale): never {
-  const target = loginTarget(next, adminAccess(role), role);
+  const target = loginTarget(next, adminAccess(role));
   if (target.kind === "admin") {
     redirect({ href: adminHref(target.next), locale });
   }
@@ -88,6 +87,9 @@ export function redirectAfterLogin(next: string | null, role: UserRole, locale: 
       href: Object.keys(query).length ? { pathname: target.path, query } : target.path,
       locale,
     });
+  }
+  if (target.kind === "home") {
+    redirect({ href: "/", locale });
   }
   redirect({ href: "/prihlasky", locale });
   throw new Error("redirect");

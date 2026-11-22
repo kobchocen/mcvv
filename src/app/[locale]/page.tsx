@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { currentRaceYear } from "@/lib/entries/year";
+import { currentRaceYear, editionNumber } from "@/lib/entries/year";
 import { formatRaceDay } from "@/lib/format/date";
 import { getHomeResultsSummary } from "@/lib/home/cached";
 import { loadPartners } from "@/lib/partners/logos";
@@ -72,7 +72,8 @@ export default async function Home({ params }: PageProps) {
     ];
   }
 
-  const { raceDate, startModel, slotSettings } = await currentRaceYear();
+  const raceYear = await currentRaceYear();
+  const { raceDate, startModel, slotSettings } = raceYear;
   // Čas startu a interval v textech z modelu ročníku (st_nula_s, st_interval), ne natvrdo.
   const startText = startTextParams(startModel, slotSettings);
   const rawSchedule = {
@@ -86,7 +87,10 @@ export default async function Home({ params }: PageProps) {
   const content: McvvHomepageContent = {
     brand: t.raw("brand") as McvvHomepageContent["brand"],
     nav: t.raw("nav") as McvvHomepageContent["nav"],
-    hero: t.raw("hero") as McvvHomepageContent["hero"],
+    hero: {
+      ...(t.raw("hero") as McvvHomepageContent["hero"]),
+      edition: t("hero.edition", { n: editionNumber(raceYear) }),
+    },
     overview: fillPlaceholders(t.raw("overview") as McvvHomepageContent["overview"], startText),
     profile: t.raw("profile") as McvvHomepageContent["profile"],
     schedule,

@@ -6,10 +6,13 @@ import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
-import { allowedStationsFor } from "@/lib/live/assignment-core";
-import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { stationsForScope } from "@/lib/live/assignment-core";
+import { getStations } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
 import { withStart } from "@/lib/live/stations";
-import { canAccessSplits } from "@/lib/auth/roles";
+import { allowsFor, can, getAccess } from "@/lib/admin/access";
+import { splitScope } from "@/lib/admin/permissions";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -25,12 +28,13 @@ export default async function SplitsPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   const session = await getSession();
+  const access = await getAccess();
   if (!session) {
     redirect({ href: { pathname: "/prihlaseni", query: { next: "/mezicasy" } }, locale });
     return null;
   }
   const t = await getTranslations({ locale, namespace: "Splits" });
-  if (!canAccessSplits(session.role)) {
+  if (!can(access, "screens.splits", "read")) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
         <div className="mx-auto max-w-md">
@@ -47,13 +51,17 @@ export default async function SplitsPage({ params }: PageProps) {
     );
   }
   const [ctx, allStations, assigned] = await Promise.all([
-    getRaceContext(),
+    getLiveRaceContext(),
     getStations(),
     getAssignedStations(session.id),
   ]);
   // Splitmaker vidí jen přiřazená stanoviště (server zápis na jiné odmítne).
   // Start (#203) je vestavěné stanoviště: evidence, kdo odstartoval (jen evidence).
-  const stations = allowedStationsFor(session.role, assigned, withStart(allStations));
+  const stations = stationsForScope(
+    splitScope(allowsFor(access)),
+    assigned,
+    withStart(allStations),
+  );
   if (stations.length === 0) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
@@ -72,6 +80,7 @@ export default async function SplitsPage({ params }: PageProps) {
   }
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <McvvTestRunBanner locale={locale} />
       <McvvSplitsClient
         stations={stations}

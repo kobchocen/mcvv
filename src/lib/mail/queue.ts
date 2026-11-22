@@ -12,8 +12,9 @@ import {
   type MailKind,
   type MailPolicy,
 } from "./queue-core";
+import { mailBlockedInTest } from "./test-block";
 import { prismaMailQueueStore } from "./queue-store";
-import { postResendEmail } from "./resend";
+import { postProviderEmail } from "./provider";
 
 export type MailInput = {
   to: string;
@@ -37,6 +38,8 @@ export function mailDryRun(): boolean {
 export async function enqueueMail(
   input: MailInput & { kind: MailKind; dedupeKey?: string; notBefore?: Date },
 ): Promise<{ id: number; created: boolean }> {
+  // Blok pošty v testovacím režimu: nic se nezařadí ani neodešle (jen log), i bez MAIL_DRY_RUN.
+  if (mailBlockedInTest(input.kind)) return { id: 0, created: false };
   if (input.dedupeKey) {
     const existing = await prisma.mailQueue.findUnique({
       where: { dedupeKey: input.dedupeKey },
@@ -71,7 +74,7 @@ async function drain(ids?: number[], limit = 25): Promise<DrainOutcome> {
     limit,
     ids,
     send: (mail) =>
-      postResendEmail(
+      postProviderEmail(
         {
           to: mail.toEmail,
           subject: mail.subject,
@@ -107,7 +110,7 @@ async function alertCapOnce(quota: boolean, policy: MailPolicy) {
       limit: 1,
       ids: [id],
       send: (m) =>
-        postResendEmail(
+        postProviderEmail(
           { to: m.toEmail, subject: m.subject, html: m.html, text: m.text },
           { dryRun: mailDryRun(), idempotencyKey: `mcvv-mail-${m.id}` },
         ),
@@ -121,6 +124,7 @@ async function alertCapOnce(quota: boolean, policy: MailPolicy) {
 export async function sendMail(
   input: MailInput & { kind: MailKind; dedupeKey?: string },
 ): Promise<"sent" | "queued" | "failed"> {
+  if (mailBlockedInTest(input.kind)) return "queued";
   const { id } = await enqueueMail(input);
   const outcome = await drain([id], 1);
   if (outcome.sent > 0) return "sent";

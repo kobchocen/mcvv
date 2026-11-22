@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { saveFreeEntryEmails } from "@/lib/entries/settings";
 import { saveOrganizerRegistrationEmail } from "@/lib/entries/organizer-registration";
 import { normalizeMoment, parseHttpUrl, saveSiteSettings } from "@/lib/settings/site";
@@ -44,7 +44,7 @@ async function loadSettingsForAudit(): Promise<Record<string, string>> {
 }
 
 export async function saveSettings(formData: FormData): Promise<void> {
-  const session = await requireAdmin();
+  const session = await requireSection("settings", "write");
   const locale = await getLocale();
   const url = parseHttpUrl(String(formData.get("onlineResultsUrl") ?? ""));
   if (!url.ok) {

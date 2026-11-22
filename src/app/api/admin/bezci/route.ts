@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
+import { sectionRouteAccess } from "@/lib/admin/access";
 import { suggestRunners } from "@/lib/admin/runner-directory";
-import { adminRouteAccess } from "@/lib/admin/staff";
 import { NO_STORE } from "@/lib/http/no-store";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * Hledá podle jména (slova v libovolném pořadí), id, dřívějšího jména a ročníku narození.
  */
 export async function GET(request: NextRequest): Promise<Response> {
-  const access = await adminRouteAccess();
+  const access = await sectionRouteAccess("dictionaries.runners", "read");
   if (!access.ok) {
     return access.response;
   }

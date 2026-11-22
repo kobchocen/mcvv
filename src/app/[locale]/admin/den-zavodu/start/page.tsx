@@ -2,18 +2,17 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClubLink, ConfirmSubmitButton } from "@/components/molecules";
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { canAccess, requireSection } from "@/lib/admin/access";
 import { formatDateTime } from "@/lib/format/date";
 import { OUTCOME_LABELS_CS } from "@/lib/live/admin-core";
 import { clearBlocked } from "@/lib/live/clear-core";
 import { MANUAL_REASON_MAX } from "@/lib/live/manual-core";
-import { getRaceContext } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
 import { clearStartsAction, deleteStartAction, setStartAction } from "@/lib/live/start-actions";
 import { loadStartOverview, previewStartClear, startJournal } from "@/lib/live/start-check";
 import {
@@ -24,6 +23,7 @@ import {
 } from "@/lib/live/start-check-core";
 import { pragueClock } from "@/lib/live/start-clock";
 import { FINISH_SPLIT } from "@/lib/live/stations";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type SearchParams = {
   filter?: string;
@@ -55,18 +55,17 @@ const MAX_ROWS = 400;
 /**
  * Evidence startu (#203): kdo opravdu odstartoval, kdo ne (kandidáti DNS) a časy. Přehled
  * vidí admin i pořadatel; zápis, opravu a mazání jen admin. Čas startu je jen evidence –
- * výsledky, OFeed ani OBD ho nepoužívají.
+ * výsledky ho nepoužívají.
  */
 export default async function StartCheckPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
   const sp = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireStaff();
-  const isAdmin = session.role === "admin";
+  await requireSection("raceControl.start", "read");
+  const isAdmin = await canAccess("raceControl.start", "write");
   const t = await getTranslations({ locale, namespace: "StartCheck" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
   const editBib = isAdmin && /^\d{1,3}$/.test(sp.edit ?? "") ? Number(sp.edit) : null;
   const [overview, recent, history, clearPreview] = await Promise.all([
     loadStartOverview(ctx),
@@ -105,9 +104,9 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <div className="mx-auto grid max-w-5xl gap-8">
         <div>
-          <McvvAdminHomeLink label={admin("title")} />
           <McvvTestRunBanner locale={locale} leftovers className="mb-4" />
           <p className="mt-2 text-sm">
             <Link href="/admin/den-zavodu" className="text-race-accent hover:underline">

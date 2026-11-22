@@ -28,9 +28,25 @@ describe("print adapter: start list → bib cards", () => {
       new Map([["19800101", 12]]),
     );
     assert.deepEqual(rows, [
-      { bib: 41, runnerId: "19800101", name: "Novák Jan", categoryId: "C", registrationId: 12 },
+      {
+        bib: 41,
+        runnerId: "19800101",
+        name: "Novák Jan",
+        categoryId: "C",
+        categoryName: "Muži",
+        birthYear: "1980",
+        registrationId: 12,
+      },
       // Běžec jen v mcvv_start (přihláška na místě) nemá číslo přihlášky.
-      { bib: 602, runnerId: "19700101", name: "19700101", categoryId: "C", registrationId: null },
+      {
+        bib: 602,
+        runnerId: "19700101",
+        name: "19700101",
+        categoryId: "C",
+        categoryName: "Muži",
+        birthYear: "1970",
+        registrationId: null,
+      },
     ]);
   });
 
@@ -71,6 +87,7 @@ describe("print adapter: start list → bib cards", () => {
       model,
       championBibs: championBibList({ men: 501, women: null }),
       veterans: new Map(),
+      winnerCounts: new Map(),
       logoCount: 0,
     };
     const [first, second] = bibRowsFromStartList(
@@ -80,6 +97,6 @@ describe("print adapter: start list → bib cards", () => {
     assert.equal(first.startTime, "10:01:00");
     assert.equal(first.registrationId, null);
     assert.equal(second.startTime, "10:00:00");
-    assert.equal(second.color, "red");
+    assert.equal(second.color, "gold");
   });
 });

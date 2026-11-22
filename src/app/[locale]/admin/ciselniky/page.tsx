@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
-import { requireStaff } from "@/lib/admin/staff";
+import { canAccess, requireSection } from "@/lib/admin/access";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -20,10 +19,10 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const session = await requireStaff();
+  await requireSection("dictionaries", "read");
   // Úpravy běžců (přejmenování #198, stát, slučování) smí jen admin. Slučování běžců a klubů
   // je záložka uvnitř číselníku Běžci / Kluby (ne samostatná dlaždice).
-  const isAdmin = session.role === "admin";
+  const isAdmin = await canAccess("dictionaries.runners", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
 
   const cards = [
@@ -51,7 +50,6 @@ export default async function AdminDictionariesPage({ params }: PageProps) {
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("dictsTitle")}
         </h1>

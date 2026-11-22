@@ -3,25 +3,19 @@ import { Prisma } from "@prisma/client";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { rosterHasBib } from "@/lib/race/roster";
 
 import {
   checkPunch,
-  decideDeviceDelete,
-  decideDeviceWrite,
   decideWrite,
-  deviceEntryKey,
-  nextDeviceEntryKey,
   OWNING_OUTCOMES,
-  SUPERSEDED_OUTCOMES,
-  type DeviceItem,
   type Outcome,
   type WebEntry,
 } from "./ingest-core";
 import { conflictStillCurrent } from "./manual-core";
-import { getRaceContext, type RaceContext } from "./race-context";
+import type { RaceContext } from "./race-context";
 import { startInstant } from "./start-time";
-import { plannedStartMs } from "./starter-core";
-import { autoMarkStart, type StarterPlan } from "./starter";
+import { autoMarkStart } from "./starter";
 import { isSplitCode, webAuthor } from "./stations";
 
 type Tx = Prisma.TransactionClient;
@@ -40,9 +34,9 @@ function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
+/** Číslo je ve startovce ročníku (zaplacená přihláška s číslem, `race/roster`). */
 async function knownBib(tx: Tx, year: number, bib: number): Promise<boolean> {
-  const row = await tx.startEntry.findFirst({ where: { year, bib }, select: { bib: true } });
-  return row !== null;
+  return rosterHasBib(tx, year, bib);
 }
 
 /** Zapíše řádek mcvv_split podle pravidla `decideWrite`. */
@@ -188,7 +182,13 @@ async function applyWebEntry(
   if (written.outcome === "applied") {
     await autoMarkStart(
       tx,
-      { year: ctx.year, bib: entry.bib, split: entry.split, splitAt: new Date(punchedAt) },
+      {
+        year: ctx.year,
+        bib: entry.bib,
+        split: entry.split,
+        splitAt: new Date(punchedAt),
+        userId: user.id,
+      },
       ctx,
     );
   }
@@ -290,159 +290,6 @@ export async function rejectWebEntries(
   return results;
 }
 
-export type DeviceToken = { id: number; year: number; author: string };
-
-/** Řádek mcvv_split pro (rok, split, číslo) a zápis z OBD, který ho vlastní (pokud nějaký). */
-async function currentSplit(tx: Tx, year: number, split: string, bib: number) {
-  const row = await tx.split.findUnique({
-    where: { bib_year_split: { bib, year, split } },
-    select: { time: true },
-  });
-  if (!row) return { row: null, owner: null };
-  const owner = await tx.splitEntry.findFirst({
-    where: { year, split, bib, time: row.time, outcome: { in: OWNING_OUTCOMES } },
-    orderBy: { id: "desc" },
-  });
-  return { row, owner };
-}
-
-async function applyDeviceItem(
-  tx: Tx,
-  item: DeviceItem,
-  token: DeviceToken,
-  now: Date,
-  plan: StarterPlan | null,
-): Promise<EntryResult> {
-  const base = deviceEntryKey(token.id, item);
-  // Idempotence: poslední zápis se stejným klíčem platí, dokud ho nepřepsala/nesmazala novější verze souboru.
-  const previous = await tx.splitEntry.findMany({
-    where: { OR: [{ entryKey: base }, { entryKey: { startsWith: `${base}#` } }] },
-    orderBy: { id: "desc" },
-  });
-  const latest = previous[0];
-  if (latest && !SUPERSEDED_OUTCOMES.includes(latest.outcome as Outcome)) {
-    return storedResult(latest);
-  }
-  const entryKey = nextDeviceEntryKey(
-    base,
-    previous.map((row) => row.entryKey),
-  );
-  const { row: existing, owner } = await currentSplit(tx, token.year, item.split, item.bib);
-  const ownedByObd = owner?.source === "obd";
-  const state = existing ? { time: existing.time, ownedByObd } : null;
-  const unknown = (await knownBib(tx, token.year, item.bib)) ? null : "unknown-bib";
-  const entry = {
-    entryKey,
-    year: token.year,
-    split: item.split,
-    bib: item.bib,
-    time: item.timeS,
-    source: "obd",
-    author: token.author,
-    tokenId: token.id,
-  };
-
-  if (item.action === "delete") {
-    const decision = decideDeviceDelete(state, item.timeS);
-    if (decision === "delete" && owner) {
-      await releaseOwnedSplit(tx, owner);
-      await tx.splitEntry.update({ where: { id: owner.id }, data: { outcome: "deleted" } });
-    }
-    const row = await tx.splitEntry.create({
-      data: {
-        ...entry,
-        action: "delete",
-        replaces: decision === "delete" ? (owner?.entryKey ?? null) : null,
-        outcome: decision === "delete" ? "deleted" : "unchanged",
-        note: decision === "delete" ? null : decision,
-      },
-    });
-    return { ...storedResult(row), existingTime: existing?.time };
-  }
-
-  const decision = decideDeviceWrite(state, item.timeS, item.replace);
-  let outcome: Outcome;
-  if (decision === "insert") {
-    await tx.split.create({
-      data: {
-        bib: item.bib,
-        year: token.year,
-        split: item.split,
-        time: item.timeS,
-        created: now,
-        author: token.author,
-      },
-    });
-    outcome = "applied";
-  } else if (decision === "replace" && owner) {
-    // Jen s přepínačem applyCorrections: přepsat hodnotu, kterou zapsalo OBD (legacy by ji zahodil).
-    await tx.split.updateMany({
-      where: { bib: item.bib, year: token.year, split: item.split, time: existing!.time },
-      data: { time: item.timeS, created: now, author: token.author },
-    });
-    await tx.splitEntry.update({ where: { id: owner.id }, data: { outcome: "replaced" } });
-    outcome = "applied";
-  } else {
-    outcome = decision === "unchanged" ? "unchanged" : "conflict";
-  }
-  if (outcome === "applied" && plan && plan.year === token.year) {
-    const planned = plannedStartMs(
-      plan.zero.getTime(),
-      item.bib,
-      plan.intervalS,
-      plan.secondStartFrom,
-    );
-    await autoMarkStart(
-      tx,
-      {
-        year: token.year,
-        bib: item.bib,
-        split: item.split,
-        splitAt: new Date(planned + item.timeS * 1000),
-      },
-      plan,
-    );
-  }
-  const notes = [
-    unknown,
-    existing && existing.time !== item.timeS ? `existing=${existing.time}` : null,
-  ].filter(Boolean);
-  const row = await tx.splitEntry.create({
-    data: {
-      ...entry,
-      action: decision === "replace" ? "correct" : "create",
-      replaces: decision === "replace" ? (owner?.entryKey ?? null) : null,
-      outcome,
-      note: notes.length > 0 ? notes.join(";") : null,
-    },
-  });
-  return {
-    ...storedResult(row),
-    existingTime: existing && existing.time !== item.timeS ? existing.time : undefined,
-  };
-}
-
-/** Dávka z klienta na cílovém PC (OBD). */
-export async function applyDeviceItems(
-  items: DeviceItem[],
-  token: DeviceToken,
-  now = new Date(),
-  plan?: StarterPlan | null,
-): Promise<EntryResult[]> {
-  const results: EntryResult[] = [];
-  // Kontext závodu pro doplnění startu ze splitu (jednou na dávku).
-  const startPlan = plan === undefined ? await getRaceContext() : plan;
-  for (const item of items) {
-    const key = deviceEntryKey(token.id, item);
-    results.push(
-      await withRetry(key, () =>
-        prisma.$transaction((tx) => applyDeviceItem(tx, item, token, now, startPlan)),
-      ),
-    );
-  }
-  return results;
-}
-
 export type ConflictDecision = "ok" | "missing" | "stale";
 
 /**
@@ -477,6 +324,7 @@ export async function resolveConflict(
       bib: entry.bib,
       split: entry.split,
       splitAt: entry.punchedAt ?? new Date(),
+      userId: entry.userId,
     });
     await tx.splitEntry.updateMany({
       where: {

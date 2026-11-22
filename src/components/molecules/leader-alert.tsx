@@ -19,7 +19,8 @@ export function leaderBoxClass(alert: LeaderAlert | undefined, nowMs: number): s
 
 function usePointName() {
   const t = useTranslations("Leader");
-  return (k: PointKey) => (k === "m1" ? t("m1") : k === "m2" ? t("m2") : t("fin"));
+  return (k: PointKey) =>
+    k === "m1" ? t("m1") : k === "m2" ? t("m2") : k === "m3" ? t("m3") : t("fin");
 }
 
 /** Štítek v nadpisu kategorie: „★ NOVÝ LÍDR“ (cíl) / „★ LÍDR M1“. */

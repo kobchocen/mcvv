@@ -2,8 +2,8 @@
   "Home": {
     "brand": {
       "mark": "V",
-      "top": "MALA CENA",
-      "bottom": "VELKE VERANDY"
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
     },
     "nav": {
       "register": "Anmelden",
@@ -48,9 +48,10 @@
     },
     "hero": {
       "kicker": "Traditioneller Waldcrosslauf",
+      "edition": "{n}. Ausgabe",
       "place": "Choceň · jeden ersten Sonntag im Dezember",
-      "titleLine1": "MALA CENA",
-      "titleLine2": "VELKE VERANDY",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
       "memorial": "Jirka-Švadlena-Gedenklauf",
       "claim": "Ein Waldcross, der dich an jedem Anstieg prüft. Kurz, intensiv und gnadenlos – mit steilen Anstiegen und schnellen, technischen Abstiegen.",
       "primaryCta": "Anmeldungen",
@@ -312,7 +313,12 @@
       "venkuLine1": "18 Punkte im Wald bei Velká Veranda.",
       "venkuLine2Prefix": "Auf zu Erlebnissen mit",
       "venkuLogoAria": "venku.app – Standort Choceň",
-      "organizer": "Veranstalter: K.O.B. Choceň, z.s."
+      "organizer": "Veranstalter: K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Hauptpartner",
+        "partners": "Partner",
+        "prizes": "Die Preise für die Besten stifteten"
+      }
     },
     "finalCta": {
       "title": "Bereit für vier Anstiege?",
@@ -1226,7 +1232,8 @@
     "split2Short": "Z2",
     "colTime": "Zeit",
     "empty": "Keine Ergebnisse.",
-    "backToTop": "Nach oben"
+    "backToTop": "Nach oben",
+    "weatherLine": "Wetter: {line}"
   },
   "ConfirmDialog": {
     "cancel": "Abbrechen",
@@ -1263,11 +1270,13 @@
     "colStart": "Start",
     "colM1": "Z1",
     "colM2": "Z2",
+    "colM3": "Z3",
     "colFin": "Ziel",
     "colLoss": "Rückstand",
     "colIfNow": "Wenn jetzt",
     "km1": "1,3 km",
     "km2": "2,7 km",
+    "kmAt": "{km, number} km",
     "ifNow": "jetzt",
     "late": "später Start +{offset}",
     "lateShort": "+{offset} später",
@@ -1302,6 +1311,7 @@
     "recentEmpty": "Noch kein Durchgang.",
     "pointM1": "Z1",
     "pointM2": "Z2",
+    "pointM3": "Z3",
     "pointFin": "ZIEL",
     "note": "Die Live-Ergebnisse werden aus den Zwischenzeiten (1,3 km, 2,7 km) und dem Ziel berechnet. Die offiziellen Ergebnisse werden nach dem Rennen unter <link>Ergebnisse {year}</link> veröffentlicht.",
     "footerStartlist": "Startliste",
@@ -1383,11 +1393,18 @@
     "unknownRunner": "Unbekannter Läufer (Nr. {bib})",
     "unknownSub": "nicht in den Daten dieses Jahres",
     "unknownGroup": "Nicht in den Daten dieses Jahres",
-    "unknownRemove": "Entfernen"
+    "unknownRemove": "Entfernen",
+    "closedEyebrow": "Online-Ergebnisse",
+    "beforeTitle": "Das Rennen hat noch nicht begonnen",
+    "beforeText": "Die Live-Ergebnisse erscheinen hier mit dem Start des Rennens.",
+    "closedTitle": "Online-Ergebnisse sind gerade nicht verfügbar",
+    "closedText": "Die Live-Ergebnisse sind vorübergehend abgeschaltet. Die offiziellen Ergebnisse veröffentlichen wir nach der Prüfung durch das Schiedsgericht.",
+    "closedLink": "Startliste"
   },
   "Leader": {
     "m1": "Z1",
     "m2": "Z2",
+    "m3": "Z3",
     "fin": "Ziel",
     "chipFin": "NEUER FÜHRENDER",
     "chipSplit": "FÜHRENDER {point}",
@@ -1426,5 +1443,30 @@
     "badgeTitle": "Streckenrekord (vorläufig)",
     "badgeEqTitle": "Streckenrekord eingestellt (vorläufig)",
     "finalTitle": "Streckenrekord: {cats}"
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Klar",
+      "partly_cloudy": "Heiter bis wolkig",
+      "cloudy": "Bewölkt",
+      "overcast": "Bedeckt",
+      "fog": "Nebel",
+      "drizzle": "Nieselregen",
+      "rain": "Regen",
+      "showers": "Regenschauer",
+      "snow": "Schneefall",
+      "snow_showers": "Schneeschauer"
+    },
+    "tag": {
+      "dry": "Trockene Strecke",
+      "hard": "Harter Boden",
+      "wet": "Nasse Strecke",
+      "mud": "Matschig",
+      "frost": "Frost",
+      "ice": "Glatteis",
+      "snow_dusting": "Leichte Schneedecke",
+      "snow_patches": "Schneereste",
+      "snow_cover": "Schnee auf der Strecke"
+    }
   }
 }

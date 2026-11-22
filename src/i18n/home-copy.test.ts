@@ -13,6 +13,7 @@ type HomeCopy = {
       venkuLine2Prefix: string;
       venkuLogoAria: string;
       organizer: string;
+      groups: { main: string; partners: string; prizes: string };
     };
   };
 };
@@ -55,6 +56,13 @@ for (const locale of Object.keys(OVERVIEW_TITLES)) {
     assert.ok(partners.organizer);
     assert.match(partners.venkuLogoAria, /venku\.app/);
     assert.match(partners.venkuLogoAria, /Choceň/);
+  });
+
+  test(`${locale}: partners section has all three group headings`, () => {
+    const { groups } = load(locale).Home.partners;
+    assert.ok(groups.main);
+    assert.ok(groups.partners);
+    assert.ok(groups.prizes);
   });
 }
 

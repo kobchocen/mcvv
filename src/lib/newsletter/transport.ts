@@ -1,17 +1,18 @@
 import { env } from "@/lib/env";
-
 import {
   mailAllowlist,
   maskRecipient,
   recipientAllowed,
   SKIPPED_PROVIDER_ID,
 } from "@/lib/mail/allowlist";
+import { mailConfigured, mailProvider } from "@/lib/mail/configured";
+import { sendSesBatch } from "@/lib/mail/ses";
 
 import type { BatchSendResult, OutgoingMessage } from "./core";
 
-/** Resend batch API accepts up to 100 messages per request (1 request toward the rate limit). */
+/** Velikost dávky newsletteru (Resend batch max. 100; SES posílá stejnou dávku po jednom). */
 export const NEWSLETTER_BATCH_SIZE = 50;
-/** Pause between batches in the client loop (Resend default limit: 2 requests/s). */
+/** Pauza mezi dávkami v klientské smyčce (Resend 2 req/s; u SES platí ještě limiter v transportu). */
 export const NEWSLETTER_BATCH_PAUSE_MS = 700;
 
 export function newsletterDryRun(): boolean {
@@ -22,7 +23,7 @@ export function newsletterDryRun(): boolean {
 }
 
 export function newsletterMailConfigured(): boolean {
-  return Boolean(env.RESEND_API_KEY && env.MAIL_FROM);
+  return mailConfigured();
 }
 
 /**
@@ -49,13 +50,26 @@ export async function sendNewsletterBatch(
         allowed.length > 0
           ? await sendBatch(allowed, `${idempotencyKey}-allowed`, options)
           : { ok: true as const, providerIds: [] };
-      if (!sent.ok) return sent;
-      let next = 0;
+      const mapAllowed = (
+        ids: (string | null | undefined)[] | undefined,
+        unsent: string | null | undefined,
+      ) => {
+        let next = 0;
+        return messages.map((m) =>
+          recipientAllowed(m.to, allow) ? (ids?.[next++] ?? unsent) : SKIPPED_PROVIDER_ID,
+        );
+      };
+      if (!sent.ok) {
+        return {
+          ok: false,
+          retryable: sent.retryable,
+          error: sent.error,
+          sentProviderIds: mapAllowed(sent.sentProviderIds, undefined),
+        };
+      }
       return {
         ok: true,
-        providerIds: messages.map((m) =>
-          recipientAllowed(m.to, allow) ? (sent.providerIds[next++] ?? null) : SKIPPED_PROVIDER_ID,
-        ),
+        providerIds: mapAllowed(sent.providerIds, null).map((id) => id ?? null),
       };
     }
   }
@@ -67,6 +81,9 @@ async function sendBatch(
   idempotencyKey: string,
   options: { dryRun: boolean },
 ): Promise<BatchSendResult> {
+  if (mailProvider() === "ses") {
+    return sendSesBatch(messages, { dryRun: options.dryRun });
+  }
   if (options.dryRun) {
     console.info(`[newsletter] dry-run: ${messages.length} zpráv (${idempotencyKey})`);
     return { ok: true, providerIds: messages.map(() => "dry-run") };

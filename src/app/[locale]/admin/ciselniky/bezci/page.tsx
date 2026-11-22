@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CountryFlag } from "@/components/atoms";
-import { McvvAdminDictsSubnav, McvvAdminHomeLink, runnersSubnav } from "@/components/organisms";
+import { McvvAdminDictsSubnav, runnersSubnav } from "@/components/organisms";
 import { McvvAdminRunnerSearch } from "@/components/organisms/mcvv-admin-runner-search";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { RUNNER_SEARCH_LIMIT, RUNNER_SEARCH_MIN } from "@/lib/admin/runner-direc
 import { searchRunners } from "@/lib/admin/runner-directory";
 import { isRunnerId } from "@/lib/admin/runner-orphans-core";
 import { birthYearOf, runnerSexOf } from "@/lib/admin/runner-sex-core";
-import { requireAdmin } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { countryName } from "@/lib/runner/nationality";
 
 type PageProps = Readonly<{
@@ -33,7 +33,7 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireAdmin();
+  await requireSection("dictionaries.runners", "read");
   const [admin, copy] = await Promise.all([
     getTranslations({ locale, namespace: "Admin" }),
     getTranslations({ locale, namespace: "AdminRunners" }),
@@ -46,7 +46,6 @@ export default async function AdminRunnersPage({ params, searchParams }: PagePro
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={admin("title")} />
         <McvvAdminDictsSubnav
           backLabel={admin("dictsTitle")}
           label={copy("title")}

@@ -6,7 +6,7 @@
  * - an allowlist of public pages (e.g. `/prihlasky`, `/navod`).
  * The locale prefix (`/cs`, `/en`) is stripped; the result is a locale-less path.
  */
-import { adminPathAllowed, RACE_DAY_PATH, type AdminAccess, type UserRole } from "./roles";
+import { adminPathAllowed, type AdminAccess } from "./roles";
 
 export const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
 const SAFE_QUERY = /^[\w.=&-]*$/;
@@ -29,6 +29,7 @@ export const USER_NEXT_PATHS = [
   "/zpravy",
   "/mezicasy",
   "/mezicasy/speaker",
+  "/cil",
   "/start",
   "/kancelar",
   "/kancelar/prodejky",
@@ -109,24 +110,20 @@ export type LoginTarget =
   | { kind: "admin"; next: string }
   | { kind: "user"; path: UserNextPath; query: string }
   | { kind: "thread"; id: string }
+  | { kind: "home" }
   | { kind: "default" };
 
 /**
- * Decides where to go after a successful login when no usable `next` was given:
- * - full staff (organizer, admin) → administration,
- * - race-day-only account (Časomíra) → race-day section,
- * - split-time operator (splitmaker) → split entry page,
- * - race office (race_office) → cash desk (`/kancelar`),
- * - starter (starter) → start screen (`/start`),
- * - everybody else → the application page (`/prihlasky`).
- * `access` accepts the legacy boolean (`true` = full staff); `role` is needed only to
- * tell the splitmaker and the race office apart (they have no admin access).
+ * Decides where to go after a successful login:
+ * - a usable `next` wins (admin paths only when the account may open them, conversation
+ *   threads, or an allowlisted public page),
+ * - otherwise any account with an admin home (everybody except a runner) lands on the race
+ *   homepage `/` – Pavel 21. 11.: no automatic jump into the role's own screen any more,
+ *   staff reach it through the gear icon → `/admin`,
+ * - a runner keeps the application page (`/prihlasky`).
+ * `access` accepts the legacy boolean (`true` = full staff).
  */
-export function loginTarget(
-  next: string | null,
-  access: boolean | AdminAccess,
-  role?: UserRole,
-): LoginTarget {
+export function loginTarget(next: string | null, access: boolean | AdminAccess): LoginTarget {
   const level: AdminAccess = access === true ? "full" : access === false ? "none" : access;
   if (next) {
     if (isAdminNext(next)) {
@@ -144,20 +141,5 @@ export function loginTarget(
       }
     }
   }
-  if (level === "raceday") {
-    return { kind: "admin", next: RACE_DAY_PATH };
-  }
-  if (level === "full") {
-    return { kind: "admin", next: "/admin" };
-  }
-  if (role === "splitmaker") {
-    return { kind: "user", path: "/mezicasy", query: "" };
-  }
-  if (role === "race_office") {
-    return { kind: "user", path: "/kancelar", query: "" };
-  }
-  if (role === "starter") {
-    return { kind: "user", path: "/start", query: "" };
-  }
-  return { kind: "default" };
+  return level === "none" ? { kind: "default" } : { kind: "home" };
 }

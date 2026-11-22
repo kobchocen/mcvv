@@ -133,8 +133,13 @@ model WebImageType {
 model Edition {
   id               Int       @id @default(autoincrement()) @map("id") @db.SmallInt
   date             DateTime  @map("datum") @db.Date
+  /// Původní volný text počasí (poznámka; zobrazí se, když chybí typ).
   weather          String?   @map("weather") @db.VarChar(64)
   temp             Int?      @map("temp") @db.SmallInt
+  /// Typ počasí (číselník v `src/lib/editions/weather.ts`, emoji + 5 jazyků).
+  weatherKind      String?   @map("pocasi_typ") @db.VarChar(16)
+  /// Štítky stavu trati oddělené čárkou (mud, snow_cover, …).
+  courseTags       String?   @map("trat_stitky") @db.VarChar(120)
   zhl              Boolean?  @default(true) @map("zhl")
   isCarEx          Boolean?  @default(false) @map("iscarex")
   regDeadline      DateTime? @map("prihl_datum") @db.Date
@@ -406,30 +411,102 @@ model User {
   messageThreads MessageThread[]
   messages       Message[]
   auditEntries   AuditLog[]
+  roleGrants     UserRoleGrant[]
+  pins           UserPin[]
 
   @@map("mcvv_user")
+}
+
+/// Role účtu (návrh administrace v2): účet může mít víc rolí, práva se sčítají.
+/// Závodník (`registrar`) je implicitní a sem se nezapisuje. Platí až se zapnutým
+/// nastavením `permissions.v2`; do té doby rozhoduje `mcvv_user.role` (zůstává jako záloha).
+/// Kódy rolí validuje aplikace (VARCHAR, ne enum – nová role nepotřebuje migraci).
+model UserRoleGrant {
+  userId    Int      @map("user_id")
+  role      String   @db.VarChar(24)
+  createdAt DateTime @default(now()) @map("created_at")
+  /// Kdo roli přidělil (null = migrace / seed).
+  createdBy Int?     @map("created_by")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, role])
+  @@index([role])
+  @@map("mcvv_user_role")
+}
+
+/// Odchylky matice oprávnění role × sekce od výchozích hodnot v kódu
+/// (`src/lib/admin/sections.ts`). Chybějící řádek = výchozí hodnota z kódu.
+/// Admin má vždy vše a sem se nezapisuje.
+model RoleSection {
+  role      String   @db.VarChar(24)
+  /// Id podkapitoly z registru sekcí, např. `entries.payments`.
+  sectionId String   @map("section_id") @db.VarChar(48)
+  /// none | read | write
+  level     String   @db.VarChar(5)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy Int?     @map("updated_by")
+
+  @@id([role, sectionId])
+  @@map("mcvv_role_section")
+}
+
+/// Vlastní připnuté položky administrace (★). Bez řádků = výchozí připnuté podle rolí.
+model UserPin {
+  userId    Int    @map("user_id")
+  sectionId String @map("section_id") @db.VarChar(48)
+  pos       Int    @db.TinyInt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, sectionId])
+  @@map("mcvv_user_pin")
 }
 
 /// Auditní záznam akcí v administraci (#107): změny rolí, exporty a importy dne závodu.
 /// Jméno a e-mail aktéra se ukládají i jako text, aby záznam přežil smazání účtu.
 model AuditLog {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now()) @map("created_at")
-  actorUserId Int?     @map("actor_user_id")
-  actorEmail  String   @map("actor_email") @db.VarChar(255)
-  actorRole   String   @map("actor_role") @db.VarChar(20)
+  id          Int        @id @default(autoincrement())
+  createdAt   DateTime   @default(now()) @map("created_at")
+  actorUserId Int?       @map("actor_user_id")
+  actorEmail  String     @map("actor_email") @db.VarChar(255)
+  actorRole   String     @map("actor_role") @db.VarChar(20)
   /// Např. "user.role_change", "raceday.obd_export".
-  action      String   @db.VarChar(64)
+  action      String     @db.VarChar(64)
   /// Cíl akce (např. "user:12", "year:2026").
-  target      String?  @db.VarChar(128)
+  target      String?    @db.VarChar(128)
   /// Strukturované detaily (z čeho na co, počty řádků…). Bez osobních údajů navíc.
   detail      Json?
-
-  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actor       User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  meta        AuditMeta?
 
   @@index([action, createdAt])
   @@index([actorUserId, createdAt])
   @@map("mcvv_audit_log")
+}
+
+/// Doplňkové údaje auditního záznamu pro filtry a přehledy auditu (návrh v2). Samostatná
+/// tabulka 1:1, aby migrace jen přidávala tabulky a `mcvv_audit_log` zůstal beze změny.
+model AuditMeta {
+  auditId    Int      @id @map("audit_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  /// Ročník a startovní číslo, jsou-li známé (filtr „historie čísla“).
+  year       Int?     @db.SmallInt
+  bib        Int?     @db.SmallInt
+  /// Typ cíle akce (např. "start", "split", "finish", "settings", "registration").
+  entity     String?  @db.VarChar(24)
+  /// web | device | system
+  source     String?  @db.VarChar(8)
+  /// Všechny role aktéra v okamžiku akce (čárkou oddělené).
+  actorRoles String?  @map("actor_roles") @db.VarChar(160)
+  /// Id požadavku – spojí víc záznamů jedné akce.
+  requestId  String?  @map("request_id") @db.Char(16)
+
+  audit AuditLog @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([year, bib, createdAt])
+  @@index([entity, createdAt])
+  @@map("mcvv_audit_meta")
 }
 
 enum EmailTokenPurpose {
@@ -536,7 +613,7 @@ model NewsletterRecipient {
   error      String?                   @db.VarChar(500)
   claimToken String?                   @map("claim_token") @db.VarChar(36)
   claimedAt  DateTime?                 @map("claimed_at")
-  providerId String?                   @map("provider_id") @db.VarChar(64)
+  providerId String?                   @map("provider_id") @db.VarChar(255)
   sentAt     DateTime?                 @map("sent_at")
   createdAt  DateTime                  @default(now()) @map("created_at")
 
@@ -578,7 +655,7 @@ enum MailQueueStatus {
   failed
 }
 
-/// Fronta odchozích e-mailů (denní limit Resend). Newsletter má vlastní tabulku příjemců,
+/// Fronta odchozích e-mailů (denní limit). Newsletter má vlastní tabulku příjemců,
 /// ale počítá se do stejného denního limitu.
 model MailQueue {
   id         Int             @id @default(autoincrement())
@@ -598,7 +675,7 @@ model MailQueue {
   claimToken String?         @map("claim_token") @db.VarChar(36)
   claimedAt  DateTime?       @map("claimed_at")
   lastError  String?         @map("last_error") @db.VarChar(500)
-  providerId String?         @map("provider_id") @db.VarChar(64)
+  providerId String?         @map("provider_id") @db.VarChar(255)
   sentAt     DateTime?       @map("sent_at")
   createdAt  DateTime        @default(now()) @map("created_at")
 
@@ -726,6 +803,117 @@ enum MessageThreadStatus {
 enum MessageSide {
   user
   staff
+}
+
+/// Dotaz z kontaktního formuláře od nepřihlášeného návštěvníka (#205). Pořadatel ho vidí
+/// v administraci (Zprávy → Dotazy), odpovídá e-mailem přes frontu pošty.
+model ContactQuestion {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(100)
+  email       String    @db.VarChar(254)
+  message     String    @db.Text
+  /// Jazyk webu při odeslání (cs | en | de | pl | uk) – jazyk obálky odpovědi.
+  locale      String    @default("cs") @map("jazyk") @db.VarChar(2)
+  /// new | answered | closed
+  status      String    @default("new") @map("stav") @db.VarChar(10)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  lastReplyAt DateTime? @map("last_reply_at")
+  closedAt    DateTime? @map("closed_at")
+  /// Kdy odešlo upozornění pořadateli (null = nepodařilo se, dotaz je jen v databázi).
+  notifiedAt  DateTime? @map("notified_at")
+
+  replies ContactReply[]
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("mcvv_contact_question")
+}
+
+/// Odpověď pořadatele na dotaz z kontaktního formuláře (#205).
+model ContactReply {
+  id          Int      @id @default(autoincrement())
+  questionId  Int      @map("question_id")
+  body        String   @db.Text
+  authorId    Int?     @map("author_id")
+  authorName  String   @map("author_name") @db.VarChar(80)
+  /// Řádek fronty pošty s odpovědí.
+  mailQueueId Int?     @map("mail_queue_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  question ContactQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("mcvv_contact_reply")
+}
+
+/// Testovací režim závodu (B+, bod 6 nočního balíku): jeden test. Průběh testu (start,
+/// mezičasy, cíl) jde do stínového ročníku 9026 ve stávajících tabulkách, startovka
+/// a dohlášky testu do `mcvv_test_*`. Ostré přihlášky, běžce a kluby test jen čte.
+model TestModeRun {
+  id        Int       @id @default(autoincrement())
+  /// planned | running | ended | cleaned
+  status    String    @default("planned") @map("stav") @db.VarChar(10)
+  /// Stínový ročník (9026).
+  year      Int       @default(9026) @map("rok") @db.SmallInt
+  zeroAt    DateTime  @map("nula_at")
+  endAt     DateTime  @map("konec_at")
+  cleanupAt DateTime  @map("likvidace_at")
+  /// draw | copy
+  roster    String    @default("draw") @map("startovka") @db.VarChar(5)
+  fictional Int       @default(0) @map("fiktivnich") @db.SmallInt
+  /// Konfigurace platná při založení (JSON) – pro report.
+  config    String    @db.Text
+  /// Výsledek kontrol konzistence (JSON), report jen v administraci.
+  report    String?   @db.MediumText
+  createdBy String    @map("zalozil") @db.VarChar(80)
+  createdAt DateTime  @default(now()) @map("created_at")
+  startedAt DateTime? @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+  cleanedAt DateTime? @map("cleaned_at")
+
+  starts  TestModeStart[]
+  onsites TestModeOnsite[]
+
+  @@index([status, zeroAt])
+  @@map("mcvv_test_run")
+}
+
+/// Testovací startovka (losování nebo kopie ostré startovky) – snímek jména, kategorie a klubu,
+/// bez FK a bez id ostrého běžce (sloučení běžců se testu netýká; data testu se likvidují).
+model TestModeStart {
+  testRunId  Int     @map("test_run_id")
+  bib        Int     @map("cislo") @db.SmallInt
+  name       String  @map("jmeno") @db.VarChar(80)
+  categoryId String  @map("kategorie") @db.Char(1)
+  club       String? @map("klub") @db.VarChar(80)
+  fictional  Boolean @default(false) @map("fiktivni")
+
+  testRun TestModeRun @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+
+  @@id([testRunId, bib])
+  @@map("mcvv_test_start")
+}
+
+/// Testovací dohláška na místě – žádná přihláška, běžec, prodejka ani platba; platba jen simulovaná.
+model TestModeOnsite {
+  id         Int      @id @default(autoincrement())
+  testRunId  Int      @map("test_run_id")
+  bib        Int      @map("cislo") @db.SmallInt
+  name       String   @map("jmeno") @db.VarChar(80)
+  birthYear  Int?     @map("rocnik") @db.SmallInt
+  sex        String?  @map("pohlavi") @db.VarChar(1)
+  categoryId String   @map("kategorie") @db.Char(1)
+  club       String?  @map("klub") @db.VarChar(80)
+  /// sim_cash | sim_qr
+  payment    String   @default("sim_cash") @map("platba") @db.VarChar(10)
+  createdBy  String   @map("zalozil") @db.VarChar(80)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  testRun TestModeRun @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+
+  @@unique([testRunId, bib])
+  @@map("mcvv_test_onsite")
 }
 
 /// Vlákno zpráv: buď k přihlášce (rok + prihlaska_id), nebo obecné k účtu (user_id, bez přihlášky).
@@ -1011,33 +1199,43 @@ model SaleItem {
 /// Prodejka závodní kanceláře (#207). VS = rok + 9 + pořadí na 5 míst (např. 2026900001),
 /// nikdy se nepotká s VS přihlášky (rok + 1–9999). Částka a řádky se po vytvoření nemění.
 model Sale {
-  id            Int       @id @default(autoincrement())
-  year          Int       @map("rok") @db.SmallInt
+  id             Int       @id @default(autoincrement())
+  year           Int       @map("rok") @db.SmallInt
   /// Pořadí prodejky v ročníku (1, 2, …).
-  number        Int       @map("cislo")
-  vs            String    @unique @db.VarChar(10)
+  number         Int       @map("cislo")
+  vs             String    @unique @db.VarChar(10)
   /// Celková částka v Kč (součet řádků).
-  total         Int       @map("castka")
+  total          Int       @map("castka")
   /// unpaid | paid_bank | paid_cash | cancelled
-  status        String    @default("unpaid") @map("stav") @db.VarChar(12)
-  createdById   Int?      @map("vytvoril_id")
-  createdByName String    @map("vytvoril") @db.VarChar(80)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  paidAt        DateTime? @map("zaplaceno_at")
+  status         String    @default("unpaid") @map("stav") @db.VarChar(12)
+  createdById    Int?      @map("vytvoril_id")
+  createdByName  String    @map("vytvoril") @db.VarChar(80)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  paidAt         DateTime? @map("zaplaceno_at")
   /// Kdo označil zaplaceno (hotově / ručně převodem); u spárování z Fio "fio".
-  paidByName    String?   @map("zaplatil_zapsal") @db.VarChar(80)
-  paidById      Int?      @map("zaplatil_zapsal_id")
+  paidByName     String?   @map("zaplatil_zapsal") @db.VarChar(80)
+  paidById       Int?      @map("zaplatil_zapsal_id")
   /// Spárovaný pohyb z Fio (mcvv_bank_tx.id).
-  bankTxId      Int?      @map("bank_tx_id")
-  cancelledAt   DateTime? @map("storno_at")
-  cancelledBy   String?   @map("storno_kdo") @db.VarChar(80)
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  bankTxId       Int?      @map("bank_tx_id")
+  cancelledAt    DateTime? @map("storno_at")
+  cancelledBy    String?   @map("storno_kdo") @db.VarChar(80)
+  /// Dohláška na místě (#222): přihláška (rok prodejky + id), kterou prodejka založila.
+  /// Zaplacení prodejky = platba přihlášky, storno = zrušení přihlášky a uvolnění čísla.
+  registrationId Int?      @map("prihlaska_id") @db.SmallInt
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  /// E-mail pro účtenku (#223), volitelný.
+  email          String?   @map("email") @db.VarChar(128)
+  /// Jazyk účtenky (cs | en | de | pl | uk), prázdné = cs.
+  locale         String?   @map("jazyk") @db.VarChar(2)
+  /// Kdy naposledy odešla účtenka e-mailem (do fronty).
+  receiptSentAt  DateTime? @map("uctenka_odeslana_at")
 
   lines SaleLine[]
 
   @@unique([year, number])
   @@index([year, status])
   @@index([year, createdAt])
+  @@index([year, registrationId])
   @@map("mcvv_sale")
 }
 
@@ -1099,4 +1297,50 @@ model CategoryMeta {
   feeGroup   FeeGroup @default(dospeli) @map("skupina")
 
   @@map("mcvv_kateg_meta")
+}
+
+// ============================================
+// Cíl: stopky a čísla (#252)
+// ============================================
+
+/// Klik na stopkách v cíli (#252): okamžik průběhu cílovou čárou podle zařízení po korekci
+/// hodin. Pořadí kliků = pořadí doběhu; s čísly se páruje podle pořadí (`mcvv_finish_bib`).
+/// Nic se nemaže: oprava = příznak `smazano` (přebytečný klik) nebo nový ruční klik.
+model FinishPunch {
+  id        Int      @id @default(autoincrement())
+  /// Idempotenční klíč: UUID zápisu z offline fronty stanice, u ručního zápisu `adm:…`.
+  entryKey  String   @unique @map("entry_key") @db.VarChar(80)
+  year      Int      @map("rok") @db.SmallInt
+  punchedAt DateTime @map("punched_at") @db.DateTime(3)
+  /// watch (stanice stopky) | admin (ručně doplněný klik)
+  source    String   @db.VarChar(8)
+  deleted   Boolean  @default(false) @map("smazano")
+  note      String?  @db.VarChar(255)
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([year, punchedAt])
+  @@map("mcvv_finish_punch")
+}
+
+/// Opsané číslo v cíli (#252) v pořadí doběhu. Pořadí určuje `poradi` (na začátku okamžik
+/// opsání v ms); prohození = výměna pořadí, chybějící číslo = vložení mezi sousedy.
+model FinishBib {
+  id        Int      @id @default(autoincrement())
+  entryKey  String   @unique @map("entry_key") @db.VarChar(80)
+  year      Int      @map("rok") @db.SmallInt
+  bib       Int      @map("cislo") @db.SmallInt
+  readAt    DateTime @map("read_at") @db.DateTime(3)
+  sortKey   Float    @map("poradi")
+  /// bibs (stanice čísla) | admin (ručně vložené)
+  source    String   @db.VarChar(8)
+  deleted   Boolean  @default(false) @map("smazano")
+  note      String?  @db.VarChar(255)
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([year, sortKey])
+  @@map("mcvv_finish_bib")
 }

@@ -19,6 +19,8 @@ import { DownloadResultsButton } from "@/components/results/DownloadResultsButto
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
+import { isPublicYear } from "@/lib/testmode/public-year";
+import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
 
 type PageProps = {
   params: Promise<{ locale: string; year: string }>;
@@ -44,7 +46,8 @@ export default async function ResultsYearPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const year = parseInt(yearParam, 10);
-  if (isNaN(year)) notFound();
+  // Stínový ročník testovacího režimu (≥ 9000) nikdy veřejně.
+  if (!isPublicYear(year)) notFound();
 
   // Check year exists
   const hasData = await prisma.result.count({ where: { year } });
@@ -95,6 +98,8 @@ export default async function ResultsYearPage({ params }: PageProps) {
       date: true,
       weather: true,
       temp: true,
+      weatherKind: true,
+      courseTags: true,
     },
   });
 
@@ -137,6 +142,9 @@ export default async function ResultsYearPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
+  const weatherT = await getTranslations({ locale, namespace: "Weather" });
+  // PDF výsledků je česky (bez emoji – písmo PDF je nemá)
+  const weatherCsT = await getTranslations({ locale: "cs", namespace: "Weather" });
   const title = translated
     ? t("fullResults", { year })
     : isCs
@@ -185,25 +193,20 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 <>
                   {editionInfo.date && (
                     <p className="mt-1 text-sm text-race-muted">
-                      {translated ? "" : "Datum: "}
-                      {new Date(editionInfo.date).toLocaleDateString(
-                        translated ? intlTag(locale) : "cs-CZ",
-                        {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        },
-                      )}
+                      {isCs ? "Datum: " : ""}
+                      {new Date(editionInfo.date).toLocaleDateString(intlTag(locale), {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
                     </p>
                   )}
                   <p className="mt-1 text-sm text-race-muted">
-                    {translated
-                      ? t("weather", {
-                          weather: editionInfo.weather || "—",
-                          temp: editionInfo.temp ?? "—",
-                        })
-                      : `Počasí: ${editionInfo.weather || "—"}, ${editionInfo.temp ?? "—"} °C`}
+                    {t("weatherLine", {
+                      line:
+                        formatWeatherLine(weatherView(editionInfo), (key) => weatherT(key)) || "—",
+                    })}
                   </p>
                 </>
               )}
@@ -214,6 +217,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
                 year={year}
                 total={total}
                 editionInfo={editionInfo}
+                weatherText={
+                  editionInfo
+                    ? formatWeatherLine(weatherView(editionInfo), (key) => weatherCsT(key), {
+                        emoji: false,
+                      }) || undefined
+                    : undefined
+                }
                 orderedCats={orderedCats}
                 catGroups={catGroups}
               />

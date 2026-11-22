@@ -82,7 +82,7 @@ describe("mezičasy", () => {
   });
   it("/mezicasy/speaker is an allowed target after login (#188)", () => {
     assert.equal(safeNext("/cs/mezicasy/speaker"), "/mezicasy/speaker");
-    assert.deepEqual(loginTarget("/mezicasy/speaker", "full", "organizer"), {
+    assert.deepEqual(loginTarget("/mezicasy/speaker", "full"), {
       kind: "user",
       path: "/mezicasy/speaker",
       query: "",
@@ -91,18 +91,16 @@ describe("mezičasy", () => {
 });
 
 describe("loginTarget – Časomíra (raceday access)", () => {
-  it("lands on the race-day section by default", () => {
-    assert.deepEqual(loginTarget(null, "raceday"), { kind: "admin", next: "/admin/den-zavodu" });
+  it("lands on the race homepage by default (no jump into the race-day section)", () => {
+    assert.deepEqual(loginTarget(null, "raceday"), { kind: "home" });
   });
-  it("honours only race-day admin paths", () => {
+  it("honours the /admin home and race-day admin paths only", () => {
     assert.deepEqual(loginTarget("/admin/den-zavodu", "raceday"), {
       kind: "admin",
       next: "/admin/den-zavodu",
     });
-    assert.deepEqual(loginTarget("/admin/prihlasky", "raceday"), {
-      kind: "admin",
-      next: "/admin/den-zavodu",
-    });
+    assert.deepEqual(loginTarget("/admin", "raceday"), { kind: "admin", next: "/admin" });
+    assert.deepEqual(loginTarget("/admin/prihlasky", "raceday"), { kind: "home" });
   });
   it("full access and none behave like the boolean variant", () => {
     assert.deepEqual(loginTarget("/admin/platby", "full"), {
@@ -113,49 +111,36 @@ describe("loginTarget – Časomíra (raceday access)", () => {
   });
 });
 
-describe("loginTarget – default target by role (no next)", () => {
-  it("sends full staff to the administration", () => {
-    assert.deepEqual(loginTarget(null, "full", "organizer"), { kind: "admin", next: "/admin" });
-    assert.deepEqual(loginTarget(null, "full", "admin"), { kind: "admin", next: "/admin" });
-    assert.deepEqual(loginTarget("/", true), { kind: "admin", next: "/admin" });
+describe("loginTarget – default target (no next, Pavel 21. 11.)", () => {
+  it("sends every staff role to the race homepage", () => {
+    assert.deepEqual(loginTarget(null, "full"), { kind: "home" });
+    assert.deepEqual(loginTarget("/", true), { kind: "home" });
+    assert.deepEqual(loginTarget(null, "raceday"), { kind: "home" });
+    assert.deepEqual(loginTarget(null, "tools"), { kind: "home" });
   });
-  it("sends the split-time operator to the split entry page", () => {
-    assert.deepEqual(loginTarget(null, "none", "splitmaker"), {
-      kind: "user",
-      path: "/mezicasy",
-      query: "",
-    });
+  it("keeps the application page for runners", () => {
+    assert.deepEqual(loginTarget(null, "none"), { kind: "default" });
   });
-  it("sends the race office to the cash desk (#207)", () => {
-    assert.deepEqual(loginTarget(null, "none", "race_office"), {
-      kind: "user",
-      path: "/kancelar",
-      query: "",
-    });
-    assert.equal(safeNext("/cs/kancelar/prodejky"), "/kancelar/prodejky");
-    assert.deepEqual(loginTarget("/kancelar/polozky", "full", "admin"), {
-      kind: "user",
-      path: "/kancelar/polozky",
-      query: "",
-    });
-  });
-  it("keeps the race-day target for Časomíra and the application page for registrars", () => {
-    assert.deepEqual(loginTarget(null, "raceday", "timing"), {
-      kind: "admin",
-      next: "/admin/den-zavodu",
-    });
-    assert.deepEqual(loginTarget(null, "none", "registrar"), { kind: "default" });
+  it("tools roles may follow next to the /admin home but not deeper", () => {
+    assert.deepEqual(loginTarget("/admin", "tools"), { kind: "admin", next: "/admin" });
+    assert.deepEqual(loginTarget("/admin/platby", "tools"), { kind: "home" });
   });
   it("an explicit next still wins", () => {
-    assert.deepEqual(loginTarget("/prihlasky", "full", "admin"), {
+    assert.deepEqual(loginTarget("/prihlasky", "full"), {
       kind: "user",
       path: "/prihlasky",
       query: "",
     });
-    assert.deepEqual(loginTarget("/navod", "none", "splitmaker"), {
+    assert.deepEqual(loginTarget("/navod", "tools"), {
       kind: "user",
       path: "/navod",
       query: "",
     });
+    assert.deepEqual(loginTarget("/kancelar/polozky", "full"), {
+      kind: "user",
+      path: "/kancelar/polozky",
+      query: "",
+    });
+    assert.equal(safeNext("/cs/kancelar/prodejky"), "/kancelar/prodejky");
   });
 });

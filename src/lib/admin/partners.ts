@@ -5,11 +5,12 @@ import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formChecked, formInt, formString } from "@/lib/admin/parse";
 import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { partnerSnapshot, partnerTarget } from "@/lib/audit/startlist";
+import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { validateLogo, type LogoRejectReason } from "@/lib/partners/logo-file";
 import { redirect } from "@/i18n/routing";
@@ -81,7 +82,7 @@ type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 async function clearOtherGeneral(
   tx: Tx,
   keepId: number | null,
-  session: Awaited<ReturnType<typeof requireStaff>>,
+  session: SessionUser,
 ): Promise<void> {
   const others = await tx.sponsor.findMany({
     where: { general: true, ...(keepId ? { NOT: { id: keepId } } : {}) },
@@ -102,7 +103,7 @@ async function clearOtherGeneral(
 }
 
 export async function savePartner(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("partners", "write");
   const id = formInt(formData, "id");
   const name = formString(formData, "name") || null;
   const link = formString(formData, "link") || null;
@@ -187,7 +188,7 @@ export async function savePartner(formData: FormData): Promise<void> {
 
 /** „Smazání“ partnera = deaktivace (řádek v `sponsors` zůstává). */
 export async function deactivatePartner(formData: FormData): Promise<void> {
-  const session = await requireStaff();
+  const session = await requireSection("partners", "write");
   const id = formInt(formData, "id");
   if (!id) {
     return;

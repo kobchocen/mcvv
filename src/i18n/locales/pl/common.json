@@ -2,8 +2,8 @@
   "Home": {
     "brand": {
       "mark": "V",
-      "top": "MALA CENA",
-      "bottom": "VELKE VERANDY"
+      "top": "MALÁ CENA",
+      "bottom": "VELKÉ VERANDY"
     },
     "nav": {
       "register": "Zaloguj się",
@@ -48,9 +48,10 @@
     },
     "hero": {
       "kicker": "Tradycyjny bieg przełajowy w lesie",
+      "edition": "{n}. edycja",
       "place": "Choceň · co roku w pierwszą niedzielę grudnia",
-      "titleLine1": "MALA CENA",
-      "titleLine2": "VELKE VERANDY",
+      "titleLine1": "MALÁ CENA",
+      "titleLine2": "VELKÉ VERANDY",
       "memorial": "Memoriał Jirki Švadleny",
       "claim": "Leśny przełaj, który sprawdzi cię na każdym podbiegu. Krótka, intensywna i bezlitosna trasa pełna stromych podbiegów i szybkich, technicznych zbiegów.",
       "primaryCta": "Zapisy",
@@ -312,7 +313,12 @@
       "venkuLine1": "18 punktów w lesie przy Velké Verandzie.",
       "venkuLine2Prefix": "Rusz po wrażenia z",
       "venkuLogoAria": "venku.app – lokalizacja Choceň",
-      "organizer": "Organizator: K.O.B. Choceň, z.s."
+      "organizer": "Organizator: K.O.B. Choceň, z.s.",
+      "groups": {
+        "main": "Partnerzy główni",
+        "partners": "Partnerzy",
+        "prizes": "Nagrody dla najlepszych ufundowali"
+      }
     },
     "finalCta": {
       "title": "Gotów na cztery podbiegi?",
@@ -1226,7 +1232,8 @@
     "split2Short": "M2",
     "colTime": "Czas",
     "empty": "Brak wyników.",
-    "backToTop": "Do góry"
+    "backToTop": "Do góry",
+    "weatherLine": "Pogoda: {line}"
   },
   "ConfirmDialog": {
     "cancel": "Anuluj",
@@ -1263,11 +1270,13 @@
     "colStart": "Start",
     "colM1": "M1",
     "colM2": "M2",
+    "colM3": "M3",
     "colFin": "Meta",
     "colLoss": "Strata",
     "colIfNow": "Gdyby teraz",
     "km1": "1,3 km",
     "km2": "2,7 km",
+    "kmAt": "{km, number} km",
     "ifNow": "teraz",
     "late": "spóźniony start +{offset}",
     "lateShort": "+{offset} spóźn.",
@@ -1302,6 +1311,7 @@
     "recentEmpty": "Brak przejść.",
     "pointM1": "M1",
     "pointM2": "M2",
+    "pointM3": "M3",
     "pointFin": "META",
     "note": "Wyniki na żywo są obliczane z międzyczasów (1,3 km, 2,7 km) i mety. Oficjalne wyniki zostaną opublikowane po biegu w <link>Wyniki {year}</link>.",
     "footerStartlist": "Lista startowa",
@@ -1383,11 +1393,18 @@
     "unknownRunner": "Nieznany zawodnik (nr {bib})",
     "unknownSub": "brak w tegorocznych danych",
     "unknownGroup": "Brak w tegorocznych danych",
-    "unknownRemove": "Usuń"
+    "unknownRemove": "Usuń",
+    "closedEyebrow": "Wyniki online",
+    "beforeTitle": "Bieg jeszcze się nie rozpoczął",
+    "beforeText": "Wyniki na żywo pojawią się tutaj wraz ze startem biegu.",
+    "closedTitle": "Wyniki online są teraz niedostępne",
+    "closedText": "Wyniki na żywo są tymczasowo wyłączone. Oficjalne wyniki opublikujemy po weryfikacji przez sędziego.",
+    "closedLink": "Lista startowa"
   },
   "Leader": {
     "m1": "M1",
     "m2": "M2",
+    "m3": "M3",
     "fin": "Meta",
     "chipFin": "NOWY LIDER",
     "chipSplit": "LIDER {point}",
@@ -1426,5 +1443,30 @@
     "badgeTitle": "rekord trasy (wstępny)",
     "badgeEqTitle": "wyrównany rekord trasy (wstępny)",
     "finalTitle": "rekord trasy: {cats}"
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Bezchmurnie",
+      "partly_cloudy": "Częściowe zachmurzenie",
+      "cloudy": "Pochmurno",
+      "overcast": "Całkowite zachmurzenie",
+      "fog": "Mgła",
+      "drizzle": "Mżawka",
+      "rain": "Deszcz",
+      "showers": "Przelotne opady deszczu",
+      "snow": "Opady śniegu",
+      "snow_showers": "Przelotne opady śniegu"
+    },
+    "tag": {
+      "dry": "Sucha trasa",
+      "hard": "Twarde podłoże",
+      "wet": "Mokra trasa",
+      "mud": "Błotniście",
+      "frost": "Mróz",
+      "ice": "Gołoledź",
+      "snow_dusting": "Przyprószenie śniegiem",
+      "snow_patches": "Resztki śniegu",
+      "snow_cover": "Śnieg na trasie"
+    }
   }
 }

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { can, getAccess, requireSection, type Access } from "@/lib/admin/access";
 import { requireStaff } from "@/lib/admin/staff";
 import { adminAccess } from "@/lib/auth/roles";
-import { getSession } from "@/lib/auth/session";
 import { mailPolicy } from "@/lib/mail/queue";
 import { mailStats } from "@/lib/mail/queue-store";
 import { staffUnreadCount } from "@/lib/messages/store";
 import buildInfo from "@/lib/build-info.json";
-import { Link, redirect, type Locale } from "@/i18n/routing";
+import { Link, type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -24,61 +24,24 @@ export default async function AdminPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  const current = await getSession();
-  if (current && adminAccess(current.role) === "raceday") {
-    // Časomíra (timing) vidí jen „Den závodu“.
-    redirect({ href: "/admin/den-zavodu", locale });
+  const access = await getAccess();
+  if (access.v2) {
+    // Engine oprávnění: přehled zpráv a pošty jen s právem na Zprávy, jinak rozcestník.
+    await requireSection("overview", "read");
+    if (!can(access, "messages", "read")) return <RaceDayHome locale={locale} access={access} />;
+  } else {
+    const current = access.session;
+    const level = current ? adminAccess(current.role) : "none";
+    if (current && (level === "raceday" || level === "tools")) {
+      // Role dne závodu (timing, splitmaker, startér, kancelář): rozcestník jen s jejich
+      // sekcemi a obrazovkami (dřív je přihlášení přesměrovalo rovnou na ně).
+      return <RaceDayHome locale={locale} access={access} />;
+    }
+    await requireStaff();
   }
-  const session = await requireStaff();
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const audit = await getTranslations({ locale, namespace: "AdminAudit" });
   const [mail, policy] = await Promise.all([mailStats().catch(() => null), mailPolicy()]);
   const unreadThreads = await staffUnreadCount().catch(() => null);
-
-  const tiles: {
-    href:
-      | "/admin/partneri"
-      | "/admin/rocniky"
-      | "/admin/ciselniky"
-      | "/admin/prihlasky"
-      | "/admin/startovka"
-      | "/admin/newsletter"
-      | "/admin/platby"
-      | "/admin/tisk"
-      | "/admin/zpravy"
-      | "/admin/nastaveni"
-      | "/admin/den-zavodu"
-      | "/admin/po-zavode"
-      | "/admin/uzivatele"
-      | "/admin/audit"
-      | "/kancelar";
-    title: string;
-    detail?: string;
-    highlight?: boolean;
-  }[] = [
-    {
-      href: "/admin/zpravy",
-      title: copy("navMessages"),
-      detail: unreadThreads === null ? undefined : copy("messagesTile", { count: unreadThreads }),
-      highlight: (unreadThreads ?? 0) > 0,
-    },
-    { href: "/admin/partneri", title: copy("navPartners") },
-    { href: "/admin/rocniky", title: copy("navEditions") },
-    { href: "/admin/ciselniky", title: copy("navDictionaries") },
-    { href: "/admin/prihlasky", title: copy("navRegistrations") },
-    { href: "/admin/startovka", title: copy("navStartList") },
-    { href: "/admin/newsletter", title: copy("navNewsletter") },
-    { href: "/admin/platby", title: copy("navPayments") },
-    { href: "/admin/den-zavodu", title: copy("navRaceDay") },
-    { href: "/admin/po-zavode", title: copy("navAfterRace") },
-    { href: "/kancelar", title: copy("navCashDesk") },
-    { href: "/admin/tisk", title: copy("navPrintBibs") },
-  ];
-  if (session.role === "admin") {
-    tiles.push({ href: "/admin/uzivatele", title: copy("navUsers") });
-    tiles.push({ href: "/admin/nastaveni", title: copy("navSettings") });
-    tiles.push({ href: "/admin/audit", title: audit("nav") });
-  }
 
   return (
     <main className="px-4 py-16 sm:px-6 lg:px-8">
@@ -106,31 +69,57 @@ export default async function AdminPage({ params }: PageProps) {
             {mail.quotaExceeded ? ` ${copy("mailQuotaExceeded")}` : ""}
           </p>
         ) : null}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {(unreadThreads ?? 0) > 0 ? (
+          <Link
+            href="/admin/zpravy"
+            className="mt-8 block max-w-xl border border-race-accent bg-race-surface p-5"
+            data-testid="admin-unread"
+          >
+            <p className="font-display text-xl font-semibold text-foreground dark:text-white">
+              {copy("navMessages")}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-race-accent">
+              {copy("messagesTile", { count: unreadThreads ?? 0 })}
+            </p>
+          </Link>
+        ) : null}
+      </div>
+    </main>
+  );
+}
+
+type RaceDayHref = "/admin/den-zavodu" | "/mezicasy" | "/start" | "/kancelar";
+
+/** Rozcestník pro role dne závodu bez plné administrace. */
+async function RaceDayHome({ locale, access }: { locale: Locale; access: Access }) {
+  const copy = await getTranslations({ locale, namespace: "Admin" });
+  const tiles: { href: RaceDayHref; title: string }[] = [];
+  // Flag vypnutý: can() = canAccessRaceDay / canAccessSplits / canAccessStarter / canUseCashDesk.
+  if (can(access, "raceControl.overview", "read"))
+    tiles.push({ href: "/admin/den-zavodu", title: copy("navRaceDay") });
+  if (can(access, "screens.splits", "read"))
+    tiles.push({ href: "/mezicasy", title: copy("navSplitEntry") });
+  if (can(access, "screens.starter", "read"))
+    tiles.push({ href: "/start", title: copy("navStarter") });
+  if (can(access, "raceOffice.cash", "read"))
+    tiles.push({ href: "/kancelar", title: copy("navCashDesk") });
+  return (
+    <main className="px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <h1 className="font-display text-4xl font-bold text-foreground dark:text-white">
+          {copy("title")}
+        </h1>
+        <p className="mt-4 max-w-xl text-base leading-7 text-race-muted">{copy("toolsIntro")}</p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2" data-testid="raceday-home">
           {tiles.map((tile) => (
             <Link
               key={tile.href}
               href={tile.href}
-              className={
-                tile.highlight
-                  ? "border border-race-accent bg-race-surface p-5 transition-colors hover:border-race-accent"
-                  : "border border-race-line/55 bg-race-surface p-5 transition-colors hover:border-race-accent/50"
-              }
+              className="border border-race-line/55 bg-race-surface p-6 transition-colors hover:border-race-accent/50"
             >
-              <p className="font-display text-xl font-semibold text-foreground dark:text-white">
-                {tile.title}
+              <p className="font-display text-2xl font-semibold text-foreground dark:text-white">
+                {tile.title} {tile.href.startsWith("/admin") ? "" : "↗"}
               </p>
-              {tile.detail ? (
-                <p
-                  className={
-                    tile.highlight
-                      ? "mt-1 text-sm font-semibold text-race-accent"
-                      : "mt-1 text-sm text-race-muted"
-                  }
-                >
-                  {tile.detail}
-                </p>
-              ) : null}
             </Link>
           ))}
         </div>

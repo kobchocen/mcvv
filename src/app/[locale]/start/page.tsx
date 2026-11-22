@@ -4,9 +4,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { McvvStarterClient } from "@/components/organisms/mcvv-starter-client";
 import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Link, redirect, type Locale } from "@/i18n/routing";
+import { allowsFor, getAccess } from "@/lib/admin/access";
+import { starterScope } from "@/lib/admin/permissions";
 import { getSession } from "@/lib/auth/session";
 import { getStartCorridor } from "@/lib/live/starter";
-import { starterAccess } from "@/lib/live/starter-api-core";
+import { starterAccessFor } from "@/lib/live/starter-api-core";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -36,7 +38,11 @@ export default async function StarterPage({ params, searchParams }: PageProps) {
     return null;
   }
   const t = await getTranslations({ locale, namespace: "Starter" });
-  const access = starterAccess(session.role, await getStartCorridor(session.id), koridor);
+  const access = starterAccessFor(
+    starterScope(allowsFor(await getAccess())),
+    await getStartCorridor(session.id),
+    koridor,
+  );
   if (!access.ok) {
     const noCorridor = access.error === "no-corridor";
     return (

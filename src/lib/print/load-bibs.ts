@@ -6,6 +6,7 @@ import {
   type StartSettings,
 } from "@/lib/race/startlist-load";
 
+import { absoluteWinnerCountsFrom } from "./bib-winners";
 import { bibRowsFromStartList, championBibList } from "./bib-start";
 import {
   buildBibCard,
@@ -31,11 +32,18 @@ export async function loadVeterans(): Promise<Map<string, number>> {
   );
 }
 
+/** bezec_id → počet historických absolutních vítězství (před ročníkem tisku). */
+export async function loadWinnerCounts(year: number): Promise<Map<string, number>> {
+  const rows = await prisma.result.findMany({
+    where: { year: { lt: year }, time: { gt: 0 } },
+    select: { year: true, runnerId: true, time: true },
+  });
+  return absoluteWinnerCountsFrom(rows, { beforeYear: year });
+}
+
 export type PrintStartList = {
   year: number;
   settings: StartSettings;
-  /** Zdroj čísel: `start` = mcvv_start po importu z prezentace, jinak řádky přihlášek. */
-  source: "start" | "registrations";
   rows: BibEntryRow[];
 };
 
@@ -43,13 +51,13 @@ export type PrintStartList = {
 export async function loadPrintStartList(): Promise<PrintStartList> {
   const { year } = await currentRaceYear();
   const settings = await loadStartSettings(year);
-  const { rows, source } = await loadPublicStartList(year, settings.model);
+  const { rows } = await loadPublicStartList(year, settings.model);
   const lines = await prisma.registrationLine.findMany({
     where: { year, runnerId: { in: rows.map((row) => row.runnerId) } },
     select: { runnerId: true, registrationId: true },
   });
   const registrationOf = new Map(lines.map((line) => [line.runnerId, line.registrationId]));
-  return { year, settings, source, rows: bibRowsFromStartList(rows, registrationOf) };
+  return { year, settings, rows: bibRowsFromStartList(rows, registrationOf) };
 }
 
 export async function loadBibCards(
@@ -57,13 +65,19 @@ export async function loadBibCards(
   logoCount: number,
 ): Promise<{ year: number; cards: BibCard[]; total: number }> {
   const { year, settings, rows: startRows } = await loadPrintStartList();
+  const empty = new Map<string, number>();
+  const [veterans, winnerCounts] =
+    request.mode === "blank"
+      ? [empty, empty]
+      : await Promise.all([loadVeterans(), loadWinnerCounts(year)]);
   const options = {
     mode: request.mode,
     year,
     model: settings.model,
     championBibs: request.championBibs ?? championBibList(settings.champions),
     logoCount,
-    veterans: request.mode === "blank" ? new Map<string, number>() : await loadVeterans(),
+    veterans,
+    winnerCounts,
   };
 
   if (request.mode === "blank") {

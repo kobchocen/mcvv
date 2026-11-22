@@ -4,11 +4,17 @@ import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { formDate, formInt, formString } from "@/lib/admin/parse";
 import { diffFields } from "@/lib/audit/diff";
 import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
+import {
+  formatCourseTags,
+  parseCourseTags,
+  parseTemperature,
+  parseWeatherKind,
+} from "@/lib/editions/weather";
 import { ensureOrganizerRegistration } from "@/lib/entries/organizer-registration";
 import { loadBibRanges } from "@/lib/race/startlist-load";
 import { encodeStartIssues, validateStartSettings, type BibRange } from "@/lib/race/start-settings";
@@ -143,7 +149,7 @@ async function syncSlotsFromEdition(
 }
 
 export async function saveEdition(formData: FormData): Promise<void> {
-  const actor = await requireStaff();
+  const actor = await requireSection("editions", "write");
   const locale = await getLocale();
   const id = formInt(formData, "id");
   const date = formDate(formData, "date");
@@ -186,7 +192,9 @@ export async function saveEdition(formData: FormData): Promise<void> {
     date,
     regDeadline: formDate(formData, "regDeadline"),
     weather: formString(formData, "weather") || null,
-    temp: formInt(formData, "temp"),
+    temp: parseTemperature(formData.get("temp")),
+    weatherKind: parseWeatherKind(formData.get("weatherKind")),
+    courseTags: formatCourseTags(parseCourseTags(formData.getAll("courseTags"))),
     ...feeFields(formData),
     startZeroSeconds: zeroSeconds ?? DEFAULT_START_MODEL.zeroSeconds,
     secondStartFrom,

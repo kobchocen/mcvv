@@ -20,8 +20,8 @@ test("race date formats", () => {
   const race = new Date(Date.UTC(2026, 11, 6));
   assert.equal(plain(formatRaceDate(race, "cs")), "Neděle 6. 12. 2026");
   assert.equal(plain(formatRaceDate(race, "en")), "Sunday 6 December 2026");
-  assert.equal(plain(formatRaceDay(race, "cs")), "Neděle 6. prosince");
-  assert.equal(plain(formatRaceDay(race, "en")), "Sunday 6 December");
+  assert.equal(plain(formatRaceDay(race, "cs")), "Neděle 6. prosince 2026");
+  assert.equal(plain(formatRaceDay(race, "en")), "Sunday, 6 December 2026");
 });
 
 test("formatShortDateTime drops the year within the same Prague year", () => {

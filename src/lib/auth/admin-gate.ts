@@ -45,6 +45,8 @@ export type AdminGateInput = {
   isRscOrAction: boolean;
   /** Role z platné podepsané cookie, nebo null (žádná / neplatná / prošlá cookie). */
   cookieRole: UserRole | null;
+  /** Příznak `staff` z cookie (role z `mcvv_user_role` při zapnutém `permissions.v2`). */
+  cookieStaff?: boolean;
 };
 
 export type AdminGateDecision =
@@ -58,7 +60,9 @@ export function adminGate(input: AdminGateInput): AdminGateDecision {
   const requestPath = `${page.path}${input.search}`;
   const documentRequest =
     (input.method === "GET" || input.method === "HEAD") && !input.isRscOrAction;
-  const allowed = input.cookieRole !== null && adminAccess(input.cookieRole) !== "none";
+  const allowed =
+    input.cookieRole !== null &&
+    (adminAccess(input.cookieRole) !== "none" || input.cookieStaff === true);
   if (!allowed && documentRequest) {
     return {
       kind: "redirect",

@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 
 import { paymentRegistrationId } from "@/lib/admin/parse";
+import { systemAuditMeta } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { cancellationDetail } from "@/lib/entries/cancel-core";
 import { entryTarget } from "@/lib/entries/changes-core";
@@ -161,6 +162,7 @@ export async function runLatePayment(options: {
           ...SYSTEM_ACTOR,
           action: "entry.cancelled",
           target: entryTarget(year, reg.id),
+          meta: systemAuditMeta("late-pay-job", "entry.cancelled", entryTarget(year, reg.id)),
           detail: {
             ...cancellationDetail({
               year,

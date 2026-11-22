@@ -61,11 +61,13 @@ export default defineRouting({
     "/admin/tisk": "/admin/tisk",
     "/admin/zpravy": "/admin/zpravy",
     "/admin/zpravy/[id]": "/admin/zpravy/[id]",
+    "/admin/zpravy/dotazy": "/admin/zpravy/dotazy",
+    "/admin/zpravy/dotazy/[id]": "/admin/zpravy/dotazy/[id]",
     "/admin/uzivatele": "/admin/uzivatele",
     "/admin/audit": "/admin/audit",
+    // editor oprávnění rolí (P8, jen při zapnutém permissions.v2)
+    "/admin/opravneni": "/admin/opravneni",
     "/admin/den-zavodu": "/admin/den-zavodu",
-    "/admin/den-zavodu/prezentace": "/admin/den-zavodu/prezentace",
-    "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",
     // po závodě: tombola (#128)
     "/admin/po-zavode": "/admin/po-zavode",
     // závodní kancelář: pokladna a prodejky (#207)
@@ -76,12 +78,21 @@ export default defineRouting({
     "/newsletter/odhlasit": "/newsletter/odhlasit",
     "/admin/prihlasky/[rok]/[id]": "/admin/prihlasky/[rok]/[id]",
     "/admin/prihlasky/spec-starty": "/admin/prihlasky/spec-starty",
-    // den závodu: živé mezičasy a OFeed (#120–#122)
+    // den závodu: živé mezičasy (#120, #121)
     "/admin/den-zavodu/zive": "/admin/den-zavodu/zive",
+    "/admin/den-zavodu/test-rezim": "/admin/den-zavodu/test-rezim",
     "/admin/den-zavodu/zive/casy": "/admin/den-zavodu/zive/casy",
+    // cíl: párování stopek a čísel (#252)
+    "/admin/den-zavodu/zive/cil": "/admin/den-zavodu/zive/cil",
+    // oficiální výsledky: kontrola rozhodčím a zveřejnění (#337)
+    "/admin/den-zavodu/vysledky": "/admin/den-zavodu/vysledky",
+    // přehled trati pro šéfa trati (#316)
+    "/admin/den-zavodu/trat": "/admin/den-zavodu/trat",
     // evidence startu (#203)
     "/admin/den-zavodu/start": "/admin/den-zavodu/start",
     "/mezicasy": "/mezicasy",
+    // cíl: stanice Stopky a Čísla (#252)
+    "/cil": "/cil",
     "/mezicasy/speaker": "/mezicasy/speaker",
     "/start": "/start",
     // velké obrazovky v cíli – náhrada OFB (veřejné, bez přihlášení, Q134 / Q144)

@@ -10,7 +10,7 @@
 import { normalizeClubName } from "@/lib/clubs/core";
 
 import { isDns, type OnlineRunner } from "./online-results-core";
-import { POINTS, type PointKey } from "./speaker-core";
+import { ALL_POINTS, type PointKey } from "./speaker-core";
 
 /** Nejvýš tolik sledovaných běžců (Q170). */
 export const FOLLOW_LIMIT = 10;
@@ -150,6 +150,8 @@ export function clubFollowState(
 export type FollowSnap = {
   m1: number | null;
   m2: number | null;
+  /** Třetí veřejný mezičas (#316). */
+  m3?: number | null;
   fin: number | null;
   /** ✓ konečné pořadí v kategorii. */
   final: boolean;
@@ -163,7 +165,10 @@ export type FollowEvent =
 /** Klíč stavu – změna = možná nové hlášení. */
 export function followSignature(snaps: ReadonlyMap<number, FollowSnap>): string {
   return [...snaps]
-    .map(([b, x]) => `${b}:${x.m1 ?? ""}:${x.m2 ?? ""}:${x.fin ?? ""}:${x.final ? 1 : 0}`)
+    .map(
+      ([b, x]) =>
+        `${b}:${x.m1 ?? ""}:${x.m2 ?? ""}:${x.m3 ?? ""}:${x.fin ?? ""}:${x.final ? 1 : 0}`,
+    )
     .join("|");
 }
 
@@ -180,7 +185,7 @@ export function followEvents(
   for (const [bib, is] of next) {
     const was = prev.get(bib);
     if (!was) continue;
-    for (const k of POINTS) {
+    for (const k of ALL_POINTS) {
       if (was[k] != null || is[k] == null) continue;
       out.push(k === "fin" ? { kind: "fin", bib } : { kind: "split", bib, point: k });
     }

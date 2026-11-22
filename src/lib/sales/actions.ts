@@ -1,19 +1,23 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 
 import { redirect } from "@/i18n/routing";
 import { formInt, formString } from "@/lib/admin/parse";
-import { canChangeSaleStatus, canManageSaleItems } from "@/lib/auth/roles";
 import { currentRaceYear } from "@/lib/entries/year";
+import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
+import { normalizeEmail } from "@/lib/newsletter/core";
 
 import { parseSaleItemInput } from "./core";
-import { cashDeskActionSession } from "./guard";
+import { cashDeskActionSession, saleStatusSection } from "./guard";
+import { createOnsiteEntry, suggestOnsiteBibFor, type CreateOnsiteEntryResult } from "./onsite";
+import { parseOnsiteEntryInput, type OnsiteEntryField } from "./onsite-core";
 import {
   changeSaleStatus,
   createSale,
   createSaleItem,
+  sendSaleReceipt,
   updateSaleItem,
   type CreateSaleResult,
 } from "./sales";
@@ -22,18 +26,87 @@ function revalidate() {
   revalidatePath("/[locale]/kancelar", "layout");
 }
 
+/** Dohláška na místě mění i přihlášky a startovku (#222). */
+function revalidateEntries() {
+  revalidatePath("/[locale]/prihlaseni-zavodnici", "page");
+  revalidatePath("/[locale]", "page");
+  revalidateTag(HOME_COUNTS_TAG, "max");
+}
+
+const ONSITE_FIELDS = [
+  "firstName",
+  "lastName",
+  "birthYear",
+  "sex",
+  "categoryId",
+  "clubName",
+  "nationality",
+  "bib",
+  "bibAuto",
+  "email",
+  "receiptEmail",
+  "receiptLocale",
+] as const;
+
+/**
+ * Pokladna: dohláška na místě (#222) – založí přihlášku s ručně zadaným číslem a prodejku
+ * s cenou termínu „na místě“, propojené spolu.
+ */
+export async function createOnsiteEntryAction(
+  input: Partial<Record<(typeof ONSITE_FIELDS)[number], string>>,
+): Promise<
+  | CreateOnsiteEntryResult
+  | { ok: false; error: "forbidden" }
+  | { ok: false; error: "invalid"; field: OnsiteEntryField }
+> {
+  const session = await cashDeskActionSession();
+  if (!session) return { ok: false, error: "forbidden" };
+  const raw: Record<string, string> = {};
+  for (const key of ONSITE_FIELDS) {
+    const value = input?.[key];
+    if (typeof value === "string") raw[key] = value.slice(0, 200);
+  }
+  const parsed = parseOnsiteEntryInput(raw);
+  if (!parsed.ok) return parsed;
+  const { year } = await currentRaceYear();
+  const result = await createOnsiteEntry(session, year, parsed.data);
+  if (result.ok) {
+    revalidate();
+    revalidateEntries();
+  }
+  return result;
+}
+
+/** Pokladna: návrh nejbližšího volného čísla pro kategorii dohlášky (#222). */
+export async function suggestOnsiteBibAction(
+  categoryId: string,
+): Promise<{ bib: number; outsideCategory: boolean } | null> {
+  const session = await cashDeskActionSession();
+  if (!session || typeof categoryId !== "string" || !/^[A-Za-z0-9]$/.test(categoryId)) {
+    return null;
+  }
+  const { year } = await currentRaceYear();
+  const suggestion = await suggestOnsiteBibFor(year, categoryId);
+  return suggestion ? { bib: suggestion.bib, outsideCategory: suggestion.outsideCategory } : null;
+}
+
 /** Pokladna: vytvořit prodejku z vybraných položek (ceny počítá server). */
 export async function createSaleAction(input: {
   lines: ReadonlyArray<{ itemId: number; quantity: number }>;
-}): Promise<CreateSaleResult | { ok: false; error: "forbidden" }> {
+  email?: string;
+  locale?: string;
+}): Promise<CreateSaleResult | { ok: false; error: "forbidden" | "invalid_email" }> {
   const session = await cashDeskActionSession();
   if (!session) return { ok: false, error: "forbidden" };
   const lines = Array.isArray(input?.lines) ? input.lines.slice(0, 100) : [];
   const { year } = await currentRaceYear();
+  const email = typeof input?.email === "string" ? input.email.trim().slice(0, 128) : "";
+  if (email && !normalizeEmail(email)) return { ok: false, error: "invalid_email" };
   const result = await createSale(
     session,
     year,
     lines.map((l) => ({ itemId: Number(l?.itemId), quantity: Number(l?.quantity) })),
+    { email, locale: typeof input?.locale === "string" ? input.locale : null },
   );
   if (result.ok) revalidate();
   return result;
@@ -49,13 +122,19 @@ async function toSale(id: number, query: Record<string, string>): Promise<never>
 }
 
 async function changeStatus(formData: FormData, to: "paid_cash" | "paid_bank" | "cancelled") {
-  const session = await cashDeskActionSession((role) => canChangeSaleStatus(role, to));
+  const session = await cashDeskActionSession(saleStatusSection(to));
   const id = formInt(formData, "id");
   if (!id) return;
   if (!session) return toSale(id, { chyba: "forbidden" });
   const result = await changeSaleStatus(session, id, to, formString(formData, "note") ?? undefined);
   revalidate();
+  if (result === "ok") revalidateEntries();
   if (result !== "ok") return toSale(id, { chyba: result });
+  // Účtenka (#223): po zaplacení ji pošleme automaticky, pokud prodejka má e-mail.
+  if (to !== "cancelled") {
+    const receipt = await sendSaleReceipt(session, id);
+    if (receipt === "ok") return toSale(id, { ok: to, uctenka: "1" });
+  }
   return toSale(id, { ok: to });
 }
 
@@ -79,7 +158,7 @@ async function toItems(query: Record<string, string>): Promise<never> {
 
 /** Ceník: nová položka nebo úprava (id). Jen admin. */
 export async function saveSaleItem(formData: FormData): Promise<void> {
-  const session = await cashDeskActionSession(canManageSaleItems);
+  const session = await cashDeskActionSession("raceOffice.items");
   if (!session) return toItems({ chyba: "forbidden" });
   const parsed = parseSaleItemInput({
     name: formString(formData, "name") ?? "",
@@ -102,7 +181,7 @@ export async function saveSaleItem(formData: FormData): Promise<void> {
 
 /** Ceník: aktivovat / deaktivovat položku (neaktivní se v pokladně nenabízí). Jen admin. */
 export async function toggleSaleItem(formData: FormData): Promise<void> {
-  const session = await cashDeskActionSession(canManageSaleItems);
+  const session = await cashDeskActionSession("raceOffice.items");
   if (!session) return toItems({ chyba: "forbidden" });
   const id = formInt(formData, "id");
   if (!id) return toItems({ chyba: "not_found" });
@@ -110,4 +189,19 @@ export async function toggleSaleItem(formData: FormData): Promise<void> {
   const ok = await updateSaleItem(session, id, { active });
   revalidate();
   return toItems(ok ? { ok: active ? "activated" : "deactivated" } : { chyba: "not_found" });
+}
+
+/** Poslat (znovu) účtenku e-mailem z detailu prodejky (#223). */
+export async function sendSaleReceiptAction(formData: FormData): Promise<void> {
+  const session = await cashDeskActionSession();
+  const id = formInt(formData, "id");
+  if (!id) return;
+  if (!session) return toSale(id, { chyba: "forbidden" });
+  const result = await sendSaleReceipt(session, id, {
+    email: formString(formData, "email"),
+    locale: formString(formData, "locale"),
+  });
+  revalidate();
+  if (result !== "ok") return toSale(id, { chyba: result });
+  return toSale(id, { ok: "receipt" });
 }

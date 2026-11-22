@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { McvvAdminPartnerOptions } from "@/components/organisms/mcvv-admin-partner-combobox";
 import { McvvAdminSpecialStart } from "@/components/organisms/mcvv-admin-special-start";
 import { McvvAdminSpecialStartBadge } from "@/components/organisms/mcvv-admin-special-start-badge";
@@ -16,7 +15,7 @@ import {
   specialStartFlash,
   specialStartValue,
 } from "@/lib/admin/special-start-view";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 import { prisma } from "@/lib/db/client";
 import {
   formatOffset,
@@ -53,9 +52,8 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("entries.special", "read");
   const t = await getTranslations({ locale, namespace: "SpecialStart" });
-  const admin = await getTranslations({ locale, namespace: "Admin" });
   const query = await searchParams;
   const parsedYear = Number.parseInt(query.rok ?? "", 10);
   const year =
@@ -122,7 +120,6 @@ export default async function AdminSpecialStartsPage({ params, searchParams }: P
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-10">
         <div>
-          <McvvAdminHomeLink label={admin("title")} />
           <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
             {t("overviewTitle", { year })}
           </h1>

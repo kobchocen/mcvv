@@ -1,5 +1,5 @@
 import { zonedCivilToUtc } from "@/lib/date/race-schedule";
-import { isoWithOffset } from "@/lib/ofeed/iof-xml";
+import { isoWithOffset } from "@/lib/date/iso-offset";
 
 /** `<input type="datetime-local">` (Europe/Prague) → instant; nesmysl → null. */
 export function parsePragueLocal(raw: string | null | undefined): Date | null {
@@ -14,15 +14,6 @@ export function parsePragueLocal(raw: string | null | undefined): Date | null {
 /** Instant → hodnota pro `<input type="datetime-local">` v Europe/Prague. */
 export function toPragueLocalInput(date: Date | null): string {
   return date ? isoWithOffset(date).slice(0, 16) : "";
-}
-
-/** Výchozí platnost klíče zařízení: den závodu 6:00–18:00. */
-export function defaultTokenWindow(zero: Date): { from: Date; until: Date } {
-  const day = isoWithOffset(zero).slice(0, 10);
-  return {
-    from: parsePragueLocal(`${day}T06:00`)!,
-    until: parsePragueLocal(`${day}T18:00`)!,
-  };
 }
 
 export const OUTCOME_LABELS_CS: Record<string, string> = {

@@ -1,4 +1,6 @@
-import { loadReceiptFonts } from "@/lib/receipts/fonts";
+import { loadBibFonts } from "@/lib/print/bib-fonts";
+import { prepareBibArtwork } from "@/lib/print/bib-artwork";
+import { loadCourseProfileData, loadMcvvLogo, loadYearBadge } from "@/lib/print/bib-assets";
 import { bibFilename, parseBibPrintParams } from "@/lib/print/bibs-core";
 import { NO_STORE, pdfResponse, staffOnly } from "@/lib/print/http";
 import { loadBibCards } from "@/lib/print/load-bibs";
@@ -10,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/admin/tisk/cisla?mode=all|selected|blank&bibs=…&offset=&limit=&order=&red=…
- * PDF startovních čísel (#118), 2 na A4. Jen pořadatel / admin.
+ * PDF startovních čísel, A5 na šířku, jedno číslo na stránku. Jen pořadatel / admin.
  */
 export async function GET(request: Request): Promise<Response> {
   const denied = await staffOnly();
@@ -21,12 +23,29 @@ export async function GET(request: Request): Promise<Response> {
   if (!params) {
     return new Response("Bad request", { status: 400, headers: NO_STORE });
   }
-  const logos = await loadBibPartnerLogos();
+  const [logos, fonts, mcvvLogo, profile] = await Promise.all([
+    loadBibPartnerLogos(),
+    loadBibFonts(),
+    loadMcvvLogo(),
+    loadCourseProfileData(),
+  ]);
   const { year, cards } = await loadBibCards(params, logos.length);
+  const [yearBadge, artwork] = await Promise.all([
+    loadYearBadge(year),
+    prepareBibArtwork(cards, year, profile),
+  ]);
   const pdf = renderBibsPdf(
     cards,
-    await loadReceiptFonts(),
-    logos.map((item) => item.logo),
+    {
+      fonts,
+      logos: logos.map((item) => item.logo),
+      mcvvLogo,
+      profile,
+      yearBadge,
+      year,
+      qrs: artwork.qrs,
+      seals: artwork.seals,
+    },
     { title: `Startovní čísla MCVV ${year}` },
   );
   return pdfResponse(pdf, bibFilename(params.mode, year, cards[0]?.bib, cards.at(-1)?.bib));

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { McvvAdminHomeLink } from "@/components/organisms";
 import { recalculateRecords, saveCategory } from "@/lib/admin/dictionaries";
 import { prisma } from "@/lib/db/client";
 import { type Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
-import { requireStaff } from "@/lib/admin/staff";
+import { requireSection } from "@/lib/admin/access";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -23,7 +22,7 @@ export default async function AdminCategoriesPage({ params, searchParams }: Page
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
-  await requireStaff();
+  await requireSection("dictionaries.categories", "read");
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const categories = await prisma.category.findMany({ orderBy: { sort: "asc" } });
   const { rekordy } = await searchParams;
@@ -32,7 +31,6 @@ export default async function AdminCategoriesPage({ params, searchParams }: Page
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <McvvAdminHomeLink label={copy("title")} />
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("dictsCategories")}
         </h1>

@@ -1,11 +1,10 @@
 import { env } from "@/lib/env";
 
 import { mailAllowlist, maskRecipient, recipientAllowed, SKIPPED_PROVIDER_ID } from "./allowlist";
+import { mailConfigured } from "./configured";
 import { classifyResendFailure, type MailKind, type SendResult } from "./queue-core";
 
-export function mailConfigured(): boolean {
-  return Boolean(env.RESEND_API_KEY && env.MAIL_FROM);
-}
+export { mailConfigured } from "./configured";
 
 export type ResendMessage = {
   to: string;
@@ -70,7 +69,7 @@ export async function postResendEmail(
 export async function sendResendEmail(
   input: ResendMessage & { kind?: MailKind },
 ): Promise<boolean> {
-  if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+  if (!mailConfigured()) {
     return false;
   }
   const { sendMail } = await import("./queue");

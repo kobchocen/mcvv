@@ -1,6 +1,6 @@
 {
   "name": "mcvv",
-  "version": "1.15.1",
+  "version": "1.16.0",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -28,6 +28,7 @@
     "chart:check": "node scripts/release/check-chart.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1173.0",
     "@hookform/resolvers": "6.0.2",
     "@prisma/adapter-mariadb": "^7.10.1",
     "@prisma/client": "7.10.1",
@@ -65,7 +66,7 @@
     "jspdf-autotable": "^5.0.9",
     "lucide-react": "^1.65.0",
     "mariadb": "^3.5.4",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "next-intl": "4.14.9",
     "next-themes": "0.4.6",
     "nodemailer": "^10.3.1",
@@ -99,7 +100,7 @@
     "conventional-changelog-conventionalcommits": "10.4.1",
     "dotenv": "^18.0.9",
     "eslint": "^10.13.0",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "eslint-config-prettier": "^10.1.8",
     "husky": "9.1.7",
     "prettier": "^3.9.10",

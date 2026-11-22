@@ -18,10 +18,10 @@ import { adminAccess, getSession } from "@/lib/auth/session";
 import { adminHomeHref } from "@/lib/auth/roles";
 import { getHomeCounts } from "@/lib/home/cached";
 import { currentRaceYear } from "@/lib/entries/year";
+import { loadLiveWindow } from "@/lib/race/official";
 import { deadlineCountdown } from "@/lib/slots/core";
 import { heroButtons, raceStartFor, resolveHeroPhase, type HeroButton } from "@/lib/race/phase";
 import { getSiteSettings } from "@/lib/settings/site";
-import { getOfeedSettings, onlineResultsOverrideUrl } from "@/lib/ofeed/settings";
 import { getUnreadCount } from "@/lib/messages/store";
 import type { McvvHeroCta } from "@/components/organisms/mcvv-hero-section";
 
@@ -46,28 +46,30 @@ export async function McvvHomepageTemplate({
 }: McvvHomepageTemplateProps) {
   const session = await getSession();
   const { year, open, raceDate, startModel, slots, standardEnd } = await currentRaceYear();
-  const [settings, ofeed, { resultsCount, startlistCount, entriesCount }] = await Promise.all([
+  const now = new Date();
+  const [settings, { resultsCount, startlistCount, entriesCount }, live] = await Promise.all([
     getSiteSettings(),
-    getOfeedSettings().catch(() => null),
     // cached per replica for a minute, revalidated by registrations and imports (DB load)
     getHomeCounts(year),
+    // okno živých výsledků (#337): ruční přebití a zveřejnění oficiálních výsledků
+    loadLiveWindow(now),
   ]);
   const raceStart = raceStartFor(raceDate, year, startModel.zeroSeconds);
-  const now = new Date();
   const phase = resolveHeroPhase({
     now,
     raceStart,
     startlistPublished: settings.startlistPublished,
     resultsCount,
+    liveWindow: live.mode,
+    published: live.state === "published",
   });
   const buttons = heroButtons({
     phase,
     entriesCount,
     startlistCount,
     resultsCount,
-    // vlastní /vysledky/online (Q116); ručně zadaná URL je nouzové přebití, při testovací
-    // akci OFeed web na OFeed neodkazuje (Q33)
-    onlineResultsUrl: onlineResultsOverrideUrl(settings.onlineResultsUrl, ofeed),
+    // vlastní /vysledky/online (Q116); ručně zadaná URL je nouzové přebití
+    onlineResultsUrl: settings.onlineResultsUrl,
   });
   // Odpočet do konce standardních přihlášek (ze slotu, jinak konec dne uzávěrky), v pozdním
   // termínu do konce pozdních přihlášek – s rozlišeným textem (Q401).
@@ -126,7 +128,7 @@ export async function McvvHomepageTemplate({
                 name: session.name,
                 email: session.email,
                 staff: adminAccess(session.role) !== "none",
-                adminHref: adminHomeHref(session.role),
+                adminHref: adminHomeHref(),
                 starter:
                   session.role === "starter"
                     ? {

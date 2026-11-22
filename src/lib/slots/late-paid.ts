@@ -8,6 +8,7 @@ import { paymentRegistrationId } from "@/lib/admin/parse";
 import { startLineTarget } from "@/lib/audit/startlist";
 import { systemAuditMeta } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
+import { withTxRetry } from "@/lib/db/tx-retry";
 import { currentRaceYear } from "@/lib/entries/year";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
@@ -43,78 +44,88 @@ export async function isSubmittedLate(year: number, id: number): Promise<boolean
  * Přidělí čísla běžcům zaplacené pozdní přihlášky, jen když je losování potvrzené
  * (`startlistDrawConfirmed`; nouzové skrytí startovky přidělování nezastaví). `published`
  * ve výsledku = startovka je vidět (e-mail g pak čísla a časy uvede).
- * Pod zámkem databáze (GET_LOCK), aby dvě současné platby nedostaly stejné číslo.
+ * Pod zámkem databáze (GET_LOCK), aby dvě současné platby nedostaly stejné číslo. Zámek se
+ * uvolní ještě před COMMITem, proto další držitel nejdřív zamykacím čtením počká na nepotvrzené
+ * řádky předchozího a souběhovou chybu (1020/deadlock) transakce zopakuje.
  */
 export async function assignLateBibs(year: number, id: number): Promise<LateBibResult> {
   const site = await getSiteSettings();
   if (!startlistDrawConfirmed(site, year)) return { published: false, assigned: [], missing: [] };
   const settings = await loadStartSettings(year);
-  const result = await prisma.$transaction(
-    async (tx) => {
-      const lock = await tx.$queryRaw<{ ok: bigint | number | null }[]>`
+  const result = await withTxRetry(() =>
+    prisma.$transaction(
+      async (tx) => {
+        const lock = await tx.$queryRaw<{ ok: bigint | number | null }[]>`
         SELECT GET_LOCK(${BIB_LOCK}, 10) AS ok`;
-      if (Number(lock[0]?.ok ?? 0) !== 1) throw new Error("late bib lock timeout");
-      try {
-        const [own, lines] = await Promise.all([
-          tx.registrationLine.findMany({
-            where: { year, registrationId: id },
-            select: { runnerId: true, categoryId: true, bib: true },
-            orderBy: { runnerId: "asc" },
-          }),
-          tx.registrationLine.findMany({
-            where: { year, bib: { gt: 0 } },
-            select: { bib: true },
-          }),
-        ]);
-        const taken = new Set<number>([
-          ...lines.map((line) => line.bib!),
-          ...[settings.champions.men, settings.champions.women].filter(
-            (bib): bib is number => bib != null && bib > 0,
-          ),
-        ]);
-        const picks = pickLateBibs(own, settings.ranges, taken);
-        const assigned: LateBibResult["assigned"] = [];
-        const missing: string[] = [];
-        for (const { runnerId, pick } of picks) {
-          if (!pick) {
-            missing.push(runnerId);
-            continue;
-          }
-          await tx.registrationLine.update({
-            where: { year_runnerId: { year, runnerId } },
-            data: { bib: pick.bib },
-          });
-          await tx.startLineMeta.upsert({
-            where: { year_runnerId: { year, runnerId } },
-            update: { locked: true },
-            create: { year, runnerId, locked: true },
-          });
-          await tx.auditLog.create({
-            data: {
-              ...SYSTEM_ACTOR,
-              action: "startlist.bib_set",
-              target: startLineTarget(year, runnerId),
-              meta: systemAuditMeta(
-                "late-paid",
-                "startlist.bib_set",
-                startLineTarget(year, runnerId),
-              ),
-              detail: {
-                changes: { bib: { from: null, to: pick.bib }, locked: { from: false, to: true } },
-                auto: "late_paid",
-                registrationId: id,
-                outsideCategory: pick.outsideCategory,
+        if (Number(lock[0]?.ok ?? 0) !== 1) throw new Error("late bib lock timeout");
+        try {
+          // Předchozí držitel uvolní zámek těsně před COMMITem. Zamykací čtení čísel ročníku počká
+          // na jeho nepotvrzené řádky, takže snímek transakce (první běžné čtení až po něm) jeho
+          // čísla už vidí – žádné duplicitní číslo.
+          await tx.$queryRaw`
+          SELECT cislo FROM mcvv_prihlaska_radek WHERE rok = ${year} AND cislo > 0
+          LOCK IN SHARE MODE`;
+          const [own, lines] = await Promise.all([
+            tx.registrationLine.findMany({
+              where: { year, registrationId: id },
+              select: { runnerId: true, categoryId: true, bib: true },
+              orderBy: { runnerId: "asc" },
+            }),
+            tx.registrationLine.findMany({
+              where: { year, bib: { gt: 0 } },
+              select: { bib: true },
+            }),
+          ]);
+          const taken = new Set<number>([
+            ...lines.map((line) => line.bib!),
+            ...[settings.champions.men, settings.champions.women].filter(
+              (bib): bib is number => bib != null && bib > 0,
+            ),
+          ]);
+          const picks = pickLateBibs(own, settings.ranges, taken);
+          const assigned: LateBibResult["assigned"] = [];
+          const missing: string[] = [];
+          for (const { runnerId, pick } of picks) {
+            if (!pick) {
+              missing.push(runnerId);
+              continue;
+            }
+            await tx.registrationLine.update({
+              where: { year_runnerId: { year, runnerId } },
+              data: { bib: pick.bib },
+            });
+            await tx.startLineMeta.upsert({
+              where: { year_runnerId: { year, runnerId } },
+              update: { locked: true },
+              create: { year, runnerId, locked: true },
+            });
+            await tx.auditLog.create({
+              data: {
+                ...SYSTEM_ACTOR,
+                action: "startlist.bib_set",
+                target: startLineTarget(year, runnerId),
+                meta: systemAuditMeta(
+                  "late-paid",
+                  "startlist.bib_set",
+                  startLineTarget(year, runnerId),
+                ),
+                detail: {
+                  changes: { bib: { from: null, to: pick.bib }, locked: { from: false, to: true } },
+                  auto: "late_paid",
+                  registrationId: id,
+                  outsideCategory: pick.outsideCategory,
+                },
               },
-            },
-          });
-          assigned.push({ runnerId, ...pick });
+            });
+            assigned.push({ runnerId, ...pick });
+          }
+          return { published: site.startlistPublished, assigned, missing };
+        } finally {
+          await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
         }
-        return { published: site.startlistPublished, assigned, missing };
-      } finally {
-        await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
-      }
-    },
-    { timeout: 20_000 },
+      },
+      { timeout: 20_000 },
+    ),
   );
   if (result.missing.length > 0) {
     await sendMail({

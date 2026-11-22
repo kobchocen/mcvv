@@ -8,4 +8,5 @@ export const SITEMAP_ROUTES: readonly string[] = [
   "/statistiky",
   ...STAT_SLUGS.map((slug) => `/statistiky/${slug}`),
   "/kluby",
+  "/prihlaseni-zavodnici",
 ];

@@ -14,3 +14,4 @@ export * from "./mcvv-partners-section";
 export * from "./mcvv-profile-section";
 export * from "./mcvv-results-section";
 export * from "./mcvv-schedule-section";
+export * from "./mcvv-entrants-table";

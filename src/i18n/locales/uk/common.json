@@ -584,7 +584,12 @@
     "colBirth": "Рік народження",
     "colClub": "Клуб",
     "colStarts": "Старти",
-    "colRecord": "ОР"
+    "colRecord": "ОР",
+    "clubMetaTitle": "{club} · зареєстровані учасники",
+    "clubMetaDescription": "Зареєстровані учасники клубу {club} на {n}-й забіг Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# зареєстрований учасник} few {# зареєстровані учасники} many {# зареєстрованих учасників} other {# зареєстрованого учасника}}",
+    "clubProfile": "Профіль клубу",
+    "backToList": "Зареєстровані учасники"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# повідомлення} few {# повідомлення} many {# повідомлень} other {# повідомлення}}",

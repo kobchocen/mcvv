@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import {
   NationalitySelect,
@@ -10,7 +10,7 @@ import {
 import { useRouter } from "@/i18n/routing";
 import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { HOME_COUNTRY } from "@/lib/runner/nationality";
-import { createOnsiteEntryAction } from "@/lib/sales/actions";
+import { createOnsiteEntryAction, suggestOnsiteBibAction } from "@/lib/sales/actions";
 
 type OnsiteCategory = { id: string; name: string; sex: string; age: number; fee: number };
 
@@ -19,8 +19,9 @@ const input = "h-12 w-full border border-race-line/60 bg-race-deep px-3 text-bas
 const label = "grid gap-1 text-sm";
 
 /**
- * Pokladna – dohláška na místě (#222): údaje běžce, kategorie a ručně zadané startovní číslo
- * (podle vytištěných čísel v kanceláři; volná čísla se záměrně nenabízí). Vytvoří přihlášku
+ * Pokladna – dohláška na místě (#222): údaje běžce, kategorie a startovní číslo. Číslo systém
+ * navrhne (nejbližší volné ve startovní řadě kategorie), pokladní ho smí přepsat; nechaný
+ * návrh se při uložení vybere znovu pod zámkem (souběžné pokladny). Vytvoří přihlášku
  * s rezervovaným číslem a prodejku s cenou termínu „na místě“; pak detail prodejky s QR.
  */
 export function McvvOnsiteEntryForm({
@@ -47,6 +48,29 @@ export function McvvOnsiteEntryForm({
   }, [birthYear, sex, year, categories]);
   const selected =
     eligible.find((category) => category.id === categoryId) ?? defaultCategory(eligible);
+  const selectedId = selected?.id ?? "";
+  const [bib, setBib] = useState("");
+  const [suggested, setSuggested] = useState<{ bib: number; outsideCategory: boolean } | null>(
+    null,
+  );
+  const lastSuggested = useRef("");
+  // Návrh čísla pro vybranou kategorii; ručně přepsané číslo se nepřepisuje.
+  useEffect(() => {
+    if (!selectedId) return;
+    let active = true;
+    void suggestOnsiteBibAction(selectedId).then((next) => {
+      if (!active) return;
+      const previous = lastSuggested.current;
+      const value = next ? String(next.bib) : "";
+      setBib((current) => (current === "" || current === previous ? value : current));
+      lastSuggested.current = value;
+      setSuggested(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [selectedId]);
+  const bibAuto = suggested !== null && bib === String(suggested.bib);
 
   const submit = (form: HTMLFormElement) => {
     setError(null);
@@ -62,6 +86,7 @@ export function McvvOnsiteEntryForm({
         clubName: value("clubName"),
         nationality: value("nationality") || HOME_COUNTRY,
         bib: value("bib"),
+        bibAuto: bibAuto ? "1" : "0",
         email: value("email"),
       });
       if (result.ok) {
@@ -170,15 +195,22 @@ export function McvvOnsiteEntryForm({
           <span className="font-semibold">{t("onsiteBib")}</span>
           <input
             name="bib"
-            required
             inputMode="numeric"
+            value={bib}
+            onChange={(event) => setBib(event.target.value.trim())}
             pattern="\d{1,4}"
             maxLength={4}
             className={`${input} font-display text-2xl font-bold tabular-nums`}
             autoComplete="off"
             data-testid="onsite-bib"
           />
-          <span className="text-xs text-race-muted">{t("onsiteBibHint")}</span>
+          <span className="text-xs text-race-muted" data-testid="onsite-bib-hint">
+            {suggested
+              ? bibAuto
+                ? t(suggested.outsideCategory ? "onsiteBibSuggestedOutside" : "onsiteBibSuggested")
+                : t("onsiteBibOverride", { bib: suggested.bib })
+              : t("onsiteBibHint")}
+          </span>
         </label>
         {error ? (
           <p role="alert" className="text-sm font-semibold text-red-600 dark:text-red-400">

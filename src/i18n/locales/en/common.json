@@ -2229,7 +2229,7 @@
     "itemError_price": "The price must be a whole number 0–100,000 CZK.",
     "itemError_order": "The order must be a whole number.",
     "onsiteTitle": "On-site entry – registration and bib",
-    "onsiteIntro": "Fill in the runner, pick the category and enter the bib you hand over (only from the numbers printed in the office). The bib is reserved at once; the sale uses the on-site fee. Cancelling an unpaid sale cancels the entry and frees the bib.",
+    "onsiteIntro": "Fill in the runner and choose the category. The system suggests the nearest free bib in the right start line; you can overwrite it (e.g. to match the printed bibs). The bib is reserved at once; the sale has the on-site fee. Cancelling an unpaid sale cancels the entry and frees the bib.",
     "onsiteNoSlot": "On-site entry with registration is unavailable: the edition has no on-site term (set it in the edition administration).",
     "onsiteLastName": "Surname",
     "onsiteFirstName": "First name",
@@ -2242,7 +2242,7 @@
     "onsiteClub": "Club / town (optional)",
     "onsiteEmail": "E-mail (optional)",
     "onsiteBib": "Bib number",
-    "onsiteBibHint": "Enter a number from the bibs printed in the office.",
+    "onsiteBibHint": "Empty = the nearest free bib is assigned on save.",
     "onsiteCreate": "Register and create sale ({price})",
     "onsiteCreateNoPrice": "Register and create sale",
     "onsite_no_slot": "The edition has no on-site term – the entry cannot be created.",
@@ -2263,7 +2263,11 @@
     "onsiteInvalid_email": "The e-mail is not valid (or leave it empty).",
     "onsiteRegistration": "Entry",
     "onsiteRegistrationValue": "{year}/{id} (on-site entry)",
-    "onsiteRegistrationReleased": "cancelled, bib released"
+    "onsiteRegistrationReleased": "cancelled, bib released",
+    "onsiteBibSuggested": "Suggested nearest free bib in the category window. If another desk takes it meanwhile, the next free one is assigned on save.",
+    "onsiteBibSuggestedOutside": "The category window is full – suggested the nearest free bib outside it (same start line).",
+    "onsiteBibOverride": "Bib entered by hand (suggestion was {bib}).",
+    "onsite_no_bib": "No free bib for this category – enter a bib by hand."
   },
   "AdminUsers": {
     "title": "Users and roles",

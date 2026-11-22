@@ -2,8 +2,8 @@
  * Dohláška na místě v pokladně (#222) – čisté funkce bez DB (testovatelné, bezpečné i pro
  * klientský bundle).
  *
- * Obsluha zadá údaje běžce, kategorii a startovní číslo ručně podle fyzicky vytištěných čísel
- * v závodní kanceláři (UI záměrně nenabízí seznam volných čísel). Číslo se rezervuje už při
+ * Obsluha zadá údaje běžce a kategorii; startovní číslo systém navrhne (nejbližší volné ve
+ * startovní řadě kategorie, `onsite-bib-core.ts`) a pokladní ho smí přepsat. Číslo se rezervuje už při
  * vytvoření prodejky (řádek přihlášky s číslem, zamčený ve startovce); storno nezaplacené
  * prodejky přihlášku zruší a číslo uvolní. Startovné je cena termínu „na místě“ (Q314).
  */
@@ -36,7 +36,16 @@ export const onsiteEntrySchema = z.object({
     .trim()
     .toUpperCase()
     .refine((value) => isCountryCode(value)),
-  bib: z.coerce.number().int().min(1).max(ONSITE_BIB_MAX),
+  /** Prázdné = automaticky nejbližší volné číslo ve startovní řadě kategorie. */
+  bib: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.coerce.number().int().min(1).max(ONSITE_BIB_MAX).optional(),
+  ),
+  /** "1" = pokladní nechal navržené číslo beze změny (při uložení se vybere znovu pod zámkem). */
+  bibAuto: z
+    .enum(["0", "1"])
+    .optional()
+    .transform((value) => value === "1"),
   /** Nepovinný e-mail běžce (doklad / potvrzení); prázdný = přihláška bez e-mailu. */
   email: optionalEmail,
 });
@@ -58,6 +67,7 @@ const FIELD_OF: Record<string, OnsiteEntryField> = {
   categoryId: "category",
   nationality: "nationality",
   bib: "bib",
+  bibAuto: "bib",
   email: "email",
 };
 

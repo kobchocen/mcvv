@@ -16,6 +16,7 @@ import { BIB_LOCK } from "@/lib/slots/late-paid";
 import { categoryFeeGroup, loadSlots } from "@/lib/slots/load";
 
 import { saleVs, SALE_NUMBER_MAX } from "./core";
+import { suggestOnsiteBib, type OnsiteBibSuggestion } from "./onsite-bib-core";
 import {
   checkOnsiteBib,
   ONSITE_PAYMENT_AUTHOR,
@@ -40,6 +41,7 @@ export type OnsiteEntryError =
   | "runner_taken"
   | "bib_taken"
   | "bib_champion"
+  | "no_bib"
   | "full"
   | "busy";
 
@@ -52,6 +54,8 @@ export type CreateOnsiteEntryResult =
       registrationId: number;
       bib: number;
       outsideCategory: boolean;
+      /** Číslo vybral systém (návrh nejbližšího volného), ne pokladní ručně. */
+      bibAuto: boolean;
     }
   | { ok: false; error: OnsiteEntryError };
 
@@ -90,7 +94,10 @@ export async function loadOnsiteEntryOptions(year: number) {
 function isRetryable(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
-    (error.code === "P2002" || error.code === "P2034")
+    (error.code === "P2002" ||
+      error.code === "P2034" ||
+      // MariaDB 1020 „Record has changed since last read … try restarting transaction“
+      /restarting transaction/i.test(error.message))
   );
 }
 
@@ -128,6 +135,9 @@ export async function createOnsiteEntry(
   ]);
   const range = settings.ranges.find((row) => row.categoryId === category.id) ?? null;
   const champions = [settings.champions.men, settings.champions.women];
+  // Automatický režim: prázdné číslo, nebo pokladní nechal návrh beze změny – číslo se
+  // vybere znovu pod zámkem (souběžná pokladna mohla návrh mezitím obsadit).
+  const auto = input.bib === undefined || input.bibAuto;
   const author = actorName(session);
   const email = input.email ? input.email.toLowerCase() : null;
 
@@ -140,6 +150,12 @@ export async function createOnsiteEntry(
             SELECT GET_LOCK(${BIB_LOCK}, 10) AS ok`;
           if (Number(lock[0]?.ok ?? 0) !== 1) return { ok: false as const, error: "busy" as const };
           try {
+            // Předchozí držitel zámku ho uvolní těsně před COMMITem. Zamykací čtení čísel ročníku
+            // počká na jeho nepotvrzené řádky, takže snímek transakce (první běžné čtení až po
+            // něm) už jeho čísla, přihlášku i prodejku vidí – žádné duplicitní číslo ani 1020.
+            await tx.$queryRaw`
+              SELECT cislo FROM mcvv_prihlaska_radek WHERE rok = ${year} AND cislo > 0
+              LOCK IN SHARE MODE`;
             return await createInTx(tx, {
               session,
               year,
@@ -150,9 +166,20 @@ export async function createOnsiteEntry(
               category,
               fee,
               slot,
-              bib: input.bib,
+              bib: input.bib ?? null,
+              auto,
               range,
               champions,
+              suggest: (taken) =>
+                suggestOnsiteBib({
+                  model: settings.model,
+                  categoryId: category.id,
+                  ranges: settings.ranges,
+                  taken,
+                  champions,
+                  raceDate: settings.raceDate,
+                  now: new Date(),
+                }),
             });
           } finally {
             await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
@@ -180,12 +207,14 @@ async function createInTx(
     category: { id: string; name: string };
     fee: number;
     slot: { feeAdult: number; feeYouth: number };
-    bib: number;
+    bib: number | null;
+    auto: boolean;
     range: { bibFrom: number; bibTo: number } | null;
     champions: (number | null)[];
+    suggest: (taken: ReadonlySet<number>) => OnsiteBibSuggestion | null;
   },
 ): Promise<CreateOnsiteEntryResult> {
-  const { year, runner, bib } = ctx;
+  const { year, runner } = ctx;
   // Souběh: běžec mohl být mezitím přihlášen jinou pokladnou nebo z webu.
   const again = await tx.registrationLine.findFirst({
     where: { year, runnerId: runner.id },
@@ -197,6 +226,14 @@ async function createInTx(
     tx.startEntry.findMany({ where: { year, bib: { gt: 0 } }, select: { bib: true } }),
   ]);
   const taken = new Set<number>([...lines.map((l) => l.bib!), ...imported.map((r) => r.bib)]);
+  let bib: number;
+  if (ctx.auto) {
+    const suggestion = ctx.suggest(taken);
+    if (!suggestion) return { ok: false, error: "no_bib" };
+    bib = suggestion.bib;
+  } else if (ctx.bib == null) {
+    return { ok: false, error: "no_bib" };
+  } else bib = ctx.bib;
   const check = checkOnsiteBib(bib, taken, ctx.champions, ctx.range);
   if (!check.ok) return check;
 
@@ -314,6 +351,7 @@ async function createInTx(
       detail: {
         changes: { bib: { from: null, to: bib }, locked: { from: false, to: true } },
         auto: "onsite",
+        bibAuto: ctx.auto,
         registrationId: id,
         saleId: sale.id,
         outsideCategory: check.outsideCategory,
@@ -329,7 +367,34 @@ async function createInTx(
     registrationId: id,
     bib,
     outsideCategory: check.outsideCategory,
+    bibAuto: ctx.auto,
   };
+}
+
+/**
+ * Návrh čísla pro formulář pokladny (bez zámku – jen předvyplnění; při uložení se v
+ * automatickém režimu vybírá znovu pod zámkem). Null = kategorie neexistuje nebo nic volného.
+ */
+export async function suggestOnsiteBibFor(
+  year: number,
+  categoryId: string,
+  now = new Date(),
+): Promise<OnsiteBibSuggestion | null> {
+  const [settings, lines, imported] = await Promise.all([
+    loadStartSettings(year),
+    prisma.registrationLine.findMany({ where: { year, bib: { gt: 0 } }, select: { bib: true } }),
+    prisma.startEntry.findMany({ where: { year, bib: { gt: 0 } }, select: { bib: true } }),
+  ]);
+  const taken = new Set<number>([...lines.map((l) => l.bib!), ...imported.map((r) => r.bib)]);
+  return suggestOnsiteBib({
+    model: settings.model,
+    categoryId,
+    ranges: settings.ranges,
+    taken,
+    champions: [settings.champions.men, settings.champions.women],
+    raceDate: settings.raceDate,
+    now,
+  });
 }
 
 /**

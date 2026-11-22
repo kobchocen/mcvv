@@ -10,7 +10,7 @@ import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
 
 import { parseSaleItemInput } from "./core";
 import { cashDeskActionSession, saleStatusSection } from "./guard";
-import { createOnsiteEntry, type CreateOnsiteEntryResult } from "./onsite";
+import { createOnsiteEntry, suggestOnsiteBibFor, type CreateOnsiteEntryResult } from "./onsite";
 import { parseOnsiteEntryInput, type OnsiteEntryField } from "./onsite-core";
 import {
   changeSaleStatus,
@@ -40,6 +40,7 @@ const ONSITE_FIELDS = [
   "clubName",
   "nationality",
   "bib",
+  "bibAuto",
   "email",
 ] as const;
 
@@ -70,6 +71,19 @@ export async function createOnsiteEntryAction(
     revalidateEntries();
   }
   return result;
+}
+
+/** Pokladna: návrh nejbližšího volného čísla pro kategorii dohlášky (#222). */
+export async function suggestOnsiteBibAction(
+  categoryId: string,
+): Promise<{ bib: number; outsideCategory: boolean } | null> {
+  const session = await cashDeskActionSession();
+  if (!session || typeof categoryId !== "string" || !/^[A-Za-z0-9]$/.test(categoryId)) {
+    return null;
+  }
+  const { year } = await currentRaceYear();
+  const suggestion = await suggestOnsiteBibFor(year, categoryId);
+  return suggestion ? { bib: suggestion.bib, outsideCategory: suggestion.outsideCategory } : null;
 }
 
 /** Pokladna: vytvořit prodejku z vybraných položek (ceny počítá server). */

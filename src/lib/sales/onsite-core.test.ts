@@ -36,12 +36,24 @@ describe("parseOnsiteEntryInput", () => {
     const parsed = parseOnsiteEntryInput({ ...valid, email: "bezec@example.cz" });
     assert.equal(parsed.ok, true);
   });
-  it("reports the first invalid field", () => {
-    assert.deepEqual(parseOnsiteEntryInput({ ...valid, bib: "" }), {
+  it("empty bib or an unchanged suggestion means automatic bib", () => {
+    const empty = parseOnsiteEntryInput({ ...valid, bib: "" });
+    assert.ok(empty.ok);
+    if (empty.ok) {
+      assert.equal(empty.data.bib, undefined);
+      assert.equal(empty.data.bibAuto, false);
+    }
+    const kept = parseOnsiteEntryInput({ ...valid, bib: "305", bibAuto: "1" });
+    assert.ok(kept.ok && kept.data.bib === 305 && kept.data.bibAuto === true);
+    const manual = parseOnsiteEntryInput({ ...valid, bib: "305", bibAuto: "0" });
+    assert.ok(manual.ok && manual.data.bibAuto === false);
+    assert.deepEqual(parseOnsiteEntryInput({ ...valid, bibAuto: "x" }), {
       ok: false,
       error: "invalid",
       field: "bib",
     });
+  });
+  it("reports the first invalid field", () => {
     assert.deepEqual(parseOnsiteEntryInput({ ...valid, bib: "0" }), {
       ok: false,
       error: "invalid",

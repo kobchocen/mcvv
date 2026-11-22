@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import type { BibRange } from "@/lib/race/start-settings";
@@ -9,6 +10,8 @@ import { consistencyChecks } from "./checks-core";
 import {
   configFromForm,
   DEFAULT_TEST_MODE_CONFIG,
+  dueAutoStart,
+  testPhase,
   isShadowYear,
   parseTestModeConfig,
   parseTimes,
@@ -17,6 +20,8 @@ import {
   testDayBlocked,
   TEST_SHADOW_YEAR,
 } from "./config-core";
+import { nextFreeTestBib } from "./onsite-core";
+import { isPublicYear, PUBLIC_YEAR_WHERE, publicYears } from "./public-year";
 import {
   buildTestRoster,
   isFictionalId,
@@ -93,18 +98,19 @@ describe("testmode plan", () => {
   });
 
   it("copies the live start list only from copyLiveFrom and when drawn", () => {
-    const zero = new Date("2026-12-03T09:15:00Z");
-    const p = planTestRun({ zero, raceDate: race, config, liveStartListDrawn: true });
+    const at = new Date("2026-12-03T09:15:00Z");
+    const p = planTestRun({ at, raceDate: race, config, liveStartListDrawn: true });
     assert.equal(p.roster, "copy");
-    assert.equal(p.endAt.getTime() - zero.getTime(), 3 * 3_600_000);
-    assert.equal(p.cleanupAt.getTime() - zero.getTime(), 5 * 3_600_000);
+    assert.equal(p.zero.getTime() - at.getTime(), 3_600_000);
+    assert.equal(p.endAt.getTime() - at.getTime(), 3 * 3_600_000);
+    assert.equal(p.cleanupAt.getTime() - at.getTime(), 5 * 3_600_000);
     assert.equal(
-      planTestRun({ zero, raceDate: race, config, liveStartListDrawn: false }).roster,
+      planTestRun({ at, raceDate: race, config, liveStartListDrawn: false }).roster,
       "draw",
     );
     const early = new Date("2026-11-29T09:15:00Z");
     assert.equal(
-      planTestRun({ zero: early, raceDate: race, config, liveStartListDrawn: true }).roster,
+      planTestRun({ at: early, raceDate: race, config, liveStartListDrawn: true }).roster,
       "draw",
     );
   });
@@ -256,5 +262,75 @@ describe("testmode consistency checks", () => {
     ]);
     assert.equal(r.ok, false);
     assert.equal(r.roster, 4);
+  });
+});
+
+describe("testmode phases and scheduler", () => {
+  const race = new Date(Date.UTC(2026, 11, 6));
+  const on = { ...DEFAULT_TEST_MODE_CONFIG, enabled: true };
+
+  it("phase follows T+1h / T+3h / T+5h", () => {
+    const at = new Date("2026-11-28T09:15:00Z");
+    const p = planTestRun({ at, raceDate: race, config: on, liveStartListDrawn: false });
+    const run = { zeroAt: p.zero, endAt: p.endAt, cleanupAt: p.cleanupAt };
+    const h = (n: number) => new Date(at.getTime() + n * 3_600_000);
+    assert.equal(testPhase(run, h(0.5)), "office");
+    assert.equal(testPhase(run, h(1)), "race");
+    assert.equal(testPhase(run, h(3)), "ended");
+    assert.equal(testPhase(run, h(5)), "cleanup");
+  });
+
+  it("auto start only when enabled, in the window, once, and not on blocked days", () => {
+    // 10:15 v Praze = 09:15 UTC (listopad, SEČ)
+    const now = new Date("2026-11-28T09:17:30Z");
+    const base = { now, raceDate: race, activeRun: false, lastStartedAt: null };
+    assert.equal(dueAutoStart({ ...base, config: DEFAULT_TEST_MODE_CONFIG }), null);
+    const slot = dueAutoStart({ ...base, config: on });
+    assert.equal(slot?.toISOString(), "2026-11-28T09:15:00.000Z");
+    assert.equal(dueAutoStart({ ...base, config: on, lastStartedAt: slot }), null);
+    assert.equal(dueAutoStart({ ...base, config: on, activeRun: true }), null);
+    assert.equal(
+      dueAutoStart({ ...base, config: on, now: new Date("2026-11-28T09:25:00Z") }),
+      null,
+    );
+    assert.equal(
+      dueAutoStart({ ...base, config: on, now: new Date("2026-12-05T09:16:00Z") }),
+      null,
+    );
+  });
+});
+
+describe("test on-site bib", () => {
+  it("nearest free bib in the category's start line, never a champion", () => {
+    const ranges = [
+      { categoryId: "A", bibFrom: 399, bibTo: 401 },
+      { categoryId: "K", bibFrom: 641, bibTo: 642 },
+    ];
+    const base = { model: DEFAULT_START_MODEL, ranges, champions: [400] };
+    assert.equal(nextFreeTestBib({ ...base, categoryId: "A", taken: new Set([399]) }), 401);
+    assert.equal(nextFreeTestBib({ ...base, categoryId: "K", taken: new Set([641, 642]) }), 643);
+  });
+});
+
+describe("public year guard", () => {
+  it("shadow years never reach public outputs", () => {
+    assert.equal(isPublicYear(2026), true);
+    assert.equal(isPublicYear(9026), false);
+    assert.equal(isPublicYear(Number.NaN), false);
+    assert.deepEqual(publicYears([9026, 2026, 2025]), [2026, 2025]);
+    assert.deepEqual(PUBLIC_YEAR_WHERE, { lt: 9000 });
+  });
+
+  it("public year lists and pages use the guard", () => {
+    const read = (path: string) =>
+      readFileSync(new URL(`../../../${path}`, import.meta.url), "utf8");
+    assert.match(read("src/lib/results/cached.ts"), /PUBLIC_YEAR_WHERE/);
+    assert.match(read("src/lib/raceday/tombola.ts"), /PUBLIC_YEAR_WHERE[\s\S]*PUBLIC_YEAR_WHERE/);
+    assert.match(read("src/app/[locale]/results/[year]/page.tsx"), /isPublicYear\(year\)/);
+    assert.match(read("src/app/[locale]/results/page.tsx"), /publicYears\(/);
+    // Veřejné živé výstupy berou ostrý kontext, nikdy testovací.
+    for (const path of ["src/lib/live/online-results.ts", "src/lib/live/speaker.ts"]) {
+      assert.doesNotMatch(read(path), /getLiveRaceContext/, path);
+    }
   });
 });

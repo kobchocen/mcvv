@@ -2,6 +2,8 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
 import { validRegistrationIds } from "@/lib/entries/status";
+import { isShadowYear } from "@/lib/testmode/config-core";
+import { loadTestRoster } from "@/lib/testmode/roster";
 
 /**
  * Startovka ročníku = jediný zdroj pro živé moduly, veřejnou startovku i tisk (varianta A).
@@ -33,6 +35,8 @@ export async function loadRoster(
   year: number,
   options: { db?: Db; bib?: BibRange } = {},
 ): Promise<RosterEntry[]> {
+  // Stínový ročník testovacího režimu (B+): startovka z `mcvv_test_start`, ostrá data se nečtou.
+  if (isShadowYear(year)) return loadTestRoster(null, options.bib);
   const db = options.db ?? prisma;
   const [lines, valid] = await Promise.all([
     db.registrationLine.findMany({
@@ -71,6 +75,7 @@ export async function countRoster(year: number): Promise<number> {
 /** Je číslo ve startovce ročníku? (Jedno číslo – kontroluje jen přihlášky s tímto číslem.) */
 export async function rosterHasBib(db: Db, year: number, bib: number): Promise<boolean> {
   if (!Number.isInteger(bib) || bib < 1) return false;
+  if (isShadowYear(year)) return (await loadTestRoster(null, { in: [bib] })).length > 0;
   const lines = await db.registrationLine.findMany({
     where: { year, bib },
     select: { registrationId: true },

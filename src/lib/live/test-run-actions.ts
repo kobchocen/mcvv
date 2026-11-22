@@ -13,6 +13,8 @@ import {
   getTestCutoff,
   resolveTestZero,
   startTestRun,
+  TestModeActiveError,
+  testModeRunActive,
   validateTestStart,
 } from "./test-run";
 
@@ -35,7 +37,11 @@ async function back(query: Record<string, string>): Promise<never> {
 export async function startTestRunAction(formData: FormData): Promise<void> {
   const session = await requireSection("raceControl.testRun", "write");
   const now = new Date();
-  const [active, cutoff] = await Promise.all([getActiveTestRun(now), getTestCutoff(now)]);
+  const [active, cutoff, testModeActive] = await Promise.all([
+    getActiveTestRun(now),
+    getTestCutoff(now),
+    testModeRunActive(),
+  ]);
   const zero = resolveTestZero(
     String(formData.get("zeroChoice") ?? ""),
     String(formData.get("zeroCustom") ?? ""),
@@ -47,9 +53,15 @@ export async function startTestRunAction(formData: FormData): Promise<void> {
     zero,
     cutoff,
     active,
+    testModeActive,
   });
   if (error) await back({ testError: error });
-  await startTestRun(zero!, session, now);
+  try {
+    await startTestRun(zero!, session, now);
+  } catch (startError) {
+    if (startError instanceof TestModeActiveError) await back({ testError: "testMode" });
+    throw startError;
+  }
   await back({ test: "started" });
 }
 

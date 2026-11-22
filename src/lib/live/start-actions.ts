@@ -9,7 +9,7 @@ import { isoWithOffset } from "@/lib/date/iso-offset";
 
 import { clearBlocked, confirmationMatches } from "./clear-core";
 import { isValidBib, normalizeReason } from "./manual-core";
-import { getRaceContext } from "./race-context";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 import { clearStarts, deleteManualStart, setManualStart } from "./start-check";
 import { parseExpectedStart } from "./start-check-core";
 import { parseStartClock } from "./start-clock";
@@ -30,7 +30,8 @@ async function back(query: Record<string, string>): Promise<never> {
 
 async function startForm(formData: FormData) {
   const session = await requireSection("raceControl.start", "write");
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
+  enterLiveTestContext(ctx);
   const bib = Number(formData.get("bib"));
   const edit = Number.isInteger(bib) ? String(bib) : "";
   if (!isValidBib(bib)) await back({ error: "bib" });
@@ -70,7 +71,8 @@ export async function deleteStartAction(formData: FormData): Promise<void> {
 /** Hromadné vyčištění evidence startu ročníku (jen admin, jen před nulou, opsaný ročník). */
 export async function clearStartsAction(formData: FormData): Promise<void> {
   const session = await requireSection("raceControl.start", "write");
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
+  enterLiveTestContext(ctx);
   if (clearBlocked(new Date(), ctx.officialZero)) await back({ error: "blocked" });
   if (String(formData.get("year") ?? "") !== String(ctx.year)) await back({ error: "year" });
   if (!confirmationMatches(String(formData.get("confirmYear") ?? ""), ctx.year)) {

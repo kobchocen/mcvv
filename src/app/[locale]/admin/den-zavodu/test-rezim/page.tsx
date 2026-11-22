@@ -7,7 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
 import { canAccess, requireSection } from "@/lib/admin/access";
 import { formatDateTime } from "@/lib/format/date";
-import { saveTestModeConfigAction } from "@/lib/testmode/actions";
+import {
+  cleanupTestModeNowAction,
+  endTestModeNowAction,
+  saveTestModeConfigAction,
+  startTestModeNowAction,
+} from "@/lib/testmode/actions";
+import { testPhase } from "@/lib/testmode/config-core";
+import type { TestReport } from "@/lib/testmode/run";
 import {
   FICTIONAL_MAX,
   listTestModeRuns,
@@ -18,7 +25,7 @@ import {
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; run?: string; runError?: string }>;
 }>;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -36,7 +43,7 @@ const legend = "px-1 font-display text-lg font-semibold";
  */
 export default async function TestModePage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
-  const { saved, error } = await searchParams;
+  const { saved, error, run: runDone, runError } = await searchParams;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireSection("raceControl.live", "read");
@@ -47,6 +54,8 @@ export default async function TestModePage({ params, searchParams }: PageProps) 
     listTestModeRuns(),
     canAccess("raceControl.live", "write"),
   ]);
+  const now = new Date();
+  const active = runs.find((run) => run.status === "running" || run.status === "ended") ?? null;
   const fixed = Object.entries(TEST_MODE_FIXED).map(([key, value]) =>
     t(`fixed.${key}` as "fixed.mainScenario", { value: String(value) }),
   );
@@ -78,12 +87,78 @@ export default async function TestModePage({ params, searchParams }: PageProps) 
               {t("saved")}
             </p>
           ) : null}
+          {runError ? (
+            <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {t(`runError.${runError}` as never)}
+            </p>
+          ) : runDone ? (
+            <p role="status" className="mt-4 text-sm text-race-accent">
+              {t(`runDone.${runDone}` as never)}
+            </p>
+          ) : null}
         </div>
+
+        <fieldset
+          className={`${box} ${active ? "border-amber-500" : ""}`}
+          data-testid="testmode-active"
+        >
+          <legend className={legend}>{t("activeTitle")}</legend>
+          {active ? (
+            <>
+              <p className="text-sm">
+                {t("activeInfo", {
+                  phase: t(`phase.${testPhase(active, now)}`),
+                  zero: formatDateTime(active.zeroAt, locale),
+                  end: formatDateTime(active.endAt, locale),
+                  cleanup: formatDateTime(active.cleanupAt, locale),
+                  runners: active._count.starts,
+                  onsite: active._count.onsites,
+                })}
+              </p>
+              {canWrite ? (
+                <div className="flex flex-wrap gap-3">
+                  {active.status === "running" ? (
+                    <form action={endTestModeNowAction}>
+                      <input type="hidden" name="runId" value={active.id} />
+                      <Button type="submit" variant="outline" className="h-10">
+                        {t("endNow")}
+                      </Button>
+                    </form>
+                  ) : null}
+                  <form action={cleanupTestModeNowAction}>
+                    <input type="hidden" name="runId" value={active.id} />
+                    <Button type="submit" variant="outline" className="h-10">
+                      {t("cleanupNow")}
+                    </Button>
+                  </form>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-race-muted">{t("noActive")}</p>
+              {canWrite ? (
+                <form action={startTestModeNowAction}>
+                  <Button
+                    type="submit"
+                    className="h-10 w-fit bg-race-accent-solid font-semibold text-white hover:bg-race-accent-solid-hover"
+                  >
+                    {t("startNow")}
+                  </Button>
+                </form>
+              ) : null}
+            </>
+          )}
+        </fieldset>
 
         <fieldset className={box} data-testid="testmode-config">
           <legend className={legend}>{t("configTitle")}</legend>
           <form action={saveTestModeConfigAction} className="grid gap-4">
             <fieldset disabled={!canWrite} className="grid gap-4">
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <input type="checkbox" name="enabled" defaultChecked={config.enabled} />
+                {t("enabled")}
+              </label>
               <div className="grid gap-1.5">
                 <Label htmlFor="fictionalRunners">{t("fictionalRunners")}</Label>
                 <Input
@@ -193,7 +268,8 @@ export default async function TestModePage({ params, searchParams }: PageProps) 
                   <th className="py-1 pr-3">{t("runStatus")}</th>
                   <th className="py-1 pr-3">{t("runRoster")}</th>
                   <th className="py-1 pr-3">{t("runCounts")}</th>
-                  <th className="py-1">{t("runCleanup")}</th>
+                  <th className="py-1 pr-3">{t("runCleanup")}</th>
+                  <th className="py-1">{t("runReport")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,7 +281,10 @@ export default async function TestModePage({ params, searchParams }: PageProps) 
                     <td className="py-1 pr-3 tabular-nums">
                       {run._count.starts} / {run._count.onsites}
                     </td>
-                    <td className="py-1">{formatDateTime(run.cleanupAt, locale)}</td>
+                    <td className="py-1 pr-3">{formatDateTime(run.cleanupAt, locale)}</td>
+                    <td className="py-1">
+                      <ReportCell report={run.report} t={t} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -214,5 +293,58 @@ export default async function TestModePage({ params, searchParams }: PageProps) 
         </fieldset>
       </div>
     </main>
+  );
+}
+
+function parseReport(raw: string | null): TestReport | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as TestReport;
+  } catch {
+    return null;
+  }
+}
+
+/** Report po testu (jen v administraci): souhrn a prvních 30 problémů. */
+function ReportCell({
+  report: raw,
+  t,
+}: Readonly<{
+  report: string | null;
+  t: Awaited<ReturnType<typeof getTranslations<"TestMode">>>;
+}>) {
+  const report = parseReport(raw);
+  if (!report) return <span className="text-race-muted">–</span>;
+  return (
+    <details>
+      <summary className={report.ok ? "text-race-accent" : "text-red-600 dark:text-red-400"}>
+        {t("reportSummary", {
+          roster: report.roster,
+          started: report.started,
+          finished: report.finished,
+          issues: report.issues.length,
+        })}
+      </summary>
+      <p className="mt-1 text-xs text-race-muted">
+        {t("reportCounts", {
+          onsite: report.onsite,
+          splits: report.splits,
+          punches: report.punches,
+          bibs: report.finishBibs,
+        })}
+      </p>
+      {report.issues.length > 0 ? (
+        <ul className="mt-1 list-disc pl-5 text-xs">
+          {report.issues.slice(0, 30).map((issue, index) => (
+            <li key={index}>
+              {t(`issue.${issue.kind}` as "issue.missing_split", {
+                bib: issue.bib,
+                split: "split" in issue ? issue.split : "",
+              })}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </details>
   );
 }

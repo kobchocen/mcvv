@@ -20,6 +20,7 @@ import { formatRaceTime } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
+import { publicYears } from "@/lib/testmode/public-year";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -54,7 +55,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   // All years with participant counts + basic top info for summary cards
   const yearData = await getResultYearCounts();
 
-  const years = yearData.map((y) => y.year);
+  const years = publicYears(yearData.map((y) => y.year));
   const countMap = Object.fromEntries(yearData.map((y) => [y.year, y.count]));
 
   // Default to latest or selected

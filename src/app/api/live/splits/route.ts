@@ -5,7 +5,8 @@ import { stationsForScope } from "@/lib/live/assignment-core";
 import { getAssignedStations } from "@/lib/live/assignment";
 import { applyWebEntries, rejectWebEntries, type EntryResult } from "@/lib/live/ingest";
 import { sameOrigin, summarize, webBatchSchema } from "@/lib/live/ingest-core";
-import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { getStations } from "@/lib/live/race-context";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 import { RateLimiter } from "@/lib/live/rate-limit";
 import { applyStartEntries, rejectStartEntries } from "@/lib/live/start-check";
 import { partitionStartEntries } from "@/lib/live/start-check-core";
@@ -70,7 +71,8 @@ export async function POST(request: NextRequest) {
     ),
   );
   try {
-    const ctx = await getRaceContext();
+    const ctx = await getLiveRaceContext();
+    enterLiveTestContext(ctx);
     const { start, splits } = partitionStartEntries(parsed.data.entries);
     const permitted = splits.filter((entry) => allowed.has(entry.split));
     const refused = splits.filter((entry) => !allowed.has(entry.split));

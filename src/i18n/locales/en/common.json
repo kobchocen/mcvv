@@ -2053,7 +2053,8 @@
     "publicSplitsShown": "On public outputs (live results, board, speaker): {list}.",
     "publicSplitsOver": "Further public splits are not shown – the first {slots} by course position are shown (outputs support at most 3).",
     "publicSplitsMax": "Maximum public splits",
-    "openTestMode": "Test mode – settings"
+    "openTestMode": "Test mode – settings",
+    "testModeBanner": "TEST – test mode is running (shadow edition {year}). Writes go to the test only."
   },
   "LiveSplits": {
     "title": "Edition splits",
@@ -2159,7 +2160,8 @@
       "zeroFar": "The test zero can be at most 24 h ahead.",
       "raceDay": "A test run cannot start from race day on (not even with a zero on race day).",
       "active": "A test run is already in progress.",
-      "notActive": "No test run is in progress."
+      "notActive": "No test run is in progress.",
+      "testMode": "The new test mode (year 9026) is running. Start the old test run only after it has been cleaned up."
     }
   },
   "CashDesk": {
@@ -3699,6 +3701,69 @@
       "times": "Enter times as HH:MM separated by commas.",
       "durationH": "Test end must be 1–6 hours after zero.",
       "cleanupAfterH": "Cleanup must be no earlier than the test end and at most 24 hours after zero."
+    },
+    "enabled": "Start tests automatically at the configured times",
+    "activeTitle": "Active test",
+    "noActive": "No test is running.",
+    "startNow": "Start a test now (zero in 60 min)",
+    "endNow": "End the test now",
+    "cleanupNow": "Clean up the test data now",
+    "activeInfo": "Phase: {phase}. Zero {zero}, end {end}, cleanup {cleanup}. Start list {runners} runners, {onsite} on-site entries.",
+    "phase": {
+      "office": "office (on-site entries)",
+      "race": "race",
+      "ended": "ended – writes locked",
+      "cleanup": "cleanup"
+    },
+    "runDone": {
+      "started": "Test started.",
+      "ended": "Test ended, report computed.",
+      "cleaned": "Test data cleaned up, the report stays in the history."
+    },
+    "runError": {
+      "blocked": "A test cannot start now – race day or the two days before it.",
+      "active": "Another test is already running.",
+      "legacy_active": "The old test run from the Live page is running – end it first.",
+      "empty": "The test start list would be empty (no paid entries or fictional runners).",
+      "blocking": "The test draw failed (not enough bibs or a category without a range).",
+      "state": "The test is in another state – reload the page."
+    },
+    "runReport": "Report",
+    "reportSummary": "start list {roster}, started {started}, finished {finished}, issues {issues}",
+    "reportCounts": "{onsite} on-site entries, {splits} splits, {punches} finish clicks, {bibs} bibs read.",
+    "issue": {
+      "duplicate_bib": "bib {bib}: duplicate bib in the start list",
+      "unknown_bib": "bib {bib}: split {split} for a bib outside the start list",
+      "negative_time": "bib {bib}: negative time ({split})",
+      "not_increasing": "bib {bib}: time at {split} is not later than the previous one",
+      "finish_without_start": "bib {bib}: finish without a start record",
+      "missing_split": "bib {bib}: split {split} missing",
+      "started_no_finish": "bib {bib}: started but has no finish"
+    },
+    "onsiteTitle": "TEST – test on-site entry",
+    "onsiteIntro": "Test mode is running. This entry goes to the test only (shadow edition): no live entry, sale, payment or e-mail. Empty bib = nearest free bib in the category's start line.",
+    "onsiteLastName": "Last name",
+    "onsiteFirstName": "First name",
+    "onsiteBirthYear": "Year of birth",
+    "onsiteSex": "Sex",
+    "onsiteCategory": "Category",
+    "onsiteClub": "Club",
+    "onsiteBib": "Bib (optional)",
+    "onsitePayment": "Payment (simulated)",
+    "payment": {
+      "sim_cash": "Cash (TEST)",
+      "sim_qr": "QR (TEST, do not pay)"
+    },
+    "onsiteCreate": "Save test on-site entry",
+    "onsiteDone": "Test on-site entry saved, bib {bib}.",
+    "onsiteError": {
+      "forbidden": "You have no access to the cash desk.",
+      "invalid": "Check the entered details.",
+      "no_test": "No test is running.",
+      "closed": "The test has ended – on-site entries are closed.",
+      "category": "The category does not match the year of birth and sex.",
+      "bib_taken": "This bib is already taken in the test.",
+      "no_bib": "No free bib for the category – enter one by hand."
     }
   }
 }

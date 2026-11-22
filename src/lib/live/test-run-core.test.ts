@@ -128,6 +128,9 @@ test("validateTestStart: active test, zero bounds, race day", () => {
     validateTestStart({ ...base, active: run({ expiresAt: new Date(now.getTime() + H) }) }),
     "active",
   );
+  // běžící nový testovací režim (9026) starý test nepustí
+  assert.equal(validateTestStart({ ...base, testModeActive: true }), "testMode");
+  assert.equal(validateTestStart({ ...base, testModeActive: false }), null);
   // vypršelý test nebrání novému
   assert.equal(validateTestStart({ ...base, active: run({ expiresAt: now }) }), null);
   assert.equal(validateTestStart({ ...base, zero: null }), "zero");

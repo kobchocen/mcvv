@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth/session";
 import { applyFinishOps } from "@/lib/live/finish";
 import { finishBatchSchema } from "@/lib/live/finish-core";
 import { sameOrigin } from "@/lib/live/ingest-core";
-import { getRaceContext } from "@/lib/live/race-context";
+import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 import { RateLimiter } from "@/lib/live/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
     );
   }
   try {
-    const ctx = await getRaceContext();
+    const ctx = await getLiveRaceContext();
+    enterLiveTestContext(ctx);
     const results = await applyFinishOps(parsed.data.ops, ctx, session);
     return NextResponse.json(
       { ok: true, year: ctx.year, results, now: Date.now() },

@@ -24,8 +24,10 @@ import { loadSplitTable, type SplitTableRow } from "@/lib/live/manual";
 import { MANUAL_REASON_MAX, orderProblems } from "@/lib/live/manual-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { prisma } from "@/lib/db/client";
-import { getRaceContext, getStations } from "@/lib/live/race-context";
+import { getStations } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
 import { FINISH_SPLIT } from "@/lib/live/stations";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type SearchParams = {
   splits?: string | string[];
@@ -68,7 +70,7 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
   await requireSection("raceControl.manual", "read");
   const t = await getTranslations({ locale, namespace: "LiveSplits" });
   const live = await getTranslations({ locale, namespace: "LiveResults" });
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
   const editBib = /^\d{1,3}$/.test(sp.edit ?? "") ? Number(sp.edit) : null;
   const [stations, overview, table, history] = await Promise.all([
     getStations(),
@@ -132,6 +134,7 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <div className="mx-auto grid max-w-4xl gap-8">
         <div>
           <McvvTestRunBanner locale={locale} leftovers className="mb-4" />

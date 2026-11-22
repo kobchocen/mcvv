@@ -12,7 +12,7 @@ import { formatDateTime } from "@/lib/format/date";
 import { OUTCOME_LABELS_CS } from "@/lib/live/admin-core";
 import { clearBlocked } from "@/lib/live/clear-core";
 import { MANUAL_REASON_MAX } from "@/lib/live/manual-core";
-import { getRaceContext } from "@/lib/live/race-context";
+import { getLiveRaceContext } from "@/lib/testmode/run";
 import { clearStartsAction, deleteStartAction, setStartAction } from "@/lib/live/start-actions";
 import { loadStartOverview, previewStartClear, startJournal } from "@/lib/live/start-check";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/lib/live/start-check-core";
 import { pragueClock } from "@/lib/live/start-clock";
 import { FINISH_SPLIT } from "@/lib/live/stations";
+import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
 type SearchParams = {
   filter?: string;
@@ -64,7 +65,7 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
   await requireSection("raceControl.start", "read");
   const isAdmin = await canAccess("raceControl.start", "write");
   const t = await getTranslations({ locale, namespace: "StartCheck" });
-  const ctx = await getRaceContext();
+  const ctx = await getLiveRaceContext();
   const editBib = isAdmin && /^\d{1,3}$/.test(sp.edit ?? "") ? Number(sp.edit) : null;
   const [overview, recent, history, clearPreview] = await Promise.all([
     loadStartOverview(ctx),
@@ -103,6 +104,7 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
 
   return (
     <main className="px-4 py-12 sm:px-6 lg:px-8">
+      <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <div className="mx-auto grid max-w-5xl gap-8">
         <div>
           <McvvTestRunBanner locale={locale} leftovers className="mb-4" />

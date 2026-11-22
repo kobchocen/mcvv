@@ -112,6 +112,10 @@ export type AuditAction =
   | "raceday.setup_changed"
   | "raceday.starter_settings_changed"
   | "raceday.testmode_config_changed"
+  | "raceday.testmode_started"
+  | "raceday.testmode_ended"
+  | "raceday.testmode_cleaned"
+  | "raceday.testmode_onsite"
   | "raceday.resultboard_changed"
   // P7: newsletter – rozeslání, opakování selhaných, smazání konceptu.
   | "newsletter.started"

@@ -41,6 +41,10 @@ export type RaceContext = {
   dnsGraceS: number;
   /** Lhůta DNS online výsledků (sekundy) bez jediného záznamu Startu. */
   dnsGraceFallbackS: number;
+  /** Běží testovací režim B+ (rok = stínový 9026, nula = nula testu). */
+  testRunId?: number;
+  /** Test skončil (T+3h) – zápisy jsou zamčené. */
+  testReadOnly?: boolean;
 };
 
 /** ISO s offsetem nebo prázdné; nesmysl → null. */

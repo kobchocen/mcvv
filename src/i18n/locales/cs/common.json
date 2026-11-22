@@ -2160,7 +2160,8 @@
       "zeroFar": "Nula testu může být nejvýš 24 h dopředu.",
       "raceDay": "Od dne závodu testovací běh spustit nejde (ani s nulou v den závodu).",
       "active": "Testovací běh už běží.",
-      "notActive": "Žádný testovací běh neběží."
+      "notActive": "Žádný testovací běh neběží.",
+      "testMode": "Běží nový testovací režim (ročník 9026). Starý testovací běh spustíte až po jeho likvidaci."
     }
   },
   "CashDesk": {

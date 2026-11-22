@@ -151,7 +151,7 @@ export function resolveTestZero(
   }
 }
 
-export type TestStartError = "zero" | "zeroPast" | "zeroFar" | "raceDay" | "active";
+export type TestStartError = "zero" | "zeroPast" | "zeroFar" | "raceDay" | "active" | "testMode";
 
 /** Konec testu: 3 h od nuly (nebo od spuštění), nejpozději den závodu 00:00. */
 export function testRunExpiry(startedAt: Date, zero: Date, cutoff: Date): Date {
@@ -168,9 +168,12 @@ export function validateTestStart(input: {
   zero: Date | null;
   cutoff: Date;
   active: TestRun | null;
+  /** Běží nový testovací režim (ročník 9026, `mcvv_test_run`)? Oba testy najednou nejdou. */
+  testModeActive?: boolean;
 }): TestStartError | null {
   const { now, zero, cutoff, active } = input;
   if (testRunBlocked(now, cutoff)) return "raceDay";
+  if (input.testModeActive) return "testMode";
   if (active && !testRunExpired(active, now)) return "active";
   if (!zero) return "zero";
   if (zero.getTime() < now.getTime() - TEST_ZERO_PAST_TOLERANCE_MS) return "zeroPast";

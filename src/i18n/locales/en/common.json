@@ -2160,7 +2160,8 @@
       "zeroFar": "The test zero can be at most 24 h ahead.",
       "raceDay": "A test run cannot start from race day on (not even with a zero on race day).",
       "active": "A test run is already in progress.",
-      "notActive": "No test run is in progress."
+      "notActive": "No test run is in progress.",
+      "testMode": "The new test mode (year 9026) is running. Start the old test run only after it has been cleaned up."
     }
   },
   "CashDesk": {

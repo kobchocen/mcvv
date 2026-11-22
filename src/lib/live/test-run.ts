@@ -88,8 +88,26 @@ export async function expireTestRunIfDue(now = new Date()): Promise<void> {
   await getActiveTestRun(now);
 }
 
+/** Stavy běhu nového testovacího režimu, které brání spuštění starého testu (#186). */
+const TEST_MODE_ACTIVE = ["running", "ended"];
+
+/** Běží (nebo čeká na likvidaci) nový testovací režim (ročník 9026)? */
+export async function testModeRunActive(
+  db: Pick<Prisma.TransactionClient, "testModeRun"> = prisma,
+): Promise<boolean> {
+  return (await db.testModeRun.count({ where: { status: { in: TEST_MODE_ACTIVE } } })) > 0;
+}
+
+export class TestModeActiveError extends Error {
+  constructor() {
+    super("test mode run is active");
+    this.name = "TestModeActiveError";
+  }
+}
+
 /**
- * Spustí test: uloží stav a nastaví zkušební nulu. Kontroly dělá volající (validateTestStart).
+ * Spustí test: uloží stav a nastaví zkušební nulu. Kontroly dělá volající (validateTestStart);
+ * běžící nový testovací režim zastaví start i tady (TestModeActiveError).
  */
 export async function startTestRun(
   zero: Date,
@@ -106,6 +124,7 @@ export async function startTestRun(
     tokenIds: [],
   };
   await prisma.$transaction(async (tx) => {
+    if (await testModeRunActive(tx)) throw new TestModeActiveError();
     const text = serializeTestRun(run);
     await tx.setting.upsert({
       where: { key: TEST_RUN_KEY },

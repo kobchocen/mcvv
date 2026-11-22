@@ -21,7 +21,7 @@ export function championBibList(champions: ChampionBibs): number[] {
 
 /**
  * Řádky startovky → řádky tisku. Číslo přihlášky (pořadí „podle přihlášky“ a „(id)“ na
- * čísle) se dohledá podle běžce; běžec jen v `mcvv_start` (přihláška na místě) ho nemá.
+ * čísle) se dohledá podle běžce (i dohláška na místě má od #222 vlastní přihlášku).
  */
 export function bibRowsFromStartList(
   rows: readonly PublicStartRow[],

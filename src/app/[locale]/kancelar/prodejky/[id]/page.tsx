@@ -106,6 +106,18 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
               </dd>
               <dt className="text-race-muted">{t("message")}</dt>
               <dd>{saleQrMessage(sale.vs)}</dd>
+              {sale.registrationId != null ? (
+                <>
+                  <dt className="text-race-muted">{t("onsiteRegistration")}</dt>
+                  <dd data-testid="sale-registration">
+                    {t("onsiteRegistrationValue", {
+                      year: sale.year,
+                      id: sale.registrationId,
+                    })}
+                    {sale.status === "cancelled" ? ` · ${t("onsiteRegistrationReleased")}` : ""}
+                  </dd>
+                </>
+              ) : null}
               <dt className="text-race-muted">{t("createdBy")}</dt>
               <dd>
                 {sale.createdByName}, {when(sale.createdAt)}

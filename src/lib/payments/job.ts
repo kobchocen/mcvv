@@ -10,6 +10,7 @@ import { autoConfirmLastDay } from "@/lib/slots/core";
 import { env } from "@/lib/env";
 import { sendMail } from "@/lib/mail/queue";
 import { matchSaleTransaction, parseSaleVs, type SaleSnapshot } from "@/lib/sales/core";
+import { payOnsiteRegistrationInTx } from "@/lib/sales/onsite";
 import { utcDayStart } from "@/lib/mail/queue-core";
 
 import {
@@ -181,20 +182,40 @@ async function processSaleTransaction(
     return "unmatched";
   }
   // Podmíněný zápis: mezitím mohla kancelář označit „zaplaceno hotově“ nebo stornovat.
-  return prisma.$transaction(async (db) => {
+  const outcome = await prisma.$transaction(async (db) => {
+    const now = new Date();
     const paid = await db.sale.updateMany({
       where: { id: decision.saleId, status: "unpaid" },
-      data: { status: "paid_bank", paidAt: new Date(), paidByName: "fio", bankTxId },
+      data: { status: "paid_bank", paidAt: now, paidByName: "fio", bankTxId },
     });
     const ok = paid.count === 1;
+    // Dohláška na místě (#222): zaplacená prodejka = platba přihlášky (ve stejné transakci).
+    const sale = ok
+      ? await db.sale.findUnique({
+          where: { id: decision.saleId },
+          select: { year: true, total: true, registrationId: true },
+        })
+      : null;
+    const paymentId = sale ? await payOnsiteRegistrationInTx(db, sale, now) : null;
     await db.bankTx.update({
       where: { id: bankTxId },
       data: ok
-        ? { status: "matched", reason: "sale", note }
+        ? {
+            status: "matched",
+            reason: "sale",
+            note,
+            ...(paymentId != null && sale?.registrationId != null
+              ? { paymentId, registrationId: sale.registrationId }
+              : {}),
+          }
         : { status: "unmatched", reason: "sale_paid", note },
     });
-    return ok ? "matched" : "unmatched";
+    return { ok, registrationId: paymentId != null ? (sale?.registrationId ?? null) : null };
   });
+  if (outcome.registrationId != null) {
+    await recalculateRegistrationStatus(year, outcome.registrationId);
+  }
+  return outcome.ok ? "matched" : "unmatched";
 }
 
 export type TxOutcome = "skipped" | "duplicate" | "matched" | "unmatched" | "dry_run";

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvCashDeskClient } from "@/components/organisms/mcvv-cash-desk-client";
+import { McvvOnsiteEntryForm } from "@/components/organisms/mcvv-onsite-entry-form";
 import {
   McvvCashDeskForbidden,
   McvvCashDeskNav,
@@ -9,7 +10,9 @@ import {
 } from "@/components/organisms/mcvv-cash-desk-nav";
 import { Link, type Locale } from "@/i18n/routing";
 import { currentRaceYear } from "@/lib/entries/year";
+import { nationalityField } from "@/lib/runner/nationality-field";
 import { cashDeskPageSession } from "@/lib/sales/guard";
+import { loadOnsiteEntryOptions } from "@/lib/sales/onsite";
 import { listSaleItems, recentSales } from "@/lib/sales/sales";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
@@ -32,15 +35,26 @@ export default async function CashDeskPage({ params }: PageProps) {
   if (!session) return <McvvCashDeskForbidden />;
   const t = await getTranslations({ locale: locale as Locale, namespace: "CashDesk" });
   const { year } = await currentRaceYear();
-  const [items, recent] = await Promise.all([
+  const [items, recent, onsite, nationality] = await Promise.all([
     listSaleItems(year, { activeOnly: true }),
     recentSales(year),
+    loadOnsiteEntryOptions(year),
+    nationalityField(locale),
   ]);
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-3 pb-10 pt-4">
         <McvvCashDeskNav session={session} active="desk" />
         <p className="text-xs text-race-muted">{t("deskIntro", { year })}</p>
+        {onsite ? (
+          <McvvOnsiteEntryForm
+            year={year}
+            categories={onsite.categories}
+            nationality={nationality}
+          />
+        ) : (
+          <p className="text-xs text-race-muted">{t("onsiteNoSlot")}</p>
+        )}
         <McvvCashDeskClient
           items={items.map((item) => ({ id: item.id, name: item.name, price: item.price }))}
         />

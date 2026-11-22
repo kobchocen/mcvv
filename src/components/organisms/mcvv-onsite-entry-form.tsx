@@ -11,6 +11,8 @@ import { useRouter } from "@/i18n/routing";
 import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { HOME_COUNTRY } from "@/lib/runner/nationality";
 import { createOnsiteEntryAction, suggestOnsiteBibAction } from "@/lib/sales/actions";
+import { onsiteReceiptEmail } from "@/lib/sales/onsite-core";
+import { RECEIPT_LOCALES } from "@/lib/sales/receipt-mail";
 
 type OnsiteCategory = { id: string; name: string; sex: string; age: number; fee: number };
 
@@ -39,6 +41,11 @@ export function McvvOnsiteEntryForm({
   const [sex, setSex] = useState<"" | "M" | "F">("");
   const [categoryId, setCategoryId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Účtenka (#223): předvyplněná e-mailem běžce, dokud ji pokladní nezmění nebo nesmaže.
+  const [entryEmail, setEntryEmail] = useState("");
+  const [receiptOverride, setReceiptOverride] = useState<string | null>(null);
+  const [receiptLang, setReceiptLang] = useState("cs");
+  const receiptEmail = onsiteReceiptEmail(entryEmail, receiptOverride);
   const [pending, startTransition] = useTransition();
 
   const eligible = useMemo(() => {
@@ -88,6 +95,8 @@ export function McvvOnsiteEntryForm({
         bib: value("bib"),
         bibAuto: bibAuto ? "1" : "0",
         email: value("email"),
+        receiptEmail,
+        receiptLocale: receiptLang,
       });
       if (result.ok) {
         router.push({ pathname: "/kancelar/prodejky/[id]", params: { id: String(result.saleId) } });
@@ -188,7 +197,44 @@ export function McvvOnsiteEntryForm({
           </label>
           <label className={label}>
             {t("onsiteEmail")}
-            <input name="email" type="email" maxLength={128} className={input} autoComplete="off" />
+            <input
+              name="email"
+              type="email"
+              maxLength={128}
+              className={input}
+              autoComplete="off"
+              value={entryEmail}
+              onChange={(event) => setEntryEmail(event.target.value)}
+            />
+          </label>
+          <label className={label}>
+            {t("onsiteReceiptEmail")}
+            <span className="grid grid-cols-[1fr_auto] gap-2">
+              <input
+                type="email"
+                inputMode="email"
+                maxLength={128}
+                className={input}
+                autoComplete="off"
+                value={receiptEmail}
+                onChange={(event) => setReceiptOverride(event.target.value)}
+                placeholder={t("receiptEmailPlaceholder")}
+                data-testid="onsite-receipt-email"
+              />
+              <select
+                value={receiptLang}
+                onChange={(event) => setReceiptLang(event.target.value)}
+                aria-label={t("receiptLocale")}
+                className="h-12 border border-race-line/60 bg-race-deep px-2 text-base"
+              >
+                {RECEIPT_LOCALES.map((code) => (
+                  <option key={code} value={code}>
+                    {code.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </span>
+            <span className="text-xs text-race-muted">{t("onsiteReceiptEmailHint")}</span>
           </label>
         </div>
         <label className={`${label} sm:max-w-xs`}>

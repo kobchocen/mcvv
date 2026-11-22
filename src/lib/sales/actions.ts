@@ -44,6 +44,8 @@ const ONSITE_FIELDS = [
   "bib",
   "bibAuto",
   "email",
+  "receiptEmail",
+  "receiptLocale",
 ] as const;
 
 /**

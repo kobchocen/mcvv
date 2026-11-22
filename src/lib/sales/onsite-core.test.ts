@@ -5,6 +5,7 @@ import {
   checkOnsiteBib,
   ONSITE_PAYMENT_AUTHOR,
   ONSITE_SALE_LINE_LABEL,
+  onsiteReceiptEmail,
   onsiteSaleLineName,
   parseOnsiteEntryInput,
 } from "./onsite-core";
@@ -79,6 +80,11 @@ describe("parseOnsiteEntryInput", () => {
       error: "invalid",
       field: "email",
     });
+    assert.deepEqual(parseOnsiteEntryInput({ ...valid, receiptEmail: "nope@" }), {
+      ok: false,
+      error: "invalid",
+      field: "receiptEmail",
+    });
     assert.deepEqual(parseOnsiteEntryInput({ ...valid, lastName: "  " }), {
       ok: false,
       error: "invalid",
@@ -136,5 +142,31 @@ describe("onsiteSaleLineName", () => {
 describe("ONSITE_PAYMENT_AUTHOR", () => {
   it("fits mcvv_platba.autor VARCHAR(8)", () => {
     assert.ok(ONSITE_PAYMENT_AUTHOR.length <= 8);
+  });
+});
+
+describe("receipt e-mail on the on-site entry (#223)", () => {
+  it("parses an optional receipt e-mail and locale", () => {
+    const empty = parseOnsiteEntryInput(valid);
+    assert.ok(empty.ok);
+    if (!empty.ok) return;
+    assert.equal(empty.data.receiptEmail, "");
+    assert.equal(empty.data.receiptLocale, "");
+    const filled = parseOnsiteEntryInput({
+      ...valid,
+      receiptEmail: " platce@example.cz ",
+      receiptLocale: "de",
+    });
+    assert.ok(filled.ok);
+    if (!filled.ok) return;
+    assert.equal(filled.data.receiptEmail, "platce@example.cz");
+    assert.equal(filled.data.receiptLocale, "de");
+  });
+
+  it("follows the runner's e-mail until the cashier changes or clears it", () => {
+    assert.equal(onsiteReceiptEmail("", null), "");
+    assert.equal(onsiteReceiptEmail("bezec@example.cz", null), "bezec@example.cz");
+    assert.equal(onsiteReceiptEmail("bezec@example.cz", "rodic@example.cz"), "rodic@example.cz");
+    assert.equal(onsiteReceiptEmail("bezec@example.cz", ""), "");
   });
 });

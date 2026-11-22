@@ -1232,7 +1232,8 @@
     "split2Short": "П2",
     "colTime": "Час",
     "empty": "Немає результатів.",
-    "backToTop": "Нагору"
+    "backToTop": "Нагору",
+    "weatherLine": "Погода: {line}"
   },
   "ConfirmDialog": {
     "cancel": "Скасувати",
@@ -1442,5 +1443,30 @@
     "badgeTitle": "рекорд траси (попередній)",
     "badgeEqTitle": "повторений рекорд траси (попередній)",
     "finalTitle": "рекорд траси: {cats}"
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Ясно",
+      "partly_cloudy": "Мінлива хмарність",
+      "cloudy": "Хмарно",
+      "overcast": "Похмуро",
+      "fog": "Туман",
+      "drizzle": "Мряка",
+      "rain": "Дощ",
+      "showers": "Зливи",
+      "snow": "Снігопад",
+      "snow_showers": "Короткочасний сніг"
+    },
+    "tag": {
+      "dry": "Суха траса",
+      "hard": "Твердий ґрунт",
+      "wet": "Мокра траса",
+      "mud": "Багнюка",
+      "frost": "Мороз",
+      "ice": "Ожеледь",
+      "snow_dusting": "Легкий сніг",
+      "snow_patches": "Залишки снігу",
+      "snow_cover": "Сніг на трасі"
+    }
   }
 }

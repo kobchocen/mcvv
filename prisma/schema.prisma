@@ -133,8 +133,13 @@ model WebImageType {
 model Edition {
   id               Int       @id @default(autoincrement()) @map("id") @db.SmallInt
   date             DateTime  @map("datum") @db.Date
+  /// Původní volný text počasí (poznámka; zobrazí se, když chybí typ).
   weather          String?   @map("weather") @db.VarChar(64)
   temp             Int?      @map("temp") @db.SmallInt
+  /// Typ počasí (číselník v `src/lib/editions/weather.ts`, emoji + 5 jazyků).
+  weatherKind      String?   @map("pocasi_typ") @db.VarChar(16)
+  /// Štítky stavu trati oddělené čárkou (mud, snow_cover, …).
+  courseTags       String?   @map("trat_stitky") @db.VarChar(120)
   zhl              Boolean?  @default(true) @map("zhl")
   isCarEx          Boolean?  @default(false) @map("iscarex")
   regDeadline      DateTime? @map("prihl_datum") @db.Date

@@ -21,6 +21,7 @@ import type { Locale } from "@/i18n/routing";
 import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
 import { publicYears } from "@/lib/testmode/public-year";
+import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -118,7 +119,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
         lt: new Date(defaultYear + 1, 0, 1),
       },
     },
-    select: { date: true, weather: true, temp: true },
+    select: { date: true, weather: true, temp: true, weatherKind: true, courseTags: true },
   });
 
   // Bibs and splits for mezičasy support (like in per-year)
@@ -213,6 +214,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
+  const weatherT = await getTranslations({ locale, namespace: "Weather" });
   const labels: McvvResultsTableLabels = {
     name: t("colName"),
     birth: t("colBirth"),
@@ -340,9 +342,10 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                   )}
                   {editionInfo && (
                     <div className="text-xs text-race-muted">
-                      {t("weather", {
-                        weather: editionInfo.weather || "—",
-                        temp: editionInfo.temp ?? "—",
+                      {t("weatherLine", {
+                        line:
+                          formatWeatherLine(weatherView(editionInfo), (key) => weatherT(key)) ||
+                          "—",
                       })}
                     </div>
                   )}

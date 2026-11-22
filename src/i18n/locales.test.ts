@@ -45,6 +45,7 @@ export const PUBLIC_NAMESPACES = [
   "OnlineResults",
   "Leader",
   "Record",
+  "Weather",
 ].sort();
 
 /**

@@ -5,6 +5,17 @@ import { saveEdition } from "@/lib/admin/editions";
 import { dateInputValue } from "@/lib/admin/parse";
 import { AdminField } from "@/components/organisms/mcvv-admin-field";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  COURSE_TAG_EMOJI,
+  COURSE_TAGS,
+  parseCourseTags,
+  parseWeatherKind,
+  WEATHER_EMOJI,
+  WEATHER_KINDS,
+  type CourseTag,
+  type WeatherKind,
+} from "@/lib/editions/weather";
 
 export function McvvAdminEditionForm({
   edition,
@@ -19,6 +30,12 @@ export function McvvAdminEditionForm({
     reg: string;
     weather: string;
     temp: string;
+    weatherKind: string;
+    weatherNone: string;
+    courseTags: string;
+    tempHint: string;
+    kindLabel: (kind: WeatherKind) => string;
+    tagLabel: (tag: CourseTag) => string;
     kidsMail: string;
     kidsPlace: string;
     adultMail: string;
@@ -47,14 +64,50 @@ export function McvvAdminEditionForm({
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <AdminField name="weather" label={copy.weather} defaultValue={edition?.weather ?? ""} />
-        <AdminField
-          name="temp"
-          label={copy.temp}
-          type="number"
-          defaultValue={edition?.temp ?? ""}
-        />
+        <div className="grid gap-1.5">
+          <Label htmlFor="weatherKind">{copy.weatherKind}</Label>
+          <select
+            id="weatherKind"
+            name="weatherKind"
+            defaultValue={parseWeatherKind(edition?.weatherKind) ?? ""}
+            className="h-10 border border-race-line bg-race-surface px-2 text-sm"
+          >
+            <option value="">{copy.weatherNone}</option>
+            {WEATHER_KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {WEATHER_EMOJI[kind]} {copy.kindLabel(kind)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-1.5">
+          <AdminField
+            name="temp"
+            label={copy.temp}
+            type="number"
+            defaultValue={edition?.temp ?? ""}
+          />
+          <p className="text-xs text-race-muted">{copy.tempHint}</p>
+        </div>
       </div>
+      <fieldset className="grid gap-2">
+        <legend className="mb-1 text-sm font-medium">{copy.courseTags}</legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {COURSE_TAGS.map((tag) => (
+            <label key={tag} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="courseTags"
+                value={tag}
+                defaultChecked={parseCourseTags(edition?.courseTags).includes(tag)}
+                className="size-4"
+              />
+              {COURSE_TAG_EMOJI[tag]} {copy.tagLabel(tag)}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <AdminField name="weather" label={copy.weather} defaultValue={edition?.weather ?? ""} />
       <div className="grid gap-4 sm:grid-cols-2">
         <AdminField
           name="startKidsMail"

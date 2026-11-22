@@ -1232,7 +1232,8 @@
     "split2Short": "Z2",
     "colTime": "Zeit",
     "empty": "Keine Ergebnisse.",
-    "backToTop": "Nach oben"
+    "backToTop": "Nach oben",
+    "weatherLine": "Wetter: {line}"
   },
   "ConfirmDialog": {
     "cancel": "Abbrechen",
@@ -1442,5 +1443,30 @@
     "badgeTitle": "Streckenrekord (vorläufig)",
     "badgeEqTitle": "Streckenrekord eingestellt (vorläufig)",
     "finalTitle": "Streckenrekord: {cats}"
+  },
+  "Weather": {
+    "kind": {
+      "clear": "Klar",
+      "partly_cloudy": "Heiter bis wolkig",
+      "cloudy": "Bewölkt",
+      "overcast": "Bedeckt",
+      "fog": "Nebel",
+      "drizzle": "Nieselregen",
+      "rain": "Regen",
+      "showers": "Regenschauer",
+      "snow": "Schneefall",
+      "snow_showers": "Schneeschauer"
+    },
+    "tag": {
+      "dry": "Trockene Strecke",
+      "hard": "Harter Boden",
+      "wet": "Nasse Strecke",
+      "mud": "Matschig",
+      "frost": "Frost",
+      "ice": "Glatteis",
+      "snow_dusting": "Leichte Schneedecke",
+      "snow_patches": "Schneereste",
+      "snow_cover": "Schnee auf der Strecke"
+    }
   }
 }

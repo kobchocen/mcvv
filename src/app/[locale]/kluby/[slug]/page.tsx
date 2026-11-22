@@ -155,9 +155,16 @@ function ClubYearTable({
           <h4 className={yearGroupBarClass}>{group.title}</h4>
           <div className="overflow-x-auto">
             <table
-              className="w-full border-collapse text-left text-sm"
+              className="w-full border-collapse text-left text-sm sm:table-fixed"
               data-testid={`club-year-results-${group.sex}`}
             >
+              <colgroup>
+                <col className="sm:w-[10%]" />
+                <col className="sm:w-[34%]" />
+                <col className="hidden sm:table-column sm:w-[24%]" />
+                <col className="sm:w-[20%]" />
+                <col className="sm:w-[12%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                   <th className="w-[1%] whitespace-nowrap py-2 pr-3">{copy.rank}</th>

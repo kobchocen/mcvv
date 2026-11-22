@@ -7,6 +7,12 @@ import { writeAudit } from "@/lib/audit/log";
 import { prisma } from "@/lib/db/client";
 import { entryTarget } from "@/lib/entries/changes-core";
 import { recalculateRegistrationStatus } from "@/lib/entries/status";
+import { BANK_ACCOUNT } from "@/lib/entries/spd";
+import { enqueueMail } from "@/lib/mail/queue";
+import { normalizeEmail } from "@/lib/newsletter/core";
+import { siteUrl } from "@/lib/site/url";
+
+import { receiptLocale, renderSaleReceipt } from "./receipt-mail";
 
 import {
   buildSaleLines,
@@ -50,7 +56,10 @@ export async function createSale(
   session: SessionUser,
   year: number,
   requested: ReadonlyArray<{ itemId: number; quantity: number }>,
+  /** Volitelný e-mail a jazyk účtenky (#223); neplatný e-mail se neuloží. */
+  receipt: { email?: string | null; locale?: string | null } = {},
 ): Promise<CreateSaleResult> {
+  const receiptEmail = normalizeEmail(receipt.email);
   const items: SaleItemPrice[] = await listSaleItems(year);
   const built = buildSaleLines(requested, items);
   if (!built.ok) return built;
@@ -72,6 +81,8 @@ export async function createSale(
             status: "unpaid",
             createdById: session.id,
             createdByName: actorName(session),
+            email: receiptEmail,
+            locale: receiptEmail ? receiptLocale(receipt.locale) : null,
             lines: {
               create: built.lines.map((line) => ({
                 itemId: line.itemId,
@@ -310,4 +321,60 @@ export async function updateSaleItem(
     );
     return true;
   });
+}
+
+export type ReceiptResult = "ok" | "not_found" | "invalid_email" | "no_email";
+
+/** E-mail do auditu bez celé adresy (j…@domena.cz). */
+function maskEmail(email: string): string {
+  const [name, domain] = email.split("@");
+  return `${name.slice(0, 1)}…@${domain ?? ""}`;
+}
+
+/**
+ * Pošle účtenku prodejky e-mailem přes frontu pošty (#223). Bez `email` se použije e-mail
+ * uložený u prodejky; zadaný e-mail a jazyk se k prodejce uloží. Obsah: položky, kusy, ceny,
+ * celkem, způsob a stav platby, VS – v jazyce prodejky (výchozí cs).
+ */
+export async function sendSaleReceipt(
+  session: SessionUser,
+  id: number,
+  input: { email?: string | null; locale?: string | null } = {},
+  now = new Date(),
+): Promise<ReceiptResult> {
+  const sale = await getSale(id);
+  if (!sale) return "not_found";
+  const typed = input.email?.trim() ? normalizeEmail(input.email) : null;
+  if (input.email?.trim() && !typed) return "invalid_email";
+  const email = typed ?? sale.email;
+  if (!email) return "no_email";
+  const locale = receiptLocale(input.locale ?? sale.locale);
+  const mail = renderSaleReceipt({
+    sale,
+    locale,
+    site: siteUrl(),
+    account: `${BANK_ACCOUNT} (Fio)`,
+  });
+  await enqueueMail({
+    ...mail,
+    to: email,
+    kind: "other",
+    dedupeKey: `sale-receipt:${sale.id}:${sale.status}:${email}:${now.getTime()}`,
+  });
+  await prisma.$transaction(async (db) => {
+    await db.sale.update({
+      where: { id: sale.id },
+      data: { email, locale, receiptSentAt: now },
+    });
+    await writeAudit(
+      {
+        actor: actor(session),
+        action: "sale.receipt_sent",
+        target: `sale:${sale.id}`,
+        detail: { vs: sale.vs, to: maskEmail(email), locale, status: sale.status },
+      },
+      db,
+    );
+  });
+  return "ok";
 }

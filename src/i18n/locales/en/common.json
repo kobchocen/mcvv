@@ -2267,7 +2267,19 @@
     "onsiteBibSuggested": "Suggested nearest free bib in the category window. If another desk takes it meanwhile, the next free one is assigned on save.",
     "onsiteBibSuggestedOutside": "The category window is full – suggested the nearest free bib outside it (same start line).",
     "onsiteBibOverride": "Bib entered by hand (suggestion was {bib}).",
-    "onsite_no_bib": "No free bib for this category – enter a bib by hand."
+    "onsite_no_bib": "No free bib for this category – enter a bib by hand.",
+    "receiptEmail": "E-mail for the receipt",
+    "receiptEmailPlaceholder": "E-mail for the receipt (optional)",
+    "receiptLocale": "Receipt language",
+    "receiptTitle": "Receipt by e-mail",
+    "receiptSend": "Send receipt",
+    "receiptResend": "Send receipt again",
+    "receiptSent": "Last sent {at}.",
+    "flash_receipt": "The receipt is queued for sending.",
+    "flash_receiptAuto": "The receipt was sent to the saved e-mail.",
+    "flashError_invalid_email": "Invalid e-mail.",
+    "flashError_no_email": "Enter an e-mail for the receipt.",
+    "error_invalid_email": "Invalid e-mail for the receipt."
   },
   "AdminUsers": {
     "title": "Users and roles",

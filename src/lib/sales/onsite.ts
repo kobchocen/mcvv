@@ -5,6 +5,7 @@ import { startLineTarget } from "@/lib/audit/startlist";
 import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { isRetryableTxError, withTxRetry } from "@/lib/db/tx-retry";
 import { eligibleCategoriesFor } from "@/lib/entries/category";
 import { resolveClub } from "@/lib/entries/club";
 import { nextRegistrationId } from "@/lib/entries/ensure-core";
@@ -91,16 +92,6 @@ export async function loadOnsiteEntryOptions(year: number) {
   };
 }
 
-function isRetryable(error: unknown): boolean {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    (error.code === "P2002" ||
-      error.code === "P2034" ||
-      // MariaDB 1020 „Record has changed since last read … try restarting transaction“
-      /restarting transaction/i.test(error.message))
-  );
-}
-
 export async function createOnsiteEntry(
   session: SessionUser,
   year: number,
@@ -141,58 +132,61 @@ export async function createOnsiteEntry(
   const author = actorName(session);
   const email = input.email ? input.email.toLowerCase() : null;
 
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 10 + Math.random() * 40 * attempt));
-    try {
-      return await prisma.$transaction(
-        async (tx) => {
-          const lock = await tx.$queryRaw<{ ok: bigint | number | null }[]>`
+  // Stejná logika zámku jako přidělení čísel pozdním přihláškám (late-paid, #348): GET_LOCK,
+  // zamykací čtení čísel ročníku a opakování celé transakce při souběhu (db/tx-retry).
+  try {
+    return await withTxRetry(
+      () =>
+        prisma.$transaction(
+          async (tx) => {
+            const lock = await tx.$queryRaw<{ ok: bigint | number | null }[]>`
             SELECT GET_LOCK(${BIB_LOCK}, 10) AS ok`;
-          if (Number(lock[0]?.ok ?? 0) !== 1) return { ok: false as const, error: "busy" as const };
-          try {
-            // Předchozí držitel zámku ho uvolní těsně před COMMITem. Zamykací čtení čísel ročníku
-            // počká na jeho nepotvrzené řádky, takže snímek transakce (první běžné čtení až po
-            // něm) už jeho čísla, přihlášku i prodejku vidí – žádné duplicitní číslo ani 1020.
-            await tx.$queryRaw`
+            if (Number(lock[0]?.ok ?? 0) !== 1)
+              return { ok: false as const, error: "busy" as const };
+            try {
+              // Předchozí držitel zámku ho uvolní těsně před COMMITem. Zamykací čtení čísel ročníku
+              // počká na jeho nepotvrzené řádky, takže snímek transakce (první běžné čtení až po
+              // něm) už jeho čísla, přihlášku i prodejku vidí – žádné duplicitní číslo ani 1020.
+              await tx.$queryRaw`
               SELECT cislo FROM mcvv_prihlaska_radek WHERE rok = ${year} AND cislo > 0
               LOCK IN SHARE MODE`;
-            return await createInTx(tx, {
-              session,
-              year,
-              author,
-              email,
-              runner,
-              club,
-              category,
-              fee,
-              slot,
-              bib: input.bib ?? null,
-              auto,
-              range,
-              champions,
-              suggest: (taken) =>
-                suggestOnsiteBib({
-                  model: settings.model,
-                  categoryId: category.id,
-                  ranges: settings.ranges,
-                  taken,
-                  champions,
-                  raceDate: settings.raceDate,
-                  now: new Date(),
-                }),
-            });
-          } finally {
-            await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
-          }
-        },
-        { timeout: 20_000 },
-      );
-    } catch (error) {
-      if (isRetryable(error)) continue;
-      throw error;
-    }
+              return await createInTx(tx, {
+                session,
+                year,
+                author,
+                email,
+                runner,
+                club,
+                category,
+                fee,
+                slot,
+                bib: input.bib ?? null,
+                auto,
+                range,
+                champions,
+                suggest: (taken) =>
+                  suggestOnsiteBib({
+                    model: settings.model,
+                    categoryId: category.id,
+                    ranges: settings.ranges,
+                    taken,
+                    champions,
+                    raceDate: settings.raceDate,
+                    now: new Date(),
+                  }),
+              });
+            } finally {
+              await tx.$queryRaw`SELECT RELEASE_LOCK(${BIB_LOCK})`;
+            }
+          },
+          { timeout: 20_000 },
+        ),
+      { attempts: 8 },
+    );
+  } catch (error) {
+    if (isRetryableTxError(error)) return { ok: false, error: "busy" };
+    throw error;
   }
-  return { ok: false, error: "busy" };
 }
 
 async function createInTx(

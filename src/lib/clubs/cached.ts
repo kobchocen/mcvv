@@ -4,8 +4,14 @@ import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 
 import { createClubResolver, type ClubNameRow } from "./core";
 import { computeClubDirectory, type ClubDirectoryRow } from "./directory";
+import { computeClubInsights, type ClubInsights } from "./insights";
 import { computeClubProfile, type ClubProfile } from "./profile";
-import { loadClubDirectoryInput, loadClubNames, loadClubResults } from "./queries";
+import {
+  loadClubDirectoryInput,
+  loadClubInsightInput,
+  loadClubNames,
+  loadClubResults,
+} from "./queries";
 
 /**
  * Cached club data for the public pages (/kluby, /kluby/[slug]). Results change only with a
@@ -45,5 +51,14 @@ export const getClubDirectory = unstable_cache(
     return computeClubDirectory(rows, createClubResolver(index));
   },
   ["club-directory-v2"],
+  CLUB_CACHE,
+);
+
+export const getClubInsights = unstable_cache(
+  async (): Promise<ClubInsights> => {
+    const [index, rows] = await Promise.all([getClubIndex(), loadClubInsightInput()]);
+    return computeClubInsights(rows, createClubResolver(index));
+  },
+  ["club-insights-v1"],
   CLUB_CACHE,
 );

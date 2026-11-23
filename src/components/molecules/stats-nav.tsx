@@ -1,10 +1,23 @@
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
-/** `slug: ""` is the overview page (/statistiky). */
-export type StatsNavItem = { slug: string; label: string };
+/** `slug: ""` is the overview page (/statistiky). Optional `href` is a public path such as /kluby. */
+export type StatsNavItem = {
+  slug: string;
+  label: string;
+  href?: "/kluby" | "/statistiky";
+};
 
 export const STATS_OVERVIEW_SLUG = "";
+
+/** Insert the Clubs item into the statistics nav, in front of Countries when present. */
+export function withClubsNavItem(items: StatsNavItem[], label: string): StatsNavItem[] {
+  const clubs: StatsNavItem = { slug: "kluby", label, href: "/kluby" };
+  if (items.some((item) => item.slug === "kluby")) return items;
+  const index = items.findIndex((item) => item.slug === "staty");
+  if (index >= 0) return [...items.slice(0, index), clubs, ...items.slice(index)];
+  return [...items, clubs];
+}
 
 /** Pill navigation between the statistics pages; scrolls horizontally on small screens. */
 export function StatsNav({
@@ -36,14 +49,15 @@ export function StatsNav({
       >
         {items.map((item) => {
           const active = item.slug === current;
+          const href =
+            item.href ??
+            (item.slug === STATS_OVERVIEW_SLUG
+              ? "/statistiky"
+              : { pathname: "/statistiky/[slug]" as const, params: { slug: item.slug } });
           return (
             <li key={item.slug || "overview"} className="shrink-0 snap-start">
               <Link
-                href={
-                  item.slug === STATS_OVERVIEW_SLUG
-                    ? "/statistiky"
-                    : { pathname: "/statistiky/[slug]", params: { slug: item.slug } }
-                }
+                href={href}
                 aria-current={active ? "page" : undefined}
                 className={
                   active

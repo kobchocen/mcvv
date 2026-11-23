@@ -6,7 +6,7 @@ import { McvvStatsPage, type McvvHomepageContent } from "@/components/templates"
 import { isStaffRole, getSession } from "@/lib/auth/session";
 import { isStatSlug, STAT_SLUGS } from "@/lib/stats/queries";
 import { loadStatsSlug } from "@/lib/stats/tables";
-import { STATS_OVERVIEW_SLUG } from "@/components/molecules";
+import { STATS_OVERVIEW_SLUG, withClubsNavItem } from "@/components/molecules";
 import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -58,10 +58,13 @@ export default async function StatsSlugPage({ params }: PageProps) {
       statsNav={{
         current: slug,
         ariaLabel: stats("navLabel"),
-        items: [
-          { slug: STATS_OVERVIEW_SLUG, label: stats("overview.nav") },
-          ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
-        ],
+        items: withClubsNavItem(
+          [
+            { slug: STATS_OVERVIEW_SLUG, label: stats("overview.nav") },
+            ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
+          ],
+          stats("overview.clubsNav"),
+        ),
       }}
     />
   );

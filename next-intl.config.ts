@@ -27,6 +27,7 @@ export default defineRouting({
     "/bezec/[id]": "/bezec/[id]",
     // seznam a profily klubů (#105) a jejich sloučení v adminu (#104)
     "/kluby": "/kluby",
+    "/kluby/seznam": "/kluby/seznam",
     "/kluby/[slug]": "/kluby/[slug]",
     "/fotogalerie": "/fotogalerie",
     // trvalý odkaz na fotku pro sdílení (Q426)

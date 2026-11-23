@@ -18,7 +18,7 @@ export type McvvStatsOverviewCopy = {
   men: string;
   women: string;
   more: Record<
-    "records" | "wins" | "photos" | "winners" | "attendance" | "ages" | "times" | "clubs",
+    "records" | "wins" | "photos" | "winners" | "attendance" | "ages" | "times" | "clubs" | "teams",
     string
   >;
   records: { title: string; sameYear: string | null };
@@ -39,6 +39,7 @@ export type McvvStatsOverviewCopy = {
   recordEdition: { title: string; unit: string };
   womenTile: { title: string; value: string; unit: string; axis: [string, string, string] };
   clubs: { title: string };
+  teamsTile: { title: string; line: string | null; sub: string | null };
   together: { title: string; value: string; unit: string; note: string };
   moment: { title: string; headline: string; body: string } | null;
   footnote: string;
@@ -330,6 +331,20 @@ export function McvvStatsOverview({ brand, nav, data, copy, statsNav }: McvvStat
                   );
                 })}
               </Duo>
+            </Tile>
+
+            <Tile
+              title={copy.teamsTile.title}
+              more={<MoreLink href={statHref("tymy")} label={copy.more.teams} />}
+            >
+              {copy.teamsTile.line ? (
+                <>
+                  <div className={cn(bigClass, "mt-1")}>{copy.teamsTile.line}</div>
+                  {copy.teamsTile.sub ? <p className={metaClass}>{copy.teamsTile.sub}</p> : null}
+                </>
+              ) : (
+                <p className={metaClass}>—</p>
+              )}
             </Tile>
 
             <Tile

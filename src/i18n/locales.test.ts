@@ -37,6 +37,7 @@ export const PUBLIC_NAMESPACES = [
   "Messages",
   "Auth",
   "Stats",
+  "Teams",
   "LanguageSwitcher",
   "ThemeToggle",
   "Guide",

@@ -8,6 +8,7 @@ export const STAT_SLUGS = [
   "veterani",
   "ucast",
   "staty",
+  "tymy",
 ] as const;
 export type StatSlug = (typeof STAT_SLUGS)[number];
 

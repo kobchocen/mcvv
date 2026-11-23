@@ -22,6 +22,7 @@ import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
 import { publicYears } from "@/lib/testmode/public-year";
 import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
+import { getYearTeamCompetition, isHistoricalTeamYear, winnersOf } from "@/lib/teams";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -131,6 +132,8 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
     select: { bib: true, split: true, time: true },
   });
   const hasSplits = yearHasSplits(splitsRaw.length);
+  const teamYear = await getYearTeamCompetition(defaultYear);
+  const teamWinners = teamYear ? winnersOf(teamYear.competition, defaultYear) : [];
   const showSplits = splitsRequested && hasSplits;
   const splitsByBib = new Map<number, Array<{ split: string; time: number }>>();
   splitsRaw.forEach((s) => {
@@ -215,6 +218,7 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
   const weatherT = await getTranslations({ locale, namespace: "Weather" });
+  const teamsT = await getTranslations({ locale, namespace: "Teams" });
   const labels: McvvResultsTableLabels = {
     name: t("colName"),
     birth: t("colBirth"),
@@ -393,6 +397,31 @@ export default async function ResultsArchivePage({ params, searchParams }: PageP
                       </div>
                     )}
                   </div>
+
+                  {teamWinners.length > 0 ? (
+                    <div className="mt-3">
+                      <div className="mb-1 text-xs font-semibold uppercase text-race-dim">
+                        {teamsT("winningTeam")}
+                      </div>
+                      {teamWinners.map((winner) => (
+                        <a
+                          key={winner.team}
+                          href={`/${locale}/results/${defaultYear}#soutez-tymu`}
+                          className="mt-1 flex items-end justify-between gap-4 border-t border-race-line/45 pt-2 hover:text-race-accent"
+                        >
+                          <p className="text-base font-semibold text-foreground">{winner.team}</p>
+                          <p className="font-display text-lg font-semibold text-race-accent">
+                            {teamsT("pointsAbbr", { points: winner.points })}
+                          </p>
+                        </a>
+                      ))}
+                      {isHistoricalTeamYear(defaultYear) ? (
+                        <p className="mt-3 border-l-4 border-race-accent bg-race-deep/40 px-3 py-2 text-xs leading-5 text-race-muted">
+                          {teamsT("historicalNote")}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Right: Category winners – moved up for compactness */}

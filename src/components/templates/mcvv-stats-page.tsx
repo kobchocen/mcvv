@@ -11,6 +11,7 @@ export type StatsCell = {
   clubSlug?: string;
   /** ISO kód státu (#200): vlaječka před textem. */
   flag?: string;
+  href?: string;
 };
 
 export type StatsTable = {
@@ -161,6 +162,13 @@ export function McvvStatsPage({
                                   <CountryFlag code={cell.flag} />
                                   {cell.text}
                                 </span>
+                              ) : cell.href ? (
+                                <a
+                                  href={cell.href}
+                                  className="font-medium text-race-accent underline-offset-2 hover:underline"
+                                >
+                                  {cell.text}
+                                </a>
                               ) : (
                                 cell.text
                               )}

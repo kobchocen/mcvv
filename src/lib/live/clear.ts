@@ -4,7 +4,15 @@ import { writeAudit } from "@/lib/audit/log";
 import type { SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 
-import { formatClearSource, snapshotRows, splitRowKey, type ClearFilter } from "./clear-core";
+import {
+  clearsFinishRecords,
+  formatClearSource,
+  snapshotFinishBibs,
+  snapshotFinishPunches,
+  snapshotRows,
+  splitRowKey,
+  type ClearFilter,
+} from "./clear-core";
 import { OWNING_OUTCOMES } from "./ingest-core";
 import { LIVE_ZERO_OVERRIDE_KEY } from "./race-context";
 
@@ -18,7 +26,16 @@ export type ClearCounts = {
   entries: number;
   /** Z toho otevřené konflikty. */
   conflicts: number;
+  /** Kliky stopek v cíli (mcvv_finish_punch), které se smažou (#366). */
+  finishPunches: number;
+  /** Čísla ze stanice čísel v cíli (mcvv_finish_bib), která se smažou (#366). */
+  finishBibs: number;
 };
+
+/** Všechny záznamy stanic v cíli ročníku (i měkce smazané), když je výběr zahrnuje. */
+function finishWhere(year: number, filter: ClearFilter): { year: number } | null {
+  return clearsFinishRecords(filter) ? { year } : null;
+}
 
 function journalWhere(year: number, filter: ClearFilter): Prisma.SplitEntryWhereInput {
   const base: Prisma.SplitEntryWhereInput = { year, split: { in: filter.splits } };
@@ -58,12 +75,22 @@ function countBySplit(rows: { split: string }[]): Record<string, number> {
 /** Náhled: kolik se toho smaže (stejný výběr jako `clearSplits`). */
 export async function previewClear(year: number, filter: ClearFilter): Promise<ClearCounts> {
   const where = journalWhere(year, filter);
-  const [rows, entries, conflicts] = await Promise.all([
+  const finish = finishWhere(year, filter);
+  const [rows, entries, conflicts, finishPunches, finishBibs] = await Promise.all([
     selectedSplitRows(prisma, year, filter),
     prisma.splitEntry.count({ where }),
     prisma.splitEntry.count({ where: { ...where, outcome: "conflict" } }),
+    finish ? prisma.finishPunch.count({ where: finish }) : 0,
+    finish ? prisma.finishBib.count({ where: finish }) : 0,
   ]);
-  return { splits: countBySplit(rows), splitsTotal: rows.length, entries, conflicts };
+  return {
+    splits: countBySplit(rows),
+    splitsTotal: rows.length,
+    entries,
+    conflicts,
+    finishPunches,
+    finishBibs,
+  };
 }
 
 export type ClearOptions = {
@@ -76,7 +103,8 @@ export type ClearResult = ClearCounts & { zeroCleared: boolean };
 const DELETE_CHUNK = 200;
 
 /**
- * Smaže výběr z mcvv_split i z deníku (včetně konfliktů) v jedné transakci a zapíše audit
+ * Smaže výběr z mcvv_split i z deníku (včetně konfliktů) a s cílem a zdrojem „vše“ také
+ * záznamy stanic v cíli (kliky stopek a čísla, #366) v jedné transakci a zapíše audit
  * `raceday.splits_cleared` se snímkem smazaných řádků.
  * Ochranu v den závodu (Q32) a potvrzení kontroluje volající (server action).
  */
@@ -106,6 +134,18 @@ export async function clearSplits(
       const conflicts = await tx.splitEntry.count({ where: { ...where, outcome: "conflict" } });
       const removed = await tx.splitEntry.deleteMany({ where });
 
+      const finish = finishWhere(year, filter);
+      const [punchRows, bibRows] = finish
+        ? await Promise.all([
+            tx.finishPunch.findMany({ where: finish }),
+            tx.finishBib.findMany({ where: finish }),
+          ])
+        : [[], []];
+      if (finish) {
+        await tx.finishPunch.deleteMany({ where: finish });
+        await tx.finishBib.deleteMany({ where: finish });
+      }
+
       let zeroCleared = false;
       if (options.clearZeroOverride) {
         const deleted = await tx.setting.deleteMany({ where: { key: LIVE_ZERO_OVERRIDE_KEY } });
@@ -125,8 +165,17 @@ export async function clearSplits(
             entries: removed.count,
             conflicts,
             zeroCleared,
+            finishPunches: punchRows.length,
+            finishBibs: bibRows.length,
             // [číslo, split, čas, autor, created] – podklad pro případnou obnovu
             snapshot: snapshotRows(rows),
+            // #366: záznamy stanic v cíli – podklad pro případnou obnovu (formát viz clear-core)
+            ...(finish
+              ? {
+                  finishPunchSnapshot: snapshotFinishPunches(punchRows),
+                  finishBibSnapshot: snapshotFinishBibs(bibRows),
+                }
+              : {}),
           },
         },
         tx,
@@ -136,6 +185,8 @@ export async function clearSplits(
         splitsTotal: rows.length,
         entries: removed.count,
         conflicts,
+        finishPunches: punchRows.length,
+        finishBibs: bibRows.length,
         zeroCleared,
       };
     },

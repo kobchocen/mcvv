@@ -146,6 +146,32 @@ export function reviveFinishQueue(raw: unknown): FinishQueue {
   };
 }
 
+export const FINISH_STATIONS: readonly StationKind[] = ["watch", "bibs"];
+
+/**
+ * Které fronty stanic se mají teď odeslat (#366): obě stanice, ne jen zvolená – zvolená první.
+ * Fronta je na řadě, když má co odeslat a nečeká na další pokus po výpadku.
+ */
+export function dueFinishStations(
+  queues: Readonly<Record<StationKind, FinishQueue>>,
+  now: number,
+  active: StationKind,
+): StationKind[] {
+  return [active, ...FINISH_STATIONS.filter((station) => station !== active)].filter(
+    (station) => queues[station].outbox.length > 0 && now >= queues[station].nextAttemptAt,
+  );
+}
+
+/** Kolik čeká v druhé (nezvolené) stanici – ukazuje se v hlavičce, ať nezapadne. */
+export function otherStationPending(
+  queues: Readonly<Record<StationKind, FinishQueue>>,
+  active: StationKind,
+): { station: StationKind; count: number } | null {
+  const station = active === "watch" ? "bibs" : "watch";
+  const count = queues[station].outbox.length;
+  return count > 0 ? { station, count } : null;
+}
+
 export function finishQueueKey(year: number, userId: number, kind: StationKind): string {
   return `finish:${kind}:${year}:${userId}`;
 }

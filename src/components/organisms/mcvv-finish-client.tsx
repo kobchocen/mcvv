@@ -23,7 +23,7 @@ import {
 import { clockSample, pickOffset } from "@/lib/live/queue-core";
 import { loadValue, saveValue } from "@/lib/live/queue-store";
 
-type Props = { year: number; userId: number; userName: string };
+type Props = { year: number; userId: number; userName: string; locale: string };
 
 const RECENT = 40;
 
@@ -48,7 +48,7 @@ function clockTenths(ms: number): string {
  * doběhu). Fronta v zařízení přežije výpadek sítě i zavření prohlížeče a dosynchronizuje se;
  * čas zařízení se koriguje proti serveru stejně jako na mezičasech.
  */
-export function McvvFinishClient({ year, userId, userName }: Props) {
+export function McvvFinishClient({ year, userId, userName, locale }: Props) {
   const t = useTranslations("Finish");
   const [kind, setKind] = useState<StationKind>("watch");
   const storageKey = finishQueueKey(year, userId, kind);
@@ -108,6 +108,25 @@ export function McvvFinishClient({ year, userId, userName }: Props) {
       cancelled = true;
     };
   }, [storageKey]);
+
+  // service worker – stránka cíle se otevře i bez signálu (#366), API se necachuje
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker
+      .register("/cil-sw.js", { scope: `/${locale}/cil` })
+      .then(() => navigator.serviceWorker.ready)
+      .then((registration) => {
+        const urls = [
+          window.location.pathname,
+          ...performance
+            .getEntriesByType("resource")
+            .map((entry) => entry.name)
+            .filter((name) => name.includes("/_next/static/")),
+        ];
+        registration.active?.postMessage({ type: "precache", urls });
+      })
+      .catch(() => undefined);
+  }, [locale]);
 
   // obrazovka nezhasne
   useEffect(() => {

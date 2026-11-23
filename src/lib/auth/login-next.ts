@@ -31,6 +31,8 @@ function adminHref(next: string) {
   if (path === "/admin/uzivatele") return "/admin/uzivatele" as const;
   if (path === "/admin/audit") return "/admin/audit" as const;
   if (path === "/admin/opravneni") return "/admin/opravneni" as const;
+  if (path === "/admin/obrazovky") return "/admin/obrazovky" as const;
+  if (path === "/admin/kancelar") return "/admin/kancelar" as const;
   if (path === "/admin/den-zavodu") return "/admin/den-zavodu" as const;
   if (path === "/admin/den-zavodu/zive") return "/admin/den-zavodu/zive" as const;
   if (path === "/admin/den-zavodu/zive/casy") return "/admin/den-zavodu/zive/casy" as const;

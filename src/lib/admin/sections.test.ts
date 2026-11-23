@@ -11,6 +11,7 @@ import {
   type UserRole,
 } from "@/lib/auth/roles";
 
+import { isSectionId, legacyAllows, type AccessLevel } from "@/lib/admin/permissions";
 import { ADMIN_SECTIONS, backHref, locate, navTree, visibleSections } from "./sections";
 import { readGuardSource } from "@/lib/admin/guard-source";
 
@@ -39,6 +40,12 @@ function guardOf(source: string): ((role: UserRole) => boolean) | null {
   if (source.includes("requireAdmin()")) return isAdmin;
   if (source.includes("requireRaceDay()")) return canAccessRaceDay;
   if (source.includes("requireStaff()")) return isStaffRole;
+  const section = source.match(/requireSection\("([\w.]+)", "(read|write)"\)/);
+  if (section && isSectionId(section[1])) {
+    const id = section[1];
+    const level = section[2] as AccessLevel;
+    return (role) => legacyAllows(role, id, level);
+  }
   return null;
 }
 
@@ -144,6 +151,28 @@ describe("admin sections registry", () => {
       .flatMap((group) => group.chapters)
       .find((chapter) => chapter.id === "raceControl");
     assert.equal(raceControl?.href, "/admin/den-zavodu");
+  });
+
+  it("screens and race office chapters link to their hub pages, not the first screen", () => {
+    const chapter = (role: UserRole, id: string) =>
+      visibleSections(role)
+        .flatMap((group) => group.chapters)
+        .find((item) => item.id === id);
+    assert.equal(chapter("admin", "screens")?.href, "/admin/obrazovky");
+    assert.equal(chapter("starter", "screens")?.href, "/admin/obrazovky");
+    assert.equal(chapter("splitmaker", "screens")?.href, "/admin/obrazovky");
+    assert.equal(chapter("timing", "screens")?.href, "/admin/obrazovky");
+    assert.equal(chapter("race_office", "screens"), undefined);
+    assert.equal(chapter("admin", "raceOffice")?.href, "/admin/kancelar");
+    assert.equal(chapter("organizer", "raceOffice")?.href, "/admin/kancelar");
+    assert.equal(chapter("race_office", "raceOffice")?.href, "/admin/kancelar");
+    assert.equal(chapter("starter", "raceOffice"), undefined);
+    assert.equal(locate("/admin/obrazovky")?.chapterId, "screens");
+    assert.equal(locate("/admin/obrazovky")?.subsectionId, undefined);
+    assert.equal(locate("/admin/kancelar")?.chapterId, "raceOffice");
+    assert.equal(locate("/admin/kancelar")?.subsectionId, undefined);
+    assert.equal(backHref("/admin/obrazovky"), "/admin");
+    assert.equal(backHref("/admin/kancelar"), "/admin");
   });
 });
 

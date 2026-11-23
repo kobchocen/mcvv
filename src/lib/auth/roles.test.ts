@@ -7,7 +7,10 @@ import {
   hasAdminHome,
   adminPathAllowed,
   canAccessRaceDay,
+  canAccessScreens,
   canAccessSplits,
+  OFFICE_HUB_PATH,
+  SCREENS_HUB_PATH,
   canChangeSaleStatus,
   canManageSaleItems,
   canMarkSalePaidBank,
@@ -76,6 +79,8 @@ describe("role permissions", () => {
     assert.ok(adminPathAllowed("raceday", "/admin/den-zavodu"));
     assert.ok(adminPathAllowed("raceday", "/admin/den-zavodu/import"));
     assert.ok(adminPathAllowed("raceday", "/admin"));
+    assert.ok(adminPathAllowed("raceday", SCREENS_HUB_PATH));
+    assert.ok(!adminPathAllowed("raceday", OFFICE_HUB_PATH));
     for (const path of [
       "/admin/prihlasky",
       "/admin/platby",
@@ -94,17 +99,24 @@ describe("role permissions", () => {
     assert.ok(!hasAdminHome("registrar"));
     assert.ok(!adminPathAllowed("none", "/admin"));
   });
-  it("splitmaker, starter and race office get the gear and only the /admin home", () => {
+  it("splitmaker, starter and race office get the gear, /admin home and their hubs", () => {
     for (const role of ["splitmaker", "starter", "race_office"] as const) {
       assert.equal(adminAccess(role), "tools", role);
       assert.ok(hasAdminHome(role), role);
       assert.equal(adminHomeHref(), "/admin", role);
       assert.ok(!canAccessRaceDay(role), role);
       assert.ok(adminPathAllowed(adminAccess(role), "/admin"), role);
+      assert.ok(adminPathAllowed(adminAccess(role), SCREENS_HUB_PATH), role);
+      assert.ok(adminPathAllowed(adminAccess(role), OFFICE_HUB_PATH), role);
       assert.ok(!adminPathAllowed(adminAccess(role), "/admin/den-zavodu"), role);
       assert.ok(!adminPathAllowed(adminAccess(role), "/admin/prihlasky"), role);
     }
     assert.ok(canAccessSplits("splitmaker"));
+    assert.equal(canAccessScreens("starter"), true);
+    assert.equal(canAccessScreens("splitmaker"), true);
+    assert.equal(canAccessScreens("race_office"), false);
+    assert.equal(canAccessScreens("timing"), true);
+    assert.equal(canAccessScreens("registrar"), false);
   });
   it("everybody except a runner has the gear", () => {
     for (const role of USER_ROLES) {

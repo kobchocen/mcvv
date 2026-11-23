@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "New in the {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
+      "title": "Team competition",
+      "body": "From this year, teams as well as individuals score across categories. What counts is performance, not how many people are in the club. A prize for the winning team.",
+      "linkLabel": "Team competition rules"
+    },
     "overview": {
       "eyebrow": "01 — About",
       "title": "It is not just a run. It is a challenge.",

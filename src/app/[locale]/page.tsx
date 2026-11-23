@@ -91,6 +91,11 @@ export default async function Home({ params }: PageProps) {
       ...(t.raw("hero") as McvvHomepageContent["hero"]),
       edition: t("hero.edition", { n: editionNumber(raceYear) }),
     },
+    news: {
+      ...(t.raw("news") as Omit<McvvHomepageContent["news"], "href" | "eyebrow">),
+      eyebrow: t("news.eyebrow", { n: editionNumber(raceYear) }),
+      href: "/souteze-tymu",
+    },
     overview: fillPlaceholders(t.raw("overview") as McvvHomepageContent["overview"], startText),
     profile: t.raw("profile") as McvvHomepageContent["profile"],
     schedule,

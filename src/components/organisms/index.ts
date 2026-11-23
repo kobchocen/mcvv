@@ -9,6 +9,7 @@ export * from "./mcvv-admin-dicts-subnav";
 export * from "./mcvv-login-next-redirect";
 export * from "./mcvv-navbar";
 export * from "./mcvv-public-navbar";
+export * from "./mcvv-news-box";
 export * from "./mcvv-overview-section";
 export * from "./mcvv-partners-section";
 export * from "./mcvv-profile-section";

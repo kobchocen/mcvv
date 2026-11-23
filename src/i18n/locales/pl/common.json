@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "Nowość {n}. edycji",
+      "title": "Rywalizacja drużynowa",
+      "body": "Od tego roku obok zawodników indywidualnych punktują także drużyny we wszystkich kategoriach. Liczy się wynik, a nie liczba osób w klubie. Nagroda dla zwycięskiej drużyny.",
+      "linkLabel": "Zasady rywalizacji drużynowej"
+    },
     "overview": {
       "eyebrow": "01 — O biegu",
       "title": "To nie jest tylko bieg. To jest wyzwanie.",

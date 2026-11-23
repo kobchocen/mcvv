@@ -26,6 +26,7 @@ import {
   type InstructionSectionId,
   type McvvInstructionsContent,
 } from "@/components/templates/mcvv-instructions-content";
+import { InstructionsArrivalMap } from "@/components/templates/mcvv-instructions-arrival-map";
 import { CourseMapLink, InstructionText } from "@/components/templates/mcvv-instructions-links";
 
 const sectionIcons: Record<InstructionSectionId, LucideIcon> = {
@@ -156,6 +157,9 @@ export function McvvInstructionsTemplate({ content }: McvvInstructionsTemplatePr
                           </li>
                         ))}
                       </ul>
+                    ) : null}
+                    {id === "parking" ? (
+                      <InstructionsArrivalMap content={content.arrivalMap} />
                     ) : null}
                     {id === "course" ? (
                       <p className="text-sm leading-7 sm:text-base">

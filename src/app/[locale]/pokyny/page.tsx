@@ -39,6 +39,7 @@ export default async function InstructionsPage({ params }: PageProps) {
     tocTitle: copy("tocTitle"),
     backToTop: copy("backToTop"),
     mapAlt: copy("mapAlt"),
+    arrivalMap: (home.raw("schedule") as McvvHomepageContent["schedule"]).arrivalMap,
     sections: copy.raw("sections") as McvvInstructionsContent["sections"],
   };
 

@@ -1,4 +1,7 @@
-import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
+import type {
+  ArrivalMapContent,
+  McvvHomepageContent,
+} from "@/components/templates/mcvv-homepage-content";
 
 export const INSTRUCTION_SECTION_ORDER = [
   "organizer",
@@ -39,5 +42,7 @@ export type McvvInstructionsContent = {
   tocTitle: string;
   backToTop: string;
   mapAlt: string;
+  /** Mapa příjezdu a parkování (stejný dialog jako na úvodu, sekce Parkování). */
+  arrivalMap?: ArrivalMapContent;
   sections: Record<InstructionSectionId, InstructionSectionCopy>;
 };

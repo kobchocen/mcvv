@@ -1,3 +1,5 @@
+import { revalidateTag } from "next/cache";
+
 import { prisma } from "@/lib/db/client";
 import { writeAudit, type AuditActor } from "@/lib/audit/log";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -5,6 +7,7 @@ import { FINISH_SPLIT_CODE } from "@/lib/live/finish-core";
 import { peekStoredTestRun } from "@/lib/live/test-run";
 import { raceStartFor } from "@/lib/race/phase";
 import { loadRoster } from "@/lib/race/roster";
+import { STATS_CACHE_TAG } from "@/lib/stats/overview-query";
 import { recalculateCategoryRecords } from "@/lib/stats/records";
 
 import {
@@ -170,7 +173,7 @@ export async function publishOfficialResults(
   const race = await currentRaceYear();
   const year = race.year;
   const { run } = await peekStoredTestRun(now);
-  return prisma.$transaction(
+  const result = await prisma.$transaction(
     async (tx) => {
       const preview = await previewFor(tx, year);
       const { check, published } = await stamps(tx, year);
@@ -219,6 +222,8 @@ export async function publishOfficialResults(
     },
     { timeout: 60_000 },
   );
+  if (result.ok) revalidateTag(STATS_CACHE_TAG, "max");
+  return result;
 }
 
 /** Ruční otevření / nouzové zavření okna živých výsledků (jen admin, audit). */

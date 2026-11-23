@@ -11,6 +11,7 @@ import { getSiteSettings, splitMoment } from "@/lib/settings/site";
 import { COURSE_CLIMB_M, COURSE_KM } from "@/lib/stats/overview";
 import { getStatsOverview } from "@/lib/stats/overview-query";
 import { STAT_SLUGS } from "@/lib/stats/core";
+import { getAllTeamCompetitions, winnersOf } from "@/lib/teams";
 import { formatRaceTime } from "@/lib/utils";
 import { type Locale } from "@/i18n/routing";
 import { intlTag } from "@/lib/i18n/locale";
@@ -32,7 +33,15 @@ export default async function StatsIndexPage({ params }: PageProps) {
   const home = await getTranslations({ locale, namespace: "Home" });
   const stats = await getTranslations({ locale, namespace: "Stats" });
   const t = await getTranslations({ locale, namespace: "Stats.overview" });
-  const [data, settings] = await Promise.all([getStatsOverview(), getSiteSettings()]);
+  const [data, settings, teamYears] = await Promise.all([
+    getStatsOverview(),
+    getSiteSettings(),
+    getAllTeamCompetitions(),
+  ]);
+  const latestTeam = teamYears.length
+    ? teamYears.reduce((best, row) => (row.year > best.year ? row : best))
+    : null;
+  const latestWinners = latestTeam ? winnersOf(latestTeam.competition, latestTeam.year) : [];
 
   const intl = intlTag(locale);
   const number = (value: number) => new Intl.NumberFormat(intl).format(value);
@@ -81,6 +90,7 @@ export default async function StatsIndexPage({ params }: PageProps) {
       ages: t("moreAges"),
       times: t("moreTimes"),
       clubs: t("moreClubs"),
+      teams: t("moreTeams"),
     },
     records: {
       title: t("records"),
@@ -136,6 +146,13 @@ export default async function StatsIndexPage({ params }: PageProps) {
       ],
     },
     clubs: { title: t("clubs") },
+    teamsTile: {
+      title: t("teams"),
+      line: latestWinners.length
+        ? `${latestTeam?.year} · ${latestWinners.map((winner) => winner.team).join(" / ")}`
+        : null,
+      sub: latestWinners[0] ? `${latestWinners[0].points} b · ${latestWinners[0].finishers}` : null,
+    },
     together: {
       title: t("together"),
       value: number(data.together.hours),

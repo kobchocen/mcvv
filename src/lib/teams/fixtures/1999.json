@@ -1,0 +1,1017 @@
+[
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 1,
+    "runnerName": "Bolech Filip",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 2,
+    "runnerName": "Španiel Miroslav",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 3,
+    "runnerName": "Herman Jan",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 4,
+    "runnerName": "Pešek Ondřej",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 5,
+    "runnerName": "Pátek Michal",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 6,
+    "runnerName": "Grundman Vojtěch",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 7,
+    "runnerName": "Siegel Josef",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 8,
+    "runnerName": "Abrahám Petr",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 9,
+    "runnerName": "Řemínek Matěj",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 10,
+    "runnerName": "Zajíc Jakub",
+    "clubName": "AFK SKP Pardubice"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 11,
+    "runnerName": "Sýkora Bohumil",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 12,
+    "runnerName": "Košťálek Martin",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 13,
+    "runnerName": "Krosch Jan",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "J",
+    "categoryName": "žáci",
+    "place": 14,
+    "runnerName": "Kislinger Jan",
+    "clubName": "Kob Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 1,
+    "runnerName": "Dejdar Lukáš",
+    "clubName": "AC Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 2,
+    "runnerName": "Knížek Jiří",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 2,
+    "runnerName": "Krčál Jaroslav",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 4,
+    "runnerName": "Tauchman Jiří",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 5,
+    "runnerName": "Šlajs Tomáš",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 6,
+    "runnerName": "Zitka Adam",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 7,
+    "runnerName": "Řehák Pavel",
+    "clubName": "Ok Polart Vamberk"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 8,
+    "runnerName": "Štěrba Zbyněk",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 9,
+    "runnerName": "Veverka Tomáš",
+    "clubName": "Ok Polart Vamberk"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 10,
+    "runnerName": "Hudák Stanislav",
+    "clubName": "Ok Polart Vamberk"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 11,
+    "runnerName": "Fukátko Jan",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 12,
+    "runnerName": "Odvody Zdeněk",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 13,
+    "runnerName": "Sládek František",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 14,
+    "runnerName": "Šafr Martin",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 15,
+    "runnerName": "Stárek Libor",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 16,
+    "runnerName": "Žemlička Jan",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "L",
+    "categoryName": "dorostenci",
+    "place": 17,
+    "runnerName": "Hynek Jan",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 1,
+    "runnerName": "Losman Petr",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 2,
+    "runnerName": "Vítek Miroslav",
+    "clubName": "Sportdres Ústí N.Orl."
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 3,
+    "runnerName": "Zřídkaveselý Libor",
+    "clubName": "Sk Žabovřesky Brno"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 4,
+    "runnerName": "Razým Lukáš",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 5,
+    "runnerName": "Pilgr Luděk",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 6,
+    "runnerName": "Hepner David",
+    "clubName": "Slavia Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 7,
+    "runnerName": "Filip Libor",
+    "clubName": "Želva Skořenice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 8,
+    "runnerName": "Vacek Martin",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 9,
+    "runnerName": "Stránský Aleš",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 10,
+    "runnerName": "Paclík Jiří",
+    "clubName": "Slavia Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 11,
+    "runnerName": "Koblic Jan",
+    "clubName": "Želva Skořenice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 12,
+    "runnerName": "Paclík Roman",
+    "clubName": "Slavia Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 13,
+    "runnerName": "Doucha Jiří",
+    "clubName": "Start Náchod"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 14,
+    "runnerName": "Netuka Martin",
+    "clubName": "Slavia Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 15,
+    "runnerName": "Vašata Pavel",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 16,
+    "runnerName": "Kober Michal",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 17,
+    "runnerName": "Tihon Michal",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 18,
+    "runnerName": "Hovorka Jan",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 19,
+    "runnerName": "Razým Jan",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 20,
+    "runnerName": "Ondra Vladimír",
+    "clubName": "Liga 100 Praha"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 21,
+    "runnerName": "Doležal Marek",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 22,
+    "runnerName": "Slavík Pavel",
+    "clubName": "Start Náchod"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 23,
+    "runnerName": "Hejzlar Jiří",
+    "clubName": "Lo Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 23,
+    "runnerName": "Švadlena Pavel",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 25,
+    "runnerName": "Pilgr Aleš",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 26,
+    "runnerName": "Hlaváček Lubomír",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 26,
+    "runnerName": "Chaloupka Stanislav",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 28,
+    "runnerName": "Macháček Lubomír",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 29,
+    "runnerName": "Čálek Filip",
+    "clubName": "Javor"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 30,
+    "runnerName": "Haas Karel",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 31,
+    "runnerName": "Horáček Josef",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 32,
+    "runnerName": "Lakota Martin",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 33,
+    "runnerName": "Půlpán Roman",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 34,
+    "runnerName": "Blažek Petr",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 35,
+    "runnerName": "Netolický Milan",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 36,
+    "runnerName": "Roudný Václav",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 37,
+    "runnerName": "Kadrman Jiří",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 38,
+    "runnerName": "Šustr Pavel",
+    "clubName": "Amatér Knířov"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 39,
+    "runnerName": "Pecina Roman",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "A",
+    "categoryName": "muži",
+    "place": 40,
+    "runnerName": "Macháček Milan",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 1,
+    "runnerName": "Filip Luboš",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 2,
+    "runnerName": "Šlajs Tomáš",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 3,
+    "runnerName": "Vondrouš Jaroslav",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 4,
+    "runnerName": "Šafář Jaroslav",
+    "clubName": "Ústí Nad Orlicí"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 5,
+    "runnerName": "Sadílek Václav",
+    "clubName": "Atletika Albrechtice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 6,
+    "runnerName": "Panáček Jan",
+    "clubName": "Krby Žamberk"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 7,
+    "runnerName": "Farář Václav",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 8,
+    "runnerName": "Zajíc Jan",
+    "clubName": "Krb Chrudim"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 9,
+    "runnerName": "Třasák Milan",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 10,
+    "runnerName": "Losman Miroslav",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 11,
+    "runnerName": "Čípa Jiří",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 12,
+    "runnerName": "Běhoun Pavel",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 13,
+    "runnerName": "Otakar Tomáš",
+    "clubName": "Týniště Nad Orlicí"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 14,
+    "runnerName": "Juračka Vojtěch",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 15,
+    "runnerName": "Fridrich Milan",
+    "clubName": "Zářecká Lhota"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 16,
+    "runnerName": "Pilgr Bohuslav",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 17,
+    "runnerName": "Dočkal Zdeněk",
+    "clubName": "Týniště Nad Orlicí"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 18,
+    "runnerName": "Doležal Petr",
+    "clubName": "Týniště Nad Orlicí"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 19,
+    "runnerName": "Beňo Miroslav",
+    "clubName": "Týniště Nad Orlicí"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 20,
+    "runnerName": "Víšek Zdeněk",
+    "clubName": "Praha"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 21,
+    "runnerName": "Sáňka Bedřich",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 22,
+    "runnerName": "Vlček Josef",
+    "clubName": "Týniště Nad Orlicí"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 23,
+    "runnerName": "Šafr Martin",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 24,
+    "runnerName": "Doležal Jaromír",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 25,
+    "runnerName": "Grundman Martin",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 26,
+    "runnerName": "Sůva Petr",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 27,
+    "runnerName": "Kislinger Jan",
+    "clubName": "Kob Pardubice"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 28,
+    "runnerName": "Stárek Milan",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "B",
+    "categoryName": "muži nad 40 let",
+    "place": 29,
+    "runnerName": "Bolech Jiří",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 1,
+    "runnerName": "Švadlena Jiří",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 2,
+    "runnerName": "Sadílek Otakar",
+    "clubName": "Atletika Albrechtice"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 3,
+    "runnerName": "Fridrich Jaroslav",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 4,
+    "runnerName": "Novotný Jiří",
+    "clubName": "Club 21 Letohrad"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 5,
+    "runnerName": "Hejzlar Jiří",
+    "clubName": "Lo Choceň"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 6,
+    "runnerName": "Havran Miroslav",
+    "clubName": "Profistav Litomyšl"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 7,
+    "runnerName": "Kalousek Jan",
+    "clubName": "Kčt Žamberk"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 8,
+    "runnerName": "Šimůnek Jan",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "C",
+    "categoryName": "muži nad 50 let",
+    "place": 9,
+    "runnerName": "Šlajs Ludvík",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 1,
+    "runnerName": "Krčálová Veronika",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 2,
+    "runnerName": "Fukátková Pavla",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 3,
+    "runnerName": "Juračková Jana",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 4,
+    "runnerName": "Lišková Magdaléna",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 5,
+    "runnerName": "Sůvová Barbora",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 6,
+    "runnerName": "Rychtaříková Iva",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 7,
+    "runnerName": "Kurková Andrea",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 8,
+    "runnerName": "Grundmanová Lenka",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 9,
+    "runnerName": "Podhorníková Martina",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "K",
+    "categoryName": "žákyně",
+    "place": 10,
+    "runnerName": "Kislingerová Gabriela",
+    "clubName": "Kob Pardubice"
+  },
+  {
+    "categoryId": "M",
+    "categoryName": "dorostenky",
+    "place": 1,
+    "runnerName": "Koukalová Dana",
+    "clubName": "AC Pardubice"
+  },
+  {
+    "categoryId": "M",
+    "categoryName": "dorostenky",
+    "place": 2,
+    "runnerName": "Škodová Petra",
+    "clubName": "K.O.B. Choceň"
+  },
+  {
+    "categoryId": "M",
+    "categoryName": "dorostenky",
+    "place": 3,
+    "runnerName": "Lásková Lenka",
+    "clubName": "AC Choceň"
+  },
+  {
+    "categoryId": "M",
+    "categoryName": "dorostenky",
+    "place": 4,
+    "runnerName": "Vaníčková Ivana",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 1,
+    "runnerName": "Kuncová Jana",
+    "clubName": "Želva Skořenice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 2,
+    "runnerName": "Vlčovská Marta",
+    "clubName": "AC Pardubice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 3,
+    "runnerName": "Melounková Lucie",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 4,
+    "runnerName": "Jorová Ludmila",
+    "clubName": "Tj Albrechtice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 5,
+    "runnerName": "Šolínová Lucie",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 6,
+    "runnerName": "Rybářová Lenka",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 7,
+    "runnerName": "Vlčovská Eva",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 8,
+    "runnerName": "Šedová Jana",
+    "clubName": "Sruby"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 9,
+    "runnerName": "Žabová Petra",
+    "clubName": "HK Choceň"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 10,
+    "runnerName": "Veverková Yveta",
+    "clubName": "Ok Polart Vamberk"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 11,
+    "runnerName": "Kašparová Eva",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 12,
+    "runnerName": "Kadermanová Ludmila",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 13,
+    "runnerName": "Kovářová Anna",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 14,
+    "runnerName": "Juračková Jana",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 15,
+    "runnerName": "Bašarinová Michaela",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "F",
+    "categoryName": "ženy",
+    "place": 16,
+    "runnerName": "Čípová Ivana",
+    "clubName": "Ob Česká Třebová"
+  },
+  {
+    "categoryId": "G",
+    "categoryName": "ženy nad 40 let",
+    "place": 1,
+    "runnerName": "Novotná Eva",
+    "clubName": "Club 21 Letohrad"
+  },
+  {
+    "categoryId": "G",
+    "categoryName": "ženy nad 40 let",
+    "place": 2,
+    "runnerName": "Běhounová Jiřina",
+    "clubName": "Ok99 Hradec Králové"
+  },
+  {
+    "categoryId": "G",
+    "categoryName": "ženy nad 40 let",
+    "place": 3,
+    "runnerName": "Keprtová Miloslava",
+    "clubName": "Iscarex Česká Třebová"
+  },
+  {
+    "categoryId": "G",
+    "categoryName": "ženy nad 40 let",
+    "place": 4,
+    "runnerName": "Baštová Alena",
+    "clubName": "Lokomotiva Pardubice"
+  },
+  {
+    "categoryId": "G",
+    "categoryName": "ženy nad 40 let",
+    "place": 5,
+    "runnerName": "Doležalová Jitka",
+    "clubName": "Choceň"
+  },
+  {
+    "categoryId": "G",
+    "categoryName": "ženy nad 40 let",
+    "place": 6,
+    "runnerName": "Kubíková Květa",
+    "clubName": "Lokomotiva Pardubice"
+  }
+]

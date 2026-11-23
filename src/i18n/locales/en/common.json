@@ -938,8 +938,8 @@
     "suggestLabel": "Club name suggestions",
     "suggestHint": "Start typing a name, including former ones. Suggestions help complete your search.",
     "hubMetaTitle": "Clubs — stories and records",
-    "hubIntro": "Streaks, team turnouts, category wins and other club stories from every edition. The searchable directory is just one of the views.",
-    "hubLead": "{clubs, plural, one {# club} other {# clubs}} across {editions} editions, {starts} finishes in club colours.",
+    "hubIntro": "Streaks, team turnouts, category wins and other club stories from every edition.",
+    "hubLead": "Across {editions} editions there are {starts} finishes in the colours of {clubs, plural, one {# club} other {# clubs}}.",
     "unlinkedNote": "Another {count} finishes are not linked to a club.",
     "navLabel": "Club views",
     "viewOverview": "Overview",
@@ -1006,7 +1006,8 @@
     "cardReturn": "Most interesting return: {club} {gap}",
     "veteransUnit": "veterans",
     "hubViewMetaTitle": "{view} — Clubs",
-    "cardReturnGap": "{count, plural, one {after # year} other {after # years}}"
+    "cardReturnGap": "{count, plural, one {after # year} other {after # years}}",
+    "hubLeadUnlinked": "Across {editions} editions there are {starts} finishes in the colours of {clubs, plural, one {# club} other {# clubs}}, and another {unlinked} not linked to a club."
   },
   "ClubCleanup": {
     "title": "Clean up orphan clubs",

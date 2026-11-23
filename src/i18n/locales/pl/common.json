@@ -849,8 +849,8 @@
     "suggestLabel": "Podpowiedzi nazw klubów",
     "suggestHint": "Zacznij wpisywać nazwę, także dawną. Podpowiedzi pomagają uzupełnić wyszukiwanie.",
     "hubMetaTitle": "Kluby — ciekawe spojrzenia",
-    "hubIntro": "Serie startów, wielkości ekip, zwycięstwa kategoriowe i inne spojrzenia na kluby. Lista z wyszukiwaniem to tylko jeden z widoków.",
-    "hubLead": "{clubs, plural, one {# klub} few {# kluby} many {# klubów} other {# klubu}} w {editions} edycjach, {starts} finiszy w barwach klubu.",
+    "hubIntro": "Serie startów, wielkości ekip, zwycięstwa kategoriowe i inne spojrzenia na kluby.",
+    "hubLead": "W {editions} edycjach jest {starts} finiszy w barwach {clubs, plural, one {# klubu} few {# klubów} many {# klubów} other {# klubu}}.",
     "unlinkedNote": "Kolejnych {count} finiszy nie jest przypisanych do żadnego klubu.",
     "navLabel": "Widoki klubów",
     "viewOverview": "Przegląd",
@@ -917,7 +917,8 @@
     "cardReturn": "Najciekawszy powrót: {club} {gap}",
     "veteransUnit": "weteranów",
     "hubViewMetaTitle": "{view} — Kluby",
-    "cardReturnGap": "{count, plural, one {po # roku} few {po # latach} many {po # latach} other {po # roku}}"
+    "cardReturnGap": "{count, plural, one {po # roku} few {po # latach} many {po # latach} other {po # roku}}",
+    "hubLeadUnlinked": "W {editions} edycjach jest {starts} finiszy w barwach {clubs, plural, one {# klubu} few {# klubów} many {# klubów} other {# klubu}}, a kolejne {unlinked} zostało bez klubu."
   },
   "Messages": {
     "title": "Wiadomości",

@@ -21,7 +21,6 @@ export type McvvClubsHubCopy = {
   title: string;
   intro: string;
   lead: string;
-  unlinkedNote: string;
   navLabel: string;
   men: string;
   women: string;
@@ -127,11 +126,8 @@ export function McvvClubsHub({
           </h1>
           <p className="mt-4 max-w-3xl text-race-muted">{copy.intro}</p>
           <p className="mt-2 max-w-3xl text-sm text-race-muted">{copy.lead}</p>
-          {data.unlinkedStarts > 0 ? (
-            <p className="mt-2 text-sm text-race-dim">{copy.unlinkedNote}</p>
-          ) : null}
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-3">
             {copy.counters.map((item) => (
               <div
                 key={item.label}
@@ -187,13 +183,27 @@ function OverviewGrid({
   const vet = data.veterans[0];
 
   return (
-    <section className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <section className="mt-10 grid grid-flow-dense grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       <Tile title={copy.streaksTitle} more={<MoreLink view="snury" label={copy.moreView} />}>
         <Ranked clubs={data.streaks.slice(0, 3)} value={(row) => String(row.length)} />
       </Tile>
 
       <Tile title={copy.loyalTitle} more={<MoreLink view="vernost" label={copy.moreView} />}>
         <Ranked clubs={data.loyal.slice(0, 3)} value={(row) => String(row.editions)} />
+      </Tile>
+
+      <Tile title={copy.veteransTitle} more={<MoreLink view="veterani" label={copy.moreView} />}>
+        <div className={bigClass}>
+          {data.veteranCount}{" "}
+          <small className="font-sans text-sm font-medium normal-case text-race-muted">
+            {copy.veteransUnit}
+          </small>
+        </div>
+        {vet ? (
+          <p className={metaClass}>
+            <ClubName slug={vet.slug} name={vet.name} /> · {vet.count}
+          </p>
+        ) : null}
       </Tile>
 
       <Tile
@@ -266,7 +276,7 @@ function OverviewGrid({
 
       <Tile
         title={copy.medalsTitle}
-        className="md:col-span-2"
+        className="xl:col-span-2"
         more={<MoreLink view="medaile" label={copy.moreView} />}
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -288,22 +298,8 @@ function OverviewGrid({
         )}
       </Tile>
 
-      <Tile title={copy.veteransTitle} more={<MoreLink view="veterani" label={copy.moreView} />}>
-        <div className={bigClass}>
-          {data.veteranCount}{" "}
-          <small className="font-sans text-sm font-medium normal-case text-race-muted">
-            {copy.veteransUnit}
-          </small>
-        </div>
-        {vet ? (
-          <p className={metaClass}>
-            <ClubName slug={vet.slug} name={vet.name} /> · {vet.count}
-          </p>
-        ) : null}
-      </Tile>
-
-      {data.jubilees.length > 0 ? (
-        <Tile title={copy.jubileesTitle} more={<MoreLink view="jubilea" label={copy.moreView} />}>
+      <Tile title={copy.jubileesTitle} more={<MoreLink view="jubilea" label={copy.moreView} />}>
+        {data.jubilees.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {data.jubilees.map((group) => (
               <li key={group.nth}>
@@ -314,8 +310,10 @@ function OverviewGrid({
               </li>
             ))}
           </ul>
-        </Tile>
-      ) : null}
+        ) : (
+          <p className={metaClass}>{copy.empty}</p>
+        )}
+      </Tile>
 
       <Tile
         title={copy.t("listTitle")}

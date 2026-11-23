@@ -849,8 +849,8 @@
     "suggestLabel": "Підказки назв клубів",
     "suggestHint": "Почніть вводити назву, зокрема колишню. Підказки допомагають доповнити пошук.",
     "hubMetaTitle": "Клуби — цікаві погляди",
-    "hubIntro": "Серії стартів, розміри команд, категорійні перемоги та інші погляди на клуби. Список із пошуком — лише один із них.",
-    "hubLead": "{clubs, plural, one {# клуб} few {# клуби} many {# клубів} other {# клубу}} за {editions} років, {starts} фінішів у кольорах клубу.",
+    "hubIntro": "Серії стартів, розміри команд, категорійні перемоги та інші погляди на клуби.",
+    "hubLead": "За {editions} років є {starts} фінішів у кольорах {clubs, plural, one {# клубу} few {# клубів} many {# клубів} other {# клубу}}.",
     "unlinkedNote": "Ще {count} фінішів не прив’язано до жодного клубу.",
     "navLabel": "Погляди на клуби",
     "viewOverview": "Огляд",
@@ -917,7 +917,8 @@
     "cardReturn": "Найцікавіше повернення: {club} {gap}",
     "veteransUnit": "ветеранів",
     "hubViewMetaTitle": "{view} — Клуби",
-    "cardReturnGap": "{count, plural, one {після # року} few {після # років} many {після # років} other {після # року}}"
+    "cardReturnGap": "{count, plural, one {після # року} few {після # років} many {після # років} other {після # року}}",
+    "hubLeadUnlinked": "За {editions} років є {starts} фінішів у кольорах {clubs, plural, one {# клубу} few {# клубів} many {# клубів} other {# клубу}}, ще {unlinked} лишилося без клубу."
   },
   "Messages": {
     "title": "Повідомлення",

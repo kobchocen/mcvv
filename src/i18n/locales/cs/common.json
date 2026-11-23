@@ -938,8 +938,8 @@
     "suggestLabel": "Našeptávač názvů klubů",
     "suggestHint": "Začněte psát název, i dřívější. Návrhy pomáhají hledání doplnit.",
     "hubMetaTitle": "Kluby — pohledy a zajímavosti",
-    "hubIntro": "Šňůry, výpravy, kategoriální vítězství a další pohledy na oddíly, které kdy doběhly Malou cenu Velké Verandy. Seznam s vyhledáváním je jeden z pohledů.",
-    "hubLead": "{clubs, plural, one {# klub} few {# kluby} other {# klubů}} v {editions} ročnících, {starts} startů v barvách klubu.",
+    "hubIntro": "Šňůry, výpravy, kategoriální vítězství a další pohledy na oddíly, které kdy doběhly Malou cenu Velké Verandy.",
+    "hubLead": "V {editions} ročnících je {starts} startů v barvách {clubs, plural, one {# klubu} few {# klubů} other {# klubů}}.",
     "unlinkedNote": "Dalších {count} startů není přiřazeno k žádnému klubu.",
     "navLabel": "Pohledy na kluby",
     "viewOverview": "Přehled",
@@ -1006,7 +1006,8 @@
     "cardReturn": "Nejzajímavější návrat: {club} {gap}",
     "veteransUnit": "veteránů",
     "hubViewMetaTitle": "{view} — Kluby",
-    "cardReturnGap": "{count, plural, one {po # roce} few {po # letech} other {po # letech}}"
+    "cardReturnGap": "{count, plural, one {po # roce} few {po # letech} other {po # letech}}",
+    "hubLeadUnlinked": "V {editions} ročnících je {starts} startů v barvách {clubs, plural, one {# klubu} few {# klubů} other {# klubů}}, dalších {unlinked} zůstalo bez klubu."
   },
   "ClubCleanup": {
     "title": "Úklid sirotků v číselníku klubů",

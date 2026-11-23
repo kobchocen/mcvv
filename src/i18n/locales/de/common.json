@@ -849,8 +849,8 @@
     "suggestLabel": "Namensvorschläge für Vereine",
     "suggestHint": "Beginnen Sie zu tippen, auch frühere Namen. Die Vorschläge ergänzen die Suche.",
     "hubMetaTitle": "Vereine — Einblicke und Rekorde",
-    "hubIntro": "Serien, Mannschaftsstärken, Kategorie-Siege und weitere Einblicke. Das durchsuchbare Verzeichnis ist nur eine der Ansichten.",
-    "hubLead": "{clubs, plural, one {# Verein} other {# Vereine}} in {editions} Jahrgängen, {starts} Zieleinläufe in Vereinsfarben.",
+    "hubIntro": "Serien, Mannschaftsstärken, Kategorie-Siege und weitere Einblicke.",
+    "hubLead": "In {editions} Jahrgängen gibt es {starts} Zieleinläufe in den Farben von {clubs, plural, one {# Verein} other {# Vereinen}}.",
     "unlinkedNote": "Weitere {count} Zieleinläufe sind keinem Verein zugeordnet.",
     "navLabel": "Vereinsansichten",
     "viewOverview": "Überblick",
@@ -917,7 +917,8 @@
     "cardReturn": "Interessanteste Rückkehr: {club} {gap}",
     "veteransUnit": "Veteranen",
     "hubViewMetaTitle": "{view} — Vereine",
-    "cardReturnGap": "{count, plural, one {nach # Jahr} other {nach # Jahren}}"
+    "cardReturnGap": "{count, plural, one {nach # Jahr} other {nach # Jahren}}",
+    "hubLeadUnlinked": "In {editions} Jahrgängen gibt es {starts} Zieleinläufe in den Farben von {clubs, plural, one {# Verein} other {# Vereinen}}, weitere {unlinked} sind keinem Verein zugeordnet."
   },
   "Messages": {
     "title": "Nachrichten",

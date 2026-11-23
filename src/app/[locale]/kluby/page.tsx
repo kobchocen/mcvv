@@ -95,12 +95,19 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
         eyebrow: t("eyebrow"),
         title: t("title"),
         intro: t("hubIntro"),
-        lead: t("hubLead", {
-          clubs: data.clubs,
-          editions: data.editions,
-          starts: number(data.finishers - data.unlinkedStarts),
-        }),
-        unlinkedNote: t("unlinkedNote", { count: data.unlinkedStarts }),
+        lead:
+          data.unlinkedStarts > 0
+            ? t("hubLeadUnlinked", {
+                clubs: data.clubs,
+                editions: data.editions,
+                starts: number(data.finishers - data.unlinkedStarts),
+                unlinked: data.unlinkedStarts,
+              })
+            : t("hubLead", {
+                clubs: data.clubs,
+                editions: data.editions,
+                starts: number(data.finishers - data.unlinkedStarts),
+              }),
         navLabel: t("navLabel"),
         men: t("men"),
         women: t("women"),

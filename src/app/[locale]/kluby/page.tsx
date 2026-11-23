@@ -3,14 +3,15 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { McvvClubsHub, type McvvHomepageContent } from "@/components/templates";
 import { redirect, type Locale } from "@/i18n/routing";
-import { getClubInsights } from "@/lib/clubs/cached";
-import { isClubListQuery } from "@/lib/clubs/insights";
+import { getClubDirectory, getClubInsights } from "@/lib/clubs/cached";
+import { isClubListQuery, isClubListView, parseClubHubView } from "@/lib/clubs/insights";
 import { intlTag } from "@/lib/i18n/locale";
 
 type SearchParams = {
   q?: string | string[];
   razeni?: string | string[];
   strana?: string | string[];
+  pohled?: string | string[];
 };
 
 type PageProps = Readonly<{
@@ -21,14 +22,38 @@ type PageProps = Readonly<{
 const first = (value: string | string[] | undefined) =>
   (Array.isArray(value) ? value[0] : value) ?? "";
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale: locale as Locale, namespace: "Clubs" });
-  return { title: t("hubMetaTitle"), description: t("hubIntro") };
+  const pohled = first((await searchParams).pohled);
+  const view = parseClubHubView(pohled);
+  const viewLabel =
+    view === "snury"
+      ? t("viewStreaks")
+      : view === "vernost"
+        ? t("viewLoyal")
+        : view === "vypravy"
+          ? t("viewExpeditions")
+          : view === "novacci"
+            ? t("viewNewcomers")
+            : view === "medaile"
+              ? t("viewMedals")
+              : view === "male-kluby"
+                ? t("viewSmall")
+                : view === "veterani"
+                  ? t("viewVeterans")
+                  : view === "jubilea"
+                    ? t("viewJubilees")
+                    : null;
+  return {
+    title: viewLabel ? t("hubViewMetaTitle", { view: viewLabel }) : t("hubMetaTitle"),
+    description: t("hubIntro"),
+  };
 }
 
 /**
- * Club insights hub. Legacy list URLs (`q`, `razeni`, `strana`) redirect to /kluby/seznam.
+ * Club insights hub. Legacy list URLs (`q`, `razeni`, `strana`) and ?pohled=seznam
+ * redirect to /kluby/seznam. Other `pohled` values open a single view tab.
  */
 export default async function ClubsHubPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
@@ -38,7 +63,8 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
   const q = first(query.q).trim().slice(0, 80);
   const razeni = first(query.razeni);
   const strana = first(query.strana);
-  if (isClubListQuery({ q, razeni, strana })) {
+  const pohled = first(query.pohled);
+  if (isClubListQuery({ q, razeni, strana }) || isClubListView(pohled)) {
     const next: Record<string, string> = {};
     if (q) next.q = q;
     if (razeni) next.razeni = razeni;
@@ -46,10 +72,12 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
     redirect({ href: { pathname: "/kluby/seznam", query: next }, locale });
   }
 
-  const [home, t, data] = await Promise.all([
+  const view = parseClubHubView(pohled);
+  const [home, t, data, directory] = await Promise.all([
     getTranslations({ locale, namespace: "Home" }),
     getTranslations({ locale, namespace: "Clubs" }),
     getClubInsights(),
+    getClubDirectory(),
   ]);
   const number = (value: number) => new Intl.NumberFormat(intlTag(locale)).format(value);
   const perfect = data.streaks.filter((row) => row.length === data.editions);
@@ -60,6 +88,9 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
       brand={home.raw("brand") as McvvHomepageContent["brand"]}
       nav={home.raw("nav") as McvvHomepageContent["nav"]}
       data={data}
+      view={view}
+      suggestNames={directory.map((row) => row.name)}
+      listAction={`/${locale}/kluby/seznam`}
       copy={{
         eyebrow: t("eyebrow"),
         title: t("title"),
@@ -71,7 +102,6 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
         }),
         unlinkedNote: t("unlinkedNote", { count: data.unlinkedStarts }),
         navLabel: t("navLabel"),
-        toList: t("toList"),
         men: t("men"),
         women: t("women"),
         wins: t("wins"),
@@ -92,6 +122,8 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
         expeditionsLead: t("expeditionsLead"),
         expeditionsMax: t("expeditionsMax"),
         expeditionsAll: t("expeditionsAll"),
+        expeditionsUnit: t("expeditionsUnit"),
+        expeditionsChart: t("expeditionsChart"),
         colYear: t("colYear"),
         colSize: t("colSize"),
         newcomersTitle: t("newcomersTitle"),
@@ -105,6 +137,8 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
         returnsGap: t("returnsGap"),
         returnsLast: t("returnsLast"),
         yearsCount: (count) => t("yearsCount", { count }),
+        cardReturn: (club, gap) =>
+          t("cardReturn", { club, gap: t("cardReturnGap", { count: gap }) }),
         medalsTitle: t("medalsTitle"),
         medalsLead: t("medalsLead"),
         smallTitle: t("smallTitle"),
@@ -116,8 +150,12 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
         veteransCount: t("veteransCount"),
         veteransExamples: t("veteransExamples"),
         veteransAll: t("veteransAll"),
+        veteransUnit: t("veteransUnit"),
         jubileesTitle: t("jubileesTitle", { year: data.nextYear }),
         jubileeNth: (n) => t("jubileeNth", { n }),
+        moreView: t("moreView"),
+        moreList: t("moreList"),
+        showMoreCount: (count) => t("showMoreCount", { count }),
         counters: [
           { value: number(data.clubs), label: t("counterClubs") },
           {

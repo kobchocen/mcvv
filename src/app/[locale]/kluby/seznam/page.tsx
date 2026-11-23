@@ -171,11 +171,13 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
                   <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
                     <th className="py-2 pr-4">{sortLink("nazev", copy("club"))}</th>
                     <th className="py-2 pr-4 text-right">{sortLink("starty", copy("starts"))}</th>
-                    <th className="py-2 pr-4 text-right">{copy("runners")}</th>
+                    <th className="hidden py-2 pr-4 text-right sm:table-cell">{copy("runners")}</th>
                     <th className="py-2 pr-4 text-right">
                       {sortLink("rocniky", copy("editions"))}
                     </th>
-                    <th className="py-2">{sortLink("posledni", copy("years"))}</th>
+                    <th className="hidden py-2 sm:table-cell">
+                      {sortLink("posledni", copy("years"))}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,9 +191,13 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
                         />
                       </td>
                       <td className="py-2 pr-4 text-right tabular-nums">{row.starts}</td>
-                      <td className="py-2 pr-4 text-right tabular-nums">{row.runners}</td>
+                      <td className="hidden py-2 pr-4 text-right tabular-nums sm:table-cell">
+                        {row.runners}
+                      </td>
                       <td className="py-2 pr-4 text-right tabular-nums">{row.editions}</td>
-                      <td className="py-2 tabular-nums text-race-muted">{years(row)}</td>
+                      <td className="hidden py-2 tabular-nums text-race-muted sm:table-cell">
+                        {years(row)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

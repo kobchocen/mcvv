@@ -906,7 +906,18 @@
     "openProfile": "Vereinsprofil",
     "colYear": "Jahr",
     "colSize": "Zieleinläufe",
-    "emptyView": "Für diese Ansicht gibt es noch keine Daten."
+    "emptyView": "Für diese Ansicht gibt es noch keine Daten.",
+    "viewJubilees": "Jubiläen",
+    "showMore": "Mehr anzeigen",
+    "showMoreCount": "Mehr anzeigen ({count})",
+    "moreView": "Ganze Ansicht",
+    "moreList": "Liste öffnen",
+    "expeditionsUnit": "Finisher",
+    "expeditionsChart": "Größte Expedition des Jahrgangs",
+    "cardReturn": "Interessanteste Rückkehr: {club} {gap}",
+    "veteransUnit": "Veteranen",
+    "hubViewMetaTitle": "{view} — Vereine",
+    "cardReturnGap": "{count, plural, one {nach # Jahr} other {nach # Jahren}}"
   },
   "Messages": {
     "title": "Nachrichten",

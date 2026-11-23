@@ -87,6 +87,8 @@ export type ClubInsights = {
   veterans: VeteranClubRow[];
   jubilees: JubileeGroup[];
   clubsPerYear: { year: number; clubs: number }[];
+  /** Largest single-club expedition in each edition, chronological. */
+  expeditionsByYear: ExpeditionRow[];
 };
 
 const JUBILEE_NTH = [10, 20, 25, 30, 34] as const;
@@ -354,6 +356,24 @@ export function computeClubInsights(
     return { year, clubs: ids.size };
   });
 
+  const expeditionsByYear: ExpeditionRow[] = [];
+  for (const year of years) {
+    let best: ExpeditionRow | null = null;
+    for (const [id, agg] of byClub) {
+      const size = agg.yearSize.get(year) ?? 0;
+      if (size <= 0) continue;
+      const row = { ...ref(id), year, size };
+      if (
+        !best ||
+        size > best.size ||
+        (size === best.size && row.name.localeCompare(best.name, "cs") < 0)
+      ) {
+        best = row;
+      }
+    }
+    if (best) expeditionsByYear.push(best);
+  }
+
   return {
     finishers: rows.length,
     unlinkedStarts,
@@ -377,9 +397,38 @@ export function computeClubInsights(
     veterans,
     jubilees,
     clubsPerYear,
+    expeditionsByYear,
   };
 }
 
 export function isClubListQuery(query: { q?: string; razeni?: string; strana?: string }): boolean {
   return Boolean(query.q?.trim() || query.razeni || query.strana);
+}
+
+/** Tab slugs for /kluby?pohled=… (empty string is the overview). */
+export const CLUB_HUB_VIEWS = [
+  "",
+  "snury",
+  "vernost",
+  "vypravy",
+  "novacci",
+  "medaile",
+  "male-kluby",
+  "veterani",
+  "jubilea",
+] as const;
+
+export type ClubHubView = (typeof CLUB_HUB_VIEWS)[number];
+
+export function parseClubHubView(raw?: string | null): ClubHubView {
+  const value = raw?.trim() ?? "";
+  return (CLUB_HUB_VIEWS as readonly string[]).includes(value) ? (value as ClubHubView) : "";
+}
+
+export function isClubListView(raw?: string | null): boolean {
+  return (raw?.trim() ?? "") === "seznam";
+}
+
+export function clubHubHref(view: ClubHubView = "") {
+  return view ? { pathname: "/kluby" as const, query: { pohled: view } } : ("/kluby" as const);
 }

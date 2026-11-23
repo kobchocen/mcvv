@@ -995,7 +995,18 @@
     "openProfile": "Profil klubu",
     "colYear": "Rok",
     "colSize": "Finišerů",
-    "emptyView": "Pro tento pohled zatím nejsou data."
+    "emptyView": "Pro tento pohled zatím nejsou data.",
+    "viewJubilees": "Jubilea",
+    "showMore": "Zobrazit víc",
+    "showMoreCount": "Zobrazit víc ({count})",
+    "moreView": "Celý pohled",
+    "moreList": "Otevřít seznam",
+    "expeditionsUnit": "finišerů",
+    "expeditionsChart": "Největší výprava v ročníku",
+    "cardReturn": "Nejzajímavější návrat: {club} {gap}",
+    "veteransUnit": "veteránů",
+    "hubViewMetaTitle": "{view} — Kluby",
+    "cardReturnGap": "{count, plural, one {po # roce} few {po # letech} other {po # letech}}"
   },
   "ClubCleanup": {
     "title": "Úklid sirotků v číselníku klubů",

@@ -5,7 +5,9 @@ import { createClubResolver, type ClubNameRow } from "./core";
 import {
   computeClubInsights,
   isClubListQuery,
+  isClubListView,
   longestStreak,
+  parseClubHubView,
   veteranThreshold,
   type ClubInsightInput,
 } from "./insights";
@@ -130,6 +132,15 @@ describe("computeClubInsights", () => {
     assert.ok(small);
     assert.equal(small?.wins, 1);
     assert.equal(small?.starts, 3);
+
+    assert.deepEqual(
+      data.expeditionsByYear.map((row) => [row.year, row.id, row.size]),
+      [
+        [2020, "TNM", 2],
+        [2021, "CHC", 1],
+        [2022, "CHC", 2],
+      ],
+    );
   });
 
   it("does not treat a first-year club as a return", () => {
@@ -142,5 +153,15 @@ describe("computeClubInsights", () => {
     assert.equal(data.newcomersLatestCount, 1);
     assert.equal(data.newcomers[0]?.id, "TNM");
     assert.equal(data.returns.length, 0);
+  });
+});
+
+describe("parseClubHubView", () => {
+  it("accepts known pohled values and treats seznam as the list view", () => {
+    assert.equal(parseClubHubView(undefined), "");
+    assert.equal(parseClubHubView("snury"), "snury");
+    assert.equal(parseClubHubView("neznamy"), "");
+    assert.equal(isClubListView("seznam"), true);
+    assert.equal(isClubListView("snury"), false);
   });
 });

@@ -59,6 +59,6 @@ export const getClubInsights = unstable_cache(
     const [index, rows] = await Promise.all([getClubIndex(), loadClubInsightInput()]);
     return computeClubInsights(rows, createClubResolver(index));
   },
-  ["club-insights-v1"],
+  ["club-insights-v2"],
   CLUB_CACHE,
 );

@@ -995,7 +995,18 @@
     "openProfile": "Club profile",
     "colYear": "Year",
     "colSize": "Finishers",
-    "emptyView": "There is no data for this view yet."
+    "emptyView": "There is no data for this view yet.",
+    "viewJubilees": "Jubilees",
+    "showMore": "Show more",
+    "showMoreCount": "Show more ({count})",
+    "moreView": "Full view",
+    "moreList": "Open the list",
+    "expeditionsUnit": "finishers",
+    "expeditionsChart": "Largest expedition of the year",
+    "cardReturn": "Most interesting return: {club} {gap}",
+    "veteransUnit": "veterans",
+    "hubViewMetaTitle": "{view} — Clubs",
+    "cardReturnGap": "{count, plural, one {after # year} other {after # years}}"
   },
   "ClubCleanup": {
     "title": "Clean up orphan clubs",

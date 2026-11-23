@@ -17,6 +17,7 @@ import {
   splitScope,
   starterScope,
   v2Allows,
+  defaultLevel,
   v2HasAdminHome,
   type AccessLevel,
 } from "@/lib/admin/permissions";
@@ -24,7 +25,7 @@ import { ADMIN_SECTIONS } from "@/lib/admin/sections";
 import { hasAdminHome, isStaffRole, type UserRole } from "@/lib/auth/roles";
 import { stationsForScope, allowedStationsFor } from "@/lib/live/assignment-core";
 import { starterAccess, starterAccessFor } from "@/lib/live/starter-api-core";
-import { grantsFromLegacyRole } from "@/lib/auth/staff-roles";
+import { grantsFromLegacyRole, STAFF_ROLES } from "@/lib/auth/staff-roles";
 
 const ROLES: UserRole[] = [
   "registrar",
@@ -94,6 +95,24 @@ describe("permissions engine – ekvivalence s dnešními rolemi", () => {
           `${role} ${item.id}`,
         );
       }
+    }
+  });
+
+  it("rodičovské sekce Obrazovky a Kancelář kopírují přístup k podsekcím", () => {
+    const screenChildren = SECTION_IDS.filter((id) => id.startsWith("screens."));
+    const officeChildren = SECTION_IDS.filter((id) => id.startsWith("raceOffice."));
+    const rank = { none: 0, read: 1, write: 2 } as const;
+    const maxOf = (role: (typeof STAFF_ROLES)[number], ids: typeof SECTION_IDS) => {
+      let best: keyof typeof rank = "none";
+      for (const id of ids) {
+        const level = defaultLevel(role, id);
+        if (rank[level] > rank[best]) best = level;
+      }
+      return best;
+    };
+    for (const role of STAFF_ROLES) {
+      assert.equal(defaultLevel(role, "screens"), maxOf(role, screenChildren), `screens ${role}`);
+      assert.equal(defaultLevel(role, "raceOffice"), maxOf(role, officeChildren), `office ${role}`);
     }
   });
 

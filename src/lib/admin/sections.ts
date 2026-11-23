@@ -13,6 +13,7 @@
  */
 import {
   canAccessRaceDay,
+  canAccessScreens,
   canAccessSplits,
   canAccessStarter,
   canManageSaleItems,
@@ -103,11 +104,13 @@ export type AdminNavHref =
   | "/admin/den-zavodu/zive/cil"
   | "/admin/den-zavodu/vysledky"
   | "/admin/den-zavodu/trat"
+  | "/admin/obrazovky"
   | "/cil"
   | "/start"
   | "/mezicasy"
   | "/mezicasy/speaker"
   | "/resultboard"
+  | "/admin/kancelar"
   | "/kancelar"
   | "/kancelar/prodejky"
   | "/kancelar/polozky"
@@ -257,6 +260,8 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
         id: "screens",
         label: "screens",
         icon: "screens",
+        href: "/admin/obrazovky",
+        allowed: canAccessScreens,
         children: [
           {
             id: "screens.starter",
@@ -299,6 +304,8 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
         id: "raceOffice",
         label: "raceOffice",
         icon: "raceOffice",
+        href: "/admin/kancelar",
+        allowed: canUseCashDesk,
         children: [
           {
             id: "raceOffice.cash",

@@ -69,6 +69,9 @@ export default defineRouting({
     // editor oprávnění rolí (P8, jen při zapnutém permissions.v2)
     "/admin/opravneni": "/admin/opravneni",
     "/admin/den-zavodu": "/admin/den-zavodu",
+    // rozcestníky obrazovek dne závodu a závodní kanceláře
+    "/admin/obrazovky": "/admin/obrazovky",
+    "/admin/kancelar": "/admin/kancelar",
     // po závodě: tombola (#128)
     "/admin/po-zavode": "/admin/po-zavode",
     // závodní kancelář: pokladna a prodejky (#207)

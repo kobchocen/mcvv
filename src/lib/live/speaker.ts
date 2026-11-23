@@ -14,6 +14,7 @@ import {
 import { startInstant } from "./start-time";
 import { FINISH_SPLIT, type Station } from "./stations";
 import { getActiveTestRun } from "./test-run";
+import { clubDictionary } from "./online-results-core";
 
 /** Jak dlouho sdílí všechny obrazovky jeden snímek z DB (polling klienta je 5 s). */
 export const SPEAKER_CACHE_MS = 3000;
@@ -29,12 +30,14 @@ export async function loadSpeakerSnapshot(now = new Date()): Promise<SpeakerSnap
     getPublicStations(),
     getActiveTestRun(now),
   ]);
-  const { categories, runners, tr, pts, pp } = await loadRaceRunners(ctx, stations);
+  const { categories, runners, tr, clubs: clubOf, pts, pp } = await loadRaceRunners(ctx, stations);
+  const { clubs, indexOf } = clubDictionary(runners.map((r) => clubOf.get(r.bib)));
   return {
     year: ctx.year,
     test: testRun !== null,
     categories: categories.map((c) => ({ id: c.id, name: c.name, sex: c.sex })),
-    runners,
+    runners: runners.map((r) => ({ ...r, club: indexOf(clubOf.get(r.bib)) })),
+    clubs,
     tr,
     pts,
     pp,

@@ -11,6 +11,9 @@ import {
 } from "@/components/molecules/leader-alert";
 import { RecordBadge, RecordOverlay } from "@/components/molecules/record-alert";
 import { useLeaderAlerts } from "@/hooks/use-leader-alerts";
+import { useTeamLeaderAlerts } from "@/hooks/use-team-leader-alerts";
+import { liveTeamCompetition } from "@/lib/teams/live";
+import { McvvLiveTeamBlock } from "@/components/organisms/mcvv-live-team-block";
 import { useRecordAlerts } from "@/hooks/use-record-alerts";
 import { useTrDemo } from "@/hooks/use-tr-demo";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
@@ -98,6 +101,22 @@ export function McvvSpeakerScreen({
     () => new Map(snapshot.categories.map((c) => [c.id, c])),
     [snapshot.categories],
   );
+  const teamSource = useMemo(
+    () => ({
+      runners: snapshot.runners.map((r) => ({ ...r, club: r.club ?? null })),
+      clubs: snapshot.clubs ?? [],
+      categories: snapshot.categories,
+    }),
+    [snapshot],
+  );
+  const teamCompetition = useMemo(() => liveTeamCompetition(teamSource), [teamSource]);
+  const teamAlert = useTeamLeaderAlerts({
+    source: teamSource,
+    updatedMs,
+    nowMs,
+    resetKey: `${snapshot.year}|${snapshot.test}`,
+    enabled: true,
+  });
   const index = useMemo(() => buildSearchIndex(snapshot.runners), [snapshot.runners]);
   const results = useMemo(() => searchRunners(index, query), [index, query]);
   const card = cardBib === null ? null : (snapshot.runners.find((r) => r.bib === cardBib) ?? null);
@@ -411,6 +430,9 @@ export function McvvSpeakerScreen({
         </div>
       </header>
       <main className={s.grid}>
+        <div className={s.teams} data-testid="speaker-teams">
+          <McvvLiveTeamBlock competition={teamCompetition} alert={teamAlert} compact />
+        </div>
         {snapshot.categories.map((c) => {
           const state = categoryState(grouped.get(c.id) ?? [], now);
           const count =

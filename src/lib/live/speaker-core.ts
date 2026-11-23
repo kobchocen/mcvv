@@ -36,6 +36,8 @@ export type SpeakerRunner = {
   /** Třetí veřejný mezičas (#316); chybí = není nastavený. */
   m3?: number | null;
   fin: number | null;
+  /** Index into `SpeakerSnapshot.clubs`; missing on older snapshots. */
+  club?: number | null;
 };
 
 export type SpeakerCategory = { id: string; name: string; sex: string };
@@ -47,6 +49,8 @@ export type SpeakerSnapshot = {
   test: boolean;
   categories: SpeakerCategory[];
   runners: SpeakerRunner[];
+  /** Číselník klubů startovky (stejný význam jako u online výsledků); chybí u starších snímků. */
+  clubs?: { id: string; name: string; slug: string }[];
   /** Kdo dnes drží / vyrovnal traťový rekord (viz `records-live-core.ts`). */
   tr: TrMark[];
   /** Popisky veřejných mezičasů v pořadí M1, M2, M3 (#316); chybí = výchozí dva. */

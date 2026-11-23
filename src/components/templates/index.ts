@@ -5,3 +5,4 @@ export * from "./mcvv-program-content";
 export * from "./mcvv-program-template";
 export * from "./mcvv-stats-page";
 export * from "./mcvv-stats-overview";
+export * from "./mcvv-team-rules-page";

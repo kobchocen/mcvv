@@ -82,6 +82,84 @@ export function snapshotRows(rows: readonly SplitSnapshotRow[]): (string | numbe
     .map((row) => [row.bib, row.split, row.time, row.author, row.created?.toISOString() ?? null]);
 }
 
+/**
+ * Záznamy stanic v cíli (#366, mcvv_finish_punch / mcvv_finish_bib) se mažou, když výběr
+ * zahrnuje cíl (split 9) a zdroj je „vše“. Filtr zdroje (web / OBD / admin) míří na zápisy
+ * deníku mezičasů, stanice cíle mají vlastní zdroj – s konkrétním zdrojem se proto nemažou.
+ * Bez smazání by přepočet cíle split 9 z ponechaných kliků a čísel znovu vytvořil.
+ */
+export function clearsFinishRecords(filter: ClearFilter): boolean {
+  return filter.source.kind === "all" && filter.splits.includes(FINISH_SPLIT);
+}
+
+export type FinishPunchSnapshotRow = {
+  entryKey: string;
+  punchedAt: Date;
+  source: string;
+  deleted: boolean;
+  note: string | null;
+  userId: number | null;
+  createdAt: Date;
+};
+
+export type FinishBibSnapshotRow = {
+  entryKey: string;
+  bib: number;
+  readAt: Date;
+  sortKey: number;
+  source: string;
+  deleted: boolean;
+  note: string | null;
+  userId: number | null;
+  createdAt: Date;
+};
+
+/**
+ * Snímek smazaných kliků stopek do auditu:
+ * `[entryKey, punchedAt ISO, zdroj, smazáno 0/1, poznámka, userId, created ISO]`, podle času.
+ */
+export function snapshotFinishPunches(
+  rows: readonly FinishPunchSnapshotRow[],
+): (string | number | null)[][] {
+  return [...rows]
+    .sort(
+      (a, b) =>
+        a.punchedAt.getTime() - b.punchedAt.getTime() || a.entryKey.localeCompare(b.entryKey),
+    )
+    .map((row) => [
+      row.entryKey,
+      row.punchedAt.toISOString(),
+      row.source,
+      row.deleted ? 1 : 0,
+      row.note,
+      row.userId,
+      row.createdAt.toISOString(),
+    ]);
+}
+
+/**
+ * Snímek smazaných čísel ze stanice čísel do auditu:
+ * `[entryKey, číslo, readAt ISO, pořadí, zdroj, smazáno 0/1, poznámka, userId, created ISO]`,
+ * podle pořadí.
+ */
+export function snapshotFinishBibs(
+  rows: readonly FinishBibSnapshotRow[],
+): (string | number | null)[][] {
+  return [...rows]
+    .sort((a, b) => a.sortKey - b.sortKey || a.entryKey.localeCompare(b.entryKey))
+    .map((row) => [
+      row.entryKey,
+      row.bib,
+      row.readAt.toISOString(),
+      row.sortKey,
+      row.source,
+      row.deleted ? 1 : 0,
+      row.note,
+      row.userId,
+      row.createdAt.toISOString(),
+    ]);
+}
+
 /** Klíč řádku mcvv_split pro párování se zápisy v deníku. */
 export function splitRowKey(row: { split: string; bib: number; time: number }): string {
   return `${row.split}:${row.bib}:${row.time}`;

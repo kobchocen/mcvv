@@ -15,6 +15,7 @@ import { previewClear } from "@/lib/live/clear";
 import {
   clearableSplits,
   clearBlocked,
+  clearsFinishRecords,
   formatClearSource,
   parseClearFilter,
   type ClearFilter,
@@ -36,6 +37,7 @@ type SearchParams = {
   error?: string;
   cleared?: string;
   entries?: string;
+  finish?: string;
   q?: string;
   all?: string;
   edit?: string;
@@ -162,6 +164,7 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
               {t("clearDone", {
                 splits: Number(sp.cleared) || 0,
                 entries: Number(sp.entries) || 0,
+                finish: Number(sp.finish) || 0,
               })}
             </p>
           ) : null}
@@ -541,6 +544,14 @@ export default async function LiveSplitsPage({ params, searchParams }: PageProps
                     {stationName(code)}: {preview.splits[code] ?? 0}
                   </li>
                 ))}
+                {clearsFinishRecords(requested) ? (
+                  <li data-testid="clear-finish-records">
+                    {t("previewFinish", {
+                      punches: preview.finishPunches,
+                      bibs: preview.finishBibs,
+                    })}
+                  </li>
+                ) : null}
                 <li>
                   {t("filterSource")}: {sourceLabel(sourceValue)}
                 </li>

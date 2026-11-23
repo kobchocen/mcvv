@@ -4,10 +4,13 @@ import { test } from "node:test";
 import {
   clearableSplits,
   clearBlocked,
+  clearsFinishRecords,
   confirmationMatches,
   formatClearSource,
   parseClearFilter,
   parseClearSource,
+  snapshotFinishBibs,
+  snapshotFinishPunches,
   snapshotRows,
   splitRowKey,
 } from "./clear-core";
@@ -76,4 +79,88 @@ test("snapshotRows is compact and sorted by split then bib", () => {
     ],
   );
   assert.equal(splitRowKey({ split: "9", bib: 41, time: 1686 }), "9:41:1686");
+});
+
+test("#366: finish station records are cleared only with the finish and source all", () => {
+  assert.equal(clearsFinishRecords({ splits: ["1", "3", "9"], source: { kind: "all" } }), true);
+  assert.equal(clearsFinishRecords({ splits: ["9"], source: { kind: "all" } }), true);
+  assert.equal(clearsFinishRecords({ splits: ["1", "3"], source: { kind: "all" } }), false);
+  assert.equal(
+    clearsFinishRecords({ splits: ["9"], source: { kind: "source", source: "web" } }),
+    false,
+  );
+  assert.equal(
+    clearsFinishRecords({ splits: ["1", "9"], source: { kind: "source", source: "admin" } }),
+    false,
+  );
+  // výchozí výběr z formuláře (nic nezaškrtnuto) = všechny splity včetně cíle
+  const allowed = clearableSplits([{ code: "1", label: "1,3 km" }]);
+  assert.equal(
+    clearsFinishRecords(parseClearFilter({ splits: [], source: "all" }, allowed)!),
+    true,
+  );
+});
+
+test("#366: finish snapshots are compact, keep soft-deleted rows and sort by time / order", () => {
+  const created = new Date("2026-12-06T09:00:00.000Z");
+  const t1 = new Date("2026-12-06T09:40:01.250Z");
+  const t2 = new Date("2026-12-06T09:41:00.000Z");
+  assert.deepEqual(
+    snapshotFinishPunches([
+      {
+        entryKey: "b",
+        punchedAt: t2,
+        source: "watch",
+        deleted: true,
+        note: "dvojklik",
+        userId: 5,
+        createdAt: created,
+      },
+      {
+        entryKey: "a",
+        punchedAt: t1,
+        source: "admin",
+        deleted: false,
+        note: null,
+        userId: null,
+        createdAt: created,
+      },
+    ]),
+    [
+      ["a", t1.toISOString(), "admin", 0, null, null, created.toISOString()],
+      ["b", t2.toISOString(), "watch", 1, "dvojklik", 5, created.toISOString()],
+    ],
+  );
+  assert.deepEqual(
+    snapshotFinishBibs([
+      {
+        entryKey: "y",
+        bib: 41,
+        readAt: t2,
+        sortKey: 2.5,
+        source: "bibs",
+        deleted: false,
+        note: null,
+        userId: 7,
+        createdAt: created,
+      },
+      {
+        entryKey: "x",
+        bib: 3,
+        readAt: t1,
+        sortKey: 1,
+        source: "bibs",
+        deleted: true,
+        note: "překlep",
+        userId: 7,
+        createdAt: created,
+      },
+    ]),
+    [
+      ["x", 3, t1.toISOString(), 1, "bibs", 1, "překlep", 7, created.toISOString()],
+      ["y", 41, t2.toISOString(), 2.5, "bibs", 0, null, 7, created.toISOString()],
+    ],
+  );
+  assert.deepEqual(snapshotFinishPunches([]), []);
+  assert.deepEqual(snapshotFinishBibs([]), []);
 });

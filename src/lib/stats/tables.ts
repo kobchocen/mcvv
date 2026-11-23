@@ -27,6 +27,8 @@ export type StatsCellData = {
 export type StatsTableData = {
   title?: string;
   columns: string[];
+  /** 0-based indexes of numeric columns: nowrap, tabular figures, never clipped. */
+  numericColumns?: readonly number[];
   rows: StatsCellData[][];
 };
 
@@ -237,6 +239,7 @@ export async function loadStatsSlug(
               t("tymy.colPoints"),
               t("tymy.colFinishers"),
             ],
+            numericColumns: [2, 3],
             rows: years.flatMap((row) => {
               const winners = winnersOf(row.competition, row.year);
               if (winners.length === 0) return [];

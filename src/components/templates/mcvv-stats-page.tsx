@@ -2,6 +2,7 @@ import { CountryFlag } from "@/components/atoms";
 import { McvvPublicNavbar } from "@/components/organisms";
 import { ClubLink, RunnerNameLink, StatsNav, type StatsNavItem } from "@/components/molecules";
 import { Link } from "@/i18n/routing";
+import { statsTableColumnClass } from "@/lib/stats/table-layout";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 
 export type StatsCell = {
@@ -17,6 +18,8 @@ export type StatsCell = {
 export type StatsTable = {
   title?: string;
   columns: string[];
+  /** 0-based indexes of numeric columns: nowrap, tabular figures, never clipped. */
+  numericColumns?: readonly number[];
   rows: StatsCell[][];
 };
 
@@ -42,6 +45,8 @@ export type McvvStatsPageProps = {
   statsNav?: { items: StatsNavItem[]; current: string; ariaLabel: string };
   /** Odkaz na tiskové PDF – jen pro pořadatele/administrátory. */
   print?: { href: string; label: string };
+  /** Optional rules link under the intro (team competition). */
+  rulesLink?: { href: "/souteze-tymu"; label: string };
 };
 
 export function McvvStatsPage({
@@ -59,6 +64,7 @@ export function McvvStatsPage({
   back,
   statsNav,
   print,
+  rulesLink,
 }: McvvStatsPageProps) {
   const maxBar = chart?.reduce((max, bar) => Math.max(max, bar.men + bar.women), 0) ?? 0;
 
@@ -78,6 +84,17 @@ export function McvvStatsPage({
           </h1>
           {intro ? (
             <p className="mt-4 max-w-2xl text-base leading-7 text-race-muted">{intro}</p>
+          ) : null}
+          {rulesLink ? (
+            <p className="mt-3">
+              <Link
+                href={rulesLink.href}
+                data-testid="stats-rules-link"
+                className="text-sm font-semibold text-race-accent underline-offset-2 hover:underline"
+              >
+                {rulesLink.label}
+              </Link>
+            </p>
           ) : null}
           {print ? (
             <p className="mt-4">
@@ -138,11 +155,18 @@ export function McvvStatsPage({
                   </h2>
                 ) : null}
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+                  <table className="w-full border-collapse text-left text-sm">
                     <thead>
                       <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                        {table.columns.map((column) => (
-                          <th key={column} className="py-2 pr-4">
+                        {table.columns.map((column, columnIndex) => (
+                          <th
+                            key={`${column}-${columnIndex}`}
+                            className={statsTableColumnClass(
+                              columnIndex,
+                              table.numericColumns,
+                              "header",
+                            )}
+                          >
                             {column}
                           </th>
                         ))}
@@ -152,7 +176,14 @@ export function McvvStatsPage({
                       {table.rows.map((row, index) => (
                         <tr key={index} className="border-b border-race-line/40">
                           {row.map((cell, cellIndex) => (
-                            <td key={cellIndex} className="py-2.5 pr-4 text-race-muted">
+                            <td
+                              key={cellIndex}
+                              className={statsTableColumnClass(
+                                cellIndex,
+                                table.numericColumns,
+                                "cell",
+                              )}
+                            >
                               {cell.runnerId ? (
                                 <RunnerNameLink id={cell.runnerId} name={cell.text} />
                               ) : cell.clubSlug ? (

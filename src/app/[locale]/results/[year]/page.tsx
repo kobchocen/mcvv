@@ -22,6 +22,8 @@ import { intlTag } from "@/lib/i18n/locale";
 import { isPublicYear } from "@/lib/testmode/public-year";
 import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
 import { getYearTeamCompetition, teamStandingsCopy } from "@/lib/teams";
+import { announcementDiff } from "@/lib/teams/snapshot";
+import { loadTeamAnnouncement } from "@/lib/teams/announcement";
 import { McvvTeamStandings } from "@/components/organisms/mcvv-team-standings";
 
 type PageProps = {
@@ -139,6 +141,11 @@ export default async function ResultsYearPage({ params }: PageProps) {
   };
 
   const teamYear = await getYearTeamCompetition(year);
+  const announcement = await loadTeamAnnouncement(year);
+  const announcementCompare =
+    announcement && teamYear
+      ? announcementDiff(announcement.official, teamYear.competition.official)
+      : null;
 
   const isCs = locale === "cs";
   // de/pl/uk (#273) use the ResultsArchive messages; cs/en keep their original wording.
@@ -306,6 +313,27 @@ export default async function ResultsYearPage({ params }: PageProps) {
               );
             })}
           </div>
+
+          {announcement ? (
+            <div
+              className="mt-10 rounded-lg border border-race-line/55 bg-race-surface px-4 py-3 text-sm"
+              data-testid="team-announcement"
+            >
+              <p className="font-display font-semibold text-foreground dark:text-white">
+                {teamsT("announcedAt")}
+              </p>
+              <ol className="mt-2 space-y-1 text-race-muted">
+                {announcement.official.map((row, index) => (
+                  <li key={`${row.team}-${index}`}>
+                    {row.rank}. {row.team} — {teamsT("pointsAbbr", { points: row.points })}
+                  </li>
+                ))}
+              </ol>
+              {announcementCompare?.changed ? (
+                <p className="mt-2 font-medium text-race-accent">{teamsT("announcedVsOfficial")}</p>
+              ) : null}
+            </div>
+          ) : null}
 
           {teamYear ? (
             <McvvTeamStandings

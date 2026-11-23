@@ -21,6 +21,9 @@ import { RecordBadge, RecordOverlay } from "@/components/molecules/record-alert"
 import { FOLLOW_TOAST_MS, useFollowAlerts, type FollowToast } from "@/hooks/use-follow-alerts";
 import { useFollowed } from "@/hooks/use-followed";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
+import { useTeamLeaderAlerts } from "@/hooks/use-team-leader-alerts";
+import { liveTeamCompetition } from "@/lib/teams/live";
+import { McvvLiveTeamBlock } from "@/components/organisms/mcvv-live-team-block";
 import { useRecordAlerts } from "@/hooks/use-record-alerts";
 import { useTrDemo } from "@/hooks/use-tr-demo";
 import { Link } from "@/i18n/routing";
@@ -114,7 +117,7 @@ function SearchIcon() {
 const subscribeNothing = () => () => {};
 
 /** Pohled místo kategorie: ★ Sledovaní (`?v=sledovani`, `?f=`) nebo přehled klubu (`?klub=<slug>`). */
-type View = { t: "fol" } | { t: "klub"; slug: string };
+type View = { t: "fol" } | { t: "klub"; slug: string } | { t: "tymy" };
 type ShownView = { t: "fol" } | { t: "klub"; club: number };
 
 function viewFromSearch(search: string): View | null {
@@ -122,11 +125,13 @@ function viewFromSearch(search: string): View | null {
   const klub = params.get("klub");
   if (klub) return { t: "klub", slug: klub };
   if (params.get("v") === "sledovani" || params.has("f")) return { t: "fol" };
+  if (params.get("v") === "tymy") return { t: "tymy" };
   return null;
 }
 
 function resolveView(view: View | null, clubs: readonly OnlineClub[]): ShownView | null {
   if (!view || view.t === "fol") return view;
+  if (view.t === "tymy") return null;
   const id = clubIdFromSlug(view.slug);
   const club = clubs.findIndex((c) => c.id === id);
   return club < 0 ? null : { t: "klub", club };
@@ -151,6 +156,7 @@ export function McvvOnlineResults({
   partners = NO_PARTNERS,
 }: Props) {
   const t = useTranslations("OnlineResults");
+  const teamsT = useTranslations("Teams");
   const locale = useLocale();
   const {
     snapshot: wire,
@@ -238,10 +244,17 @@ export function McvvOnlineResults({
   const canNotify = useSyncExternalStore(subscribeNothing, notificationsSupported, () => false);
   const freeze = new URLSearchParams(search).get("ffreeze") === "1";
   const [chosenView, setChosenView] = useState<View | null | undefined>(undefined);
-  const view = resolveView(
-    chosenView === undefined ? viewFromSearch(search) : chosenView,
-    snapshot.clubs,
-  );
+  const rawView = chosenView === undefined ? viewFromSearch(search) : chosenView;
+  const teamsOn = rawView?.t === "tymy";
+  const view = resolveView(teamsOn ? null : rawView, snapshot.clubs);
+  const teamCompetition = useMemo(() => liveTeamCompetition(snapshot), [snapshot]);
+  const teamAlert = useTeamLeaderAlerts({
+    source: snapshot,
+    updatedMs,
+    nowMs,
+    resetKey: String(snapshot.year),
+    enabled: true,
+  });
   const [detailBib, setDetailBib] = useState<number | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const rowOf = (r: OnlineRunner) => states.get(r.cat)?.rows.find((x) => x.runner.bib === r.bib);
@@ -433,7 +446,12 @@ export function McvvOnlineResults({
     setSheetOpen(false);
     setQuery("");
     setSearchOpen(false);
-    const q = next.t === "fol" ? "v=sledovani" : `klub=${encodeURIComponent(next.slug)}`;
+    const q =
+      next.t === "fol"
+        ? "v=sledovani"
+        : next.t === "tymy"
+          ? "v=tymy"
+          : `klub=${encodeURIComponent(next.slug)}`;
     window.history.replaceState(null, "", `/${locale}/vysledky/online?${q}`);
     window.scrollTo({ top: 0 });
   };
@@ -1566,6 +1584,18 @@ export function McvvOnlineResults({
           {mobile ? null : t("tabFollow")}{" "}
           <span className={cx(s.tc, s.num)}>{followed.list.length}</span>
         </button>
+        <button
+          type="button"
+          className={cx(s.tab, teamsOn && s.on)}
+          onClick={() => openView({ t: "tymy" })}
+          aria-current={teamsOn ? "page" : undefined}
+          data-testid="online-tab-teams"
+        >
+          {teamsT("nav")}
+          {teamCompetition.official[0] ? (
+            <span className={cx(s.tc, s.num)}>{teamCompetition.official.length}</span>
+          ) : null}
+        </button>
         {shownView?.club ? (
           <span className={cx(s.tab, s.ctab, s.on)} data-testid="online-tab-club">
             <span className={s.vs}>⌂</span>
@@ -1601,7 +1631,11 @@ export function McvvOnlineResults({
       </div>
       <div className={s.wrap}>
         <main>
-          {shownView ? (
+          {teamsOn ? (
+            <section className={s.cat} data-testid="online-teams-view">
+              <McvvLiveTeamBlock competition={teamCompetition} alert={teamAlert} showPrize />
+            </section>
+          ) : shownView ? (
             shownView.section
           ) : cat && S ? (
             <section className={cx(s.cat, S.done && s.done)} data-testid="online-category">

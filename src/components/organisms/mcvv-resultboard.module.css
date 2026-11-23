@@ -709,3 +709,12 @@ tr.dnsr td {
     animation: none;
   }
 }
+
+.teams {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.8rem 0.7rem;
+  border-top: 1px solid color-mix(in oklab, currentColor 25%, transparent);
+  background: color-mix(in oklab, canvas 8%, transparent);
+  overflow: auto;
+  max-height: 28vh;
+}

@@ -14,6 +14,9 @@ import { useLeaderAlerts } from "@/hooks/use-leader-alerts";
 import { useRecordAlerts } from "@/hooks/use-record-alerts";
 import { useTrDemo } from "@/hooks/use-tr-demo";
 import { useLiveSnapshot } from "@/hooks/use-live-snapshot";
+import { useTeamLeaderAlerts } from "@/hooks/use-team-leader-alerts";
+import { liveTeamCompetition } from "@/lib/teams/live";
+import { McvvLiveTeamBlock } from "@/components/organisms/mcvv-live-team-block";
 import { useResultboardInfo } from "@/hooks/use-resultboard-info";
 import type { LeaderAlert } from "@/lib/live/leader-core";
 import {
@@ -87,6 +90,14 @@ export function McvvResultboard(props: Props) {
   const info = useResultboardInfo(props.initialInfo, props.initialInfoEtag);
   const { config } = info;
   const data = useMemo(() => decodeOnline(wire), [wire]);
+  const teamCompetition = useMemo(() => liveTeamCompetition(data), [data]);
+  const teamAlert = useTeamLeaderAlerts({
+    source: data,
+    updatedMs,
+    nowMs,
+    resetKey: `${data.year}|${props.test}`,
+    enabled: true,
+  });
   const grouped = useMemo(() => byCategory(data.runners), [data]);
   // aktivní body = veřejné mezičasy (nejvýš 3, #316) + cíl
   const outPoints = useMemo(() => pointsFor(data.pts?.length), [data.pts]);
@@ -240,6 +251,9 @@ export function McvvResultboard(props: Props) {
           ))}
         </main>
       )}
+      <div className={s.teams} data-testid="resultboard-teams">
+        <McvvLiveTeamBlock competition={teamCompetition} alert={teamAlert} compact />
+      </div>
       {config.partners.show ? (
         <PartnerBar info={info} qrSvg={props.qrSvg} qrLabel={props.qrLabel} />
       ) : null}

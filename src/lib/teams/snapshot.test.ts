@@ -13,6 +13,7 @@ const competition: TeamCompetition = {
   official: [
     {
       rank: 1,
+      clubId: "ALF",
       team: "Alfa",
       points: 42,
       finishers: 6,
@@ -21,6 +22,7 @@ const competition: TeamCompetition = {
     },
     {
       rank: 2,
+      clubId: "BET",
       team: "Beta",
       points: 40,
       finishers: 8,
@@ -43,8 +45,14 @@ test("round-trips a 12:20 announcement and detects a later official change", () 
   assert.equal(parsed?.official[0]?.team, "Alfa");
   const same = announcementDiff(parsed!.official, competition.official);
   assert.equal(same.changed, false);
-  const changed = announcementDiff(parsed!.official, [
+  const renamedOnly = announcementDiff(parsed!.official, [
     { ...competition.official[0]!, team: "Gama" },
+    competition.official[1]!,
+  ]);
+  // Display name is not the row identity.
+  assert.equal(renamedOnly.changed, false);
+  const changed = announcementDiff(parsed!.official, [
+    { ...competition.official[0]!, clubId: "GAM", team: "Gama" },
     competition.official[1]!,
   ]);
   assert.equal(changed.changed, true);

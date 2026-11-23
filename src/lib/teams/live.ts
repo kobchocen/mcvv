@@ -5,10 +5,11 @@ export type LiveTeamRunner = {
   cat: string;
   name: string;
   fin: number | null;
+  /** Index into `LiveTeamSource.clubs`; null = no club. */
   club: number | null;
 };
 
-export type LiveTeamClub = { name: string };
+export type LiveTeamClub = { id: string; name: string };
 
 export type LiveTeamCategory = { id: string; name: string };
 
@@ -23,12 +24,16 @@ export function liveTeamCompetition(source: LiveTeamSource): TeamCompetition {
   const names = new Map(source.categories.map((category) => [category.id, category.name]));
   const timed = source.runners
     .filter((runner) => runner.fin != null)
-    .map((runner) => ({
-      categoryId: runner.cat,
-      categoryName: names.get(runner.cat) ?? runner.cat,
-      time: runner.fin as number,
-      runnerName: runner.name,
-      clubName: runner.club != null ? (source.clubs[runner.club]?.name ?? null) : null,
-    }));
+    .map((runner) => {
+      const club = runner.club != null ? source.clubs[runner.club] : undefined;
+      return {
+        categoryId: runner.cat,
+        categoryName: names.get(runner.cat) ?? runner.cat,
+        time: runner.fin as number,
+        runnerName: runner.name,
+        clubId: club?.id ?? null,
+        clubName: club?.name ?? null,
+      };
+    });
   return computeTeamCompetition(finishersFromTimedResults(timed));
 }

@@ -11,6 +11,7 @@ function finishers(rows: { cat: string; place: number; name: string; team: strin
       categoryName: row.cat,
       place: row.place,
       runnerName: row.name,
+      clubId: row.team,
       clubName: row.team,
     })),
   );

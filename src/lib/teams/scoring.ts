@@ -1,13 +1,17 @@
 /**
  * Team competition scoring for MCVV (soutěž týmů, 2026 rules).
  *
- * Pure functions, no I/O. A team is the exact club name from the edition's results
- * list after trimming whitespace. Names are not unified (case, punctuation and
- * diacritics all matter). Official standings follow PRAVIDLA.md: points, then more
- * 1st places among counted performances, then more 2nds, and so on; identical
- * series share a rank and the next place is skipped.
+ * Pure functions, no I/O. A team is the club id in the edition (`cis_klub.id` /
+ * `Result.clubId`). Names are display-only and are never used to group or merge
+ * teams. Rows without a club id, or with the placeholder no-club id, are not a
+ * team. Official standings follow PRAVIDLA.md: points, then more 1st places
+ * among counted performances, then more 2nds, and so on; identical series share
+ * a rank and the next place is skipped.
  */
-import { isNoClub } from "@/lib/clubs/core";
+import { clubKey, isNoClub } from "@/lib/clubs/core";
+
+/** Placeholder club id meaning "no club" (`cis_klub` 000). */
+const NO_CLUB_ID = "000";
 
 /** Men (A) and women (F) — the only categories on the 1st–10th scale. */
 export const MAIN_CATEGORY_IDS = ["A", "F"] as const;
@@ -65,7 +69,10 @@ export type TeamFinisher = {
   categoryName?: string;
   place: number;
   runnerName: string;
-  clubName: string | null | undefined;
+  /** Club id in this edition; identity of the team. Missing = not a team. */
+  clubId: string | null | undefined;
+  /** Display name of that id in this edition; not used for grouping. */
+  clubName?: string | null | undefined;
 };
 
 /** A timed result row before category places are assigned. */
@@ -74,7 +81,8 @@ export type TimedTeamResult = {
   categoryName?: string;
   time: number;
   runnerName: string;
-  clubName: string | null | undefined;
+  clubId: string | null | undefined;
+  clubName?: string | null | undefined;
 };
 
 export type CountedPerformance = {
@@ -88,7 +96,9 @@ export type CountedPerformance = {
 export type TeamStanding = {
   /** Official rank; null when the team is unclassified (fewer than MIN_FINISHERS). */
   rank: number | null;
-  /** Exact trimmed club name from the list. */
+  /** Club id in this edition; identity of the team. */
+  clubId: string;
+  /** Display name of this club id in the edition (not a grouping key). */
   team: string;
   points: number;
   finishers: number;
@@ -101,11 +111,16 @@ export type TeamCompetition = {
   unclassified: TeamStanding[];
 };
 
-/** Team key: trim only. Empty / placeholder names are not a team. */
-export function teamKey(clubName: string | null | undefined): string | null {
-  const trimmed = (clubName ?? "").trim();
-  if (!trimmed || isNoClub(trimmed)) return null;
-  return trimmed;
+/** Team key: the club id in this edition. Empty / placeholder ids are not a team. */
+export function teamKey(clubId: string | null | undefined): string | null {
+  const key = clubKey(clubId);
+  if (!key || key === NO_CLUB_ID) return null;
+  return key;
+}
+
+function displayName(clubId: string, clubName: string | null | undefined): string {
+  const name = (clubName ?? "").trim();
+  return name || clubId;
 }
 
 export function finishersFromTimedResults(rows: readonly TimedTeamResult[]): TeamFinisher[] {
@@ -115,6 +130,7 @@ export function finishersFromTimedResults(rows: readonly TimedTeamResult[]): Tea
     categoryName: row.categoryName ?? row.categoryId,
     place: places[index]!,
     runnerName: row.runnerName,
+    clubId: row.clubId,
     clubName: row.clubName,
   }));
 }
@@ -150,7 +166,7 @@ function compareOfficial(a: TeamStanding, b: TeamStanding): number {
   if (b.points !== a.points) return b.points - a.points;
   const series = comparePlaceSeries(placeCounts(a.counted), placeCounts(b.counted));
   if (series !== 0) return series;
-  return a.team.localeCompare(b.team, "cs");
+  return a.team.localeCompare(b.team, "cs") || a.clubId.localeCompare(b.clubId);
 }
 
 function sortCounted(counted: CountedPerformance[]): CountedPerformance[] {
@@ -165,6 +181,7 @@ function sortCounted(counted: CountedPerformance[]): CountedPerformance[] {
  */
 export function computeTeamCompetition(finishers: readonly TeamFinisher[]): TeamCompetition {
   type Acc = {
+    clubId: string;
     team: string;
     finishers: number;
     byCategory: Map<string, CountedPerformance[]>;
@@ -172,12 +189,21 @@ export function computeTeamCompetition(finishers: readonly TeamFinisher[]): Team
   const teams = new Map<string, Acc>();
 
   for (const row of finishers) {
-    const key = teamKey(row.clubName);
+    const key = teamKey(row.clubId);
     if (!key) continue;
+    if (isNoClub(row.clubName)) continue;
     let acc = teams.get(key);
     if (!acc) {
-      acc = { team: key, finishers: 0, byCategory: new Map() };
+      acc = {
+        clubId: key,
+        team: displayName(key, row.clubName),
+        finishers: 0,
+        byCategory: new Map(),
+      };
       teams.set(key, acc);
+    } else if (acc.team === key) {
+      const name = (row.clubName ?? "").trim();
+      if (name) acc.team = name;
     }
     acc.finishers += 1;
     const points = pointsForPlace(row.categoryId, row.place);
@@ -204,6 +230,7 @@ export function computeTeamCompetition(finishers: readonly TeamFinisher[]): Team
     const classified = acc.finishers >= MIN_FINISHERS;
     standings.push({
       rank: null,
+      clubId: acc.clubId,
       team: acc.team,
       points: counted.reduce((sum, item) => sum + item.points, 0),
       finishers: acc.finishers,
@@ -231,7 +258,10 @@ export function computeTeamCompetition(finishers: readonly TeamFinisher[]): Team
     .filter((row) => !row.classified)
     .sort(
       (a, b) =>
-        b.points - a.points || b.finishers - a.finishers || a.team.localeCompare(b.team, "cs"),
+        b.points - a.points ||
+        b.finishers - a.finishers ||
+        a.team.localeCompare(b.team, "cs") ||
+        a.clubId.localeCompare(b.clubId),
     );
 
   return { official, unclassified };

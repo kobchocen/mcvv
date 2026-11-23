@@ -41,3 +41,25 @@ for (const locale of ["cs", "en", "de", "pl", "uk"]) {
     assert.doesNotMatch(blob, /nesluč|nesjednoc/i);
   });
 }
+
+test("cs: typmy intro uses the short approved wording", () => {
+  const raw = readFileSync(new URL("./locales/cs/common.json", import.meta.url), "utf8");
+  const intro = (JSON.parse(raw).Stats.tymy as { intro: string }).intro.trim();
+  assert.equal(
+    intro,
+    "Vítězové ročníků 1993–2025 přepočítaní podle pravidel soutěže týmů 2026. Tým je klub tak, jak je zapsaný ve výsledcích daného roku.",
+  );
+});
+
+for (const locale of ["cs", "en", "de", "pl", "uk"]) {
+  test(`${locale}: typmy intro is two short sentences and does not repeat the 2026 rules`, () => {
+    const raw = readFileSync(new URL(`./locales/${locale}/common.json`, import.meta.url), "utf8");
+    const intro = (JSON.parse(raw).Stats.tymy as { intro: string }).intro.trim();
+    assert.match(intro, /1993–2025/);
+    assert.equal((intro.match(/2026/g) ?? []).length, 1);
+    assert.equal(intro.endsWith("."), true);
+    const sentences = intro.split(/(?<=\.)\s+/);
+    assert.equal(sentences.length, 2);
+    assert.doesNotMatch(intro, /autocomplete/i);
+  });
+}

@@ -27,22 +27,28 @@ export const emptyTeamAlertTracker = (): TeamAlertTracker => ({
 export type LiveFinish = {
   runnerName: string;
   team: string;
+  clubId: string;
 };
 
-/** Finishers present in `next` but not in `prev` (by runner name + team). */
+function finisherKey(clubId: string, runnerName: string): string {
+  return `${clubId}|${runnerName}`;
+}
+
+/** Finishers present in `next` but not in `prev` (by runner name + club id). */
 export function newFinishers(prev: TeamCompetition | null, next: TeamCompetition): LiveFinish[] {
   const seen = new Set<string>();
   if (prev) {
     for (const row of [...prev.official, ...prev.unclassified]) {
-      for (const item of row.counted) seen.add(`${row.team}|${item.runnerName}`);
-      // counted-only would miss non-scoring finishers; also key by team+finishers count later
+      for (const item of row.counted) seen.add(finisherKey(row.clubId, item.runnerName));
     }
   }
   const added: LiveFinish[] = [];
   for (const row of [...next.official, ...next.unclassified]) {
     for (const item of row.counted) {
-      const key = `${row.team}|${item.runnerName}`;
-      if (!seen.has(key)) added.push({ runnerName: item.runnerName, team: row.team });
+      const key = finisherKey(row.clubId, item.runnerName);
+      if (!seen.has(key)) {
+        added.push({ runnerName: item.runnerName, team: row.team, clubId: row.clubId });
+      }
     }
   }
   return added;
@@ -77,8 +83,9 @@ function detectTeamAlert(
   const margin = leadMargin(next.official);
   const until = nowMs + LEADER_HOLD_MS;
 
-  if (!prevLeader || prevLeader.team !== nextLeader.team) {
-    const runner = added.find((item) => item.team === nextLeader.team) ?? added[added.length - 1]!;
+  if (!prevLeader || prevLeader.clubId !== nextLeader.clubId) {
+    const runner =
+      added.find((item) => item.clubId === nextLeader.clubId) ?? added[added.length - 1]!;
     return {
       kind: "new",
       runnerName: runner.runnerName,
@@ -89,7 +96,7 @@ function detectTeamAlert(
     };
   }
 
-  const onLeader = added.find((item) => item.team === nextLeader.team);
+  const onLeader = added.find((item) => item.clubId === nextLeader.clubId);
   if (onLeader) {
     return {
       kind: "held",
@@ -102,7 +109,7 @@ function detectTeamAlert(
   }
 
   const mover = added[added.length - 1]!;
-  const standing = next.official.find((row) => row.team === mover.team);
+  const standing = next.official.find((row) => row.clubId === mover.clubId);
   if (!standing || standing.rank == null) return null;
   return {
     kind: "moved",

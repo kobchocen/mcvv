@@ -5,9 +5,14 @@ import { isHistoricalTeamYear, leadMargin, formatCountedList } from "./format";
 import type { TeamStanding } from "./scoring";
 
 function standing(
-  partial: Pick<TeamStanding, "rank" | "team" | "points" | "finishers">,
+  partial: Pick<TeamStanding, "rank" | "team" | "points" | "finishers"> & { clubId?: string },
 ): TeamStanding {
-  return { ...partial, counted: [], classified: partial.rank != null };
+  return {
+    ...partial,
+    clubId: partial.clubId ?? partial.team,
+    counted: [],
+    classified: partial.rank != null,
+  };
 }
 
 test("years before 2026 are historical back-calculations", () => {

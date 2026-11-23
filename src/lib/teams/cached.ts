@@ -13,12 +13,12 @@ const TEAM_CACHE = { revalidate: 3600, tags: [STATS_CACHE_TAG] };
 
 export const getYearTeamCompetition = unstable_cache(
   loadYearTeamCompetition,
-  ["team-competition-year-v1"],
+  ["team-competition-year-v2"],
   TEAM_CACHE,
 );
 
 export const getAllTeamCompetitions = unstable_cache(
   loadAllTeamCompetitions,
-  ["team-competition-all-v1"],
+  ["team-competition-all-v2"],
   TEAM_CACHE,
 );

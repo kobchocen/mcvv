@@ -2,6 +2,7 @@ import type { TeamCompetition, TeamStanding } from "./scoring";
 
 export type AnnouncementRow = {
   rank: number | null;
+  clubId: string;
   team: string;
   points: number;
   finishers: number;
@@ -20,6 +21,7 @@ export const announcementSettingKey = (year: number) => `teams.announce.${year}`
 export function compactOfficial(competition: TeamCompetition): AnnouncementRow[] {
   return competition.official.map((row) => ({
     rank: row.rank,
+    clubId: row.clubId,
     team: row.team,
     points: row.points,
     finishers: row.finishers,
@@ -63,7 +65,7 @@ export type AnnouncementDiff = {
 };
 
 function rowKey(row: AnnouncementRow): string {
-  return `${row.rank ?? "-"}|${row.team}|${row.points}|${row.finishers}`;
+  return `${row.rank ?? "-"}|${row.clubId}|${row.points}|${row.finishers}`;
 }
 
 export function announcementDiff(
@@ -72,6 +74,7 @@ export function announcementDiff(
 ): AnnouncementDiff {
   const compact = official.map((row) => ({
     rank: row.rank,
+    clubId: row.clubId,
     team: row.team,
     points: row.points,
     finishers: row.finishers,

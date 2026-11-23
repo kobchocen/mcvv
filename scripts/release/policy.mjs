@@ -29,6 +29,8 @@ export function validatePullRequest(head, base) {
     return;
   if (base === "main") return;
   if (releaseBranchPattern.test(base) && /^(bugfix|hotfix|docs|test|ci|build)\//.test(head)) return;
+  // Stacked PRs: a working branch may target its parent working branch.
+  if (workingBranchPattern.test(head) && workingBranchPattern.test(base)) return;
   throw new Error("Unsupported pull request direction");
 }
 

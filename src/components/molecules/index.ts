@@ -1,5 +1,6 @@
 export * from "./record-badge";
 export * from "./stats-nav";
+export * from "./clubs-expandable-table";
 export * from "./back-to-top";
 export * from "./photo-gallery-grid";
 export * from "./photo-lightbox";

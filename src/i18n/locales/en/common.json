@@ -1733,7 +1733,7 @@
     "tymy": {
       "nav": "Teams",
       "title": "Team competition",
-      "intro": "Historical list of winners from the 1993–2025 back-calculation under the 2026 team competition rules. Calculated under the 2026 team competition rules, applied to the historical results list. A team is the club name as it appears on that year’s list.",
+      "intro": "Winners of the 1993–2025 editions recalculated under the 2026 team competition rules. A team is the club as recorded in that year’s results.",
       "colWinner": "Winning team",
       "colPoints": "Points",
       "colFinishers": "Finishers",

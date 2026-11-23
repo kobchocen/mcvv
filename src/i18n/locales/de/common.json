@@ -1077,7 +1077,7 @@
     "tymy": {
       "nav": "Teams",
       "title": "Teamwertung",
-      "intro": "Historische Siegerliste der Rückrechnung 1993–2025 nach den Regeln der Teamwertung 2026. Berechnet nach den Regeln der Teamwertung 2026, angewandt auf die historische Ergebnisliste. Ein Team ist der Clubname, wie er in der Liste dieses Jahres steht.",
+      "intro": "Sieger der Jahrgänge 1993–2025, neu berechnet nach den Regeln der Teamwertung 2026. Ein Team ist der Club, wie er in den Ergebnissen des jeweiligen Jahres steht.",
       "colWinner": "Siegerteam",
       "colPoints": "Punkte",
       "colFinishers": "Finisher",

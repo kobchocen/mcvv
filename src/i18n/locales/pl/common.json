@@ -1077,7 +1077,7 @@
     "tymy": {
       "nav": "Drużyny",
       "title": "Rywalizacja drużynowa",
-      "intro": "Historyczna lista zwycięzców przeliczenia 1993–2025 według zasad rywalizacji drużynowej 2026. Obliczenie według zasad rywalizacji drużynowej 2026, zastosowane do historycznej listy wyników. Drużyna to nazwa klubu tak, jak jest na liście tego roku.",
+      "intro": "Zwycięzcy edycji 1993–2025 przeliczeni według zasad rywalizacji drużynowej 2026. Drużyna to klub tak, jak jest zapisany w wynikach danego roku.",
       "colWinner": "Zwycięska drużyna",
       "colPoints": "Punkty",
       "colFinishers": "Finiszerów",

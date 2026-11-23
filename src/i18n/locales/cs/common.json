@@ -1733,7 +1733,7 @@
     "tymy": {
       "nav": "Týmy",
       "title": "Soutěž týmů",
-      "intro": "Historická listina vítězů zpětného propočtu 1993–2025 podle pravidel soutěže týmů 2026. Propočet podle pravidel soutěže týmů 2026, uplatněný na historickou výsledkovou listinu. Tým je název klubu tak, jak je v listině tohoto roku.",
+      "intro": "Vítězové ročníků 1993–2025 přepočítaní podle pravidel soutěže týmů 2026. Tým je klub tak, jak je zapsaný ve výsledcích daného roku.",
       "colWinner": "Vítězný tým",
       "colPoints": "Body",
       "colFinishers": "Finišerů",

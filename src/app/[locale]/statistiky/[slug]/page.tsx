@@ -33,6 +33,7 @@ export default async function StatsSlugPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const stats = await getTranslations({ locale, namespace: "Stats" });
+  const teams = await getTranslations({ locale, namespace: "Teams" });
   const { tables, chart, chartCaption } = await loadStatsSlug(slug, stats, locale);
   const session = await getSession();
   const print =
@@ -47,6 +48,7 @@ export default async function StatsSlugPage({ params }: PageProps) {
       eyebrow={stats("eyebrow")}
       title={stats(`${slug}.title`)}
       intro={stats(`${slug}.intro`)}
+      rulesLink={slug === "tymy" ? { href: "/souteze-tymu", label: teams("rulesLink") } : undefined}
       tables={tables}
       chart={chart}
       chartCaption={chartCaption}

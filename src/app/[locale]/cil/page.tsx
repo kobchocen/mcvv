@@ -50,7 +50,12 @@ export default async function FinishPage({ params }: PageProps) {
     <main className="min-h-screen bg-race-deep text-foreground">
       <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <McvvTestRunBanner locale={locale} />
-      <McvvFinishClient year={ctx.year} userId={session.id} userName={session.name} />
+      <McvvFinishClient
+        year={ctx.year}
+        userId={session.id}
+        userName={session.name}
+        locale={locale}
+      />
     </main>
   );
 }

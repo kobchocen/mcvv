@@ -767,6 +767,17 @@
     "remove": "Entfernen",
     "quickAddTitle": "{name}, Jahrgang {year}",
     "quickAdd": "Schnellauswahl",
+    "quickHint": "Läufer, die nicht mehr angeboten werden sollen, entfernst du mit dem Kreuz. Aus Anmeldungen und Ergebnissen wird nichts gelöscht.",
+    "quickHide": "{name} nicht mehr anbieten",
+    "quickHiddenNotice": "{name} wird nicht mehr angeboten.",
+    "quickUndo": "Rückgängig",
+    "quickHiddenToggle": "Ausgeblendete Läufer ({count})",
+    "quickHiddenShow": "anzeigen",
+    "quickHiddenCollapse": "ausblenden",
+    "quickRestore": "{name} wieder anbieten",
+    "quickRestoreAll": "Alle wiederherstellen",
+    "quickAllHidden": "Du hast alle Läufer aus der Schnellauswahl ausgeblendet.",
+    "quickError": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
     "newRunner": "Neuer Läufer",
     "firstName": "Vorname",
     "lastName": "Nachname",
@@ -1431,7 +1442,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Schnellauswahl – Läufer aus früheren Jahren",
-        "text": "Die <b>Rychlá nabídka</b> (Schnellauswahl) zeigt alle Läufer, die du in früheren Jahren mit dieser E-Mail-Adresse angemeldet hast. Einfach anklicken – Kategorie und Startgeld werden automatisch ausgefüllt.",
+        "text": "Die <b>Rychlá nabídka</b> (Schnellauswahl) zeigt alle Läufer, die du in früheren Jahren mit dieser E-Mail-Adresse angemeldet hast. Einfach anklicken – Kategorie und Startgeld werden automatisch ausgefüllt. Läufer, die nicht mehr angeboten werden sollen, entfernst du mit dem Kreuz; ausgeblendete Läufer lassen sich wiederherstellen.",
         "tip": "Meldest du einen Verein an? Benenne die Anmeldung zuerst nach dem Verein um und speichere. Die Läufer übernehmen den Verein aus dem Namen der Anmeldung."
       },
       {

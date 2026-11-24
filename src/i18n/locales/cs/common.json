@@ -767,6 +767,17 @@
     "remove": "Odebrat",
     "quickAddTitle": "{name}, ročník {year}",
     "quickAdd": "Rychlá nabídka",
+    "quickHint": "Běžce, kterého už nechcete nabízet, odeberte křížkem. Z přihlášek ani výsledků se nic nesmaže.",
+    "quickHide": "Už nenabízet {name}",
+    "quickHiddenNotice": "{name} se už nebude nabízet.",
+    "quickUndo": "Zpět",
+    "quickHiddenToggle": "Skrytí běžci ({count})",
+    "quickHiddenShow": "zobrazit",
+    "quickHiddenCollapse": "schovat",
+    "quickRestore": "Vrátit do nabídky {name}",
+    "quickRestoreAll": "Vrátit všechny",
+    "quickAllHidden": "Všechny běžce z nabídky máte skryté.",
+    "quickError": "Změnu se nepodařilo uložit. Zkuste to prosím znovu.",
     "newRunner": "Nový běžec",
     "firstName": "Jméno",
     "lastName": "Příjmení",
@@ -2087,7 +2098,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Rychlá nabídka – běžci z minulých let",
-        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy.",
+        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy. Běžce, kterého už nechcete nabízet, odeberete křížkem; skryté běžce můžete zase vrátit.",
         "tip": "Přihlašujete klub? Nejdřív přihlášku přejmenujte na název klubu a uložte. Podle názvu přihlášky se běžcům přiřadí klub."
       },
       {

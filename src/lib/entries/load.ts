@@ -1,7 +1,7 @@
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import { prisma } from "@/lib/db/client";
 import { nextStatus } from "@/lib/entries/status";
-import { buildQuickList, withLastClub } from "@/lib/entries/quick";
+import { buildQuickList, splitQuickHidden, withLastClub } from "@/lib/entries/quick";
 import { currentRaceYear } from "@/lib/entries/year";
 import {
   emailEquals,
@@ -33,7 +33,11 @@ const registrationInclude = {
  * jako dřív (trim + bez ohledu na velikost písmen) a řádky se dočtou jen u vlastních přihlášek.
  * Nezávislé dotazy běží souběžně.
  */
-export async function loadMyEntry(email: string) {
+export async function loadMyEntry(
+  email: string,
+  /** Účet přihlášeného (skrytí běžci z rychlé nabídky, MD-31); null = bez účtu. */
+  userId: number | null = null,
+) {
   const { year, open, deadline, slots } = await currentRaceYear();
   const index = await prisma.registration.findMany({
     select: { year: true, id: true, email: true, status: true, name: true },
@@ -171,7 +175,7 @@ export async function loadMyEntry(email: string) {
     row.lines.map((line) => ({ id: line.runnerId, name: line.runner.name })),
   );
   const pastRunnerIds = [...new Set(pastRunners.map((runner) => runner.id))];
-  const [takenLines, pastLines] =
+  const [takenLines, pastLines, hiddenRows] =
     pastRunnerIds.length > 0
       ? await Promise.all([
           prisma.registrationLine.findMany({
@@ -183,13 +187,17 @@ export async function loadMyEntry(email: string) {
             where: { year: { lt: year }, runnerId: { in: pastRunnerIds } },
             select: { runnerId: true, year: true, clubId: true, club: { select: { name: true } } },
           }),
+          // Běžci, které si účet z nabídky skryl („už nenabízet“, MD-31).
+          userId !== null
+            ? prisma.userQuickHidden.findMany({ where: { userId }, select: { runnerId: true } })
+            : [],
         ])
-      : [[], []];
+      : [[], [], []];
   const thisYearTaken = new Set(takenLines.map((row) => row.runnerId));
   const quickRunners = buildQuickList(
     pastRunners.filter((runner) => !thisYearTaken.has(runner.id)),
   );
-  const quick = withLastClub(
+  const quickAll = withLastClub(
     quickRunners,
     pastLines.map((line) => ({
       runnerId: line.runnerId,
@@ -197,6 +205,10 @@ export async function loadMyEntry(email: string) {
       clubId: line.clubId,
       clubName: line.club.name,
     })),
+  );
+  const { visible: quick, hidden: quickHidden } = splitQuickHidden(
+    quickAll,
+    hiddenRows.map((row) => row.runnerId),
   );
 
   let registration = current;
@@ -234,7 +246,10 @@ export async function loadMyEntry(email: string) {
     slots,
     cancelled,
     past: minePast,
+    /** Rychlá nabídka bez běžců skrytých účtem. */
     quick,
+    /** Běžci z nabídky skrytí účtem (lze je vrátit). */
+    quickHidden,
     payments,
   };
 }

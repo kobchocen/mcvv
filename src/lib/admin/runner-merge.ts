@@ -4,6 +4,8 @@
  */
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { moveQuickHidden } from "@/lib/entries/quick-hidden-move";
+
 import {
   planRunnerMerge,
   type RunnerMergeResult,
@@ -144,6 +146,8 @@ export async function applyRunnerMerge(
       where: { partnerId: otherId },
       data: { partnerId: mainId },
     });
+    // Skrytí v rychlé nabídce účtů (MD-31) patří sloučenému běžci.
+    await moveQuickHidden(tx, otherId, mainId);
     if (plan.nationality) {
       await tx.runner.update({ where: { id: mainId }, data: { nationality: plan.nationality } });
     }

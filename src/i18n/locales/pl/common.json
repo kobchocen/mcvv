@@ -767,6 +767,17 @@
     "remove": "Usuń",
     "quickAddTitle": "{name}, rocznik {year}",
     "quickAdd": "Szybki wybór",
+    "quickHint": "Zawodnika, którego nie chcesz już widzieć w propozycjach, usuń krzyżykiem. Ze zgłoszeń ani wyników nic nie zostanie usunięte.",
+    "quickHide": "Nie proponuj już: {name}",
+    "quickHiddenNotice": "Nie proponujemy już: {name}.",
+    "quickUndo": "Cofnij",
+    "quickHiddenToggle": "Ukryci zawodnicy ({count})",
+    "quickHiddenShow": "pokaż",
+    "quickHiddenCollapse": "zwiń",
+    "quickRestore": "Przywróć do propozycji: {name}",
+    "quickRestoreAll": "Przywróć wszystkich",
+    "quickAllHidden": "Wszyscy zawodnicy z szybkiego wyboru są ukryci.",
+    "quickError": "Nie udało się zapisać zmiany. Spróbuj ponownie.",
     "newRunner": "Nowy zawodnik",
     "firstName": "Imię",
     "lastName": "Nazwisko",
@@ -1431,7 +1442,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Szybki wybór – zawodnicy z poprzednich lat",
-        "text": "<b>Rychlá nabídka</b> (Szybki wybór) pokazuje wszystkich zawodników, których zgłaszałeś z tego e-maila w poprzednich latach. Wystarczy ich kliknąć – kategoria i opłata uzupełnią się automatycznie.",
+        "text": "<b>Rychlá nabídka</b> (Szybki wybór) pokazuje wszystkich zawodników, których zgłaszałeś z tego e-maila w poprzednich latach. Wystarczy ich kliknąć – kategoria i opłata uzupełnią się automatycznie. Zawodnika, którego nie chcesz już widzieć w propozycjach, usuniesz krzyżykiem; ukrytych zawodników można przywrócić.",
         "tip": "Zgłaszasz klub? Najpierw zmień nazwę zgłoszenia na nazwę klubu i zapisz. Zawodnicy przejmują klub z nazwy zgłoszenia."
       },
       {

@@ -767,6 +767,17 @@
     "remove": "Remove",
     "quickAddTitle": "{name}, born {year}",
     "quickAdd": "Quick add",
+    "quickHint": "Use the cross to remove a runner you no longer want suggested. Nothing is deleted from entries or results.",
+    "quickHide": "Stop suggesting {name}",
+    "quickHiddenNotice": "{name} will no longer be suggested.",
+    "quickUndo": "Undo",
+    "quickHiddenToggle": "Hidden runners ({count})",
+    "quickHiddenShow": "show",
+    "quickHiddenCollapse": "hide",
+    "quickRestore": "Suggest {name} again",
+    "quickRestoreAll": "Restore all",
+    "quickAllHidden": "You have hidden all runners from quick add.",
+    "quickError": "The change could not be saved. Please try again.",
     "newRunner": "New runner",
     "firstName": "First name",
     "lastName": "Last name",
@@ -2087,7 +2098,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Quick add – runners from previous years",
-        "text": "<b>Rychlá nabídka</b> (Quick add) lists all runners you entered from this e-mail in previous years. Just click them – category and fee are filled in automatically.",
+        "text": "<b>Rychlá nabídka</b> (Quick add) lists all runners you entered from this e-mail in previous years. Just click them – category and fee are filled in automatically. Use the cross to remove a runner you no longer want suggested; hidden runners can be restored.",
         "tip": "Entering a club? Rename the entry to the club name and save it first. Runners get their club from the entry name."
       },
       {

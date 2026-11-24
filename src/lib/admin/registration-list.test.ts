@@ -72,4 +72,16 @@ describe("admin entry list layout", () => {
     assert.match(timeline, /<details className=/);
     assert.doesNotMatch(timeline, /<details open/);
   });
+
+  it("shows a short free badge with the full text for hover and screen readers", () => {
+    assert.match(source, /copy\("freeAutoConfirmedShort"\)/);
+    assert.match(source, /title=\{copy\("freeAutoConfirmed"\)\}/);
+    assert.match(source, /aria-label=\{copy\("freeAutoConfirmed"\)\}/);
+  });
+
+  it("keeps entry icons on the e-mail line so the name gets the full width", () => {
+    const meta = source.indexOf('data-testid="regs-entry-meta"');
+    assert.ok(meta > 0);
+    assert.ok(source.indexOf("<McvvMessageBubble", meta) > meta);
+  });
 });

@@ -1498,6 +1498,7 @@
     "status4": "Overpaid",
     "status5": "Confirmed",
     "freeAutoConfirmed": "Free – confirmed automatically",
+    "freeAutoConfirmedShort": "Free",
     "statusUnknown": "—",
     "filter": "Filter",
     "includeCancelled": "include cancelled",

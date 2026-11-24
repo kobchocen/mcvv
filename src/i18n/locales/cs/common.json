@@ -1498,6 +1498,7 @@
     "status4": "Přeplacená",
     "status5": "Potvrzená",
     "freeAutoConfirmed": "Zdarma – potvrzeno automaticky",
+    "freeAutoConfirmedShort": "Zdarma",
     "statusUnknown": "—",
     "filter": "Filtrovat",
     "includeCancelled": "včetně zrušených",

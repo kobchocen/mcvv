@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { Check, MailX } from "lucide-react";
+import { Check, MailX, Zap } from "lucide-react";
 
 import { paymentRegistrationId } from "@/lib/admin/parse";
 import {
@@ -381,11 +381,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <table className="block w-full border-collapse text-left text-sm @2xl:table @2xl:table-fixed">
               <colgroup className="hidden @2xl:table-column-group">
                 <col />
-                <col className="w-[6.5rem]" />
-                <col className="w-[3.75rem]" />
-                <col className="w-[6rem]" />
-                <col className="w-[6.5rem]" />
-                <col className="w-[8.5rem]" />
+                <col className="w-[6.25rem]" />
+                <col className="w-[3.5rem]" />
+                <col className="w-[5.75rem]" />
+                <col className="w-[6.25rem]" />
+                <col className="w-[7.25rem]" />
               </colgroup>
               <thead className="hidden @2xl:table-header-group">
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
@@ -461,9 +461,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       <td className="col-span-3 row-start-1 min-w-0 @2xl:py-2.5 @2xl:pr-3">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <span className="shrink-0 text-xs text-race-dim tabular-nums">
-                            #{row.id}
-                          </span>
                           <Link
                             href={detailHref(row)}
                             className={cn(
@@ -477,6 +474,22 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                           >
                             {label}
                           </Link>
+                        </div>
+                        <div
+                          className="mt-0.5 flex min-w-0 items-center gap-1.5"
+                          data-testid="regs-entry-meta"
+                        >
+                          <span className="shrink-0 text-xs text-race-dim tabular-nums">
+                            #{row.id}
+                          </span>
+                          {row.email ? (
+                            <span
+                              className="min-w-0 flex-1 truncate text-xs text-race-muted"
+                              title={row.email}
+                            >
+                              {row.email}
+                            </span>
+                          ) : null}
                           {summary ? (
                             <Link
                               href={detailHref(row)}
@@ -525,14 +538,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                             </span>
                           ) : null}
                         </div>
-                        {row.email ? (
-                          <div
-                            className="mt-0.5 truncate text-xs text-race-muted"
-                            title={row.email}
-                          >
-                            {row.email}
-                          </div>
-                        ) : null}
                       </td>
                       <td
                         className="col-span-1 @2xl:py-2.5 @2xl:pr-3"
@@ -628,8 +633,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                             fee,
                             autoConfirmed: autoConfirmed.has(row.id),
                           }) ? (
-                            <span className="w-fit rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-[0.6875rem] font-medium leading-tight text-emerald-700 dark:text-emerald-300">
-                              {copy("freeAutoConfirmed")}
+                            <span
+                              title={copy("freeAutoConfirmed")}
+                              aria-label={copy("freeAutoConfirmed")}
+                              data-testid="regs-free-auto-badge"
+                              className="relative z-10 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-700 dark:text-emerald-300"
+                            >
+                              <Zap className="size-3" aria-hidden="true" />
+                              {copy("freeAutoConfirmedShort")}
                             </span>
                           ) : null}
                           {canConfirm ? (

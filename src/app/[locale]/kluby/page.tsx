@@ -11,6 +11,7 @@ type SearchParams = {
   q?: string | string[];
   razeni?: string | string[];
   strana?: string | string[];
+  smer?: string | string[];
   pohled?: string | string[];
 };
 
@@ -63,12 +64,14 @@ export default async function ClubsHubPage({ params, searchParams }: PageProps) 
   const q = first(query.q).trim().slice(0, 80);
   const razeni = first(query.razeni);
   const strana = first(query.strana);
+  const smer = first(query.smer);
   const pohled = first(query.pohled);
-  if (isClubListQuery({ q, razeni, strana }) || isClubListView(pohled)) {
+  if (isClubListQuery({ q, razeni, strana, smer }) || isClubListView(pohled)) {
     const next: Record<string, string> = {};
     if (q) next.q = q;
     if (razeni) next.razeni = razeni;
     if (strana) next.strana = strana;
+    if (smer) next.smer = smer;
     redirect({ href: { pathname: "/kluby/seznam", query: next }, locale });
   }
 

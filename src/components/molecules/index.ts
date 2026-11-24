@@ -25,3 +25,4 @@ export * from "./nationality-flag-select";
 export * from "./confirm-dialog";
 export * from "./pending-submit-button";
 export * from "./link-pending-label";
+export * from "./sortable-column-header";

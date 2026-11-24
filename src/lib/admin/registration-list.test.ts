@@ -63,4 +63,13 @@ describe("admin entry list layout", () => {
   it("formats dates through the locale instead of ISO", () => {
     assert.doesNotMatch(source, /dateInputValue\(row\.created\)/);
   });
+
+  it("keeps the registration timeline collapsed by default", () => {
+    const timeline = readFileSync(
+      new URL("../../components/organisms/mcvv-admin-registration-timeline.tsx", import.meta.url),
+      "utf8",
+    );
+    assert.match(timeline, /<details className=/);
+    assert.doesNotMatch(timeline, /<details open/);
+  });
 });

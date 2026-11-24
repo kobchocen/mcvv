@@ -104,7 +104,7 @@ export function McvvAdminRegistrationTimeline({ data }: { data: RegistrationTime
   const comparison = summary.comparison;
 
   return (
-    <details open className="mt-6 min-w-0 border border-race-line bg-race-surface">
+    <details className="mt-6 min-w-0 border border-race-line bg-race-surface">
       <summary className="cursor-pointer px-4 py-3 font-display text-lg font-semibold">
         {t("timelineTitle")}
       </summary>

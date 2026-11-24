@@ -7,8 +7,10 @@ import {
   applyFinishAck,
   countFinish,
   deleteFinishRecord,
+  dueFinishStations,
   EMPTY_FINISH_QUEUE,
   nextFinishBatch,
+  otherStationPending,
   reviveFinishQueue,
   scheduleFinishRetry,
 } from "./finish-queue-core";
@@ -69,4 +71,34 @@ test("deleting an unsent record drops it locally, a sent one queues a delete op"
 test("reviveFinishQueue tolerates garbage", () => {
   assert.deepEqual(reviveFinishQueue(null), EMPTY_FINISH_QUEUE);
   assert.deepEqual(reviveFinishQueue({ records: "x" }).records, []);
+});
+
+test("odesílají se fronty obou stanic, zvolená první (#366)", () => {
+  const watch = addFinishPunch(EMPTY_FINISH_QUEUE, 1000, id);
+  const bibs = addFinishBib(EMPTY_FINISH_QUEUE, 12, 1100, id);
+  assert.deepEqual(dueFinishStations({ watch, bibs }, 5000, "bibs"), ["bibs", "watch"]);
+  assert.deepEqual(dueFinishStations({ watch, bibs }, 5000, "watch"), ["watch", "bibs"]);
+  // jen nezvolená stanice má co odeslat
+  assert.deepEqual(dueFinishStations({ watch, bibs: EMPTY_FINISH_QUEUE }, 5000, "bibs"), ["watch"]);
+  // po výpadku čeká každá fronta na svůj další pokus
+  const waiting = scheduleFinishRetry(watch, 5000);
+  assert.deepEqual(dueFinishStations({ watch: waiting, bibs }, 5500, "bibs"), ["bibs"]);
+  assert.deepEqual(dueFinishStations({ watch: waiting, bibs }, 6000, "bibs"), ["bibs", "watch"]);
+  assert.deepEqual(
+    dueFinishStations({ watch: EMPTY_FINISH_QUEUE, bibs: EMPTY_FINISH_QUEUE }, 5000, "watch"),
+    [],
+  );
+});
+
+test("hlavička ukazuje čekající zápisy druhé stanice (#366)", () => {
+  const watch = addFinishPunch(addFinishPunch(EMPTY_FINISH_QUEUE, 1000, id), 1200, id);
+  assert.deepEqual(otherStationPending({ watch, bibs: EMPTY_FINISH_QUEUE }, "bibs"), {
+    station: "watch",
+    count: 2,
+  });
+  assert.equal(otherStationPending({ watch, bibs: EMPTY_FINISH_QUEUE }, "watch"), null);
+  assert.equal(
+    otherStationPending({ watch: EMPTY_FINISH_QUEUE, bibs: EMPTY_FINISH_QUEUE }, "bibs"),
+    null,
+  );
 });

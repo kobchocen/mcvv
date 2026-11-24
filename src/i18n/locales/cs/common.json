@@ -3801,6 +3801,7 @@
     "online": "Online",
     "offline": "Offline",
     "queued": "{count, plural, =0 {vše odesláno} one {# čeká} few {# čekají} other {# čeká}}",
+    "otherQueued": "{station}: {count, plural, one {# čeká} few {# čekají} other {# čeká}}",
     "countPunches": "Kliků",
     "countBibs": "Čísel",
     "countPending": "{count} čeká na odeslání",

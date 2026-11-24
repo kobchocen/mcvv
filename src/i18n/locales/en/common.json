@@ -3801,6 +3801,7 @@
     "online": "Online",
     "offline": "Offline",
     "queued": "{count, plural, =0 {all sent} one {# queued} other {# queued}}",
+    "otherQueued": "{station}: {count, plural, other {# queued}}",
     "countPunches": "Clicks",
     "countBibs": "Bibs",
     "countPending": "{count} waiting to be sent",

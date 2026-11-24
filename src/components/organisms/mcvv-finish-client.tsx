@@ -11,9 +11,12 @@ import {
   applyFinishAck,
   countFinish,
   deleteFinishRecord,
+  dueFinishStations,
   EMPTY_FINISH_QUEUE,
+  FINISH_STATIONS,
   finishQueueKey,
   nextFinishBatch,
+  otherStationPending,
   reviveFinishQueue,
   scheduleFinishRetry,
   type FinishQueue,
@@ -26,6 +29,11 @@ import { loadValue, saveValue } from "@/lib/live/queue-store";
 type Props = { year: number; userId: number; userName: string; locale: string };
 
 const RECENT = 40;
+
+const EMPTY_QUEUES: Record<StationKind, FinishQueue> = {
+  watch: EMPTY_FINISH_QUEUE,
+  bibs: EMPTY_FINISH_QUEUE,
+};
 
 function uuid(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
@@ -51,11 +59,12 @@ function clockTenths(ms: number): string {
 export function McvvFinishClient({ year, userId, userName, locale }: Props) {
   const t = useTranslations("Finish");
   const [kind, setKind] = useState<StationKind>("watch");
-  const storageKey = finishQueueKey(year, userId, kind);
-  const [queue, setQueueState] = useState<FinishQueue>(EMPTY_FINISH_QUEUE);
-  const queueRef = useRef<FinishQueue>(EMPTY_FINISH_QUEUE);
-  const [loadedKey, setLoadedKey] = useState<string | null>(null);
-  const loaded = loadedKey === storageKey;
+  const kindRef = useRef<StationKind>("watch");
+  // fronty obou stanic – odesílají se obě bez ohledu na zvolenou stanici (#366)
+  const [queues, setQueuesState] = useState<Record<StationKind, FinishQueue>>(EMPTY_QUEUES);
+  const queuesRef = useRef<Record<StationKind, FinishQueue>>(EMPTY_QUEUES);
+  const [loaded, setLoaded] = useState(false);
+  const queue = queues[kind];
   const [offset, setOffset] = useState<number | null>(null);
   const offsetRef = useRef(0);
   const [online, setOnline] = useState(true);
@@ -69,14 +78,18 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
   const sending = useRef(false);
 
   const setQueue = useCallback(
-    (update: (state: FinishQueue) => FinishQueue) => {
-      const next = update(queueRef.current);
-      queueRef.current = next;
-      setQueueState(next);
-      void saveValue(storageKey, next);
+    (station: StationKind, update: (state: FinishQueue) => FinishQueue) => {
+      const next = update(queuesRef.current[station]);
+      queuesRef.current = { ...queuesRef.current, [station]: next };
+      setQueuesState(queuesRef.current);
+      void saveValue(finishQueueKey(year, userId, station), next);
     },
-    [storageKey],
+    [year, userId],
   );
+
+  useEffect(() => {
+    kindRef.current = kind;
+  }, [kind]);
 
   // uložená stanice a offset hodin
   useEffect(() => {
@@ -93,21 +106,25 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
     })();
   }, []);
 
-  // fronta zvolené stanice
+  // fronty obou stanic
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const stored = reviveFinishQueue(await loadValue(storageKey));
+      const [watch, bibs] = await Promise.all(
+        FINISH_STATIONS.map(async (station) =>
+          reviveFinishQueue(await loadValue(finishQueueKey(year, userId, station))),
+        ),
+      );
       if (cancelled) return;
-      queueRef.current = stored;
-      setQueueState(stored);
+      queuesRef.current = { watch, bibs };
+      setQueuesState(queuesRef.current);
       if (!navigator.onLine) setOnline(false);
-      setLoadedKey(storageKey);
+      setLoaded(true);
     })();
     return () => {
       cancelled = true;
     };
-  }, [storageKey]);
+  }, [year, userId]);
 
   // service worker – stránka cíle se otevře i bez signálu (#366), API se necachuje
   useEffect(() => {
@@ -186,46 +203,59 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
     return () => window.clearTimeout(id);
   }, []);
 
-  const flush = useCallback(async () => {
-    const state = queueRef.current;
-    if (sending.current || state.outbox.length === 0 || Date.now() < state.nextAttemptAt) return;
-    const batch = nextFinishBatch(state);
-    sending.current = true;
-    batch.forEach((op) => inFlight.current.add(op.id));
-    try {
-      const response = await fetch("/api/live/finish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ops: batch }),
-        cache: "no-store",
-        credentials: "same-origin",
-      });
-      if (response.ok) {
-        const body = (await response.json()) as { results: FinishOpResult[] };
-        setQueue((s) => applyFinishAck(s, body.results));
-        setOnline(true);
-        setProblem(null);
-        setLastSyncAt(Date.now());
-      } else {
-        if (response.status === 401) setProblem("login");
-        if (response.status === 403) setProblem("forbidden");
-        setOnline(response.status < 500 && response.status !== 429);
-        setQueue((s) => scheduleFinishRetry(s, Date.now()));
+  const flushStation = useCallback(
+    async (station: StationKind) => {
+      const batch = nextFinishBatch(queuesRef.current[station]);
+      if (batch.length === 0) return;
+      batch.forEach((op) => inFlight.current.add(op.id));
+      try {
+        const response = await fetch("/api/live/finish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ops: batch }),
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+        if (response.ok) {
+          const body = (await response.json()) as { results: FinishOpResult[] };
+          setQueue(station, (s) => applyFinishAck(s, body.results));
+          setOnline(true);
+          setProblem(null);
+          setLastSyncAt(Date.now());
+        } else {
+          if (response.status === 401) setProblem("login");
+          if (response.status === 403) setProblem("forbidden");
+          setOnline(response.status < 500 && response.status !== 429);
+          setQueue(station, (s) => scheduleFinishRetry(s, Date.now()));
+        }
+      } catch {
+        setOnline(false);
+        setQueue(station, (s) => scheduleFinishRetry(s, Date.now()));
+      } finally {
+        batch.forEach((op) => inFlight.current.delete(op.id));
       }
-    } catch {
-      setOnline(false);
-      setQueue((s) => scheduleFinishRetry(s, Date.now()));
+    },
+    [setQueue],
+  );
+
+  // odešle obě stanice (zvolenou první), každá má vlastní odstup po výpadku
+  const flush = useCallback(async () => {
+    if (sending.current) return;
+    const due = dueFinishStations(queuesRef.current, Date.now(), kindRef.current);
+    if (due.length === 0) return;
+    sending.current = true;
+    try {
+      for (const station of due) await flushStation(station);
     } finally {
-      batch.forEach((op) => inFlight.current.delete(op.id));
       sending.current = false;
     }
-  }, [setQueue]);
+  }, [flushStation]);
 
   useEffect(() => {
     if (!loaded) return;
     const id = window.setInterval(() => void flush(), 1000);
     const wake = () => {
-      setQueue((s) => ({ ...s, nextAttemptAt: 0 }));
+      for (const station of FINISH_STATIONS) setQueue(station, (s) => ({ ...s, nextAttemptAt: 0 }));
       void flush();
     };
     const offline = () => setOnline(false);
@@ -247,7 +277,7 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
 
   const punch = useCallback(() => {
     const at = stampNow(offsetRef.current);
-    setQueue((s) => addFinishPunch(s, at, uuid));
+    setQueue("watch", (s) => addFinishPunch(s, at, uuid));
     navigator.vibrate?.(25);
   }, [setQueue]);
 
@@ -256,7 +286,7 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
     const bib = Number(input);
     setInput("");
     if (!Number.isInteger(bib) || bib < 1 || bib > 999) return;
-    setQueue((s) => addFinishBib(s, bib, at, uuid));
+    setQueue("bibs", (s) => addFinishBib(s, bib, at, uuid));
     navigator.vibrate?.(25);
     show(t("bibSaved", { bib }));
   };
@@ -291,7 +321,9 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
       setConfirmDelete(record.id);
       return;
     }
-    setQueue((s) => deleteFinishRecord(s, record.id, uuid, inFlight.current));
+    setQueue(record.kind === "punch" ? "watch" : "bibs", (s) =>
+      deleteFinishRecord(s, record.id, uuid, inFlight.current),
+    );
     setConfirmDelete(null);
   };
 
@@ -303,6 +335,8 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
     [...active].sort((a, b) => a.at - b.at).map((r, index) => [r.id, index + 1]),
   );
   const pending = queue.outbox.length;
+  const other = otherStationPending(queues, kind);
+  const pendingAll = pending + (other?.count ?? 0);
   const stateClass = (r: StationRecord) =>
     r.state === "applied" || r.state === "duplicate"
       ? "border-race-accent/60 text-race-accent"
@@ -325,14 +359,22 @@ export function McvvFinishClient({ year, userId, userName, locale }: Props) {
           <span
             data-testid="sync-status"
             className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-              online && pending === 0
+              online && pendingAll === 0
                 ? "border-race-accent/60 text-race-accent"
                 : online
                   ? "border-sky-500/60 text-sky-600 dark:text-sky-300"
                   : "border-red-500/60 text-red-600 dark:text-red-400"
             }`}
           >
-            {online ? t("online") : t("offline")} · {t("queued", { count: pending })}
+            {online ? t("online") : t("offline")} ·{" "}
+            {other ? `${t(kind === "watch" ? "stationWatch" : "stationBibs")}: ` : ""}
+            {t("queued", { count: pending })}
+            {other
+              ? ` · ${t("otherQueued", {
+                  station: t(other.station === "watch" ? "stationWatch" : "stationBibs"),
+                  count: other.count,
+                })}`
+              : ""}
           </span>
         </div>
         <div className="flex items-end justify-between gap-2">

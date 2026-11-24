@@ -94,7 +94,7 @@
     "news": {
       "eyebrow": "Novinka {n}. ročníku",
       "title": "Soutěž týmů",
-      "body": "Od letoška bodují vedle jednotlivců i týmy napříč kategoriemi. Rozhoduje výkon, ne počet lidí v klubu. Odměna pro vítězný tým.",
+      "body": "Od letoška bodují vedle jednotlivců i týmy napříč kategoriemi. Rozhoduje výkon, ne počet lidí v klubu. Odměna pro vítězný tým. Soutěž týmů podporuje IONTMAX.",
       "linkLabel": "Pravidla soutěže týmů"
     },
     "overview": {
@@ -1998,6 +1998,9 @@
     "announcement": "Vítězný tým vyhlásíme na místě ve 12:20 spolu s ostatními výsledky. Odměna pro vítězný tým.",
     "prizeWaiver": "K.O.B. Choceň jako pořadatel se v případě vítězství vzdává ceny ve prospěch druhého týmu.",
     "officialPublish": "Oficiální pořadí zveřejníme s výsledky na mcvv.org.",
+    "sponsorLabel": "Sponzor soutěže týmů",
+    "sponsorTitle": "Soutěž týmů podporuje IONTMAX",
+    "sponsorWebsite": "Oficiální web sponzora",
     "historyLink": "Historický přehled vítězů 1993–2025",
     "historyLinkNote": "zpětný propočet podle pravidel 2026",
     "rulesLink": "Pravidla soutěže týmů",

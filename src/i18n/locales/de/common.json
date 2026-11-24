@@ -94,7 +94,7 @@
     "news": {
       "eyebrow": "Neuheit der {n}. Ausgabe",
       "title": "Teamwertung",
-      "body": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Eine Prämie für das Siegerteam.",
+      "body": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Eine Prämie für das Siegerteam. Die Teamwertung wird von IONTMAX unterstützt.",
       "linkLabel": "Regeln der Teamwertung"
     },
     "overview": {
@@ -1344,6 +1344,9 @@
     "announcement": "Das Siegerteam wird vor Ort um 12:20 zusammen mit den übrigen Ergebnissen bekannt gegeben. Eine Prämie für das Siegerteam.",
     "prizeWaiver": "Siegt K.O.B. Choceň als Veranstalter, verzichtet der Club auf die Prämie zugunsten des zweiten Teams.",
     "officialPublish": "Die offizielle Wertung veröffentlichen wir mit den Ergebnissen auf mcvv.org.",
+    "sponsorLabel": "Sponsor der Teamwertung",
+    "sponsorTitle": "Die Teamwertung wird von IONTMAX unterstützt",
+    "sponsorWebsite": "Offizielle Website des Sponsors",
     "historyLink": "Historische Siegerliste 1993–2025",
     "historyLinkNote": "Rückrechnung nach den Regeln 2026",
     "rulesLink": "Regeln der Teamwertung",

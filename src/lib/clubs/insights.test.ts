@@ -36,6 +36,7 @@ describe("veteranThreshold / longestStreak / isClubListQuery", () => {
     assert.equal(isClubListQuery({ q: "chocen" }), true);
     assert.equal(isClubListQuery({ razeni: "nazev" }), true);
     assert.equal(isClubListQuery({ strana: "2" }), true);
+    assert.equal(isClubListQuery({ smer: "vzestupne" }), true);
   });
 });
 

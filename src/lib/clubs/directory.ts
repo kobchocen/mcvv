@@ -28,8 +28,46 @@ export type ClubDirectoryRow = {
   searchKeys: string[];
 };
 
-export const CLUB_DIRECTORY_SORTS = ["starty", "nazev", "rocniky", "posledni"] as const;
+export const CLUB_DIRECTORY_SORTS = ["starty", "bezci", "nazev", "rocniky", "posledni"] as const;
 export type ClubDirectorySort = (typeof CLUB_DIRECTORY_SORTS)[number];
+export type ClubDirectoryDirection = "asc" | "desc";
+
+/** Default direction of each list sort (numeric columns high-to-low, name A–Z). */
+export const CLUB_DIRECTORY_DEFAULT_DIRECTION: Record<ClubDirectorySort, ClubDirectoryDirection> = {
+  starty: "desc",
+  bezci: "desc",
+  nazev: "asc",
+  rocniky: "desc",
+  posledni: "desc",
+};
+
+/** Query value of `smer` when it differs from the column default. */
+export function clubDirectoryDirectionQuery(
+  sort: ClubDirectorySort,
+  direction: ClubDirectoryDirection,
+): "vzestupne" | "sestupne" | undefined {
+  if (direction === CLUB_DIRECTORY_DEFAULT_DIRECTION[sort]) return undefined;
+  return direction === "asc" ? "vzestupne" : "sestupne";
+}
+
+export function parseClubDirectoryDirection(
+  raw: string,
+  sort: ClubDirectorySort,
+): ClubDirectoryDirection {
+  if (raw === "vzestupne") return "asc";
+  if (raw === "sestupne") return "desc";
+  return CLUB_DIRECTORY_DEFAULT_DIRECTION[sort];
+}
+
+/** Next direction after clicking a column: default on a new column, toggle on the active one. */
+export function nextClubDirectoryDirection(
+  column: ClubDirectorySort,
+  currentSort: ClubDirectorySort,
+  currentDirection: ClubDirectoryDirection,
+): ClubDirectoryDirection {
+  if (column !== currentSort) return CLUB_DIRECTORY_DEFAULT_DIRECTION[column];
+  return currentDirection === "asc" ? "desc" : "asc";
+}
 
 export function isClubDirectorySort(value: unknown): value is ClubDirectorySort {
   return typeof value === "string" && (CLUB_DIRECTORY_SORTS as readonly string[]).includes(value);
@@ -91,14 +129,20 @@ export function filterClubDirectory(
 export function sortClubDirectory(
   rows: readonly ClubDirectoryRow[],
   sort: ClubDirectorySort,
+  direction: ClubDirectoryDirection = CLUB_DIRECTORY_DEFAULT_DIRECTION[sort],
 ): ClubDirectoryRow[] {
   const byName = (a: ClubDirectoryRow, b: ClubDirectoryRow) =>
     a.name.localeCompare(b.name, "cs") || a.id.localeCompare(b.id);
   const compare: Record<ClubDirectorySort, (a: ClubDirectoryRow, b: ClubDirectoryRow) => number> = {
     starty: (a, b) => b.starts - a.starts || byName(a, b),
+    bezci: (a, b) => b.runners - a.runners || b.starts - a.starts || byName(a, b),
     nazev: byName,
     rocniky: (a, b) => b.editions - a.editions || b.starts - a.starts || byName(a, b),
     posledni: (a, b) => b.lastYear - a.lastYear || b.starts - a.starts || byName(a, b),
   };
-  return [...rows].sort(compare[sort]);
+  const defaultDir = CLUB_DIRECTORY_DEFAULT_DIRECTION[sort];
+  return [...rows].sort((a, b) => {
+    const cmp = compare[sort](a, b);
+    return direction === defaultDir ? cmp : -cmp;
+  });
 }

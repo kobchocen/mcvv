@@ -56,7 +56,6 @@ export function startListPdfLabels(
   return {
     brandTop: brand.top,
     brandBottom: brand.bottom,
-    brandMark: brand.mark,
     title: fill(messages.pdfTitle, { year: input.year }),
     edition: fill(messages.pdfEdition, { n: input.editionNumber }),
     raceDay,

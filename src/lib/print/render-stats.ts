@@ -3,6 +3,13 @@ import { jsPDF } from "jspdf";
 import type { ReceiptFonts } from "@/lib/receipts/fonts";
 import type { StatsChartBar, StatsTableData } from "@/lib/stats/tables";
 
+import {
+  drawOfficialLogo,
+  loadOfficialLogoPng,
+  officialLogoPrintWidthMm,
+  officialLogoSize,
+  PRINT_HEADER_BAND_MM,
+} from "./official-logo";
 import { CELL_PAD, COLUMN_GAP, layoutStats, PT_TO_MM, type StatsLayout } from "./stats-layout";
 
 const FONT = "DejaVu";
@@ -59,47 +66,29 @@ function truncate(doc: jsPDF, text: string, width: number): string {
   return `${cut.trimEnd()}…`;
 }
 
-/** Ikona webu (viewBox 64×64) překreslená vektorově. */
-export function drawBrandMark(doc: jsPDF, x: number, y: number, size: number) {
-  const k = size / 64;
-  doc.setFillColor(...PRINT_COLORS.accent);
-  doc.roundedRect(x, y, size, size, 16 * k, 16 * k, "F");
-  const points: [number, number][] = [
-    [27.76, 50],
-    [21.27, 14],
-    [28.07, 14],
-    [31.93, 38.44],
-    [35.53, 14],
-    [42.73, 14],
-    [36.16, 50],
-  ];
-  const deltas = points.slice(1).map(([px, py], index) => {
-    const [qx, qy] = points[index];
-    return [(px - qx) * k, (py - qy) * k];
-  });
-  doc.setFillColor(255, 255, 255);
-  doc.lines(deltas, x + points[0][0] * k, y + points[0][1] * k, [1, 1], "F", true);
-}
-
-/** Hlavička: tmavý pruh se značkou MCVV, nadpis, oranžová linka. */
+/** Hlavička: tmavý pruh s oficiálním logem MCVV, nadpis, oranžová linka. */
 function drawHeader(doc: jsPDF, report: StatsReport): number {
   const { ink, accent } = PRINT_COLORS;
+  const band = PRINT_HEADER_BAND_MM;
   doc.setFillColor(...ink);
-  doc.rect(0, 0, PAGE_W, 34, "F");
+  doc.rect(0, 0, PAGE_W, band, "F");
   doc.setFillColor(...accent);
-  doc.rect(0, 34, PAGE_W, 1.4, "F");
+  doc.rect(0, band, PAGE_W, 1.4, "F");
 
-  // Značka MCVV (src/app/icon.svg: zaoblený čtverec #b13d0c s bílým „V“) + MALÁ CENA / VELKÉ VERANDY
-  drawBrandMark(doc, MARGIN, 9, 15);
+  const logo = loadOfficialLogoPng("dark");
+  const logoW = officialLogoPrintWidthMm();
+  const logoH = officialLogoSize(logoW).height;
+  drawOfficialLogo(doc, logo, MARGIN, (band - logoH) / 2, logoW, "mcvv-logo-dark");
+  const brandX = MARGIN + logoW + 1;
   doc.setFont(FONT, "bold");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9.5);
-  doc.text("MALÁ CENA", MARGIN + 19, 15.3);
-  doc.text("VELKÉ VERANDY", MARGIN + 19, 20.6);
+  doc.text("MALÁ CENA", brandX, 15.3);
+  doc.text("VELKÉ VERANDY", brandX, 20.6);
   doc.setFont(FONT, "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(190, 205, 195);
-  doc.text("www.mcvv.org", MARGIN + 19, 25.4);
+  doc.text("www.mcvv.org", brandX, 25.4);
 
   // Nadpis vpravo
   const right = PAGE_W - MARGIN;
@@ -110,7 +99,7 @@ function drawHeader(doc: jsPDF, report: StatsReport): number {
   doc.setTextColor(255, 255, 255);
   let size = 22;
   doc.setFontSize(size);
-  const maxTitle = CONTENT_W - 62;
+  const maxTitle = CONTENT_W - 90;
   if (doc.getTextWidth(report.title) > maxTitle) {
     size = (size * maxTitle) / doc.getTextWidth(report.title);
     doc.setFontSize(size);

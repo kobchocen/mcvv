@@ -160,12 +160,13 @@ describe("newsletter banner – template", () => {
       unsubscribeUrl: "u",
       siteUrl: "https://mcvv.org",
     });
-    assert.doesNotMatch(mail.html, /<img /);
-    // Bez banneru zůstává výchozí hlavička MCVV.
+    // Bez banneru zůstává výchozí hlavička s oficiálním logem z HTTPS URL.
     assert.match(
       mail.html,
-      /<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">\n<a href="https:\/\/mcvv\.org"[^>]*>MCVV<\/a>\n<span[^>]*>Malá cena Velké Verandy<\/span>/,
+      /<img src="https:\/\/mcvv\.org\/images\/logo\/mcvv-logo-barevne-na-tmave\.png"/,
     );
+    assert.match(mail.html, /Malá cena Velké Verandy/);
+    assert.doesNotMatch(mail.html, /data:image|base64|cid:/);
   });
 
   it("serves the public image cross-origin (webmail) with a long immutable cache", () => {

@@ -1,6 +1,13 @@
 import { jsPDF } from "jspdf";
 import { autoTable, type UserOptions } from "jspdf-autotable";
 
+import {
+  drawOfficialLogo,
+  loadOfficialLogoPng,
+  officialLogoPrintWidthMm,
+  officialLogoSize,
+} from "@/lib/print/official-logo";
+
 import type { ReceiptFonts } from "./fonts";
 import type { ReceiptTranslate } from "./labels";
 import {
@@ -65,20 +72,47 @@ export function renderReceiptPdf(
     doc.text(value, x, y, align ? { align } : undefined);
   };
 
-  // Hlavička
-  text(t("title"), MARGIN, 24, { size: 17, bold: true, color: INK });
-  text(t("number", { number: receipt.number }), right, 33, { size: 12, bold: true }, "right");
-  text(t("issueDate", { date: day(receipt.issueDate) }), right, 39, { size: 9.5 }, "right");
-  text(t("subtitle", { year: receipt.year }), MARGIN, 33, { size: 9.5, color: MUTED });
+  // Hlavička: oficiální logo na světlém podkladu, vedle název dokladu.
+  const logo = loadOfficialLogoPng("light");
+  const logoW = officialLogoPrintWidthMm();
+  const logoH = officialLogoSize(logoW).height;
+  const logoY = 12;
+  drawOfficialLogo(doc, logo, MARGIN, logoY, logoW, "mcvv-logo-light");
+  const titleX = MARGIN + logoW + 4;
+  const numberLabel = t("number", { number: receipt.number });
+  const dateLabel = t("issueDate", { date: day(receipt.issueDate) });
+  text(numberLabel, right, logoY + 7, { size: 12, bold: true }, "right");
+  text(dateLabel, right, logoY + 13.5, { size: 9.5 }, "right");
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(12);
+  const numberW = doc.getTextWidth(numberLabel);
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(9.5);
+  const reserved = Math.max(numberW, doc.getTextWidth(dateLabel)) + 8;
+  let titleSize = 15;
+  const titleText = t("title");
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(titleSize);
+  const titleMax = Math.max(40, right - reserved - titleX);
+  while (titleSize > 11 && doc.getTextWidth(titleText) > titleMax) {
+    titleSize -= 0.5;
+    doc.setFontSize(titleSize);
+  }
+  const titleLines = doc.splitTextToSize(titleText, titleMax) as string[];
+  text(titleLines, titleX, logoY + 7, { size: titleSize, bold: true, color: INK });
+  const subtitleY = logoY + 7 + Math.max(1, titleLines.length) * (titleSize * 0.4) + 1.5;
+  text(t("subtitle", { year: receipt.year }), titleX, subtitleY, { size: 9.5, color: MUTED });
+  const ruleY = Math.max(logoY + logoH + 4, subtitleY + 5);
   doc.setDrawColor(...ACCENT);
   doc.setLineWidth(0.8);
-  doc.line(MARGIN, 43, right, 43);
+  doc.line(MARGIN, ruleY, right, ruleY);
 
   // Příjemce / plátce
   const column = (width - 2 * MARGIN) / 2 - 4;
+  const payerTop = ruleY + 8;
   const block = (x: number, title: string, lines: string[]) => {
-    text(title.toUpperCase(), x, 51, { size: 8.5, bold: true, color: MUTED });
-    let y = 57;
+    text(title.toUpperCase(), x, payerTop, { size: 8.5, bold: true, color: MUTED });
+    let y = payerTop + 6;
     lines.forEach((line, index) => {
       doc.setFont(FONT, index === 0 ? "bold" : "normal");
       doc.setFontSize(10.5);

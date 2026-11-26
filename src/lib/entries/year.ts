@@ -56,6 +56,7 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
       regDeadline: true,
       startZeroSeconds: true,
       startInterval: true,
+      organizerZeroSeconds: true,
       secondStartFrom: true,
       standardPayUntil: true,
       standardPayMailS: true,
@@ -95,7 +96,12 @@ export async function startModelForYear(year: number): Promise<StartModel> {
       date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) },
     },
     orderBy: { id: "desc" },
-    select: { startZeroSeconds: true, startInterval: true, secondStartFrom: true },
+    select: {
+      startZeroSeconds: true,
+      startInterval: true,
+      organizerZeroSeconds: true,
+      secondStartFrom: true,
+    },
   });
   return startModelFromEdition(edition);
 }

@@ -219,7 +219,14 @@ export async function setSplitAction(formData: FormData): Promise<void> {
   const raw = String(formData.get("value") ?? "");
   const time =
     formData.get("mode") === "clock"
-      ? clockToRaceTime(raw, ctx.zero, bib, ctx.intervalS, ctx.secondStartFrom)
+      ? clockToRaceTime(
+          raw,
+          ctx.zero,
+          bib,
+          ctx.intervalS,
+          ctx.secondStartFrom,
+          ctx.organizerShiftSeconds,
+        )
       : parseRaceTime(raw);
   if (time === null) await back({ edit, error: "time" }, SPLITS_PAGE);
   const known = await rosterHasBib(prisma, ctx.year, bib);

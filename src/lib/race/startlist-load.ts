@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { ENTRY_STATUS, validRegistrationIds } from "@/lib/entries/status";
@@ -14,7 +12,9 @@ import {
   startTimeForBib,
   type StartModel,
 } from "./start-time";
+import { inputFingerprint } from "./startlist-fingerprint";
 import type { GeneratorInput } from "./startlist-generator";
+import { deriveOrganizerTieSeed, organizerSetKey } from "./startlist-organizer-order";
 import { seedTimesByRunner, seedTimeWindow } from "./startlist-seed-time";
 
 export type CategoryInfo = { id: string; name: string; sort: number; sex: string };
@@ -123,6 +123,8 @@ export type AdminStartRow = {
   locked: boolean;
   /** Poslední platný čas z Y−1…Y−3 (nasazení); null = v okně žádný. */
   lastYearTime: number | null;
+  /** Počet odběhlých ročníků (mcvv_time s time > 0), #382. */
+  editionsCount: number;
   personalBest: number | null;
   note: string | null;
   registrationNote: string | null;
@@ -181,7 +183,7 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
   ]);
   const runnerIds = lines.map((line) => line.runnerId);
   const window = seedTimeWindow(year);
-  const [history, best] = await Promise.all([
+  const [history, best, starts] = await Promise.all([
     prisma.result.findMany({
       where: {
         year: { gte: window.from, lte: window.to },
@@ -195,9 +197,15 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       where: { runnerId: { in: runnerIds } },
       _min: { time: true },
     }),
+    prisma.result.groupBy({
+      by: ["runnerId"],
+      where: { runnerId: { in: runnerIds }, time: { gt: 0 } },
+      _count: { _all: true },
+    }),
   ]);
   const lastById = seedTimesByRunner(history, year);
   const bestById = new Map(best.map((row) => [row.runnerId, row._min.time ?? null]));
+  const startsById = new Map(starts.map((row) => [row.runnerId, row._count._all]));
   const metaById = new Map(metas.map((meta) => [meta.runnerId, meta]));
   return lines.map((line) => {
     const meta = metaById.get(line.runnerId);
@@ -216,6 +224,7 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       bib: line.bib && line.bib > 0 ? line.bib : null,
       locked: meta?.locked ?? false,
       lastYearTime: lastById.get(line.runnerId) ?? null,
+      editionsCount: startsById.get(line.runnerId) ?? 0,
       personalBest: bestById.get(line.runnerId) ?? null,
       note: line.note,
       registrationNote: line.registration.note,
@@ -251,6 +260,7 @@ export async function buildGeneratorInput(
       locked: row.locked,
       eligible: row.valid,
       lastYearTime: row.lastYearTime,
+      editionsCount: row.editionsCount,
       special: row.special
         ? {
             kind: row.special.kind,
@@ -259,25 +269,19 @@ export async function buildGeneratorInput(
           }
         : null,
     })),
+    organizerTieSeed: deriveOrganizerTieSeed(
+      organizerSetKey(
+        rows.map((row) => ({
+          runnerId: row.runnerId,
+          eligible: row.valid,
+          special: row.special,
+        })),
+      ),
+    ),
   };
 }
 
-/** Otisk vstupu generátoru: uložení návrhu projde jen nad stejnými daty, jaká byla v náhledu. */
-export function inputFingerprint(input: GeneratorInput): string {
-  const entries = [...input.entries]
-    .sort((a, b) => a.runnerId.localeCompare(b.runnerId))
-    .map((e) => [
-      e.runnerId,
-      e.categoryId,
-      e.currentBib,
-      e.locked,
-      e.eligible,
-      e.lastYearTime,
-      e.special ? [e.special.kind, e.special.partnerId, e.special.offsetSeconds] : null,
-    ]);
-  const payload = JSON.stringify([input.model, input.ranges, input.champions, entries]);
-  return createHash("sha256").update(payload).digest("hex").slice(0, 32);
-}
+export { inputFingerprint };
 
 export type PublicStartRow = {
   bib: number;

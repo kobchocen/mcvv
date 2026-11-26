@@ -42,16 +42,17 @@ export function corridorRange(
 }
 
 /**
- * Plánovaný start čísla v ms epoch: nula + interval · (n′ − 1), n′ = pořadí v rámci startu
- * (stejné pravidlo jako `src/lib/race/start-time.ts`, hranice z modelu ročníku).
+ * Plánovaný start čísla v ms epoch: nula' + interval · (n′ − 1). Pořadatelé ve slotech
+ * 1–40 používají posun `organizerShiftSeconds` (#382, stejné pravidlo jako race/start-time).
  */
 export function plannedStartMs(
   zeroMs: number,
   bib: number,
   intervalS: number,
   secondStartFrom: number,
+  organizerShiftSeconds = 0,
 ): number {
-  return zeroMs + startOffsetSeconds(bib, intervalS, secondStartFrom) * 1000;
+  return zeroMs + startOffsetSeconds(bib, intervalS, secondStartFrom, organizerShiftSeconds) * 1000;
 }
 
 // --- nastavení (admin, `mcvv_setting`) ---

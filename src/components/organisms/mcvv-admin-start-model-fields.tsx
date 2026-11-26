@@ -11,6 +11,7 @@ export type McvvAdminStartModelCopy = {
   heading: string;
   hint: string;
   zero: string;
+  organizerZero: string;
   interval: string;
   secondStart: string;
   championMen: string;
@@ -62,6 +63,11 @@ export function McvvAdminStartModelFields({
           name="startZero"
           label={copy.zero}
           defaultValue={formatClock(model.zeroSeconds)}
+        />
+        <AdminField
+          name="organizerZero"
+          label={copy.organizerZero}
+          defaultValue={formatClock(model.organizerZeroSeconds)}
         />
         <AdminField
           name="startInterval"

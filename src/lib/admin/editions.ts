@@ -159,6 +159,10 @@ export async function saveEdition(formData: FormData): Promise<void> {
   const year = date.getUTCFullYear();
   const zeroRaw = formString(formData, "startZero");
   const zeroSeconds = zeroRaw ? parseClock(zeroRaw) : DEFAULT_START_MODEL.zeroSeconds;
+  const organizerRaw = formString(formData, "organizerZero");
+  const organizerZeroSeconds = organizerRaw
+    ? parseClock(organizerRaw)
+    : DEFAULT_START_MODEL.organizerZeroSeconds;
   const intervalSeconds = formInt(formData, "startInterval") ?? DEFAULT_START_MODEL.intervalSeconds;
   const secondStartFrom =
     formInt(formData, "secondStartFrom") ?? DEFAULT_START_MODEL.secondStartFrom;
@@ -172,7 +176,12 @@ export async function saveEdition(formData: FormData): Promise<void> {
     categories.map((category) => category.id),
   );
   const issues = validateStartSettings(
-    { zeroSeconds: zeroSeconds ?? -1, intervalSeconds, secondStartFrom },
+    {
+      zeroSeconds: zeroSeconds ?? -1,
+      intervalSeconds,
+      secondStartFrom,
+      organizerZeroSeconds: organizerZeroSeconds ?? -1,
+    },
     ranges ?? currentRanges,
     champions,
   );
@@ -197,6 +206,7 @@ export async function saveEdition(formData: FormData): Promise<void> {
     courseTags: formatCourseTags(parseCourseTags(formData.getAll("courseTags"))),
     ...feeFields(formData),
     startZeroSeconds: zeroSeconds ?? DEFAULT_START_MODEL.zeroSeconds,
+    organizerZeroSeconds: organizerZeroSeconds ?? DEFAULT_START_MODEL.organizerZeroSeconds,
     secondStartFrom,
     championBibMen: champions.men,
     championBibWomen: champions.women,

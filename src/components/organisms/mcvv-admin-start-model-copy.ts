@@ -8,6 +8,7 @@ type StartAdminT = Awaited<ReturnType<typeof getTranslations<"StartAdmin">>>;
 
 type IssueKey =
   | "issue_zero"
+  | "issue_organizerZero"
   | "issue_interval"
   | "issue_secondStart"
   | "issue_rangeOrder"
@@ -26,8 +27,9 @@ export function startModelCopy(
 ): McvvAdminStartModelCopy {
   return {
     heading: t("editionHeading"),
-    hint: t("editionHint", { second: secondStartFrom }),
+    hint: t("editionHint", { second: secondStartFrom, secondOrgEnd: secondStartFrom + 39 }),
     zero: t("editionZero"),
+    organizerZero: t("editionOrganizerZero"),
     interval: t("editionInterval"),
     secondStart: t("editionSecondStart"),
     championMen: t("editionChampionMen"),

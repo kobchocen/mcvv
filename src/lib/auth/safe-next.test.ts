@@ -156,3 +156,27 @@ describe("loginTarget – default target (no next, Pavel 21. 11.)", () => {
     assert.equal(safeNext("/cs/kancelar/prodejky"), "/kancelar/prodejky");
   });
 });
+
+describe("resultboard", () => {
+  it("/resultboard and TV 1–4 are allowed targets after login", () => {
+    assert.equal(safeNext("/cs/resultboard"), "/resultboard");
+    assert.equal(safeNext("/resultboard/1"), "/resultboard/1");
+    assert.equal(safeNext("/cs/resultboard/4?test=1"), "/resultboard/4?test=1");
+    assert.deepEqual(loginTarget("/resultboard", "full"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+    assert.deepEqual(loginTarget("/resultboard/2?test=1", "full"), {
+      kind: "resultboard",
+      tv: "2",
+      query: "test=1",
+    });
+  });
+  it("rejects unknown resultboard paths", () => {
+    assert.equal(safeNext("/resultboard/5"), null);
+    assert.equal(safeNext("/resultboard/0"), null);
+    assert.equal(safeNext("/resultboard/tv"), null);
+    assert.equal(safeNext("/resultboard/1/x"), null);
+  });
+});

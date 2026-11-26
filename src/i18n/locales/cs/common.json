@@ -3438,6 +3438,9 @@
     "indexNote": "Otevřete na televizi v cíli a přepněte prohlížeč na celou obrazovku (F11). Obrazovka se obnovuje sama.",
     "indexTv": "TV {n}",
     "indexHint": "Rozdělení kategorií a další nastavení: administrace → Den závodu → Živé výsledky.",
+    "forbiddenTitle": "Jen pro pořadatele",
+    "forbidden": "Obrazovka resultboardu je jen pro pořadatele a administrátory.",
+    "home": "Zpět na web",
     "legendRecord": "traťový rekord (předběžně)"
   },
   "ResultboardSettings": {

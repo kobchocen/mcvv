@@ -83,6 +83,17 @@ export function redirectAfterLogin(next: string | null, role: UserRole, locale: 
   if (target.kind === "thread") {
     redirect({ href: { pathname: "/zpravy/[id]", params: { id: target.id } }, locale });
   }
+  if (target.kind === "resultboard") {
+    const query = Object.fromEntries(new URLSearchParams(target.query));
+    redirect({
+      href: {
+        pathname: "/resultboard/[tv]",
+        params: { tv: target.tv },
+        ...(Object.keys(query).length ? { query } : {}),
+      },
+      locale,
+    });
+  }
   if (target.kind === "user") {
     const query = Object.fromEntries(new URLSearchParams(target.query));
     redirect({

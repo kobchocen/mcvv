@@ -22,6 +22,11 @@ export function useResultboardInfo(initial: ResultboardInfo, initialEtag: string
           cache: "no-store",
           headers: { "If-None-Match": etagRef.current },
         });
+        if ((response.status === 401 || response.status === 403) && !stopped) {
+          // vypršená session na kiosku / TV: obnovení stránky pošle na přihlášení
+          window.location.reload();
+          return;
+        }
         if (response.status === 200 && !stopped) {
           const body = (await response.json()) as ResultboardInfo;
           etagRef.current = response.headers.get("ETag") ?? "";

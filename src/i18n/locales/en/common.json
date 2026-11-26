@@ -3438,6 +3438,9 @@
     "indexNote": "Open on a TV at the finish and switch the browser to full screen (F11). The screen refreshes on its own.",
     "indexTv": "TV {n}",
     "indexHint": "Category split and other settings: admin → Race day → Live results.",
+    "forbiddenTitle": "Organizers only",
+    "forbidden": "The resultboard screen is for organizers and administrators only.",
+    "home": "Back to the website",
     "legendRecord": "course record (provisional)"
   },
   "ResultboardSettings": {

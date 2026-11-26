@@ -50,8 +50,9 @@ export function startOffsetSeconds(
   bib: number,
   intervalS: number,
   secondStartFrom: number,
+  organizerShiftSeconds = 0,
 ): number {
-  const planned = startInstant(zero, bib, intervalS, secondStartFrom);
+  const planned = startInstant(zero, bib, intervalS, secondStartFrom, organizerShiftSeconds);
   return Math.round((startedAt.getTime() - planned.getTime()) / 1000);
 }
 
@@ -157,7 +158,7 @@ export type StartSummary = {
 export function buildStartOverview(
   startList: readonly StartListRow[],
   records: readonly StartRecord[],
-  ctx: { zero: Date; intervalS: number; secondStartFrom: number },
+  ctx: { zero: Date; intervalS: number; secondStartFrom: number; organizerShiftSeconds?: number },
 ): { rows: StartOverviewRow[]; summary: StartSummary } {
   const byBib = new Map(records.map((record) => [record.bib, record]));
   const seen = new Set<number>();
@@ -167,7 +168,13 @@ export function buildStartOverview(
     return {
       ...base,
       known,
-      planned: startInstant(ctx.zero, base.bib, ctx.intervalS, ctx.secondStartFrom),
+      planned: startInstant(
+        ctx.zero,
+        base.bib,
+        ctx.intervalS,
+        ctx.secondStartFrom,
+        ctx.organizerShiftSeconds ?? 0,
+      ),
       record,
       offsetS: record
         ? startOffsetSeconds(
@@ -176,6 +183,7 @@ export function buildStartOverview(
             base.bib,
             ctx.intervalS,
             ctx.secondStartFrom,
+            ctx.organizerShiftSeconds ?? 0,
           )
         : null,
     };

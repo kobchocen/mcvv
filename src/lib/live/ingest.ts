@@ -157,7 +157,13 @@ async function applyWebEntry(
   const punchedAt = entry.punchedAt;
   const check = checkPunch(
     punchedAt,
-    startInstant(ctx.zero, entry.bib, ctx.intervalS, ctx.secondStartFrom),
+    startInstant(
+      ctx.zero,
+      entry.bib,
+      ctx.intervalS,
+      ctx.secondStartFrom,
+      ctx.organizerShiftSeconds,
+    ),
     now,
   );
   if (!check.ok) {

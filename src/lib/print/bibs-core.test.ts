@@ -32,10 +32,12 @@ const options: BuildBibOptions = {
 
 describe("start time on the bib (legacy tiskcisel.php / #114)", () => {
   const cases: [number, string][] = [
-    [1, "10:15:00"],
+    [1, "07:45:00"],
+    [40, "07:54:45"],
     [41, "10:25:00"],
     [301, "11:30:00"],
-    [601, "10:15:00"],
+    [601, "07:45:00"],
+    [640, "07:54:45"],
     [641, "10:25:00"],
     [901, "11:30:00"],
   ];
@@ -45,11 +47,12 @@ describe("start time on the bib (legacy tiskcisel.php / #114)", () => {
   it("uses the edition start model (zero, interval, 2nd start) via startTimeForBib", () => {
     const at = (edition: Parameters<typeof startModelFromEdition>[0], bib: number) =>
       buildBlankBibCard(bib, { ...options, model: startModelFromEdition(edition) }).startTime;
-    assert.equal(at({ startInterval: 20 }, 4), "10:16:00");
-    assert.equal(at({ startInterval: null }, 4), "10:15:45");
+    assert.equal(at({ startInterval: 20 }, 4), "07:46:00");
+    assert.equal(at({ startInterval: null }, 4), "07:45:45");
     const edition = { startZeroSeconds: 11 * 3600, startInterval: 30, secondStartFrom: 501 };
-    assert.equal(at(edition, 501), "11:00:00");
-    assert.equal(at(edition, 503), "11:01:00");
+    assert.equal(at(edition, 501), "07:45:00");
+    assert.equal(at(edition, 503), "07:46:00");
+    assert.equal(at(edition, 541), "11:20:00");
     for (const bib of [1, 77, 501, 640]) {
       assert.equal(at(edition, bib), startTimeForBib(startModelFromEdition(edition), bib));
     }

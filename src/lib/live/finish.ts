@@ -36,7 +36,10 @@ import { autoMarkStart } from "./starter";
  */
 
 type Tx = Prisma.TransactionClient;
-export type FinishPlan = Pick<RaceContext, "year" | "zero" | "intervalS" | "secondStartFrom">;
+export type FinishPlan = Pick<
+  RaceContext,
+  "year" | "zero" | "intervalS" | "secondStartFrom" | "organizerShiftSeconds"
+>;
 type Actor = AuditActor & { id: number | null };
 
 const SYNC_LOCK = "mcvv_finish_sync";
@@ -146,7 +149,13 @@ async function startLookup(db: Tx | typeof prisma, plan: FinishPlan) {
     roster: byBib,
     startOf: (bib: number) =>
       byBib.has(bib)
-        ? startInstant(plan.zero, bib, plan.intervalS, plan.secondStartFrom).getTime()
+        ? startInstant(
+            plan.zero,
+            bib,
+            plan.intervalS,
+            plan.secondStartFrom,
+            plan.organizerShiftSeconds,
+          ).getTime()
         : null,
   };
 }

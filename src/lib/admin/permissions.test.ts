@@ -18,24 +18,17 @@ import {
   starterScope,
   v2Allows,
   defaultLevel,
+  staffCookieFromGrants,
   v2HasAdminHome,
   type AccessLevel,
 } from "@/lib/admin/permissions";
 import { ADMIN_SECTIONS } from "@/lib/admin/sections";
-import { hasAdminHome, isStaffRole, type UserRole } from "@/lib/auth/roles";
+import { hasAdminHome, isStaffRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
 import { stationsForScope, allowedStationsFor } from "@/lib/live/assignment-core";
 import { starterAccess, starterAccessFor } from "@/lib/live/starter-api-core";
 import { grantsFromLegacyRole, STAFF_ROLES } from "@/lib/auth/staff-roles";
 
-const ROLES: UserRole[] = [
-  "registrar",
-  "organizer",
-  "admin",
-  "timing",
-  "splitmaker",
-  "race_office",
-  "starter",
-];
+const ROLES: UserRole[] = [...USER_ROLES];
 const LEVELS: AccessLevel[] = ["read", "write"];
 
 describe("permissions engine – ekvivalence s dnešními rolemi", () => {
@@ -89,11 +82,15 @@ describe("permissions engine – ekvivalence s dnešními rolemi", () => {
       assert.ok(item.id in SECTION_RULES, `sekce ${item.id} chybí v SECTION_RULES`);
       if (!item.allowed) continue;
       for (const role of ROLES) {
-        assert.equal(
-          legacyAllows(role, item.id as keyof typeof SECTION_RULES, "read"),
-          item.allowed(role),
-          `${role} ${item.id}`,
-        );
+        const canRead = legacyAllows(role, item.id as keyof typeof SECTION_RULES, "read");
+        const inNav: boolean = item.allowed(role);
+        // Role Resultboard smí otevřít /resultboard, ale v administraci se nesmí objevit.
+        if (role === "resultboard" && item.id === "screens.resultboard") {
+          assert.equal(canRead, true, `${role} ${item.id} read`);
+          assert.equal(inNav, false, `${role} ${item.id} nav`);
+          continue;
+        }
+        assert.equal(canRead, inNav, `${role} ${item.id}`);
       }
     }
   });
@@ -111,6 +108,13 @@ describe("permissions engine – ekvivalence s dnešními rolemi", () => {
       return best;
     };
     for (const role of STAFF_ROLES) {
+      if (role === "resultboard") {
+        assert.equal(defaultLevel(role, "screens"), "none");
+        assert.equal(defaultLevel(role, "screens.resultboard"), "read");
+        assert.equal(defaultLevel(role, "screens.speaker"), "none");
+        assert.equal(defaultLevel(role, "raceOffice"), "none");
+        continue;
+      }
       assert.equal(defaultLevel(role, "screens"), maxOf(role, screenChildren), `screens ${role}`);
       assert.equal(defaultLevel(role, "raceOffice"), maxOf(role, officeChildren), `office ${role}`);
     }
@@ -231,5 +235,30 @@ describe("permissions editor (P8)", () => {
     }
     const overrides = new Map([[overrideKey("organizer_legacy", "permissions"), "write" as const]]);
     assert.equal(v2Allows(["organizer_legacy"], "permissions", "read", overrides), false);
+  });
+
+  it("the matrix includes Resultboard as an editable column", () => {
+    assert.ok(EDITABLE_ROLES.includes("resultboard"));
+    assert.equal(defaultLevel("resultboard", "screens.resultboard"), "read");
+    assert.equal(v2Allows(["resultboard"], "screens.resultboard", "write"), false);
+    for (const id of SECTION_IDS) {
+      if (id === "screens.resultboard") continue;
+      assert.equal(defaultLevel("resultboard", id), "none", id);
+    }
+  });
+});
+
+describe("staff cookie (permissions v2 + Resultboard)", () => {
+  it("does not mark a Resultboard-only account as staff", () => {
+    assert.equal(v2HasAdminHome(["resultboard"]), false);
+    assert.equal(staffCookieFromGrants("resultboard", ["resultboard"]), false);
+    assert.equal(staffCookieFromGrants("registrar", ["resultboard"]), false);
+  });
+
+  it("still marks a registrar with v2 admin roles as staff", () => {
+    assert.equal(staffCookieFromGrants("registrar", ["entries"]), true);
+    assert.equal(staffCookieFromGrants("registrar", ["speaker", "resultboard"]), true);
+    assert.equal(staffCookieFromGrants("organizer", ["organizer_legacy"]), false);
+    assert.equal(staffCookieFromGrants("registrar", []), false);
   });
 });

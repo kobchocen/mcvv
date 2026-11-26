@@ -35,7 +35,10 @@ import {
  */
 
 type Tx = Prisma.TransactionClient;
-export type StarterPlan = Pick<RaceContext, "year" | "zero" | "intervalS" | "secondStartFrom">;
+export type StarterPlan = Pick<
+  RaceContext,
+  "year" | "zero" | "intervalS" | "secondStartFrom" | "organizerShiftSeconds"
+>;
 
 export const STARTER_SOURCE = "starter";
 export const SPLIT_SOURCE = "split";
@@ -68,6 +71,7 @@ export type StarterSnapshot = {
   zero: number;
   intervalS: number;
   secondStartFrom: number;
+  organizerShiftSeconds: number;
   zeroOverridden: boolean;
   settings: StarterSettings;
   runners: { bib: number; name: string; club: string | null }[];
@@ -105,6 +109,7 @@ export async function loadStarterSnapshot(
     zero: ctx.zero.getTime(),
     intervalS: ctx.intervalS,
     secondStartFrom: ctx.secondStartFrom,
+    organizerShiftSeconds: ctx.organizerShiftSeconds,
     zeroOverridden: ctx.zeroOverridden,
     settings,
     runners,
@@ -147,7 +152,13 @@ async function applyStarterEntry(
   }
   const tapAt = new Date(entry.at);
   const planned = new Date(
-    plannedStartMs(plan.zero.getTime(), entry.bib, plan.intervalS, plan.secondStartFrom),
+    plannedStartMs(
+      plan.zero.getTime(),
+      entry.bib,
+      plan.intervalS,
+      plan.secondStartFrom,
+      plan.organizerShiftSeconds,
+    ),
   );
   const corridor = corridorOf(entry.bib, plan.secondStartFrom);
   const journal = async (outcome: StarterOutcome, note: string | null = null) => {
@@ -269,7 +280,13 @@ export async function autoMarkStart(
   const ctx = plan ?? (await getLiveRaceContext());
   if (ctx.year !== input.year) return false;
   const planned = new Date(
-    plannedStartMs(ctx.zero.getTime(), input.bib, ctx.intervalS, ctx.secondStartFrom),
+    plannedStartMs(
+      ctx.zero.getTime(),
+      input.bib,
+      ctx.intervalS,
+      ctx.secondStartFrom,
+      ctx.organizerShiftSeconds,
+    ),
   );
   // INSERT IGNORE: souběžné ťuknutí startéra má přednost a zápis mezičasu nesmí shodit.
   const created = await tx.startCheck.createMany({

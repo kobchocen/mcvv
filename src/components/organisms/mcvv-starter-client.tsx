@@ -362,6 +362,7 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
         runner.bib,
         snapshot.intervalS,
         snapshot.secondStartFrom,
+        snapshot.organizerShiftSeconds,
       ),
     }));
   }, [snapshot]);

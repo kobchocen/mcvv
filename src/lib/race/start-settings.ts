@@ -7,6 +7,7 @@ export type ChampionBibs = { men: number | null; women: number | null };
 
 export type StartSettingsIssue =
   | { code: "zero" }
+  | { code: "organizerZero" }
   | { code: "interval" }
   | { code: "secondStart" }
   | { code: "rangeOrder"; categoryId: string }
@@ -27,6 +28,13 @@ export function validateStartSettings(
   const issues: StartSettingsIssue[] = [];
   if (!Number.isInteger(model.zeroSeconds) || model.zeroSeconds < 0 || model.zeroSeconds >= 86400) {
     issues.push({ code: "zero" });
+  }
+  if (
+    !Number.isInteger(model.organizerZeroSeconds) ||
+    model.organizerZeroSeconds < 0 ||
+    model.organizerZeroSeconds >= 86400
+  ) {
+    issues.push({ code: "organizerZero" });
   }
   if (
     !Number.isInteger(model.intervalSeconds) ||
@@ -149,6 +157,7 @@ export type DecodedIssue = { code: string; category?: string; other?: string };
 export function decodeStartIssues(raw: string | null | undefined): DecodedIssue[] {
   const known = new Set([
     "zero",
+    "organizerZero",
     "interval",
     "secondStart",
     "rangeOrder",

@@ -9,6 +9,8 @@ import {
   type GeneratorEntry,
   type GeneratorInput,
 } from "./startlist-generator";
+import { inputFingerprint } from "./startlist-fingerprint";
+import { deriveOrganizerTieSeed, organizerSetKey } from "./startlist-organizer-order";
 import { DEFAULT_START_MODEL, startTimeForBib } from "./start-time";
 
 const RANGES: BibRange[] = [
@@ -117,19 +119,92 @@ describe("generateStartList", () => {
     assert.ok(map.get(slow.runnerId)! < map.get(fast.runnerId)!);
   });
 
-  it("numbers organizers (spec. start) from 1 and 601 consecutively", () => {
+  it("treats a seed time from two or three years ago as a returning runner (#381)", () => {
+    // Loader fills lastYearTime from the most recent year in Y−1…Y−3, so a 2024
+    // time arrives in the same field as a 2025 time.
+    const fromTwoYearsAgo = entry({ categoryId: "A", name: "Předloni", lastYearTime: 1400 });
+    const lastYearFast = entry({ categoryId: "A", name: "Loni rychlý", lastYearTime: 800 });
+    const fresh = entry({ categoryId: "A", name: "Nováček" });
+    const map = bibs(generateStartList(input([fromTwoYearsAgo, lastYearFast, fresh])));
+    assert.ok(map.get(fresh.runnerId)! < map.get(fromTwoYearsAgo.runnerId)!);
+    assert.ok(map.get(fromTwoYearsAgo.runnerId)! < map.get(lastYearFast.runnerId)!);
+  });
+
+  it("numbers organizers from 1 and 601 by completed editions, not category sort (#382)", () => {
     const org = { kind: "organizer", partnerId: null, offsetSeconds: 0 } as const;
-    const orgA = entry({ categoryId: "A", special: org, name: "B Org" });
-    const orgJ = entry({ categoryId: "J", special: org, name: "Z Org" });
-    const orgF1 = entry({ categoryId: "F", special: org, name: "A Org" });
-    const orgF2 = entry({ categoryId: "F", special: org, name: "C Org" });
+    const orgA = entry({ categoryId: "A", special: org, name: "B Org", editionsCount: 12 });
+    const orgJ = entry({ categoryId: "J", special: org, name: "Z Org", editionsCount: 3 });
+    const orgF1 = entry({ categoryId: "F", special: org, name: "A Org", editionsCount: 8 });
+    const orgF2 = entry({ categoryId: "F", special: org, name: "C Org", editionsCount: 1 });
     const plain = entry({ categoryId: "A", name: "A Plain" });
     const map = bibs(generateStartList(input([orgA, orgJ, orgF1, orgF2, plain])));
-    assert.equal(map.get(orgJ.runnerId), 1, "category J sorts before A");
-    assert.equal(map.get(orgA.runnerId), 2);
-    assert.equal(map.get(orgF1.runnerId), 601);
+    assert.equal(map.get(orgA.runnerId), 1, "most editions in series 1 starts first");
+    assert.equal(map.get(orgJ.runnerId), 2);
+    assert.equal(map.get(orgF1.runnerId), 601, "most editions in series 2");
     assert.equal(map.get(orgF2.runnerId), 602);
     assert.equal(map.get(plain.runnerId), 301, "no implicit organizer (Q220)");
+  });
+  it("breaks organiser ties with a seed that is stable until the set changes", () => {
+    const org = { kind: "organizer", partnerId: null, offsetSeconds: 0 } as const;
+    const a = entry({
+      categoryId: "A",
+      special: org,
+      name: "A",
+      editionsCount: 5,
+      runnerId: "AAA0001",
+    });
+    const b = entry({
+      categoryId: "A",
+      special: org,
+      name: "B",
+      editionsCount: 5,
+      runnerId: "BBB0001",
+    });
+    const entries = [a, b];
+    const seed = deriveOrganizerTieSeed(organizerSetKey(entries));
+    const first = bibs(generateStartList(input(entries, { organizerTieSeed: seed })));
+    const second = bibs(generateStartList(input([b, a], { organizerTieSeed: seed })));
+    assert.deepEqual(first, second);
+    const bibsAssigned = [first.get(a.runnerId), first.get(b.runnerId)].sort();
+    assert.deepEqual(bibsAssigned, [1, 2]);
+    const fingerprint = inputFingerprint(input(entries, { organizerTieSeed: seed }));
+    const same = inputFingerprint(input([b, a], { organizerTieSeed: seed }));
+    assert.equal(fingerprint, same);
+    const otherSeed = seed ^ 0xaaaaaaaa;
+    assert.notEqual(
+      inputFingerprint(input(entries, { organizerTieSeed: otherSeed })),
+      fingerprint,
+      "seed is part of the input fingerprint",
+    );
+  });
+  it("gives overflow organisers a bib outside 1–40 whose start uses the edition zero", () => {
+    const org = { kind: "organizer", partnerId: null, offsetSeconds: 0 } as const;
+    const organisers = Array.from({ length: 41 }, (_, i) =>
+      entry({
+        categoryId: "A",
+        special: org,
+        name: `Org ${String(i).padStart(2, "0")}`,
+        editionsCount: 41 - i,
+        runnerId: `ORG${String(i).padStart(5, "0")}`,
+      }),
+    );
+    const result = generateStartList(input(organisers));
+    const map = bibs(result);
+    const assigned = organisers.map((row) => map.get(row.runnerId)!);
+    const inRange = assigned.filter((bib) => bib >= 1 && bib <= 40);
+    const overflow = assigned.filter((bib) => bib < 1 || bib > 40);
+    assert.equal(inRange.length, 40);
+    assert.equal(overflow.length, 1);
+    const overflowBib = overflow[0];
+    assert.ok(overflowBib === 41 || overflowBib >= 41);
+    assert.equal(
+      startTimeForBib(DEFAULT_START_MODEL, overflowBib),
+      startTimeForBib(DEFAULT_START_MODEL, 41),
+    );
+    assert.notEqual(startTimeForBib(DEFAULT_START_MODEL, overflowBib).startsWith("07:"), true);
+    assert.ok(startTimeForBib(DEFAULT_START_MODEL, overflowBib).startsWith("10:"));
+    const overflowWarning = result.warnings.find((w) => w.code === "specOverflow");
+    assert.equal(overflowWarning?.code, "specOverflow");
   });
   it("assigns champion bibs and keeps them out of the windows", () => {
     const champ = entry({ categoryId: "A", lastYearTime: 800 });

@@ -12,6 +12,8 @@
  *   a přehled prodejek na `/kancelar`,
  * - `starter` – startér: žádná administrace, jen obrazovka startu `/start` pro přiřazený
  *   koridor (`mcvv_user.start_corridor`).
+ * - `resultboard` – obrazovky výsledků v cíli: žádná administrace, jen
+ *   `/resultboard` (rozcestník a TV). Po přihlášení sem účet rovnou dorazí.
  *
  * Oprávnění se vynucují na serveru (stránky, server actions, route handlery) přes
  * `src/lib/admin/staff.ts`; tady je jen jejich definice, aby šla testovat.
@@ -25,6 +27,7 @@ export const USER_ROLES = [
   "splitmaker",
   "race_office",
   "starter",
+  "resultboard",
 ] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
@@ -55,6 +58,11 @@ export function canAccessStarter(role: UserRole): boolean {
 /** Obrazovka pro speakera s průběžnými výsledky (#188, Q73): jen admin nebo pořadatel. */
 export function canViewSpeakerScreen(role: UserRole): boolean {
   return isStaffRole(role);
+}
+
+/** Obrazovky resultboardu v cíli: admin, pořadatel, nebo role Resultboard (jen čtení). */
+export function canViewResultboardScreen(role: UserRole): boolean {
+  return role === "resultboard" || isStaffRole(role);
 }
 
 /** Rozcestník obrazovek dne závodu: alespoň jedna z obrazovek startér / mezičasy / cíl / speaker. */
@@ -110,14 +118,15 @@ export function canMergeClubs(role: UserRole): boolean {
  * - `tools` – rozcestník `/admin` a huby obrazovek / kanceláře
  *   (`/admin/obrazovky`, `/admin/kancelar`); obrazovky samotné leží mimo /admin
  *   a hlídají si přístup samy,
- * - `none` – závodník (`registrar`), bez kolečka a bez administrace.
+ * - `none` – závodník (`registrar`) a role Resultboard (jen `/resultboard`, bez kolečka
+ *   a bez administrace).
  */
 export type AdminAccess = "full" | "raceday" | "tools" | "none";
 
 export function adminAccess(role: UserRole): AdminAccess {
   if (isStaffRole(role)) return "full";
   if (canAccessRaceDay(role)) return "raceday";
-  if (role === "registrar") return "none";
+  if (role === "registrar" || role === "resultboard") return "none";
   return "tools";
 }
 
@@ -155,7 +164,7 @@ export function adminPathAllowed(access: AdminAccess, path: string): boolean {
 
 /**
  * Přihlášení bez ověřeného e-mailu smí jen plný staff (účty zakládá seed).
- * Nové omezené role (`timing`, `splitmaker`, `race_office`, `starter`) ověřený e-mail potřebují stejně jako `registrar`.
+ * Nové omezené role (`timing`, `splitmaker`, `race_office`, `starter`, `resultboard`) ověřený e-mail potřebují stejně jako `registrar`.
  */
 export function requiresVerifiedEmail(role: UserRole): boolean {
   return !isStaffRole(role);

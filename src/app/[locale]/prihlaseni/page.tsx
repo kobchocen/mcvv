@@ -7,7 +7,7 @@ import { McvvResendVerification } from "@/components/organisms/mcvv-resend-verif
 import { McvvOauthButtons } from "@/components/organisms/mcvv-oauth-buttons";
 import { appleEnabled, googleEnabled } from "@/lib/auth/oauth";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
-import { getSession } from "@/lib/auth/session";
+import { adminLevel, getAccess } from "@/lib/admin/access";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
 import type { McvvHomepageContent } from "@/components/templates";
@@ -32,10 +32,11 @@ export default async function LoginPage({ params, searchParams }: PageProps) {
   const { next: nextParam, overeni, heslo } = await searchParams;
   const verifyInvalid = overeni === "neplatne";
   const next = safeNext(nextParam);
-  const session = await getSession();
+  const access = await getAccess();
 
-  if (session) {
-    redirectAfterLogin(next, session.role, locale);
+  if (access.session) {
+    // Role z DB (ne ze staré cookie) a stejné rozhodnutí jako layout /admin.
+    redirectAfterLogin(next, access.session.role, adminLevel(access), locale);
   }
 
   const home = await getTranslations({ locale, namespace: "Home" });

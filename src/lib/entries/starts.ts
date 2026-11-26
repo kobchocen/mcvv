@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/client";
 
+/** Počet minulých účastí (všechny řádky mcvv_time mimo aktuální rok) – stejné pravidlo jako „Účasti“ na profilu. */
 export async function countPastStarts(
   runnerIds: string[],
   currentYear: number,

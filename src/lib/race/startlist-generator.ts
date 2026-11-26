@@ -6,6 +6,7 @@ import {
   type RangedSpecialKind,
   type SpecialStartSpec,
 } from "./special-start";
+import { resolveOrganizerTieSeed, compareOrganizerOrder } from "./startlist-organizer-order";
 import type { BibRange } from "./start-settings";
 import { bibForSlot, startSeriesForBib, startSlot, type StartModel } from "./start-time";
 
@@ -22,8 +23,9 @@ import { bibForSlot, startSeriesForBib, startSlot, type StartModel } from "./sta
  *    Běžci „spolu s“, kteří se k nim (i přes další běžce) váží, jdou s nimi (Q227);
  * b) v okně kategorie (rozsah čísel ročníku) se ostatní běžci rozprostřou rovnoměrně kolem
  *    již obsazených čísel, bez velkých děr;
- * c) nejdřív nováčci a běžci bez loňského času (podle jména), pak vracející se podle loňského
- *    času od nejpomalejšího – nejrychlejší startují na konci, závod graduje;
+ * c) nejdřív nováčci a běžci bez času z uplynulých 3 let (podle jména), pak vracející se
+ *    podle posledního dostupného času z Y−1…Y−3 od nejpomalejšího – nejrychlejší startují
+ *    na konci, závod graduje (#381);
  * d) „spolu s“ (náhrada dřívějších skupin, Q225): čas partnera + posun (libovolný násobek
  *    intervalu, i záporný), ve vlastním nebo druhém startu (posun 0 = druhý start). Když je
  *    přesný čas obsazený, nejbližší volné číslo a upozornění; běžce z kategorie smí posunout
@@ -44,8 +46,10 @@ export type GeneratorEntry = {
   locked: boolean;
   /** Platná (zaplacená / potvrzená, nezrušená) přihláška – jen ty dostanou číslo. */
   eligible: boolean;
-  /** Loňský čas v sekundách, null = nováček nebo loni neběžel. */
+  /** Poslední platný čas z Y−1…Y−3 (s), null = v okně žádný (#381). */
   lastYearTime: number | null;
+  /** Počet účastí (mcvv_time, stejně jako na /bezec/[id]) – řazení pořadatelů (#382). */
+  editionsCount?: number;
   /** Spec. start z administrace přihlášek (null / chybí = žádný). */
   special?: SpecialStartSpec | null;
 };
@@ -58,6 +62,11 @@ export type GeneratorInput = {
   champions: { runnerId: string; bib: number }[];
   entries: GeneratorEntry[];
   locale?: string;
+  /**
+   * Seed pro shody počtu ročníků u pořadatelů (#382). Když chybí, odvodí se ze sady
+   * způsobilých pořadatelů a drží se, dokud se sada nezmění.
+   */
+  organizerTieSeed?: number;
 };
 
 export type AssignmentReason =
@@ -127,7 +136,7 @@ export function spreadIndexes(n: number, m: number): number[] {
   return Array.from({ length: count }, (_, i) => Math.floor((i * m) / count));
 }
 
-/** Pořadí v okně kategorie: nováčci / bez loňského času (jméno), pak loňský čas sestupně. */
+/** Pořadí v okně kategorie: nováčci / bez času z 3 let (jméno), pak seed čas sestupně. */
 export function seedOrder<
   T extends { name: string; lastYearTime: number | null; runnerId: string },
 >(runners: T[], locale = "cs"): T[] {
@@ -304,6 +313,7 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
   };
   for (const kind of RANGED_SPECIAL_KINDS) {
     for (const series of [1, 2] as const) {
+      const organizerSeed = resolveOrganizerTieSeed(input);
       const anchors = entries
         .filter(
           (entry) =>
@@ -311,7 +321,16 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
             entry.special?.kind === kind &&
             rangeSeries(model, rangeByCategory.get(entry.categoryId)) === series,
         )
-        .sort(orderBySort);
+        .sort(
+          kind === "organizer"
+            ? (a, b) =>
+                compareOrganizerOrder(
+                  { runnerId: a.runnerId, editionsCount: a.editionsCount ?? 0 },
+                  { runnerId: b.runnerId, editionsCount: b.editionsCount ?? 0 },
+                  organizerSeed,
+                )
+            : orderBySort,
+        );
       // Pozdě plní rozsah od konce (co nejpozději), v pořadí zůstává stabilní řazení.
       const late = kind === "late";
       if (late) {

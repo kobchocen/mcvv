@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { McvvResultboardForbidden } from "@/components/organisms/mcvv-resultboard-forbidden";
 import { Link, type Locale } from "@/i18n/routing";
 import { loadResultboardConfig } from "@/lib/live/resultboard";
+import { requireResultboardAccess } from "@/lib/live/resultboard-access";
 
 type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
 
@@ -12,11 +14,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("indexMetaTitle"), robots: { index: false, follow: false } };
 }
 
-/** Rozcestník `/resultboard` – odkazy na jednotlivé TV v cíli (Q144). Veřejné, noindex. */
+/** Rozcestník `/resultboard` – odkazy na jednotlivé TV v cíli (Q144). Jen přihlášení s `screens.resultboard`. */
 export default async function ResultboardIndexPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
+  if (!(await requireResultboardAccess(locale, "/resultboard"))) {
+    return <McvvResultboardForbidden locale={locale} />;
+  }
   const t = await getTranslations({ locale, namespace: "Resultboard" });
   const config = await loadResultboardConfig();
   return (

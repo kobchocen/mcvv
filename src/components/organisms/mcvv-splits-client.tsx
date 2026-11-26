@@ -42,6 +42,8 @@ type Props = {
   intervalS: number;
   /** První číslo 2. startu (hranice koridorů z modelu ročníku). */
   secondStartFrom: number;
+  /** Posun nuly pořadatelů vůči nule ročníku (#382). */
+  organizerShiftSeconds?: number;
   zeroOverridden: boolean;
   /** Práh odchylky na Startu v sekundách (nastavení admina, výchozí 2 min). */
   startLimitS?: number;
@@ -74,6 +76,7 @@ export function McvvSplitsClient({
   zeroIso,
   intervalS,
   secondStartFrom,
+  organizerShiftSeconds = 0,
   zeroOverridden,
   startLimitS = DEFAULT_START_OFFSET_LIMIT_S,
   locale,
@@ -351,6 +354,7 @@ export function McvvSplitsClient({
       zero,
       intervalS,
       secondStartFrom,
+      organizerShiftSeconds,
       bib: r.bib,
       punchedAt: r.punchedAt,
       serverTime: r.time,

@@ -164,6 +164,9 @@ model Edition {
   // Model startu (#114): nulový čas v sekundách od půlnoci (Europe/Prague), 1. číslo 2. startu,
   // čísla obhájců (absolutní vítězové minulého ročníku, muži a ženy).
   startZeroSeconds Int       @default(36900) @map("st_nula_s")
+  /// Nula startu pořadatelů (čísla ve slotech 1–40, tj. 1–40 / 601–640) v sekundách od půlnoci.
+  /// Null = výchozích 7:45 (#382).
+  organizerZeroSeconds Int?  @map("st_nula_porad_s")
   secondStartFrom  Int       @default(601) @map("st_druhy_od") @db.SmallInt
   championBibMen   Int?      @default(400) @map("st_obhajce_m") @db.SmallInt
   championBibWomen Int?      @default(950) @map("st_obhajce_z") @db.SmallInt
@@ -384,6 +387,8 @@ enum UserRole {
   race_office
   /// „Startér“: obrazovka startu `/start` pro jeden koridor (mcvv_user.start_corridor).
   starter
+  /// „Resultboard“: jen obrazovky výsledků v cíli `/resultboard`, bez administrace.
+  resultboard
 }
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.

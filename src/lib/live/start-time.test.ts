@@ -43,3 +43,27 @@ test("second-start boundary comes from the edition model (st_druhy_od = 501)", (
   assert.equal(startOffsetSeconds(601, 15, 501), 1500);
   assert.equal(secondsSinceStart(zero, 502, new Date(zero.getTime() + 20_500), 15, 501), 5);
 });
+
+test("organiser zero (#382) shifts only bibs in slots 1–40", () => {
+  const shift = 27900 - 36900; // 7:45 − 10:15
+  const hhmmss = (bib: number) =>
+    startInstant(zero, bib, 15, 601, shift).toLocaleTimeString("en-GB", {
+      timeZone: "Europe/Prague",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  assert.equal(hhmmss(1), "07:45:00");
+  assert.equal(hhmmss(40), "07:54:45");
+  assert.equal(hhmmss(41), "10:25:00");
+  assert.equal(hhmmss(601), "07:45:00");
+  assert.equal(hhmmss(640), "07:54:45");
+  assert.equal(hhmmss(641), "10:25:00");
+  assert.equal(startOffsetSeconds(1, 15, 601, shift), -9000);
+  assert.equal(startOffsetSeconds(40, 15, 601, shift), -9000 + 39 * 15);
+  assert.equal(startOffsetSeconds(41, 15, 601, shift), 600);
+  assert.equal(startOffsetSeconds(641, 15, 601, shift), 600);
+  // bez posunu zůstává původní nula (zpětná kompatibilita volání)
+  assert.equal(startOffsetSeconds(1, 15, 601), 0);
+});

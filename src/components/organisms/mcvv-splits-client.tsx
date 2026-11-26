@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useCoarsePointer } from "@/hooks/use-mobile";
+
 import {
   addPunch,
   applyAck,
@@ -29,15 +31,40 @@ import {
   recentRecords,
   relativeTime,
 } from "@/lib/live/splits-screen-core";
+import { Flag, Hourglass, Milestone, Play, UserCheck, type LucideIcon } from "lucide-react";
+
+import {
+  applyBibKey,
+  BIB_KEYPAD_KEYS,
+  bibInputMode,
+  isBibBackspaceKey,
+  isBibSubmitKey,
+} from "@/lib/live/splits-input";
+import type { FieldCounts } from "@/lib/live/splits-field-core";
+import {
+  classifySplitWarning,
+  primarySplitWarning,
+  splitWarningStateKey,
+  warningFieldFromBibs,
+  type FieldBibs,
+  type SplitWarning,
+} from "@/lib/live/splits-warning-core";
 import { formatOffset } from "@/lib/live/start-check-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { isStartStation, type Station } from "@/lib/live/stations";
 
 type Props = {
   stations: Station[];
+  /** Stanoviště vybrané na serveru (přiřazení / ?split=). */
+  initialStation: string;
+  /** Platný kód z ?split=, jinak null. */
+  urlStation: string | null;
+  /** Admin/pořadatel smí mít víc stanovišť; splitmaker má obrazovku přibitou. */
+  canChooseStation: boolean;
+  initialField: FieldCounts;
+  initialBibs: FieldBibs;
   year: number;
   userId: number;
-  userName: string;
   zeroIso: string;
   intervalS: number;
   /** První číslo 2. startu (hranice koridorů z modelu ročníku). */
@@ -68,11 +95,38 @@ function clock(ms: number): string {
   return new Date(ms).toLocaleTimeString("cs-CZ", { timeZone: "Europe/Prague" });
 }
 
+const FIELD_BOXES: {
+  key: keyof FieldCounts;
+  icon: LucideIcon;
+  label: "infoWaitingStart" | "infoStarted" | "infoPrevious" | "infoPassedHere" | "infoFinished";
+  short:
+    | "infoWaitingStartShort"
+    | "infoStartedShort"
+    | "infoPreviousShort"
+    | "infoPassedHereShort"
+    | "infoFinishedShort";
+}[] = [
+  {
+    key: "waitingStart",
+    icon: Hourglass,
+    label: "infoWaitingStart",
+    short: "infoWaitingStartShort",
+  },
+  { key: "started", icon: Play, label: "infoStarted", short: "infoStartedShort" },
+  { key: "previousSegment", icon: Milestone, label: "infoPrevious", short: "infoPreviousShort" },
+  { key: "passedHere", icon: UserCheck, label: "infoPassedHere", short: "infoPassedHereShort" },
+  { key: "finished", icon: Flag, label: "infoFinished", short: "infoFinishedShort" },
+];
+
 export function McvvSplitsClient({
   stations,
+  initialStation,
+  urlStation,
+  canChooseStation,
+  initialField,
+  initialBibs,
   year,
   userId,
-  userName,
   zeroIso,
   intervalS,
   secondStartFrom,
@@ -87,7 +141,7 @@ export function McvvSplitsClient({
   const [queue, setQueueState] = useState<QueueState>(EMPTY_QUEUE);
   const queueRef = useRef<QueueState>(EMPTY_QUEUE);
   const [loaded, setLoaded] = useState(false);
-  const [station, setStation] = useState(stations[0]?.code ?? "1");
+  const [station, setStation] = useState(initialStation);
   const [input, setInput] = useState("");
   const [offset, setOffset] = useState<number | null>(null);
   const offsetRef = useRef(0);
@@ -97,7 +151,7 @@ export function McvvSplitsClient({
   const [warning, setWarning] = useState<{ bib: number; at: number; existing: SplitRecord } | null>(
     null,
   );
-  const [flash, setFlash] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ message: string; warning?: string } | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editBib, setEditBib] = useState("");
   const inFlight = useRef<Set<string>>(new Set());
@@ -105,6 +159,18 @@ export function McvvSplitsClient({
   const inputRef = useRef<HTMLInputElement>(null);
   /** Běžící hodiny (#187); null do prvního tiku, aby SSR a klient nerenderovaly jiný čas. */
   const [now, setNow] = useState<number | null>(null);
+  const coarsePointer = useCoarsePointer();
+  const [field, setField] = useState<FieldCounts>(initialField);
+  const [fieldBibs, setFieldBibs] = useState<FieldBibs>(initialBibs);
+  const warningField = useMemo(() => warningFieldFromBibs(fieldBibs), [fieldBibs]);
+
+  // Virtual Keyboard API: typování Reactu atribut ještě nemá, na dotyku ho nastavíme ručně.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    if (coarsePointer) el.setAttribute("virtualkeyboardpolicy", "manual");
+    else el.removeAttribute("virtualkeyboardpolicy");
+  }, [coarsePointer]);
 
   const setQueue = useCallback(
     (update: (state: QueueState) => QueueState) => {
@@ -128,7 +194,14 @@ export function McvvSplitsClient({
       if (cancelled) return;
       queueRef.current = stored;
       setQueueState(stored);
-      if (savedStation && stations.some((s) => s.code === savedStation)) setStation(savedStation);
+      if (
+        canChooseStation &&
+        !urlStation &&
+        savedStation &&
+        stations.some((s) => s.code === savedStation)
+      ) {
+        setStation(savedStation);
+      }
       if (typeof savedOffset === "number") {
         offsetRef.current = savedOffset;
         setOffset(savedOffset);
@@ -139,7 +212,7 @@ export function McvvSplitsClient({
     return () => {
       cancelled = true;
     };
-  }, [storageKey, stations]);
+  }, [storageKey, stations, canChooseStation, urlStation]);
 
   // service worker – stránka se otevře i bez signálu
   useEffect(() => {
@@ -207,6 +280,31 @@ export function McvvSplitsClient({
     const id = window.setInterval(sync, 60_000);
     return () => window.clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(
+          `/api/live/splits/stats?split=${encodeURIComponent(station)}`,
+          { cache: "no-store", credentials: "same-origin" },
+        );
+        if (!response.ok || cancelled) return;
+        const body = (await response.json()) as { counts?: FieldCounts; bibs?: FieldBibs };
+        if (cancelled) return;
+        if (body.counts) setField(body.counts);
+        if (body.bibs) setFieldBibs(body.bibs);
+      } catch {
+        // offline – necháme poslední známé počty
+      }
+    };
+    void load();
+    const id = window.setInterval(load, 15_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [station]);
 
   // běžící aktuální čas – tik zarovnaný na celou sekundu
   useEffect(() => {
@@ -281,9 +379,10 @@ export function McvvSplitsClient({
     };
   }, [flush, loaded, setQueue]);
 
-  const show = (message: string) => {
-    setFlash(message);
-    window.setTimeout(() => setFlash((current) => (current === message ? null : current)), 2500);
+  const show = (message: string, warning?: string) => {
+    const next = { message, warning };
+    setFlash(next);
+    window.setTimeout(() => setFlash((current) => (current === next ? null : current)), 2500);
   };
 
   const record = (bib: number, at: number, force = false) => {
@@ -295,7 +394,11 @@ export function McvvSplitsClient({
     setWarning(null);
     setQueue((s) => addPunch(s, { split: station, bib, punchedAt: at }, uuid));
     navigator.vibrate?.(30);
-    show(t("saved", { bib, time: clock(at) }));
+    const punchWarning = classifySplitWarning(bib, station, warningField);
+    show(
+      t("saved", { bib, time: clock(at) }),
+      punchWarning ? t(`state.${splitWarningStateKey(punchWarning)}`) : undefined,
+    );
   };
 
   const submit = () => {
@@ -315,15 +418,8 @@ export function McvvSplitsClient({
   };
 
   const press = (key: string) => {
-    if (key === "C") setInput("");
-    else if (key === "⌫") setInput((value) => value.slice(0, -1));
-    else if (key === "OK") submit();
-    else setInput((value) => (value.length >= 3 ? value : (value + key).replace(/^0+/, "")));
-  };
-
-  const chooseStation = (code: string) => {
-    setStation(code);
-    void saveValue("station", code);
+    if (isBibSubmitKey(key)) submit();
+    else setInput((value) => applyBibKey(value, key));
   };
 
   const saveEdit = (target: SplitRecord) => {
@@ -374,38 +470,71 @@ export function McvvSplitsClient({
       : t("startFarLate", { limit });
   };
 
+  const warningOf = (r: SplitRecord): SplitWarning | null => {
+    const fromNote = primarySplitWarning(r.note);
+    if (fromNote) return fromNote;
+    if (r.bib === null) return null;
+    if (r.state !== "pending" && r.state !== "applied") return null;
+    // Po potvrzení serveru platí jen poznámka z deníku (auto-start už by jinak varování shodil).
+    if (r.state === "applied") return null;
+    return classifySplitWarning(r.bib, r.split, warningField);
+  };
   const stateLabel = (r: SplitRecord) => {
-    if (r.state === "applied" && r.note?.includes("unknown-bib")) return t("state.unknownBib");
+    const punchWarning = warningOf(r);
+    if (punchWarning) return t(`state.${splitWarningStateKey(punchWarning)}`);
     if (r.state === "rejected" && r.note)
       return t("state.rejectedReason", { reason: t(`reason.${r.note.split(";")[0]}` as never) });
     return t(`state.${r.state}` as never);
   };
   const stateClass = (r: SplitRecord) =>
-    r.state === "applied"
-      ? r.note?.includes("unknown-bib")
-        ? "border-amber-500/60 text-amber-600 dark:text-amber-300"
-        : "border-race-accent/60 text-race-accent"
-      : r.state === "pending" || r.state === "draft"
-        ? "border-sky-500/60 text-sky-600 dark:text-sky-300"
-        : r.state === "deleted"
-          ? "border-race-line text-race-muted line-through"
-          : "border-red-500/60 text-red-600 dark:text-red-400";
+    warningOf(r)
+      ? "border-amber-500/60 text-amber-700 dark:text-amber-300"
+      : r.state === "applied"
+        ? "border-race-accent/60 text-race-accent"
+        : r.state === "pending" || r.state === "draft"
+          ? "border-sky-500/60 text-sky-600 dark:text-sky-300"
+          : r.state === "deleted"
+            ? "border-race-line text-race-muted line-through"
+            : "border-red-500/60 text-red-600 dark:text-red-400";
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
-      <header className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-3 pb-4 pt-2 sm:gap-3 sm:pb-8 sm:pt-4">
+      <header className="flex flex-col gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-2">
           <Link
             href="/"
             data-testid="back-link"
             aria-label={t("backAria")}
-            className="inline-flex h-9 items-center text-sm font-semibold text-race-accent hover:underline"
+            className="inline-flex h-8 shrink-0 items-center text-sm font-semibold text-race-accent hover:underline"
           >
-            ← mcvv.org
+            <span className="sm:hidden">←</span>
+            <span className="hidden sm:inline">← mcvv.org</span>
           </Link>
+          <h1 className="min-w-0 flex-1 font-display text-lg font-bold leading-tight text-foreground dark:text-white sm:text-2xl">
+            {t("titleShort")}
+            <span data-testid="station-heading" className="font-semibold text-race-accent">
+              {" "}
+              · {atStart ? t("startStation") : stationLabel}
+            </span>
+          </h1>
+          <div className="shrink-0 text-right" data-testid="clock">
+            <p
+              aria-label={t("now")}
+              className="font-display text-xl font-bold leading-none tabular-nums text-foreground dark:text-white sm:text-3xl"
+            >
+              <time suppressHydrationWarning>
+                {now === null ? "--:--:--" : clock(correctedNow(now, offset))}
+              </time>
+            </p>
+            {offset === null ? (
+              <p className="mt-0.5 text-[11px] text-race-muted">{t("clockDevice")}</p>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <span
             data-testid="sync-status"
-            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+            className={`rounded-full border px-2 py-0.5 font-semibold ${
               online && pending === 0
                 ? "border-race-accent/60 text-race-accent"
                 : online
@@ -413,76 +542,29 @@ export function McvvSplitsClient({
                   : "border-red-500/60 text-red-600 dark:text-red-400"
             }`}
           >
-            {online ? t("online") : t("offline")} · {t("queued", { count: pending })}
+            {online ? t("online") : t("offline")}
+            {pending > 0 || !online ? ` · ${t("queued", { count: pending })}` : ""}
+            {!online && lastSyncAt ? ` · ${t("lastSync", { time: clock(lastSyncAt) })}` : ""}
           </span>
-        </div>
-        <div className="flex items-end justify-between gap-2">
-          <h1 className="font-display text-2xl font-bold text-foreground dark:text-white">
-            {t("title", { year })}
-          </h1>
-          <div className="text-right" data-testid="clock">
-            <p
-              aria-label={t("now")}
-              className="font-display text-3xl font-bold leading-none tabular-nums text-foreground dark:text-white"
-            >
-              <time suppressHydrationWarning>
-                {now === null ? "--:--:--" : clock(correctedNow(now, offset))}
-              </time>
-            </p>
-            <p className="mt-1 text-[11px] text-race-muted">
-              {offset === null ? t("clockDevice") : t("clockCorrected")}
-            </p>
-          </div>
-        </div>
-        <div role="radiogroup" aria-label={t("station")} className="grid grid-cols-2 gap-2">
-          {stations.map((s) => (
-            <button
-              key={s.code}
-              type="button"
-              role="radio"
-              aria-checked={s.code === station}
-              onClick={() => chooseStation(s.code)}
-              className={`h-12 border text-base font-semibold ${
-                s.code === station
-                  ? "border-race-accent bg-race-accent-solid text-white"
-                  : "border-race-line/60 bg-race-surface text-foreground"
-              }`}
-            >
-              {isStartStation(s.code)
-                ? t("startStation")
-                : t("stationLabel", { label: s.label, code: s.code })}
-            </button>
-          ))}
-        </div>
-        <p
-          data-testid="counts"
-          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border border-race-line/50 bg-race-surface px-3 py-2 text-sm"
-        >
-          <span>
-            {atStart ? t("startStation") : stationLabel}:{" "}
-            <strong className="font-display text-lg tabular-nums">{counts.station}</strong>{" "}
+          <span data-testid="counts" className="text-race-muted">
+            <strong className="font-display text-sm tabular-nums text-foreground">
+              {counts.station}
+            </strong>{" "}
             {t("countRecorded", { count: counts.station })}
             {counts.stationSent !== counts.station
               ? ` (${t("countSaved", { count: counts.stationSent })})`
               : ""}
           </span>
-          <span className="text-race-muted">
-            {t("countTotalSent")}:{" "}
-            <strong className="font-display text-lg tabular-nums text-foreground">
-              {counts.totalSent}
-            </strong>
-          </span>
-        </p>
-        <p className="text-xs text-race-muted">
-          {t("operator", { name: userName })} ·{" "}
-          {offset === null ? t("clockUnknown") : t("clockOffset", { ms: offset })}
-          {lastSyncAt ? ` · ${t("lastSync", { time: clock(lastSyncAt) })}` : ""}
-          {zeroOverridden ? ` · ${t("testZero", { time: clock(zero.getTime()) })}` : ""}
-        </p>
+        </div>
+        {zeroOverridden ? (
+          <p className="text-xs text-race-muted">
+            {t("testZero", { time: clock(zero.getTime()) })}
+          </p>
+        ) : null}
         {atStart ? (
           <p
             data-testid="start-hint"
-            className="border border-sky-500/50 bg-sky-500/10 p-2 text-xs text-foreground"
+            className="border border-sky-500/50 bg-sky-500/10 px-2 py-1 text-xs text-foreground"
           >
             {t("startHint")}{" "}
             <span data-testid="start-limit">
@@ -493,7 +575,7 @@ export function McvvSplitsClient({
         {problem ? (
           <p
             role="alert"
-            className="border border-red-500/60 p-3 text-sm text-red-600 dark:text-red-400"
+            className="border border-red-500/60 p-2 text-sm text-red-600 dark:text-red-400"
           >
             {problem === "login" ? t("problemLogin") : t("problemForbidden")}{" "}
             {problem === "login" ? (
@@ -515,7 +597,7 @@ export function McvvSplitsClient({
           event.preventDefault();
           submit();
         }}
-        className="flex items-stretch gap-2"
+        className="grid gap-1.5 sm:gap-2"
       >
         <label htmlFor="bib" className="sr-only">
           {t("bib")}
@@ -524,50 +606,109 @@ export function McvvSplitsClient({
           ref={inputRef}
           id="bib"
           data-testid="bib-input"
-          inputMode="numeric"
-          pattern="[0-9]*"
+          inputMode={bibInputMode(coarsePointer)}
+          enterKeyHint="done"
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          pattern={coarsePointer ? undefined : "[0-9]*"}
           autoFocus
           value={input}
           onChange={(event) => setInput(event.target.value.replace(/\D/g, "").slice(0, 3))}
+          onKeyDown={(event) => {
+            if (isBibSubmitKey(event.key)) {
+              event.preventDefault();
+              submit();
+            }
+          }}
           placeholder={t("bibPlaceholder")}
-          className="h-20 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-5xl font-bold tabular-nums text-foreground dark:text-white"
+          className="h-14 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-4xl font-bold tabular-nums text-foreground dark:text-white sm:h-16 sm:text-5xl"
         />
-        <button
-          type="submit"
-          data-testid="submit"
-          className="h-20 w-28 shrink-0 bg-race-accent-solid font-display text-xl font-bold text-white hover:bg-race-accent-solid-hover"
-        >
-          {t("submit")}
-        </button>
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2" data-testid="bib-keypad">
+          {BIB_KEYPAD_KEYS.map((key) => {
+            const submitKey = isBibSubmitKey(key);
+            const backspaceKey = isBibBackspaceKey(key);
+            return (
+              <button
+                key={key}
+                type={submitKey ? "submit" : "button"}
+                tabIndex={submitKey ? 0 : -1}
+                data-testid={submitKey ? "submit" : backspaceKey ? "bib-backspace" : undefined}
+                aria-label={submitKey ? t("submit") : backspaceKey ? t("backspace") : undefined}
+                onClick={submitKey ? undefined : () => press(key)}
+                className={
+                  submitKey
+                    ? "h-11 bg-race-accent-solid font-display text-lg font-bold text-white hover:bg-race-accent-solid-hover sm:h-14 sm:text-xl"
+                    : "h-11 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white sm:h-14 sm:text-3xl"
+                }
+              >
+                {submitKey ? t("submit") : backspaceKey ? "⌫" : key}
+              </button>
+            );
+          })}
+        </div>
       </form>
 
-      <div className="grid grid-cols-3 gap-2" aria-hidden="true">
-        {["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "⌫"].map((key) => (
-          <button
-            key={key}
-            type="button"
-            tabIndex={-1}
-            onClick={() => press(key)}
-            className="h-16 border border-race-line/60 bg-race-surface font-display text-3xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white"
-          >
-            {key}
-          </button>
-        ))}
-      </div>
+      <ul
+        className="grid grid-cols-5 gap-0.5"
+        data-testid="field-counts"
+        aria-label={t("infoBoxes")}
+      >
+        {FIELD_BOXES.map((box) => {
+          const Icon = box.icon;
+          const label = t(box.label);
+          const count = field[box.key];
+          const caption = `${label}: ${count}`;
+          return (
+            <li key={box.key}>
+              <div
+                title={caption}
+                aria-label={caption}
+                className="flex flex-col items-center justify-center px-0.5 py-1 text-foreground"
+              >
+                <Icon className="size-4 shrink-0 text-race-accent" aria-hidden="true" />
+                <span className="font-display text-sm font-bold leading-tight tabular-nums sm:text-base">
+                  {count}
+                </span>
+                <span className="max-w-full truncate text-center text-[9px] leading-tight text-race-muted sm:text-[11px]">
+                  {t(box.short)}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
       <button
         type="button"
         onClick={stampOnly}
-        className="h-12 border border-dashed border-race-line bg-transparent text-sm font-semibold text-foreground"
+        className="h-12 border border-dashed border-race-line bg-transparent px-3 text-base font-semibold text-foreground sm:h-14 sm:text-lg"
       >
         {t("stampOnly")}
         {drafts > 0 ? ` (${t("drafts", { count: drafts })})` : ""}
       </button>
 
-      <p aria-live="polite" className="min-h-6 text-center text-sm font-semibold text-race-accent">
-        {flash}
-      </p>
+      {flash ? (
+        <div
+          aria-live="polite"
+          data-testid="flash"
+          className={
+            flash.warning
+              ? "border border-amber-500/80 bg-amber-500/15 px-3 py-2 text-center text-amber-800 dark:text-amber-200"
+              : "text-center text-sm font-semibold text-race-accent"
+          }
+        >
+          <p className={flash.warning ? "text-sm font-semibold" : undefined}>{flash.message}</p>
+          {flash.warning ? (
+            <p data-testid="flash-warning" className="text-lg font-bold leading-tight">
+              {flash.warning}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <p aria-live="polite" className="sr-only" />
+      )}
 
       {warning ? (
         <div
@@ -601,7 +742,7 @@ export function McvvSplitsClient({
       ) : null}
 
       <section aria-label={t("recent")} className="grid gap-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-race-muted">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-race-muted sm:text-sm">
           {t("recent")} – {stationLabel}
           {stationRows > RECENT_LIMIT ? (
             <span className="ml-1 normal-case tracking-normal">
@@ -622,9 +763,9 @@ export function McvvSplitsClient({
                     setEditing(editing === r.id ? null : r.id);
                     setEditBib(r.bib ? String(r.bib) : "");
                   }}
-                  className="grid w-full grid-cols-[4rem_1fr_auto] items-center gap-2 px-3 py-2 text-left"
+                  className="grid w-full grid-cols-[3.5rem_1fr_auto] items-center gap-2 px-3 py-1.5 text-left sm:py-2"
                 >
-                  <span className="font-display text-2xl font-bold tabular-nums">
+                  <span className="font-display text-xl font-bold tabular-nums sm:text-2xl">
                     {r.bib ?? "?"}
                   </span>
                   <span className="text-xs text-race-muted">
@@ -637,6 +778,8 @@ export function McvvSplitsClient({
                       : ""}
                   </span>
                   <span
+                    data-testid="record-state"
+                    data-warning={warningOf(r) ?? undefined}
                     className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${stateClass(r)}`}
                   >
                     {stateLabel(r)}

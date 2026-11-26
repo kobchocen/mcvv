@@ -54,3 +54,27 @@ export function stationsForScope(
   const codes = new Set(parseAssignment(assigned));
   return stations.filter((station) => codes.has(station.code));
 }
+
+/**
+ * Které stanoviště otevřít na obrazovce Mezičasy.
+ * Splitmaker má obrazovku přibitou na přiřazené stanoviště (právě jedno);
+ * kdyby jich měl víc, bere se platný `?split=` nebo první přiřazené.
+ * Admin/pořadatel (allStations) nemá přepínač; použije `?split=`, jinak uložené,
+ * jinak první ze seznamu.
+ */
+export function resolveSplitStation(input: {
+  allowed: readonly { code: string }[];
+  allStations: boolean;
+  urlCode?: string | null;
+  savedCode?: string | null;
+}): string | null {
+  const codes = input.allowed.map((station) => station.code);
+  const has = (code?: string | null): code is string => !!code && codes.includes(code);
+  if (!input.allStations) {
+    if (has(input.urlCode)) return input.urlCode;
+    return codes[0] ?? null;
+  }
+  if (has(input.urlCode)) return input.urlCode;
+  if (has(input.savedCode)) return input.savedCode;
+  return codes[0] ?? null;
+}

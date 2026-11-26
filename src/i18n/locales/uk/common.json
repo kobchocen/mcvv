@@ -700,6 +700,7 @@
     "pdfTitle": "Стартовий протокол {year}",
     "pdfEdition": "{n}-й забіг",
     "pdfModel": "Старт 1 і 2 паралельно від {zero} · інтервал {interval} с · 2-й старт від № {second}",
+    "pdfOrganizerZero": "Організатори від {organizerZero}",
     "pdfCount": "Учасників: {count}",
     "pdfLegend": "Номери 2-го старту помаранчеві. № N і № N + {offset} стартують одночасно.",
     "pdfCategory": "Категорія",

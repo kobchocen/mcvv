@@ -8,6 +8,8 @@ import {
   FIRST_ORGANIZER_ZERO_YEAR,
   ORGANIZER_SLOT_RANGE,
   defaultOrganizerZeroSeconds,
+  showsOrganizerZeroInHeader,
+  withOrganizerZeroLine,
   bibForSlot,
   compareByStart,
   organizerShiftSeconds,
@@ -169,5 +171,54 @@ describe("parseClock", () => {
     assert.equal(parseClock("10:60"), null);
     assert.equal(parseClock("abc"), null);
     assert.equal(parseClock(""), null);
+  });
+});
+
+describe("showsOrganizerZeroInHeader", () => {
+  it("shows the organiser zero when it differs from the edition zero", () => {
+    assert.equal(showsOrganizerZeroInHeader(DEFAULT_START_MODEL, 2025), true);
+    assert.equal(showsOrganizerZeroInHeader(DEFAULT_START_MODEL, 2026), true);
+    assert.equal(showsOrganizerZeroInHeader(DEFAULT_START_MODEL), true);
+  });
+  it("shows the default 7:45 on 2026+ even if both zeros happen to match", () => {
+    const same = { ...DEFAULT_START_MODEL, organizerZeroSeconds: DEFAULT_START_MODEL.zeroSeconds };
+    assert.equal(showsOrganizerZeroInHeader(same, 2026), true);
+    assert.equal(showsOrganizerZeroInHeader(same, 2027), true);
+  });
+  it("hides the line on historical years when organisers share the edition zero", () => {
+    const past = startModelFromEdition(
+      { startZeroSeconds: 36900, organizerZeroSeconds: null },
+      2025,
+    );
+    assert.equal(past.organizerZeroSeconds, past.zeroSeconds);
+    assert.equal(showsOrganizerZeroInHeader(past, 2025), false);
+    assert.equal(showsOrganizerZeroInHeader(past, 2024), false);
+    assert.equal(showsOrganizerZeroInHeader(past), false);
+  });
+  it("shows an explicit organiser zero stored on a historical edition", () => {
+    const stored = startModelFromEdition(
+      { startZeroSeconds: 36900, organizerZeroSeconds: 7 * 3600 },
+      2024,
+    );
+    assert.equal(showsOrganizerZeroInHeader(stored, 2024), true);
+  });
+});
+
+describe("withOrganizerZeroLine", () => {
+  it("inserts the organiser phrase after the edition zero", () => {
+    const base = "Nula 10:15:00 · interval 15 s · 2. start od č. 601";
+    assert.equal(
+      withOrganizerZeroLine(base, "Pořadatelé od 07:45:00"),
+      "Nula 10:15:00 · Pořadatelé od 07:45:00 · interval 15 s · 2. start od č. 601",
+    );
+  });
+  it("returns the base line when the organiser phrase is missing", () => {
+    const base = "Nula 10:15:00 · interval 15 s";
+    assert.equal(withOrganizerZeroLine(base, null), base);
+    assert.equal(withOrganizerZeroLine(base, ""), base);
+    assert.equal(
+      withOrganizerZeroLine("Nula 10:15:00", "Pořadatelé od 07:45:00"),
+      "Nula 10:15:00 · Pořadatelé od 07:45:00",
+    );
   });
 });

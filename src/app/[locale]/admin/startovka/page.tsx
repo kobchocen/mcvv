@@ -38,7 +38,13 @@ import {
   loadStartSettings,
   type AdminStartRow,
 } from "@/lib/race/startlist-load";
-import { compareByStart, formatClock, startTimeForBib } from "@/lib/race/start-time";
+import {
+  compareByStart,
+  formatClock,
+  showsOrganizerZeroInHeader,
+  startTimeForBib,
+  withOrganizerZeroLine,
+} from "@/lib/race/start-time";
 import { cn, formatRaceTime } from "@/lib/utils";
 import { Link, type Locale } from "@/i18n/routing";
 
@@ -300,14 +306,24 @@ export default async function AdminStartListPage({ params, searchParams }: PageP
             ))}
           </p>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-race-muted">{t("intro")}</p>
-          <p className="mt-3 text-sm text-foreground dark:text-white">
-            {t("modelLine", {
-              zero: formatClock(model.zeroSeconds),
-              interval: model.intervalSeconds,
-              second: model.secondStartFrom,
-              men: champions.men ?? "—",
-              women: champions.women ?? "—",
-            })}{" "}
+          <p
+            className="mt-3 text-sm text-foreground dark:text-white"
+            data-testid="startlist-model-line"
+          >
+            {withOrganizerZeroLine(
+              t("modelLine", {
+                zero: formatClock(model.zeroSeconds),
+                interval: model.intervalSeconds,
+                second: model.secondStartFrom,
+                men: champions.men ?? "—",
+                women: champions.women ?? "—",
+              }),
+              showsOrganizerZeroInHeader(model, year)
+                ? t("organizerZero", {
+                    organizerZero: formatClock(model.organizerZeroSeconds),
+                  })
+                : null,
+            )}{" "}
             ·{" "}
             <Link href={editionLink} className={linkButton}>
               {t("editModel")}

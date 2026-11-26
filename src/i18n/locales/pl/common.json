@@ -702,6 +702,7 @@
     "pdfTitle": "Lista startowa {year}",
     "pdfEdition": "{n}. edycja",
     "pdfModel": "Start 1 i 2 równolegle od {zero} · interwał {interval} s · 2. start od nr {second}",
+    "pdfOrganizerZero": "Organizatorzy od {organizerZero}",
     "pdfCount": "Zawodnicy: {count}",
     "pdfLegend": "Numery 2. startu są pomarańczowe. Nr N i nr N + {offset} startują jednocześnie.",
     "pdfCategory": "Kategoria",

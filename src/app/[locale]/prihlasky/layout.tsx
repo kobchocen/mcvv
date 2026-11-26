@@ -11,7 +11,7 @@ export default async function EntriesLayout({ children, params }: LayoutProps) {
   return (
     <>
       {children}
-      <McvvViewAsOutsideAdmin locale={locale as Locale} />
+      <McvvViewAsOutsideAdmin locale={locale as Locale} reserveSpace />
     </>
   );
 }

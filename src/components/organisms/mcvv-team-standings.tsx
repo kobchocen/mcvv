@@ -53,7 +53,7 @@ export function McvvTeamStandings({
         : null;
 
   return (
-    <section id={id} className="mt-12" aria-labelledby={`${id}-title`}>
+    <section id={id} className="mt-12 scroll-mt-28" aria-labelledby={`${id}-title`}>
       <h2
         id={`${id}-title`}
         className="font-display text-3xl font-bold text-foreground dark:text-white"

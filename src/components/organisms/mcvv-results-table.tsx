@@ -84,7 +84,7 @@ export function McvvResultsGroup({
   const columns = 5 + (showCategory ? 1 : 0) + (showSplits ? 2 : 0);
   const splitLabels = { split1: labels.split1Short, split2: labels.split2Short };
   return (
-    <div id={id} className={className}>
+    <div id={id} className={[id ? "scroll-mt-28" : null, className].filter(Boolean).join(" ")}>
       <div className={barClass}>{title}</div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">

@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 
 import { LanguageSwitcher, RaceBrand, ThemeToggle } from "@/components/atoms";
+import { LinkPendingContents } from "@/components/molecules/link-pending-label";
 import { Button } from "@/components/ui/button";
 import { isActivePath } from "@/lib/site/active-path";
 import {
@@ -103,7 +104,7 @@ function MobileLink({ link, locale, active }: { link: NavLink; locale: string; a
           active && "bg-race-accent/10 font-semibold text-foreground dark:text-white",
         )}
       >
-        {link.label}
+        <LinkPendingContents>{link.label}</LinkPendingContents>
       </Link>
     </SheetClose>
   );
@@ -143,7 +144,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                   "font-semibold text-foreground dark:text-white",
               )}
             >
-              {link.label}
+              <LinkPendingContents>{link.label}</LinkPendingContents>
             </Link>
           ))}
         </nav>

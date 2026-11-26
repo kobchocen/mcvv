@@ -1184,6 +1184,7 @@
     "overview": {
       "nav": "Übersicht",
       "metaTitle": "Statistiken",
+      "loading": "Statistiken werden geladen…",
       "eyebrow": "Statistiken · {from}–{to}",
       "title": "{n, plural, one {# Ausgabe} other {# Ausgaben}} in Zahlen",
       "lead": "Rekorde, Sieger und Momente, an die man sich erinnert. Daten aus jeder Ergebnisliste seit {from}.",

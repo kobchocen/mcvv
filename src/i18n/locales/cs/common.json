@@ -1840,6 +1840,7 @@
     "overview": {
       "nav": "Přehled",
       "metaTitle": "Statistiky",
+      "loading": "Načítám statistiky…",
       "eyebrow": "Statistiky · {from}–{to}",
       "title": "{n, plural, one {# ročník} few {# ročníky} other {# ročníků}} v číslech",
       "lead": "Rekordy, vítězové a momenty, které stojí za zapamatování. Data ze všech výsledkových listin od roku {from}.",

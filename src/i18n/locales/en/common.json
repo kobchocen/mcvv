@@ -1840,6 +1840,7 @@
     "overview": {
       "nav": "Overview",
       "metaTitle": "Statistics",
+      "loading": "Loading statistics…",
       "eyebrow": "Statistics · {from}–{to}",
       "title": "{n, plural, one {# edition} other {# editions}} in numbers",
       "lead": "Records, winners and moments worth remembering. Data from every results list since {from}.",

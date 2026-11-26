@@ -1184,6 +1184,7 @@
     "overview": {
       "nav": "Przegląd",
       "metaTitle": "Statystyki",
+      "loading": "Wczytuję statystyki…",
       "eyebrow": "Statystyki · {from}–{to}",
       "title": "{n, plural, one {# edycja} few {# edycje} many {# edycji} other {# edycji}} w liczbach",
       "lead": "Rekordy, zwycięzcy i chwile warte zapamiętania. Dane ze wszystkich list wyników od {from}.",

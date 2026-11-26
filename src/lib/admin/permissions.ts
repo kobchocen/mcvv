@@ -19,6 +19,7 @@ import {
   canManageSaleItems,
   canMarkSalePaidBank,
   canUseCashDesk,
+  canViewResultboardScreen,
   canViewSpeakerScreen,
   hasAdminHome,
   isStaffRole,
@@ -38,6 +39,7 @@ export type LegacyGuard =
   | "splits"
   | "starter"
   | "speaker"
+  | "resultboard"
   | "cashDesk"
   | "saleItems"
   | "bankPaid"
@@ -51,6 +53,7 @@ export const LEGACY_PREDICATES: Record<LegacyGuard, (role: UserRole) => boolean>
   splits: canAccessSplits,
   starter: canAccessStarter,
   speaker: canViewSpeakerScreen,
+  resultboard: canViewResultboardScreen,
   cashDesk: canUseCashDesk,
   saleItems: canManageSaleItems,
   bankPaid: canMarkSalePaidBank,
@@ -88,7 +91,7 @@ export const SECTION_RULES = {
   /** Cíl (#252): stanice Stopky a Čísla. */
   "screens.finish": { read: "raceday", write: "raceday" },
   "screens.speaker": { read: "speaker", write: "speaker" },
-  "screens.resultboard": { read: "speaker", write: "speaker" },
+  "screens.resultboard": { read: "resultboard", write: "speaker" },
   raceOffice: { read: "cashDesk", write: "cashDesk" },
   "raceOffice.cash": { read: "cashDesk", write: "cashDesk" },
   "raceOffice.sales": { read: "cashDesk", write: "cashDesk" },
@@ -136,6 +139,7 @@ const DERIVED_FROM_LEGACY: Partial<Record<StaffRole, UserRole>> = {
   splitmaker: "splitmaker",
   starter: "starter",
   race_office: "race_office",
+  resultboard: "resultboard",
 };
 
 type Matrix = Partial<Record<SectionId, AccessLevel>>;
@@ -291,8 +295,9 @@ export function v2Allows(
 }
 
 /** Má účet nějakou sekci (= kolečko a /admin)? */
+/** Kolečko a rozcestník `/admin`: právo číst přehled, ne jen kioskovou obrazovku. */
 export function v2HasAdminHome(grants: readonly StaffRole[], overrides?: Overrides): boolean {
-  return grants.length > 0 && SECTION_IDS.some((id) => v2Allows(grants, id, "read", overrides));
+  return v2Allows(grants, "overview", "read", overrides);
 }
 
 type Allows = (id: SectionId, level: AccessLevel) => boolean;

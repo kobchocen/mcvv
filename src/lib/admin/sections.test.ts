@@ -89,8 +89,9 @@ describe("admin sections registry", () => {
     assert.equal(new Set(ids).size, ids.length);
   });
 
-  it("a runner sees nothing, every other role at least the overview", () => {
+  it("a runner and the resultboard role see nothing, every other role at least the overview", () => {
     assert.deepEqual(visibleSections("registrar"), []);
+    assert.deepEqual(visibleSections("resultboard"), []);
     for (const role of USER_ROLES.filter(hasAdminHome)) {
       const first = visibleSections(role)[0]?.chapters[0];
       assert.equal(first?.id, "overview", role);

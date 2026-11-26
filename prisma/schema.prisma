@@ -384,6 +384,8 @@ enum UserRole {
   race_office
   /// „Startér“: obrazovka startu `/start` pro jeden koridor (mcvv_user.start_corridor).
   starter
+  /// „Resultboard“: jen obrazovky výsledků v cíli `/resultboard`, bez administrace.
+  resultboard
 }
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.

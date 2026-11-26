@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { loginTarget, safeAdminNext, safeNext } from "./safe-next";
+import { loginTarget, postLoginTarget, safeAdminNext, safeNext } from "./safe-next";
 
 describe("safeNext", () => {
   it("accepts allowlisted public paths and strips the locale", () => {
@@ -178,5 +178,59 @@ describe("resultboard", () => {
     assert.equal(safeNext("/resultboard/0"), null);
     assert.equal(safeNext("/resultboard/tv"), null);
     assert.equal(safeNext("/resultboard/1/x"), null);
+  });
+});
+
+describe("postLoginTarget – resultboard role", () => {
+  it("lands on /resultboard when there is no next", () => {
+    assert.deepEqual(postLoginTarget(null, "resultboard"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+    assert.deepEqual(postLoginTarget("/", "resultboard"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+  });
+  it("honours a resultboard next including a TV and test mode", () => {
+    assert.deepEqual(postLoginTarget("/resultboard", "resultboard"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+    assert.deepEqual(postLoginTarget("/resultboard/1", "resultboard"), {
+      kind: "resultboard",
+      tv: "1",
+      query: "",
+    });
+    assert.deepEqual(postLoginTarget("/resultboard/2?test=1", "resultboard"), {
+      kind: "resultboard",
+      tv: "2",
+      query: "test=1",
+    });
+  });
+  it("does not follow admin or other staff next", () => {
+    assert.deepEqual(postLoginTarget("/admin", "resultboard"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+    assert.deepEqual(postLoginTarget("/admin/obrazovky", "resultboard"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+    assert.deepEqual(postLoginTarget("/mezicasy/speaker", "resultboard"), {
+      kind: "user",
+      path: "/resultboard",
+      query: "",
+    });
+  });
+  it("does not change the default for a runner or staff", () => {
+    assert.deepEqual(postLoginTarget(null, "registrar"), { kind: "default" });
+    assert.deepEqual(postLoginTarget(null, "admin"), { kind: "home" });
+    assert.deepEqual(postLoginTarget(null, "organizer"), { kind: "home" });
   });
 });

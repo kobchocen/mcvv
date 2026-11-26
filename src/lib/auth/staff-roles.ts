@@ -28,6 +28,7 @@ export const STAFF_ROLES = [
   "starter",
   "splitmaker",
   "race_office",
+  "resultboard",
 ] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
@@ -69,6 +70,7 @@ export function primaryLegacyRole(grants: readonly StaffRole[]): UserRole {
   if (grants.includes("race_office")) return "race_office";
   if (grants.includes("starter")) return "starter";
   if (grants.includes("splitmaker")) return "splitmaker";
+  if (grants.includes("resultboard")) return "resultboard";
   return "registrar";
 }
 

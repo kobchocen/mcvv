@@ -61,6 +61,14 @@ test("an account without admin access is redirected, staff and timing pass", () 
     adminGate({ ...base, pathname: "/cs/admin", cookieRole: "registrar" }).kind,
     "redirect",
   );
+  assert.equal(
+    adminGate({ ...base, pathname: "/cs/admin", cookieRole: "resultboard" }).kind,
+    "redirect",
+  );
+  assert.equal(
+    adminGate({ ...base, pathname: "/cs/admin/obrazovky", cookieRole: "resultboard" }).kind,
+    "redirect",
+  );
   assert.deepEqual(adminGate({ ...base, pathname: "/cs/admin", cookieRole: "organizer" }), {
     kind: "pass",
     requestPath: "/admin",

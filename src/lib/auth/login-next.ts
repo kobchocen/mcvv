@@ -1,6 +1,6 @@
 import { locales, redirect, type Locale } from "@/i18n/routing";
-import { adminAccess, type UserRole } from "@/lib/auth/roles";
-import { loginTarget } from "@/lib/auth/safe-next";
+import { type UserRole } from "@/lib/auth/roles";
+import { postLoginTarget } from "@/lib/auth/safe-next";
 
 export { safeAdminNext, safeNext } from "@/lib/auth/safe-next";
 
@@ -76,7 +76,7 @@ function adminHref(next: string) {
 
 /** Po přihlášení: bezpečný `next`, jinak výchozí cíl podle role (viz `loginTarget`). */
 export function redirectAfterLogin(next: string | null, role: UserRole, locale: Locale): never {
-  const target = loginTarget(next, adminAccess(role));
+  const target = postLoginTarget(next, role);
   if (target.kind === "admin") {
     redirect({ href: adminHref(target.next), locale });
   }

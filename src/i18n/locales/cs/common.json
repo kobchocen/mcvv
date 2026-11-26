@@ -2655,6 +2655,7 @@
     "role_splitmaker": "Mezičasy",
     "role_race_office": "Závodní kancelář",
     "role_starter": "Startér",
+    "role_resultboard": "Resultboard",
     "filterRole": "Role",
     "filterVerified": "Ověřený e-mail",
     "search": "Jméno nebo e-mail",
@@ -2713,7 +2714,8 @@
     "staffRole_course_chief": "Šéf trati",
     "staffRole_starter": "Startér",
     "staffRole_splitmaker": "Mezičasy",
-    "staffRole_race_office": "Závodní kancelář"
+    "staffRole_race_office": "Závodní kancelář",
+    "staffRole_resultboard": "Resultboard"
   },
   "RoleChangeMail": {
     "subject": "MCVV: vaše role na webu je nyní „{role}“",
@@ -2728,6 +2730,7 @@
     "role_splitmaker": "Mezičasy",
     "role_race_office": "Závodní kancelář",
     "role_starter": "Startér",
+    "role_resultboard": "Resultboard",
     "about_registrar": "S běžným účtem můžete přihlašovat závodníky, spravovat své přihlášky a psát pořadateli zprávy. Do administrace přístup nemáte.",
     "about_organizer": "Jako pořadatel máte plný přístup do administrace závodu (přihlášky, startovka, platby, výsledky…) kromě nastavení a správy uživatelů.",
     "about_admin": "Jako administrátor máte přístup do celé administrace včetně nastavení a správy uživatelů a jejich rolí.",
@@ -2735,13 +2738,15 @@
     "about_splitmaker": "Role Mezičasy umožňuje zadávat mezičasy na kontrolách na stránce Mezičasy.",
     "about_race_office": "Role Závodní kancelář otevírá pokladnu a přehled prodejek na stránce Kancelář.",
     "about_starter": "Role Startér otevírá obrazovku startu na stránce Start: fronta závodníků přiřazeného koridoru, označení „na startu“ a pozdní starty.",
+    "about_resultboard": "Role Resultboard otevírá obrazovky výsledků v cíli na stránce Resultboard. Do administrace přístup nemáte.",
     "action_registrar": "Moje přihlášky",
     "action_organizer": "Otevřít administraci",
     "action_admin": "Otevřít administraci",
     "action_timing": "Den závodu",
     "action_splitmaker": "Mezičasy",
     "action_race_office": "Závodní kancelář",
-    "action_starter": "Start"
+    "action_starter": "Start",
+    "action_resultboard": "Resultboard"
   },
   "AdminAudit": {
     "title": "Auditní log",

@@ -28,6 +28,7 @@ describe("staff roles (permissions v2)", () => {
     assert.deepEqual(grantsFromLegacyRole("timing"), ["timing_ops"]);
     assert.deepEqual(grantsFromLegacyRole("admin"), ["admin"]);
     assert.deepEqual(grantsFromLegacyRole("starter"), ["starter"]);
+    assert.deepEqual(grantsFromLegacyRole("resultboard"), ["resultboard"]);
   });
 
   it("the migration backfill uses the same mapping", () => {

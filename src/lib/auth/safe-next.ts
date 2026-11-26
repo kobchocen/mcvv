@@ -6,7 +6,7 @@
  * - an allowlist of public pages (e.g. `/prihlasky`, `/navod`).
  * The locale prefix (`/cs`, `/en`) is stripped; the result is a locale-less path.
  */
-import { adminPathAllowed, type AdminAccess } from "./roles";
+import { adminAccess, adminPathAllowed, type AdminAccess, type UserRole } from "./roles";
 
 export const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
 const SAFE_QUERY = /^[\w.=&-]*$/;
@@ -151,4 +151,16 @@ export function loginTarget(next: string | null, access: boolean | AdminAccess):
     }
   }
   return level === "none" ? { kind: "default" } : { kind: "home" };
+}
+
+/**
+ * Jako `loginTarget`, ale výchozí cíl bere v potaz roli: účet Resultboard bez použitelného
+ * `next` jde na `/resultboard`, ne na přihlášky.
+ */
+export function postLoginTarget(next: string | null, role: UserRole): LoginTarget {
+  const target = loginTarget(next, adminAccess(role));
+  if (role !== "resultboard") return target;
+  if (target.kind === "resultboard") return target;
+  if (target.kind === "user" && target.path === "/resultboard") return target;
+  return { kind: "user", path: "/resultboard", query: "" };
 }

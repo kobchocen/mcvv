@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { can, getAccess, requireSection, type Access } from "@/lib/admin/access";
+import { allowsFor, can, getAccess, requireSection, type Access } from "@/lib/admin/access";
+import { raceDayTiles } from "@/lib/admin/raceday-home";
 import { requireStaff } from "@/lib/admin/staff";
 import { adminAccess } from "@/lib/auth/roles";
 import { mailPolicy } from "@/lib/mail/queue";
@@ -88,28 +89,23 @@ export default async function AdminPage({ params }: PageProps) {
   );
 }
 
-type RaceDayHref = "/admin/den-zavodu" | "/mezicasy" | "/start" | "/kancelar";
-
 /** Rozcestník pro role dne závodu bez plné administrace. */
 async function RaceDayHome({ locale, access }: { locale: Locale; access: Access }) {
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  const tiles: { href: RaceDayHref; title: string }[] = [];
   // Flag vypnutý: can() = canAccessRaceDay / canAccessSplits / canAccessStarter / canUseCashDesk.
-  if (can(access, "raceControl.overview", "read"))
-    tiles.push({ href: "/admin/den-zavodu", title: copy("navRaceDay") });
-  if (can(access, "screens.splits", "read"))
-    tiles.push({ href: "/mezicasy", title: copy("navSplitEntry") });
-  if (can(access, "screens.starter", "read"))
-    tiles.push({ href: "/start", title: copy("navStarter") });
-  if (can(access, "raceOffice.cash", "read"))
-    tiles.push({ href: "/kancelar", title: copy("navCashDesk") });
+  const tiles = raceDayTiles(allowsFor(access)).map((tile) => ({
+    href: tile.href,
+    title: copy(tile.key),
+  }));
   return (
     <main className="px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <h1 className="font-display text-4xl font-bold text-foreground dark:text-white">
           {copy("title")}
         </h1>
-        <p className="mt-4 max-w-xl text-base leading-7 text-race-muted">{copy("toolsIntro")}</p>
+        <p className="mt-4 max-w-xl text-base leading-7 text-race-muted">
+          {copy(tiles.length ? "toolsIntro" : "toolsEmpty")}
+        </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2" data-testid="raceday-home">
           {tiles.map((tile) => (
             <Link

@@ -1,5 +1,5 @@
 import { locales, redirect, type Locale } from "@/i18n/routing";
-import { type UserRole } from "@/lib/auth/roles";
+import type { AdminAccess, UserRole } from "@/lib/auth/roles";
 import { postLoginTarget } from "@/lib/auth/safe-next";
 
 export { safeAdminNext, safeNext } from "@/lib/auth/safe-next";
@@ -74,9 +74,18 @@ function adminHref(next: string) {
   return "/admin" as const;
 }
 
-/** Po přihlášení: bezpečný `next`, jinak výchozí cíl podle role (viz `loginTarget`). */
-export function redirectAfterLogin(next: string | null, role: UserRole, locale: Locale): never {
-  const target = postLoginTarget(next, role);
+/**
+ * Po přihlášení: bezpečný `next`, jinak výchozí cíl podle role a úrovně přístupu
+ * (viz `postLoginTarget`). Úroveň musí pocházet ze stejného rozhodnutí jako stráž layoutu
+ * `/admin` (`adminLevel` / `loginAdminLevel` v `src/lib/admin/access.ts`), jinak hrozí smyčka.
+ */
+export function redirectAfterLogin(
+  next: string | null,
+  role: UserRole,
+  level: AdminAccess,
+  locale: Locale,
+): never {
+  const target = postLoginTarget(next, role, level);
   if (target.kind === "admin") {
     redirect({ href: adminHref(target.next), locale });
   }

@@ -40,7 +40,15 @@ import {
   isBibBackspaceKey,
   isBibSubmitKey,
 } from "@/lib/live/splits-input";
-import { EMPTY_FIELD_COUNTS, type FieldCounts } from "@/lib/live/splits-field-core";
+import type { FieldCounts } from "@/lib/live/splits-field-core";
+import {
+  classifySplitWarning,
+  primarySplitWarning,
+  splitWarningStateKey,
+  warningFieldFromBibs,
+  type FieldBibs,
+  type SplitWarning,
+} from "@/lib/live/splits-warning-core";
 import { formatOffset } from "@/lib/live/start-check-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { isStartStation, type Station } from "@/lib/live/stations";
@@ -53,6 +61,8 @@ type Props = {
   urlStation: string | null;
   /** Admin/pořadatel smí mít víc stanovišť; splitmaker má obrazovku přibitou. */
   canChooseStation: boolean;
+  initialField: FieldCounts;
+  initialBibs: FieldBibs;
   year: number;
   userId: number;
   zeroIso: string;
@@ -113,6 +123,8 @@ export function McvvSplitsClient({
   initialStation,
   urlStation,
   canChooseStation,
+  initialField,
+  initialBibs,
   year,
   userId,
   zeroIso,
@@ -139,7 +151,7 @@ export function McvvSplitsClient({
   const [warning, setWarning] = useState<{ bib: number; at: number; existing: SplitRecord } | null>(
     null,
   );
-  const [flash, setFlash] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ message: string; warning?: string } | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editBib, setEditBib] = useState("");
   const inFlight = useRef<Set<string>>(new Set());
@@ -148,7 +160,9 @@ export function McvvSplitsClient({
   /** Běžící hodiny (#187); null do prvního tiku, aby SSR a klient nerenderovaly jiný čas. */
   const [now, setNow] = useState<number | null>(null);
   const coarsePointer = useCoarsePointer();
-  const [field, setField] = useState<FieldCounts>(EMPTY_FIELD_COUNTS);
+  const [field, setField] = useState<FieldCounts>(initialField);
+  const [fieldBibs, setFieldBibs] = useState<FieldBibs>(initialBibs);
+  const warningField = useMemo(() => warningFieldFromBibs(fieldBibs), [fieldBibs]);
 
   // Virtual Keyboard API: typování Reactu atribut ještě nemá, na dotyku ho nastavíme ručně.
   useEffect(() => {
@@ -276,8 +290,10 @@ export function McvvSplitsClient({
           { cache: "no-store", credentials: "same-origin" },
         );
         if (!response.ok || cancelled) return;
-        const body = (await response.json()) as { counts?: FieldCounts };
-        if (!cancelled && body.counts) setField(body.counts);
+        const body = (await response.json()) as { counts?: FieldCounts; bibs?: FieldBibs };
+        if (cancelled) return;
+        if (body.counts) setField(body.counts);
+        if (body.bibs) setFieldBibs(body.bibs);
       } catch {
         // offline – necháme poslední známé počty
       }
@@ -363,9 +379,10 @@ export function McvvSplitsClient({
     };
   }, [flush, loaded, setQueue]);
 
-  const show = (message: string) => {
-    setFlash(message);
-    window.setTimeout(() => setFlash((current) => (current === message ? null : current)), 2500);
+  const show = (message: string, warning?: string) => {
+    const next = { message, warning };
+    setFlash(next);
+    window.setTimeout(() => setFlash((current) => (current === next ? null : current)), 2500);
   };
 
   const record = (bib: number, at: number, force = false) => {
@@ -377,7 +394,11 @@ export function McvvSplitsClient({
     setWarning(null);
     setQueue((s) => addPunch(s, { split: station, bib, punchedAt: at }, uuid));
     navigator.vibrate?.(30);
-    show(t("saved", { bib, time: clock(at) }));
+    const punchWarning = classifySplitWarning(bib, station, warningField);
+    show(
+      t("saved", { bib, time: clock(at) }),
+      punchWarning ? t(`state.${splitWarningStateKey(punchWarning)}`) : undefined,
+    );
   };
 
   const submit = () => {
@@ -449,22 +470,32 @@ export function McvvSplitsClient({
       : t("startFarLate", { limit });
   };
 
+  const warningOf = (r: SplitRecord): SplitWarning | null => {
+    const fromNote = primarySplitWarning(r.note);
+    if (fromNote) return fromNote;
+    if (r.bib === null) return null;
+    if (r.state !== "pending" && r.state !== "applied") return null;
+    // Po potvrzení serveru platí jen poznámka z deníku (auto-start už by jinak varování shodil).
+    if (r.state === "applied") return null;
+    return classifySplitWarning(r.bib, r.split, warningField);
+  };
   const stateLabel = (r: SplitRecord) => {
-    if (r.state === "applied" && r.note?.includes("unknown-bib")) return t("state.unknownBib");
+    const punchWarning = warningOf(r);
+    if (punchWarning) return t(`state.${splitWarningStateKey(punchWarning)}`);
     if (r.state === "rejected" && r.note)
       return t("state.rejectedReason", { reason: t(`reason.${r.note.split(";")[0]}` as never) });
     return t(`state.${r.state}` as never);
   };
   const stateClass = (r: SplitRecord) =>
-    r.state === "applied"
-      ? r.note?.includes("unknown-bib")
-        ? "border-amber-500/60 text-amber-600 dark:text-amber-300"
-        : "border-race-accent/60 text-race-accent"
-      : r.state === "pending" || r.state === "draft"
-        ? "border-sky-500/60 text-sky-600 dark:text-sky-300"
-        : r.state === "deleted"
-          ? "border-race-line text-race-muted line-through"
-          : "border-red-500/60 text-red-600 dark:text-red-400";
+    warningOf(r)
+      ? "border-amber-500/60 text-amber-700 dark:text-amber-300"
+      : r.state === "applied"
+        ? "border-race-accent/60 text-race-accent"
+        : r.state === "pending" || r.state === "draft"
+          ? "border-sky-500/60 text-sky-600 dark:text-sky-300"
+          : r.state === "deleted"
+            ? "border-race-line text-race-muted line-through"
+            : "border-red-500/60 text-red-600 dark:text-red-400";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-3 pb-4 pt-2 sm:gap-3 sm:pb-8 sm:pt-4">
@@ -659,13 +690,24 @@ export function McvvSplitsClient({
       </button>
 
       {flash ? (
-        <p aria-live="polite" className="text-center text-sm font-semibold text-race-accent">
-          {flash}
-        </p>
+        <div
+          aria-live="polite"
+          data-testid="flash"
+          className={
+            flash.warning
+              ? "border border-amber-500/80 bg-amber-500/15 px-3 py-2 text-center text-amber-800 dark:text-amber-200"
+              : "text-center text-sm font-semibold text-race-accent"
+          }
+        >
+          <p className={flash.warning ? "text-sm font-semibold" : undefined}>{flash.message}</p>
+          {flash.warning ? (
+            <p data-testid="flash-warning" className="text-lg font-bold leading-tight">
+              {flash.warning}
+            </p>
+          ) : null}
+        </div>
       ) : (
-        <p aria-live="polite" className="sr-only">
-          {flash}
-        </p>
+        <p aria-live="polite" className="sr-only" />
       )}
 
       {warning ? (
@@ -736,6 +778,8 @@ export function McvvSplitsClient({
                       : ""}
                   </span>
                   <span
+                    data-testid="record-state"
+                    data-warning={warningOf(r) ?? undefined}
                     className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${stateClass(r)}`}
                   >
                     {stateLabel(r)}

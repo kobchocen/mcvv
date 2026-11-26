@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
 import { resolveSplitStation, stationsForScope } from "@/lib/live/assignment-core";
 import { getStations } from "@/lib/live/race-context";
+import { loadFieldSnapshot } from "@/lib/live/splits-field";
 import { getLiveRaceContext } from "@/lib/testmode/run";
 import { withStart } from "@/lib/live/stations";
 import { allowsFor, can, getAccess } from "@/lib/admin/access";
@@ -104,6 +105,8 @@ export default async function SplitsPage({ params, searchParams }: PageProps) {
       ? urlCode
       : null;
 
+  const field = await loadFieldSnapshot(ctx.year, initialStation, allStations);
+
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
@@ -113,6 +116,8 @@ export default async function SplitsPage({ params, searchParams }: PageProps) {
         initialStation={initialStation}
         urlStation={urlStation}
         canChooseStation={scope.all}
+        initialField={field.counts}
+        initialBibs={field.bibs}
         year={ctx.year}
         userId={session.id}
         zeroIso={ctx.zero.toISOString()}

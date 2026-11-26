@@ -2308,7 +2308,9 @@
       "rejectedReason": "odmítnuto: {reason}",
       "deleted": "smazáno",
       "error": "chyba",
-      "unknownBib": "neznámé číslo"
+      "unknownBib": "neznámé číslo",
+      "notStarted": "neodstartoval?",
+      "alreadyFinished": "už je v cíli"
     },
     "reason": {
       "before-start": "před startem",

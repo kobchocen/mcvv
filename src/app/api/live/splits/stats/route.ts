@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
 import { stationsForScope } from "@/lib/live/assignment-core";
 import { getStations } from "@/lib/live/race-context";
-import { loadFieldCounts } from "@/lib/live/splits-field";
+import { loadFieldSnapshot } from "@/lib/live/splits-field";
 import { isStationCode, withStart } from "@/lib/live/stations";
 import { enterLiveTestContext, getLiveRaceContext } from "@/lib/testmode/run";
 
@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
   if (!stations.some((station) => station.code === split)) {
     return NextResponse.json({ error: "station-not-assigned" }, { status: 403, headers: noStore });
   }
-  const counts = await loadFieldCounts(ctx.year, split, splitStations);
-  return NextResponse.json({ ok: true, year: ctx.year, split, counts }, { headers: noStore });
+  const snapshot = await loadFieldSnapshot(ctx.year, split, splitStations);
+  return NextResponse.json(
+    { ok: true, year: ctx.year, split, counts: snapshot.counts, bibs: snapshot.bibs },
+    { headers: noStore },
+  );
 }

@@ -2308,7 +2308,9 @@
       "rejectedReason": "rejected: {reason}",
       "deleted": "deleted",
       "error": "error",
-      "unknownBib": "unknown bib"
+      "unknownBib": "unknown bib",
+      "notStarted": "not started?",
+      "alreadyFinished": "already finished"
     },
     "reason": {
       "before-start": "before start",

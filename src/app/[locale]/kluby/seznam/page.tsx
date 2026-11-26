@@ -1,24 +1,27 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ClubLink, PaginationLinks } from "@/components/molecules";
+import { ClubLink, PaginationLinks, SortableColumnHeader } from "@/components/molecules";
 import { McvvPublicNavbar } from "@/components/organisms";
 import type { McvvHomepageContent } from "@/components/templates";
 import { Link, type Locale } from "@/i18n/routing";
 import {
+  clubDirectoryDirectionQuery,
   filterClubDirectory,
   isClubDirectorySort,
+  nextClubDirectoryDirection,
+  parseClubDirectoryDirection,
   sortClubDirectory,
   type ClubDirectorySort,
 } from "@/lib/clubs";
 import { getClubDirectory } from "@/lib/clubs/cached";
 import { paginate } from "@/lib/site/pagination";
-import { cn } from "@/lib/utils";
 
 type SearchParams = {
   q?: string | string[];
   razeni?: string | string[];
   strana?: string | string[];
+  smer?: string | string[];
 };
 
 type PageProps = Readonly<{
@@ -40,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /**
  * Public club list (#105 follow-up): every club id with a result (merged ids are rewritten
  * to the main id, Q45), linking to the club profiles. Search, sorting and paging are plain GET
- * parameters (q, razeni, strana) over the cached list.
+ * parameters (q, razeni, smer, strana) over the cached list.
  */
 export default async function ClubsPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
@@ -50,38 +53,68 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
   const q = first(query.q).trim().slice(0, 80);
   const sortRaw = first(query.razeni);
   const sort: ClubDirectorySort = isClubDirectorySort(sortRaw) ? sortRaw : "starty";
+  const direction = parseClubDirectoryDirection(first(query.smer), sort);
 
   const [home, copy, directory] = await Promise.all([
     getTranslations({ locale, namespace: "Home" }),
     getTranslations({ locale, namespace: "Clubs" }),
     getClubDirectory(),
   ]);
-  const rows = sortClubDirectory(filterClubDirectory(directory, q), sort);
+  const rows = sortClubDirectory(filterClubDirectory(directory, q), sort, direction);
   const slice = paginate(rows, first(query.strana), CLUBS_PER_PAGE);
   const totalStarts = directory.reduce((sum, row) => sum + row.starts, 0);
+  const smer = clubDirectoryDirectionQuery(sort, direction);
 
-  const href = (next: { sort?: ClubDirectorySort; page?: number }) => {
+  const href = (next: {
+    sort?: ClubDirectorySort;
+    direction?: typeof direction;
+    page?: number;
+  }) => {
     const params: Record<string, string> = {};
     if (q) params.q = q;
     const nextSort = next.sort ?? sort;
+    const nextDir = next.direction ?? direction;
     if (nextSort !== "starty") params.razeni = nextSort;
+    const nextSmer = clubDirectoryDirectionQuery(nextSort, nextDir);
+    if (nextSmer) params.smer = nextSmer;
     if (next.page && next.page > 1) params.strana = String(next.page);
     return { pathname: "/kluby/seznam" as const, query: params };
   };
   const years = (row: { firstYear: number; lastYear: number }) =>
     row.firstYear === row.lastYear ? `${row.firstYear}` : `${row.firstYear}–${row.lastYear}`;
-  const sortLink = (value: ClubDirectorySort, label: string) => (
-    <Link
-      href={href({ sort: value })}
-      aria-current={sort === value ? "true" : undefined}
-      className={cn(
-        "hover:text-race-accent hover:underline",
-        sort === value && "text-race-accent underline underline-offset-4",
-      )}
-    >
-      {label}
-    </Link>
-  );
+  const columnLabel: Record<ClubDirectorySort, string> = {
+    nazev: copy("club"),
+    starty: copy("starts"),
+    bezci: copy("runners"),
+    rocniky: copy("editions"),
+    posledni: copy("years"),
+  };
+  const sortHeader = (
+    value: ClubDirectorySort,
+    align: "left" | "right" = "left",
+    className?: string,
+  ) => {
+    const label = columnLabel[value];
+    const active = sort === value;
+    return (
+      <SortableColumnHeader
+        label={label}
+        href={href({ sort: value, direction: nextClubDirectoryDirection(value, sort, direction) })}
+        active={active}
+        direction={active ? direction : undefined}
+        align={align}
+        className={className}
+        ariaLabel={
+          active
+            ? copy("sortedBy", {
+                column: label,
+                direction: direction === "asc" ? copy("sortAscending") : copy("sortDescending"),
+              })
+            : copy("sortBy", { column: label })
+        }
+      />
+    );
+  };
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
@@ -135,6 +168,7 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
               ))}
             </datalist>
             {sort !== "starty" ? <input type="hidden" name="razeni" value={sort} /> : null}
+            {smer ? <input type="hidden" name="smer" value={smer} /> : null}
             <button
               type="submit"
               className="h-10 rounded-full bg-race-accent-solid px-5 font-display text-sm font-semibold text-white"
@@ -145,7 +179,10 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
               <Link
                 href={{
                   pathname: "/kluby/seznam",
-                  query: sort !== "starty" ? { razeni: sort } : {},
+                  query: {
+                    ...(sort !== "starty" ? { razeni: sort } : {}),
+                    ...(smer ? { smer } : {}),
+                  },
                 }}
                 className="h-10 content-center text-sm font-semibold text-race-accent hover:underline"
               >
@@ -162,6 +199,12 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
             {slice.total === 0
               ? copy("empty")
               : copy("shown", { from: slice.from, to: slice.to, total: slice.total })}
+            {slice.total > 0
+              ? ` ${copy("sortedCaption", {
+                  column: columnLabel[sort],
+                  direction: direction === "asc" ? copy("sortAscending") : copy("sortDescending"),
+                })}`
+              : null}
           </p>
 
           {slice.total > 0 ? (
@@ -169,15 +212,11 @@ export default async function ClubsPage({ params, searchParams }: PageProps) {
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                    <th className="py-2 pr-4">{sortLink("nazev", copy("club"))}</th>
-                    <th className="py-2 pr-4 text-right">{sortLink("starty", copy("starts"))}</th>
-                    <th className="hidden py-2 pr-4 text-right sm:table-cell">{copy("runners")}</th>
-                    <th className="py-2 pr-4 text-right">
-                      {sortLink("rocniky", copy("editions"))}
-                    </th>
-                    <th className="hidden py-2 sm:table-cell">
-                      {sortLink("posledni", copy("years"))}
-                    </th>
+                    {sortHeader("nazev")}
+                    {sortHeader("starty", "right")}
+                    {sortHeader("bezci", "right", "hidden sm:table-cell")}
+                    {sortHeader("rocniky", "right")}
+                    {sortHeader("posledni", "left", "hidden sm:table-cell")}
                   </tr>
                 </thead>
                 <tbody>

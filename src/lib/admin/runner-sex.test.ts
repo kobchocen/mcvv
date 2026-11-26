@@ -222,6 +222,22 @@ function table(rows: Row[], pk: (row: Row) => string) {
       assertUnique();
       return { count: hit.length };
     },
+    createMany: async ({ data, skipDuplicates }: { data: Row[]; skipDuplicates?: boolean }) => {
+      let count = 0;
+      for (const row of data) {
+        if (skipDuplicates && rows.some((r) => pk(r) === pk(row))) continue;
+        rows.push({ ...row });
+        count++;
+      }
+      assertUnique();
+      return { count };
+    },
+    deleteMany: async ({ where }: { where: Where }) => {
+      const keep = rows.filter((r) => !matches(r, where));
+      const count = rows.length - keep.length;
+      rows.splice(0, rows.length, ...keep);
+      return { count };
+    },
   };
 }
 
@@ -303,6 +319,11 @@ function fakeDb() {
     registrationSlot: table([], (r) => `${r.year}|${r.type}`),
     registrationMeta: table([], (r) => `${r.year}|${r.id}`),
     categoryMeta: table([], (r) => String(r.categoryId)),
+    // Rychlá nabídka (MD-31): účet 5 má běžce skrytého – skrytí jde s ním na nové id.
+    userQuickHidden: table(
+      [{ userId: 5, runnerId: "19830002", createdAt: new Date("2026-11-01T10:00:00Z") }],
+      (r) => `${r.userId}|${r.runnerId}`,
+    ),
   };
   let failAt: string | null = null;
   const client = {
@@ -448,6 +469,11 @@ describe("applySexChange (re-keying in one transaction)", () => {
     assert.ok(ids.includes("19835003"));
     assert.ok(!ids.includes("19830002"));
     assert.equal(fake.runner.rows.find((r) => r.id === "19835003")?.name, "Nováková Jana");
+    assert.deepEqual(
+      fake.userQuickHidden.rows.map((r) => [r.userId, r.runnerId]),
+      [[5, "19835003"]],
+      "quick-add hiding follows the runner",
+    );
     for (const model of [
       "registrationLine",
       "startEntry",
@@ -455,6 +481,7 @@ describe("applySexChange (re-keying in one transaction)", () => {
       "webImage",
       "startLineMeta",
       "specialStart",
+      "userQuickHidden",
     ] as const) {
       assert.ok(
         !fake[model].rows.some((r) => r.runnerId === "19830002"),

@@ -94,7 +94,7 @@
     "news": {
       "eyebrow": "Neuheit der {n}. Ausgabe",
       "title": "Teamwertung",
-      "body": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Eine Prämie für das Siegerteam.",
+      "body": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Eine Prämie für das Siegerteam. Die Teamwertung wird von IONTMAX unterstützt.",
       "linkLabel": "Regeln der Teamwertung"
     },
     "overview": {
@@ -767,6 +767,17 @@
     "remove": "Entfernen",
     "quickAddTitle": "{name}, Jahrgang {year}",
     "quickAdd": "Schnellauswahl",
+    "quickHint": "Läufer, die nicht mehr angeboten werden sollen, entfernst du mit dem Kreuz. Aus Anmeldungen und Ergebnissen wird nichts gelöscht.",
+    "quickHide": "{name} nicht mehr anbieten",
+    "quickHiddenNotice": "{name} wird nicht mehr angeboten.",
+    "quickUndo": "Rückgängig",
+    "quickHiddenToggle": "Ausgeblendete Läufer ({count})",
+    "quickHiddenShow": "anzeigen",
+    "quickHiddenCollapse": "ausblenden",
+    "quickRestore": "{name} wieder anbieten",
+    "quickRestoreAll": "Alle wiederherstellen",
+    "quickAllHidden": "Du hast alle Läufer aus der Schnellauswahl ausgeblendet.",
+    "quickError": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
     "newRunner": "Neuer Läufer",
     "firstName": "Vorname",
     "lastName": "Nachname",
@@ -974,6 +985,11 @@
     "runners": "Läufer",
     "editions": "Ausgaben",
     "years": "Jahre",
+    "sortBy": "Sortieren nach: {column}",
+    "sortedBy": "Sortiert nach: {column}, {direction}. Klicken, um die Richtung zu wechseln.",
+    "sortAscending": "aufsteigend",
+    "sortDescending": "absteigend",
+    "sortedCaption": "Sortiert nach: {column} ({direction})",
     "pages": "Seiten der Vereinsliste",
     "previous": "Zurück",
     "next": "Weiter",
@@ -1328,6 +1344,9 @@
     "announcement": "Das Siegerteam wird vor Ort um 12:20 zusammen mit den übrigen Ergebnissen bekannt gegeben. Eine Prämie für das Siegerteam.",
     "prizeWaiver": "Siegt K.O.B. Choceň als Veranstalter, verzichtet der Club auf die Prämie zugunsten des zweiten Teams.",
     "officialPublish": "Die offizielle Wertung veröffentlichen wir mit den Ergebnissen auf mcvv.org.",
+    "sponsorLabel": "Sponsor der Teamwertung",
+    "sponsorTitle": "Die Teamwertung wird von IONTMAX unterstützt",
+    "sponsorWebsite": "Offizielle Website des Sponsors",
     "historyLink": "Historische Siegerliste 1993–2025",
     "historyLinkNote": "Rückrechnung nach den Regeln 2026",
     "rulesLink": "Regeln der Teamwertung",
@@ -1426,7 +1445,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Schnellauswahl – Läufer aus früheren Jahren",
-        "text": "Die <b>Rychlá nabídka</b> (Schnellauswahl) zeigt alle Läufer, die du in früheren Jahren mit dieser E-Mail-Adresse angemeldet hast. Einfach anklicken – Kategorie und Startgeld werden automatisch ausgefüllt.",
+        "text": "Die <b>Rychlá nabídka</b> (Schnellauswahl) zeigt alle Läufer, die du in früheren Jahren mit dieser E-Mail-Adresse angemeldet hast. Einfach anklicken – Kategorie und Startgeld werden automatisch ausgefüllt. Läufer, die nicht mehr angeboten werden sollen, entfernst du mit dem Kreuz; ausgeblendete Läufer lassen sich wiederherstellen.",
         "tip": "Meldest du einen Verein an? Benenne die Anmeldung zuerst nach dem Verein um und speichere. Die Läufer übernehmen den Verein aus dem Namen der Anmeldung."
       },
       {

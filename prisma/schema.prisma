@@ -413,6 +413,7 @@ model User {
   auditEntries   AuditLog[]
   roleGrants     UserRoleGrant[]
   pins           UserPin[]
+  quickHidden    UserQuickHidden[]
 
   @@map("mcvv_user")
 }
@@ -461,6 +462,22 @@ model UserPin {
 
   @@id([userId, sectionId])
   @@map("mcvv_user_pin")
+}
+
+/// Rychlá nabídka na /prihlasky (MD-31): běžci, které si účet skryl („už nenabízet“).
+/// Jen preference účtu (napříč ročníky) – přihlášky, výsledky ani číselník běžců se nemění.
+/// Bez cizího klíče na `cis_bezec`: id běžce se mění sloučením (#261) a změnou pohlaví (#103),
+/// řádky se tam přesouvají v kódu; řádek ke smazanému běžci nic neblokuje a nic nezobrazí.
+model UserQuickHidden {
+  userId    Int      @map("user_id")
+  runnerId  String   @map("runner_id") @db.Char(8)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, runnerId])
+  @@index([runnerId])
+  @@map("mcvv_user_quick_hidden")
 }
 
 /// Auditní záznam akcí v administraci (#107): změny rolí, exporty a importy dne závodu.

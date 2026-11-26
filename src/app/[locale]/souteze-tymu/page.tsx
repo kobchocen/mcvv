@@ -58,6 +58,9 @@ export default async function TeamRulesPage({ params }: PageProps) {
         announcement: t("announcement"),
         prizeWaiver: t("prizeWaiver"),
         officialPublish: t("officialPublish"),
+        sponsorLabel: t("sponsorLabel"),
+        sponsorTitle: t("sponsorTitle"),
+        sponsorWebsite: t("sponsorWebsite"),
         historyLink: t("historyLink"),
         historyLinkNote: t("historyLinkNote"),
       }}

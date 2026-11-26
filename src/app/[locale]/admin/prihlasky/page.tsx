@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { dateInputValue, paymentRegistrationId } from "@/lib/admin/parse";
+import { Check, MailX, Zap } from "lucide-react";
+
+import { paymentRegistrationId } from "@/lib/admin/parse";
+import {
+  entryStatusTone,
+  formatListAmount,
+  paymentDiffTone,
+  type EntryStatusTone,
+} from "@/lib/admin/registration-list";
+import { formatDate, formatDateTime } from "@/lib/format/date";
+import { AutoSubmitSelect } from "@/components/molecules/auto-submit-select";
 import { prisma } from "@/lib/db/client";
 import { Link } from "@/i18n/routing";
 import { type Locale } from "@/i18n/routing";
@@ -40,24 +50,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: t("regsTitle") };
 }
 
-function statusClass(status: number | null | undefined): string {
-  switch (status) {
-    case 0:
-      return "text-race-dim";
-    case 1:
-      return "text-race-muted";
-    case 2:
-      return "font-semibold text-red-600 dark:text-red-400";
-    case 3:
-      return "font-semibold text-emerald-700 dark:text-emerald-400";
-    case 4:
-      return "font-semibold text-amber-700 dark:text-amber-400";
-    case 5:
-      return "font-semibold text-race-accent";
-    default:
-      return "";
-  }
-}
+const statusBadge: Record<EntryStatusTone, string> = {
+  cancelled: "border-race-line text-race-dim",
+  empty: "border-race-line text-race-muted",
+  unpaid: "border-red-600/40 bg-red-600/10 text-red-700 dark:text-red-300",
+  paid: "border-race-accent/50 bg-race-accent/10 text-race-accent",
+  overpaid: "border-amber-600/40 bg-amber-500/10 text-amber-800 dark:text-amber-300",
+  confirmed: "border-emerald-600/40 bg-emerald-600/10 text-emerald-700 dark:text-emerald-300",
+  unknown: "border-race-line text-race-muted",
+};
 
 const pragueShort = (d: Date, locale: Locale) =>
   new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "cs-CZ", {
@@ -197,20 +198,58 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     paidById.set(id, (paidById.get(id) ?? 0) + (payment.amount ?? 0));
   }
 
+  const totals = registrations.reduce(
+    (sum, row) => ({
+      runners: sum.runners + row.lines.length,
+      fee: sum.fee + row.lines.reduce((acc, line) => acc + (line.entryFee ?? 0), 0),
+      paid: sum.paid + (paidById.get(row.id) ?? 0),
+    }),
+    { runners: 0, fee: 0, paid: 0 },
+  );
+  const money = (value: number, signed = false) => formatListAmount(value, locale, { signed });
+  const selectClass =
+    "h-9 rounded-md border border-race-line bg-race-surface px-2 text-sm text-foreground focus-visible:border-race-accent focus-visible:outline-none";
+  const detailHref = (row: { year: number; id: number }) => ({
+    pathname: "/admin/prihlasky/[rok]/[id]" as const,
+    params: { rok: String(row.year), id: String(row.id) },
+  });
+
   return (
-    <main className="px-4 py-12 sm:px-6 lg:px-8">
+    <main className="px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <h1 className="font-display text-3xl font-bold text-foreground dark:text-white">
           {copy("regsTitle")} {selectedYear}
         </h1>
-        <form className="mt-4 flex flex-wrap items-end gap-3" method="get">
-          <input type="hidden" name="rok" value={selectedYear} />
-          <label className="grid gap-1 text-sm">
-            <span className="text-race-muted">{copy("regsStatus")}</span>
+        <form
+          className="mt-5 flex flex-wrap items-end gap-x-3 gap-y-3 rounded-lg border border-race-line/60 bg-race-surface/60 p-3"
+          method="get"
+          data-testid="regs-filters"
+        >
+          {years.length > 1 ? (
+            <label className="grid gap-1 text-xs font-medium text-race-muted">
+              {copy("regsYear")}
+              <AutoSubmitSelect
+                name="rok"
+                defaultValue={String(selectedYear)}
+                className={cn(selectClass, "tabular-nums")}
+                data-testid="regs-year"
+              >
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </AutoSubmitSelect>
+            </label>
+          ) : (
+            <input type="hidden" name="rok" value={selectedYear} />
+          )}
+          <label className="grid gap-1 text-xs font-medium text-race-muted">
+            {copy("regsStatus")}
             <select
               name="stav"
               defaultValue={Number.isFinite(statusFilter) ? String(statusFilter) : ""}
-              className="h-10 border border-race-line bg-race-surface px-2"
+              className={selectClass}
             >
               <option value="">{copy("statusAll")}</option>
               <option value="1">{copy("status1")}</option>
@@ -221,12 +260,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <option value="0">{copy("status0")}</option>
             </select>
           </label>
-          <label className="grid gap-1 text-sm">
-            <span className="text-race-muted">{copy("regsTerm")}</span>
+          <label className="grid gap-1 text-xs font-medium text-race-muted">
+            {copy("regsTerm")}
             <select
               name="termin"
               defaultValue={slotFilter ?? ""}
-              className="h-10 border border-race-line bg-race-surface px-2"
+              className={selectClass}
               data-testid="regs-slot-filter"
             >
               <option value="">{copy("regsTermAll")}</option>
@@ -237,40 +276,47 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               ))}
             </select>
           </label>
-          <label className="flex h-10 items-center gap-2 text-sm">
-            <input type="checkbox" name="zrusene" value="1" defaultChecked={includeCancelled} />
-            {copy("includeCancelled")}
-          </label>
-          <label className="flex h-10 items-center gap-2 text-sm">
-            <input type="checkbox" name="prazdne" value="1" defaultChecked={includeEmpty} />
-            {copy("includeEmpty")}
-          </label>
-          <label className="flex h-10 items-center gap-2 text-sm">
-            <input type="checkbox" name="spec" value="1" defaultChecked={onlySpecial} />
-            {specialT("regsFilter")}
-          </label>
-          <Button type="submit" variant="outline" className="h-10 border-race-line bg-race-surface">
+          <fieldset className="flex min-h-9 flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="zrusene"
+                value="1"
+                defaultChecked={includeCancelled}
+                className="size-4 accent-race-accent"
+              />
+              {copy("includeCancelled")}
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="prazdne"
+                value="1"
+                defaultChecked={includeEmpty}
+                className="size-4 accent-race-accent"
+              />
+              {copy("includeEmpty")}
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="spec"
+                value="1"
+                defaultChecked={onlySpecial}
+                className="size-4 accent-race-accent"
+              />
+              {specialT("regsFilter")}
+            </label>
+          </fieldset>
+          <Button
+            type="submit"
+            variant="outline"
+            className="h-9 border-race-line bg-race-surface sm:ml-auto"
+          >
             {copy("filter")}
           </Button>
         </form>
-        {years.length > 1 ? (
-          <p className="mt-3 flex flex-wrap gap-3 text-sm">
-            {years.map((year) => (
-              <Link
-                key={year}
-                href={{ pathname: "/admin/prihlasky", query: { rok: String(year) } }}
-                className={
-                  year === selectedYear
-                    ? "font-semibold text-race-accent"
-                    : "text-race-muted hover:text-foreground"
-                }
-              >
-                {year}
-              </Link>
-            ))}
-          </p>
-        ) : null}
-        <p className="mt-3 text-sm">
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
           <Link
             href={{
               pathname: "/admin/prihlasky/spec-starty",
@@ -281,73 +327,94 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {specialT("overviewLink", { count: specialRows.length })}
           </Link>
-        </p>
-        {lateAwaiting > 0 ? (
-          <p
-            className="mt-3 text-sm font-medium text-amber-800 dark:text-amber-300"
-            data-testid="late-awaiting"
-          >
-            {copy("lateAwaitingSummary", { count: lateAwaiting })}{" "}
-            <Link
-              href={{
-                pathname: "/admin/prihlasky",
-                query: { rok: String(selectedYear), termin: "late" },
-              }}
-              className="text-race-accent hover:underline"
+          {lateAwaiting > 0 ? (
+            <span
+              className="font-medium text-amber-800 dark:text-amber-300"
+              data-testid="late-awaiting"
             >
-              {copy("lateAwaitingShow")}
-            </Link>
-          </p>
-        ) : null}
+              {copy("lateAwaitingSummary", { count: lateAwaiting })}{" "}
+              <Link
+                href={{
+                  pathname: "/admin/prihlasky",
+                  query: { rok: String(selectedYear), termin: "late" },
+                }}
+                className="text-race-accent hover:underline"
+              >
+                {copy("lateAwaitingShow")}
+              </Link>
+            </span>
+          ) : null}
+          {hiddenEmpty > 0 ? (
+            <span className="text-race-muted">
+              {copy("hiddenEmpty", { count: hiddenEmpty })}{" "}
+              <Link
+                href={{
+                  pathname: "/admin/prihlasky",
+                  query: {
+                    rok: String(selectedYear),
+                    prazdne: "1",
+                    ...(Number.isFinite(statusFilter) ? { stav: String(statusFilter) } : {}),
+                    ...(zrusene === "1" ? { zrusene: "1" } : {}),
+                    ...(slotFilter ? { termin: slotFilter } : {}),
+                  },
+                }}
+                className="font-medium text-race-accent hover:underline"
+              >
+                {copy("showEmpty")}
+              </Link>
+            </span>
+          ) : null}
+        </div>
         <McvvAdminRegistrationTimeline data={timeline} />
-        {hiddenEmpty > 0 ? (
-          <p className="mt-3 text-sm text-race-muted">
-            {copy("hiddenEmpty", { count: hiddenEmpty })}{" "}
-            <Link
-              href={{
-                pathname: "/admin/prihlasky",
-                query: {
-                  rok: String(selectedYear),
-                  prazdne: "1",
-                  ...(Number.isFinite(statusFilter) ? { stav: String(statusFilter) } : {}),
-                  ...(zrusene === "1" ? { zrusene: "1" } : {}),
-                  ...(slotFilter ? { termin: slotFilter } : {}),
-                },
-              }}
-              className="font-medium text-race-accent hover:underline"
-            >
-              {copy("showEmpty")}
-            </Link>
-          </p>
-        ) : null}
         {registrations.length === 0 ? (
           <p className="mt-8 text-sm text-race-muted">{copy("regsEmpty")}</p>
         ) : (
-          <div className="mt-8 overflow-x-auto">
-            <table className="w-full min-w-[68rem] border-collapse text-left text-sm">
-              <thead>
+          <div className="@container mt-8">
+            <p className="mb-2 text-sm text-race-muted tabular-nums" data-testid="regs-summary">
+              {copy("regsSummary", {
+                count: registrations.length,
+                runners: totals.runners,
+                fee: money(totals.fee),
+                paid: money(totals.paid),
+              })}
+            </p>
+            <table className="block w-full border-collapse text-left text-sm @2xl:table @2xl:table-fixed">
+              <colgroup className="hidden @2xl:table-column-group">
+                <col />
+                <col className="w-[6.25rem]" />
+                <col className="w-[3.5rem]" />
+                <col className="w-[5.75rem]" />
+                <col className="w-[6.25rem]" />
+                <col className="w-[7.25rem]" />
+              </colgroup>
+              <thead className="hidden @2xl:table-header-group">
                 <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-                  <th className="py-2 pr-3">{copy("regsId")}</th>
-                  <th className="py-2 pr-3">{copy("regsName")}</th>
-                  <th className="py-2 pr-3">{copy("regsEmail")}</th>
-                  <th className="py-2 pr-3">{copy("regsCreated")}</th>
-                  <th className="py-2 pr-3">{copy("regsTerm")}</th>
-                  <th className="py-2 pr-3">{copy("regsCount")}</th>
-                  <th className="py-2 pr-3">{copy("regsFee")}</th>
-                  <th className="py-2 pr-3">{copy("regsPaid")}</th>
-                  <th className="py-2 pr-3">{copy("regsDiff")}</th>
-                  <th className="py-2 pr-3">{copy("regsStatus")}</th>
-                  <th className="py-2 pr-3">{copy("regsPromotion")}</th>
-                  <th className="py-2 pr-3">{copy("regsMessages")}</th>
-                  <th className="py-2 pr-3">{specialT("column")}</th>
-                  <th className="py-2" />
+                  <th scope="col" className="py-2 pr-3">
+                    {copy("regsEntry")}
+                  </th>
+                  <th scope="col" className="py-2 pr-3">
+                    {copy("regsCreated")}
+                  </th>
+                  <th scope="col" className="py-2 pr-3 text-right">
+                    {copy("regsRunners")}
+                  </th>
+                  <th scope="col" className="py-2 pr-3 text-right">
+                    {copy("regsFee")}
+                  </th>
+                  <th scope="col" className="py-2 pr-3 text-right">
+                    {copy("regsPaid")}
+                  </th>
+                  <th scope="col" className="py-2 pl-4">
+                    {copy("regsStatus")}
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="grid gap-2 @2xl:table-row-group">
                 {registrations.map((row) => {
                   const fee = row.lines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
                   const paid = paidById.get(row.id) ?? 0;
                   const diff = paid - fee;
+                  const diffTone = paymentDiffTone(diff);
                   const summary = threadSummaries.get(summaryKey(row.year, row.id));
                   const specialKinds = specialByRegistration.get(row.id) ?? [];
                   const meta = metaById.get(row.id);
@@ -377,14 +444,122 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                                 },
                               )
                             : undefined;
+                  const cancelled = row.status === ENTRY_STATUS.cancelled;
+                  const canConfirm =
+                    row.status === ENTRY_STATUS.paid || row.status === ENTRY_STATUS.overpaid;
+                  const label = row.name?.trim() || row.email || `#${row.id}`;
                   return (
-                    <tr key={`${row.year}-${row.id}`} className="border-b border-race-line/40">
-                      <td className="py-2.5 pr-3 font-medium">{row.id}</td>
-                      <td className="py-2.5 pr-3">{row.name}</td>
-                      <td className="py-2.5 pr-3">{row.email}</td>
-                      <td className="py-2.5 pr-3">{dateInputValue(row.created)}</td>
-                      <td className="py-2.5 pr-3" data-testid={`regs-slot-${row.id}`}>
-                        <span className="whitespace-nowrap">{copy(`regsTerm_${slot}`)}</span>
+                    <tr
+                      key={`${row.year}-${row.id}`}
+                      className={cn(
+                        "relative grid grid-cols-4 gap-x-3 gap-y-2 rounded-lg border border-race-line/60 bg-race-surface p-3",
+                        "transition-colors hover:bg-race-accent/[0.06] focus-within:ring-2 focus-within:ring-race-accent/60",
+                        "@2xl:table-row @2xl:rounded-none @2xl:border-0 @2xl:border-b @2xl:border-race-line/40 @2xl:bg-transparent @2xl:p-0",
+                        cancelled && "text-race-dim",
+                      )}
+                      data-testid={`regs-row-${row.id}`}
+                    >
+                      <td className="col-span-3 row-start-1 min-w-0 @2xl:py-2.5 @2xl:pr-3">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <Link
+                            href={detailHref(row)}
+                            className={cn(
+                              "min-w-0 truncate font-semibold text-foreground outline-none",
+                              "after:absolute after:inset-0 after:content-['']",
+                              "hover:text-race-accent focus-visible:text-race-accent",
+                              cancelled && "text-race-dim line-through decoration-race-dim/60",
+                            )}
+                            title={label}
+                            data-testid="regs-row-link"
+                          >
+                            {label}
+                          </Link>
+                        </div>
+                        <div
+                          className="mt-0.5 flex min-w-0 items-center gap-1.5"
+                          data-testid="regs-entry-meta"
+                        >
+                          <span className="shrink-0 text-xs text-race-dim tabular-nums">
+                            #{row.id}
+                          </span>
+                          {row.email ? (
+                            <span
+                              className="min-w-0 flex-1 truncate text-xs text-race-muted"
+                              title={row.email}
+                            >
+                              {row.email}
+                            </span>
+                          ) : null}
+                          {summary ? (
+                            <Link
+                              href={detailHref(row)}
+                              className="relative z-10 shrink-0"
+                              title={
+                                summary.open && summary.unread > 0
+                                  ? `${copy("msgUnread")}: ${summary.unread}`
+                                  : copy("msgCount", { count: summary.count })
+                              }
+                            >
+                              <McvvMessageBubble
+                                count={summary.count}
+                                unread={summary.open ? summary.unread : 0}
+                                label={
+                                  summary.open && summary.unread > 0
+                                    ? `${copy("msgUnread")}: ${summary.unread}`
+                                    : copy("msgCount", { count: summary.count })
+                                }
+                              />
+                            </Link>
+                          ) : null}
+                          {specialKinds.length > 0 ? (
+                            <Link
+                              href={detailHref(row)}
+                              className="relative z-10 shrink-0"
+                              title={[...new Set(specialKinds)]
+                                .map((kind) => specialT(`kind_${kind}`))
+                                .join(", ")}
+                            >
+                              <McvvAdminSpecialStartBadge
+                                label={
+                                  specialKinds.length === 1
+                                    ? specialT(`kind_${specialKinds[0]}`)
+                                    : specialT("regsCount", { count: specialKinds.length })
+                                }
+                              />
+                            </Link>
+                          ) : null}
+                          {isPromotionOptOut(row.promotion) ? (
+                            <span
+                              className="relative z-10 shrink-0 text-race-dim"
+                              title={copy("regsNoNewsletter")}
+                            >
+                              <MailX className="size-3.5" aria-hidden="true" />
+                              <span className="sr-only">{copy("regsNoNewsletter")}</span>
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td
+                        className="col-span-1 @2xl:py-2.5 @2xl:pr-3"
+                        data-testid={`regs-slot-${row.id}`}
+                      >
+                        <span className="block text-[0.6875rem] font-semibold uppercase tracking-wide text-race-dim @2xl:hidden">
+                          {copy("regsCreated")}
+                        </span>
+                        <span
+                          className="block whitespace-nowrap tabular-nums"
+                          title={row.created ? formatDateTime(row.created, locale) : undefined}
+                        >
+                          {row.created ? formatDate(row.created, locale) : "—"}
+                        </span>
+                        <span
+                          className={cn(
+                            "block whitespace-nowrap text-xs",
+                            slot === "standard" ? "text-race-dim" : "font-medium text-race-muted",
+                          )}
+                        >
+                          {copy(`regsTerm_${slot}`)}
+                        </span>
                         {late ? (
                           <span
                             title={lateTitle}
@@ -405,98 +580,83 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                           </span>
                         ) : null}
                       </td>
-                      <td className="py-2.5 pr-3">{row.lines.length}</td>
-                      <td className="py-2.5 pr-3">{fee}</td>
-                      <td className="py-2.5 pr-3">{paid}</td>
-                      <td className="py-2.5 pr-3">{diff}</td>
-                      <td className={cn("py-2.5 pr-3", statusClass(row.status))}>
-                        {copy(statusKey(row.status))}
-                        {showFreeAutoBadge({
-                          status: row.status,
-                          fee,
-                          autoConfirmed: autoConfirmed.has(row.id),
-                        }) ? (
-                          <span className="mt-1 block w-fit whitespace-nowrap rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                            {copy("freeAutoConfirmed")}
-                          </span>
-                        ) : null}
+                      <td className="col-span-1 text-right tabular-nums @2xl:py-2.5 @2xl:pr-3">
+                        <span className="block text-[0.6875rem] font-semibold uppercase tracking-wide text-race-dim @2xl:hidden">
+                          {copy("regsRunners")}
+                        </span>
+                        {row.lines.length}
                       </td>
-                      <td className="py-2.5 pr-3">
-                        {isPromotionOptOut(row.promotion) ? (
+                      <td className="col-span-1 text-right tabular-nums @2xl:py-2.5 @2xl:pr-3">
+                        <span className="block text-[0.6875rem] font-semibold uppercase tracking-wide text-race-dim @2xl:hidden">
+                          {copy("regsFee")}
+                        </span>
+                        <span className="whitespace-nowrap">{money(fee)}</span>
+                      </td>
+                      <td className="col-span-1 text-right tabular-nums @2xl:py-2.5 @2xl:pr-3">
+                        <span className="block text-[0.6875rem] font-semibold uppercase tracking-wide text-race-dim @2xl:hidden">
+                          {copy("regsPaid")}
+                        </span>
+                        <span className="block whitespace-nowrap">{money(paid)}</span>
+                        {diffTone !== "even" ? (
                           <span
-                            title={copy("regsNoNewsletter")}
-                            className="rounded-full border border-race-line px-2 py-0.5 text-xs text-race-muted"
+                            className={cn(
+                              "block whitespace-nowrap text-xs font-semibold",
+                              diffTone === "short"
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-amber-700 dark:text-amber-400",
+                            )}
+                            title={copy("regsDiff")}
                           >
-                            {copy("regsNewsletterOff")}
+                            <span className="sr-only">{copy("regsDiff")} </span>
+                            {money(diff, true)}
                           </span>
                         ) : null}
                       </td>
-                      <td className="py-2.5 pr-3">
-                        {summary ? (
-                          <Link
-                            href={{
-                              pathname: "/admin/prihlasky/[rok]/[id]",
-                              params: { rok: String(row.year), id: String(row.id) },
-                            }}
+                      <td
+                        className="col-start-4 row-start-1 justify-self-end text-right @2xl:py-2.5 @2xl:pl-4 @2xl:text-left"
+                        data-testid={`regs-status-${row.id}`}
+                      >
+                        <div className="flex flex-col items-end gap-1.5 @2xl:items-start">
+                          <span
+                            className={cn(
+                              "inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-semibold",
+                              statusBadge[entryStatusTone(row.status)],
+                            )}
                           >
-                            <McvvMessageBubble
-                              count={summary.count}
-                              unread={summary.open ? summary.unread : 0}
-                              label={
-                                summary.open && summary.unread > 0
-                                  ? `${copy("msgUnread")}: ${summary.unread}`
-                                  : copy("msgCount", { count: summary.count })
-                              }
-                            />
-                          </Link>
-                        ) : null}
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        {specialKinds.length > 0 ? (
-                          <Link
-                            href={{
-                              pathname: "/admin/prihlasky/[rok]/[id]",
-                              params: { rok: String(row.year), id: String(row.id) },
-                            }}
-                            title={[...new Set(specialKinds)]
-                              .map((kind) => specialT(`kind_${kind}`))
-                              .join(", ")}
-                          >
-                            <McvvAdminSpecialStartBadge
-                              label={
-                                specialKinds.length === 1
-                                  ? specialT(`kind_${specialKinds[0]}`)
-                                  : specialT("regsCount", { count: specialKinds.length })
-                              }
-                            />
-                          </Link>
-                        ) : null}
-                      </td>
-                      <td className="py-2.5">
-                        <div className="flex flex-wrap items-center gap-3">
-                          {row.status === ENTRY_STATUS.paid ||
-                          row.status === ENTRY_STATUS.overpaid ? (
-                            <form action={confirmRegistration}>
+                            {row.status === ENTRY_STATUS.confirmed ? (
+                              <Check className="size-3" aria-hidden="true" />
+                            ) : null}
+                            {copy(statusKey(row.status))}
+                          </span>
+                          {showFreeAutoBadge({
+                            status: row.status,
+                            fee,
+                            autoConfirmed: autoConfirmed.has(row.id),
+                          }) ? (
+                            <span
+                              title={copy("freeAutoConfirmed")}
+                              aria-label={copy("freeAutoConfirmed")}
+                              data-testid="regs-free-auto-badge"
+                              className="relative z-10 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-700 dark:text-emerald-300"
+                            >
+                              <Zap className="size-3" aria-hidden="true" />
+                              {copy("freeAutoConfirmedShort")}
+                            </span>
+                          ) : null}
+                          {canConfirm ? (
+                            <form action={confirmRegistration} className="relative z-10">
                               <input type="hidden" name="year" value={row.year} />
                               <input type="hidden" name="id" value={row.id} />
                               <input type="hidden" name="from" value="list" />
                               <button
                                 type="submit"
-                                className="font-semibold text-race-accent hover:underline"
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-race-accent/50 px-2 text-xs font-semibold text-race-accent hover:bg-race-accent/10"
                               >
+                                <Check className="size-3.5" aria-hidden="true" />
                                 {copy("confirmEntry")}
                               </button>
                             </form>
                           ) : null}
-                          <Link
-                            href={{
-                              pathname: "/admin/prihlasky/[rok]/[id]",
-                              params: { rok: String(row.year), id: String(row.id) },
-                            }}
-                            className="font-semibold text-race-accent hover:underline"
-                          >
-                            {copy("edit")}
-                          </Link>
                         </div>
                       </td>
                     </tr>

@@ -17,3 +17,4 @@ export * from "./mcvv-results-section";
 export * from "./mcvv-schedule-section";
 export * from "./mcvv-entrants-table";
 export * from "./mcvv-team-standings";
+export * from "./mcvv-teams-sponsor";

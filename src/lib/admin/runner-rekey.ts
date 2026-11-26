@@ -1,5 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { moveQuickHidden } from "@/lib/entries/quick-hidden-move";
+
 import {
   buildSexChangePlan,
   birthYearOf,
@@ -231,6 +233,8 @@ export async function applySexChange(
           })
         ).count,
       };
+      // Skrytí v rychlé nabídce účtů (MD-31) jdou s běžcem na nové id (mimo počty v auditu).
+      await moveQuickHidden(tx, oldId, newId);
       for (const line of plan.lines) {
         if (!line.newCategory) continue;
         await tx.registrationLine.update({

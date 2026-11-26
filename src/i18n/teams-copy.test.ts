@@ -8,6 +8,7 @@ type TeamsCopy = {
     prizeWaiver: string;
     historicalNote: string;
     announcement: string;
+    sponsorTitle: string;
   };
 };
 
@@ -30,7 +31,19 @@ test("cs: rules use našeptávač, never autocomplete, and the approved prize wa
   );
   assert.match(copy.announcement, /Odměna pro vítězný tým/);
   assert.doesNotMatch(copy.announcement, /sladk/i);
+  assert.equal(copy.sponsorTitle, "Soutěž týmů podporuje IONTMAX");
+  assert.doesNotMatch(copy.sponsorTitle, /odměn|cen|nápoj/i);
 });
+
+for (const locale of ["cs", "en", "de", "pl", "uk"]) {
+  test(`${locale}: sponsor line names IONTMAX and not the prize`, () => {
+    const teams = JSON.parse(
+      readFileSync(new URL(`./locales/${locale}/common.json`, import.meta.url), "utf8"),
+    ).Teams as Record<string, string>;
+    assert.match(teams.sponsorTitle, /IONTMAX/);
+    assert.doesNotMatch(teams.sponsorTitle, /prize|Prämie|Nagroda|Нагорода|odměn/i);
+  });
+}
 
 for (const locale of ["cs", "en", "de", "pl", "uk"]) {
   test(`${locale}: public team copy never says autocomplete`, () => {

@@ -401,8 +401,13 @@ export function computeClubInsights(
   };
 }
 
-export function isClubListQuery(query: { q?: string; razeni?: string; strana?: string }): boolean {
-  return Boolean(query.q?.trim() || query.razeni || query.strana);
+export function isClubListQuery(query: {
+  q?: string;
+  razeni?: string;
+  strana?: string;
+  smer?: string;
+}): boolean {
+  return Boolean(query.q?.trim() || query.razeni || query.strana || query.smer);
 }
 
 /** Tab slugs for /kluby?pohled=… (empty string is the overview). */

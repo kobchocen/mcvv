@@ -22,6 +22,7 @@ test("cs: news box uses the approved team-competition wording", () => {
   assert.match(news.body, /Od letoška bodují vedle jednotlivců i týmy napříč kategoriemi/);
   assert.match(news.body, /Rozhoduje výkon, ne počet lidí v klubu/);
   assert.match(news.body, /Odměna pro vítězný tým/);
+  assert.match(news.body, /Soutěž týmů podporuje IONTMAX/);
   assert.doesNotMatch(news.body, /autocomplete/i);
   assert.doesNotMatch(news.body, /našeptávač/);
   assert.doesNotMatch(news.body, /nesluč|nesjednoc/i);
@@ -40,6 +41,7 @@ for (const locale of ["cs", "en", "de", "pl", "uk"]) {
     assert.ok(news.body);
     assert.ok(news.linkLabel);
     assert.match(news.eyebrow, /\{n\b/);
+    assert.match(news.body, /IONTMAX/);
     const blob = `${news.title} ${news.body} ${news.linkLabel} ${news.eyebrow}`;
     assert.doesNotMatch(blob, /autocomplete/i);
   });

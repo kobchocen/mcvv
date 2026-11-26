@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
+import { loginAdminLevel } from "@/lib/admin/access";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
 import { setSession, type UserRole } from "@/lib/auth/session";
 import { type Locale } from "@/i18n/routing";
@@ -185,7 +186,13 @@ async function finishLogin(
   if (!written) {
     return NextResponse.redirect(new URL(`/${locale}/prihlaseni`, origin()));
   }
-  redirectAfterLogin(safeNext(next), user.role as UserRole, locale);
+  const level = await loginAdminLevel({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role as UserRole,
+  });
+  redirectAfterLogin(safeNext(next), user.role as UserRole, level, locale);
 }
 
 export async function finishGoogle(

@@ -16,7 +16,7 @@ import { navTree, visibleSectionsBy } from "@/lib/admin/sections";
 import { staffUnreadCount } from "@/lib/messages/store";
 import { withFooterYear, type McvvHomepageContent } from "@/components/templates";
 import { prisma } from "@/lib/db/client";
-import { type Locale } from "@/i18n/routing";
+import { redirect, type Locale } from "@/i18n/routing";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -29,6 +29,12 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   setRequestLocale(locale);
   const access = await getAccess();
   const session = access.session;
+  if (session && !canOpenAdmin(access)) {
+    // Přihlášený účet bez rozcestníku: rovnou pryč, ne prázdná stránka s klientským
+    // přesměrováním na přihlášení (to by ho poslalo zpět sem). Resultboard na své obrazovky,
+    // závodník na přihlášky (stejně jako výchozí cíl po přihlášení).
+    redirect({ href: session.role === "resultboard" ? "/resultboard" : "/prihlasky", locale });
+  }
   if (!session || !canOpenAdmin(access)) {
     return (
       <Suspense fallback={null}>

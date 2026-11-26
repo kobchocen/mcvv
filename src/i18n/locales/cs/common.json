@@ -1787,6 +1787,8 @@
     "lateAwaitingSummary": "{count, plural, one {# pozdní přihláška čeká} few {# pozdní přihlášky čekají} other {# pozdních přihlášek čeká}} na platbu.",
     "lateAwaitingShow": "Zobrazit pozdní",
     "toolsIntro": "Tvoje obrazovky a sekce pro den závodu. Otevírají se na celou obrazovku.",
+    "toolsEmpty": "Zatím nemáš přidělenou žádnou obrazovku ani sekci. Požádej pořadatele, aby ti v administraci nastavil roli.",
+    "navScreens": "Obrazovky dne závodu",
     "navSplitEntry": "Mezičasy – zápis na kontrole",
     "navStarter": "Startér",
     "screensTitle": "Obrazovky",

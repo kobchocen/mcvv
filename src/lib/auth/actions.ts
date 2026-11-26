@@ -12,6 +12,7 @@ import {
   DEFAULT_LOGIN_IP_LIMIT,
   loginRateLimit,
 } from "@/lib/auth/login-guard";
+import { loginAdminLevel } from "@/lib/admin/access";
 import { redirectAfterLogin, safeNext } from "@/lib/auth/login-next";
 import { requiresVerifiedEmail } from "@/lib/auth/roles";
 import { clearSession, setSession } from "@/lib/auth/session";
@@ -70,7 +71,13 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
 
   const locale = (await getLocale()) as Locale;
   const next = safeNext(formData.get("next"));
-  redirectAfterLogin(next, user.role, locale);
+  const level = await loginAdminLevel({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  });
+  redirectAfterLogin(next, user.role, level, locale);
   return {};
 }
 

@@ -157,8 +157,12 @@ export function loginTarget(next: string | null, access: boolean | AdminAccess):
  * Jako `loginTarget`, ale výchozí cíl bere v potaz roli: účet Resultboard bez použitelného
  * `next` jde na `/resultboard`, ne na přihlášky.
  */
-export function postLoginTarget(next: string | null, role: UserRole): LoginTarget {
-  const target = loginTarget(next, adminAccess(role));
+export function postLoginTarget(
+  next: string | null,
+  role: UserRole,
+  level: AdminAccess = adminAccess(role),
+): LoginTarget {
+  const target = loginTarget(next, level);
   if (role !== "resultboard") return target;
   if (target.kind === "resultboard") return target;
   if (target.kind === "user" && target.path === "/resultboard") return target;

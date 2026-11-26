@@ -1787,6 +1787,8 @@
     "lateAwaitingSummary": "{count, plural, one {# late entry is} other {# late entries are}} waiting for payment.",
     "lateAwaitingShow": "Show late entries",
     "toolsIntro": "Your race-day screens and sections. They open full screen.",
+    "toolsEmpty": "You have no screen or section assigned yet. Ask an organiser to set your role in the administration.",
+    "navScreens": "Race-day screens",
     "navSplitEntry": "Split times – checkpoint entry",
     "navStarter": "Starter",
     "screensTitle": "Screens",

@@ -107,7 +107,13 @@ export async function loadRaceRunners(
     name: s.runnerName.trim(),
     cat: s.categoryId,
     start: Math.round(
-      startInstant(ctx.zero, s.bib, ctx.intervalS, ctx.secondStartFrom).getTime() / 1000,
+      startInstant(
+        ctx.zero,
+        s.bib,
+        ctx.intervalS,
+        ctx.secondStartFrom,
+        ctx.organizerShiftSeconds,
+      ).getTime() / 1000,
     ),
     ...(times.get(s.bib) ?? empty()),
     runnerId: s.runnerId,

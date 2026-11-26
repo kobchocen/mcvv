@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { currentRaceYear } from "@/lib/entries/year";
 import { raceStartFor } from "@/lib/race/phase";
+import { organizerShiftSeconds } from "@/lib/race/start-time";
 
 import { DEFAULT_DNS_GRACE_FALLBACK_S, DEFAULT_DNS_GRACE_S } from "./online-results-core";
 import { durationFromSetting, startOffsetLimitFromSetting } from "./splits-screen-core";
@@ -30,6 +31,8 @@ export type RaceContext = {
   intervalS: number;
   /** První číslo 2. startu z modelu ročníku (st_druhy_od, výchozí 601) – hranice koridorů a výpočet startovních časů ve všech živých modulech. */
   secondStartFrom: number;
+  /** Posun nuly pořadatelů vůči nule ročníku (7:45 − 10:15 = −9 000). #382 */
+  organizerShiftSeconds: number;
   /** Nula je přepsaná pro zkoušku nanečisto. */
   zeroOverridden: boolean;
   /** Skutečná nula ročníku (den závodu v nulový čas ročníku st_nula_s, výchozí 10:15) bez ohledu na zkušební nulu. */
@@ -80,6 +83,7 @@ export async function getRaceContext(): Promise<RaceContext> {
     officialZero,
     intervalS: model.intervalSeconds,
     secondStartFrom: model.secondStartFrom,
+    organizerShiftSeconds: organizerShiftSeconds(model),
     zeroOverridden: overrideZero !== null,
     raceDate: current.raceDate,
     startLimitS: startOffsetLimitFromSetting(setting(LIVE_START_OFFSET_LIMIT_KEY)),

@@ -152,12 +152,12 @@ describe("parseOffset / formatOffset (Q224, Q235)", () => {
 });
 
 describe("generateStartList – organizer / early / late", () => {
-  it("numbers flagged organizers from 1 and 601 in category order", () => {
-    const a = entry({ categoryId: "A", special: organizer, name: "Adamec" });
-    const j = entry({ categoryId: "J", special: organizer, name: "Zelený" });
-    const k = entry({ categoryId: "K", special: organizer });
+  it("numbers flagged organizers from 1 and 601 by completed editions (#382)", () => {
+    const a = entry({ categoryId: "A", special: organizer, name: "Adamec", editionsCount: 2 });
+    const j = entry({ categoryId: "J", special: organizer, name: "Zelený", editionsCount: 10 });
+    const k = entry({ categoryId: "K", special: organizer, editionsCount: 1 });
     const { bib, line, result } = run([a, j, k, ...filler("A", 5)]);
-    assert.equal(bib(j), 1, "J sorts before A");
+    assert.equal(bib(j), 1, "more completed editions starts first");
     assert.equal(bib(a), 2);
     assert.equal(bib(k), 601);
     assert.equal(line(j).reason, "organizer");
@@ -214,7 +214,12 @@ describe("generateStartList – organizer / early / late", () => {
 
   it("organizer overflow: nearest free bib outside 1–40 with a warning (Q237)", () => {
     const orgs = Array.from({ length: 41 }, (_, i) =>
-      entry({ categoryId: "A", special: organizer, name: `Org ${String(i + 1).padStart(2, "0")}` }),
+      entry({
+        categoryId: "A",
+        special: organizer,
+        name: `Org ${String(i + 1).padStart(2, "0")}`,
+        editionsCount: 41 - i,
+      }),
     );
     const { bib, result } = run(orgs);
     assert.deepEqual(

@@ -25,6 +25,7 @@ import {
   type TestPhase,
 } from "./config-core";
 import { enterTestContext, runInTestContext } from "./context";
+import { applyTestRunToRaceContext } from "./live-context";
 import { nextFreeTestBib, type TestOnsiteInput } from "./onsite-core";
 import { buildTestRoster } from "./roster-core";
 
@@ -71,18 +72,7 @@ export async function getActiveTestModeRun(): Promise<ActiveTestModeRun | null> 
 export async function getLiveRaceContext(now = new Date()): Promise<RaceContext> {
   const [base, run] = await Promise.all([getRaceContext(), getActiveTestModeRun()]);
   if (!run) return base;
-  const phase = testPhase(run, now);
-  if (phase === "cleanup") return base;
-  const readOnly = phase === "ended" || run.status !== "running";
-  return {
-    ...base,
-    year: TEST_SHADOW_YEAR,
-    zero: run.zeroAt,
-    officialZero: run.zeroAt,
-    zeroOverridden: true,
-    testRunId: run.id,
-    testReadOnly: readOnly,
-  };
+  return applyTestRunToRaceContext(base, run, testPhase(run, now));
 }
 
 /**

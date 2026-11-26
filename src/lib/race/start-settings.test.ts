@@ -55,13 +55,13 @@ describe("validateStartSettings", () => {
   });
   it("rejects invalid model values", () => {
     const issues = validateStartSettings(
-      { zeroSeconds: 90000, intervalSeconds: 0, secondStartFrom: 1 },
+      { zeroSeconds: 90000, intervalSeconds: 0, secondStartFrom: 1, organizerZeroSeconds: 90000 },
       [],
       { men: null, women: null },
     );
     assert.deepEqual(
       issues.map((issue) => issue.code),
-      ["zero", "interval", "secondStart"],
+      ["zero", "organizerZero", "interval", "secondStart"],
     );
   });
 });

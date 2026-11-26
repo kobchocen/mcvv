@@ -6,6 +6,7 @@ import {
   type RangedSpecialKind,
   type SpecialStartSpec,
 } from "./special-start";
+import { resolveOrganizerTieSeed, compareOrganizerOrder } from "./startlist-organizer-order";
 import type { BibRange } from "./start-settings";
 import { bibForSlot, startSeriesForBib, startSlot, type StartModel } from "./start-time";
 
@@ -47,6 +48,8 @@ export type GeneratorEntry = {
   eligible: boolean;
   /** Poslední platný čas z Y−1…Y−3 (s), null = v okně žádný (#381). */
   lastYearTime: number | null;
+  /** Počet účastí (mcvv_time, stejně jako na /bezec/[id]) – řazení pořadatelů (#382). */
+  editionsCount?: number;
   /** Spec. start z administrace přihlášek (null / chybí = žádný). */
   special?: SpecialStartSpec | null;
 };
@@ -59,6 +62,11 @@ export type GeneratorInput = {
   champions: { runnerId: string; bib: number }[];
   entries: GeneratorEntry[];
   locale?: string;
+  /**
+   * Seed pro shody počtu ročníků u pořadatelů (#382). Když chybí, odvodí se ze sady
+   * způsobilých pořadatelů a drží se, dokud se sada nezmění.
+   */
+  organizerTieSeed?: number;
 };
 
 export type AssignmentReason =
@@ -305,6 +313,7 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
   };
   for (const kind of RANGED_SPECIAL_KINDS) {
     for (const series of [1, 2] as const) {
+      const organizerSeed = resolveOrganizerTieSeed(input);
       const anchors = entries
         .filter(
           (entry) =>
@@ -312,7 +321,16 @@ export function generateStartList(input: GeneratorInput): StartListProposal {
             entry.special?.kind === kind &&
             rangeSeries(model, rangeByCategory.get(entry.categoryId)) === series,
         )
-        .sort(orderBySort);
+        .sort(
+          kind === "organizer"
+            ? (a, b) =>
+                compareOrganizerOrder(
+                  { runnerId: a.runnerId, editionsCount: a.editionsCount ?? 0 },
+                  { runnerId: b.runnerId, editionsCount: b.editionsCount ?? 0 },
+                  organizerSeed,
+                )
+            : orderBySort,
+        );
       // Pozdě plní rozsah od konce (co nejpozději), v pořadí zůstává stabilní řazení.
       const late = kind === "late";
       if (late) {

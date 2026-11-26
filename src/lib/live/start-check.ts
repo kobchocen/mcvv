@@ -28,7 +28,10 @@ import {
  */
 
 type Tx = Prisma.TransactionClient;
-type Ctx = Pick<RaceContext, "year" | "zero" | "intervalS" | "secondStartFrom">;
+type Ctx = Pick<
+  RaceContext,
+  "year" | "zero" | "intervalS" | "secondStartFrom" | "organizerShiftSeconds"
+>;
 
 function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
@@ -144,6 +147,7 @@ async function applyStartEntry(
     entry.bib,
     ctx.intervalS,
     ctx.secondStartFrom,
+    ctx.organizerShiftSeconds,
   );
   const existing = await tx.startCheck.findUnique({
     where: { year_bib: { year: ctx.year, bib: entry.bib } },
@@ -191,6 +195,7 @@ async function applyStartEntry(
       entry.bib,
       ctx.intervalS,
       ctx.secondStartFrom,
+      ctx.organizerShiftSeconds,
     );
   }
   const notes = [
@@ -381,7 +386,14 @@ export async function setManualStart(input: {
         year: ctx.year,
         bib,
         startedAt,
-        offsetS: startOffsetSeconds(startedAt, ctx.zero, bib, ctx.intervalS, ctx.secondStartFrom),
+        offsetS: startOffsetSeconds(
+          startedAt,
+          ctx.zero,
+          bib,
+          ctx.intervalS,
+          ctx.secondStartFrom,
+          ctx.organizerShiftSeconds,
+        ),
         source: START_MANUAL_SOURCE,
         action,
         outcome: "applied",

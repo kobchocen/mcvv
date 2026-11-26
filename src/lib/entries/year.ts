@@ -56,6 +56,7 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
       regDeadline: true,
       startZeroSeconds: true,
       startInterval: true,
+      organizerZeroSeconds: true,
       secondStartFrom: true,
       standardPayUntil: true,
       standardPayMailS: true,
@@ -80,7 +81,7 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
     open,
     raceDate: latest?.date ?? null,
     editionId: latest?.id ?? null,
-    startModel: startModelFromEdition(latest),
+    startModel: startModelFromEdition(latest, year),
     slots,
     slotSettings,
     standardEnd: standardEnd(slots, deadline),
@@ -95,9 +96,14 @@ export async function startModelForYear(year: number): Promise<StartModel> {
       date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) },
     },
     orderBy: { id: "desc" },
-    select: { startZeroSeconds: true, startInterval: true, secondStartFrom: true },
+    select: {
+      startZeroSeconds: true,
+      startInterval: true,
+      organizerZeroSeconds: true,
+      secondStartFrom: true,
+    },
   });
-  return startModelFromEdition(edition);
+  return startModelFromEdition(edition, year);
 }
 
 /** First edition was held in 1993 (edition 34 = 2026). */

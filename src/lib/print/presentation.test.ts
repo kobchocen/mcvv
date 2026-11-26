@@ -79,11 +79,11 @@ describe("presentation reports (#125)", () => {
     assert.deepEqual(
       family.rows.map((r) => [r.bib, r.time, r.birthYear]),
       [
-        [4, "10:15:45", "1980"],
-        [605, "10:16:00", "1985"],
+        [4, "07:45:45", "1980"],
+        [605, "07:46:00", "1985"],
         [null, "", "1980"],
       ],
-      "by bib, runners without bib last; legacy time 10:15 + 15 s × (n − 1)",
+      "by bib, runners without bib last; organiser zero 7:45 + 15 s × (n − 1) for bibs in slots 1–40 (#382)",
     );
     assert.equal(family.fee, 400);
     assert.equal(family.paid, 250);

@@ -100,6 +100,10 @@ describe("loginTarget – Časomíra (raceday access)", () => {
       next: "/admin/den-zavodu",
     });
     assert.deepEqual(loginTarget("/admin", "raceday"), { kind: "admin", next: "/admin" });
+    assert.deepEqual(loginTarget("/admin/obrazovky", "raceday"), {
+      kind: "admin",
+      next: "/admin/obrazovky",
+    });
     assert.deepEqual(loginTarget("/admin/prihlasky", "raceday"), { kind: "home" });
   });
   it("full access and none behave like the boolean variant", () => {
@@ -121,8 +125,16 @@ describe("loginTarget – default target (no next, Pavel 21. 11.)", () => {
   it("keeps the application page for runners", () => {
     assert.deepEqual(loginTarget(null, "none"), { kind: "default" });
   });
-  it("tools roles may follow next to the /admin home but not deeper", () => {
+  it("tools roles may follow next to the /admin home and their hubs, not other admin pages", () => {
     assert.deepEqual(loginTarget("/admin", "tools"), { kind: "admin", next: "/admin" });
+    assert.deepEqual(loginTarget("/admin/obrazovky", "tools"), {
+      kind: "admin",
+      next: "/admin/obrazovky",
+    });
+    assert.deepEqual(loginTarget("/admin/kancelar", "tools"), {
+      kind: "admin",
+      next: "/admin/kancelar",
+    });
     assert.deepEqual(loginTarget("/admin/platby", "tools"), { kind: "home" });
   });
   it("an explicit next still wins", () => {

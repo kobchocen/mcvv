@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "Neuheit der {n}. Ausgabe",
+      "title": "Teamwertung",
+      "body": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Eine Prämie für das Siegerteam. Die Teamwertung wird von IONTMAX unterstützt.",
+      "linkLabel": "Regeln der Teamwertung"
+    },
     "overview": {
       "eyebrow": "01 — Über das Rennen",
       "title": "Das ist nicht nur ein Lauf. Das ist eine Herausforderung.",
@@ -529,7 +535,142 @@
   "Instructions": {
     "eyebrow": "{n}. Ausgabe",
     "title": "Hinweise",
-    "status": "Die Hinweise werden vorbereitet"
+    "tocTitle": "Auf dieser Seite",
+    "backToTop": "Nach oben",
+    "mapAlt": "Streckenkarte der Malá cena Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Veranstalter",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Rennen",
+        "paragraphs": ["Waldcrosslauf Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Datum",
+        "paragraphs": ["Sonntag, 6. Dezember 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Ort",
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
+        "items": []
+      },
+      "parking": {
+        "title": "Parken",
+        "paragraphs": [
+          "Parkplatz 1 - In der Kurve der Straße 315 von Choceň nach Sruby (49°59'36.018\"N, 16°12'15.656\"E), die Kapazität des Parkplatzes ist begrenzt, bitte halten Sie sich an die Anweisungen des Veranstalters, wenn Sie über Choceň anreisen, nutzen Sie Parkplatz Nr. 2.",
+          "Parkplatz 2 - In Choceň, am Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), das Parken ist nicht organisiert, beachten Sie die Verkehrsregeln.",
+          "Eine Skizze mit den eingezeichneten Parkplätzen ist auf der Karte des Wettkampfzentrums (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Entfernungen",
+        "paragraphs": [],
+        "items": [
+          "Wettkampfzentrum - Parkplatz 1: 400 m",
+          "Wettkampfzentrum - Parkplatz 2: 800 m",
+          "Wettkampfzentrum - Bahnhof ČD: 1,8 km",
+          "Wettkampfzentrum - Start: 0 m",
+          "Wettkampfzentrum - Ziel: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Wettkampfbüro",
+        "paragraphs": ["Aufgeteilt in zwei \"Schalter\":"],
+        "items": [
+          "Angemeldete Läufer mit bezahltem Startgeld - Abholung der Startnummer jederzeit bis zu Ihrem Start.",
+          "Neue Anmeldungen - gegen ein höheres Startgeld und nur bis 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Startnummer",
+        "paragraphs": [
+          "Die Startnummer mit Ihrem Namen (nur für im Voraus Angemeldete) und der Startzeit erhalten Sie im Wettkampfbüro. Ohne Startnummer werden Sie nicht an den Start gelassen. Tragen Sie die Nummer sichtbar auf der Brust. Andernfalls können Sie disqualifiziert werden. Die Streckenrichter auf der Strecke können Sie sonst nicht identifizieren, und Ihnen fehlt dann der Durchgang an einem Kontrollpunkt!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Intervallstart in Paaren alle 15 Sekunden. Erscheinen Sie rechtzeitig am Start! Mindestens 3 Minuten vor Ihrer Startzeit. Jeder Läufer ist selbst dafür verantwortlich, rechtzeitig am Start zu sein. Die Zeit des Rennens wird ab der auf der Startnummer angegebenen Startzeit gemessen. Die offizielle Zeit des Rennens ist die mitteleuropäische Zeit (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Strecke",
+        "paragraphs": [
+          "4 300 m auf Waldwegen und Pfaden (400 m Asphalt), hügeliges Profil (200 m Höhenunterschied), mit rotem Flatterband markiert, die Strecke ist für alle Kategorien gleich."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Verpflegung",
+        "paragraphs": [
+          "Ein warmes Getränk nach dem Rennen. Standverkauf von Verpflegung mit dem traditionellen Sortiment."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Umkleiden, WC",
+        "paragraphs": [
+          "Nur Notunterstände (Zelte) im Wettkampfzentrum verfügbar - begrenzte Anzahl, mobile WC im Wettkampfzentrum."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Sanitätsdienst",
+        "paragraphs": [
+          "Ein Sanitäter im Wettkampfzentrum. Die nächsten Krankenhäuser sind Ústí nad Orlicí oder Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Siegerehrung",
+        "paragraphs": [
+          "Geldpreise für den 1. - 5. Platz in den Kategorien Männer und Frauen (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) und für den 1. - 3. Platz in den Veterankategorien (500 CZK, 300 CZK, 200 CZK). Sachpreise für die besten drei in den Schüler- und Jugendkategorien."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Zeitplan",
+        "paragraphs": [],
+        "items": [
+          "9:00 - Öffnung des Wettkampfbüros",
+          "9:45 - Ende der Annahme neuer Anmeldungen",
+          "10:15 - Start der ersten Läufer",
+          "11:55 - Start des letzten Läufers",
+          "12:15 - Zieleinlauf des letzten Läufers",
+          "12:20 — Siegerehrung und Tombola"
+        ]
+      },
+      "privacy": {
+        "title": "Datenschutz, Film- und Fotoaufnahmen",
+        "paragraphs": [
+          "Mit der Anmeldung zu diesem Rennen erklärt sich jeder Teilnehmer damit einverstanden, dass seine personenbezogenen Daten im Umfang der Anmeldung zum Rennen veröffentlicht werden, und zwar als Liste der Angemeldeten, Startliste und Ergebnisliste auf der Website des Rennens und im Wettkampfzentrum. Während der Veranstaltung werden journalistische Fotos und Videos angefertigt (einschließlich des Einsatzes einer Drohne), die der Information der Öffentlichkeit über das durchgeführte Rennen, der Bewerbung des Rennens oder der Abrechnung von Zuschüssen für die Veranstaltung usw. dienen, im Einklang mit der geltenden Gesetzgebung. Außerdem können hier Fotos für den persönlichen Bedarf der Teilnehmer angefertigt werden (als Erinnerung an die Rennen, für die Bewerbung von Sportvereinen usw.), insbesondere bei der Siegerehrung und auf der Strecke. Wenn Sie mit dem Fotografieren oder Filmen nicht einverstanden sind, teilen Sie das dem Fotografen oder Kameramann ausdrücklich mit."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Hinweis",
+        "paragraphs": [
+          "Verkaufs- oder Werbetätigkeit (außer der Bewerbung von Sportveranstaltungen) ist nur mit Zustimmung des Rennleiters möglich.",
+          "Das Rennen ist seinem Charakter nach nicht für Kinder unter sechs Jahren geeignet. In die Ergebnisliste wird nur ein Läufer aufgenommen, der die gesamte Strecke ohne Hilfe einer anderen Person absolviert."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "Für Zuschauer",
+        "paragraphs": [
+          "Die Läufer beobachten und ihnen durch Anfeuern die passende Atmosphäre schaffen können Sie sowohl in der Zielarena (dort gibt es Verpflegung, einen Ergebnisservice und Zwischenzeitansagen) als auch selbstverständlich auf der Strecke. Hier empfehlen wir, dem Waldweg (Formanka) zu folgen, der von Parkplatz Nr. 1 weiter in nordwestlicher Richtung etwa 400 m den Hügel hinauf zur Veranda führt; dort biegen Sie rechts auf einen Waldweg ab und treffen nach knapp 100 m auf die Rennstrecke. Außer dort zu bleiben, können Sie weiter bis zum Gipfel der Sutina gehen (der 1. Hügel - die Schnellsten sind hier etwa 90 s nach dem Start) oder auf der Strecke nach links abbiegen (gegen die Laufrichtung) und bis zum Hřebínek gehen, dem Gipfel des letzten, vierten Hügels (die Schnellsten sind hier etwa 13 Minuten nach dem Start). Wenn Sie sich auf der Strecke bewegen, achten Sie bitte auf das laufende Rennen und lassen Sie den Läufern genug Platz."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n}. Ausgabe",
@@ -584,7 +725,12 @@
     "colBirth": "Jahrgang",
     "colClub": "Verein",
     "colStarts": "Starts",
-    "colRecord": "PB"
+    "colRecord": "PB",
+    "clubMetaTitle": "{club} · angemeldete Läufer",
+    "clubMetaDescription": "Angemeldete Läufer des Vereins {club} in der {n}. Ausgabe von Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# angemeldeter Läufer} other {# angemeldete Läufer}}",
+    "clubProfile": "Vereinsprofil",
+    "backToList": "Angemeldete Läufer"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# Nachricht} other {# Nachrichten}}",
@@ -621,6 +767,17 @@
     "remove": "Entfernen",
     "quickAddTitle": "{name}, Jahrgang {year}",
     "quickAdd": "Schnellauswahl",
+    "quickHint": "Läufer, die nicht mehr angeboten werden sollen, entfernst du mit dem Kreuz. Aus Anmeldungen und Ergebnissen wird nichts gelöscht.",
+    "quickHide": "{name} nicht mehr anbieten",
+    "quickHiddenNotice": "{name} wird nicht mehr angeboten.",
+    "quickUndo": "Rückgängig",
+    "quickHiddenToggle": "Ausgeblendete Läufer ({count})",
+    "quickHiddenShow": "anzeigen",
+    "quickHiddenCollapse": "ausblenden",
+    "quickRestore": "{name} wieder anbieten",
+    "quickRestoreAll": "Alle wiederherstellen",
+    "quickAllHidden": "Du hast alle Läufer aus der Schnellauswahl ausgeblendet.",
+    "quickError": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
     "newRunner": "Neuer Läufer",
     "firstName": "Vorname",
     "lastName": "Nachname",
@@ -828,10 +985,91 @@
     "runners": "Läufer",
     "editions": "Ausgaben",
     "years": "Jahre",
+    "sortBy": "Sortieren nach: {column}",
+    "sortedBy": "Sortiert nach: {column}, {direction}. Klicken, um die Richtung zu wechseln.",
+    "sortAscending": "aufsteigend",
+    "sortDescending": "absteigend",
+    "sortedCaption": "Sortiert nach: {column} ({direction})",
     "pages": "Seiten der Vereinsliste",
     "previous": "Zurück",
     "next": "Weiter",
-    "page": "Seite {page}"
+    "page": "Seite {page}",
+    "listMetaTitle": "Vereinsverzeichnis",
+    "listTitle": "Vereinsverzeichnis",
+    "listLead": "Suche und Sortierung aller Vereine, deren Läuferinnen und Läufer die Kleine Preis der Großen Veranda beendet haben.",
+    "suggestLabel": "Namensvorschläge für Vereine",
+    "suggestHint": "Beginnen Sie zu tippen, auch frühere Namen. Die Vorschläge ergänzen die Suche.",
+    "hubMetaTitle": "Vereine — Einblicke und Rekorde",
+    "hubIntro": "Serien, Mannschaftsstärken, Kategorie-Siege und weitere Einblicke.",
+    "hubLead": "In {editions} Jahrgängen gibt es {starts} Zieleinläufe in den Farben von {clubs, plural, one {# Verein} other {# Vereinen}}.",
+    "unlinkedNote": "Weitere {count} Zieleinläufe sind keinem Verein zugeordnet.",
+    "navLabel": "Vereinsansichten",
+    "viewOverview": "Überblick",
+    "viewStreaks": "Serien",
+    "viewLoyal": "Treue",
+    "viewExpeditions": "Mannschaften",
+    "viewNewcomers": "Neue und Rückkehrer",
+    "viewMedals": "Kategorie-Siege",
+    "viewSmall": "Kleine Vereine",
+    "viewVeterans": "Veteranen",
+    "viewList": "Verzeichnis",
+    "counterClubs": "Vereine",
+    "counterEditions": "Jahrgänge",
+    "counterStarts": "Zieleinläufe in Vereinsfarben",
+    "counterStreak": "Jahre in Folge am Start haben K.O.B. Choceň und AC Choceň",
+    "streaksTitle": "Längste Anwesenheitsserien",
+    "streaksLead": "Wie viele Jahrgänge in Folge ein Verein mindestens eine Person im Ziel hatte. Zwei Vereine aus Choceň haben nie gefehlt.",
+    "streaksCol": "Serie",
+    "loyalTitle": "Treueste Vereine",
+    "loyalLead": "Zahl der Jahrgänge mit einem Zieleinlauf, auch mit Pausen.",
+    "loyalMissed": "Ausgelassen",
+    "expeditionsTitle": "Größte Mannschaften",
+    "expeditionsLead": "Zieleinläufe eines Vereins in einem Jahr, aus der Ergebnisliste, nicht aus der Startliste.",
+    "expeditionsMax": "Historisches Maximum des Vereins",
+    "expeditionsAll": "Größte Mannschaften nach Jahr",
+    "startListNote": "Die Startliste dieses Jahres ist noch nicht veröffentlicht. Sobald sie vorliegt, zeigen wir die diesjährige Mannschaft neben dem Rekord — nicht als Rangliste nach Nennungen.",
+    "newcomersTitle": "Neue Vereine und Rückkehrer",
+    "newcomersLead": "Im Jahr {year} waren {newcomers, plural, one {# Verein} other {# Vereine}} zum ersten Mal im Ziel und {returns, plural, one {# Verein} other {# Vereine}} kehrten nach einer Pause zurück.",
+    "newcomersHeading": "Neue Vereine {year}",
+    "returnsHeading": "Rückkehrer {year}",
+    "returnsGap": "Pause",
+    "returnsLast": "Zuletzt",
+    "yearsCount": "{count, plural, one {# Jahr} other {# Jahre}}",
+    "medalsTitle": "Kategorie-Siege der Vereinsmitglieder",
+    "medalsLead": "Einzel-Siege und Podestplätze in den Kategorien, dem vereinheitlichten Verein zugerechnet. Männer und Frauen immer getrennt.",
+    "medalsNote": "Das sind keine offiziellen Titel des Teamwettbewerbs. Der Teamwettbewerb verwendet den genauen Vereinsnamen der jeweiligen Ergebnisliste und wird nicht über Namensvarianten summiert.",
+    "wins": "Siege",
+    "podiums": "Podestplätze",
+    "men": "Männer",
+    "women": "Frauen",
+    "smallTitle": "Kleine Vereine, große Ergebnisse",
+    "smallLead": "Vereine, die mit einer kleinen Mannschaft oft Kategorie-Siege holen. Gezeigt wird der Anteil der Siege an den Zieleinläufen (mindestens 20).",
+    "winRate": "Siege je Einlauf",
+    "podiumRate": "Podestplätze je Einlauf",
+    "veteransTitle": "Veteranen in Vereinen",
+    "veteransLead": "Mitglieder des MCVV-Veteranenklubs (mehr Einläufe als die Hälfte der Jahrgänge mit Ergebnissen, derzeit {threshold}+), nach dem Verein mit den meisten Einläufen.",
+    "veteransCount": "Veteranen",
+    "veteransExamples": "Beispiele",
+    "veteransAll": "Ganze Veteranenliste",
+    "jubileesTitle": "Jubiläen, wenn sie {year} starten",
+    "jubileeNth": "{n}. Jahrgang",
+    "toList": "Durchsuchbares Vereinsverzeichnis",
+    "openProfile": "Vereinsprofil",
+    "colYear": "Jahr",
+    "colSize": "Zieleinläufe",
+    "emptyView": "Für diese Ansicht gibt es noch keine Daten.",
+    "viewJubilees": "Jubiläen",
+    "showMore": "Mehr anzeigen",
+    "showMoreCount": "Mehr anzeigen ({count})",
+    "moreView": "Ganze Ansicht",
+    "moreList": "Liste öffnen",
+    "expeditionsUnit": "Finisher",
+    "expeditionsChart": "Größte Expedition des Jahrgangs",
+    "cardReturn": "Interessanteste Rückkehr: {club} {gap}",
+    "veteransUnit": "Veteranen",
+    "hubViewMetaTitle": "{view} — Vereine",
+    "cardReturnGap": "{count, plural, one {nach # Jahr} other {nach # Jahren}}",
+    "hubLeadUnlinked": "In {editions} Jahrgängen gibt es {starts} Zieleinläufe in den Farben von {clubs, plural, one {# Verein} other {# Vereinen}}, weitere {unlinked} sind keinem Verein zugeordnet."
   },
   "Messages": {
     "title": "Nachrichten",
@@ -982,7 +1220,7 @@
       "women": "Frauen auf der Strecke",
       "womenUnit": "aller Starts",
       "womenPeak": "Höchstwert {year}: {share}",
-      "clubs": "Treuester Verein",
+      "clubs": "Vereine",
       "together": "Gemeinsam auf der Strecke",
       "togetherUnit": "Stunden Laufen",
       "togetherNote": "≈ {days} Tage Laufen ohne Pause · {climb} km Anstieg ({starts} × {metres} m)",
@@ -994,8 +1232,13 @@
       "moreAttendance": "Gesamtteilnahme",
       "moreAges": "Rekorde nach Alter",
       "moreTimes": "Bestzeiten",
-      "moreClubs": "Alle Vereine",
-      "footnote": "Distanz = Starts × {km} km (alle Kategorien laufen dieselbe Strecke), Anstieg = Starts × {metres} m. Namen wie im aktuellen Läufereintrag."
+      "moreClubs": "Einblicke und Rekorde",
+      "footnote": "Distanz = Starts × {km} km (alle Kategorien laufen dieselbe Strecke), Anstieg = Starts × {metres} m. Namen wie im aktuellen Läufereintrag.",
+      "moreTeams": "Siegerliste der Teamwertung",
+      "teams": "Teamwertung",
+      "clubsUnit": "Vereine",
+      "clubsNote": "Längste Serie: {streak} Jahrgänge in Folge",
+      "clubsNav": "Vereine"
     },
     "eyebrow": "Statistiken",
     "colName": "Läufer",
@@ -1066,7 +1309,75 @@
       "colForeign": "Läufer aus dem Ausland",
       "colUnknown": "Nicht angegeben",
       "unknown": "Nicht angegeben"
+    },
+    "tymy": {
+      "nav": "Teams",
+      "title": "Teamwertung",
+      "intro": "Sieger der Jahrgänge 1993–2025, neu berechnet nach den Regeln der Teamwertung 2026. Ein Team ist der Club, wie er in den Ergebnissen des jeweiligen Jahres steht.",
+      "colWinner": "Siegerteam",
+      "colPoints": "Punkte",
+      "colFinishers": "Finisher",
+      "tileMore": "Siegerliste"
     }
+  },
+  "Teams": {
+    "title": "Teamwertung",
+    "nav": "Teams",
+    "rulesEyebrow": "{n}. Ausgabe · {when}",
+    "lead": "Ab diesem Jahr werten neben den Einzelstartern auch Teams über die Kategorien hinweg. Entscheidend ist die Leistung, nicht die Zahl der Clubmitglieder. Neuheit der {n}. Ausgabe — ein Bonus außerhalb der Ausschreibung 2026.",
+    "sectionTeam": "Team",
+    "teamDef": "Ein Team ist der Club genau so, wie er in der Meldung eingetragen ist.",
+    "entryDuty": "Für die Angaben in der Meldung haftet der Läufer. In der Melde-App verwendet bitte die Namensvorschläge, damit die Schreibweise mit den anderen Teammitgliedern übereinstimmt.",
+    "noClub": "Läufer ohne eingetragenen Club werden in der Teamwertung nicht berücksichtigt.",
+    "sectionScoring": "Wertung",
+    "scoringRules": "Gewertet werden nur klassifizierte Finisher (offizielle Zielzeit). Pro Kategorie zählt höchstens ein Läufer eines Teams (der mit der höchsten Punktzahl).",
+    "otherCats": "Übrige Kategorien — 1. bis 5. Platz",
+    "mainCats": "Männer und Frauen — 1. bis 10. Platz",
+    "place": "Platz",
+    "points": "Punkte",
+    "sum": "Das Teamergebnis ist die Summe der gewerteten Punkte.",
+    "sectionRanking": "Rangfolge",
+    "rankingRules": "In die Wertung kommt nur ein Team mit mindestens drei klassifizierten Finishern. Disqualifikationen, Aufgaben und DNS zählen weder für dieses Minimum noch für Punkte.",
+    "sectionTie": "Punktgleichheit",
+    "tieRules": "Bei Punktgleichheit entscheidet die größere Zahl besserer Platzierungen unter den gewerteten Leistungen: zuerst mehr erste Plätze, dann mehr zweite, und so weiter. Ist auch diese Reihe gleich, teilen sich die Teams den Platz.",
+    "sectionPrize": "Siegerehrung und Prämie",
+    "announcement": "Das Siegerteam wird vor Ort um 12:20 zusammen mit den übrigen Ergebnissen bekannt gegeben. Eine Prämie für das Siegerteam.",
+    "prizeWaiver": "Siegt K.O.B. Choceň als Veranstalter, verzichtet der Club auf die Prämie zugunsten des zweiten Teams.",
+    "officialPublish": "Die offizielle Wertung veröffentlichen wir mit den Ergebnissen auf mcvv.org.",
+    "sponsorLabel": "Sponsor der Teamwertung",
+    "sponsorTitle": "Die Teamwertung wird von IONTMAX unterstützt",
+    "sponsorWebsite": "Offizielle Website des Sponsors",
+    "historyLink": "Historische Siegerliste 1993–2025",
+    "historyLinkNote": "Rückrechnung nach den Regeln 2026",
+    "rulesLink": "Regeln der Teamwertung",
+    "winnersLink": "Siegerliste",
+    "historicalNote": "Berechnet nach den Regeln der Teamwertung 2026, angewandt auf die historische Ergebnisliste. Ein Team ist der Clubname, wie er in der Liste dieses Jahres steht.",
+    "provisionalChip": "Regeln 2026 angewandt",
+    "liveChip": "Laufend",
+    "officialChip": "Offiziell",
+    "colRank": "Rg.",
+    "colTeam": "Team",
+    "colPoints": "Punkte",
+    "colFinishers": "Finisher",
+    "colCounted": "Gewertete Leistungen",
+    "colYear": "Jahr",
+    "colWinner": "Siegerteam",
+    "pointsAbbr": "{points} P",
+    "finishersAbbr": "{count, plural, one {# Finisher} other {# Finisher}}",
+    "marginPoints": "Vorsprung {lead} P",
+    "marginPlaces": "Punktgleich mit {team}, bessere Platzierungen entscheiden",
+    "unclassified": "Nicht klassifizierte Teams (weniger als 3 Finisher)",
+    "winningTeam": "Siegerteam",
+    "statsTitle": "Teamwertung",
+    "statsIntro": "Historische Siegerliste der Rückrechnung 1993–2025 nach den Regeln der Teamwertung 2026.",
+    "statsNav": "Teams",
+    "announcedAt": "Bekannt gegeben um 12:20",
+    "announcedVsOfficial": "Die Bekanntgabe um 12:20 und die offizielle Wertung nach der Veröffentlichung unterscheiden sich.",
+    "alertNew": "Der Zieleinlauf von {name} brachte {team} an die Spitze der Teamwertung. {margin}",
+    "alertHeld": "Der Zieleinlauf von {name} hielt {team} an der Spitze. {margin}",
+    "alertMoved": "Der Zieleinlauf von {name} brachte {team} auf Platz {rank}.",
+    "prizeLive": "Eine Prämie für das Siegerteam. Siegt K.O.B. Choceň als Veranstalter, verzichtet der Club auf die Prämie zugunsten des zweiten Teams.",
+    "when2026": "Sonntag, 6. 12. 2026, Choceň"
   },
   "LanguageSwitcher": {
     "label": "Sprache"
@@ -1134,7 +1445,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Schnellauswahl – Läufer aus früheren Jahren",
-        "text": "Die <b>Rychlá nabídka</b> (Schnellauswahl) zeigt alle Läufer, die du in früheren Jahren mit dieser E-Mail-Adresse angemeldet hast. Einfach anklicken – Kategorie und Startgeld werden automatisch ausgefüllt.",
+        "text": "Die <b>Rychlá nabídka</b> (Schnellauswahl) zeigt alle Läufer, die du in früheren Jahren mit dieser E-Mail-Adresse angemeldet hast. Einfach anklicken – Kategorie und Startgeld werden automatisch ausgefüllt. Läufer, die nicht mehr angeboten werden sollen, entfernst du mit dem Kreuz; ausgeblendete Läufer lassen sich wiederherstellen.",
         "tip": "Meldest du einen Verein an? Benenne die Anmeldung zuerst nach dem Verein um und speichere. Die Läufer übernehmen den Verein aus dem Namen der Anmeldung."
       },
       {

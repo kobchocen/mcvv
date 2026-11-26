@@ -144,7 +144,8 @@ export async function resolveConflictAction(formData: FormData): Promise<void> {
 
 /**
  * Hromadné vyčištění mezičasů aktuálního ročníku (Q31: jen admin; Q32: zakázané od skutečné
- * nuly ročníku). Potvrzení = opsaný ročník. Maže mcvv_split i deník včetně konfliktů.
+ * nuly ročníku). Potvrzení = opsaný ročník. Maže mcvv_split i deník včetně konfliktů,
+ * s cílem a zdrojem „vše“ i záznamy stanic v cíli (#366).
  */
 export async function clearSplitsAction(formData: FormData): Promise<void> {
   const session = await requireSection("raceControl.live", "write");
@@ -177,6 +178,7 @@ export async function clearSplitsAction(formData: FormData): Promise<void> {
     {
       cleared: String(result.splitsTotal),
       entries: String(result.entries),
+      finish: String(result.finishPunches + result.finishBibs),
     },
     SPLITS_PAGE,
   );

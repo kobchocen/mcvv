@@ -1,5 +1,6 @@
 export * from "./record-badge";
 export * from "./stats-nav";
+export * from "./clubs-expandable-table";
 export * from "./back-to-top";
 export * from "./photo-gallery-grid";
 export * from "./photo-lightbox";
@@ -24,3 +25,4 @@ export * from "./nationality-flag-select";
 export * from "./confirm-dialog";
 export * from "./pending-submit-button";
 export * from "./link-pending-label";
+export * from "./sortable-column-header";

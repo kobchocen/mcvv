@@ -5,6 +5,7 @@ import {
   McvvGallerySection,
   McvvHeroSection,
   McvvNavbar,
+  McvvNewsBox,
   McvvOverviewSection,
   McvvPartnersSection,
   McvvProfileSection,
@@ -149,6 +150,7 @@ export async function McvvHomepageTemplate({
         secondary={buttons.secondary ? toCta(buttons.secondary) : null}
         refreshAtMs={phase === "A" || phase === "B" ? raceStart.getTime() : null}
       />
+      <McvvNewsBox content={content.news} />
       <McvvOverviewSection content={content.overview} />
       <McvvProfileSection content={content.profile} />
       <McvvScheduleSection content={content.schedule} />

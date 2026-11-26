@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "New in the {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
+      "title": "Team competition",
+      "body": "From this year, teams as well as individuals score across categories. What counts is performance, not how many people are in the club. A prize for the winning team. The team competition is supported by IONTMAX.",
+      "linkLabel": "Team competition rules"
+    },
     "overview": {
       "eyebrow": "01 — About",
       "title": "It is not just a run. It is a challenge.",
@@ -529,7 +535,142 @@
   "Instructions": {
     "eyebrow": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
     "title": "Instructions",
-    "status": "Instructions are being prepared"
+    "tocTitle": "On this page",
+    "backToTop": "Back to top",
+    "mapAlt": "Course map of Malá cena Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Organizer",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Race",
+        "paragraphs": ["Forest cross Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Date",
+        "paragraphs": ["Sunday 6 December 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Place",
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
+        "items": []
+      },
+      "parking": {
+        "title": "Parking",
+        "paragraphs": [
+          "Car park 1 - In the bend of road 315 from Choceň to Sruby (49°59'36.018\"N, 16°12'15.656\"E), the car park has limited capacity, please follow the organizer's instructions, if you arrive via Choceň use car park no. 2.",
+          "Car park 2 - In Choceň, on Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), parking is not organised, observe the traffic rules.",
+          "A sketch with the car parks marked is on the race-centre map (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Distances",
+        "paragraphs": [],
+        "items": [
+          "Race centre - Car park 1: 400 m",
+          "Race centre - Car park 2: 800 m",
+          "Race centre - ČD railway station: 1.8 km",
+          "Race centre - start: 0 m",
+          "Race centre - finish: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Race office",
+        "paragraphs": ["Split into two \"counters\":"],
+        "items": [
+          "Registered runners with the entry fee paid - collect your bib any time before your start.",
+          "New entries - at a higher entry fee and only until 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Bib",
+        "paragraphs": [
+          "You receive a bib with your name (pre-registered runners only) and your start time at the race office. You will not be allowed to start without a bib. Wear the number visibly on your chest. Otherwise you may be disqualified. Course officials on the course may not be able to identify you, and you would then miss a passage through a control point!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Interval start in pairs every 15 seconds. Arrive at the start on time! At least 3 minutes before your start time. Each runner is responsible for arriving at the start on time. Race time is measured from the start time printed on the bib. The official race time is Central European Time (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Course",
+        "paragraphs": [
+          "4 300 m on forest roads and paths (400 m of asphalt), a hilly profile (200 m of elevation gain), marked with red streamers, the same course for all categories."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Refreshments",
+        "paragraphs": [
+          "A hot drink after the race. Stall sales of refreshments with the traditional range."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Changing rooms, toilets",
+        "paragraphs": [
+          "Only emergency shelters (tents) are available at the race centre - a limited number, mobile toilets at the race centre."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Medical service",
+        "paragraphs": [
+          "A medic at the race centre. The nearest hospitals are Ústí nad Orlicí or Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Prize giving",
+        "paragraphs": [
+          "Cash prizes for 1st - 5th place in the men's and women's categories (CZK 3 000, CZK 2 000, CZK 1 000, CZK 500, CZK 200) and for 1st - 3rd place in the veteran categories (CZK 500, CZK 300, CZK 200). Prizes in kind for the best three in the youth and junior categories."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Timetable",
+        "paragraphs": [],
+        "items": [
+          "9:00 - race office opens",
+          "9:45 - new entries close",
+          "10:15 - start of the first runners",
+          "11:55 - start of the last runner",
+          "12:15 - finish of the last runner",
+          "12:20 — awards ceremony and raffle"
+        ]
+      },
+      "privacy": {
+        "title": "Personal data, filming and photography",
+        "paragraphs": [
+          "By entering this race, each participant agrees to the publication of their personal data in the scope of the race entry, in the form of the list of entrants, the start list and the results list on the race website and at the race centre. During the event, news photographs and videos will be taken (including the use of an unmanned drone) to inform the public about the race that took place, to promote the race or to account for grants for the event and so on, in accordance with the applicable legislation. Photographs may also be taken here for the personal use of race participants (as a memory of the races, to promote sports clubs, and so on), especially from the prize giving and from the course. If you do not agree to being photographed or filmed, tell the photographer or camera operator explicitly."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Notice",
+        "paragraphs": [
+          "Selling or promotional activity (except the promotion of sports events) is allowed only with the consent of the race director.",
+          "By its nature the race is not suitable for children under six. Only a runner who completes the whole course without help from another person is included in the results."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "For spectators",
+        "paragraphs": [
+          "You can watch the runners and, by cheering, create the right atmosphere both in the finish arena (refreshments, a results service and split announcements are available there) and of course on the course. Here we recommend continuing along the forest track (Formanka) that leads to Veranda from car park no. 1, further north-west for about 400 m up the hill, where you turn right onto a forest path and after just under 100 m you meet the race course. Besides staying there, you can continue on to the top of Sutina (the 1st hill - the fastest runners are here about 90 s after the start) or turn left along the course (against the direction of the race) and walk as far as Hřebínek, the top of the last, fourth hill (the fastest runners are here about 13 minutes after the start). When moving on the course, please watch the race in progress and leave the runners enough room."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
@@ -584,7 +725,12 @@
     "colBirth": "Year",
     "colClub": "Club",
     "colStarts": "Starts",
-    "colRecord": "PB"
+    "colRecord": "PB",
+    "clubMetaTitle": "{club} · entered runners",
+    "clubMetaDescription": "Entered runners of {club} in the {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition of Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# entered runner} other {# entered runners}}",
+    "clubProfile": "Club profile",
+    "backToList": "Entered runners"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# message} other {# messages}}",
@@ -621,6 +767,17 @@
     "remove": "Remove",
     "quickAddTitle": "{name}, born {year}",
     "quickAdd": "Quick add",
+    "quickHint": "Use the cross to remove a runner you no longer want suggested. Nothing is deleted from entries or results.",
+    "quickHide": "Stop suggesting {name}",
+    "quickHiddenNotice": "{name} will no longer be suggested.",
+    "quickUndo": "Undo",
+    "quickHiddenToggle": "Hidden runners ({count})",
+    "quickHiddenShow": "show",
+    "quickHiddenCollapse": "hide",
+    "quickRestore": "Suggest {name} again",
+    "quickRestoreAll": "Restore all",
+    "quickAllHidden": "You have hidden all runners from quick add.",
+    "quickError": "The change could not be saved. Please try again.",
     "newRunner": "New runner",
     "firstName": "First name",
     "lastName": "Last name",
@@ -917,10 +1074,91 @@
     "runners": "Runners",
     "editions": "Editions",
     "years": "Years",
+    "sortBy": "Sort by: {column}",
+    "sortedBy": "Sorted by: {column}, {direction}. Click to toggle the direction.",
+    "sortAscending": "ascending",
+    "sortDescending": "descending",
+    "sortedCaption": "Sorted by: {column} ({direction})",
     "pages": "Pages of the club list",
     "previous": "Previous",
     "next": "Next",
-    "page": "Page {page}"
+    "page": "Page {page}",
+    "listMetaTitle": "Club directory",
+    "listTitle": "Club directory",
+    "listLead": "Search and sort every club whose runners have finished the Little Prize of the Grand Veranda.",
+    "suggestLabel": "Club name suggestions",
+    "suggestHint": "Start typing a name, including former ones. Suggestions help complete your search.",
+    "hubMetaTitle": "Clubs — stories and records",
+    "hubIntro": "Streaks, team turnouts, category wins and other club stories from every edition.",
+    "hubLead": "Across {editions} editions there are {starts} finishes in the colours of {clubs, plural, one {# club} other {# clubs}}.",
+    "unlinkedNote": "Another {count} finishes are not linked to a club.",
+    "navLabel": "Club views",
+    "viewOverview": "Overview",
+    "viewStreaks": "Streaks",
+    "viewLoyal": "Loyalty",
+    "viewExpeditions": "Turnouts",
+    "viewNewcomers": "Newcomers and returns",
+    "viewMedals": "Category wins",
+    "viewSmall": "Small clubs",
+    "viewVeterans": "Veterans",
+    "viewList": "Directory",
+    "counterClubs": "clubs",
+    "counterEditions": "editions",
+    "counterStarts": "finishes in club colours",
+    "counterStreak": "consecutive years for both K.O.B. Choceň and AC Choceň",
+    "streaksTitle": "Longest attendance streaks",
+    "streaksLead": "How many editions in a row a club had at least one finisher. Two Choceň clubs have never missed a year.",
+    "streaksCol": "Streak",
+    "loyalTitle": "Most loyal clubs",
+    "loyalLead": "Number of editions with a finisher, including gaps. This recognises clubs that missed a year but have otherwise been coming for decades.",
+    "loyalMissed": "Missed",
+    "expeditionsTitle": "Largest turnouts",
+    "expeditionsLead": "Finishers from one club in one year, taken from the results list, not the start list.",
+    "expeditionsMax": "Club record turnout",
+    "expeditionsAll": "Largest turnouts by year",
+    "startListNote": "This year's start list has not been published yet. When it is, we will show the current turnout next to the record — not a ranking by entries.",
+    "newcomersTitle": "Newcomers and returns",
+    "newcomersLead": "In {year}, {newcomers, plural, one {# club} other {# clubs}} appeared in the results for the first time and {returns, plural, one {# club} other {# clubs}} returned after a gap.",
+    "newcomersHeading": "New clubs in {year}",
+    "returnsHeading": "Returns in {year}",
+    "returnsGap": "Gap",
+    "returnsLast": "Last seen",
+    "yearsCount": "{count, plural, one {# year} other {# years}}",
+    "medalsTitle": "Category wins by club members",
+    "medalsLead": "Individual category wins and podiums credited to the unified club. Men and women are always listed separately.",
+    "medalsNote": "These are not official team-competition titles. Team titles use the exact club name on that year's results list and are not added up across name variants.",
+    "wins": "Wins",
+    "podiums": "Podiums",
+    "men": "Men",
+    "women": "Women",
+    "smallTitle": "Small clubs, big results",
+    "smallLead": "Clubs that often take category wins with a small turnout. We show wins per finish (at least 20 finishes).",
+    "winRate": "Wins per finish",
+    "podiumRate": "Podiums per finish",
+    "veteransTitle": "Veterans in clubs",
+    "veteransLead": "Members of the MCVV veterans club (more finishes than half of the editions with results, currently {threshold}+), grouped by the club they have most finishes for.",
+    "veteransCount": "Veterans",
+    "veteransExamples": "Examples",
+    "veteransAll": "Full veterans list",
+    "jubileesTitle": "Anniversaries if they start in {year}",
+    "jubileeNth": "{n}th edition",
+    "toList": "Searchable club directory",
+    "openProfile": "Club profile",
+    "colYear": "Year",
+    "colSize": "Finishers",
+    "emptyView": "There is no data for this view yet.",
+    "viewJubilees": "Jubilees",
+    "showMore": "Show more",
+    "showMoreCount": "Show more ({count})",
+    "moreView": "Full view",
+    "moreList": "Open the list",
+    "expeditionsUnit": "finishers",
+    "expeditionsChart": "Largest expedition of the year",
+    "cardReturn": "Most interesting return: {club} {gap}",
+    "veteransUnit": "veterans",
+    "hubViewMetaTitle": "{view} — Clubs",
+    "cardReturnGap": "{count, plural, one {after # year} other {after # years}}",
+    "hubLeadUnlinked": "Across {editions} editions there are {starts} finishes in the colours of {clubs, plural, one {# club} other {# clubs}}, and another {unlinked} not linked to a club."
   },
   "ClubCleanup": {
     "title": "Clean up orphan clubs",
@@ -1187,7 +1425,6 @@
     "msgReplyRead": "Reply read {time}",
     "msgReplyUnread": "{count, plural, one {Reply not read} other {# replies not read}}",
     "msgToRegistration": "Entry detail",
-    "regsMessages": "Messages",
     "settingsMessages": "Messages",
     "settingsMessagesEnabled": "Messages enabled",
     "settingsMessagesEnabledHint": "When turned off, messages are hidden from registrants and the contact form sends an e-mail even for signed-in users. Administration stays available.",
@@ -1261,6 +1498,7 @@
     "status4": "Overpaid",
     "status5": "Confirmed",
     "freeAutoConfirmed": "Free – confirmed automatically",
+    "freeAutoConfirmedShort": "Free",
     "statusUnknown": "—",
     "filter": "Filter",
     "includeCancelled": "include cancelled",
@@ -1399,22 +1637,20 @@
     "timelineAfterRace": "{year}: {count, plural, one {# entry} other {# entries}} created after race day not shown.",
     "timelineNoCreated": "{year}: {count, plural, one {# entry} other {# entries}} without a creation date not shown.",
     "regsYear": "Year",
-    "regsId": "ID",
     "regsName": "Name",
     "regsEmail": "Email",
+    "regsEntry": "Entry",
+    "regsSummary": "{count, plural, one {# entry} other {# entries}} · {runners, plural, one {# runner} other {# runners}} · fees {fee} · paid {paid}",
     "regsCreated": "Created",
-    "regsCount": "Runners",
     "regsFee": "Entry fee",
     "regsPaid": "Paid",
     "regsDiff": "Difference",
     "regsStatus": "Status",
-    "regsPromotion": "Newsletter",
     "regsNoNewsletter": "No newsletter",
     "regsPricesTitle": "Entry fees of this entry",
     "regsPricesHint": "Stored when the entry was created ({term}). Later changes of the period price do not affect it. Saving recalculates the runners’ fees (free entries stay free).",
     "regsPricesLegacy": "No fee is stored for this entry yet – the period price applies ({term}). Saving stores it with the entry.",
     "regsPricesSave": "Save fees",
-    "regsNewsletterOff": "no",
     "regsNote": "Note",
     "regsRunners": "Runners",
     "regsBirth": "Born",
@@ -1553,6 +1789,18 @@
     "toolsIntro": "Your race-day screens and sections. They open full screen.",
     "navSplitEntry": "Split times – checkpoint entry",
     "navStarter": "Starter",
+    "screensTitle": "Screens",
+    "screensIntro": "Race-day screens open full screen, outside the administration panel.",
+    "screensStarterHint": "Interval starts from the start list – corridor and runners who have started.",
+    "screensSplitsHint": "Record passages at a split-time checkpoint.",
+    "screensFinishHint": "Finish-line clock and bib-number stations.",
+    "screensSpeakerHint": "Live results and announcements for the speaker.",
+    "screensResultboardHint": "Large finish-area screens with live results.",
+    "raceOfficeTitle": "Race office",
+    "raceOfficeIntro": "Cash desk, receipts and the price list. Office screens open full screen, outside the administration panel.",
+    "raceOfficeCashHint": "Receipts, cash payment and cancelling unpaid ones.",
+    "raceOfficeSalesHint": "List of receipts and their status.",
+    "raceOfficeItemsHint": "Race-office item price list. Admin only.",
     "qTitle": "Contact form questions",
     "qIntro": "Questions from visitors who are not signed in, sent via the contact form. The organizer still gets an e-mail notification; here you can reply and track the state.",
     "qLink": "Contact form questions →",
@@ -1626,7 +1874,7 @@
       "women": "Women on the course",
       "womenUnit": "of all starts",
       "womenPeak": "peak {year}: {share}",
-      "clubs": "Most loyal club",
+      "clubs": "Clubs",
       "together": "Together on the course",
       "togetherUnit": "hours of running",
       "togetherNote": "≈ {days} days of non-stop running · {climb} km of climbing ({starts} × {metres} m)",
@@ -1638,8 +1886,13 @@
       "moreAttendance": "Overall attendance",
       "moreAges": "Records by age",
       "moreTimes": "Best times",
-      "moreClubs": "All clubs",
-      "footnote": "Distance = starts × {km} km (all categories run the same course), climbing = starts × {metres} m. Names as in the runner's current record."
+      "moreClubs": "Stories and records",
+      "footnote": "Distance = starts × {km} km (all categories run the same course), climbing = starts × {metres} m. Names as in the runner's current record.",
+      "moreTeams": "Team competition winners",
+      "teams": "Team competition",
+      "clubsUnit": "clubs",
+      "clubsNote": "Longest streak: {streak} editions in a row",
+      "clubsNav": "Clubs"
     },
     "eyebrow": "Statistics",
     "colName": "Runner",
@@ -1710,7 +1963,75 @@
       "colForeign": "Runners from abroad",
       "colUnknown": "Not stated",
       "unknown": "Not stated"
+    },
+    "tymy": {
+      "nav": "Teams",
+      "title": "Team competition",
+      "intro": "Winners of the 1993–2025 editions recalculated under the 2026 team competition rules. A team is the club as recorded in that year’s results.",
+      "colWinner": "Winning team",
+      "colPoints": "Points",
+      "colFinishers": "Finishers",
+      "tileMore": "List of winners"
     }
+  },
+  "Teams": {
+    "title": "Team competition",
+    "nav": "Teams",
+    "rulesEyebrow": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition · {when}",
+    "lead": "From this year, teams as well as individuals score across categories. What counts is performance, not how many people are in the club. New in the {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition — a bonus outside the 2026 race notice.",
+    "sectionTeam": "Team",
+    "teamDef": "A team is the club exactly as entered on the entry form.",
+    "entryDuty": "The runner is responsible for the details on the entry. In the entry app, use the name suggester so that the spelling matches the other members of the team.",
+    "noClub": "Runners with no club filled in are not counted in the team competition.",
+    "sectionScoring": "Scoring",
+    "scoringRules": "Only classified finishers (an official finish time) score. At most one runner from each team in each category counts (the one with the highest points).",
+    "otherCats": "Other categories — 1st to 5th place",
+    "mainCats": "Men and women — 1st to 10th place",
+    "place": "Place",
+    "points": "Points",
+    "sum": "A team’s score is the sum of its counted points.",
+    "sectionRanking": "Ranking",
+    "rankingRules": "A team is ranked only if it has at least three classified finishers. Disqualifications, retirements and DNS count neither towards this minimum nor for points.",
+    "sectionTie": "Tied points",
+    "tieRules": "If points are tied, the team with more better places among counted results ranks higher: first more 1st places, then more 2nds, and so on. If that series is also identical, the teams share the place.",
+    "sectionPrize": "Announcement and prize",
+    "announcement": "The winning team will be announced on site at 12:20 together with the other results. A prize for the winning team.",
+    "prizeWaiver": "If K.O.B. Choceň wins as the organiser, it forgoes the prize in favour of the second team.",
+    "officialPublish": "The official ranking will be published with the results on mcvv.org.",
+    "sponsorLabel": "Team competition sponsor",
+    "sponsorTitle": "The team competition is supported by IONTMAX",
+    "sponsorWebsite": "Official sponsor website",
+    "historyLink": "Historical list of winners 1993–2025",
+    "historyLinkNote": "back-calculation under the 2026 rules",
+    "rulesLink": "Team competition rules",
+    "winnersLink": "List of winners",
+    "historicalNote": "Calculated under the 2026 team competition rules, applied to the historical results list. A team is the club name as it appears on that year’s list.",
+    "provisionalChip": "2026 rules applied",
+    "liveChip": "Live",
+    "officialChip": "Official",
+    "colRank": "Pl.",
+    "colTeam": "Team",
+    "colPoints": "Points",
+    "colFinishers": "Finishers",
+    "colCounted": "Counted performances",
+    "colYear": "Year",
+    "colWinner": "Winning team",
+    "pointsAbbr": "{points} pts",
+    "finishersAbbr": "{count, plural, one {# finisher} other {# finishers}}",
+    "marginPoints": "Lead {lead} pts",
+    "marginPlaces": "Tied on points with {team}; better places decide",
+    "unclassified": "Unclassified teams (fewer than 3 finishers)",
+    "winningTeam": "Winning team",
+    "statsTitle": "Team competition",
+    "statsIntro": "Historical list of winners from the 1993–2025 back-calculation under the 2026 team competition rules.",
+    "statsNav": "Teams",
+    "announcedAt": "Announced at 12:20",
+    "announcedVsOfficial": "The 12:20 announcement and the official ranking after publication differ.",
+    "alertNew": "{name}’s finish moved {team} into the lead of the team competition. {margin}",
+    "alertHeld": "{name}’s finish kept {team} in the lead. {margin}",
+    "alertMoved": "{name}’s finish moved {team} into {rank, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} place.",
+    "prizeLive": "A prize for the winning team. If K.O.B. Choceň wins as the organiser, it forgoes the prize in favour of the second team.",
+    "when2026": "Sunday 6 December 2026, Choceň"
   },
   "LanguageSwitcher": {
     "label": "Language"
@@ -1778,7 +2099,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Quick add – runners from previous years",
-        "text": "<b>Rychlá nabídka</b> (Quick add) lists all runners you entered from this e-mail in previous years. Just click them – category and fee are filled in automatically.",
+        "text": "<b>Rychlá nabídka</b> (Quick add) lists all runners you entered from this e-mail in previous years. Just click them – category and fee are filled in automatically. Use the cross to remove a runner you no longer want suggested; hidden runners can be restored.",
         "tip": "Entering a club? Rename the entry to the club name and save it first. Runners get their club from the entry name."
       },
       {
@@ -2079,9 +2400,9 @@
       "reason-required": "Enter a reason when overwriting or deleting.",
       "missing": "The time no longer exists."
     },
-    "clearDone": "Deleted: {splits} splits, {entries} journal entries.",
+    "clearDone": "Deleted: {splits} splits, {entries} journal entries, {finish} finish station records.",
     "clearTitle": "Clear edition splits",
-    "clearIntro": "After a dry run, deletes the splits (mcvv_split) and their journal including conflicts. A snapshot of the deleted times is stored in the audit log. Results (mcvv_time), records and the start list are not touched.",
+    "clearIntro": "After a dry run, deletes the splits (mcvv_split) and their journal including conflicts. When the selection includes the finish and the source is “all”, it also deletes the finish station records (stopwatch taps and entered bibs). A snapshot of everything deleted is stored in the audit log. Results (mcvv_time), records and the start list are not touched.",
     "clearAllowedUntil": "Allowed until race zero ({zero}). After that only single corrections.",
     "clearBlocked": "Bulk clearing is disabled from race zero ({zero}) on. Correct single times in the split editor.",
     "filterSplits": "Splits",
@@ -2092,8 +2413,9 @@
     "sourceObd": "OBD (historical entries)",
     "previewButton": "Show preview",
     "previewSummary": "{splits} splits and {entries} journal entries will be deleted ({conflicts} of them conflicts).",
+    "previewFinish": "Finish – stopwatch taps: {punches}, entered bibs: {bibs}",
     "optionClearZero": "Also remove the test zero",
-    "clearAfterHint": "Afterwards let operators reload /mezicasy.",
+    "clearAfterHint": "Afterwards let operators reload /mezicasy and the finish stations reload /cil.",
     "confirmLabel": "Type the year to confirm ({year})",
     "clearButton": "Delete permanently",
     "badgeManual": "manual",
@@ -3496,6 +3818,7 @@
     "online": "Online",
     "offline": "Offline",
     "queued": "{count, plural, =0 {all sent} one {# queued} other {# queued}}",
+    "otherQueued": "{station}: {count, plural, other {# queued}}",
     "countPunches": "Clicks",
     "countBibs": "Bibs",
     "countPending": "{count} waiting to be sent",

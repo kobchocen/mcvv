@@ -57,6 +57,16 @@ export function canViewSpeakerScreen(role: UserRole): boolean {
   return isStaffRole(role);
 }
 
+/** Rozcestník obrazovek dne závodu: alespoň jedna z obrazovek startér / mezičasy / cíl / speaker. */
+export function canAccessScreens(role: UserRole): boolean {
+  return (
+    canAccessStarter(role) ||
+    canAccessSplits(role) ||
+    canAccessRaceDay(role) ||
+    canViewSpeakerScreen(role)
+  );
+}
+
 /** Pokladna závodní kanceláře (#207): prodejky, „zaplaceno hotově“, storno nezaplacené. */
 export function canUseCashDesk(role: UserRole): boolean {
   return role === "race_office" || isStaffRole(role);
@@ -97,9 +107,9 @@ export function canMergeClubs(role: UserRole): boolean {
  * Úroveň přístupu do /admin:
  * - `full` – plná administrace (organizer, admin),
  * - `raceday` – rozcestník a „Den závodu“ (timing),
- * - `tools` – jen rozcestník `/admin` s odkazy na vlastní obrazovku dne závodu
- *   (splitmaker → mezičasy, race_office → pokladna, starter → start); obrazovky samotné
- *   leží mimo /admin a hlídají si přístup samy,
+ * - `tools` – rozcestník `/admin` a huby obrazovek / kanceláře
+ *   (`/admin/obrazovky`, `/admin/kancelar`); obrazovky samotné leží mimo /admin
+ *   a hlídají si přístup samy,
  * - `none` – závodník (`registrar`), bez kolečka a bez administrace.
  */
 export type AdminAccess = "full" | "raceday" | "tools" | "none";
@@ -118,6 +128,8 @@ export function hasAdminHome(role: UserRole): boolean {
 
 export const ADMIN_HOME_PATH = "/admin";
 export const RACE_DAY_PATH = "/admin/den-zavodu";
+export const SCREENS_HUB_PATH = "/admin/obrazovky";
+export const OFFICE_HUB_PATH = "/admin/kancelar";
 
 /** Kam vede ozubené kolečko v hlavičce: vždy rozcestník administrace. */
 export function adminHomeHref(): string {
@@ -129,10 +141,15 @@ export function adminPathAllowed(access: AdminAccess, path: string): boolean {
   if (access === "full") return path === ADMIN_HOME_PATH || path.startsWith(`${ADMIN_HOME_PATH}/`);
   if (access === "raceday") {
     return (
-      path === ADMIN_HOME_PATH || path === RACE_DAY_PATH || path.startsWith(`${RACE_DAY_PATH}/`)
+      path === ADMIN_HOME_PATH ||
+      path === RACE_DAY_PATH ||
+      path.startsWith(`${RACE_DAY_PATH}/`) ||
+      path === SCREENS_HUB_PATH
     );
   }
-  if (access === "tools") return path === ADMIN_HOME_PATH;
+  if (access === "tools") {
+    return path === ADMIN_HOME_PATH || path === SCREENS_HUB_PATH || path === OFFICE_HUB_PATH;
+  }
   return false;
 }
 

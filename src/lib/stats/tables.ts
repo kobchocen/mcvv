@@ -10,6 +10,7 @@ import {
 } from "./queries";
 import { countryName } from "@/lib/runner/nationality";
 import { formatRaceTime } from "@/lib/utils";
+import { getAllTeamCompetitions, winnersOf } from "@/lib/teams";
 
 /** Data jedné statistické stránky – sdílí je web (`/statistiky/[slug]`) i tiskové PDF. */
 export type StatsCellData = {
@@ -19,11 +20,15 @@ export type StatsCellData = {
   clubSlug?: string;
   /** ISO kód státu (#200): web před text přidá vlaječku, PDF jen text. */
   flag?: string;
+  /** Optional public href (team winners link to that year's team section). */
+  href?: string;
 };
 
 export type StatsTableData = {
   title?: string;
   columns: string[];
+  /** 0-based indexes of numeric columns: nowrap, tabular figures, never clipped. */
+  numericColumns?: readonly number[];
   rows: StatsCellData[][];
 };
 
@@ -44,6 +49,10 @@ function cell(text: string, runnerId?: string): StatsCellData {
 
 function clubCell(text: string, clubSlug: string | null): StatsCellData {
   return clubSlug ? { text, clubSlug } : { text };
+}
+
+function hrefCell(text: string, href: string): StatsCellData {
+  return { text, href };
 }
 
 export async function loadStatsSlug(
@@ -214,6 +223,36 @@ export async function loadStatsSlug(
                 cell(String(row.foreign)),
                 cell(String(row.unknown)),
               ]),
+          },
+        ],
+      };
+    }
+
+    case "tymy": {
+      const years = [...(await getAllTeamCompetitions())].sort((a, b) => b.year - a.year);
+      return {
+        tables: [
+          {
+            columns: [
+              t("colYear"),
+              t("tymy.colWinner"),
+              t("tymy.colPoints"),
+              t("tymy.colFinishers"),
+            ],
+            numericColumns: [2, 3],
+            rows: years.flatMap((row) => {
+              const winners = winnersOf(row.competition, row.year);
+              if (winners.length === 0) return [];
+              const href = `/${locale}/results/${row.year}#soutez-tymu`;
+              return [
+                [
+                  hrefCell(String(row.year), href),
+                  hrefCell(winners.map((winner) => winner.team).join(" / "), href),
+                  cell(String(winners[0]!.points)),
+                  cell(String(winners[0]!.finishers)),
+                ],
+              ];
+            }),
           },
         ],
       };

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { STATS_OVERVIEW_SLUG } from "@/components/molecules";
+import { STATS_OVERVIEW_SLUG, withClubsNavItem } from "@/components/molecules";
 import {
   McvvStatsOverview,
   type McvvHomepageContent,
@@ -9,8 +9,10 @@ import {
 } from "@/components/templates";
 import { getSiteSettings, splitMoment } from "@/lib/settings/site";
 import { COURSE_CLIMB_M, COURSE_KM } from "@/lib/stats/overview";
+import { getClubInsights } from "@/lib/clubs/cached";
 import { getStatsOverview } from "@/lib/stats/overview-query";
 import { STAT_SLUGS } from "@/lib/stats/core";
+import { getAllTeamCompetitions, winnersOf } from "@/lib/teams";
 import { formatRaceTime } from "@/lib/utils";
 import { type Locale } from "@/i18n/routing";
 import { intlTag } from "@/lib/i18n/locale";
@@ -32,7 +34,16 @@ export default async function StatsIndexPage({ params }: PageProps) {
   const home = await getTranslations({ locale, namespace: "Home" });
   const stats = await getTranslations({ locale, namespace: "Stats" });
   const t = await getTranslations({ locale, namespace: "Stats.overview" });
-  const [data, settings] = await Promise.all([getStatsOverview(), getSiteSettings()]);
+  const [data, settings, teamYears, clubs] = await Promise.all([
+    getStatsOverview(),
+    getSiteSettings(),
+    getAllTeamCompetitions(),
+    getClubInsights(),
+  ]);
+  const latestTeam = teamYears.length
+    ? teamYears.reduce((best, row) => (row.year > best.year ? row : best))
+    : null;
+  const latestWinners = latestTeam ? winnersOf(latestTeam.competition, latestTeam.year) : [];
 
   const intl = intlTag(locale);
   const number = (value: number) => new Intl.NumberFormat(intl).format(value);
@@ -81,6 +92,7 @@ export default async function StatsIndexPage({ params }: PageProps) {
       ages: t("moreAges"),
       times: t("moreTimes"),
       clubs: t("moreClubs"),
+      teams: t("moreTeams"),
     },
     records: {
       title: t("records"),
@@ -135,7 +147,24 @@ export default async function StatsIndexPage({ params }: PageProps) {
         trend.at(-1) ? `${trend.at(-1)?.year}: ${percent(trend.at(-1)?.share ?? 0)}` : "",
       ],
     },
-    clubs: { title: t("clubs") },
+    clubs: {
+      title: t("clubs"),
+      value: number(clubs.clubs),
+      unit: t("clubsUnit"),
+      note: clubs.streaks[0] ? t("clubsNote", { streak: clubs.streaks[0].length }) : null,
+      rows: clubs.streaks.slice(0, 3).map((row) => ({
+        name: row.name,
+        slug: row.slug,
+        value: `${row.length}`,
+      })),
+    },
+    teamsTile: {
+      title: t("teams"),
+      line: latestWinners.length
+        ? `${latestTeam?.year} · ${latestWinners.map((winner) => winner.team).join(" / ")}`
+        : null,
+      sub: latestWinners[0] ? `${latestWinners[0].points} b · ${latestWinners[0].finishers}` : null,
+    },
     together: {
       title: t("together"),
       value: number(data.together.hours),
@@ -164,10 +193,13 @@ export default async function StatsIndexPage({ params }: PageProps) {
       statsNav={{
         current: STATS_OVERVIEW_SLUG,
         ariaLabel: stats("navLabel"),
-        items: [
-          { slug: STATS_OVERVIEW_SLUG, label: t("nav") },
-          ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
-        ],
+        items: withClubsNavItem(
+          [
+            { slug: STATS_OVERVIEW_SLUG, label: t("nav") },
+            ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
+          ],
+          stats("overview.clubsNav"),
+        ),
       }}
     />
   );

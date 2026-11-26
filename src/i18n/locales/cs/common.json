@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "Novinka {n}. ročníku",
+      "title": "Soutěž týmů",
+      "body": "Od letoška bodují vedle jednotlivců i týmy napříč kategoriemi. Rozhoduje výkon, ne počet lidí v klubu. Odměna pro vítězný tým. Soutěž týmů podporuje IONTMAX.",
+      "linkLabel": "Pravidla soutěže týmů"
+    },
     "overview": {
       "eyebrow": "01 — O závodě",
       "title": "Není to jen běh. Je to výzva.",
@@ -529,7 +535,142 @@
   "Instructions": {
     "eyebrow": "{n}. ročník",
     "title": "Pokyny",
-    "status": "Pokyny se připravují"
+    "tocTitle": "Na této stránce",
+    "backToTop": "Nahoru",
+    "mapAlt": "Mapa tratě Malé ceny Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Pořadatel",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Závod",
+        "paragraphs": ["Lesní kros Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Datum",
+        "paragraphs": ["neděle 6. 12. 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Místo",
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
+        "items": []
+      },
+      "parking": {
+        "title": "Parkování",
+        "paragraphs": [
+          "Parkoviště 1 - V zatáčce silnice 315 z Chocně do Srubů (49°59'36.018\"N, 16°12'15.656\"E), kapacita parkoviště je omezená, dodržujte prosím pokyny pořadatele, pokud přijíždíte přes Choceň využijte Parkoviště č. 2.",
+          "Parkoviště 2 - V Chocni, na Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), parkování není organizováno, respektujte dopravní předpisy.",
+          "Mapka s vyznačenými parkovišti je na mapě centra závodu (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Vzdálenosti",
+        "paragraphs": [],
+        "items": [
+          "Centrum závodu - Parkoviště 1: 400 m",
+          "Centrum závodu - Parkoviště 2: 800 m",
+          "Centrum závodu - nádraží ČD: 1,8 km",
+          "Centrum závodu - start: 0 m",
+          "Centrum závodu - cíl: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Závodní kancelář",
+        "paragraphs": ["Rozdělena na dvě \"přepážky\":"],
+        "items": [
+          "Přihlášení závodníci se zaplaceným startovným - vyzvednutí startovního čísla kdykoliv do Vašeho startu.",
+          "Nové přihlášky - za vyšší startovné a pouze do 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Startovní číslo",
+        "paragraphs": [
+          "Startovní číslo se svým jménem (pouze pro předem přihlášené) a startovním časem obdržíte v závodní kanceláři. Bez startovního čísla nebudete připuštěni na start. Číslo noste viditelně na prsou. V opačném případě můžete být diskvalifikováni. Traťoví rozhodčí na trati Vás totiž nemusí identifikovat a tím pádem Vám bude chybět průchod kontrolním stanovištěm!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Intervalový ve dvojicích po 15 sekundách. Na start se dostavte včas! Minimálně 3 minuty před svým startovním časem. Každý závodník je sám zodpovědný za to, že se včas dostaví na start. Čas závodu se měří od startovního času vyznačeného na startovním čísle. Oficiálním časem závodu je středoevropský čas (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Trať",
+        "paragraphs": [
+          "4 300m po lesních cestách a pěšinách (400m asfalt), kopcovitý profil (převýšení 200m), značeno červenými fáborky, trať je shodná pro všechny kategorie."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Občerstvení",
+        "paragraphs": [
+          "Teplý nápoj po závodě. Stánkový prodej občerstvení s tradičním sortimentem."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Šatny, WC",
+        "paragraphs": [
+          "K dispozici pouze nouzové přístřešky (stany) v centru závodu - omezené množství, mobilní WC v centru závodu."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Zdravotní služba",
+        "paragraphs": [
+          "Zdravotník v centru závodu. Nejbližší nemocnice Ústí nad Orlicí nebo Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Vyhlášení výsledků",
+        "paragraphs": [
+          "Finanční odměny za 1. - 5. místo v kategoriích muži a ženy (3 000 Kč, 2 000 Kč, 1 000 Kč, 500 Kč, 200 Kč) a za 1. - 3. místo v kategoriích veteránských (500 Kč, 300 Kč, 200 Kč). Věcné odměny pro nejlepší tři v žákovských a dorosteneckých kategoriích."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Harmonogram",
+        "paragraphs": [],
+        "items": [
+          "9:00 - otevření závodní kanceláře",
+          "9:45 - konec příjmu nových přihlášek",
+          "10:15 - start prvních závodníků",
+          "11:55 - start posledního závodníka",
+          "12:15 - doběh posledního závodníka",
+          "12:20 — vyhlášení výsledků a tombola"
+        ]
+      },
+      "privacy": {
+        "title": "Ochrana osobních údajů, filmování a fotografování",
+        "paragraphs": [
+          "Přihlášením se na tento závod každý účastník souhlasí se zveřejněním svých osobních údajů v rozsahu přihlášky na závod a to v podobě seznamu přihlášených, startovní listiny a výsledkové listiny na webu závodu a v centru závodu. V průběhu akce budou pořizovány zpravodajské fotografie a videa (včetně použití bezpilotního dronu) sloužící k informování veřejnosti o proběhlém závodě, propagaci závodu či vyúčtování dotací na akci atd. v souladu s platnou legislativou. Dále zde mohou být pořizovány fotografie k osobní potřebě účastníků závodu (jako vzpomínka na závody, pro propagaci sportovních klubu, atp.) zejména z vyhlašování výsledků a z tratě závodu. V případě, že nesouhlasíte s fotografováním či filmováním, oznamte to explicitně fotografovi/kameramanovi."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Upozornění",
+        "paragraphs": [
+          "Provozování prodejní nebo propagační činnosti (vyjma propagace sportovních akcí) je možné pouze se souhlasem ředitele závodu.",
+          "Závod svým charakterem není vhodný pro děti mladší šesti let. Do výsledkové listiny bude zařazen pouze závodník absolvující celou trať bez pomoci jiné osoby."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "Pro diváky",
+        "paragraphs": [
+          "Sledovat závodníky a vytvořit jim svým povzbuzováním patřičnou atmosféru můžete jak v cílové aréně (zde máte k dispozici občerstvení, výsledkový servis či hlášení mezičasů) tak samozřejmě i na trati. Zde doporučujeme pokračovat po lesní silničce (Formanka) vedoucí na Verandu od Parkoviště č.1 dále SZ směrem asi 400m na kopec, kde se dáte doprava na lesní cestu a po necelých 100m narazíte na trať závodu. Zde máte kromě setrvání možnost pokračovat dále až na vrchol Sutiny (1. kopec - ti nejrychlejší jsou zde asi za 90s od startu) nebo případně se dát po trati vlevo (v protisměru) a dojít až na Hřebínek, vršek posledního čtvrtého kopce (ti nejrychlejší jsou zde asi za 13 minut po startu). Při pohybování po trati dbejte prosím pozor na probíhající závod a nechte závodníkům dostatek prostoru."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n}. ročník",
@@ -584,7 +725,12 @@
     "colBirth": "Ročník",
     "colClub": "Klub",
     "colStarts": "Starty",
-    "colRecord": "OR"
+    "colRecord": "OR",
+    "clubMetaTitle": "{club} · přihlášení závodníci",
+    "clubMetaDescription": "Přihlášení závodníci klubu {club} na {n}. ročník Malé ceny Velké Verandy.",
+    "clubTotal": "{count, plural, one {# přihlášený} few {# přihlášení} other {# přihlášených}}",
+    "clubProfile": "Profil klubu",
+    "backToList": "Přihlášení závodníci"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# zpráva} few {# zprávy} other {# zpráv}}",
@@ -621,6 +767,17 @@
     "remove": "Odebrat",
     "quickAddTitle": "{name}, ročník {year}",
     "quickAdd": "Rychlá nabídka",
+    "quickHint": "Běžce, kterého už nechcete nabízet, odeberte křížkem. Z přihlášek ani výsledků se nic nesmaže.",
+    "quickHide": "Už nenabízet {name}",
+    "quickHiddenNotice": "{name} se už nebude nabízet.",
+    "quickUndo": "Zpět",
+    "quickHiddenToggle": "Skrytí běžci ({count})",
+    "quickHiddenShow": "zobrazit",
+    "quickHiddenCollapse": "schovat",
+    "quickRestore": "Vrátit do nabídky {name}",
+    "quickRestoreAll": "Vrátit všechny",
+    "quickAllHidden": "Všechny běžce z nabídky máte skryté.",
+    "quickError": "Změnu se nepodařilo uložit. Zkuste to prosím znovu.",
     "newRunner": "Nový běžec",
     "firstName": "Jméno",
     "lastName": "Příjmení",
@@ -917,10 +1074,91 @@
     "runners": "Běžců",
     "editions": "Ročníků",
     "years": "Roky",
+    "sortBy": "Řadit podle: {column}",
+    "sortedBy": "Řazeno podle: {column}, {direction}. Kliknutím přepnete směr.",
+    "sortAscending": "vzestupně",
+    "sortDescending": "sestupně",
+    "sortedCaption": "Řazeno podle: {column} ({direction})",
     "pages": "Stránky seznamu klubů",
     "previous": "Předchozí",
     "next": "Další",
-    "page": "Stránka {page}"
+    "page": "Stránka {page}",
+    "listMetaTitle": "Seznam klubů",
+    "listTitle": "Seznam klubů",
+    "listLead": "Vyhledávání a řazení všech klubů, jejichž běžci doběhli Malou cenu Velké Verandy.",
+    "suggestLabel": "Našeptávač názvů klubů",
+    "suggestHint": "Začněte psát název, i dřívější. Návrhy pomáhají hledání doplnit.",
+    "hubMetaTitle": "Kluby — pohledy a zajímavosti",
+    "hubIntro": "Šňůry, výpravy, kategoriální vítězství a další pohledy na oddíly, které kdy doběhly Malou cenu Velké Verandy.",
+    "hubLead": "V {editions} ročnících je {starts} startů v barvách {clubs, plural, one {# klubu} few {# klubů} other {# klubů}}.",
+    "unlinkedNote": "Dalších {count} startů není přiřazeno k žádnému klubu.",
+    "navLabel": "Pohledy na kluby",
+    "viewOverview": "Přehled",
+    "viewStreaks": "Šňůry",
+    "viewLoyal": "Věrnost",
+    "viewExpeditions": "Výpravy",
+    "viewNewcomers": "Nováčci a návraty",
+    "viewMedals": "Kategoriální vítězství",
+    "viewSmall": "Malé kluby",
+    "viewVeterans": "Veteráni",
+    "viewList": "Seznam",
+    "counterClubs": "klubů",
+    "counterEditions": "ročníků",
+    "counterStarts": "startů v barvách klubu",
+    "counterStreak": "let v řadě na startu mají K.O.B. Choceň i AC Choceň",
+    "streaksTitle": "Nejdelší šňůry účastí",
+    "streaksLead": "Kolik ročníků v řadě měl klub v cíli aspoň jednoho finišera. Dva choceňské oddíly nechyběly ani jednou.",
+    "streaksCol": "Šňůra",
+    "loyalTitle": "Věrné kluby",
+    "loyalLead": "Počet ročníků s finišerem, i s přestávkami. Doplňuje šňůry u oddílů, které jednou vynechaly.",
+    "loyalMissed": "Vynecháno",
+    "expeditionsTitle": "Největší výpravy",
+    "expeditionsLead": "Počet finišerů jednoho klubu v jednom roce. Jde o dokončené běhy z listiny, ne o startující.",
+    "expeditionsMax": "Historické maximum klubu",
+    "expeditionsAll": "Největší výpravy ročníků",
+    "startListNote": "Letošní startovní listina ještě není zveřejněná. Až vyjde, ukážeme výpravu vedle historického maxima — ne jako žebříček podle přihlášek.",
+    "newcomersTitle": "Nováčci a návraty",
+    "newcomersLead": "V roce {year} se v cíli poprvé objevilo {newcomers, plural, one {# klub} few {# kluby} other {# klubů}} a vrátilo se {returns, plural, one {# klub} few {# kluby} other {# klubů}} po pauze.",
+    "newcomersHeading": "Nováčci roku {year}",
+    "returnsHeading": "Návraty roku {year}",
+    "returnsGap": "Pauza",
+    "returnsLast": "Naposledy",
+    "yearsCount": "{count, plural, one {# rok} few {# roky} other {# let}}",
+    "medalsTitle": "Kategoriální vítězství členů klubu",
+    "medalsLead": "První místa a stupně jednotlivců v kategoriích, přiřazené ke sjednocenému klubu. Muži a ženy jsou vždy odděleně.",
+    "medalsNote": "Toto nejsou oficiální tituly soutěže týmů. Soutěž týmů se počítá z přesného zápisu názvu v listině daného roku a přes varianty názvu se nesčítá.",
+    "wins": "Vítězství",
+    "podiums": "Stupně",
+    "men": "Muži",
+    "women": "Ženy",
+    "smallTitle": "Malé kluby, velké výsledky",
+    "smallLead": "Oddíly, které při menší výpravě často sahají po kategoriálních vítězstvích. Ukazujeme podíl vítězství na počet startů (nejmíň 20 startů).",
+    "winRate": "Vítězství na start",
+    "podiumRate": "Stupně na start",
+    "veteransTitle": "Veteráni v klubech",
+    "veteransLead": "Členové Klubu veteránů MCVV (více startů, než je polovina počtu ročníků s výsledky, teď {threshold}+) podle oddílu, za který mají nejvíc startů.",
+    "veteransCount": "Veteránů",
+    "veteransExamples": "Příklady",
+    "veteransAll": "Celý klub veteránů",
+    "jubileesTitle": "Jubilea, pokud v roce {year} odstartují",
+    "jubileeNth": "{n}. ročník",
+    "toList": "Seznam klubů s vyhledáváním",
+    "openProfile": "Profil klubu",
+    "colYear": "Rok",
+    "colSize": "Finišerů",
+    "emptyView": "Pro tento pohled zatím nejsou data.",
+    "viewJubilees": "Jubilea",
+    "showMore": "Zobrazit víc",
+    "showMoreCount": "Zobrazit víc ({count})",
+    "moreView": "Celý pohled",
+    "moreList": "Otevřít seznam",
+    "expeditionsUnit": "finišerů",
+    "expeditionsChart": "Největší výprava v ročníku",
+    "cardReturn": "Nejzajímavější návrat: {club} {gap}",
+    "veteransUnit": "veteránů",
+    "hubViewMetaTitle": "{view} — Kluby",
+    "cardReturnGap": "{count, plural, one {po # roce} few {po # letech} other {po # letech}}",
+    "hubLeadUnlinked": "V {editions} ročnících je {starts} startů v barvách {clubs, plural, one {# klubu} few {# klubů} other {# klubů}}, dalších {unlinked} zůstalo bez klubu."
   },
   "ClubCleanup": {
     "title": "Úklid sirotků v číselníku klubů",
@@ -1187,7 +1425,6 @@
     "msgReplyRead": "Odpověď přečtena {time}",
     "msgReplyUnread": "{count, plural, one {Odpověď nepřečtena} few {# odpovědi nepřečteny} other {# odpovědí nepřečteno}}",
     "msgToRegistration": "Detail přihlášky",
-    "regsMessages": "Zprávy",
     "settingsMessages": "Zprávy",
     "settingsMessagesEnabled": "Zprávy zapnuté",
     "settingsMessagesEnabledHint": "Vypnutím se zprávy přihlašujícím skryjí a kontaktní formulář posílá e-mail i přihlášeným. Administrace zůstává dostupná.",
@@ -1261,6 +1498,7 @@
     "status4": "Přeplacená",
     "status5": "Potvrzená",
     "freeAutoConfirmed": "Zdarma – potvrzeno automaticky",
+    "freeAutoConfirmedShort": "Zdarma",
     "statusUnknown": "—",
     "filter": "Filtrovat",
     "includeCancelled": "včetně zrušených",
@@ -1399,22 +1637,20 @@
     "timelineAfterRace": "{year}: {count, plural, one {# přihláška založená} few {# přihlášky založené} other {# přihlášek založených}} po datu závodu není v grafu.",
     "timelineNoCreated": "{year}: {count, plural, one {# přihláška} few {# přihlášky} other {# přihlášek}} bez data založení není v grafu.",
     "regsYear": "Rok",
-    "regsId": "ID",
     "regsName": "Název",
     "regsEmail": "E-mail",
+    "regsEntry": "Přihláška",
+    "regsSummary": "{count, plural, one {# přihláška} few {# přihlášky} other {# přihlášek}} · {runners, plural, one {# běžec} few {# běžci} other {# běžců}} · startovné {fee} · zaplaceno {paid}",
     "regsCreated": "Pořízeno",
-    "regsCount": "Počet",
     "regsFee": "Startovné",
     "regsPaid": "Zaplaceno",
     "regsDiff": "Rozdíl",
     "regsStatus": "Stav",
-    "regsPromotion": "Newsletter",
     "regsNoNewsletter": "Nezasílat newsletter",
     "regsPricesTitle": "Startovné přihlášky",
     "regsPricesHint": "Uloženo při založení přihlášky ({term}). Pozdější změna ceny termínu přihlášku nemění. Po uložení se přepočte startovné běžců (startovné zdarma zůstává).",
     "regsPricesLegacy": "Přihláška zatím nemá uloženou cenu – platí cena termínu ({term}). Uložením se cena k přihlášce uloží.",
     "regsPricesSave": "Uložit startovné",
-    "regsNewsletterOff": "ne",
     "regsNote": "Poznámka",
     "regsRunners": "Běžci",
     "regsBirth": "Ročník",
@@ -1553,6 +1789,18 @@
     "toolsIntro": "Tvoje obrazovky a sekce pro den závodu. Otevírají se na celou obrazovku.",
     "navSplitEntry": "Mezičasy – zápis na kontrole",
     "navStarter": "Startér",
+    "screensTitle": "Obrazovky",
+    "screensIntro": "Obrazovky dne závodu se otevírají na celou obrazovku, mimo panel administrace.",
+    "screensStarterHint": "Intervalový start podle startovky – koridor a odstartovaní závodníci.",
+    "screensSplitsHint": "Zápis průchodů na mezičasové kontrole.",
+    "screensFinishHint": "Stanice Stopky a Čísla v cíli.",
+    "screensSpeakerHint": "Průběžné výsledky a hlášení pro speakera.",
+    "screensResultboardHint": "Velké obrazovky s průběžnými výsledky v cíli.",
+    "raceOfficeTitle": "Závodní kancelář",
+    "raceOfficeIntro": "Pokladna, prodejky a ceník. Obrazovky kanceláře se otevírají na celou obrazovku, mimo panel administrace.",
+    "raceOfficeCashHint": "Prodejky, platba hotově a storno nezaplacené.",
+    "raceOfficeSalesHint": "Seznam prodejek a jejich stav.",
+    "raceOfficeItemsHint": "Ceník položek závodní kanceláře. Jen admin.",
     "qTitle": "Dotazy z kontaktního formuláře",
     "qIntro": "Dotazy nepřihlášených návštěvníků z kontaktního formuláře. Pořadatel dostává upozornění e-mailem jako dosud; tady se dá odpovědět a sledovat stav.",
     "qLink": "Dotazy z kontaktního formuláře →",
@@ -1626,7 +1874,7 @@
       "women": "Ženy na trati",
       "womenUnit": "všech startů",
       "womenPeak": "max. {year}: {share}",
-      "clubs": "Nejvěrnější klub",
+      "clubs": "Kluby",
       "together": "Společně na trati",
       "togetherUnit": "hodin běhu",
       "togetherNote": "≈ {days} dní nepřetržitého běhu · {climb} km převýšení ({starts} × {metres} m)",
@@ -1638,8 +1886,13 @@
       "moreAttendance": "Celková účast",
       "moreAges": "Rekordy dle věku",
       "moreTimes": "Nejlepší časy",
-      "moreClubs": "Všechny kluby",
-      "footnote": "Naběhané kilometry = starty × {km} km (všechny kategorie běží stejnou trať), převýšení = starty × {metres} m. Jména podle aktuálního záznamu běžce."
+      "moreClubs": "Pohledy a zajímavosti",
+      "footnote": "Naběhané kilometry = starty × {km} km (všechny kategorie běží stejnou trať), převýšení = starty × {metres} m. Jména podle aktuálního záznamu běžce.",
+      "moreTeams": "Listina vítězů soutěže týmů",
+      "teams": "Soutěž týmů",
+      "clubsUnit": "klubů",
+      "clubsNote": "Nejdelší šňůra: {streak} ročníků v řadě",
+      "clubsNav": "Kluby"
     },
     "eyebrow": "Statistiky",
     "colName": "Běžec",
@@ -1710,7 +1963,75 @@
       "colForeign": "Zahraničních běžců",
       "colUnknown": "Bez údaje",
       "unknown": "Neuvedeno"
+    },
+    "tymy": {
+      "nav": "Týmy",
+      "title": "Soutěž týmů",
+      "intro": "Vítězové ročníků 1993–2025 přepočítaní podle pravidel soutěže týmů 2026. Tým je klub tak, jak je zapsaný ve výsledcích daného roku.",
+      "colWinner": "Vítězný tým",
+      "colPoints": "Body",
+      "colFinishers": "Finišerů",
+      "tileMore": "Listina vítězů"
     }
+  },
+  "Teams": {
+    "title": "Soutěž týmů",
+    "nav": "Týmy",
+    "rulesEyebrow": "{n}. ročník · {when}",
+    "lead": "Od letoška bodují vedle jednotlivců i týmy napříč kategoriemi. Rozhoduje výkon, ne počet lidí v klubu. Novinka {n}. ročníku — bonus mimo rozpis 2026.",
+    "sectionTeam": "Tým",
+    "teamDef": "Tým je klub přesně tak, jak je zapsaný v přihlášce.",
+    "entryDuty": "Za správnost údajů v přihlášce ručí závodník. V přihlašovací aplikaci použijte našeptávač názvů, aby se zápis shodoval s ostatními členy týmu.",
+    "noClub": "Běžci bez vyplněného klubu se do soutěže týmů nepočítají.",
+    "sectionScoring": "Bodování",
+    "scoringRules": "Počítají se jen klasifikovaní finišeři (oficiální čas v cíli). Z každé kategorie se do týmového součtu započítá nejvýš jeden závodník týmu (ten s nejvyšším bodovým ziskem).",
+    "otherCats": "Ostatní kategorie — 1. až 5. místo",
+    "mainCats": "Muži a ženy — 1. až 10. místo",
+    "place": "Místo",
+    "points": "Body",
+    "sum": "Výsledek týmu je součet započtených bodů.",
+    "sectionRanking": "Zařazení do pořadí",
+    "rankingRules": "Do pořadí se zařadí jen tým, který má v cíli alespoň tři klasifikované finišery. Diskvalifikace, vzdání a nestart se do tohoto minima ani do bodů nepočítají.",
+    "sectionTie": "Rovnost bodů",
+    "tieRules": "Při rovnosti bodů rozhoduje větší počet lepších umístění mezi započtenými výsledky: nejdřív více prvních míst, při další shodě více druhých míst, a tak dále. Pokud je shodná i tato řada umístění, týmy se dělí o místo.",
+    "sectionPrize": "Vyhlášení a odměna",
+    "announcement": "Vítězný tým vyhlásíme na místě ve 12:20 spolu s ostatními výsledky. Odměna pro vítězný tým.",
+    "prizeWaiver": "K.O.B. Choceň jako pořadatel se v případě vítězství vzdává ceny ve prospěch druhého týmu.",
+    "officialPublish": "Oficiální pořadí zveřejníme s výsledky na mcvv.org.",
+    "sponsorLabel": "Sponzor soutěže týmů",
+    "sponsorTitle": "Soutěž týmů podporuje IONTMAX",
+    "sponsorWebsite": "Oficiální web sponzora",
+    "historyLink": "Historický přehled vítězů 1993–2025",
+    "historyLinkNote": "zpětný propočet podle pravidel 2026",
+    "rulesLink": "Pravidla soutěže týmů",
+    "winnersLink": "Listina vítězů",
+    "historicalNote": "Propočet podle pravidel soutěže týmů 2026, uplatněný na historickou výsledkovou listinu. Tým je název klubu tak, jak je v listině tohoto roku.",
+    "provisionalChip": "Propočet 2026",
+    "liveChip": "Průběžné",
+    "officialChip": "Oficiální",
+    "colRank": "Poř.",
+    "colTeam": "Tým",
+    "colPoints": "Body",
+    "colFinishers": "Finišerů",
+    "colCounted": "Započtené výkony",
+    "colYear": "Rok",
+    "colWinner": "Vítězný tým",
+    "pointsAbbr": "{points} b",
+    "finishersAbbr": "{count, plural, one {# finišer} few {# finišeři} other {# finišerů}}",
+    "marginPoints": "Náskok {lead} b",
+    "marginPlaces": "Shoda bodů s {team}, rozhodují lepší umístění",
+    "unclassified": "Neklasifikované týmy (méně než 3 finišeři)",
+    "winningTeam": "Vítězný tým",
+    "statsTitle": "Soutěž týmů",
+    "statsIntro": "Historická listina vítězů zpětného propočtu 1993–2025 podle pravidel soutěže týmů 2026.",
+    "statsNav": "Týmy",
+    "announcedAt": "Vyhlášeno ve 12:20",
+    "announcedVsOfficial": "Vyhlášení ve 12:20 a oficiální pořadí po zveřejnění se liší.",
+    "alertNew": "Doběh {name} posunul tým {team} do čela soutěže týmů. {margin}",
+    "alertHeld": "Doběh {name} udržel tým {team} v čele. {margin}",
+    "alertMoved": "Doběh {name} posunul tým {team} na {rank}. místo.",
+    "prizeLive": "Odměna pro vítězný tým. K.O.B. Choceň jako pořadatel se v případě vítězství vzdává ceny ve prospěch druhého týmu.",
+    "when2026": "neděle 6. 12. 2026, Choceň"
   },
   "LanguageSwitcher": {
     "label": "Jazyk"
@@ -1778,7 +2099,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Rychlá nabídka – běžci z minulých let",
-        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy.",
+        "text": "V sekci <b>Rychlá nabídka</b> jsou všichni běžci, které jste z tohoto e-mailu přihlásili v minulých letech. Stačí na ně kliknout – kategorie a startovné se doplní samy. Běžce, kterého už nechcete nabízet, odeberete křížkem; skryté běžce můžete zase vrátit.",
         "tip": "Přihlašujete klub? Nejdřív přihlášku přejmenujte na název klubu a uložte. Podle názvu přihlášky se běžcům přiřadí klub."
       },
       {
@@ -2079,9 +2400,9 @@
       "reason-required": "Při přepisu nebo smazání vyplňte důvod.",
       "missing": "Čas už neexistuje."
     },
-    "clearDone": "Smazáno mezičasů: {splits}, záznamů deníku: {entries}.",
+    "clearDone": "Smazáno mezičasů: {splits}, záznamů deníku: {entries}, záznamů stanic v cíli: {finish}.",
     "clearTitle": "Vyčistit mezičasy ročníku",
-    "clearIntro": "Po zkoušce nanečisto smaže mezičasy (mcvv_split) i jejich deník včetně konfliktů. Do auditu se uloží snímek smazaných časů. Výsledky (mcvv_time), rekordy ani startovka se nemění.",
+    "clearIntro": "Po zkoušce nanečisto smaže mezičasy (mcvv_split) i jejich deník včetně konfliktů. Když výběr obsahuje cíl a zdroj je „vše“, smaže i záznamy stanic v cíli (kliky stopek a zapsaná čísla). Do auditu se uloží snímek všeho smazaného. Výsledky (mcvv_time), rekordy ani startovka se nemění.",
     "clearAllowedUntil": "Povoleno do nuly závodu ({zero}). Pak už jen jednotlivé opravy.",
     "clearBlocked": "Hromadné vyčištění je od nuly závodu ({zero}) zakázané. Jednotlivé časy opravte v editaci mezičasů.",
     "filterSplits": "Splity",
@@ -2092,8 +2413,9 @@
     "sourceObd": "OBD (historické zápisy)",
     "previewButton": "Zobrazit náhled",
     "previewSummary": "Smaže se mezičasů: {splits}, záznamů deníku: {entries} (z toho konfliktů: {conflicts}).",
+    "previewFinish": "Cíl – kliky stopek: {punches}, zapsaná čísla: {bibs}",
     "optionClearZero": "Zároveň smazat zkušební nulu",
-    "clearAfterHint": "Po vyčištění ať splitmakeři načtou /mezicasy znovu.",
+    "clearAfterHint": "Po vyčištění ať splitmakeři načtou /mezicasy a stanice v cíli /cil znovu.",
     "confirmLabel": "Pro potvrzení opište ročník ({year})",
     "clearButton": "Nevratně smazat",
     "badgeManual": "ručně",
@@ -3496,6 +3818,7 @@
     "online": "Online",
     "offline": "Offline",
     "queued": "{count, plural, =0 {vše odesláno} one {# čeká} few {# čekají} other {# čeká}}",
+    "otherQueued": "{station}: {count, plural, one {# čeká} few {# čekají} other {# čeká}}",
     "countPunches": "Kliků",
     "countBibs": "Čísel",
     "countPending": "{count} čeká na odeslání",

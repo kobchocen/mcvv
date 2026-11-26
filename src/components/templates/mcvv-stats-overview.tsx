@@ -18,7 +18,7 @@ export type McvvStatsOverviewCopy = {
   men: string;
   women: string;
   more: Record<
-    "records" | "wins" | "photos" | "winners" | "attendance" | "ages" | "times" | "clubs",
+    "records" | "wins" | "photos" | "winners" | "attendance" | "ages" | "times" | "clubs" | "teams",
     string
   >;
   records: { title: string; sameYear: string | null };
@@ -38,7 +38,15 @@ export type McvvStatsOverviewCopy = {
   };
   recordEdition: { title: string; unit: string };
   womenTile: { title: string; value: string; unit: string; axis: [string, string, string] };
-  clubs: { title: string };
+  clubs: {
+    title: string;
+    value?: string;
+    unit?: string;
+    note?: string | null;
+    /** Values shown in the list (streak or starts); when omitted, starts from data.clubs are used. */
+    rows?: { name: string; slug: string; value: string }[];
+  };
+  teamsTile: { title: string; line: string | null; sub: string | null };
   together: { title: string; value: string; unit: string; note: string };
   moment: { title: string; headline: string; body: string } | null;
   footnote: string;
@@ -333,6 +341,20 @@ export function McvvStatsOverview({ brand, nav, data, copy, statsNav }: McvvStat
             </Tile>
 
             <Tile
+              title={copy.teamsTile.title}
+              more={<MoreLink href={statHref("tymy")} label={copy.more.teams} />}
+            >
+              {copy.teamsTile.line ? (
+                <>
+                  <div className={cn(bigClass, "mt-1")}>{copy.teamsTile.line}</div>
+                  {copy.teamsTile.sub ? <p className={metaClass}>{copy.teamsTile.sub}</p> : null}
+                </>
+              ) : (
+                <p className={metaClass}>—</p>
+              )}
+            </Tile>
+
+            <Tile
               title={copy.photos.title}
               more={<MoreLink href="/fotogalerie" label={copy.more.photos} />}
             >
@@ -511,17 +533,35 @@ export function McvvStatsOverview({ brand, nav, data, copy, statsNav }: McvvStat
               </div>
             </Tile>
 
-            {data.clubs.length > 0 ? (
+            {data.clubs.length > 0 || copy.clubs.value ? (
               <Tile
                 title={copy.clubs.title}
                 more={<MoreLink href="/kluby" label={copy.more.clubs} />}
               >
+                {copy.clubs.value ? (
+                  <div className={bigClass}>
+                    {copy.clubs.value}{" "}
+                    {copy.clubs.unit ? (
+                      <small className="font-sans text-sm font-medium normal-case text-race-muted">
+                        {copy.clubs.unit}
+                      </small>
+                    ) : null}
+                  </div>
+                ) : null}
+                {copy.clubs.note ? <p className={metaClass}>{copy.clubs.note}</p> : null}
                 <RankedList
-                  rows={data.clubs.map((club, index) => ({
+                  rows={(
+                    copy.clubs.rows ??
+                    data.clubs.map((club) => ({
+                      name: club.name,
+                      slug: club.slug,
+                      value: `≈${copy.number(club.starts)}`,
+                    }))
+                  ).map((club, index) => ({
                     rank: index + 1,
                     name: club.name,
                     clubSlug: club.slug,
-                    value: `≈${copy.number(club.starts)}`,
+                    value: club.value,
                   }))}
                 />
               </Tile>

@@ -1,71 +1,123 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
-import { Loader2Icon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { addExistingRunner } from "@/lib/entries/actions";
-import { Button } from "@/components/ui/button";
+import { hideQuickRunner, restoreQuickRunners } from "@/lib/entries/quick-actions";
+import type { QuickHiddenResult } from "@/lib/entries/quick-actions";
+import { compareQuick, quickLabels } from "@/lib/entries/quick";
+import {
+  McvvQuickAddView,
+  type QuickAddCopy,
+  type QuickAddRunner,
+} from "@/components/organisms/mcvv-quick-add-view";
+
+export type { QuickAddCopy } from "@/components/organisms/mcvv-quick-add-view";
 
 /**
- * Tlačítko běžce v rychlé nabídce. Hned po kliknutí ukáže, že se běžec přidává (#189):
- * zablokuje se, točí se ikonka a `aria-busy`. Běžec z nabídky zmizí, až ho server uloží
- * a stránka se obnoví.
+ * Rychlá nabídka na /prihlasky: běžci z minulých přihlášek. Křížkem se běžec skryje
+ * („už nenabízet“, MD-31) – hned zmizí (optimisticky), uloží se k účtu a nabídne se „Zpět“.
+ * Skryté lze rozbalit a vrátit. Při chybě serveru se změna vrátí a ukáže se hláška.
  */
-function QuickAddButton({ name, title }: { name: string; title: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      variant="outline"
-      disabled={pending}
-      aria-busy={pending || undefined}
-      className="h-9 border-race-line bg-race-surface disabled:opacity-70"
-      title={title}
-      aria-label={title}
-    >
-      {pending ? <Loader2Icon className="size-4 animate-spin" aria-hidden="true" /> : null}
-      {name}
-    </Button>
-  );
-}
-
 export function McvvQuickAdd({
   year,
   registrationId,
   runners,
+  hidden,
   clubName,
   copy,
 }: {
   year: number;
   /** null = přihláška ještě neexistuje, založí se s prvním běžcem. */
   registrationId: number | null;
-  /** Klub z poslední přihlášky běžce (id + text), jinak výchozí klub přihlášky (Q35). */
-  runners: { id: string; name: string; clubId?: string; clubName?: string }[];
+  /** Nabízení běžci (bez skrytých). */
+  runners: QuickAddRunner[];
+  /** Běžci skrytí účtem. */
+  hidden: QuickAddRunner[];
   clubName: string;
-  copy: { quickAdd: string; runnerTitle: string };
+  copy: QuickAddCopy;
 }) {
+  // Optimistické skrytí / vrácení podle id (true = skrytý); server je po revalidaci shodný.
+  const [overrides, setOverrides] = useState<ReadonlyMap<string, boolean>>(new Map());
+  const [notice, setNotice] = useState<QuickAddRunner | null>(null);
+  const [error, setError] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
+  const [, startTransition] = useTransition();
+  const undoRef = useRef<HTMLButtonElement>(null);
+
+  const all = useMemo(
+    () =>
+      [...new Map([...runners, ...hidden].map((runner) => [runner.id, runner])).values()].sort(
+        compareQuick,
+      ),
+    [runners, hidden],
+  );
+  const serverHidden = useMemo(() => new Set(hidden.map((runner) => runner.id)), [hidden]);
+  const labels = useMemo(() => quickLabels(all), [all]);
+  const isHidden = (id: string) => overrides.get(id) ?? serverHidden.has(id);
+  const visibleList = all.filter((runner) => !isHidden(runner.id));
+  const hiddenList = all.filter((runner) => isHidden(runner.id));
+
+  // Po skrytí přejde fokus na „Zpět“ (tlačítko s fokusem zmizelo).
+  useEffect(() => {
+    if (notice) undoRef.current?.focus();
+  }, [notice]);
+
+  const run = (ids: string[], hide: boolean, action: () => Promise<QuickHiddenResult>) => {
+    setError(false);
+    setOverrides((prev) => new Map([...prev, ...ids.map((id) => [id, hide] as const)]));
+    startTransition(async () => {
+      let ok = false;
+      try {
+        ok = (await action()).ok;
+      } catch {
+        ok = false;
+      }
+      if (!ok) {
+        setOverrides((prev) => new Map([...prev].filter(([id]) => !ids.includes(id))));
+        setNotice(null);
+        setError(true);
+      }
+    });
+  };
+
   return (
-    <div className="mt-6">
-      <h3 className="font-display text-lg font-semibold">{copy.quickAdd}</h3>
-      <ul className="mt-3 flex flex-wrap gap-2">
-        {runners.map((runner) => (
-          <li key={runner.id}>
-            <form action={addExistingRunner}>
-              <input type="hidden" name="year" value={year} />
-              <input type="hidden" name="registrationId" value={registrationId ?? 0} />
-              <input type="hidden" name="runnerId" value={runner.id} />
-              <input type="hidden" name="clubId" value={runner.clubId ?? ""} />
-              <input type="hidden" name="clubName" value={runner.clubName ?? clubName} />
-              <QuickAddButton
-                name={runner.name}
-                title={copy.runnerTitle
-                  .replace("{name}", runner.name)
-                  .replace("{year}", runner.id.slice(0, 4))}
-              />
-            </form>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <McvvQuickAddView
+      year={year}
+      registrationId={registrationId}
+      clubName={clubName}
+      runners={visibleList}
+      hidden={hiddenList}
+      labels={labels}
+      notice={notice}
+      error={error}
+      showHidden={showHidden}
+      copy={copy}
+      addAction={addExistingRunner}
+      undoRef={undoRef}
+      onHide={(runner) => {
+        setNotice(runner);
+        run([runner.id], true, () => hideQuickRunner(runner.id));
+      }}
+      onUndo={() => {
+        if (!notice) return;
+        const runner = notice;
+        setNotice(null);
+        run([runner.id], false, () => restoreQuickRunners([runner.id]));
+      }}
+      onToggleHidden={() => setShowHidden((open) => !open)}
+      onRestore={(runner) => {
+        if (notice?.id === runner.id) setNotice(null);
+        run([runner.id], false, () => restoreQuickRunners([runner.id]));
+      }}
+      onRestoreAll={() => {
+        setNotice(null);
+        run(
+          hiddenList.map((runner) => runner.id),
+          false,
+          () => restoreQuickRunners("all"),
+        );
+      }}
+    />
   );
 }

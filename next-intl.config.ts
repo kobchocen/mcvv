@@ -12,6 +12,7 @@ export default defineRouting({
     "/pokyny": "/pokyny",
     "/startovka": "/startovka",
     "/prihlaseni-zavodnici": "/prihlaseni-zavodnici",
+    "/prihlaseni-zavodnici/klub/[slug]": "/prihlaseni-zavodnici/klub/[slug]",
     "/kontakt": "/kontakt",
     "/zpravy": "/zpravy",
     "/zpravy/[id]": "/zpravy/[id]",
@@ -20,11 +21,13 @@ export default defineRouting({
     // veřejné online výsledky v den závodu (náhrada OFeed, Q116)
     "/vysledky/online": "/vysledky/online",
     "/vysledky/online/[kategorie]": "/vysledky/online/[kategorie]",
+    "/souteze-tymu": "/souteze-tymu",
     "/statistiky": "/statistiky",
     "/statistiky/[slug]": "/statistiky/[slug]",
     "/bezec/[id]": "/bezec/[id]",
     // seznam a profily klubů (#105) a jejich sloučení v adminu (#104)
     "/kluby": "/kluby",
+    "/kluby/seznam": "/kluby/seznam",
     "/kluby/[slug]": "/kluby/[slug]",
     "/fotogalerie": "/fotogalerie",
     // trvalý odkaz na fotku pro sdílení (Q426)
@@ -68,6 +71,9 @@ export default defineRouting({
     // editor oprávnění rolí (P8, jen při zapnutém permissions.v2)
     "/admin/opravneni": "/admin/opravneni",
     "/admin/den-zavodu": "/admin/den-zavodu",
+    // rozcestníky obrazovek dne závodu a závodní kanceláře
+    "/admin/obrazovky": "/admin/obrazovky",
+    "/admin/kancelar": "/admin/kancelar",
     // po závodě: tombola (#128)
     "/admin/po-zavode": "/admin/po-zavode",
     // závodní kancelář: pokladna a prodejky (#207)

@@ -13,6 +13,7 @@
  */
 import {
   canAccessRaceDay,
+  canAccessScreens,
   canAccessSplits,
   canAccessStarter,
   canManageSaleItems,
@@ -39,7 +40,8 @@ export type LegacyGuard =
   | "speaker"
   | "cashDesk"
   | "saleItems"
-  | "bankPaid";
+  | "bankPaid"
+  | "screens";
 
 export const LEGACY_PREDICATES: Record<LegacyGuard, (role: UserRole) => boolean> = {
   home: hasAdminHome,
@@ -52,6 +54,7 @@ export const LEGACY_PREDICATES: Record<LegacyGuard, (role: UserRole) => boolean>
   cashDesk: canUseCashDesk,
   saleItems: canManageSaleItems,
   bankPaid: canMarkSalePaidBank,
+  screens: canAccessScreens,
 };
 
 type Rule = { read: LegacyGuard; write: LegacyGuard };
@@ -79,12 +82,14 @@ export const SECTION_RULES = {
   "raceControl.officialCheck": { read: "raceday", write: "admin" },
   /** Přehled trati pro šéfa trati (#316): průchody kontrolami, vynechané kontroly. */
   "raceControl.course": { read: "raceday", write: "raceday" },
+  screens: { read: "screens", write: "screens" },
   "screens.starter": { read: "starter", write: "starter" },
   "screens.splits": { read: "splits", write: "splits" },
   /** Cíl (#252): stanice Stopky a Čísla. */
   "screens.finish": { read: "raceday", write: "raceday" },
   "screens.speaker": { read: "speaker", write: "speaker" },
   "screens.resultboard": { read: "speaker", write: "speaker" },
+  raceOffice: { read: "cashDesk", write: "cashDesk" },
   "raceOffice.cash": { read: "cashDesk", write: "cashDesk" },
   "raceOffice.sales": { read: "cashDesk", write: "cashDesk" },
   "raceOffice.bankPaid": { read: "bankPaid", write: "bankPaid" },
@@ -150,6 +155,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "dictionaries.runners": "read",
     "raceOffice.cash": "read",
     "raceOffice.sales": "read",
+    raceOffice: "read",
   },
   startlist: {
     overview: "write",
@@ -180,6 +186,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.resultboard": "write",
     "screens.speaker": "read",
     "screens.resultboard": "read",
+    screens: "read",
   },
   timing_ops: {
     overview: "write",
@@ -199,6 +206,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "screens.speaker": "read",
     "screens.resultboard": "read",
     "startlist.list": "read",
+    screens: "write",
   },
   chief_referee: {
     overview: "write",
@@ -212,6 +220,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.course": "read",
     "screens.speaker": "read",
     "screens.resultboard": "read",
+    screens: "read",
     "startlist.list": "read",
     "entries.list": "read",
     afterRace: "write",
@@ -224,6 +233,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.live": "read",
     "screens.splits": "read",
     "screens.speaker": "read",
+    screens: "read",
   },
 };
 

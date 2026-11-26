@@ -60,6 +60,13 @@ erDiagram
     int pos
   }
 
+  %% tabulka mcvv_user_quick_hidden — běžci skrytí z rychlé nabídky účtu
+  UserQuickHidden {
+    int user_id PK "FK"
+    string runner_id PK
+    datetime created_at
+  }
+
   %% tabulka mcvv_email_token
   EmailVerificationToken {
     int id PK
@@ -476,6 +483,7 @@ erDiagram
   %% ---------- FK (plná čára) ----------
   User ||--o{ UserRoleGrant : "user_id"
   User ||--o{ UserPin : "user_id"
+  User ||--o{ UserQuickHidden : "user_id"
   User ||--o{ EmailVerificationToken : "user_id"
   User |o--o{ AuditLog : "actor_user_id"
   User |o--o{ NewsletterCampaign : "created_by"

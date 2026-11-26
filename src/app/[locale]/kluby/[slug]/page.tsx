@@ -119,6 +119,10 @@ function BestTable({
   );
 }
 
+/** Same heading bar as the official results groups (men / women). */
+const yearGroupBarClass =
+  "bg-race-accent/10 px-4 py-1.5 text-base font-display font-bold text-race-accent tracking-tight border-l-4 border-race-accent";
+
 function ClubYearTable({
   year,
   rows,
@@ -133,42 +137,74 @@ function ClubYearTable({
     categoryRank: string;
     time: string;
     empty: string;
+    men: string;
+    women: string;
   };
 }) {
   if (rows.length === 0) return <p className="mt-3 text-sm text-race-muted">{copy.empty}</p>;
+  const groups = (
+    [
+      { sex: "M" as const, title: copy.men, rows: rows.filter((row) => row.sex === "M") },
+      { sex: "F" as const, title: copy.women, rows: rows.filter((row) => row.sex === "F") },
+    ] as const
+  ).filter((group) => group.rows.length > 0);
   return (
-    <div className="mt-3 overflow-x-auto">
-      <table className="w-full border-collapse text-left text-sm" data-testid="club-year-results">
-        <thead>
-          <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
-            <th className="py-2 pr-3">{copy.rank}</th>
-            <th className="py-2 pr-3">{copy.name}</th>
-            <th className="py-2 pr-3">{copy.category}</th>
-            <th className="py-2 pr-3">{copy.categoryRank}</th>
-            <th className="py-2">{copy.time}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.runnerId} className="border-b border-race-line/40">
-              <td className="py-2 pr-3 tabular-nums text-race-dim">{row.rank}.</td>
-              <td className="py-2 pr-3">
-                <RunnerNameLink id={row.runnerId} name={row.name} />
-              </td>
-              <td className="py-2 pr-3">{row.categoryName}</td>
-              <td className="py-2 pr-3 tabular-nums">{row.categoryRank}.</td>
-              <td className="py-2 font-display font-semibold text-race-accent">
-                <Link
-                  href={`/results/${year}#${row.runnerId}` as never}
-                  className="hover:underline"
-                >
-                  {formatRaceTime(row.time)}
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mt-3 flex flex-col gap-6" data-testid="club-year-results">
+      {groups.map((group) => (
+        <div key={group.sex}>
+          <h4 className={yearGroupBarClass}>{group.title}</h4>
+          <div className="overflow-x-auto">
+            <table
+              className="w-full border-collapse text-left text-sm sm:table-fixed"
+              data-testid={`club-year-results-${group.sex}`}
+            >
+              <colgroup>
+                <col className="sm:w-[10%]" />
+                <col className="sm:w-[34%]" />
+                <col className="hidden sm:table-column sm:w-[24%]" />
+                <col className="sm:w-[20%]" />
+                <col className="sm:w-[12%]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-race-line text-xs font-semibold uppercase tracking-wide text-race-dim">
+                  <th className="w-[1%] whitespace-nowrap py-2 pr-3">{copy.rank}</th>
+                  <th className="py-2 pr-3">{copy.name}</th>
+                  <th className="hidden py-2 pr-3 sm:table-cell">{copy.category}</th>
+                  <th className="w-[1%] whitespace-nowrap py-2 pr-3">{copy.categoryRank}</th>
+                  <th className="w-[1%] whitespace-nowrap py-2">{copy.time}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.rows.map((row) => (
+                  <tr key={row.runnerId} className="border-b border-race-line/40">
+                    <td className="w-[1%] whitespace-nowrap py-2 pr-3 tabular-nums text-race-dim">
+                      {row.rank}.
+                    </td>
+                    <td className="py-2 pr-3">
+                      <RunnerNameLink id={row.runnerId} name={row.name} />
+                      <span className="mt-px block text-xs text-race-muted sm:hidden">
+                        {row.categoryName}
+                      </span>
+                    </td>
+                    <td className="hidden py-2 pr-3 sm:table-cell">{row.categoryName}</td>
+                    <td className="w-[1%] whitespace-nowrap py-2 pr-3 tabular-nums">
+                      {row.categoryRank}.
+                    </td>
+                    <td className="w-[1%] whitespace-nowrap py-2 font-display font-semibold text-race-accent">
+                      <Link
+                        href={`/results/${year}#${row.runnerId}` as never}
+                        className="hover:underline"
+                      >
+                        {formatRaceTime(row.time)}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -441,6 +477,8 @@ export default async function ClubPage({ params, searchParams }: PageProps) {
                   categoryRank: copy("categoryRank"),
                   time: copy("time"),
                   empty: copy("yearResultsEmpty"),
+                  men: copy("men"),
+                  women: copy("women"),
                 }}
               />
               <Link

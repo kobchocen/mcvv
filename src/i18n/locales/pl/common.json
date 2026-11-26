@@ -91,6 +91,12 @@
         }
       ]
     },
+    "news": {
+      "eyebrow": "Nowość {n}. edycji",
+      "title": "Rywalizacja drużynowa",
+      "body": "Od tego roku obok zawodników indywidualnych punktują także drużyny we wszystkich kategoriach. Liczy się wynik, a nie liczba osób w klubie. Nagroda dla zwycięskiej drużyny. Rywalizację drużynową wspiera IONTMAX.",
+      "linkLabel": "Zasady rywalizacji drużynowej"
+    },
     "overview": {
       "eyebrow": "01 — O biegu",
       "title": "To nie jest tylko bieg. To jest wyzwanie.",
@@ -529,7 +535,142 @@
   "Instructions": {
     "eyebrow": "{n}. edycja",
     "title": "Komunikat",
-    "status": "Komunikat jest w przygotowaniu"
+    "tocTitle": "Na tej stronie",
+    "backToTop": "Do góry",
+    "mapAlt": "Mapa trasy Malá cena Velké Verandy",
+    "sections": {
+      "organizer": {
+        "title": "Organizator",
+        "paragraphs": ["K.O.B. Choceň"],
+        "items": []
+      },
+      "race": {
+        "title": "Bieg",
+        "paragraphs": ["Leśny bieg przełajowy Malá cena Velké Verandy"],
+        "items": []
+      },
+      "date": {
+        "title": "Data",
+        "paragraphs": ["niedziela, 6 grudnia 2026"],
+        "items": []
+      },
+      "place": {
+        "title": "Miejsce",
+        "paragraphs": ["Choceň - \"Velká Veranda\", 49°59'45\"N, 16°12'10\"E."],
+        "items": []
+      },
+      "parking": {
+        "title": "Parking",
+        "paragraphs": [
+          "Parking 1 - Na zakręcie drogi 315 z Choceň do Sruby (49°59'36.018\"N, 16°12'15.656\"E), pojemność parkingu jest ograniczona, prosimy stosować się do poleceń organizatora, jeśli przyjeżdżacie przez Choceň, skorzystajcie z parkingu nr 2.",
+          "Parking 2 - W Choceň, na Nábřeží krále Jiřího (49°59'40.238\"N, 16°12'45.698\"E), parking nie jest zorganizowany, przestrzegajcie przepisów ruchu drogowego.",
+          "Szkic z zaznaczonymi parkingami jest na mapie centrum zawodów (CZ)."
+        ],
+        "items": []
+      },
+      "distances": {
+        "title": "Odległości",
+        "paragraphs": [],
+        "items": [
+          "Centrum zawodów - parking 1: 400 m",
+          "Centrum zawodów - parking 2: 800 m",
+          "Centrum zawodów - dworzec ČD: 1,8 km",
+          "Centrum zawodów - start: 0 m",
+          "Centrum zawodów - meta: 0 m"
+        ]
+      },
+      "office": {
+        "title": "Biuro zawodów",
+        "paragraphs": ["Podzielone na dwa \"stanowiska\":"],
+        "items": [
+          "Zapisani zawodnicy z opłaconym wpisowym - odbiór numeru startowego w dowolnej chwili do swojego startu.",
+          "Nowe zgłoszenia - za wyższe wpisowe i tylko do 9:45."
+        ]
+      },
+      "bib": {
+        "title": "Numer startowy",
+        "paragraphs": [
+          "Numer startowy ze swoim nazwiskiem (tylko dla zapisanych wcześniej) i godziną startu otrzymacie w biurze zawodów. Bez numeru startowego nie zostaniecie dopuszczeni na start. Numer noście widocznie na piersi. W przeciwnym razie możecie zostać zdyskwalifikowani. Sędziowie na trasie mogą was bowiem nie zidentyfikować i zabraknie wam wtedy przejścia przez punkt kontrolny!"
+        ],
+        "items": []
+      },
+      "start": {
+        "title": "Start",
+        "paragraphs": [
+          "Start interwałowy parami co 15 sekund. Stawcie się na starcie punktualnie! Co najmniej 3 minuty przed swoją godziną startu. Każdy zawodnik sam odpowiada za to, że stawi się na starcie na czas. Czas biegu jest mierzony od godziny startu podanej na numerze startowym. Oficjalnym czasem biegu jest czas środkowoeuropejski (CET)."
+        ],
+        "items": []
+      },
+      "course": {
+        "title": "Trasa",
+        "paragraphs": [
+          "4 300 m leśnymi drogami i ścieżkami (400 m asfaltu), pagórkowaty profil (200 m przewyższenia), oznaczona czerwonymi tasiemkami, trasa jest taka sama dla wszystkich kategorii."
+        ],
+        "items": []
+      },
+      "refreshments": {
+        "title": "Poczęstunek",
+        "paragraphs": [
+          "Ciepły napój po biegu. Sprzedaż poczęstunku ze straganów o tradycyjnym asortymencie."
+        ],
+        "items": []
+      },
+      "facilities": {
+        "title": "Szatnie, WC",
+        "paragraphs": [
+          "Do dyspozycji tylko prowizoryczne zadaszenia (namioty) w centrum zawodów - ograniczona liczba, mobilne WC w centrum zawodów."
+        ],
+        "items": []
+      },
+      "medical": {
+        "title": "Służba medyczna",
+        "paragraphs": [
+          "Ratownik w centrum zawodów. Najbliższe szpitale to Ústí nad Orlicí albo Litomyšl."
+        ],
+        "items": []
+      },
+      "awards": {
+        "title": "Ogłoszenie wyników",
+        "paragraphs": [
+          "Nagrody pieniężne za 1. - 5. miejsce w kategoriach mężczyzn i kobiet (3 000 CZK, 2 000 CZK, 1 000 CZK, 500 CZK, 200 CZK) oraz za 1. - 3. miejsce w kategoriach weteranów (500 CZK, 300 CZK, 200 CZK). Nagrody rzeczowe dla najlepszej trójki w kategoriach dzieci i młodzieży."
+        ],
+        "items": []
+      },
+      "timetable": {
+        "title": "Harmonogram",
+        "paragraphs": [],
+        "items": [
+          "9:00 - otwarcie biura zawodów",
+          "9:45 - koniec przyjmowania nowych zgłoszeń",
+          "10:15 - start pierwszych zawodników",
+          "11:55 - start ostatniego zawodnika",
+          "12:15 - meta ostatniego zawodnika",
+          "12:20 — ogłoszenie wyników i loteria fantowa"
+        ]
+      },
+      "privacy": {
+        "title": "Ochrona danych osobowych, filmowanie i fotografowanie",
+        "paragraphs": [
+          "Zapisując się na ten bieg, każdy uczestnik zgadza się na publikację swoich danych osobowych w zakresie zgłoszenia na bieg, w postaci listy zapisanych, listy startowej i listy wyników na stronie biegu oraz w centrum zawodów. W trakcie imprezy będą wykonywane reporterskie fotografie i nagrania (w tym z użyciem bezzałogowego drona) służące informowaniu opinii publicznej o rozegranym biegu, promocji biegu albo rozliczeniu dotacji na imprezę itd., zgodnie z obowiązującymi przepisami. Mogą tu być też wykonywane fotografie na własny użytek uczestników biegu (jako pamiątka zawodów, do promocji klubów sportowych itp.), zwłaszcza z ogłaszania wyników i z trasy biegu. Jeśli nie zgadzacie się na fotografowanie albo filmowanie, powiedzcie o tym wprost fotografowi lub operatorowi kamery."
+        ],
+        "items": []
+      },
+      "notice": {
+        "title": "Uwaga",
+        "paragraphs": [
+          "Prowadzenie działalności sprzedażowej lub promocyjnej (z wyjątkiem promocji imprez sportowych) jest możliwe tylko za zgodą dyrektora zawodów.",
+          "Ze względu na swój charakter bieg nie jest odpowiedni dla dzieci poniżej sześciu lat. Na listę wyników zostanie wpisany tylko zawodnik, który pokona całą trasę bez pomocy innej osoby."
+        ],
+        "items": []
+      },
+      "spectators": {
+        "title": "Dla widzów",
+        "paragraphs": [
+          "Zawodników można oglądać i dopingiem tworzyć im właściwą atmosferę zarówno w arenie mety (są tam poczęstunek, serwis wyników i komunikaty międzyczasów), jak i oczywiście na trasie. Tu polecamy iść dalej leśną drogą (Formanka) prowadzącą na Verandę od parkingu nr 1, dalej na północny zachód około 400 m pod górę, gdzie skręcicie w prawo w leśną ścieżkę i po niecałych 100 m traficie na trasę biegu. Oprócz pozostania tam można iść dalej aż na szczyt Sutiny (1. wzgórze - najszybsi są tu około 90 s od startu) albo skręcić w lewo trasą (pod prąd) i dojść aż na Hřebínek, wierzchołek ostatniego, czwartego wzgórza (najszybsi są tu około 13 minut po starcie). Poruszając się po trasie, uważajcie proszę na trwający bieg i zostawcie zawodnikom dość miejsca."
+        ],
+        "items": []
+      }
+    }
   },
   "ResultsCurrent": {
     "eyebrow": "{n}. edycja",
@@ -584,7 +725,12 @@
     "colBirth": "Rocznik",
     "colClub": "Klub",
     "colStarts": "Starty",
-    "colRecord": "PB"
+    "colRecord": "PB",
+    "clubMetaTitle": "{club} · zapisani zawodnicy",
+    "clubMetaDescription": "Zapisani zawodnicy klubu {club} na {n}. edycję Malá cena Velké Verandy.",
+    "clubTotal": "{count, plural, one {# zapisany zawodnik} few {# zapisanych zawodników} many {# zapisanych zawodników} other {# zapisanego zawodnika}}",
+    "clubProfile": "Profil klubu",
+    "backToList": "Zapisani zawodnicy"
   },
   "Entries": {
     "messagesCount": "{count, plural, one {# wiadomość} few {# wiadomości} many {# wiadomości} other {# wiadomości}}",
@@ -621,6 +767,17 @@
     "remove": "Usuń",
     "quickAddTitle": "{name}, rocznik {year}",
     "quickAdd": "Szybki wybór",
+    "quickHint": "Zawodnika, którego nie chcesz już widzieć w propozycjach, usuń krzyżykiem. Ze zgłoszeń ani wyników nic nie zostanie usunięte.",
+    "quickHide": "Nie proponuj już: {name}",
+    "quickHiddenNotice": "Nie proponujemy już: {name}.",
+    "quickUndo": "Cofnij",
+    "quickHiddenToggle": "Ukryci zawodnicy ({count})",
+    "quickHiddenShow": "pokaż",
+    "quickHiddenCollapse": "zwiń",
+    "quickRestore": "Przywróć do propozycji: {name}",
+    "quickRestoreAll": "Przywróć wszystkich",
+    "quickAllHidden": "Wszyscy zawodnicy z szybkiego wyboru są ukryci.",
+    "quickError": "Nie udało się zapisać zmiany. Spróbuj ponownie.",
     "newRunner": "Nowy zawodnik",
     "firstName": "Imię",
     "lastName": "Nazwisko",
@@ -828,10 +985,91 @@
     "runners": "Zawodnicy",
     "editions": "Edycje",
     "years": "Lata",
+    "sortBy": "Sortuj według: {column}",
+    "sortedBy": "Posortowano według: {column}, {direction}. Kliknij, aby zmienić kierunek.",
+    "sortAscending": "rosnąco",
+    "sortDescending": "malejąco",
+    "sortedCaption": "Posortowano według: {column} ({direction})",
     "pages": "Strony listy klubów",
     "previous": "Poprzednia",
     "next": "Następna",
-    "page": "Strona {page}"
+    "page": "Strona {page}",
+    "listMetaTitle": "Lista klubów",
+    "listTitle": "Lista klubów",
+    "listLead": "Wyszukiwanie i sortowanie wszystkich klubów, których zawodnicy ukończyli Małą Nagrodę Wielkiej Werandy.",
+    "suggestLabel": "Podpowiedzi nazw klubów",
+    "suggestHint": "Zacznij wpisywać nazwę, także dawną. Podpowiedzi pomagają uzupełnić wyszukiwanie.",
+    "hubMetaTitle": "Kluby — ciekawe spojrzenia",
+    "hubIntro": "Serie startów, wielkości ekip, zwycięstwa kategoriowe i inne spojrzenia na kluby.",
+    "hubLead": "W {editions} edycjach jest {starts} finiszy w barwach {clubs, plural, one {# klubu} few {# klubów} many {# klubów} other {# klubu}}.",
+    "unlinkedNote": "Kolejnych {count} finiszy nie jest przypisanych do żadnego klubu.",
+    "navLabel": "Widoki klubów",
+    "viewOverview": "Przegląd",
+    "viewStreaks": "Serie",
+    "viewLoyal": "Wierność",
+    "viewExpeditions": "Ekipy",
+    "viewNewcomers": "Debiutanci i powroty",
+    "viewMedals": "Zwycięstwa kategoriowe",
+    "viewSmall": "Małe kluby",
+    "viewVeterans": "Weterani",
+    "viewList": "Lista",
+    "counterClubs": "klubów",
+    "counterEditions": "edycji",
+    "counterStarts": "finiszy w barwach klubu",
+    "counterStreak": "lat z rzędu na starcie mają K.O.B. Choceň i AC Choceň",
+    "streaksTitle": "Najdłuższe serie startów",
+    "streaksLead": "Ile edycji z rzędu klub miał w mecie przynajmniej jednego finiszerów. Dwa kluby z Chocni nie opuściły ani jednej edycji.",
+    "streaksCol": "Seria",
+    "loyalTitle": "Najwierniejsze kluby",
+    "loyalLead": "Liczba edycji z finiszerem, także z przerwami.",
+    "loyalMissed": "Opuszczone",
+    "expeditionsTitle": "Największe ekipy",
+    "expeditionsLead": "Liczba finiszerów jednego klubu w jednym roku, z listy wyników, nie ze startowej.",
+    "expeditionsMax": "Historyczne maksimum klubu",
+    "expeditionsAll": "Największe ekipy według roku",
+    "startListNote": "Tegoroczna lista startowa nie została jeszcze opublikowana. Gdy się ukaże, pokażemy ekipę obok rekordu — nie jako ranking zgłoszeń.",
+    "newcomersTitle": "Debiutanci i powroty",
+    "newcomersLead": "W roku {year} w mecie po raz pierwszy pojawiło się {newcomers, plural, one {# klub} few {# kluby} many {# klubów} other {# klubu}}, a po przerwie wróciło {returns, plural, one {# klub} few {# kluby} many {# klubów} other {# klubu}}.",
+    "newcomersHeading": "Nowe kluby w {year}",
+    "returnsHeading": "Powroty w {year}",
+    "returnsGap": "Przerwa",
+    "returnsLast": "Ostatnio",
+    "yearsCount": "{count, plural, one {# rok} few {# lata} many {# lat} other {# roku}}",
+    "medalsTitle": "Zwycięstwa kategoriowe członków klubu",
+    "medalsLead": "Indywidualne zwycięstwa i miejsca na podium w kategoriach, przypisane do ujednoliconego klubu. Mężczyźni i kobiety zawsze osobno.",
+    "medalsNote": "To nie są oficjalne tytuły rywalizacji drużynowej. Ta rywalizacja liczy dokładną nazwę z listy danego roku i nie sumuje wariantów nazwy.",
+    "wins": "Zwycięstwa",
+    "podiums": "Podium",
+    "men": "Mężczyźni",
+    "women": "Kobiety",
+    "smallTitle": "Małe kluby, wielkie wyniki",
+    "smallLead": "Kluby, które przy małej ekipie często sięgają po zwycięstwa kategoriowe. Pokazujemy udział zwycięstw w liczbie finiszy (co najmniej 20).",
+    "winRate": "Zwycięstwa na finisz",
+    "podiumRate": "Podium na finisz",
+    "veteransTitle": "Weterani w klubach",
+    "veteransLead": "Członkowie Klubu weteranów MCVV (więcej finiszy niż połowa edycji z wynikami, obecnie {threshold}+) według klubu, dla którego mają najwięcej finiszy.",
+    "veteransCount": "Weteranów",
+    "veteransExamples": "Przykłady",
+    "veteransAll": "Pełna lista weteranów",
+    "jubileesTitle": "Jubileusze, jeśli wystartują w {year}",
+    "jubileeNth": "{n}. edycja",
+    "toList": "Lista klubów z wyszukiwaniem",
+    "openProfile": "Profil klubu",
+    "colYear": "Rok",
+    "colSize": "Finiszerów",
+    "emptyView": "W tym widoku nie ma jeszcze danych.",
+    "viewJubilees": "Jubileusze",
+    "showMore": "Pokaż więcej",
+    "showMoreCount": "Pokaż więcej ({count})",
+    "moreView": "Pełny widok",
+    "moreList": "Otwórz listę",
+    "expeditionsUnit": "finisherów",
+    "expeditionsChart": "Największa wyprawa rocznika",
+    "cardReturn": "Najciekawszy powrót: {club} {gap}",
+    "veteransUnit": "weteranów",
+    "hubViewMetaTitle": "{view} — Kluby",
+    "cardReturnGap": "{count, plural, one {po # roku} few {po # latach} many {po # latach} other {po # roku}}",
+    "hubLeadUnlinked": "W {editions} edycjach jest {starts} finiszy w barwach {clubs, plural, one {# klubu} few {# klubów} many {# klubów} other {# klubu}}, a kolejne {unlinked} zostało bez klubu."
   },
   "Messages": {
     "title": "Wiadomości",
@@ -982,7 +1220,7 @@
       "women": "Kobiety na trasie",
       "womenUnit": "wszystkich startów",
       "womenPeak": "szczyt {year}: {share}",
-      "clubs": "Najwierniejszy klub",
+      "clubs": "Kluby",
       "together": "Razem na trasie",
       "togetherUnit": "godzin biegu",
       "togetherNote": "≈ {days} dni biegu bez przerwy · {climb} km podbiegów ({starts} × {metres} m)",
@@ -994,8 +1232,13 @@
       "moreAttendance": "Frekwencja ogółem",
       "moreAges": "Rekordy według wieku",
       "moreTimes": "Najlepsze czasy",
-      "moreClubs": "Wszystkie kluby",
-      "footnote": "Dystans = starty × {km} km (wszystkie kategorie biegną tę samą trasę), podbiegi = starty × {metres} m. Nazwiska według aktualnego rekordu zawodnika."
+      "moreClubs": "Spojrzenia i ciekawostki",
+      "footnote": "Dystans = starty × {km} km (wszystkie kategorie biegną tę samą trasę), podbiegi = starty × {metres} m. Nazwiska według aktualnego rekordu zawodnika.",
+      "moreTeams": "Zwycięzcy rywalizacji drużynowej",
+      "teams": "Rywalizacja drużynowa",
+      "clubsUnit": "klubów",
+      "clubsNote": "Najdłuższa seria: {streak} edycji z rzędu",
+      "clubsNav": "Kluby"
     },
     "eyebrow": "Statystyki",
     "colName": "Zawodnik",
@@ -1066,7 +1309,75 @@
       "colForeign": "Zawodnicy z zagranicy",
       "colUnknown": "Nie podano",
       "unknown": "Nie podano"
+    },
+    "tymy": {
+      "nav": "Drużyny",
+      "title": "Rywalizacja drużynowa",
+      "intro": "Zwycięzcy edycji 1993–2025 przeliczeni według zasad rywalizacji drużynowej 2026. Drużyna to klub tak, jak jest zapisany w wynikach danego roku.",
+      "colWinner": "Zwycięska drużyna",
+      "colPoints": "Punkty",
+      "colFinishers": "Finiszerów",
+      "tileMore": "Lista zwycięzców"
     }
+  },
+  "Teams": {
+    "title": "Rywalizacja drużynowa",
+    "nav": "Drużyny",
+    "rulesEyebrow": "{n}. edycja · {when}",
+    "lead": "Od tego roku obok zawodników indywidualnych punktują także drużyny we wszystkich kategoriach. Liczy się wynik, a nie liczba osób w klubie. Nowość {n}. edycji — bonus poza komunikatem zawodów 2026.",
+    "sectionTeam": "Drużyna",
+    "teamDef": "Drużyna to klub dokładnie taki, jaki wpisano w zgłoszeniu.",
+    "entryDuty": "Za poprawność danych w zgłoszeniu odpowiada zawodnik. W aplikacji zgłoszeniowej użyj podpowiedzi nazw, aby zapis zgadzał się z pozostałymi członkami drużyny.",
+    "noClub": "Zawodnicy bez wpisanego klubu nie są liczeni w rywalizacji drużynowej.",
+    "sectionScoring": "Punktacja",
+    "scoringRules": "Liczą się tylko sklasyfikowani finiszerzy (oficjalny czas na mecie). Z każdej kategorii do sumy drużyny wlicza się najwyżej jeden zawodnik drużyny (ten z najwyższą liczbą punktów).",
+    "otherCats": "Pozostałe kategorie — miejsca 1.–5.",
+    "mainCats": "Mężczyźni i kobiety — miejsca 1.–10.",
+    "place": "Miejsce",
+    "points": "Punkty",
+    "sum": "Wynik drużyny to suma wliczonych punktów.",
+    "sectionRanking": "Klasyfikacja",
+    "rankingRules": "Do klasyfikacji wchodzi tylko drużyna, która ma na mecie co najmniej trzech sklasyfikowanych finiszerów. Dyskwalifikacje, wycofania i DNS nie liczą się ani do tego minimum, ani do punktów.",
+    "sectionTie": "Równość punktów",
+    "tieRules": "Przy równości punktów rozstrzyga większa liczba lepszych miejsc wśród wliczonych wyników: najpierw więcej pierwszych miejsc, potem drugich i tak dalej. Jeśli i ten ciąg miejsc jest identyczny, drużyny dzielą miejsce.",
+    "sectionPrize": "Ogłoszenie i nagroda",
+    "announcement": "Zwycięską drużynę ogłosimy na miejscu o 12:20 razem z pozostałymi wynikami. Nagroda dla zwycięskiej drużyny.",
+    "prizeWaiver": "Jeśli wygra K.O.B. Choceň jako organizator, zrzeka się nagrody na rzecz drugiej drużyny.",
+    "officialPublish": "Oficjalną klasyfikację opublikujemy z wynikami na mcvv.org.",
+    "sponsorLabel": "Sponsor rywalizacji drużynowej",
+    "sponsorTitle": "Rywalizację drużynową wspiera IONTMAX",
+    "sponsorWebsite": "Oficjalna strona sponsora",
+    "historyLink": "Historyczna lista zwycięzców 1993–2025",
+    "historyLinkNote": "przeliczenie według zasad 2026",
+    "rulesLink": "Zasady rywalizacji drużynowej",
+    "winnersLink": "Lista zwycięzców",
+    "historicalNote": "Obliczenie według zasad rywalizacji drużynowej 2026, zastosowane do historycznej listy wyników. Drużyna to nazwa klubu tak, jak jest na liście tego roku.",
+    "provisionalChip": "Zasady 2026",
+    "liveChip": "Na żywo",
+    "officialChip": "Oficjalne",
+    "colRank": "Miejsce",
+    "colTeam": "Drużyna",
+    "colPoints": "Punkty",
+    "colFinishers": "Finiszerów",
+    "colCounted": "Wliczone wyniki",
+    "colYear": "Rok",
+    "colWinner": "Zwycięska drużyna",
+    "pointsAbbr": "{points} pkt",
+    "finishersAbbr": "{count, plural, one {# finiszer} few {# finiszerów} many {# finiszerów} other {# finiszerów}}",
+    "marginPoints": "Przewaga {lead} pkt",
+    "marginPlaces": "Remis punktowy z {team}, rozstrzygają lepsze miejsca",
+    "unclassified": "Niesklasyfikowane drużyny (mniej niż 3 finiszerów)",
+    "winningTeam": "Zwycięska drużyna",
+    "statsTitle": "Rywalizacja drużynowa",
+    "statsIntro": "Historyczna lista zwycięzców przeliczenia 1993–2025 według zasad rywalizacji drużynowej 2026.",
+    "statsNav": "Drużyny",
+    "announcedAt": "Ogłoszono o 12:20",
+    "announcedVsOfficial": "Ogłoszenie o 12:20 i oficjalna klasyfikacja po publikacji różnią się.",
+    "alertNew": "Finisz zawodnika {name} przesunął drużynę {team} na prowadzenie w rywalizacji drużynowej. {margin}",
+    "alertHeld": "Finisz zawodnika {name} utrzymał drużynę {team} na prowadzeniu. {margin}",
+    "alertMoved": "Finisz zawodnika {name} przesunął drużynę {team} na {rank}. miejsce.",
+    "prizeLive": "Nagroda dla zwycięskiej drużyny. Jeśli wygra K.O.B. Choceň jako organizator, zrzeka się nagrody na rzecz drugiej drużyny.",
+    "when2026": "niedziela 6.12.2026, Choceň"
   },
   "LanguageSwitcher": {
     "label": "Język"
@@ -1134,7 +1445,7 @@
       {
         "image": "08-rychla-nabidka.jpg",
         "title": "Szybki wybór – zawodnicy z poprzednich lat",
-        "text": "<b>Rychlá nabídka</b> (Szybki wybór) pokazuje wszystkich zawodników, których zgłaszałeś z tego e-maila w poprzednich latach. Wystarczy ich kliknąć – kategoria i opłata uzupełnią się automatycznie.",
+        "text": "<b>Rychlá nabídka</b> (Szybki wybór) pokazuje wszystkich zawodników, których zgłaszałeś z tego e-maila w poprzednich latach. Wystarczy ich kliknąć – kategoria i opłata uzupełnią się automatycznie. Zawodnika, którego nie chcesz już widzieć w propozycjach, usuniesz krzyżykiem; ukrytych zawodników można przywrócić.",
         "tip": "Zgłaszasz klub? Najpierw zmień nazwę zgłoszenia na nazwę klubu i zapisz. Zawodnicy przejmują klub z nazwy zgłoszenia."
       },
       {

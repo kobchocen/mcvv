@@ -6,7 +6,7 @@ import { McvvStatsPage, type McvvHomepageContent } from "@/components/templates"
 import { isStaffRole, getSession } from "@/lib/auth/session";
 import { isStatSlug, STAT_SLUGS } from "@/lib/stats/queries";
 import { loadStatsSlug } from "@/lib/stats/tables";
-import { STATS_OVERVIEW_SLUG } from "@/components/molecules";
+import { STATS_OVERVIEW_SLUG, withClubsNavItem } from "@/components/molecules";
 import { type Locale } from "@/i18n/routing";
 
 type PageProps = Readonly<{
@@ -33,6 +33,7 @@ export default async function StatsSlugPage({ params }: PageProps) {
 
   const home = await getTranslations({ locale, namespace: "Home" });
   const stats = await getTranslations({ locale, namespace: "Stats" });
+  const teams = await getTranslations({ locale, namespace: "Teams" });
   const { tables, chart, chartCaption } = await loadStatsSlug(slug, stats, locale);
   const session = await getSession();
   const print =
@@ -47,6 +48,7 @@ export default async function StatsSlugPage({ params }: PageProps) {
       eyebrow={stats("eyebrow")}
       title={stats(`${slug}.title`)}
       intro={stats(`${slug}.intro`)}
+      rulesLink={slug === "tymy" ? { href: "/souteze-tymu", label: teams("rulesLink") } : undefined}
       tables={tables}
       chart={chart}
       chartCaption={chartCaption}
@@ -58,10 +60,13 @@ export default async function StatsSlugPage({ params }: PageProps) {
       statsNav={{
         current: slug,
         ariaLabel: stats("navLabel"),
-        items: [
-          { slug: STATS_OVERVIEW_SLUG, label: stats("overview.nav") },
-          ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
-        ],
+        items: withClubsNavItem(
+          [
+            { slug: STATS_OVERVIEW_SLUG, label: stats("overview.nav") },
+            ...STAT_SLUGS.map((item) => ({ slug: item, label: stats(`${item}.nav`) })),
+          ],
+          stats("overview.clubsNav"),
+        ),
       }}
     />
   );

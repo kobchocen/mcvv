@@ -51,6 +51,10 @@ export type AuditAction =
   | "entry.late_submitted"
   // Admin u odeslané nezaplacené pozdní přihlášky: lhůta +60 min (detail před / po).
   | "entry.late_extended"
+  // Rychlá nabídka na /prihlasky (MD-31): přihlašující skryl / vrátil běžce, cíl `user:<id>`,
+  // detail = id a jméno běžce. Jen preference účtu, mimo denní souhrn změn přihlášek.
+  | "account.quick_hidden"
+  | "account.quick_restored"
   // Závodní kancelář (#207): prodejky a ceník. Spárování z Fio je v mcvv_bank_tx (bez auditu).
   | "sale.created"
   | "sale.paid_cash"

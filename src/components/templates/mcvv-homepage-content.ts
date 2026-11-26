@@ -119,6 +119,13 @@ export type McvvHomepageContent = {
     enrolledAria: string;
     stats: StatItem[];
   };
+  news: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    linkLabel: string;
+    href: "/souteze-tymu";
+  };
   overview: {
     eyebrow: string;
     title: string;

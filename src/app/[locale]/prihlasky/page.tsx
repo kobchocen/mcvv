@@ -10,7 +10,7 @@ import { McvvEntryHeaderForm } from "@/components/organisms/mcvv-entry-header-fo
 import { McvvClubDatalist } from "@/components/organisms/mcvv-club-datalist";
 import { McvvLineClubSelect } from "@/components/organisms/mcvv-line-club-select";
 import { McvvNewRunnerForm } from "@/components/organisms/mcvv-new-runner-form";
-import { McvvQuickAdd } from "@/components/organisms/mcvv-quick-add";
+import { McvvQuickAdd, type QuickAddCopy } from "@/components/organisms/mcvv-quick-add";
 import {
   EntryHeading,
   LateBibCards,
@@ -152,7 +152,7 @@ async function EntryBody({
   const email = session.email;
   // Nezávislá data souběžně (#189): stránka se po každé akci v přihlášce vykresluje znovu.
   const [entry, categories, noMail, clubOptions, messageSettings] = await Promise.all([
-    loadMyEntry(email),
+    loadMyEntry(email, session.id),
     prisma.category.findMany({ orderBy: { sort: "asc" } }),
     // Souhlas se zasíláním informací patří účtu (dřív jen přihlášce).
     loadAccountPromotionOptOut(email),
@@ -160,7 +160,8 @@ async function EntryBody({
     loadClubOptions(),
     getMessageSettings(),
   ]);
-  const { year, open, deadline, registration, cancelled, past, quick, payments } = entry;
+  const { year, open, deadline, registration, cancelled, past, quick, quickHidden, payments } =
+    entry;
   const { slot, writable, entries, locked, slots, awaiting } = entry;
   // Q346: formuláře jen u přihlášky, kterou lze měnit (běžící termín); jinak jen čtení.
   const editable = open && writable;
@@ -398,16 +399,14 @@ async function EntryBody({
             <p className="mt-2 max-w-2xl text-sm text-race-muted">
               {entries.length > 0 ? copy("addAnotherEntryHint") : copy("noRegistrationHint")}
             </p>
-            {quick.length > 0 ? (
+            {quick.length > 0 || quickHidden.length > 0 ? (
               <McvvQuickAdd
                 year={year}
                 registrationId={null}
                 runners={quick}
+                hidden={quickHidden}
                 clubName={defaultClubName}
-                copy={{
-                  quickAdd: copy("quickAdd"),
-                  runnerTitle: copy.raw("quickAddTitle") as string,
-                }}
+                copy={quickAddCopy(copy)}
               />
             ) : null}
             <div className="mt-8">
@@ -660,13 +659,14 @@ async function EntryBody({
           </table>
         </div>
 
-        {editable && quick.length > 0 ? (
+        {editable && (quick.length > 0 || quickHidden.length > 0) ? (
           <McvvQuickAdd
             year={year}
             registrationId={registration.id}
             runners={quick}
+            hidden={quickHidden}
             clubName={defaultClubName}
-            copy={{ quickAdd: copy("quickAdd"), runnerTitle: copy.raw("quickAddTitle") as string }}
+            copy={quickAddCopy(copy)}
           />
         ) : null}
 
@@ -754,6 +754,25 @@ async function EntryBody({
 }
 
 type EntriesCopy = Awaited<ReturnType<typeof getTranslations>>;
+
+/** Texty rychlé nabídky (šablony s `{name}` / `{count}` se plní v komponentě). */
+function quickAddCopy(copy: EntriesCopy): QuickAddCopy {
+  return {
+    quickAdd: copy("quickAdd"),
+    runnerTitle: copy.raw("quickAddTitle") as string,
+    hint: copy("quickHint"),
+    hide: copy.raw("quickHide") as string,
+    hiddenNotice: copy.raw("quickHiddenNotice") as string,
+    undo: copy("quickUndo"),
+    hiddenToggle: copy.raw("quickHiddenToggle") as string,
+    hiddenShow: copy("quickHiddenShow"),
+    hiddenCollapse: copy("quickHiddenCollapse"),
+    restore: copy.raw("quickRestore") as string,
+    restoreAll: copy("quickRestoreAll"),
+    allHidden: copy("quickAllHidden"),
+    error: copy("quickError"),
+  };
+}
 
 function newRunnerCopy(copy: EntriesCopy) {
   return {

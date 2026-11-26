@@ -21,6 +21,10 @@ import type { Prisma } from "@prisma/client";
 import { intlTag } from "@/lib/i18n/locale";
 import { isPublicYear } from "@/lib/testmode/public-year";
 import { formatWeatherLine, weatherView } from "@/lib/editions/weather";
+import { getYearTeamCompetition, teamStandingsCopy } from "@/lib/teams";
+import { announcementDiff } from "@/lib/teams/snapshot";
+import { loadTeamAnnouncement } from "@/lib/teams/announcement";
+import { McvvTeamStandings } from "@/components/organisms/mcvv-team-standings";
 
 type PageProps = {
   params: Promise<{ locale: string; year: string }>;
@@ -136,6 +140,13 @@ export default async function ResultsYearPage({ params }: PageProps) {
     return recordT("finalTitle", { cats: cats.map((id) => catNames.get(id) ?? id).join(", ") });
   };
 
+  const teamYear = await getYearTeamCompetition(year);
+  const announcement = await loadTeamAnnouncement(year);
+  const announcementCompare =
+    announcement && teamYear
+      ? announcementDiff(announcement.official, teamYear.competition.official)
+      : null;
+
   const isCs = locale === "cs";
   // de/pl/uk (#273) use the ResultsArchive messages; cs/en keep their original wording.
   const translated = locale !== "cs" && locale !== "en";
@@ -143,6 +154,7 @@ export default async function ResultsYearPage({ params }: PageProps) {
   const home = await getTranslations({ locale, namespace: "Home" });
   const t = await getTranslations({ locale, namespace: "ResultsArchive" });
   const weatherT = await getTranslations({ locale, namespace: "Weather" });
+  const teamsT = await getTranslations({ locale, namespace: "Teams" });
   // PDF výsledků je česky (bez emoji – písmo PDF je nemá)
   const weatherCsT = await getTranslations({ locale: "cs", namespace: "Weather" });
   const title = translated
@@ -250,6 +262,14 @@ export default async function ResultsYearPage({ params }: PageProps) {
 
           {/* Category navigation buttons */}
           <div className="mb-3 flex flex-wrap gap-1">
+            {teamYear ? (
+              <a
+                href="#soutez-tymu"
+                className="rounded border border-race-accent/60 px-2 py-0.5 text-xs font-semibold text-race-accent transition hover:bg-race-forest"
+              >
+                {teamsT("title")}
+              </a>
+            ) : null}
             {orderedCats.map((cat) => (
               <a
                 key={cat.id}
@@ -293,6 +313,35 @@ export default async function ResultsYearPage({ params }: PageProps) {
               );
             })}
           </div>
+
+          {announcement ? (
+            <div
+              className="mt-10 rounded-lg border border-race-line/55 bg-race-surface px-4 py-3 text-sm"
+              data-testid="team-announcement"
+            >
+              <p className="font-display font-semibold text-foreground dark:text-white">
+                {teamsT("announcedAt")}
+              </p>
+              <ol className="mt-2 space-y-1 text-race-muted">
+                {announcement.official.map((row, index) => (
+                  <li key={`${row.team}-${index}`}>
+                    {row.rank}. {row.team} — {teamsT("pointsAbbr", { points: row.points })}
+                  </li>
+                ))}
+              </ol>
+              {announcementCompare?.changed ? (
+                <p className="mt-2 font-medium text-race-accent">{teamsT("announcedVsOfficial")}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {teamYear ? (
+            <McvvTeamStandings
+              year={year}
+              competition={teamYear.competition}
+              copy={teamStandingsCopy(teamsT)}
+            />
+          ) : null}
 
           {/* Floating back to top */}
           <a

@@ -110,3 +110,35 @@ export async function loadEditionResults(year: number): Promise<EditionResultRow
     clubName: row.clubRegistryName || row.clubName || null,
   }));
 }
+
+type InsightSqlRow = {
+  year: number | bigint;
+  runnerId: string;
+  runnerName: string | null;
+  runnerRegistryName: string | null;
+  clubId: string;
+  clubName: string | null;
+  clubRegistryName: string | null;
+  time: number | bigint;
+  categoryId: string;
+};
+
+/** One result row for club insights (category and time, same fallback as the directory). */
+export async function loadClubInsightInput(): Promise<import("./insights").ClubInsightInput[]> {
+  const rows = await prisma.$queryRaw<InsightSqlRow[]>`
+    SELECT t.rok AS year, t.bezec_id AS runnerId, t.bezec_name AS runnerName,
+           b.jmeno AS runnerRegistryName, t.klub_id AS clubId, t.klub_name AS clubName,
+           k.jmeno AS clubRegistryName, t.time AS time, t.kateg_id AS categoryId
+    FROM mcvv_time t
+    LEFT JOIN cis_klub k ON k.id = t.klub_id AND k.rok = t.rok
+    LEFT JOIN cis_bezec b ON b.id = t.bezec_id`;
+  return rows.map((row) => ({
+    year: Number(row.year),
+    runnerId: row.runnerId,
+    runnerName: runnerNameFor("stats", row.runnerName, row.runnerRegistryName),
+    clubId: row.clubId,
+    clubName: row.clubRegistryName || row.clubName || null,
+    time: Number(row.time),
+    categoryId: row.categoryId,
+  }));
+}

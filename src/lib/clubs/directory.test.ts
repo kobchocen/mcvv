@@ -3,9 +3,12 @@ import { describe, it } from "node:test";
 
 import { createClubResolver, type ClubNameRow } from "./core";
 import {
+  clubDirectoryDirectionQuery,
   computeClubDirectory,
   filterClubDirectory,
   isClubDirectorySort,
+  nextClubDirectoryDirection,
+  parseClubDirectoryDirection,
   sortClubDirectory,
   type ClubDirectoryInput,
 } from "./directory";
@@ -81,7 +84,7 @@ describe("filterClubDirectory / sortClubDirectory", () => {
     assert.equal(filterClubDirectory(list, "praha").length, 0);
   });
 
-  it("sorts by starts, name, editions and last year", () => {
+  it("sorts by starts, runners, name, editions and last year", () => {
     assert.deepEqual(
       sortClubDirectory(list, "nazev").map((club) => club.id),
       ["ACH", "CHC", "ZLN"],
@@ -94,7 +97,33 @@ describe("filterClubDirectory / sortClubDirectory", () => {
       sortClubDirectory(list, "posledni").map((club) => club.id),
       ["ZLN", "CHC", "ACH"],
     );
+    assert.deepEqual(
+      sortClubDirectory(list, "bezci").map((club) => club.id),
+      ["CHC", "ZLN", "ACH"],
+    );
+    assert.deepEqual(
+      sortClubDirectory(list, "bezci", "asc").map((club) => club.id),
+      ["ACH", "ZLN", "CHC"],
+    );
+    assert.deepEqual(
+      sortClubDirectory(list, "nazev", "desc").map((club) => club.id),
+      ["ZLN", "CHC", "ACH"],
+    );
     assert.ok(isClubDirectorySort("starty"));
+    assert.ok(isClubDirectorySort("bezci"));
     assert.ok(!isClubDirectorySort("drop table"));
+  });
+
+  it("encodes a direction in the URL only when it is not the column default", () => {
+    assert.equal(parseClubDirectoryDirection("", "starty"), "desc");
+    assert.equal(parseClubDirectoryDirection("vzestupne", "starty"), "asc");
+    assert.equal(parseClubDirectoryDirection("sestupne", "nazev"), "desc");
+    assert.equal(clubDirectoryDirectionQuery("starty", "desc"), undefined);
+    assert.equal(clubDirectoryDirectionQuery("starty", "asc"), "vzestupne");
+    assert.equal(clubDirectoryDirectionQuery("nazev", "asc"), undefined);
+    assert.equal(clubDirectoryDirectionQuery("nazev", "desc"), "sestupne");
+    assert.equal(nextClubDirectoryDirection("bezci", "starty", "desc"), "desc");
+    assert.equal(nextClubDirectoryDirection("starty", "starty", "desc"), "asc");
+    assert.equal(nextClubDirectoryDirection("starty", "starty", "asc"), "desc");
   });
 });

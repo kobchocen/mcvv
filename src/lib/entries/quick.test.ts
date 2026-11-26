@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { buildQuickList, withLastClub } from "./quick";
+import {
+  buildQuickList,
+  compareQuick,
+  QUICK_RUNNER_ID,
+  quickLabels,
+  splitQuickHidden,
+  withLastClub,
+} from "./quick";
 
 test("quick list is sorted by surname, then first name, Czech collation", () => {
   const list = buildQuickList([
@@ -59,4 +66,50 @@ test("quick add prefills the club id from the runner's latest registration", () 
     { id: "19900002", name: "Chalupa Adam", clubId: "CHC", clubName: "K.O.B. Choceň" },
     { id: "19900003", name: "Hruška Jan" },
   ]);
+});
+
+test("hidden runners are split off the quick list, order kept, unknown ids ignored", () => {
+  const list = buildQuickList([
+    { id: "19800025", name: "Komárek Josef" },
+    { id: "20150002", name: "Komárek Josef" },
+    { id: "19685008", name: "Barcalová Iva" },
+  ]);
+  const { visible, hidden } = splitQuickHidden(list, ["20150002", "19990001"]);
+  assert.deepEqual(
+    visible.map((row) => row.id),
+    ["19685008", "19800025"],
+  );
+  assert.deepEqual(
+    hidden.map((row) => row.id),
+    ["20150002"],
+  );
+  assert.deepEqual(splitQuickHidden(list, []).hidden, []);
+});
+
+test("namesakes (same name, different runner) get the birth year in the label", () => {
+  const labels = quickLabels([
+    { id: "19800025", name: "Komárek Josef" },
+    { id: "20150002", name: "Komárek Josef " },
+    { id: "19685008", name: "Barcalová Iva" },
+  ]);
+  assert.equal(labels.get("19800025"), "Komárek Josef (1980)");
+  assert.equal(labels.get("20150002"), "Komárek Josef (2015)");
+  assert.equal(labels.get("19685008"), "Barcalová Iva");
+});
+
+test("compareQuick matches buildQuickList order (client re-sorts after undo)", () => {
+  const rows = [
+    { id: "20150002", name: "Komárek Josef" },
+    { id: "19685008", name: "Barcalová Iva" },
+    { id: "19800025", name: "Komárek Josef" },
+  ];
+  assert.deepEqual([...rows].sort(compareQuick), buildQuickList(rows));
+});
+
+test("quick runner id: birth year + 4 characters", () => {
+  assert.ok(QUICK_RUNNER_ID.test("19800025"));
+  assert.ok(QUICK_RUNNER_ID.test("1979Q904"));
+  assert.ok(!QUICK_RUNNER_ID.test("1980002"));
+  assert.ok(!QUICK_RUNNER_ID.test("1980002' OR 1=1"));
+  assert.ok(!QUICK_RUNNER_ID.test("abcd0001"));
 });

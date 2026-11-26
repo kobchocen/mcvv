@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useCoarsePointer } from "@/hooks/use-mobile";
+
 import {
   addPunch,
   applyAck,
@@ -29,6 +31,7 @@ import {
   recentRecords,
   relativeTime,
 } from "@/lib/live/splits-screen-core";
+import { applyBibKey, bibInputMode, isBibSubmitKey } from "@/lib/live/splits-input";
 import { formatOffset } from "@/lib/live/start-check-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { isStartStation, type Station } from "@/lib/live/stations";
@@ -37,7 +40,6 @@ type Props = {
   stations: Station[];
   year: number;
   userId: number;
-  userName: string;
   zeroIso: string;
   intervalS: number;
   /** První číslo 2. startu (hranice koridorů z modelu ročníku). */
@@ -72,7 +74,6 @@ export function McvvSplitsClient({
   stations,
   year,
   userId,
-  userName,
   zeroIso,
   intervalS,
   secondStartFrom,
@@ -105,6 +106,15 @@ export function McvvSplitsClient({
   const inputRef = useRef<HTMLInputElement>(null);
   /** Běžící hodiny (#187); null do prvního tiku, aby SSR a klient nerenderovaly jiný čas. */
   const [now, setNow] = useState<number | null>(null);
+  const coarsePointer = useCoarsePointer();
+
+  // Virtual Keyboard API: typování Reactu atribut ještě nemá, na dotyku ho nastavíme ručně.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    if (coarsePointer) el.setAttribute("virtualkeyboardpolicy", "manual");
+    else el.removeAttribute("virtualkeyboardpolicy");
+  }, [coarsePointer]);
 
   const setQueue = useCallback(
     (update: (state: QueueState) => QueueState) => {
@@ -315,10 +325,8 @@ export function McvvSplitsClient({
   };
 
   const press = (key: string) => {
-    if (key === "C") setInput("");
-    else if (key === "⌫") setInput((value) => value.slice(0, -1));
-    else if (key === "OK") submit();
-    else setInput((value) => (value.length >= 3 ? value : (value + key).replace(/^0+/, "")));
+    if (isBibSubmitKey(key)) submit();
+    else setInput((value) => applyBibKey(value, key));
   };
 
   const chooseStation = (code: string) => {
@@ -392,20 +400,65 @@ export function McvvSplitsClient({
           : "border-red-500/60 text-red-600 dark:text-red-400";
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
-      <header className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-3 pb-4 pt-2 sm:gap-3 sm:pb-8 sm:pt-4">
+      <header className="flex flex-col gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-2">
           <Link
             href="/"
             data-testid="back-link"
             aria-label={t("backAria")}
-            className="inline-flex h-9 items-center text-sm font-semibold text-race-accent hover:underline"
+            className="inline-flex h-8 shrink-0 items-center text-sm font-semibold text-race-accent hover:underline"
           >
-            ← mcvv.org
+            <span className="sm:hidden">←</span>
+            <span className="hidden sm:inline">← mcvv.org</span>
           </Link>
+          <h1 className="min-w-0 flex-1 font-display text-lg font-bold leading-tight text-foreground dark:text-white sm:text-2xl">
+            {t("titleShort")}
+            <span data-testid="station-heading" className="font-semibold text-race-accent">
+              {" "}
+              · {atStart ? t("startStation") : stationLabel}
+            </span>
+          </h1>
+          <div className="shrink-0 text-right" data-testid="clock">
+            <p
+              aria-label={t("now")}
+              className="font-display text-xl font-bold leading-none tabular-nums text-foreground dark:text-white sm:text-3xl"
+            >
+              <time suppressHydrationWarning>
+                {now === null ? "--:--:--" : clock(correctedNow(now, offset))}
+              </time>
+            </p>
+            {offset === null ? (
+              <p className="mt-0.5 text-[11px] text-race-muted">{t("clockDevice")}</p>
+            ) : null}
+          </div>
+        </div>
+        {stations.length > 1 ? (
+          <div role="radiogroup" aria-label={t("station")} className="flex flex-wrap gap-1.5">
+            {stations.map((s) => (
+              <button
+                key={s.code}
+                type="button"
+                role="radio"
+                aria-checked={s.code === station}
+                onClick={() => chooseStation(s.code)}
+                className={`h-8 px-2.5 text-sm font-semibold ${
+                  s.code === station
+                    ? "border border-race-accent bg-race-accent-solid text-white"
+                    : "border border-race-line/60 bg-race-surface text-foreground"
+                }`}
+              >
+                {isStartStation(s.code)
+                  ? t("startStation")
+                  : t("stationLabel", { label: s.label, code: s.code })}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <span
             data-testid="sync-status"
-            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+            className={`rounded-full border px-2 py-0.5 font-semibold ${
               online && pending === 0
                 ? "border-race-accent/60 text-race-accent"
                 : online
@@ -413,76 +466,29 @@ export function McvvSplitsClient({
                   : "border-red-500/60 text-red-600 dark:text-red-400"
             }`}
           >
-            {online ? t("online") : t("offline")} · {t("queued", { count: pending })}
+            {online ? t("online") : t("offline")}
+            {pending > 0 || !online ? ` · ${t("queued", { count: pending })}` : ""}
+            {!online && lastSyncAt ? ` · ${t("lastSync", { time: clock(lastSyncAt) })}` : ""}
           </span>
-        </div>
-        <div className="flex items-end justify-between gap-2">
-          <h1 className="font-display text-2xl font-bold text-foreground dark:text-white">
-            {t("title", { year })}
-          </h1>
-          <div className="text-right" data-testid="clock">
-            <p
-              aria-label={t("now")}
-              className="font-display text-3xl font-bold leading-none tabular-nums text-foreground dark:text-white"
-            >
-              <time suppressHydrationWarning>
-                {now === null ? "--:--:--" : clock(correctedNow(now, offset))}
-              </time>
-            </p>
-            <p className="mt-1 text-[11px] text-race-muted">
-              {offset === null ? t("clockDevice") : t("clockCorrected")}
-            </p>
-          </div>
-        </div>
-        <div role="radiogroup" aria-label={t("station")} className="grid grid-cols-2 gap-2">
-          {stations.map((s) => (
-            <button
-              key={s.code}
-              type="button"
-              role="radio"
-              aria-checked={s.code === station}
-              onClick={() => chooseStation(s.code)}
-              className={`h-12 border text-base font-semibold ${
-                s.code === station
-                  ? "border-race-accent bg-race-accent-solid text-white"
-                  : "border-race-line/60 bg-race-surface text-foreground"
-              }`}
-            >
-              {isStartStation(s.code)
-                ? t("startStation")
-                : t("stationLabel", { label: s.label, code: s.code })}
-            </button>
-          ))}
-        </div>
-        <p
-          data-testid="counts"
-          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border border-race-line/50 bg-race-surface px-3 py-2 text-sm"
-        >
-          <span>
-            {atStart ? t("startStation") : stationLabel}:{" "}
-            <strong className="font-display text-lg tabular-nums">{counts.station}</strong>{" "}
+          <span data-testid="counts" className="text-race-muted">
+            <strong className="font-display text-sm tabular-nums text-foreground">
+              {counts.station}
+            </strong>{" "}
             {t("countRecorded", { count: counts.station })}
             {counts.stationSent !== counts.station
               ? ` (${t("countSaved", { count: counts.stationSent })})`
               : ""}
           </span>
-          <span className="text-race-muted">
-            {t("countTotalSent")}:{" "}
-            <strong className="font-display text-lg tabular-nums text-foreground">
-              {counts.totalSent}
-            </strong>
-          </span>
-        </p>
-        <p className="text-xs text-race-muted">
-          {t("operator", { name: userName })} ·{" "}
-          {offset === null ? t("clockUnknown") : t("clockOffset", { ms: offset })}
-          {lastSyncAt ? ` · ${t("lastSync", { time: clock(lastSyncAt) })}` : ""}
-          {zeroOverridden ? ` · ${t("testZero", { time: clock(zero.getTime()) })}` : ""}
-        </p>
+        </div>
+        {zeroOverridden ? (
+          <p className="text-xs text-race-muted">
+            {t("testZero", { time: clock(zero.getTime()) })}
+          </p>
+        ) : null}
         {atStart ? (
           <p
             data-testid="start-hint"
-            className="border border-sky-500/50 bg-sky-500/10 p-2 text-xs text-foreground"
+            className="border border-sky-500/50 bg-sky-500/10 px-2 py-1 text-xs text-foreground"
           >
             {t("startHint")}{" "}
             <span data-testid="start-limit">
@@ -493,7 +499,7 @@ export function McvvSplitsClient({
         {problem ? (
           <p
             role="alert"
-            className="border border-red-500/60 p-3 text-sm text-red-600 dark:text-red-400"
+            className="border border-red-500/60 p-2 text-sm text-red-600 dark:text-red-400"
           >
             {problem === "login" ? t("problemLogin") : t("problemForbidden")}{" "}
             {problem === "login" ? (
@@ -524,32 +530,46 @@ export function McvvSplitsClient({
           ref={inputRef}
           id="bib"
           data-testid="bib-input"
-          inputMode="numeric"
-          pattern="[0-9]*"
+          inputMode={bibInputMode(coarsePointer)}
+          enterKeyHint="done"
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          pattern={coarsePointer ? undefined : "[0-9]*"}
           autoFocus
           value={input}
           onChange={(event) => setInput(event.target.value.replace(/\D/g, "").slice(0, 3))}
+          onKeyDown={(event) => {
+            if (isBibSubmitKey(event.key)) {
+              event.preventDefault();
+              submit();
+            }
+          }}
           placeholder={t("bibPlaceholder")}
-          className="h-20 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-5xl font-bold tabular-nums text-foreground dark:text-white"
+          className="h-14 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-4xl font-bold tabular-nums text-foreground dark:text-white sm:h-16 sm:text-5xl"
         />
         <button
           type="submit"
           data-testid="submit"
-          className="h-20 w-28 shrink-0 bg-race-accent-solid font-display text-xl font-bold text-white hover:bg-race-accent-solid-hover"
+          className="h-14 w-24 shrink-0 bg-race-accent-solid font-display text-lg font-bold text-white hover:bg-race-accent-solid-hover sm:h-16 sm:w-28 sm:text-xl"
         >
           {t("submit")}
         </button>
       </form>
 
-      <div className="grid grid-cols-3 gap-2" aria-hidden="true">
+      <div
+        className="grid grid-cols-3 gap-1.5 sm:gap-2"
+        aria-hidden="true"
+        data-testid="bib-keypad"
+      >
         {["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "⌫"].map((key) => (
           <button
             key={key}
             type="button"
             tabIndex={-1}
             onClick={() => press(key)}
-            className="h-16 border border-race-line/60 bg-race-surface font-display text-3xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white"
+            className="h-11 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white sm:h-14 sm:text-3xl"
           >
             {key}
           </button>
@@ -559,15 +579,21 @@ export function McvvSplitsClient({
       <button
         type="button"
         onClick={stampOnly}
-        className="h-12 border border-dashed border-race-line bg-transparent text-sm font-semibold text-foreground"
+        className="h-9 border border-dashed border-race-line bg-transparent text-sm font-semibold text-foreground sm:h-11"
       >
         {t("stampOnly")}
         {drafts > 0 ? ` (${t("drafts", { count: drafts })})` : ""}
       </button>
 
-      <p aria-live="polite" className="min-h-6 text-center text-sm font-semibold text-race-accent">
-        {flash}
-      </p>
+      {flash ? (
+        <p aria-live="polite" className="text-center text-sm font-semibold text-race-accent">
+          {flash}
+        </p>
+      ) : (
+        <p aria-live="polite" className="sr-only">
+          {flash}
+        </p>
+      )}
 
       {warning ? (
         <div
@@ -601,7 +627,7 @@ export function McvvSplitsClient({
       ) : null}
 
       <section aria-label={t("recent")} className="grid gap-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-race-muted">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-race-muted sm:text-sm">
           {t("recent")} – {stationLabel}
           {stationRows > RECENT_LIMIT ? (
             <span className="ml-1 normal-case tracking-normal">
@@ -622,9 +648,9 @@ export function McvvSplitsClient({
                     setEditing(editing === r.id ? null : r.id);
                     setEditBib(r.bib ? String(r.bib) : "");
                   }}
-                  className="grid w-full grid-cols-[4rem_1fr_auto] items-center gap-2 px-3 py-2 text-left"
+                  className="grid w-full grid-cols-[3.5rem_1fr_auto] items-center gap-2 px-3 py-1.5 text-left sm:py-2"
                 >
-                  <span className="font-display text-2xl font-bold tabular-nums">
+                  <span className="font-display text-xl font-bold tabular-nums sm:text-2xl">
                     {r.bib ?? "?"}
                   </span>
                   <span className="text-xs text-race-muted">

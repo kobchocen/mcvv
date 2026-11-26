@@ -2241,6 +2241,7 @@
   "Splits": {
     "metaTitle": "Mezičasy",
     "title": "Mezičasy {year}",
+    "titleShort": "Mezičasy",
     "station": "Stanoviště",
     "stationLabel": "{label} ({code})",
     "startStation": "Start",

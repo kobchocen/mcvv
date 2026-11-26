@@ -86,7 +86,6 @@ export default async function SplitsPage({ params }: PageProps) {
         stations={stations}
         year={ctx.year}
         userId={session.id}
-        userName={session.name}
         zeroIso={ctx.zero.toISOString()}
         intervalS={ctx.intervalS}
         secondStartFrom={ctx.secondStartFrom}

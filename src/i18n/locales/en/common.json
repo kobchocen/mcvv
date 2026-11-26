@@ -2241,6 +2241,7 @@
   "Splits": {
     "metaTitle": "Splits",
     "title": "Splits {year}",
+    "titleShort": "Splits",
     "station": "Station",
     "stationLabel": "{label} ({code})",
     "startStation": "Start",

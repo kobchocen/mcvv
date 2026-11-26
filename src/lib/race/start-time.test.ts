@@ -5,7 +5,9 @@ import { SPECIAL_SLOT_RANGES } from "./special-start";
 import {
   DEFAULT_ORGANIZER_ZERO_SECONDS,
   DEFAULT_START_MODEL,
+  FIRST_ORGANIZER_ZERO_YEAR,
   ORGANIZER_SLOT_RANGE,
+  defaultOrganizerZeroSeconds,
   bibForSlot,
   compareByStart,
   organizerShiftSeconds,
@@ -66,6 +68,47 @@ describe("startTimeForBib", () => {
     assert.deepEqual(startModelFromEdition(null), DEFAULT_START_MODEL);
     assert.deepEqual(startModelFromEdition({ startInterval: 0 }), DEFAULT_START_MODEL);
     assert.equal(startModelFromEdition({ organizerZeroSeconds: null }).organizerZeroSeconds, 27900);
+  });
+  it("does not shift organisers on historical editions when the column is NULL", () => {
+    assert.equal(FIRST_ORGANIZER_ZERO_YEAR, 2026);
+    assert.equal(defaultOrganizerZeroSeconds(2025, 36900), 36900);
+    assert.equal(defaultOrganizerZeroSeconds(2026, 36900), 27900);
+    const past = startModelFromEdition(
+      {
+        startZeroSeconds: 36900,
+        startInterval: 15,
+        secondStartFrom: 601,
+        organizerZeroSeconds: null,
+      },
+      2025,
+    );
+    assert.equal(past.organizerZeroSeconds, 36900);
+    assert.equal(startTimeForBib(past, 1), "10:15:00");
+    assert.equal(startTimeForBib(past, 40), "10:24:45");
+    assert.equal(startTimeForBib(past, 41), "10:25:00");
+    assert.equal(startTimeForBib(past, 601), "10:15:00");
+    const fromDate = startModelFromEdition({
+      startZeroSeconds: 36900,
+      organizerZeroSeconds: null,
+      date: new Date("2024-12-01T00:00:00Z"),
+    });
+    assert.equal(startTimeForBib(fromDate, 1), "10:15:00");
+    const current = startModelFromEdition(
+      { startZeroSeconds: 36900, organizerZeroSeconds: null },
+      2026,
+    );
+    assert.equal(startTimeForBib(current, 1), "07:45:00");
+    const future = startModelFromEdition(
+      { startZeroSeconds: 36900, organizerZeroSeconds: null },
+      2027,
+    );
+    assert.equal(startTimeForBib(future, 1), "07:45:00");
+    // explicit value on an older edition is kept
+    const stored = startModelFromEdition(
+      { startZeroSeconds: 36900, organizerZeroSeconds: 7 * 3600 },
+      2024,
+    );
+    assert.equal(startTimeForBib(stored, 1), "07:00:00");
   });
   it("can put organisers on the same zero as the field", () => {
     const same = { ...DEFAULT_START_MODEL, organizerZeroSeconds: DEFAULT_START_MODEL.zeroSeconds };

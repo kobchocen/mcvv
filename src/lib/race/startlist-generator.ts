@@ -48,7 +48,7 @@ export type GeneratorEntry = {
   eligible: boolean;
   /** Poslední platný čas z Y−1…Y−3 (s), null = v okně žádný (#381). */
   lastYearTime: number | null;
-  /** Počet odběhlých ročníků (mcvv_time s time > 0) – řazení pořadatelů (#382). */
+  /** Počet účastí (mcvv_time, stejně jako na /bezec/[id]) – řazení pořadatelů (#382). */
   editionsCount?: number;
   /** Spec. start z administrace přihlášek (null / chybí = žádný). */
   special?: SpecialStartSpec | null;

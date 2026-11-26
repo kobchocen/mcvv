@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 
 /**
- * Pořadí pořadatelů ve startovce (#382): podle počtu odběhlých ročníků (řádky mcvv_time
- * s time > 0) sestupně; shody láme deterministický seed odvozený od sady pořadatelů.
- * Stejná sada → stejný seed (drží se, dokud se sada nezmění). Seed je součástí otisku vstupu.
+ * Pořadí pořadatelů ve startovce (#382): podle počtu účastí (řádky mcvv_time, stejné
+ * číslo jako „Účasti“ na /bezec/[id]) sestupně; shody láme deterministický seed odvozený
+ * od sady pořadatelů. Stejná sada → stejný seed (drží se, dokud se sada nezmění).
+ * Seed je součástí otisku vstupu.
  */
 
 export type OrganizerOrderEntry = {

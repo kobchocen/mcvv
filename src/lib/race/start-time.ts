@@ -9,8 +9,10 @@ import { DEFAULT_RACE_ZERO_SECONDS, zonedCivilToUtc } from "@/lib/date/race-sche
  *   start = nula' + interval × (n' − 1)
  *
  * Čísla 1 a 601 startují zároveň. Pořadatelé v rozsahu 1–40 / 601–640 (při výchozí
- * hranici 601) mají vlastní nulu (výchozí 7:45); mimo ten rozsah platí nula ročníku
- * (výchozí 10:15), včetně přetékajícího pořadatele. Nulový čas je civilní čas
+ * hranici 601) mají vlastní nulu (od 2026 výchozí 7:45); mimo ten rozsah platí nula
+ * ročníku (výchozí 10:15), včetně přetékajícího pořadatele. U ročníků před 2026, kde
+ * sloupec nuly pořadatelů v DB je NULL, se posun neuplatní — jinak by se změnily
+ * historické startovní časy (startovka, tisk, PDF). Nulový čas je civilní čas
  * v Europe/Prague.
  */
 export type StartModel = {
@@ -26,6 +28,22 @@ export type StartModel = {
 
 /** Výchozí první start pořadatelů (7:45, z hovoru k #382). */
 export const DEFAULT_ORGANIZER_ZERO_SECONDS = 7 * 3600 + 45 * 60;
+
+/**
+ * Od tohoto roku je výchozí nula pořadatelů 7:45, když je sloupec v DB NULL.
+ * Starší ročníky bez uložené hodnoty nemají posun (nula ročníku).
+ */
+export const FIRST_ORGANIZER_ZERO_YEAR = 2026;
+
+/** Výchozí nula pořadatelů pro daný rok, když ročník nemá uloženou hodnotu. */
+export function defaultOrganizerZeroSeconds(
+  year: number | undefined,
+  editionZeroSeconds: number,
+): number {
+  // Bez roku (nový / výchozí model) platí 7:45. Historické ročníky musí rok předat.
+  if (year == null) return DEFAULT_ORGANIZER_ZERO_SECONDS;
+  return year >= FIRST_ORGANIZER_ZERO_YEAR ? DEFAULT_ORGANIZER_ZERO_SECONDS : editionZeroSeconds;
+}
 
 /** Sloty s nulou pořadatelů – stejné jako `SPECIAL_SLOT_RANGES.organizer`. */
 export const ORGANIZER_SLOT_RANGE = { from: 1, to: 40 } as const;
@@ -46,13 +64,17 @@ export function startModelFromEdition(
         startInterval?: number | null;
         secondStartFrom?: number | null;
         organizerZeroSeconds?: number | null;
+        date?: Date | null;
       }
     | null
     | undefined,
+  year?: number,
 ): StartModel {
   const organizer = edition?.organizerZeroSeconds;
+  const zeroSeconds = edition?.startZeroSeconds ?? DEFAULT_START_MODEL.zeroSeconds;
+  const resolvedYear = year ?? (edition?.date ? edition.date.getUTCFullYear() : undefined);
   return {
-    zeroSeconds: edition?.startZeroSeconds ?? DEFAULT_START_MODEL.zeroSeconds,
+    zeroSeconds,
     intervalSeconds:
       edition?.startInterval && edition.startInterval > 0
         ? edition.startInterval
@@ -64,7 +86,7 @@ export function startModelFromEdition(
     organizerZeroSeconds:
       organizer != null && Number.isInteger(organizer) && organizer >= 0 && organizer < 86400
         ? organizer
-        : DEFAULT_ORGANIZER_ZERO_SECONDS,
+        : defaultOrganizerZeroSeconds(resolvedYear, zeroSeconds),
   };
 }
 

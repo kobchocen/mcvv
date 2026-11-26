@@ -77,7 +77,7 @@ export async function loadStartSettings(year: number): Promise<StartSettings> {
     year,
     editionId: edition?.id ?? null,
     raceDate: edition?.date ?? null,
-    model: startModelFromEdition(edition),
+    model: startModelFromEdition(edition, year),
     champions: {
       men: edition ? edition.championBibMen : DEFAULT_CHAMPION_BIBS.men,
       women: edition ? edition.championBibWomen : DEFAULT_CHAMPION_BIBS.women,
@@ -123,7 +123,7 @@ export type AdminStartRow = {
   locked: boolean;
   /** Poslední platný čas z Y−1…Y−3 (nasazení); null = v okně žádný. */
   lastYearTime: number | null;
-  /** Počet odběhlých ročníků (mcvv_time s time > 0), #382. */
+  /** Počet účastí (řádky mcvv_time, stejně jako „Účasti“ na /bezec/[id]), #382. */
   editionsCount: number;
   personalBest: number | null;
   note: string | null;
@@ -199,7 +199,7 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
     }),
     prisma.result.groupBy({
       by: ["runnerId"],
-      where: { runnerId: { in: runnerIds }, time: { gt: 0 } },
+      where: { runnerId: { in: runnerIds } },
       _count: { _all: true },
     }),
   ]);

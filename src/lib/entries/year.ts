@@ -81,7 +81,7 @@ export const currentRaceYear = cache(async function currentRaceYear(): Promise<{
     open,
     raceDate: latest?.date ?? null,
     editionId: latest?.id ?? null,
-    startModel: startModelFromEdition(latest),
+    startModel: startModelFromEdition(latest, year),
     slots,
     slotSettings,
     standardEnd: standardEnd(slots, deadline),
@@ -103,7 +103,7 @@ export async function startModelForYear(year: number): Promise<StartModel> {
       secondStartFrom: true,
     },
   });
-  return startModelFromEdition(edition);
+  return startModelFromEdition(edition, year);
 }
 
 /** First edition was held in 1993 (edition 34 = 2026). */

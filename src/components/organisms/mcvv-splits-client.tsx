@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useDesktopSplitsLayout } from "@/hooks/use-desktop-splits";
 import { useCoarsePointer } from "@/hooks/use-mobile";
 
 import {
@@ -31,6 +32,7 @@ import {
   recentRecords,
   relativeTime,
 } from "@/lib/live/splits-screen-core";
+import { DESKTOP_RECENT_ROW_ESTIMATE_PX, recentVisibleLimit } from "@/lib/live/splits-layout";
 import { Flag, Hourglass, Milestone, Play, UserCheck, type LucideIcon } from "lucide-react";
 
 import {
@@ -160,6 +162,12 @@ export function McvvSplitsClient({
   /** Běžící hodiny (#187); null do prvního tiku, aby SSR a klient nerenderovaly jiný čas. */
   const [now, setNow] = useState<number | null>(null);
   const coarsePointer = useCoarsePointer();
+  const desktop = useDesktopSplitsLayout();
+  const listRef = useRef<HTMLUListElement>(null);
+  const [listMetrics, setListMetrics] = useState({
+    height: 0,
+    row: DESKTOP_RECENT_ROW_ESTIMATE_PX,
+  });
   const [field, setField] = useState<FieldCounts>(initialField);
   const [fieldBibs, setFieldBibs] = useState<FieldBibs>(initialBibs);
   const warningField = useMemo(() => warningFieldFromBibs(fieldBibs), [fieldBibs]);
@@ -171,6 +179,26 @@ export function McvvSplitsClient({
     if (coarsePointer) el.setAttribute("virtualkeyboardpolicy", "manual");
     else el.removeAttribute("virtualkeyboardpolicy");
   }, [coarsePointer]);
+
+  useEffect(() => {
+    if (!desktop) return;
+    const el = listRef.current;
+    if (!el) return;
+    const measure = () => {
+      const style = getComputedStyle(el);
+      const gap = Number.parseFloat(style.rowGap || style.gap || "0") || 0;
+      const firstBtn = el.querySelector("li > button");
+      const row =
+        firstBtn instanceof HTMLElement
+          ? firstBtn.getBoundingClientRect().height + gap
+          : DESKTOP_RECENT_ROW_ESTIMATE_PX;
+      setListMetrics({ height: el.clientHeight, row });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [desktop]);
 
   const setQueue = useCallback(
     (update: (state: QueueState) => QueueState) => {
@@ -434,7 +462,10 @@ export function McvvSplitsClient({
     setEditing(null);
   };
 
-  const visible = recentRecords(queue.records, station);
+  const recentLimit = desktop
+    ? recentVisibleLimit(listMetrics.height, listMetrics.row)
+    : RECENT_LIMIT;
+  const visible = recentRecords(queue.records, station, recentLimit);
   const counts = countRecords(queue.records, station);
   const stationRows = queue.records.filter((r) => r.split === station).length;
   const pending = queue.outbox.length;
@@ -498,7 +529,16 @@ export function McvvSplitsClient({
             : "border-red-500/60 text-red-600 dark:text-red-400";
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-3 pb-4 pt-2 sm:gap-3 sm:pb-8 sm:pt-4">
+    <div
+      data-testid="splits-layout"
+      data-layout={desktop ? "desktop" : "phone"}
+      data-recent-limit={recentLimit}
+      className={
+        desktop
+          ? "mx-auto flex h-dvh w-full max-w-6xl flex-col gap-3 overflow-hidden px-6 py-4"
+          : "mx-auto flex w-full max-w-md flex-col gap-2 px-3 pb-4 pt-2 sm:gap-3 sm:pb-8 sm:pt-4"
+      }
+    >
       <header className="flex flex-col gap-1.5 sm:gap-2">
         <div className="flex items-center gap-2">
           <Link
@@ -510,7 +550,13 @@ export function McvvSplitsClient({
             <span className="sm:hidden">←</span>
             <span className="hidden sm:inline">← mcvv.org</span>
           </Link>
-          <h1 className="min-w-0 flex-1 font-display text-lg font-bold leading-tight text-foreground dark:text-white sm:text-2xl">
+          <h1
+            className={
+              desktop
+                ? "min-w-0 flex-1 font-display text-3xl font-bold leading-tight text-foreground dark:text-white"
+                : "min-w-0 flex-1 font-display text-lg font-bold leading-tight text-foreground dark:text-white sm:text-2xl"
+            }
+          >
             {t("titleShort")}
             <span data-testid="station-heading" className="font-semibold text-race-accent">
               {" "}
@@ -520,7 +566,11 @@ export function McvvSplitsClient({
           <div className="shrink-0 text-right" data-testid="clock">
             <p
               aria-label={t("now")}
-              className="font-display text-xl font-bold leading-none tabular-nums text-foreground dark:text-white sm:text-3xl"
+              className={
+                desktop
+                  ? "font-display text-5xl font-bold leading-none tabular-nums text-foreground dark:text-white"
+                  : "font-display text-xl font-bold leading-none tabular-nums text-foreground dark:text-white sm:text-3xl"
+              }
             >
               <time suppressHydrationWarning>
                 {now === null ? "--:--:--" : clock(correctedNow(now, offset))}
@@ -592,231 +642,324 @@ export function McvvSplitsClient({
         ) : null}
       </header>
 
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
-        className="grid gap-1.5 sm:gap-2"
+      <div
+        className={
+          desktop
+            ? "grid min-h-0 flex-1 grid-cols-[minmax(22rem,32rem)_minmax(0,1fr)] gap-6"
+            : "contents"
+        }
       >
-        <label htmlFor="bib" className="sr-only">
-          {t("bib")}
-        </label>
-        <input
-          ref={inputRef}
-          id="bib"
-          data-testid="bib-input"
-          inputMode={bibInputMode(coarsePointer)}
-          enterKeyHint="done"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          pattern={coarsePointer ? undefined : "[0-9]*"}
-          autoFocus
-          value={input}
-          onChange={(event) => setInput(event.target.value.replace(/\D/g, "").slice(0, 3))}
-          onKeyDown={(event) => {
-            if (isBibSubmitKey(event.key)) {
+        <div className={desktop ? "flex min-h-0 flex-col gap-3 overflow-y-auto" : "contents"}>
+          <form
+            onSubmit={(event) => {
               event.preventDefault();
               submit();
-            }
-          }}
-          placeholder={t("bibPlaceholder")}
-          className="h-14 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-4xl font-bold tabular-nums text-foreground dark:text-white sm:h-16 sm:text-5xl"
-        />
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2" data-testid="bib-keypad">
-          {BIB_KEYPAD_KEYS.map((key) => {
-            const submitKey = isBibSubmitKey(key);
-            const backspaceKey = isBibBackspaceKey(key);
-            return (
-              <button
-                key={key}
-                type={submitKey ? "submit" : "button"}
-                tabIndex={submitKey ? 0 : -1}
-                data-testid={submitKey ? "submit" : backspaceKey ? "bib-backspace" : undefined}
-                aria-label={submitKey ? t("submit") : backspaceKey ? t("backspace") : undefined}
-                onClick={submitKey ? undefined : () => press(key)}
-                className={
-                  submitKey
-                    ? "h-11 bg-race-accent-solid font-display text-lg font-bold text-white hover:bg-race-accent-solid-hover sm:h-14 sm:text-xl"
-                    : "h-11 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white sm:h-14 sm:text-3xl"
+            }}
+            className="grid gap-1.5 sm:gap-2"
+          >
+            <label htmlFor="bib" className="sr-only">
+              {t("bib")}
+            </label>
+            <input
+              ref={inputRef}
+              id="bib"
+              data-testid="bib-input"
+              inputMode={bibInputMode(coarsePointer)}
+              enterKeyHint="done"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              pattern={coarsePointer ? undefined : "[0-9]*"}
+              autoFocus
+              value={input}
+              onChange={(event) => setInput(event.target.value.replace(/\D/g, "").slice(0, 3))}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setInput("");
+                  return;
                 }
-              >
-                {submitKey ? t("submit") : backspaceKey ? "⌫" : key}
-              </button>
-            );
-          })}
-        </div>
-      </form>
-
-      <ul
-        className="grid grid-cols-5 gap-0.5"
-        data-testid="field-counts"
-        aria-label={t("infoBoxes")}
-      >
-        {FIELD_BOXES.map((box) => {
-          const Icon = box.icon;
-          const label = t(box.label);
-          const count = field[box.key];
-          const caption = `${label}: ${count}`;
-          return (
-            <li key={box.key}>
-              <div
-                title={caption}
-                aria-label={caption}
-                className="flex flex-col items-center justify-center px-0.5 py-1 text-foreground"
-              >
-                <Icon className="size-4 shrink-0 text-race-accent" aria-hidden="true" />
-                <span className="font-display text-sm font-bold leading-tight tabular-nums sm:text-base">
-                  {count}
-                </span>
-                <span className="max-w-full truncate text-center text-[9px] leading-tight text-race-muted sm:text-[11px]">
-                  {t(box.short)}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      <button
-        type="button"
-        onClick={stampOnly}
-        className="h-12 border border-dashed border-race-line bg-transparent px-3 text-base font-semibold text-foreground sm:h-14 sm:text-lg"
-      >
-        {t("stampOnly")}
-        {drafts > 0 ? ` (${t("drafts", { count: drafts })})` : ""}
-      </button>
-
-      {flash ? (
-        <div
-          aria-live="polite"
-          data-testid="flash"
-          className={
-            flash.warning
-              ? "border border-amber-500/80 bg-amber-500/15 px-3 py-2 text-center text-amber-800 dark:text-amber-200"
-              : "text-center text-sm font-semibold text-race-accent"
-          }
-        >
-          <p className={flash.warning ? "text-sm font-semibold" : undefined}>{flash.message}</p>
-          {flash.warning ? (
-            <p data-testid="flash-warning" className="text-lg font-bold leading-tight">
-              {flash.warning}
-            </p>
-          ) : null}
-        </div>
-      ) : (
-        <p aria-live="polite" className="sr-only" />
-      )}
-
-      {warning ? (
-        <div
-          role="alert"
-          className="grid gap-2 border border-amber-500/70 bg-amber-500/10 p-3 text-sm"
-        >
-          <p>
-            {t("duplicateWarning", {
-              bib: warning.bib,
-              time: clock(warning.existing.punchedAt),
-              station: stationLabel,
-            })}
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="h-10 flex-1 border border-race-line bg-race-surface font-semibold"
-              onClick={() => record(warning.bib, warning.at, true)}
-            >
-              {t("recordAnyway")}
-            </button>
-            <button
-              type="button"
-              className="h-10 flex-1 bg-race-accent-solid font-semibold text-white"
-              onClick={() => setWarning(null)}
-            >
-              {t("cancel")}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      <section aria-label={t("recent")} className="grid gap-1">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-race-muted sm:text-sm">
-          {t("recent")} – {stationLabel}
-          {stationRows > RECENT_LIMIT ? (
-            <span className="ml-1 normal-case tracking-normal">
-              ({t("recentLimit", { limit: RECENT_LIMIT, count: stationRows })})
-            </span>
-          ) : null}
-        </h2>
-        {visible.length === 0 ? <p className="text-sm text-race-muted">{t("empty")}</p> : null}
-        <ul className="grid gap-1" data-testid="records">
-          {visible.map((r) => {
-            const relative = r.bib !== null ? relativeFor({ ...r, bib: r.bib }) : null;
-            return (
-              <li key={r.id} className="border border-race-line/50 bg-race-surface">
+                if (isBibSubmitKey(event.key)) {
+                  event.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder={t("bibPlaceholder")}
+              className={
+                desktop
+                  ? "h-24 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-7xl font-bold tabular-nums text-foreground dark:text-white"
+                  : "h-14 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-4xl font-bold tabular-nums text-foreground dark:text-white sm:h-16 sm:text-5xl"
+              }
+            />
+            {desktop ? (
+              <div className="grid grid-cols-2 gap-3" data-testid="desktop-actions">
                 <button
                   type="button"
-                  disabled={r.state === "deleted"}
-                  onClick={() => {
-                    setEditing(editing === r.id ? null : r.id);
-                    setEditBib(r.bib ? String(r.bib) : "");
-                  }}
-                  className="grid w-full grid-cols-[3.5rem_1fr_auto] items-center gap-2 px-3 py-1.5 text-left sm:py-2"
+                  data-testid="clear-input"
+                  onClick={() => setInput("")}
+                  className="h-16 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground hover:bg-race-accent/10 dark:text-white"
                 >
-                  <span className="font-display text-xl font-bold tabular-nums sm:text-2xl">
-                    {r.bib ?? "?"}
-                  </span>
-                  <span className="text-xs text-race-muted">
-                    {clock(r.punchedAt)}
-                    {relative ? (
-                      <span className="ml-2 font-semibold text-foreground">{relative}</span>
-                    ) : null}
-                    {r.state === "duplicate" && typeof r.existingTime === "number"
-                      ? ` · ${t("existing", { time: showTime(r.existingTime) })}`
-                      : ""}
-                  </span>
-                  <span
-                    data-testid="record-state"
-                    data-warning={warningOf(r) ?? undefined}
-                    className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${stateClass(r)}`}
-                  >
-                    {stateLabel(r)}
-                  </span>
+                  {t("clearInput")}
                 </button>
-                {editing === r.id ? (
-                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 border-t border-race-line/50 p-2">
-                    <input
-                      inputMode="numeric"
-                      aria-label={t("newBib")}
-                      value={editBib}
-                      onChange={(event) =>
-                        setEditBib(event.target.value.replace(/\D/g, "").slice(0, 3))
+                <button
+                  type="submit"
+                  data-testid="submit"
+                  className="h-16 bg-race-accent-solid font-display text-2xl font-bold text-white hover:bg-race-accent-solid-hover"
+                >
+                  {t("submit")}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2" data-testid="bib-keypad">
+                {BIB_KEYPAD_KEYS.map((key) => {
+                  const submitKey = isBibSubmitKey(key);
+                  const backspaceKey = isBibBackspaceKey(key);
+                  return (
+                    <button
+                      key={key}
+                      type={submitKey ? "submit" : "button"}
+                      tabIndex={submitKey ? 0 : -1}
+                      data-testid={
+                        submitKey ? "submit" : backspaceKey ? "bib-backspace" : undefined
                       }
-                      className="h-11 min-w-0 border border-race-line/60 bg-race-surface px-2 text-center text-xl font-semibold tabular-nums"
+                      aria-label={
+                        submitKey ? t("submit") : backspaceKey ? t("backspace") : undefined
+                      }
+                      onClick={submitKey ? undefined : () => press(key)}
+                      className={
+                        submitKey
+                          ? "h-11 bg-race-accent-solid font-display text-lg font-bold text-white hover:bg-race-accent-solid-hover sm:h-14 sm:text-xl"
+                          : "h-11 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white sm:h-14 sm:text-3xl"
+                      }
+                    >
+                      {submitKey ? t("submit") : backspaceKey ? "⌫" : key}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </form>
+
+          <ul
+            className="grid grid-cols-5 gap-0.5"
+            data-testid="field-counts"
+            aria-label={t("infoBoxes")}
+          >
+            {FIELD_BOXES.map((box) => {
+              const Icon = box.icon;
+              const label = t(box.label);
+              const count = field[box.key];
+              const caption = `${label}: ${count}`;
+              return (
+                <li key={box.key}>
+                  <div
+                    title={caption}
+                    aria-label={caption}
+                    className="flex flex-col items-center justify-center px-0.5 py-1 text-foreground"
+                  >
+                    <Icon
+                      className={
+                        desktop
+                          ? "size-6 shrink-0 text-race-accent"
+                          : "size-4 shrink-0 text-race-accent"
+                      }
+                      aria-hidden="true"
                     />
-                    <button
-                      type="button"
-                      onClick={() => saveEdit(r)}
-                      className="h-11 bg-race-accent-solid px-3 text-sm font-semibold text-white"
+                    <span
+                      className={
+                        desktop
+                          ? "font-display text-2xl font-bold leading-tight tabular-nums"
+                          : "font-display text-sm font-bold leading-tight tabular-nums sm:text-base"
+                      }
                     >
-                      {r.state === "draft" ? t("assign") : t("correct")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => remove(r)}
-                      className="h-11 border border-red-500/60 px-3 text-sm font-semibold text-red-600 dark:text-red-400"
+                      {count}
+                    </span>
+                    <span
+                      className={
+                        desktop
+                          ? "max-w-full truncate text-center text-xs leading-tight text-race-muted"
+                          : "max-w-full truncate text-center text-[9px] leading-tight text-race-muted sm:text-[11px]"
+                      }
                     >
-                      {t("delete")}
-                    </button>
+                      {t(box.short)}
+                    </span>
                   </div>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+                </li>
+              );
+            })}
+          </ul>
+
+          <button
+            type="button"
+            onClick={stampOnly}
+            className={
+              desktop
+                ? "h-16 border border-dashed border-race-line bg-transparent px-3 text-xl font-semibold text-foreground"
+                : "h-12 border border-dashed border-race-line bg-transparent px-3 text-base font-semibold text-foreground sm:h-14 sm:text-lg"
+            }
+          >
+            {t("stampOnly")}
+            {drafts > 0 ? ` (${t("drafts", { count: drafts })})` : ""}
+          </button>
+
+          {flash ? (
+            <div
+              aria-live="polite"
+              data-testid="flash"
+              className={
+                flash.warning
+                  ? "border border-amber-500/80 bg-amber-500/15 px-3 py-2 text-center text-amber-800 dark:text-amber-200"
+                  : "text-center text-sm font-semibold text-race-accent"
+              }
+            >
+              <p className={flash.warning ? "text-sm font-semibold" : undefined}>{flash.message}</p>
+              {flash.warning ? (
+                <p data-testid="flash-warning" className="text-lg font-bold leading-tight">
+                  {flash.warning}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p aria-live="polite" className="sr-only" />
+          )}
+
+          {warning ? (
+            <div
+              role="alert"
+              className="grid gap-2 border border-amber-500/70 bg-amber-500/10 p-3 text-sm"
+            >
+              <p>
+                {t("duplicateWarning", {
+                  bib: warning.bib,
+                  time: clock(warning.existing.punchedAt),
+                  station: stationLabel,
+                })}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="h-10 flex-1 border border-race-line bg-race-surface font-semibold"
+                  onClick={() => record(warning.bib, warning.at, true)}
+                >
+                  {t("recordAnyway")}
+                </button>
+                <button
+                  type="button"
+                  className="h-10 flex-1 bg-race-accent-solid font-semibold text-white"
+                  onClick={() => setWarning(null)}
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <section
+          aria-label={t("recent")}
+          className={desktop ? "flex min-h-0 min-w-0 flex-col gap-2" : "grid gap-1"}
+        >
+          <h2
+            className={
+              desktop
+                ? "text-sm font-semibold uppercase tracking-wide text-race-muted"
+                : "text-xs font-semibold uppercase tracking-wide text-race-muted sm:text-sm"
+            }
+          >
+            {t("recent")} – {stationLabel}
+            {stationRows > recentLimit ? (
+              <span className="ml-1 normal-case tracking-normal">
+                ({t("recentLimit", { limit: recentLimit, count: stationRows })})
+              </span>
+            ) : null}
+          </h2>
+          {visible.length === 0 ? <p className="text-sm text-race-muted">{t("empty")}</p> : null}
+          <ul
+            ref={listRef}
+            className={
+              desktop ? "grid min-h-0 flex-1 content-start gap-1 overflow-y-auto" : "grid gap-1"
+            }
+            data-testid="records"
+          >
+            {visible.map((r) => {
+              const relative = r.bib !== null ? relativeFor({ ...r, bib: r.bib }) : null;
+              return (
+                <li key={r.id} className="border border-race-line/50 bg-race-surface">
+                  <button
+                    type="button"
+                    disabled={r.state === "deleted"}
+                    onClick={() => {
+                      setEditing(editing === r.id ? null : r.id);
+                      setEditBib(r.bib ? String(r.bib) : "");
+                    }}
+                    className={
+                      desktop
+                        ? "grid w-full grid-cols-[4.5rem_1fr_auto] items-center gap-3 px-4 py-2.5 text-left"
+                        : "grid w-full grid-cols-[3.5rem_1fr_auto] items-center gap-2 px-3 py-1.5 text-left sm:py-2"
+                    }
+                  >
+                    <span
+                      className={
+                        desktop
+                          ? "font-display text-3xl font-bold tabular-nums"
+                          : "font-display text-xl font-bold tabular-nums sm:text-2xl"
+                      }
+                    >
+                      {r.bib ?? "?"}
+                    </span>
+                    <span
+                      className={desktop ? "text-base text-race-muted" : "text-xs text-race-muted"}
+                    >
+                      {clock(r.punchedAt)}
+                      {relative ? (
+                        <span className="ml-2 font-semibold text-foreground">{relative}</span>
+                      ) : null}
+                      {r.state === "duplicate" && typeof r.existingTime === "number"
+                        ? ` · ${t("existing", { time: showTime(r.existingTime) })}`
+                        : ""}
+                    </span>
+                    <span
+                      data-testid="record-state"
+                      data-warning={warningOf(r) ?? undefined}
+                      className={`rounded-full border px-2 py-0.5 font-semibold ${desktop ? "text-sm" : "text-[11px]"} ${stateClass(r)}`}
+                    >
+                      {stateLabel(r)}
+                    </span>
+                  </button>
+                  {editing === r.id ? (
+                    <div className="grid grid-cols-[1fr_auto_auto] gap-2 border-t border-race-line/50 p-2">
+                      <input
+                        inputMode="numeric"
+                        aria-label={t("newBib")}
+                        value={editBib}
+                        onChange={(event) =>
+                          setEditBib(event.target.value.replace(/\D/g, "").slice(0, 3))
+                        }
+                        className="h-11 min-w-0 border border-race-line/60 bg-race-surface px-2 text-center text-xl font-semibold tabular-nums"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => saveEdit(r)}
+                        className="h-11 bg-race-accent-solid px-3 text-sm font-semibold text-white"
+                      >
+                        {r.state === "draft" ? t("assign") : t("correct")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(r)}
+                        className="h-11 border border-red-500/60 px-3 text-sm font-semibold text-red-600 dark:text-red-400"
+                      >
+                        {t("delete")}
+                      </button>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </div>
     </div>
   );
 }

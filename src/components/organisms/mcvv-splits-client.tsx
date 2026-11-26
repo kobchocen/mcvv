@@ -31,6 +31,8 @@ import {
   recentRecords,
   relativeTime,
 } from "@/lib/live/splits-screen-core";
+import { Flag, Hourglass, Milestone, Play, UserCheck, type LucideIcon } from "lucide-react";
+
 import {
   applyBibKey,
   BIB_KEYPAD_KEYS,
@@ -38,12 +40,19 @@ import {
   isBibBackspaceKey,
   isBibSubmitKey,
 } from "@/lib/live/splits-input";
+import { EMPTY_FIELD_COUNTS, type FieldCounts } from "@/lib/live/splits-field-core";
 import { formatOffset } from "@/lib/live/start-check-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { isStartStation, type Station } from "@/lib/live/stations";
 
 type Props = {
   stations: Station[];
+  /** Stanoviště vybrané na serveru (přiřazení / ?split=). */
+  initialStation: string;
+  /** Platný kód z ?split=, jinak null. */
+  urlStation: string | null;
+  /** Admin/pořadatel smí mít víc stanovišť; splitmaker má obrazovku přibitou. */
+  canChooseStation: boolean;
   year: number;
   userId: number;
   zeroIso: string;
@@ -76,8 +85,34 @@ function clock(ms: number): string {
   return new Date(ms).toLocaleTimeString("cs-CZ", { timeZone: "Europe/Prague" });
 }
 
+const FIELD_BOXES: {
+  key: keyof FieldCounts;
+  icon: LucideIcon;
+  label: "infoWaitingStart" | "infoStarted" | "infoPrevious" | "infoPassedHere" | "infoFinished";
+  short:
+    | "infoWaitingStartShort"
+    | "infoStartedShort"
+    | "infoPreviousShort"
+    | "infoPassedHereShort"
+    | "infoFinishedShort";
+}[] = [
+  {
+    key: "waitingStart",
+    icon: Hourglass,
+    label: "infoWaitingStart",
+    short: "infoWaitingStartShort",
+  },
+  { key: "started", icon: Play, label: "infoStarted", short: "infoStartedShort" },
+  { key: "previousSegment", icon: Milestone, label: "infoPrevious", short: "infoPreviousShort" },
+  { key: "passedHere", icon: UserCheck, label: "infoPassedHere", short: "infoPassedHereShort" },
+  { key: "finished", icon: Flag, label: "infoFinished", short: "infoFinishedShort" },
+];
+
 export function McvvSplitsClient({
   stations,
+  initialStation,
+  urlStation,
+  canChooseStation,
   year,
   userId,
   zeroIso,
@@ -94,7 +129,7 @@ export function McvvSplitsClient({
   const [queue, setQueueState] = useState<QueueState>(EMPTY_QUEUE);
   const queueRef = useRef<QueueState>(EMPTY_QUEUE);
   const [loaded, setLoaded] = useState(false);
-  const [station, setStation] = useState(stations[0]?.code ?? "1");
+  const [station, setStation] = useState(initialStation);
   const [input, setInput] = useState("");
   const [offset, setOffset] = useState<number | null>(null);
   const offsetRef = useRef(0);
@@ -113,6 +148,7 @@ export function McvvSplitsClient({
   /** Běžící hodiny (#187); null do prvního tiku, aby SSR a klient nerenderovaly jiný čas. */
   const [now, setNow] = useState<number | null>(null);
   const coarsePointer = useCoarsePointer();
+  const [field, setField] = useState<FieldCounts>(EMPTY_FIELD_COUNTS);
 
   // Virtual Keyboard API: typování Reactu atribut ještě nemá, na dotyku ho nastavíme ručně.
   useEffect(() => {
@@ -144,7 +180,14 @@ export function McvvSplitsClient({
       if (cancelled) return;
       queueRef.current = stored;
       setQueueState(stored);
-      if (savedStation && stations.some((s) => s.code === savedStation)) setStation(savedStation);
+      if (
+        canChooseStation &&
+        !urlStation &&
+        savedStation &&
+        stations.some((s) => s.code === savedStation)
+      ) {
+        setStation(savedStation);
+      }
       if (typeof savedOffset === "number") {
         offsetRef.current = savedOffset;
         setOffset(savedOffset);
@@ -155,7 +198,7 @@ export function McvvSplitsClient({
     return () => {
       cancelled = true;
     };
-  }, [storageKey, stations]);
+  }, [storageKey, stations, canChooseStation, urlStation]);
 
   // service worker – stránka se otevře i bez signálu
   useEffect(() => {
@@ -223,6 +266,29 @@ export function McvvSplitsClient({
     const id = window.setInterval(sync, 60_000);
     return () => window.clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(
+          `/api/live/splits/stats?split=${encodeURIComponent(station)}`,
+          { cache: "no-store", credentials: "same-origin" },
+        );
+        if (!response.ok || cancelled) return;
+        const body = (await response.json()) as { counts?: FieldCounts };
+        if (!cancelled && body.counts) setField(body.counts);
+      } catch {
+        // offline – necháme poslední známé počty
+      }
+    };
+    void load();
+    const id = window.setInterval(load, 15_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [station]);
 
   // běžící aktuální čas – tik zarovnaný na celou sekundu
   useEffect(() => {
@@ -335,11 +401,6 @@ export function McvvSplitsClient({
     else setInput((value) => applyBibKey(value, key));
   };
 
-  const chooseStation = (code: string) => {
-    setStation(code);
-    void saveValue("station", code);
-  };
-
   const saveEdit = (target: SplitRecord) => {
     const bib = Number(editBib);
     if (!Number.isInteger(bib) || bib < 1 || bib > MAX_BIB) return;
@@ -439,28 +500,6 @@ export function McvvSplitsClient({
             ) : null}
           </div>
         </div>
-        {stations.length > 1 ? (
-          <div role="radiogroup" aria-label={t("station")} className="flex flex-wrap gap-1.5">
-            {stations.map((s) => (
-              <button
-                key={s.code}
-                type="button"
-                role="radio"
-                aria-checked={s.code === station}
-                onClick={() => chooseStation(s.code)}
-                className={`h-8 px-2.5 text-sm font-semibold ${
-                  s.code === station
-                    ? "border border-race-accent bg-race-accent-solid text-white"
-                    : "border border-race-line/60 bg-race-surface text-foreground"
-                }`}
-              >
-                {isStartStation(s.code)
-                  ? t("startStation")
-                  : t("stationLabel", { label: s.label, code: s.code })}
-              </button>
-            ))}
-          </div>
-        ) : null}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <span
             data-testid="sync-status"
@@ -580,10 +619,40 @@ export function McvvSplitsClient({
         </div>
       </form>
 
+      <ul
+        className="grid grid-cols-5 gap-0.5"
+        data-testid="field-counts"
+        aria-label={t("infoBoxes")}
+      >
+        {FIELD_BOXES.map((box) => {
+          const Icon = box.icon;
+          const label = t(box.label);
+          const count = field[box.key];
+          const caption = `${label}: ${count}`;
+          return (
+            <li key={box.key}>
+              <div
+                title={caption}
+                aria-label={caption}
+                className="flex flex-col items-center justify-center px-0.5 py-1 text-foreground"
+              >
+                <Icon className="size-4 shrink-0 text-race-accent" aria-hidden="true" />
+                <span className="font-display text-sm font-bold leading-tight tabular-nums sm:text-base">
+                  {count}
+                </span>
+                <span className="max-w-full truncate text-center text-[9px] leading-tight text-race-muted sm:text-[11px]">
+                  {t(box.short)}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
       <button
         type="button"
         onClick={stampOnly}
-        className="h-9 border border-dashed border-race-line bg-transparent text-sm font-semibold text-foreground sm:h-11"
+        className="h-12 border border-dashed border-race-line bg-transparent px-3 text-base font-semibold text-foreground sm:h-14 sm:text-lg"
       >
         {t("stampOnly")}
         {drafts > 0 ? ` (${t("drafts", { count: drafts })})` : ""}

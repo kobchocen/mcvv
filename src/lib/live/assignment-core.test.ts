@@ -6,6 +6,7 @@ import {
   assignmentFromForm,
   formatAssignment,
   parseAssignment,
+  resolveSplitStation,
 } from "./assignment-core";
 
 const stations = [
@@ -50,4 +51,55 @@ test("start station is assignable like other stations (#203)", () => {
     withStartStations[0],
   ]);
   assert.deepEqual(allowedStationsFor("admin", null, withStartStations), withStartStations);
+});
+
+const withStart = [
+  { code: "0", label: "Start" },
+  { code: "1", label: "1,3 km" },
+  { code: "3", label: "2,7 km" },
+];
+
+test("resolveSplitStation: splitmaker is locked to the assigned split", () => {
+  assert.equal(
+    resolveSplitStation({
+      allowed: [withStart[1]],
+      allStations: false,
+      urlCode: "3",
+      savedCode: "0",
+    }),
+    "1",
+  );
+  assert.equal(
+    resolveSplitStation({
+      allowed: [withStart[1], withStart[2]],
+      allStations: false,
+      urlCode: "3",
+      savedCode: "1",
+    }),
+    "3",
+  );
+  assert.equal(
+    resolveSplitStation({
+      allowed: [withStart[1], withStart[2]],
+      allStations: false,
+      urlCode: "0",
+      savedCode: "3",
+    }),
+    "1",
+  );
+});
+
+test("resolveSplitStation: admin uses URL, then saved, then the first allowed", () => {
+  assert.equal(
+    resolveSplitStation({ allowed: withStart, allStations: true, urlCode: "3", savedCode: "1" }),
+    "3",
+  );
+  assert.equal(
+    resolveSplitStation({ allowed: withStart, allStations: true, urlCode: "x", savedCode: "1" }),
+    "1",
+  );
+  assert.equal(
+    resolveSplitStation({ allowed: withStart, allStations: true, urlCode: null, savedCode: null }),
+    "0",
+  );
 });

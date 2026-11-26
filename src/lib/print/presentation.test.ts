@@ -143,6 +143,7 @@ describe("presentation reports (#125)", () => {
     const pdf = renderPresentationPdf(blocks, labels, fonts);
     assert.equal(Buffer.from(pdf.slice(0, 5)).toString("latin1"), "%PDF-");
     assert.equal(pages(pdf), 1);
+    assert.match(Buffer.from(pdf).toString("latin1"), /\/Subtype\s*\/Image/);
     assert.equal(
       pages(renderPresentationPdf(blocks, labels, fonts, { pagePerRegistration: true })),
       2,

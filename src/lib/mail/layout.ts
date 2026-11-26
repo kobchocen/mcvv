@@ -4,6 +4,11 @@
  * forest header with orange rule, white card, muted footer. Always paired with a text part.
  */
 import { documentLocale } from "@/lib/i18n/locale";
+import {
+  OFFICIAL_LOGO_EMAIL_HEIGHT_PX,
+  OFFICIAL_LOGO_EMAIL_WIDTH_PX,
+  officialLogoEmailUrl,
+} from "@/lib/print/official-logo-shared";
 
 export function escapeHtml(value: string): string {
   return value
@@ -12,6 +17,27 @@ export function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+/**
+ * Tmavý pruh transakčních e-mailů a výchozí hlavičky newsletteru: oficiální logo
+ * z HTTPS URL na webu (ne CID / data URI) a název závodu.
+ */
+export function renderBrandHeaderRow(site: string): string {
+  const href = escapeHtml(site);
+  const src = escapeHtml(officialLogoEmailUrl(site));
+  const width = OFFICIAL_LOGO_EMAIL_WIDTH_PX;
+  const height = OFFICIAL_LOGO_EMAIL_HEIGHT_PX;
+  return `<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="padding:0 16px 0 0;vertical-align:middle">
+<a href="${href}" style="text-decoration:none"><img src="${src}" width="${width}" height="${height}" alt="MCVV" style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:${width}px"></a>
+</td>
+<td style="vertical-align:middle;font-size:13px;line-height:1.3;color:#b9cbbf">
+<a href="${href}" style="color:#b9cbbf;text-decoration:none">Malá cena Velké Verandy</a>
+</td>
+</tr></table>
+</td></tr>`;
 }
 
 export type TransactionalEmailInput = {
@@ -48,10 +74,7 @@ export function renderTransactionalEmail(input: TransactionalEmailInput): {
 <body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f6f1"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff">
-<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
-<a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
-<span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
-</td></tr>
+${renderBrandHeaderRow(input.site)}
 <tr><td style="padding:28px;font-size:16px;line-height:1.55">
 ${input.paragraphs.map(paragraph).join("\n")}
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="background:#e2531c">
@@ -98,10 +121,7 @@ export function renderBrandedEmail(input: BrandedEmailInput): { html: string; te
 <body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f6f1"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff">
-<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
-<a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
-<span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
-</td></tr>
+${renderBrandHeaderRow(input.site)}
 <tr><td style="padding:28px;font-size:16px;line-height:1.55">
 ${input.htmlBlocks.join("\n")}
 </td></tr>

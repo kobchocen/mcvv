@@ -363,5 +363,6 @@ describe("stats report", () => {
     };
     const pdf = renderStatsPdf(report, await loadReceiptFonts());
     assert.equal(pages(pdf), 1);
+    assert.match(Buffer.from(pdf).toString("latin1"), /\/Subtype\s*\/Image/);
   });
 });

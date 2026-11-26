@@ -1,5 +1,11 @@
 import { locales, type Locale } from "@/i18n/routing";
 import { siteLocale } from "@/lib/i18n/locale";
+import {
+  OFFICIAL_OG_IMAGE_HEIGHT,
+  OFFICIAL_OG_IMAGE_PATH,
+  OFFICIAL_OG_IMAGE_WIDTH,
+  officialOgImageUrl,
+} from "@/lib/print/official-logo-shared";
 
 /** Site name used in Open Graph metadata; a proper noun, never translated. */
 export const SITE_NAME = "Malá cena Velké Verandy";
@@ -46,3 +52,20 @@ export function languageAlternates(base: string, route: string): Record<string, 
   out["x-default"] = `${base}/cs${route}`;
   return out;
 }
+
+/** Výchozí sdílený obrázek (oficiální logo na forest podkladu, 1200×630). */
+export function defaultOgImage(base: string): {
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+} {
+  return {
+    url: officialOgImageUrl(base),
+    width: OFFICIAL_OG_IMAGE_WIDTH,
+    height: OFFICIAL_OG_IMAGE_HEIGHT,
+    alt: SITE_NAME,
+  };
+}
+
+export { OFFICIAL_OG_IMAGE_PATH };

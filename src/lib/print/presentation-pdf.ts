@@ -1,6 +1,13 @@
 import { jsPDF } from "jspdf";
 import { autoTable, type CellDef } from "jspdf-autotable";
 
+import {
+  PRINT_HEADER_BAND_COMPACT_MM,
+  drawOfficialLogo,
+  loadOfficialLogoPng,
+  officialLogoPrintWidthMm,
+  officialLogoSize,
+} from "@/lib/print/official-logo";
 import type { ReceiptFonts } from "@/lib/receipts/fonts";
 
 import type { AlphabetRow, PresentationBlock } from "./presentation-core";
@@ -64,23 +71,32 @@ function text(
   doc.text(value, x, y, align ? { align } : undefined);
 }
 
-/** Úzká hlavička (na každé stránce stejná, šetří toner i místo). Vrací spodní okraj. */
+/** Hlavička s oficiálním logem (na každé stránce stejná). Vrací spodní okraj. */
 function header(doc: jsPDF, labels: PresentationPdfLabels): number {
   const width = doc.internal.pageSize.getWidth();
+  const band = PRINT_HEADER_BAND_COMPACT_MM;
   doc.setFillColor(...INK);
-  doc.rect(0, 0, width, 14, "F");
+  doc.rect(0, 0, width, band, "F");
   doc.setFillColor(...ACCENT);
-  doc.rect(0, 14, width, 1, "F");
-  text(doc, labels.brand, MARGIN, 9, { size: 8.5, bold: true, color: [255, 255, 255] });
+  doc.rect(0, band, width, 1, "F");
+  const logo = loadOfficialLogoPng("dark");
+  const logoW = officialLogoPrintWidthMm();
+  const logoH = officialLogoSize(logoW).height;
+  drawOfficialLogo(doc, logo, MARGIN, (band - logoH) / 2, logoW, "mcvv-logo-dark");
+  text(doc, labels.brand, MARGIN + logoW + 1, band / 2 + 1.2, {
+    size: 8.5,
+    bold: true,
+    color: [255, 255, 255],
+  });
   text(
     doc,
     labels.title,
     width - MARGIN,
-    9.2,
+    band / 2 + 1.4,
     { size: 11, bold: true, color: [255, 255, 255] },
     "right",
   );
-  return 15;
+  return band + 1;
 }
 
 function footers(doc: jsPDF, labels: PresentationPdfLabels) {
@@ -163,7 +179,7 @@ export function renderPresentationPdf(
       theme: "plain",
       pageBreak: options.pagePerRegistration && index > 0 ? "always" : "avoid",
       rowPageBreak: "avoid",
-      margin: { left: MARGIN, right: MARGIN, top: 20, bottom: 18 },
+      margin: { left: MARGIN, right: MARGIN, top: 34, bottom: 18 },
       head: [
         [
           {
@@ -243,7 +259,7 @@ export function renderAlphabetPdf(
     autoTable(doc, {
       startY: y + 2,
       theme: "plain",
-      margin: { left: MARGIN, right: MARGIN, top: 20, bottom: 18 },
+      margin: { left: MARGIN, right: MARGIN, top: 34, bottom: 18 },
       head: [
         [
           labels.colName,

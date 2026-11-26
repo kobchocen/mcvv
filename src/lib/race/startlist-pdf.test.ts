@@ -9,7 +9,6 @@ import { renderStartListPdf, type StartListPdfLabels } from "./startlist-pdf";
 const LABELS: StartListPdfLabels = {
   brandTop: "MALÁ CENA",
   brandBottom: "VELKÉ VERANDY",
-  brandMark: "V",
   title: "Startovní listina 2026",
   edition: "34. ročník",
   raceDay: "neděle 6. 12. 2026",
@@ -49,6 +48,7 @@ describe("renderStartListPdf", () => {
     assert.equal(head, "%PDF-");
     const raw = Buffer.from(pdf).toString("latin1");
     assert.ok((raw.match(/\/Type \/Page\b/g) ?? []).length >= 2);
+    assert.match(raw, /\/Subtype\s*\/Image/);
   });
   it("renders an empty list", async () => {
     const pdf = renderStartListPdf([], DEFAULT_START_MODEL, LABELS, await loadReceiptFonts());

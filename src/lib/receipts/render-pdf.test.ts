@@ -53,6 +53,7 @@ describe("renderReceiptPdf", () => {
       assert.equal(head, "%PDF-");
       const body = Buffer.from(pdf).toString("latin1");
       assert.match(body, /DejaVu/);
+      assert.match(body, /\/Subtype\s*\/Image/);
       assert.ok(pdf.length > 5000);
     });
   }

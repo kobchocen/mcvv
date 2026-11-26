@@ -17,6 +17,7 @@ import {
   canMergeClubs,
   canManageLiveResults,
   canUseCashDesk,
+  canViewResultboardScreen,
   canViewSpeakerScreen,
   isStaffRole,
   requiresVerifiedEmail,
@@ -29,6 +30,26 @@ describe("role permissions", () => {
     for (const role of USER_ROLES) {
       assert.equal(canViewSpeakerScreen(role), role === "admin" || role === "organizer", role);
     }
+  });
+
+  it("resultboard screen: admin, organizer and the resultboard role; no admin, no speaker", () => {
+    for (const role of USER_ROLES) {
+      assert.equal(
+        canViewResultboardScreen(role),
+        role === "admin" || role === "organizer" || role === "resultboard",
+        role,
+      );
+    }
+    assert.equal(adminAccess("resultboard"), "none");
+    assert.ok(!hasAdminHome("resultboard"));
+    assert.ok(!isStaffRole("resultboard"));
+    assert.ok(!canViewSpeakerScreen("resultboard"));
+    assert.ok(!canAccessScreens("resultboard"));
+    assert.ok(!canAccessRaceDay("resultboard"));
+    assert.ok(!canAccessSplits("resultboard"));
+    assert.ok(!adminPathAllowed("none", "/admin"));
+    assert.ok(!adminPathAllowed("none", "/admin/obrazovky"));
+    assert.equal(requiresVerifiedEmail("resultboard"), true);
   });
 
   it("race office (#207): cash desk for race_office and staff, price list and manual transfer admin only, no admin", () => {
@@ -118,9 +139,9 @@ describe("role permissions", () => {
     assert.equal(canAccessScreens("timing"), true);
     assert.equal(canAccessScreens("registrar"), false);
   });
-  it("everybody except a runner has the gear", () => {
+  it("everybody except a runner and the resultboard role has the gear", () => {
     for (const role of USER_ROLES) {
-      assert.equal(hasAdminHome(role), role !== "registrar", role);
+      assert.equal(hasAdminHome(role), role !== "registrar" && role !== "resultboard", role);
     }
   });
   it("organizer and admin keep full access including race day", () => {
@@ -134,7 +155,7 @@ describe("role permissions", () => {
   it("new restricted roles need a verified e-mail like registrar", () => {
     assert.deepEqual(
       USER_ROLES.filter((role) => requiresVerifiedEmail(role)),
-      ["registrar", "timing", "splitmaker", "race_office", "starter"],
+      ["registrar", "timing", "splitmaker", "race_office", "starter", "resultboard"],
     );
   });
 });

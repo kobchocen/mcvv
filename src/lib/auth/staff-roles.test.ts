@@ -28,6 +28,7 @@ describe("staff roles (permissions v2)", () => {
     assert.deepEqual(grantsFromLegacyRole("timing"), ["timing_ops"]);
     assert.deepEqual(grantsFromLegacyRole("admin"), ["admin"]);
     assert.deepEqual(grantsFromLegacyRole("starter"), ["starter"]);
+    assert.deepEqual(grantsFromLegacyRole("resultboard"), ["resultboard"]);
   });
 
   it("the migration backfill uses the same mapping", () => {
@@ -91,5 +92,31 @@ describe("multiple roles per account (P5)", () => {
     );
     assert.equal(err({ target: { ...target, emailVerified: false } }), "unverified");
     assert.equal(err({ target: { ...target, emailVerified: false }, next: [] }), null);
+  });
+
+  it("accepts Resultboard as a staff role code and maps the column", () => {
+    assert.ok(isStaffRoleCode("resultboard"));
+    assert.ok(STAFF_ROLES.includes("resultboard"));
+    assert.equal(primaryLegacyRole(["resultboard"]), "resultboard");
+    assert.deepEqual(validateGrantsChange({ ...base, next: ["resultboard"] }), {
+      ok: true,
+      grants: ["resultboard"],
+      role: "resultboard",
+    });
+  });
+});
+
+describe("staff role labels in AdminUsers", () => {
+  it("every STAFF_ROLES code has a staffRole_* label in cs and en", () => {
+    for (const locale of ["cs", "en"] as const) {
+      const data = JSON.parse(
+        readFileSync(join(process.cwd(), `src/i18n/locales/${locale}/common.json`), "utf8"),
+      ) as { AdminUsers: Record<string, string> };
+      for (const role of STAFF_ROLES) {
+        const label = data.AdminUsers[`staffRole_${role}`];
+        assert.equal(typeof label, "string", `${locale} staffRole_${role}`);
+        assert.ok(label.trim().length > 0, `${locale} staffRole_${role}`);
+      }
+    }
   });
 });

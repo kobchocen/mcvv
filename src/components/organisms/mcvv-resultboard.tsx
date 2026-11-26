@@ -71,8 +71,9 @@ type Item = BoardItem;
 
 /**
  * Resultboard `/resultboard/<n>` (Q144) – kompletní průběžné výsledky kategorií jedné TV
- * v cíli. Data = veřejný snímek `/api/live/results` (stejná cache a ETag jako
- * `/vysledky/online`), nastavení a partneři z `/api/live/resultboard` (po 30 s).
+ * v cíli. Stránka je jen pro přihlášené s `screens.resultboard`. Data výsledků berou
+ * stejný snímek jako veřejné `/vysledky/online` (`/api/live/results`), nastavení
+ * a partneři jdou z `/api/live/resultboard` (po 30 s, také jen pro přihlášené).
  */
 export function McvvResultboard(props: Props) {
   const t = useTranslations("Resultboard");

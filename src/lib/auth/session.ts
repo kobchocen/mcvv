@@ -3,8 +3,9 @@ import { cache } from "react";
 
 import { prisma } from "@/lib/db/client";
 import { env } from "@/lib/env";
+import { staffCookieFromGrants } from "@/lib/admin/permissions";
 import { hasAdminHome, isUserRole, type UserRole } from "@/lib/auth/roles";
-import { PERMISSIONS_V2_KEY, permissionsV2On } from "@/lib/auth/staff-roles";
+import { isStaffRoleCode, PERMISSIONS_V2_KEY, permissionsV2On } from "@/lib/auth/staff-roles";
 import {
   decodeSessionToken as decode,
   encodeSessionToken as encode,
@@ -89,7 +90,15 @@ async function staffCookieFlag(user: SessionUser): Promise<boolean> {
   try {
     const flag = await prisma.setting.findUnique({ where: { key: PERMISSIONS_V2_KEY } });
     if (!permissionsV2On(flag?.text)) return false;
-    return (await prisma.userRoleGrant.count({ where: { userId: user.id } })) > 0;
+    const grants = (
+      await prisma.userRoleGrant.findMany({
+        where: { userId: user.id },
+        select: { role: true },
+      })
+    )
+      .map((row) => row.role)
+      .filter(isStaffRoleCode);
+    return staffCookieFromGrants(user.role, grants);
   } catch (error) {
     console.error("[session] staff flag lookup failed", error);
     return false;

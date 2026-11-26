@@ -61,6 +61,14 @@ test("an account without admin access is redirected, staff and timing pass", () 
     adminGate({ ...base, pathname: "/cs/admin", cookieRole: "registrar" }).kind,
     "redirect",
   );
+  assert.equal(
+    adminGate({ ...base, pathname: "/cs/admin", cookieRole: "resultboard" }).kind,
+    "redirect",
+  );
+  assert.equal(
+    adminGate({ ...base, pathname: "/cs/admin/obrazovky", cookieRole: "resultboard" }).kind,
+    "redirect",
+  );
   assert.deepEqual(adminGate({ ...base, pathname: "/cs/admin", cookieRole: "organizer" }), {
     kind: "pass",
     requestPath: "/admin",
@@ -103,4 +111,9 @@ test("staff cookie flag (P5) lets a registrar with new roles through, old cookie
   );
   assert.equal(adminGate({ ...page, cookieRole: "registrar", cookieStaff: true }).kind, "pass");
   assert.equal(adminGate({ ...page, cookieRole: null, cookieStaff: true }).kind, "redirect");
+  // Role Resultboard nemá rozcestník; příznak staff (třeba ze starší cookie) ji tam nesmí pustit.
+  assert.equal(
+    adminGate({ ...page, cookieRole: "resultboard", cookieStaff: true }).kind,
+    "redirect",
+  );
 });

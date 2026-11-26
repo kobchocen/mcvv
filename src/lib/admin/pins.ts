@@ -26,6 +26,7 @@ export const DEFAULT_PINS: Record<StaffRole, readonly SectionId[]> = {
   starter: ["screens.starter"],
   splitmaker: ["screens.splits"],
   race_office: ["raceOffice.cash", "raceOffice.sales"],
+  resultboard: ["screens.resultboard"],
 };
 
 /** Výchozí připnutí pro sadu rolí (pořadí rolí, bez duplicit, nejvýš 6). */

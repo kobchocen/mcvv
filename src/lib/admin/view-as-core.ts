@@ -57,7 +57,14 @@ export function viewAsSessionRole(mode: ViewAsMode, roles: readonly string[]): U
       roles.filter((role): role is StaffRole => isIn(VIEW_AS_V2_ROLES, role)),
     );
   }
-  for (const role of ["organizer", "timing", "race_office", "starter", "splitmaker"] as const) {
+  for (const role of [
+    "organizer",
+    "timing",
+    "race_office",
+    "starter",
+    "splitmaker",
+    "resultboard",
+  ] as const) {
     if (roles.includes(role)) return role;
   }
   return "registrar";

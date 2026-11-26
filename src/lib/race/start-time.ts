@@ -45,6 +45,30 @@ export function defaultOrganizerZeroSeconds(
   return year >= FIRST_ORGANIZER_ZERO_YEAR ? DEFAULT_ORGANIZER_ZERO_SECONDS : editionZeroSeconds;
 }
 
+/**
+ * Hlavička startovky (PDF, admin) ukáže nulu pořadatelů, když se liší od nuly
+ * ročníku, nebo když platí výchozí 7:45 (rok 2026+). Historický ročník bez
+ * posunu (nula pořadatelů = nula ročníku) ji nezobrazí.
+ */
+export function showsOrganizerZeroInHeader(model: StartModel, year?: number): boolean {
+  if (model.organizerZeroSeconds !== model.zeroSeconds) return true;
+  return year != null && year >= FIRST_ORGANIZER_ZERO_YEAR;
+}
+
+const MODEL_LINE_SEP = " · ";
+
+/**
+ * Vloží „Pořadatelé od 07:45:00“ hned za nulu ročníku (za první oddělovač).
+ * Když extra chybí, vrátí původní řádek.
+ */
+export function withOrganizerZeroLine(base: string, organizerLine?: string | null): string {
+  if (!organizerLine) return base;
+  const index = base.indexOf(MODEL_LINE_SEP);
+  return index === -1
+    ? `${base}${MODEL_LINE_SEP}${organizerLine}`
+    : `${base.slice(0, index)}${MODEL_LINE_SEP}${organizerLine}${base.slice(index)}`;
+}
+
 /** Sloty s nulou pořadatelů – stejné jako `SPECIAL_SLOT_RANGES.organizer`. */
 export const ORGANIZER_SLOT_RANGE = { from: 1, to: 40 } as const;
 

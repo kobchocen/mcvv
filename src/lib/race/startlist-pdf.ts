@@ -42,6 +42,30 @@ export type StartListPdfLabels = {
  * Linky mezi minutami jen při řazení podle času. Jen pro pořadatele
  * (route /api/admin/startovka/pdf).
  */
+
+const MODEL_LINE_SEP = " · ";
+
+function wrapModelLine(
+  text: string,
+  maxWidth: number,
+  widthOf: (value: string) => number,
+): string[] {
+  const parts = text.split(MODEL_LINE_SEP);
+  const lines: string[] = [];
+  let current = "";
+  for (const part of parts) {
+    const next = current ? `${current}${MODEL_LINE_SEP}${part}` : part;
+    if (current && widthOf(next) > maxWidth) {
+      lines.push(current);
+      current = part;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 export function renderStartListPdf(
   rows: PublicStartRow[],
   model: StartModel,
@@ -123,9 +147,18 @@ export function renderStartListPdf(
 
   const firstBand = header(true);
   let y = firstBand + 8;
-  text(labels.model, MARGIN, y, { size: 9.5, color: INK, bold: true });
+  // Delší řádek s nulou pořadatelů se musí vejít vedle počtu závodníků.
+  // Zalamujeme na oddělovačích „ · “, ať se nerozbije „2. start od č. 601“.
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(9.5);
+  const modelWidth = width - 2 * MARGIN - doc.getTextWidth(labels.count) - 4;
+  const modelLines = wrapModelLine(labels.model, modelWidth, (value) => doc.getTextWidth(value));
   text(labels.count, right, y, { size: 9.5, color: INK, bold: true }, "right");
-  y += 5;
+  for (const line of modelLines) {
+    text(line, MARGIN, y, { size: 9.5, color: INK, bold: true });
+    y += 4.5;
+  }
+  y += 0.5;
   text(labels.legend, MARGIN, y, { size: 8, color: MUTED });
   y += 3;
 

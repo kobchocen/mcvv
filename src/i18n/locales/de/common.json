@@ -702,6 +702,7 @@
     "pdfTitle": "Startliste {year}",
     "pdfEdition": "{n}. Ausgabe",
     "pdfModel": "Start 1 und 2 parallel ab {zero} · Intervall {interval} s · 2. Start ab Nr. {second}",
+    "pdfOrganizerZero": "Organisatoren ab {organizerZero}",
     "pdfCount": "Läufer: {count}",
     "pdfLegend": "Die Nummern des 2. Starts sind orange. Nr. N und Nr. N + {offset} starten gleichzeitig.",
     "pdfCategory": "Kategorie",

@@ -31,7 +31,13 @@ import {
   recentRecords,
   relativeTime,
 } from "@/lib/live/splits-screen-core";
-import { applyBibKey, bibInputMode, isBibSubmitKey } from "@/lib/live/splits-input";
+import {
+  applyBibKey,
+  BIB_KEYPAD_KEYS,
+  bibInputMode,
+  isBibBackspaceKey,
+  isBibSubmitKey,
+} from "@/lib/live/splits-input";
 import { formatOffset } from "@/lib/live/start-check-core";
 import { formatRaceTime } from "@/lib/live/start-time";
 import { isStartStation, type Station } from "@/lib/live/stations";
@@ -521,7 +527,7 @@ export function McvvSplitsClient({
           event.preventDefault();
           submit();
         }}
-        className="flex items-stretch gap-2"
+        className="grid gap-1.5 sm:gap-2"
       >
         <label htmlFor="bib" className="sr-only">
           {t("bib")}
@@ -549,32 +555,30 @@ export function McvvSplitsClient({
           placeholder={t("bibPlaceholder")}
           className="h-14 w-full min-w-0 border border-race-line/60 bg-race-surface text-center font-display text-4xl font-bold tabular-nums text-foreground dark:text-white sm:h-16 sm:text-5xl"
         />
-        <button
-          type="submit"
-          data-testid="submit"
-          className="h-14 w-24 shrink-0 bg-race-accent-solid font-display text-lg font-bold text-white hover:bg-race-accent-solid-hover sm:h-16 sm:w-28 sm:text-xl"
-        >
-          {t("submit")}
-        </button>
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2" data-testid="bib-keypad">
+          {BIB_KEYPAD_KEYS.map((key) => {
+            const submitKey = isBibSubmitKey(key);
+            const backspaceKey = isBibBackspaceKey(key);
+            return (
+              <button
+                key={key}
+                type={submitKey ? "submit" : "button"}
+                tabIndex={submitKey ? 0 : -1}
+                data-testid={submitKey ? "submit" : backspaceKey ? "bib-backspace" : undefined}
+                aria-label={submitKey ? t("submit") : backspaceKey ? t("backspace") : undefined}
+                onClick={submitKey ? undefined : () => press(key)}
+                className={
+                  submitKey
+                    ? "h-11 bg-race-accent-solid font-display text-lg font-bold text-white hover:bg-race-accent-solid-hover sm:h-14 sm:text-xl"
+                    : "h-11 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white sm:h-14 sm:text-3xl"
+                }
+              >
+                {submitKey ? t("submit") : backspaceKey ? "⌫" : key}
+              </button>
+            );
+          })}
+        </div>
       </form>
-
-      <div
-        className="grid grid-cols-3 gap-1.5 sm:gap-2"
-        aria-hidden="true"
-        data-testid="bib-keypad"
-      >
-        {["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "⌫"].map((key) => (
-          <button
-            key={key}
-            type="button"
-            tabIndex={-1}
-            onClick={() => press(key)}
-            className="h-11 border border-race-line/60 bg-race-surface font-display text-2xl font-semibold text-foreground active:bg-race-accent/20 dark:text-white sm:h-14 sm:text-3xl"
-          >
-            {key}
-          </button>
-        ))}
-      </div>
 
       <button
         type="button"

@@ -2267,6 +2267,7 @@
     "bib": "Startovní číslo",
     "bibPlaceholder": "číslo",
     "submit": "Zapsat",
+    "backspace": "Smazat číslici",
     "stampOnly": "⏱ Razítko bez čísla (doplním)",
     "drafts": "{count} bez čísla",
     "saved": "{bib} zapsáno v {time}",

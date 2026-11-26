@@ -94,7 +94,7 @@
     "news": {
       "eyebrow": "Nowość {n}. edycji",
       "title": "Rywalizacja drużynowa",
-      "body": "Od tego roku obok zawodników indywidualnych punktują także drużyny we wszystkich kategoriach. Liczy się wynik, a nie liczba osób w klubie. Nagroda dla zwycięskiej drużyny.",
+      "body": "Od tego roku obok zawodników indywidualnych punktują także drużyny we wszystkich kategoriach. Liczy się wynik, a nie liczba osób w klubie. Nagroda dla zwycięskiej drużyny. Rywalizację drużynową wspiera IONTMAX.",
       "linkLabel": "Zasady rywalizacji drużynowej"
     },
     "overview": {
@@ -1344,6 +1344,9 @@
     "announcement": "Zwycięską drużynę ogłosimy na miejscu o 12:20 razem z pozostałymi wynikami. Nagroda dla zwycięskiej drużyny.",
     "prizeWaiver": "Jeśli wygra K.O.B. Choceň jako organizator, zrzeka się nagrody na rzecz drugiej drużyny.",
     "officialPublish": "Oficjalną klasyfikację opublikujemy z wynikami na mcvv.org.",
+    "sponsorLabel": "Sponsor rywalizacji drużynowej",
+    "sponsorTitle": "Rywalizację drużynową wspiera IONTMAX",
+    "sponsorWebsite": "Oficjalna strona sponsora",
     "historyLink": "Historyczna lista zwycięzców 1993–2025",
     "historyLinkNote": "przeliczenie według zasad 2026",
     "rulesLink": "Zasady rywalizacji drużynowej",

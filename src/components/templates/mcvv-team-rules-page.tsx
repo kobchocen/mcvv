@@ -1,4 +1,4 @@
-import { McvvFooter, McvvPublicNavbar } from "@/components/organisms";
+import { McvvFooter, McvvPublicNavbar, McvvTeamsSponsor } from "@/components/organisms";
 import { Link } from "@/i18n/routing";
 import { MAIN_POINTS, OTHER_POINTS } from "@/lib/teams/scoring";
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
@@ -26,6 +26,9 @@ export type McvvTeamRulesCopy = {
   announcement: string;
   prizeWaiver: string;
   officialPublish: string;
+  sponsorLabel: string;
+  sponsorTitle: string;
+  sponsorWebsite: string;
   historyLink: string;
   historyLinkNote: string;
 };
@@ -142,6 +145,14 @@ export function McvvTeamRulesPage({ brand, nav, footer, copy }: McvvTeamRulesPag
             </p>
             <p className="mt-3 text-base leading-7">{copy.officialPublish}</p>
           </section>
+
+          <McvvTeamsSponsor
+            copy={{
+              label: copy.sponsorLabel,
+              title: copy.sponsorTitle,
+              websiteLabel: copy.sponsorWebsite,
+            }}
+          />
 
           <p className="mt-12 border-t border-race-line/50 pt-6 text-sm">
             <Link

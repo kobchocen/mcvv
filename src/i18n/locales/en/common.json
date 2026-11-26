@@ -94,7 +94,7 @@
     "news": {
       "eyebrow": "New in the {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} edition",
       "title": "Team competition",
-      "body": "From this year, teams as well as individuals score across categories. What counts is performance, not how many people are in the club. A prize for the winning team.",
+      "body": "From this year, teams as well as individuals score across categories. What counts is performance, not how many people are in the club. A prize for the winning team. The team competition is supported by IONTMAX.",
       "linkLabel": "Team competition rules"
     },
     "overview": {
@@ -1998,6 +1998,9 @@
     "announcement": "The winning team will be announced on site at 12:20 together with the other results. A prize for the winning team.",
     "prizeWaiver": "If K.O.B. Choceň wins as the organiser, it forgoes the prize in favour of the second team.",
     "officialPublish": "The official ranking will be published with the results on mcvv.org.",
+    "sponsorLabel": "Team competition sponsor",
+    "sponsorTitle": "The team competition is supported by IONTMAX",
+    "sponsorWebsite": "Official sponsor website",
     "historyLink": "Historical list of winners 1993–2025",
     "historyLinkNote": "back-calculation under the 2026 rules",
     "rulesLink": "Team competition rules",

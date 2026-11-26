@@ -3,8 +3,9 @@ import { canAccess } from "@/lib/admin/access";
 import { getSession } from "@/lib/auth/session";
 
 /**
- * Přístup k resultboardu (rozcestník, TV i API): stejně jako speaker, jen
- * `screens.resultboard` (admin a pořadatel, případně další role podle oprávnění).
+ * Přístup k resultboardu. Stránky (rozcestník a TV) vyžadují `screens.resultboard`
+ * (admin a pořadatel, případně další role podle oprávnění). API `/api/live/resultboard`
+ * sdílí i obrazovka speakera, proto stačí `screens.resultboard` nebo `screens.speaker`.
  * Nepřihlášený na stránce skončí na přihlášení, na API 401; bez oprávnění 403 / forbidden.
  */
 export function resultboardApiReject(hasSession: boolean, allowed: boolean): 401 | 403 | null {

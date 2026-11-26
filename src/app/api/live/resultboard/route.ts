@@ -11,15 +11,17 @@ export const dynamic = "force-dynamic";
 
 /**
  * Nastavení resultboardu a partneři pro obrazovky v cíli (a přepínač upozornění speakera).
- * Jen přihlášení s `screens.resultboard` (jako `/api/live/speaker`). Sdílená cache 30 s
- * na replice, ETag → 304. Výsledky samotné jdou z `/api/live/results`, které zůstává
- * veřejné pro `/vysledky/online`.
+ * Jen přihlášení s `screens.resultboard` nebo `screens.speaker` (data bere i speaker).
+ * Sdílená cache 30 s na replice, ETag → 304. Výsledky samotné jdou z `/api/live/results`,
+ * které zůstává veřejné pro `/vysledky/online`.
  */
 export async function GET(request: NextRequest) {
   const session = await getSession();
   const rejected = resultboardApiReject(
     session !== null,
-    session !== null && (await canAccess("screens.resultboard", "read")),
+    session !== null &&
+      ((await canAccess("screens.resultboard", "read")) ||
+        (await canAccess("screens.speaker", "read"))),
   );
   if (rejected === 401) return new Response("Unauthorized", { status: 401, headers: NO_STORE });
   if (rejected === 403) return new Response("Forbidden", { status: 403, headers: NO_STORE });

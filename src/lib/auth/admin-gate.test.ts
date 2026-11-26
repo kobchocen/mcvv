@@ -111,4 +111,9 @@ test("staff cookie flag (P5) lets a registrar with new roles through, old cookie
   );
   assert.equal(adminGate({ ...page, cookieRole: "registrar", cookieStaff: true }).kind, "pass");
   assert.equal(adminGate({ ...page, cookieRole: null, cookieStaff: true }).kind, "redirect");
+  // Role Resultboard nemá rozcestník; příznak staff (třeba ze starší cookie) ji tam nesmí pustit.
+  assert.equal(
+    adminGate({ ...page, cookieRole: "resultboard", cookieStaff: true }).kind,
+    "redirect",
+  );
 });

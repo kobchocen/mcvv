@@ -62,7 +62,8 @@ export function adminGate(input: AdminGateInput): AdminGateDecision {
     (input.method === "GET" || input.method === "HEAD") && !input.isRscOrAction;
   const allowed =
     input.cookieRole !== null &&
-    (adminAccess(input.cookieRole) !== "none" || input.cookieStaff === true);
+    (adminAccess(input.cookieRole) !== "none" ||
+      (input.cookieStaff === true && input.cookieRole === "registrar"));
   if (!allowed && documentRequest) {
     return {
       kind: "redirect",

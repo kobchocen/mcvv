@@ -18,6 +18,7 @@ import {
   starterScope,
   v2Allows,
   defaultLevel,
+  staffCookieFromGrants,
   v2HasAdminHome,
   type AccessLevel,
 } from "@/lib/admin/permissions";
@@ -234,5 +235,30 @@ describe("permissions editor (P8)", () => {
     }
     const overrides = new Map([[overrideKey("organizer_legacy", "permissions"), "write" as const]]);
     assert.equal(v2Allows(["organizer_legacy"], "permissions", "read", overrides), false);
+  });
+
+  it("the matrix includes Resultboard as an editable column", () => {
+    assert.ok(EDITABLE_ROLES.includes("resultboard"));
+    assert.equal(defaultLevel("resultboard", "screens.resultboard"), "read");
+    assert.equal(v2Allows(["resultboard"], "screens.resultboard", "write"), false);
+    for (const id of SECTION_IDS) {
+      if (id === "screens.resultboard") continue;
+      assert.equal(defaultLevel("resultboard", id), "none", id);
+    }
+  });
+});
+
+describe("staff cookie (permissions v2 + Resultboard)", () => {
+  it("does not mark a Resultboard-only account as staff", () => {
+    assert.equal(v2HasAdminHome(["resultboard"]), false);
+    assert.equal(staffCookieFromGrants("resultboard", ["resultboard"]), false);
+    assert.equal(staffCookieFromGrants("registrar", ["resultboard"]), false);
+  });
+
+  it("still marks a registrar with v2 admin roles as staff", () => {
+    assert.equal(staffCookieFromGrants("registrar", ["entries"]), true);
+    assert.equal(staffCookieFromGrants("registrar", ["speaker", "resultboard"]), true);
+    assert.equal(staffCookieFromGrants("organizer", ["organizer_legacy"]), false);
+    assert.equal(staffCookieFromGrants("registrar", []), false);
   });
 });

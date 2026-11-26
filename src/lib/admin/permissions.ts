@@ -300,6 +300,15 @@ export function v2HasAdminHome(grants: readonly StaffRole[], overrides?: Overrid
   return v2Allows(grants, "overview", "read", overrides);
 }
 
+/**
+ * Příznak `staff` v cookie (P5): účet podle sloupce role do administrace nesmí, ale jeho
+ * v2 granty mu otevírají rozcestník. Samotná role Resultboard grant má, rozcestník ne.
+ */
+export function staffCookieFromGrants(role: UserRole, grants: readonly StaffRole[]): boolean {
+  if (hasAdminHome(role)) return false;
+  return v2HasAdminHome(grants);
+}
+
 type Allows = (id: SectionId, level: AccessLevel) => boolean;
 
 /** Rozsah zápisu mezičasů: všechna stanoviště (řízení závodu), nebo jen přiřazená. */

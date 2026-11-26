@@ -117,6 +117,17 @@ describe("generateStartList", () => {
     assert.ok(map.get(slow.runnerId)! < map.get(fast.runnerId)!);
   });
 
+  it("treats a seed time from two or three years ago as a returning runner (#381)", () => {
+    // Loader fills lastYearTime from the most recent year in Y−1…Y−3, so a 2024
+    // time arrives in the same field as a 2025 time.
+    const fromTwoYearsAgo = entry({ categoryId: "A", name: "Předloni", lastYearTime: 1400 });
+    const lastYearFast = entry({ categoryId: "A", name: "Loni rychlý", lastYearTime: 800 });
+    const fresh = entry({ categoryId: "A", name: "Nováček" });
+    const map = bibs(generateStartList(input([fromTwoYearsAgo, lastYearFast, fresh])));
+    assert.ok(map.get(fresh.runnerId)! < map.get(fromTwoYearsAgo.runnerId)!);
+    assert.ok(map.get(fromTwoYearsAgo.runnerId)! < map.get(lastYearFast.runnerId)!);
+  });
+
   it("numbers organizers (spec. start) from 1 and 601 consecutively", () => {
     const org = { kind: "organizer", partnerId: null, offsetSeconds: 0 } as const;
     const orgA = entry({ categoryId: "A", special: org, name: "B Org" });

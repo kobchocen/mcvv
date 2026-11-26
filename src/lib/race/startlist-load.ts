@@ -15,6 +15,7 @@ import {
   type StartModel,
 } from "./start-time";
 import type { GeneratorInput } from "./startlist-generator";
+import { seedTimesByRunner, seedTimeWindow } from "./startlist-seed-time";
 
 export type CategoryInfo = { id: string; name: string; sort: number; sex: string };
 
@@ -120,6 +121,7 @@ export type AdminStartRow = {
   cancelled: boolean;
   bib: number | null;
   locked: boolean;
+  /** Poslední platný čas z Y−1…Y−3 (nasazení); null = v okně žádný. */
   lastYearTime: number | null;
   personalBest: number | null;
   note: string | null;
@@ -178,10 +180,15 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
     registrationMessageThreads(year),
   ]);
   const runnerIds = lines.map((line) => line.runnerId);
-  const [lastYear, best] = await Promise.all([
+  const window = seedTimeWindow(year);
+  const [history, best] = await Promise.all([
     prisma.result.findMany({
-      where: { year: year - 1, runnerId: { in: runnerIds } },
-      select: { runnerId: true, time: true },
+      where: {
+        year: { gte: window.from, lte: window.to },
+        runnerId: { in: runnerIds },
+        time: { gt: 0 },
+      },
+      select: { runnerId: true, year: true, time: true },
     }),
     prisma.result.groupBy({
       by: ["runnerId"],
@@ -189,7 +196,7 @@ export async function loadAdminStartRows(year: number): Promise<AdminStartRow[]>
       _min: { time: true },
     }),
   ]);
-  const lastById = new Map(lastYear.map((row) => [row.runnerId, row.time]));
+  const lastById = seedTimesByRunner(history, year);
   const bestById = new Map(best.map((row) => [row.runnerId, row._min.time ?? null]));
   const metaById = new Map(metas.map((meta) => [meta.runnerId, meta]));
   return lines.map((line) => {

@@ -22,8 +22,9 @@ import { bibForSlot, startSeriesForBib, startSlot, type StartModel } from "./sta
  *    Běžci „spolu s“, kteří se k nim (i přes další běžce) váží, jdou s nimi (Q227);
  * b) v okně kategorie (rozsah čísel ročníku) se ostatní běžci rozprostřou rovnoměrně kolem
  *    již obsazených čísel, bez velkých děr;
- * c) nejdřív nováčci a běžci bez loňského času (podle jména), pak vracející se podle loňského
- *    času od nejpomalejšího – nejrychlejší startují na konci, závod graduje;
+ * c) nejdřív nováčci a běžci bez času z uplynulých 3 let (podle jména), pak vracející se
+ *    podle posledního dostupného času z Y−1…Y−3 od nejpomalejšího – nejrychlejší startují
+ *    na konci, závod graduje (#381);
  * d) „spolu s“ (náhrada dřívějších skupin, Q225): čas partnera + posun (libovolný násobek
  *    intervalu, i záporný), ve vlastním nebo druhém startu (posun 0 = druhý start). Když je
  *    přesný čas obsazený, nejbližší volné číslo a upozornění; běžce z kategorie smí posunout
@@ -44,7 +45,7 @@ export type GeneratorEntry = {
   locked: boolean;
   /** Platná (zaplacená / potvrzená, nezrušená) přihláška – jen ty dostanou číslo. */
   eligible: boolean;
-  /** Loňský čas v sekundách, null = nováček nebo loni neběžel. */
+  /** Poslední platný čas z Y−1…Y−3 (s), null = v okně žádný (#381). */
   lastYearTime: number | null;
   /** Spec. start z administrace přihlášek (null / chybí = žádný). */
   special?: SpecialStartSpec | null;
@@ -127,7 +128,7 @@ export function spreadIndexes(n: number, m: number): number[] {
   return Array.from({ length: count }, (_, i) => Math.floor((i * m) / count));
 }
 
-/** Pořadí v okně kategorie: nováčci / bez loňského času (jméno), pak loňský čas sestupně. */
+/** Pořadí v okně kategorie: nováčci / bez času z 3 let (jméno), pak seed čas sestupně. */
 export function seedOrder<
   T extends { name: string; lastYearTime: number | null; runnerId: string },
 >(runners: T[], locale = "cs"): T[] {

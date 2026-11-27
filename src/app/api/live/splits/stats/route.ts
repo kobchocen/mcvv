@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { allowsFor, can, getAccess } from "@/lib/admin/access";
+import { getAccess, splitAllows } from "@/lib/admin/access";
 import { splitScope } from "@/lib/admin/permissions";
 import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noStore });
   }
   const access = await getAccess();
-  if (!can(access, "screens.splits", "read")) {
+  const allows = await splitAllows(access);
+  if (!allows("screens.splits", "read")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: noStore });
   }
   const split = request.nextUrl.searchParams.get("split");
@@ -34,11 +35,7 @@ export async function GET(request: NextRequest) {
     getAssignedStations(session.id),
   ]);
   enterLiveTestContext(ctx);
-  const stations = stationsForScope(
-    splitScope(allowsFor(access)),
-    assigned,
-    withStart(splitStations),
-  );
+  const stations = stationsForScope(splitScope(allows), assigned, withStart(splitStations));
   if (!stations.some((station) => station.code === split)) {
     return NextResponse.json({ error: "station-not-assigned" }, { status: 403, headers: noStore });
   }

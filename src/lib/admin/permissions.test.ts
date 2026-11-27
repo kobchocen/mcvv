@@ -14,6 +14,7 @@ import {
   parseMatrixForm,
   planMatrixChange,
   resetChanges,
+  splitAllowsFor,
   splitScope,
   starterScope,
   v2Allows,
@@ -181,6 +182,50 @@ describe("screens outside /admin (P5) – flag off = today", () => {
       assert.equal(splitScope(legacy).all, isStaffRole(role));
     });
   }
+});
+
+describe("splitAllowsFor – Mezičasy jako další role (v1 i v2)", () => {
+  const stations = [
+    { code: "1", name: "1,3 km" },
+    { code: "3", name: "2,7 km" },
+  ] as unknown as Parameters<typeof stationsForScope>[2];
+
+  it("v1: Startér s grantem Mezičasy smí zapisovat na přiřazené stanoviště", () => {
+    const allows = splitAllowsFor({
+      v2: false,
+      role: "starter",
+      grants: ["starter", "splitmaker"],
+    });
+    assert.equal(allows("screens.splits", "read"), true);
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: false, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), "1", stations), [stations[0]]);
+    assert.deepEqual(stationsForScope(splitScope(allows), null, stations), []);
+  });
+
+  it("v1: Startér bez grantu Mezičasy mezičasy nezapisuje", () => {
+    const allows = splitAllowsFor({ v2: false, role: "starter", grants: ["starter"] });
+    assert.equal(allows("screens.splits", "read"), false);
+    assert.equal(allows("screens.splits", "write"), false);
+    assert.deepEqual(splitScope(allows), { all: false, own: false });
+  });
+
+  it("v2: Startér + Mezičasy stejně jako sjednocení grantů", () => {
+    const allows = splitAllowsFor({
+      v2: true,
+      role: "starter",
+      grants: ["starter", "splitmaker"],
+    });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: false, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), "3", stations), [stations[1]]);
+  });
+
+  it("v1: jen hlavní role Mezičasy se nezmění", () => {
+    const allows = splitAllowsFor({ v2: false, role: "splitmaker", grants: ["splitmaker"] });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: false, own: true });
+  });
 });
 
 describe("permissions editor (P8)", () => {

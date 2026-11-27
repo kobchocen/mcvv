@@ -1,4 +1,5 @@
 import { isStaffRole, type UserRole } from "@/lib/auth/roles";
+import type { StaffRole } from "@/lib/auth/staff-roles";
 
 import { FINISH_SPLIT, isStationCode, type Station } from "./stations";
 
@@ -25,6 +26,17 @@ export function formatAssignment(codes: readonly string[]): string | null {
 export function assignmentFromForm(picked: readonly string[], stations: Station[]): string | null {
   const offered = new Set(stations.map((s) => s.code));
   return formatAssignment(picked.filter((code) => offered.has(code)));
+}
+
+/**
+ * Má účet roli Mezičasy? Platí hlavní sloupec `mcvv_user.role` i grant v `mcvv_user_role`,
+ * a to při zapnutém i vypnutém `permissions.v2`.
+ */
+export function hasSplitmakerRole(
+  role: UserRole,
+  grants: readonly StaffRole[] | readonly string[] = [],
+): boolean {
+  return role === "splitmaker" || grants.includes("splitmaker");
 }
 
 /** Stanoviště, na která smí účet zapisovat (pro /mezicasy i pro server). */

@@ -30,6 +30,7 @@ import {
   type StarterRunner,
 } from "@/lib/live/starter-core";
 import { DEFAULT_START_INTERVAL_S } from "@/lib/live/start-time";
+import { formatStartCountdown, isLongCountdown } from "@/lib/live/start-countdown";
 import { loadValue, saveValue } from "@/lib/live/queue-store";
 
 import styles from "./mcvv-starter-client.module.css";
@@ -643,6 +644,20 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
       </div>
     ) : null;
 
+  const countdownText = (remaining: number, plannedMs: number, short = false): string =>
+    formatStartCountdown(
+      remaining,
+      plannedMs,
+      locale,
+      {
+        hours: (hours, minutes) => t("cdHours", { hours, minutes }),
+        hoursAgo: (hours, minutes) => t("cdHoursAgo", { hours, minutes }),
+        hoursShort: (hours) => t("cdHoursShort", { hours }),
+        hoursShortAgo: (hours) => t("cdHoursShortAgo", { hours }),
+      },
+      short,
+    );
+
   const queueView = (
     <div className={styles.view}>
       <div className={styles.counters}>
@@ -700,8 +715,11 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
                   )}
                 </div>
               </div>
-              <div className={`${styles.cd} ${styles.num}`}>
-                {remaining > 0 ? `−${mmss(remaining)}` : `+${mmss(remaining)}`}
+              <div
+                className={`${styles.cd} ${styles.num} ${isLongCountdown(remaining) ? styles.cdLong : ""}`}
+                data-testid={`starter-cd-${row.bib}`}
+              >
+                {countdownText(remaining, row.plannedMs)}
               </div>
               {row.zone === "red" ? (
                 <div
@@ -801,7 +819,12 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
     const zone =
       remaining <= intervalMs ? styles.liNow : remaining <= 2 * intervalMs ? styles.liNext : "";
     if (row.state === "marked") return { className: `${styles.liMk} ${zone}`, label: t("atStart") };
-    return { className: `${styles.liUp} ${zone}`, label: t("stIn", { time: mmss(remaining) }) };
+    return {
+      className: `${styles.liUp} ${zone}`,
+      label: isLongCountdown(remaining)
+        ? countdownText(remaining, row.plannedMs, true)
+        : t("stIn", { time: mmss(remaining) }),
+    };
   };
   const nowlineIndex = filter === "all" ? listRows.findIndex((row) => row.plannedMs > now) : -1;
   const listView = (

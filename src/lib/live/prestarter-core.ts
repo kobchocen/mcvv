@@ -14,7 +14,7 @@ import type { UserRole } from "@/lib/auth/roles";
 import type { StaffRole } from "@/lib/auth/staff-roles";
 
 import type { StarterAccess } from "./starter-api-core";
-import { formatCountdown, parseCorridor, type Corridor } from "./starter-core";
+import { parseCorridor, type Corridor } from "./starter-core";
 
 /**
  * Má účet roli Předstartér? Platí hlavní sloupec `mcvv_user.role` i grant v `mcvv_user_role`,
@@ -61,33 +61,7 @@ export function prestarterAccessFor(
   return { ok: false, error: "forbidden" };
 }
 
-/** Odpočet na dlaždici: do hodiny `−4:59`, do dne „za 3 h 34 min“, dál jen datum startu. */
-export type PrestartCountdown =
-  | { kind: "clock"; text: string }
-  | { kind: "hours"; hours: number; minutes: number; past: boolean }
-  | { kind: "date"; at: number };
-
-const DAY_MS = 24 * 3_600_000;
-
-/**
- * Formát odpočtu do plánovaného startu (#379, STG 27. 11.): dlouhý odpočet `−214:47:07`
- * rozházel řádek dlaždice. Do hodiny zůstávají minuty a sekundy (`−4:59`, po startu `+0:03`),
- * do 24 h hodiny a minuty, dál jen datum startu.
- */
-export function prestartCountdown(remainingMs: number, plannedMs: number): PrestartCountdown {
-  const past = remainingMs <= 0;
-  const seconds = Math.round(Math.abs(remainingMs) / 1000);
-  if (seconds < 3600) {
-    return { kind: "clock", text: `${past ? "+" : "−"}${formatCountdown(seconds)}` };
-  }
-  if (seconds < DAY_MS / 1000) {
-    const totalMinutes = Math.floor(seconds / 60);
-    return {
-      kind: "hours",
-      hours: Math.floor(totalMinutes / 60),
-      minutes: totalMinutes % 60,
-      past,
-    };
-  }
-  return { kind: "date", at: plannedMs };
-}
+export {
+  startCountdown as prestartCountdown,
+  type StartCountdown as PrestartCountdown,
+} from "./start-countdown";

@@ -29,7 +29,7 @@ import {
   type StarterRunner,
 } from "@/lib/live/starter-core";
 import { DEFAULT_START_INTERVAL_S } from "@/lib/live/start-time";
-import { prestartCountdown } from "@/lib/live/prestarter-core";
+import { formatStartCountdown, isLongCountdown } from "@/lib/live/start-countdown";
 import { loadValue, saveValue } from "@/lib/live/queue-store";
 
 import styles from "./mcvv-prestarter-client.module.css";
@@ -474,26 +474,19 @@ export function McvvPrestarterClient({ userId, initialCorridor, canSwitch, local
 
   // --- vykreslení ---
   /** Odpočet do startu: do hodiny `−4:59`, do dne „za 3 h 34 min“, dál datum (STG 27. 11.). */
-  const countdownText = (remaining: number, plannedMs: number, short = false): string => {
-    const countdown = prestartCountdown(remaining, plannedMs);
-    if (countdown.kind === "clock") return countdown.text;
-    // v celé startovce je plánovaný čas vlevo, stačí hrubý údaj, ať zůstane místo na jméno
-    if (countdown.kind === "hours" && short) {
-      return t(countdown.past ? "cdHoursShortAgo" : "cdHoursShort", { hours: countdown.hours });
-    }
-    if (countdown.kind === "hours") {
-      return t(countdown.past ? "cdHoursAgo" : "cdHours", {
-        hours: countdown.hours,
-        minutes: countdown.minutes,
-      });
-    }
-    return new Intl.DateTimeFormat(locale === "cs" ? "cs-CZ" : "en-GB", {
-      timeZone: "Europe/Prague",
-      day: "numeric",
-      month: locale === "cs" ? "numeric" : "short",
-    }).format(countdown.at);
-  };
-  const countdownLong = (remaining: number) => prestartCountdown(remaining, 0).kind !== "clock";
+  const countdownText = (remaining: number, plannedMs: number, short = false): string =>
+    formatStartCountdown(
+      remaining,
+      plannedMs,
+      locale,
+      {
+        hours: (hours, minutes) => t("cdHours", { hours, minutes }),
+        hoursAgo: (hours, minutes) => t("cdHoursAgo", { hours, minutes }),
+        hoursShort: (hours) => t("cdHoursShort", { hours }),
+        hoursShortAgo: (hours) => t("cdHoursShortAgo", { hours }),
+      },
+      short,
+    );
   const range = snapshot ? corridorRange(corridor, snapshot.secondStartFrom) : null;
   const pendingCount = pending.length;
   const allMissing = useMemo(
@@ -614,7 +607,7 @@ export function McvvPrestarterClient({ userId, initialCorridor, canSwitch, local
                 </span>
               </span>
               <span
-                className={`${styles.cd} ${styles.num} ${countdownLong(remaining) ? styles.cdLong : ""}`}
+                className={`${styles.cd} ${styles.num} ${isLongCountdown(remaining) ? styles.cdLong : ""}`}
                 data-testid={`prestarter-cd-${row.bib}`}
               >
                 {countdownText(remaining, row.plannedMs)}
@@ -681,7 +674,7 @@ export function McvvPrestarterClient({ userId, initialCorridor, canSwitch, local
     if (row.state === "marked") return { className: `${styles.liMk} ${zone}`, label: t("atStart") };
     return {
       className: `${styles.liUp} ${zone}`,
-      label: countdownLong(remaining)
+      label: isLongCountdown(remaining)
         ? countdownText(remaining, row.plannedMs, true)
         : t("stIn", { time: mmss(remaining) }),
     };

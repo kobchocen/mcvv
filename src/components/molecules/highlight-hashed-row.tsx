@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { resultsHashScrollBlock } from "@/lib/results/hash-scroll";
+
 export function HighlightHashedRow() {
   useEffect(() => {
     const highlight = () => {
@@ -13,8 +15,11 @@ export function HighlightHashedRow() {
       if (!row) {
         return;
       }
-      row.classList.add("bg-race-accent/10");
-      row.scrollIntoView({ block: "center" });
+      const block = resultsHashScrollBlock(id);
+      if (block === "center") {
+        row.classList.add("bg-race-accent/10");
+      }
+      row.scrollIntoView({ block });
       // Class name kept as a literal so Tailwind emits the highlight utility.
     };
 

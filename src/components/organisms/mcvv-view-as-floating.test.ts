@@ -46,3 +46,12 @@ test("the bar renders only during an active admin preview", () => {
   const copy = readFileSync("src/lib/admin/view-as-bar.ts", "utf8");
   assert.match(copy, /if \(!preview\) return null;/);
 });
+
+test("entries layout reserves space under the floating preview bar, resultboard does not", () => {
+  const entries = readFileSync("src/app/[locale]/prihlasky/layout.tsx", "utf8");
+  assert.ok(entries.includes("reserveSpace"));
+  const outside = readFileSync("src/components/organisms/mcvv-view-as-outside-admin.tsx", "utf8");
+  assert.ok(outside.includes("McvvViewAsFloatingReserve"));
+  const resultboard = readFileSync("src/app/[locale]/resultboard/layout.tsx", "utf8");
+  assert.ok(!resultboard.includes("reserveSpace"));
+});

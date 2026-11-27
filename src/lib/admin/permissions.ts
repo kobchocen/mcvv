@@ -8,10 +8,11 @@
  *   vždy vše; odchylky z `mcvv_role_section` mají přednost).
  *
  * Výchozí úrovně rolí převedených ze starého sloupce (`organizer_legacy`, `splitmaker`,
- * `starter`, `race_office`) se odvozují z `legacy` – test ekvivalence hlídá, že po převodu
+ * `starter`, `prestarter`, `race_office`) se odvozují z `legacy` – test ekvivalence hlídá, že po převodu
  * nikdo nezíská ani neztratí přístup. Čisté funkce bez frameworku a DB.
  */
 import {
+  canAccessPrestarter,
   canAccessRaceDay,
   canAccessScreens,
   canAccessSplits,
@@ -38,6 +39,7 @@ export type LegacyGuard =
   | "raceday"
   | "splits"
   | "starter"
+  | "prestarter"
   | "speaker"
   | "resultboard"
   | "cashDesk"
@@ -52,6 +54,7 @@ export const LEGACY_PREDICATES: Record<LegacyGuard, (role: UserRole) => boolean>
   raceday: canAccessRaceDay,
   splits: canAccessSplits,
   starter: canAccessStarter,
+  prestarter: canAccessPrestarter,
   speaker: canViewSpeakerScreen,
   resultboard: canViewResultboardScreen,
   cashDesk: canUseCashDesk,
@@ -87,6 +90,8 @@ export const SECTION_RULES = {
   "raceControl.course": { read: "raceday", write: "raceday" },
   screens: { read: "screens", write: "screens" },
   "screens.starter": { read: "starter", write: "starter" },
+  /** Předstartér (#379): fronta koridoru na mobilu, stejný záznam startu jako startér. */
+  "screens.prestarter": { read: "prestarter", write: "prestarter" },
   "screens.splits": { read: "splits", write: "splits" },
   /** Cíl (#252): stanice Stopky a Čísla. */
   "screens.finish": { read: "raceday", write: "raceday" },
@@ -138,6 +143,7 @@ const DERIVED_FROM_LEGACY: Partial<Record<StaffRole, UserRole>> = {
   organizer_legacy: "organizer",
   splitmaker: "splitmaker",
   starter: "starter",
+  prestarter: "prestarter",
   race_office: "race_office",
   resultboard: "resultboard",
 };
@@ -205,6 +211,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.officialCheck": "read",
     "raceControl.course": "write",
     "screens.starter": "write",
+    "screens.prestarter": "write",
     "screens.finish": "write",
     "screens.splits": "write",
     "screens.speaker": "read",
@@ -341,6 +348,32 @@ export function splitAllowsFor(input: {
 /** Rozsah obrazovky startéra: libovolný koridor (řízení startu), nebo jen přiřazený. */
 export function starterScope(allows: Allows): { any: boolean; own: boolean } {
   return { any: allows("raceControl.start", "read"), own: allows("screens.starter", "read") };
+}
+
+/**
+ * Rozsah obrazovky předstartéra (#379): libovolný koridor s přepínačem (řízení startu),
+ * nebo jen přiřazený koridor (role Předstartér).
+ */
+export function prestarterScope(allows: Allows): { any: boolean; own: boolean } {
+  return { any: allows("raceControl.start", "read"), own: allows("screens.prestarter", "write") };
+}
+
+/**
+ * Obrazovky mimo /admin podle role i grantů: mezičasy (`splitAllowsFor`) a předstartér (#379).
+ * Při zapnutém v2 platí engine. Při vypnutém v2 (PROD) bere u `screens.prestarter` i granty
+ * z `mcvv_user_role`, aby účet s Předstartérem jako další rolí (např. vedle Startéra)
+ * obrazovku otevřel.
+ */
+export function screenAllowsFor(input: {
+  v2: boolean;
+  role: UserRole;
+  grants: readonly StaffRole[];
+  overrides?: Overrides;
+}): Allows {
+  const split = splitAllowsFor(input);
+  if (input.v2) return split;
+  return (id, level) =>
+    split(id, level) || (id === "screens.prestarter" && v2Allows(input.grants, id, level));
 }
 
 // ---------------------------------------------------------------------------

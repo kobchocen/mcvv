@@ -18,7 +18,12 @@ export async function McvvPublicNavbar({
   const starter =
     session?.role === "starter"
       ? { href: "/start" as const, label: (await getTranslations("Starter"))("navLink") }
-      : null;
+      : session?.role === "prestarter"
+        ? {
+            href: "/predstarter" as const,
+            label: (await getTranslations("Prestarter"))("navLink"),
+          }
+        : null;
   return (
     <McvvNavbar
       content={content}

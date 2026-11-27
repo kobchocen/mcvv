@@ -29,7 +29,8 @@ export type McvvNavbarAccount = {
   /** Cíl odkazu do administrace (výchozí /admin; Časomíra → /admin/den-zavodu). */
   adminHref?: string;
   /** Odkaz na obrazovku startéra (jen role Startér). */
-  starter?: { href: "/start"; label: string } | null;
+  /** Odkaz na obrazovku startu: startér `/start`, předstartér `/predstarter` (#379). */
+  starter?: { href: "/start" | "/predstarter"; label: string } | null;
   /** Odznak zpráv (null = funkce vypnutá / bez dat). */
   messages?: { count: number; href: "/zpravy" | "/admin/zpravy" } | null;
 };

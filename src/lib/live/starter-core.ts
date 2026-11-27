@@ -9,8 +9,9 @@
  * v okamžiku startu označený, na chvíli zčervená a pak spadne mezi „Nevyběhli“.
  *
  * Do výsledků se vždy počítá plánovaný čas ze startovky; skutečný okamžik pozdního startu
- * a příznak „pozdě“ jsou jen informace. Priorita zápisů: admin > startér (a stanoviště Start
- * v mezičasech) > automatické doplnění z mezičasu / cíle.
+ * a příznak „pozdě“ jsou jen informace. Priorita zápisů: admin > startér a předstartér (#379,
+ * stejná úroveň, platí pozdější ťuknutí; a stanoviště Start v mezičasech) > automatické
+ * doplnění z mezičasu / cíle.
  */
 
 import { DEFAULT_SECOND_START_FROM, startOffsetSeconds } from "./start-time";
@@ -116,6 +117,8 @@ export const DEFAULT_STARTER_SETTINGS: StarterSettings = {
 // (≤ 2 intervaly), pozdní start = víc než 1 interval po plánu (jen informace).
 /** Nejvýš tolik řádků ve frontě. */
 export const QUEUE_SIZE = 4;
+/** Fronta předstartéra (#379, Pavel 26. 11.): 6 stejně velkých řádků, jen řadí, nestartuje. */
+export const PRESTARTER_QUEUE_SIZE = 6;
 
 export type Zone = "now" | "next" | "later" | "red" | "gone";
 
@@ -163,7 +166,18 @@ export function formatCountdown(seconds: number): string {
 
 // --- stav čísla ---
 
-export type StarterSource = "admin" | "starter" | "web" | "split";
+/** `prestart` = předstartér (#379; sloupec `source` má 8 znaků). */
+export type StarterSource = "admin" | "starter" | "prestart" | "web" | "split";
+
+export const STARTER_SOURCE = "starter";
+export const PRESTARTER_SOURCE = "prestart";
+/** Zdroje zařízení u startu (startér, předstartér) – stejná priorita, platí pozdější ťuknutí. */
+export type DeviceSource = typeof STARTER_SOURCE | typeof PRESTARTER_SOURCE;
+
+/** Zapsal záznam startér nebo předstartér (ťuknutí na zařízení u startu)? */
+export function isDeviceSource(source: string): source is DeviceSource {
+  return source === STARTER_SOURCE || source === PRESTARTER_SOURCE;
+}
 
 /** Řádek `mcvv_start_check` tak, jak ho vidí startér (bez příznaku „neoznačen“). */
 export type StarterMark = {
@@ -203,8 +217,13 @@ export function buildStarterView(
   runners: readonly StarterRunner[],
   marks: ReadonlyMap<number, StarterMark>,
   nowMs: number,
-  settings: Pick<StarterSettings, "redPhaseS" | "dnsWindowS"> & { intervalS: number },
+  settings: Pick<StarterSettings, "redPhaseS" | "dnsWindowS"> & {
+    intervalS: number;
+    /** Počet řádků fronty (startér `QUEUE_SIZE`, předstartér `PRESTARTER_QUEUE_SIZE`). */
+    queueSize?: number;
+  },
 ): StarterView {
+  const queueSize = settings.queueSize ?? QUEUE_SIZE;
   const sorted = [...runners].sort((a, b) => a.plannedMs - b.plannedMs || a.bib - b.bib);
   const queue: QueueRow[] = [];
   const missing: StarterRunner[] = [];
@@ -221,7 +240,7 @@ export function buildStarterView(
       continue;
     }
     toStart += 1; // ještě neodstartoval (i označený před startem a červená fáze)
-    if (queue.length < QUEUE_SIZE) {
+    if (queue.length < queueSize) {
       queue.push({ ...runner, zone, marked, secondsLeft: secondsToStart(runner.plannedMs, nowMs) });
     }
   }
@@ -287,7 +306,7 @@ export function tapAction(
   return nowMs < plannedMs + redPhaseS * 1000 ? "ontime" : "late";
 }
 
-const RANK: Record<string, number> = { admin: 3, starter: 2, web: 2, split: 1 };
+const RANK: Record<string, number> = { admin: 3, starter: 2, prestart: 2, web: 2, split: 1 };
 
 export function sourceRank(source: string): number {
   return RANK[source] ?? 2;
@@ -301,8 +320,10 @@ export type StarterDecision = "insert" | "update" | "delete" | "ignored";
  * Zápis startéra proti aktuálnímu řádku startu:
  * - admin má přednost – startér jeho záznam nemění,
  * - automatické doplnění ze splitu startér vždy přepíše (i pozdě dorazivší offline ťuknutí),
- * - mezi zařízeními startérů (a stanovištěm Start) platí poslední akce podle času ťuknutí,
- * - odznačení maže jen záznam startéra / stanoviště Start, nikdy admina ani doplnění ze splitu.
+ * - mezi zařízeními startérů, předstartérů (a stanovištěm Start) platí poslední akce podle
+ *   času ťuknutí,
+ * - odznačení maže jen záznam startéra / předstartéra / stanoviště Start, nikdy admina ani
+ *   doplnění ze splitu.
  */
 export function decideStarterWrite(
   existing: ExistingStart,
@@ -355,6 +376,8 @@ export function mergePending(
   pending: readonly PendingAction[],
   plannedOf: (bib: number) => number | undefined,
   intervalS: number,
+  /** Zdroj ťuknutí tohoto zařízení (startér / předstartér). */
+  source: DeviceSource = STARTER_SOURCE,
 ): Map<number, StarterMark> {
   const marks = new Map(server);
   for (const op of [...pending].sort((a, b) => a.at - b.at)) {
@@ -374,7 +397,7 @@ export function mergePending(
     const planned = plannedOf(op.bib);
     marks.set(op.bib, {
       bib: op.bib,
-      source: "starter",
+      source,
       markedAt: op.at,
       late:
         op.action === "late" && planned !== undefined
@@ -483,7 +506,8 @@ export function keypadLookup(input: {
 
 /**
  * Štítek „pozdní start“ v online výsledcích (offset v s nebo null): automatické doplnění ze
- * splitu nikdy, zápis startéra jen s příznakem pozdě („Odstartovat teď“ víc než 1 interval po plánu),
+ * splitu nikdy, zápis startéra / předstartéra jen s příznakem pozdě („Odstartovat teď“ víc než
+ * 1 interval po plánu),
  * ostatní zdroje (stanoviště Start, admin) beze změny podle prahu #228.
  */
 export function publicLateOffset(
@@ -492,7 +516,7 @@ export function publicLateOffset(
   limitS: number,
 ): number | null {
   if (row.source === "split") return null;
-  if (row.source === "starter") return row.late ? offsetS : null;
+  if (isDeviceSource(row.source)) return row.late ? offsetS : null;
   return offsetS > limitS ? offsetS : null;
 }
 

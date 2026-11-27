@@ -101,6 +101,8 @@ export default defineRouting({
     "/cil": "/cil",
     "/mezicasy/speaker": "/mezicasy/speaker",
     "/start": "/start",
+    // předstartér: fronta koridoru na mobilu (#379)
+    "/predstarter": "/predstarter",
     // velké obrazovky v cíli – náhrada OFB (jen přihlášení s screens.resultboard)
     "/resultboard": "/resultboard",
     "/resultboard/[tv]": "/resultboard/[tv]",

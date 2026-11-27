@@ -26,6 +26,8 @@ export const STAFF_ROLES = [
   /** Šéf trati (#316). */
   "course_chief",
   "starter",
+  /** Předstartér (#379): mobilní obrazovka fronty koridoru. */
+  "prestarter",
   "splitmaker",
   "race_office",
   "resultboard",
@@ -69,6 +71,7 @@ export function primaryLegacyRole(grants: readonly StaffRole[]): UserRole {
   if (grants.includes("timing_ops")) return "timing";
   if (grants.includes("race_office")) return "race_office";
   if (grants.includes("starter")) return "starter";
+  if (grants.includes("prestarter")) return "prestarter";
   if (grants.includes("splitmaker")) return "splitmaker";
   if (grants.includes("resultboard")) return "resultboard";
   return "registrar";

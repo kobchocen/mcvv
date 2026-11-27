@@ -53,6 +53,10 @@ export function roleHomePath(role: UserRole): string {
       return "/kancelar";
     case "starter":
       return "/start";
+    case "prestarter":
+      return "/predstarter";
+    case "resultboard":
+      return "/resultboard";
     default:
       return "/prihlasky";
   }

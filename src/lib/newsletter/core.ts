@@ -4,6 +4,8 @@
  */
 
 import { isPromotionOptOut } from "../entries/promotion";
+import { renderBrandHeaderRow } from "@/lib/mail/layout";
+
 import { BANNER_DISPLAY_WIDTH, type NewsletterBanner } from "./banner";
 
 const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i;
@@ -345,14 +347,6 @@ export function renderBannerRow(banner: NewsletterBanner): string {
 </td></tr>`;
 }
 
-/** Výchozí hlavička bez banneru: tmavý pruh s názvem závodu a oranžovou linkou. */
-function renderBrandHeaderRow(site: string): string {
-  return `<tr><td style="background:#0f2a1c;padding:20px 28px;border-bottom:4px solid #e2531c">
-<a href="${site}" style="color:#ffffff;text-decoration:none;font-size:20px;font-weight:bold;letter-spacing:.5px">MCVV</a>
-<span style="color:#b9cbbf;font-size:13px;padding-left:8px">Malá cena Velké Verandy</span>
-</td></tr>`;
-}
-
 export function renderNewsletter(input: {
   subject: string;
   body: string;
@@ -363,7 +357,7 @@ export function renderNewsletter(input: {
   const unsub = escapeHtml(input.unsubscribeUrl);
   const site = escapeHtml(input.siteUrl);
   // S bannerem je banner hlavičkou e-mailu (nahradí výchozí tmavý pruh), bez něj zůstává pruh.
-  const header = input.banner ? renderBannerRow(input.banner) : renderBrandHeaderRow(site);
+  const header = input.banner ? renderBannerRow(input.banner) : renderBrandHeaderRow(input.siteUrl);
   const html = `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.subject)}</title></head>
 <body style="margin:0;padding:0;background:#f2f6f1;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">

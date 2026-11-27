@@ -87,13 +87,15 @@ export default async function StartCheckPage({ params, searchParams }: PageProps
       ? `${t("sourceAdmin")}${userName(userId)}`
       : source === "starter"
         ? `${t("sourceStarter")}${userName(userId)}`
-        : source === "web"
-          ? `${t("sourceWeb")}${userName(userId)}`
-          : source === "split"
-            ? t("sourceSplit", { split: splitLabel(splitCode) })
-            : userId && overview.userNames[userId]
-              ? overview.userNames[userId]
-              : source;
+        : source === "prestart"
+          ? `${t("sourcePrestarter")}${userName(userId)}`
+          : source === "web"
+            ? `${t("sourceWeb")}${userName(userId)}`
+            : source === "split"
+              ? t("sourceSplit", { split: splitLabel(splitCode) })
+              : userId && overview.userNames[userId]
+                ? overview.userNames[userId]
+                : source;
   const editRow =
     editBib === null ? null : (overview.rows.find((row) => row.bib === editBib) ?? null);
   const editRecord = editRow?.record ?? null;

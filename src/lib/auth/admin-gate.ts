@@ -1,12 +1,16 @@
 /**
  * Stráž administrace v `src/proxy.ts` (čisté funkce, testované).
  *
- * Nepřihlášený návštěvník (nebo účet bez přístupu do administrace podle podepsané cookie)
- * dostane na admin stránku skutečné HTTP 307 na přihlášení s `next=<původní cesta>`,
- * ne až streamovaný NEXT_REDIRECT se stavem 200. Role se v DB ověřuje dál na stránce
- * (`requireStaff` …); ta pro přesměrování použije cestu z hlavičky `REQUEST_PATH_HEADER`.
+ * Nepřihlášený návštěvník (bez platné podepsané cookie) dostane na admin stránku skutečné
+ * HTTP 307 na přihlášení s `next=<původní cesta>`, ne až streamovaný NEXT_REDIRECT se stavem 200.
+ *
+ * Přihlášeného účtu se stráž podle role v cookie neptá: role v cookie je z okamžiku přihlášení
+ * (platí 7 dní), kdežto kolečko, layout i přihlášení čtou roli z DB. Když admin účtu roli změní
+ * (registrar → mezičasy), stará cookie by posílala /admin na přihlášení a přihlášení zpět na
+ * /admin – nekonečná smyčka, v prohlížeči prázdná stránka (Pavel 26. 11.). Roli proto ověřuje
+ * až layout a stránka v DB (`getAccess` / `requireSection` …).
  */
-import { adminAccess, type UserRole } from "@/lib/auth/roles";
+import type { UserRole } from "@/lib/auth/roles";
 import { safeNext } from "@/lib/auth/safe-next";
 
 /** Hlavička, kterou proxy předává stránce s původní cestou (přepisuje případnou z klienta). */
@@ -45,7 +49,10 @@ export type AdminGateInput = {
   isRscOrAction: boolean;
   /** Role z platné podepsané cookie, nebo null (žádná / neplatná / prošlá cookie). */
   cookieRole: UserRole | null;
-  /** Příznak `staff` z cookie (role z `mcvv_user_role` při zapnutém `permissions.v2`). */
+  /**
+   * Příznak `staff` z cookie (role z `mcvv_user_role` při zapnutém `permissions.v2`).
+   * Stráž ho už nepotřebuje (pouští každou platnou session), zůstává kvůli kompatibilitě.
+   */
   cookieStaff?: boolean;
 };
 
@@ -60,9 +67,8 @@ export function adminGate(input: AdminGateInput): AdminGateDecision {
   const requestPath = `${page.path}${input.search}`;
   const documentRequest =
     (input.method === "GET" || input.method === "HEAD") && !input.isRscOrAction;
-  const allowed =
-    input.cookieRole !== null &&
-    (adminAccess(input.cookieRole) !== "none" || input.cookieStaff === true);
+  // Jen platná session; role se ověří v DB (viz výše), ne podle staré cookie.
+  const allowed = input.cookieRole !== null;
   if (!allowed && documentRequest) {
     return {
       kind: "redirect",

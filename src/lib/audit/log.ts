@@ -62,6 +62,12 @@ export type AuditAction =
   | "sale.cancelled"
   // E-mailová účtenka k prodejce (#223).
   | "sale.receipt_sent"
+  // Otevřený košík (#378): přidání / úprava / odebrání řádku, „K platbě“ a návrat do košíku.
+  | "sale.line_added"
+  | "sale.line_changed"
+  | "sale.line_removed"
+  | "sale.checkout"
+  | "sale.reopened"
   // Dotazy z kontaktního formuláře (#205).
   | "contact_question.replied"
   | "contact_question.status"

@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 
 import { LanguageSwitcher, RaceBrand, ThemeToggle } from "@/components/atoms";
+import { LinkPendingContents } from "@/components/molecules/link-pending-label";
 import { Button } from "@/components/ui/button";
 import { isActivePath } from "@/lib/site/active-path";
 import {
@@ -28,7 +29,8 @@ export type McvvNavbarAccount = {
   /** Cíl odkazu do administrace (výchozí /admin; Časomíra → /admin/den-zavodu). */
   adminHref?: string;
   /** Odkaz na obrazovku startéra (jen role Startér). */
-  starter?: { href: "/start"; label: string } | null;
+  /** Odkaz na obrazovku startu: startér `/start`, předstartér `/predstarter` (#379). */
+  starter?: { href: "/start" | "/predstarter"; label: string } | null;
   /** Odznak zpráv (null = funkce vypnutá / bez dat). */
   messages?: { count: number; href: "/zpravy" | "/admin/zpravy" } | null;
 };
@@ -103,7 +105,7 @@ function MobileLink({ link, locale, active }: { link: NavLink; locale: string; a
           active && "bg-race-accent/10 font-semibold text-foreground dark:text-white",
         )}
       >
-        {link.label}
+        <LinkPendingContents>{link.label}</LinkPendingContents>
       </Link>
     </SheetClose>
   );
@@ -143,7 +145,7 @@ export function McvvNavbar({ content, className, account }: McvvNavbarProps) {
                   "font-semibold text-foreground dark:text-white",
               )}
             >
-              {link.label}
+              <LinkPendingContents>{link.label}</LinkPendingContents>
             </Link>
           ))}
         </nav>

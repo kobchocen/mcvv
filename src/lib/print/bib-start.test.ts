@@ -94,9 +94,9 @@ describe("print adapter: start list → bib cards", () => {
       [startRow(4, "a"), startRow(501, "b")],
       new Map(),
     ).map((row) => buildBibCard(row, options));
-    assert.equal(first.startTime, "10:01:00");
+    assert.equal(first.startTime, "07:46:00");
     assert.equal(first.registrationId, null);
-    assert.equal(second.startTime, "10:00:00");
+    assert.equal(second.startTime, "07:45:00");
     assert.equal(second.color, "gold");
   });
 });

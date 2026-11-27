@@ -4,6 +4,8 @@ import { describe, it } from "node:test";
 
 import type { BibRange } from "@/lib/race/start-settings";
 import type { GeneratorEntry, GeneratorInput } from "@/lib/race/startlist-generator";
+import type { RaceContext } from "@/lib/live/race-context";
+import { startInstant, startOffsetSeconds } from "@/lib/live/start-time";
 import { DEFAULT_START_MODEL } from "@/lib/race/start-time";
 
 import { consistencyChecks } from "./checks-core";
@@ -20,6 +22,7 @@ import {
   testDayBlocked,
   TEST_SHADOW_YEAR,
 } from "./config-core";
+import { applyTestRunToRaceContext } from "./live-context";
 import { nextFreeTestBib } from "./onsite-core";
 import { isPublicYear, PUBLIC_YEAR_WHERE, publicYears } from "./public-year";
 import {
@@ -332,5 +335,83 @@ describe("public year guard", () => {
     for (const path of ["src/lib/live/online-results.ts", "src/lib/live/speaker.ts"]) {
       assert.doesNotMatch(read(path), /getLiveRaceContext/, path);
     }
+  });
+});
+
+describe("test mode organiser start (#382)", () => {
+  const official = new Date("2026-12-06T09:15:00.000Z"); // 10:15 Prague
+  const testZero = new Date("2026-11-28T09:15:00.000Z");
+  const base: RaceContext = {
+    year: 2026,
+    zero: official,
+    officialZero: official,
+    intervalS: 15,
+    secondStartFrom: 601,
+    organizerShiftSeconds: 27900 - 36900,
+    zeroOverridden: false,
+    raceDate: new Date("2026-12-06T00:00:00Z"),
+    startLimitS: 120,
+    dnsGraceS: 300,
+    dnsGraceFallbackS: 1800,
+  };
+  const run = { id: 9, zeroAt: testZero, status: "running" };
+
+  it("drops the 7:45 gap so organisers start at the test zero", () => {
+    const ctx = applyTestRunToRaceContext(base, run, "race");
+    assert.equal(ctx.year, TEST_SHADOW_YEAR);
+    assert.equal(ctx.zero, testZero);
+    assert.equal(ctx.organizerShiftSeconds, 0);
+    assert.equal(ctx.testRunId, 9);
+    assert.equal(
+      startOffsetSeconds(1, ctx.intervalS, ctx.secondStartFrom, ctx.organizerShiftSeconds),
+      0,
+    );
+    assert.equal(
+      startInstant(
+        ctx.zero,
+        1,
+        ctx.intervalS,
+        ctx.secondStartFrom,
+        ctx.organizerShiftSeconds,
+      ).getTime(),
+      testZero.getTime(),
+    );
+    assert.equal(
+      startInstant(
+        ctx.zero,
+        40,
+        ctx.intervalS,
+        ctx.secondStartFrom,
+        ctx.organizerShiftSeconds,
+      ).getTime(),
+      testZero.getTime() + 39 * 15_000,
+    );
+    assert.equal(
+      startInstant(
+        ctx.zero,
+        41,
+        ctx.intervalS,
+        ctx.secondStartFrom,
+        ctx.organizerShiftSeconds,
+      ).getTime(),
+      testZero.getTime() + 40 * 15_000,
+    );
+    // ostrý posun by pořadatele posunul 2,5 h před testovou nulu — to v testu nechceme
+    assert.equal(
+      startInstant(
+        ctx.zero,
+        1,
+        ctx.intervalS,
+        ctx.secondStartFrom,
+        base.organizerShiftSeconds,
+      ).getTime(),
+      testZero.getTime() - 9_000_000,
+    );
+  });
+
+  it("keeps the official organiser shift once the test is in cleanup", () => {
+    const ctx = applyTestRunToRaceContext(base, run, "cleanup");
+    assert.equal(ctx, base);
+    assert.equal(ctx.organizerShiftSeconds, 27900 - 36900);
   });
 });

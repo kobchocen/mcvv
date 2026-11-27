@@ -17,6 +17,8 @@ import {
   mergePending,
   offsetSeconds,
   plannedStartMs,
+  acceptsSnapshot,
+  snapshotForCorridor,
   tapAction,
   type Corridor,
   type Cue,
@@ -28,6 +30,7 @@ import {
   type StarterRunner,
 } from "@/lib/live/starter-core";
 import { DEFAULT_START_INTERVAL_S } from "@/lib/live/start-time";
+import { formatStartCountdown, isLongCountdown } from "@/lib/live/start-countdown";
 import { loadValue, saveValue } from "@/lib/live/queue-store";
 
 import styles from "./mcvv-starter-client.module.css";
@@ -78,7 +81,9 @@ function mmss(ms: number): string {
 export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }: Props) {
   const t = useTranslations("Starter");
   const [corridor, setCorridor] = useState<Corridor>(initialCorridor);
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [rawSnapshot, setSnapshot] = useState<Snapshot | null>(null);
+  // Jen startovka koridoru ze štítku – zastaralá odpověď jiného koridoru se nezobrazí.
+  const snapshot = snapshotForCorridor(rawSnapshot, corridor);
   const [pending, setPending] = useState<PendingAction[]>([]);
   const [acked, setAcked] = useState<(PendingAction & { ackAt: number })[]>([]);
   const [online, setOnline] = useState(true);
@@ -153,7 +158,8 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
     let cancelled = false;
     etagRef.current = null;
     void loadValue<Snapshot>(`starter:snap:${corridor}`).then((cached) => {
-      if (!cancelled && cached) setSnapshot((current) => current ?? cached);
+      if (cancelled || !cached || cached.corridor !== corridor) return;
+      setSnapshot((current) => snapshotForCorridor(current, corridor) ?? cached);
     });
     return () => {
       cancelled = true;
@@ -260,42 +266,51 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
   }, [serverNow]);
 
   // --- stahování startovky každé ~3 s ---
-  const fetchSnapshot = useCallback(async () => {
-    const startedAt = Date.now();
-    try {
-      const response = await fetch(`/api/live/starter?corridor=${corridor}`, {
-        cache: "no-store",
-        headers: etagRef.current ? { "If-None-Match": etagRef.current } : undefined,
-      });
-      if (response.status === 304) {
+  const fetchSnapshot = useCallback(
+    async (signal?: AbortSignal) => {
+      const startedAt = Date.now();
+      try {
+        const response = await fetch(`/api/live/starter?corridor=${corridor}`, {
+          cache: "no-store",
+          signal,
+          headers: etagRef.current ? { "If-None-Match": etagRef.current } : undefined,
+        });
+        if (response.status === 304) {
+          setOnline(true);
+          setAcked((list) => list.filter((entry) => entry.ackAt >= startedAt));
+          return;
+        }
+        if (!response.ok) {
+          setOnline(response.status < 500);
+          return;
+        }
+        const data = (await response.json()) as Snapshot;
+        // přepnutý koridor: odpověď pro předchozí koridor zahodit (ani ETag, ani cache)
+        if (!acceptsSnapshot(data, corridor, signal?.aborted)) return;
+        etagRef.current = response.headers.get("etag");
         setOnline(true);
+        setSnapshot(data);
         setAcked((list) => list.filter((entry) => entry.ackAt >= startedAt));
-        return;
+        void saveValue(`starter:snap:${data.corridor}`, data);
+      } catch {
+        if (!signal?.aborted) setOnline(false);
       }
-      if (!response.ok) {
-        setOnline(response.status < 500);
-        return;
-      }
-      const data = (await response.json()) as Snapshot;
-      etagRef.current = response.headers.get("etag");
-      setOnline(true);
-      setSnapshot(data);
-      setAcked((list) => list.filter((entry) => entry.ackAt >= startedAt));
-      void saveValue(`starter:snap:${data.corridor}`, data);
-    } catch {
-      setOnline(false);
-    }
-  }, [corridor]);
+    },
+    [corridor],
+  );
 
   useEffect(() => {
+    // a corridor switch aborts the old poll, so its late answer never fills the new queue
+    const controller = new AbortController();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- start polling the start list (async fetch)
-    void fetchSnapshot();
-    const timer = setInterval(() => void fetchSnapshot(), POLL_MS);
-    const goOnline = () => void fetchSnapshot();
+    void fetchSnapshot(controller.signal);
+    const timer = setInterval(() => void fetchSnapshot(controller.signal), POLL_MS);
+    const goOnline = () => void fetchSnapshot(controller.signal);
     const goOffline = () => setOnline(false);
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
     return () => {
+      controller.abort();
       clearInterval(timer);
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
@@ -362,6 +377,7 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
         runner.bib,
         snapshot.intervalS,
         snapshot.secondStartFrom,
+        snapshot.organizerShiftSeconds,
       ),
     }));
   }, [snapshot]);
@@ -628,6 +644,20 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
       </div>
     ) : null;
 
+  const countdownText = (remaining: number, plannedMs: number, short = false): string =>
+    formatStartCountdown(
+      remaining,
+      plannedMs,
+      locale,
+      {
+        hours: (hours, minutes) => t("cdHours", { hours, minutes }),
+        hoursAgo: (hours, minutes) => t("cdHoursAgo", { hours, minutes }),
+        hoursShort: (hours) => t("cdHoursShort", { hours }),
+        hoursShortAgo: (hours) => t("cdHoursShortAgo", { hours }),
+      },
+      short,
+    );
+
   const queueView = (
     <div className={styles.view}>
       <div className={styles.counters}>
@@ -685,8 +715,11 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
                   )}
                 </div>
               </div>
-              <div className={`${styles.cd} ${styles.num}`}>
-                {remaining > 0 ? `−${mmss(remaining)}` : `+${mmss(remaining)}`}
+              <div
+                className={`${styles.cd} ${styles.num} ${isLongCountdown(remaining) ? styles.cdLong : ""}`}
+                data-testid={`starter-cd-${row.bib}`}
+              >
+                {countdownText(remaining, row.plannedMs)}
               </div>
               {row.zone === "red" ? (
                 <div
@@ -786,7 +819,12 @@ export function McvvStarterClient({ userId, initialCorridor, canSwitch, locale }
     const zone =
       remaining <= intervalMs ? styles.liNow : remaining <= 2 * intervalMs ? styles.liNext : "";
     if (row.state === "marked") return { className: `${styles.liMk} ${zone}`, label: t("atStart") };
-    return { className: `${styles.liUp} ${zone}`, label: t("stIn", { time: mmss(remaining) }) };
+    return {
+      className: `${styles.liUp} ${zone}`,
+      label: isLongCountdown(remaining)
+        ? countdownText(remaining, row.plannedMs, true)
+        : t("stIn", { time: mmss(remaining) }),
+    };
   };
   const nowlineIndex = filter === "all" ? listRows.findIndex((row) => row.plannedMs > now) : -1;
   const listView = (

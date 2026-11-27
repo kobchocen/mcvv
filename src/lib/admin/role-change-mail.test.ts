@@ -64,6 +64,7 @@ describe("role change e-mail (#191)", () => {
     assert.equal(roleChangeMailUrl(`${SITE}/`, "cs", "timing"), `${SITE}/cs/admin/den-zavodu`);
     assert.equal(roleChangeMailUrl(SITE, "cs", "splitmaker"), `${SITE}/cs/mezicasy`);
     assert.equal(roleChangeMailUrl(SITE, "cs", "race_office"), `${SITE}/cs/kancelar`);
+    assert.equal(roleChangeMailUrl(SITE, "cs", "resultboard"), `${SITE}/cs/resultboard`);
     assert.equal(roleChangeMailUrl(SITE, "xx", "registrar"), `${SITE}/cs/prihlasky`);
   });
 

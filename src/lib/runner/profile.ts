@@ -14,6 +14,14 @@ export type RunnerResultSummary = Readonly<{
   average: number;
 }>;
 
+/**
+ * Počet účastí na profilu („Účasti“ / „Starts“): každý oficiální výsledek (`mcvv_time`),
+ * včetně času 0. Stejné číslo používá řazení pořadatelů ve startovce (#382).
+ */
+export function officialStartsCount(results: readonly RunnerResultTime[]): number {
+  return results.filter((row) => Number.isFinite(row.time)).length;
+}
+
 /** Aggregate result times, or `null` when the runner has no results yet. */
 export function summarizeRunnerResults(
   results: readonly RunnerResultTime[],
@@ -23,7 +31,7 @@ export function summarizeRunnerResults(
     return null;
   }
   return {
-    starts: times.length,
+    starts: officialStartsCount(results),
     record: Math.min(...times),
     average: Math.round(times.reduce((sum, time) => sum + time, 0) / times.length),
   };

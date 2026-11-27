@@ -1,13 +1,19 @@
 import { DEFAULT_RACE_ZERO_SECONDS, zonedCivilToUtc } from "@/lib/date/race-schedule";
 
 /**
- * Model startu ročníku (#114). Jediné místo, kde se počítá startovní čas z čísla:
+ * Model startu ročníku (#114, nula pořadatelů #382). Jediné místo, kde se počítá
+ * startovní čas z čísla:
  *
- *   n' = cislo >= prvni_cislo_2_startu ? cislo - (prvni_cislo_2_startu - 1) : cislo
- *   start = nula + interval * (n' - 1)
+ *   n' = číslo >= první číslo 2. startu ? číslo − (první číslo 2. startu − 1) : číslo
+ *   nula' = n' je ve slotech 1–40 ? nula pořadatelů : nula ročníku
+ *   start = nula' + interval × (n' − 1)
  *
- * Čísla 1 a 601 startují zároveň (dva paralelní starty). Nulový čas je civilní čas
- * v Europe/Prague, takže žádný pevný offset.
+ * Čísla 1 a 601 startují zároveň. Pořadatelé v rozsahu 1–40 / 601–640 (při výchozí
+ * hranici 601) mají vlastní nulu (od 2026 výchozí 7:45); mimo ten rozsah platí nula
+ * ročníku (výchozí 10:15), včetně přetékajícího pořadatele. U ročníků před 2026, kde
+ * sloupec nuly pořadatelů v DB je NULL, se posun neuplatní — jinak by se změnily
+ * historické startovní časy (startovka, tisk, PDF). Nulový čas je civilní čas
+ * v Europe/Prague.
  */
 export type StartModel = {
   /** Nulový čas v sekundách od půlnoci (10:15:00 = 36 900). */
@@ -16,12 +22,61 @@ export type StartModel = {
   intervalSeconds: number;
   /** První číslo druhého startu (601). */
   secondStartFrom: number;
+  /** Nula pořadatelů (sloty 1–40) v sekundách od půlnoci (7:45:00 = 27 900). */
+  organizerZeroSeconds: number;
 };
+
+/** Výchozí první start pořadatelů (7:45, z hovoru k #382). */
+export const DEFAULT_ORGANIZER_ZERO_SECONDS = 7 * 3600 + 45 * 60;
+
+/**
+ * Od tohoto roku je výchozí nula pořadatelů 7:45, když je sloupec v DB NULL.
+ * Starší ročníky bez uložené hodnoty nemají posun (nula ročníku).
+ */
+export const FIRST_ORGANIZER_ZERO_YEAR = 2026;
+
+/** Výchozí nula pořadatelů pro daný rok, když ročník nemá uloženou hodnotu. */
+export function defaultOrganizerZeroSeconds(
+  year: number | undefined,
+  editionZeroSeconds: number,
+): number {
+  // Bez roku (nový / výchozí model) platí 7:45. Historické ročníky musí rok předat.
+  if (year == null) return DEFAULT_ORGANIZER_ZERO_SECONDS;
+  return year >= FIRST_ORGANIZER_ZERO_YEAR ? DEFAULT_ORGANIZER_ZERO_SECONDS : editionZeroSeconds;
+}
+
+/**
+ * Hlavička startovky (PDF, admin) ukáže nulu pořadatelů, když se liší od nuly
+ * ročníku, nebo když platí výchozí 7:45 (rok 2026+). Historický ročník bez
+ * posunu (nula pořadatelů = nula ročníku) ji nezobrazí.
+ */
+export function showsOrganizerZeroInHeader(model: StartModel, year?: number): boolean {
+  if (model.organizerZeroSeconds !== model.zeroSeconds) return true;
+  return year != null && year >= FIRST_ORGANIZER_ZERO_YEAR;
+}
+
+const MODEL_LINE_SEP = " · ";
+
+/**
+ * Vloží „Pořadatelé od 07:45:00“ hned za nulu ročníku (za první oddělovač).
+ * Když extra chybí, vrátí původní řádek.
+ */
+export function withOrganizerZeroLine(base: string, organizerLine?: string | null): string {
+  if (!organizerLine) return base;
+  const index = base.indexOf(MODEL_LINE_SEP);
+  return index === -1
+    ? `${base}${MODEL_LINE_SEP}${organizerLine}`
+    : `${base.slice(0, index)}${MODEL_LINE_SEP}${organizerLine}${base.slice(index)}`;
+}
+
+/** Sloty s nulou pořadatelů – stejné jako `SPECIAL_SLOT_RANGES.organizer`. */
+export const ORGANIZER_SLOT_RANGE = { from: 1, to: 40 } as const;
 
 export const DEFAULT_START_MODEL: StartModel = {
   zeroSeconds: DEFAULT_RACE_ZERO_SECONDS,
   intervalSeconds: 15,
   secondStartFrom: 601,
+  organizerZeroSeconds: DEFAULT_ORGANIZER_ZERO_SECONDS,
 };
 
 export const DEFAULT_CHAMPION_BIBS = { men: 400, women: 950 } as const;
@@ -32,12 +87,18 @@ export function startModelFromEdition(
         startZeroSeconds?: number | null;
         startInterval?: number | null;
         secondStartFrom?: number | null;
+        organizerZeroSeconds?: number | null;
+        date?: Date | null;
       }
     | null
     | undefined,
+  year?: number,
 ): StartModel {
+  const organizer = edition?.organizerZeroSeconds;
+  const zeroSeconds = edition?.startZeroSeconds ?? DEFAULT_START_MODEL.zeroSeconds;
+  const resolvedYear = year ?? (edition?.date ? edition.date.getUTCFullYear() : undefined);
   return {
-    zeroSeconds: edition?.startZeroSeconds ?? DEFAULT_START_MODEL.zeroSeconds,
+    zeroSeconds,
     intervalSeconds:
       edition?.startInterval && edition.startInterval > 0
         ? edition.startInterval
@@ -46,6 +107,10 @@ export function startModelFromEdition(
       edition?.secondStartFrom && edition.secondStartFrom > 1
         ? edition.secondStartFrom
         : DEFAULT_START_MODEL.secondStartFrom,
+    organizerZeroSeconds:
+      organizer != null && Number.isInteger(organizer) && organizer >= 0 && organizer < 86400
+        ? organizer
+        : defaultOrganizerZeroSeconds(resolvedYear, zeroSeconds),
   };
 }
 
@@ -64,6 +129,22 @@ export function bibForSlot(model: StartModel, series: 1 | 2, slot: number): numb
   return series === 2 ? slot + model.secondStartFrom - 1 : slot;
 }
 
+/** Číslo leží v rozsahu nuly pořadatelů (1–40 / 601–640 při výchozí hranici). */
+export function usesOrganizerZero(model: StartModel, bib: number): boolean {
+  const slot = startSlot(model, bib);
+  return slot >= ORGANIZER_SLOT_RANGE.from && slot <= ORGANIZER_SLOT_RANGE.to;
+}
+
+/** Nula použitá pro dané číslo (pořadatelé vs. zbytek startovky). */
+export function zeroSecondsForBib(model: StartModel, bib: number): number {
+  return usesOrganizerZero(model, bib) ? model.organizerZeroSeconds : model.zeroSeconds;
+}
+
+/** Posun nuly pořadatelů vůči nule ročníku (7:45 − 10:15 = −9 000). */
+export function organizerShiftSeconds(model: StartModel): number {
+  return model.organizerZeroSeconds - model.zeroSeconds;
+}
+
 /** Startovní čas v sekundách od půlnoci, null pro neplatné číslo. */
 export function startSecondsForBib(
   model: StartModel,
@@ -72,7 +153,13 @@ export function startSecondsForBib(
   if (bib == null || !Number.isInteger(bib) || bib <= 0) {
     return null;
   }
-  return model.zeroSeconds + model.intervalSeconds * (startSlot(model, bib) - 1);
+  return zeroSecondsForBib(model, bib) + model.intervalSeconds * (startSlot(model, bib) - 1);
+}
+
+/** Posun startu vůči nule ročníku (pořadatelé typicky záporný). */
+export function startOffsetFromZero(model: StartModel, bib: number): number | null {
+  const seconds = startSecondsForBib(model, bib);
+  return seconds == null ? null : seconds - model.zeroSeconds;
 }
 
 export function formatClock(seconds: number): string {
@@ -120,5 +207,6 @@ export function parseClock(raw: string | null | undefined): number | null {
 
 /** Řazení startovky podle času, obě vlny prolnuté (při shodě času dřív 1. start). */
 export function compareByStart(model: StartModel, a: number, b: number): number {
-  return startSlot(model, a) - startSlot(model, b) || a - b;
+  const byTime = (startSecondsForBib(model, a) ?? 0) - (startSecondsForBib(model, b) ?? 0);
+  return byTime || startSlot(model, a) - startSlot(model, b) || a - b;
 }

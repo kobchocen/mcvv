@@ -189,14 +189,23 @@ async function processSaleTransaction(
       data: { status: "paid_bank", paidAt: now, paidByName: "fio", bankTxId },
     });
     const ok = paid.count === 1;
+    // Otevřený košík (#378) zaplacený převodem s přesnou částkou: uzavřít ho k platbě.
+    if (ok) {
+      await db.sale.updateMany({
+        where: { id: decision.saleId, checkoutAt: null },
+        data: { checkoutAt: now },
+      });
+    }
     // Dohláška na místě (#222): zaplacená prodejka = platba přihlášky (ve stejné transakci).
     const sale = ok
       ? await db.sale.findUnique({
           where: { id: decision.saleId },
-          select: { year: true, total: true, registrationId: true },
+          select: { id: true, year: true, total: true, registrationId: true },
         })
       : null;
-    const paymentId = sale ? await payOnsiteRegistrationInTx(db, sale, now) : null;
+    // Platba přihlášky jen ve výši startovného (bez merche, #378).
+    const payment = sale ? await payOnsiteRegistrationInTx(db, sale, now) : null;
+    const paymentId = payment?.paymentId ?? null;
     await db.bankTx.update({
       where: { id: bankTxId },
       data: ok

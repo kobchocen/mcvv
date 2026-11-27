@@ -1,6 +1,14 @@
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 
+import {
+  PRINT_HEADER_BAND_COMPACT_MM,
+  PRINT_HEADER_BAND_MM,
+  drawOfficialLogo,
+  loadOfficialLogoPng,
+  officialLogoPrintWidthMm,
+  officialLogoSize,
+} from "@/lib/print/official-logo";
 import type { ReceiptFonts } from "@/lib/receipts/fonts";
 
 import { formatClock, startSeriesForBib, type StartModel } from "./start-time";
@@ -18,7 +26,6 @@ const SITE = "www.mcvv.org";
 export type StartListPdfLabels = {
   brandTop: string;
   brandBottom: string;
-  brandMark: string;
   title: string;
   edition: string;
   raceDay: string;
@@ -42,6 +49,30 @@ export type StartListPdfLabels = {
  * Linky mezi minutami jen při řazení podle času. Jen pro pořadatele
  * (route /api/admin/startovka/pdf).
  */
+
+const MODEL_LINE_SEP = " · ";
+
+function wrapModelLine(
+  text: string,
+  maxWidth: number,
+  widthOf: (value: string) => number,
+): string[] {
+  const parts = text.split(MODEL_LINE_SEP);
+  const lines: string[] = [];
+  let current = "";
+  for (const part of parts) {
+    const next = current ? `${current}${MODEL_LINE_SEP}${part}` : part;
+    if (current && widthOf(next) > maxWidth) {
+      lines.push(current);
+      current = part;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 export function renderStartListPdf(
   rows: PublicStartRow[],
   model: StartModel,
@@ -72,30 +103,21 @@ export function renderStartListPdf(
     doc.text(value, x, y, align ? { align } : undefined);
   };
 
+  const logo = loadOfficialLogoPng("dark");
+  const logoW = officialLogoPrintWidthMm();
+  const logoH = officialLogoSize(logoW).height;
   const header = (first: boolean) => {
-    const band = first ? 30 : 16;
+    const band = first ? PRINT_HEADER_BAND_MM : PRINT_HEADER_BAND_COMPACT_MM;
     doc.setFillColor(...INK);
     doc.rect(0, 0, width, band, "F");
     doc.setFillColor(...ACCENT);
     doc.rect(0, band, width, 1.2, "F");
-    const markSize = first ? 12 : 8;
-    const markY = (band - markSize) / 2;
-    doc.roundedRect(MARGIN, markY, markSize, markSize, 1.6, 1.6, "F");
-    text(
-      labels.brandMark,
-      MARGIN + markSize / 2,
-      markY + markSize * 0.72,
-      {
-        size: first ? 17 : 11,
-        bold: true,
-        color: [255, 255, 255],
-      },
-      "center",
-    );
-    const brandX = MARGIN + markSize + 4;
+    const logoY = (band - logoH) / 2;
+    drawOfficialLogo(doc, logo, MARGIN, logoY, logoW, "mcvv-logo-dark");
+    const brandX = MARGIN + logoW + 1;
     if (first) {
-      text(labels.brandTop, brandX, markY + 4.8, { size: 9.5, bold: true, color: [255, 255, 255] });
-      text(labels.brandBottom, brandX, markY + 10, { size: 9.5, bold: true, color: ACCENT });
+      text(labels.brandTop, brandX, logoY + 4.8, { size: 9.5, bold: true, color: [255, 255, 255] });
+      text(labels.brandBottom, brandX, logoY + 10, { size: 9.5, bold: true, color: ACCENT });
       text(labels.title, right, 13, { size: 17, bold: true, color: [255, 255, 255] }, "right");
       text(
         `${labels.edition} · ${labels.raceDay}`,
@@ -123,9 +145,18 @@ export function renderStartListPdf(
 
   const firstBand = header(true);
   let y = firstBand + 8;
-  text(labels.model, MARGIN, y, { size: 9.5, color: INK, bold: true });
+  // Delší řádek s nulou pořadatelů se musí vejít vedle počtu závodníků.
+  // Zalamujeme na oddělovačích „ · “, ať se nerozbije „2. start od č. 601“.
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(9.5);
+  const modelWidth = width - 2 * MARGIN - doc.getTextWidth(labels.count) - 4;
+  const modelLines = wrapModelLine(labels.model, modelWidth, (value) => doc.getTextWidth(value));
   text(labels.count, right, y, { size: 9.5, color: INK, bold: true }, "right");
-  y += 5;
+  for (const line of modelLines) {
+    text(line, MARGIN, y, { size: 9.5, color: INK, bold: true });
+    y += 4.5;
+  }
+  y += 0.5;
   text(labels.legend, MARGIN, y, { size: 8, color: MUTED });
   y += 3;
 
@@ -156,7 +187,7 @@ export function renderStartListPdf(
     autoTable(doc, {
       startY: y,
       theme: "plain",
-      margin: { left: MARGIN, right: MARGIN, top: 22, bottom: 18 },
+      margin: { left: MARGIN, right: MARGIN, top: 34, bottom: 18 },
       head: [
         [
           labels.colTime,

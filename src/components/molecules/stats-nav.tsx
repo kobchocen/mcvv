@@ -1,4 +1,6 @@
 import { Link } from "@/i18n/routing";
+
+import { LinkPendingContents } from "@/components/molecules/link-pending-label";
 import { cn } from "@/lib/utils";
 
 /** `slug: ""` is the overview page (/statistiky). Optional `href` is a public path such as /kluby. */
@@ -65,7 +67,7 @@ export function StatsNav({
                     : "inline-flex h-9 items-center whitespace-nowrap rounded-full border border-race-line/70 bg-race-surface/60 px-4 font-display text-sm font-semibold text-race-muted transition hover:border-race-accent hover:text-race-accent"
                 }
               >
-                {item.label}
+                <LinkPendingContents>{item.label}</LinkPendingContents>
               </Link>
             </li>
           );

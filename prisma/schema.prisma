@@ -131,54 +131,57 @@ model WebImageType {
 
 /// Základní info o jednotlivých ročnících závodu
 model Edition {
-  id               Int       @id @default(autoincrement()) @map("id") @db.SmallInt
-  date             DateTime  @map("datum") @db.Date
+  id                   Int       @id @default(autoincrement()) @map("id") @db.SmallInt
+  date                 DateTime  @map("datum") @db.Date
   /// Původní volný text počasí (poznámka; zobrazí se, když chybí typ).
-  weather          String?   @map("weather") @db.VarChar(64)
-  temp             Int?      @map("temp") @db.SmallInt
+  weather              String?   @map("weather") @db.VarChar(64)
+  temp                 Int?      @map("temp") @db.SmallInt
   /// Typ počasí (číselník v `src/lib/editions/weather.ts`, emoji + 5 jazyků).
-  weatherKind      String?   @map("pocasi_typ") @db.VarChar(16)
+  weatherKind          String?   @map("pocasi_typ") @db.VarChar(16)
   /// Štítky stavu trati oddělené čárkou (mud, snow_cover, …).
-  courseTags       String?   @map("trat_stitky") @db.VarChar(120)
-  zhl              Boolean?  @default(true) @map("zhl")
-  isCarEx          Boolean?  @default(false) @map("iscarex")
-  regDeadline      DateTime? @map("prihl_datum") @db.Date
-  regEmail         String?   @default("mcvv@mcvv.org") @map("prihl_mail") @db.VarChar(32)
-  startKidsMail    Int?      @default(20) @map("start_deti_mail") @db.SmallInt
-  startKidsPlace   Int?      @default(50) @map("start_deti_mist") @db.SmallInt
-  startAdultMail   Int?      @default(50) @map("start_dosp_mail") @db.SmallInt
-  startAdultPlace  Int?      @default(100) @map("start_dosp_mist") @db.SmallInt
-  startInterval    Int?      @default(15) @map("st_interval") @db.SmallInt
-  infoEmail        String?   @default("mcvv@mcvv.org") @map("infomail") @db.VarChar(32)
-  infoWww          String?   @default("www.mcvv.org") @map("infowww") @db.VarChar(32)
-  infoTel          String?   @default("") @map("infotel") @db.VarChar(16)
+  courseTags           String?   @map("trat_stitky") @db.VarChar(120)
+  zhl                  Boolean?  @default(true) @map("zhl")
+  isCarEx              Boolean?  @default(false) @map("iscarex")
+  regDeadline          DateTime? @map("prihl_datum") @db.Date
+  regEmail             String?   @default("mcvv@mcvv.org") @map("prihl_mail") @db.VarChar(32)
+  startKidsMail        Int?      @default(20) @map("start_deti_mail") @db.SmallInt
+  startKidsPlace       Int?      @default(50) @map("start_deti_mist") @db.SmallInt
+  startAdultMail       Int?      @default(50) @map("start_dosp_mail") @db.SmallInt
+  startAdultPlace      Int?      @default(100) @map("start_dosp_mist") @db.SmallInt
+  startInterval        Int?      @default(15) @map("st_interval") @db.SmallInt
+  infoEmail            String?   @default("mcvv@mcvv.org") @map("infomail") @db.VarChar(32)
+  infoWww              String?   @default("www.mcvv.org") @map("infowww") @db.VarChar(32)
+  infoTel              String?   @default("") @map("infotel") @db.VarChar(16)
   // Ceny v cíli
-  finAdult1        Int?      @default(2000) @map("fin_dosp_1") @db.SmallInt
-  finAdult2        Int?      @default(1000) @map("fin_dosp_2") @db.SmallInt
-  finAdult3        Int?      @default(500) @map("fin_dosp_3") @db.SmallInt
-  finAdult4        Int?      @default(200) @map("fin_dosp_4") @db.SmallInt
-  finAdult5        Int?      @default(100) @map("fin_dosp_5") @db.SmallInt
-  finVet1          Int?      @default(300) @map("fin_vet_1") @db.SmallInt
-  finVet2          Int?      @default(200) @map("fin_vet_2") @db.SmallInt
-  finVet3          Int?      @default(100) @map("fin_vet_3") @db.SmallInt
+  finAdult1            Int?      @default(2000) @map("fin_dosp_1") @db.SmallInt
+  finAdult2            Int?      @default(1000) @map("fin_dosp_2") @db.SmallInt
+  finAdult3            Int?      @default(500) @map("fin_dosp_3") @db.SmallInt
+  finAdult4            Int?      @default(200) @map("fin_dosp_4") @db.SmallInt
+  finAdult5            Int?      @default(100) @map("fin_dosp_5") @db.SmallInt
+  finVet1              Int?      @default(300) @map("fin_vet_1") @db.SmallInt
+  finVet2              Int?      @default(200) @map("fin_vet_2") @db.SmallInt
+  finVet3              Int?      @default(100) @map("fin_vet_3") @db.SmallInt
   // Model startu (#114): nulový čas v sekundách od půlnoci (Europe/Prague), 1. číslo 2. startu,
   // čísla obhájců (absolutní vítězové minulého ročníku, muži a ženy).
-  startZeroSeconds Int       @default(36900) @map("st_nula_s")
-  secondStartFrom  Int       @default(601) @map("st_druhy_od") @db.SmallInt
-  championBibMen   Int?      @default(400) @map("st_obhajce_m") @db.SmallInt
-  championBibWomen Int?      @default(950) @map("st_obhajce_z") @db.SmallInt
+  startZeroSeconds     Int       @default(36900) @map("st_nula_s")
+  /// Nula startu pořadatelů (čísla ve slotech 1–40, tj. 1–40 / 601–640) v sekundách od půlnoci.
+  /// Null = výchozích 7:45 (#382).
+  organizerZeroSeconds Int?      @map("st_nula_porad_s")
+  secondStartFrom      Int       @default(601) @map("st_druhy_od") @db.SmallInt
+  championBibMen       Int?      @default(400) @map("st_obhajce_m") @db.SmallInt
+  championBibWomen     Int?      @default(950) @map("st_obhajce_z") @db.SmallInt
   // Termíny přihlášek (sloty, mcvv_prihl_slot) – nastavení ročníku. Časy v sekundách od půlnoci
   // (Europe/Prague) jako st_nula_s; DATETIME v UTC.
   /// Otevření přihlášek (začátek early/standardu); null = podle slotu standard.
-  regOpensAt       DateTime? @map("prihl_otevreni")
+  regOpensAt           DateTime? @map("prihl_otevreni")
   /// Lhůta doplatku nezaplacených standardních přihlášek; null = den po konci standardu 12:00.
-  standardPayUntil DateTime? @map("doplatek_std_do")
+  standardPayUntil     DateTime? @map("doplatek_std_do")
   /// Čas e-mailu „zaplaťte dnes do …“ v den lhůty doplatku (výchozí 7:00).
-  standardPayMailS Int       @default(25200) @map("doplatek_std_mail")
+  standardPayMailS     Int       @default(25200) @map("doplatek_std_mail")
   /// Otevření závodní kanceláře v den závodu (výchozí 9:00).
-  officeOpensS     Int       @default(32400) @map("kancelar_od")
+  officeOpensS         Int       @default(32400) @map("kancelar_od")
   /// Konec přihlášek na místě v den závodu (výchozí 9:45).
-  onsiteUntilS     Int       @default(35100) @map("na_miste_do")
+  onsiteUntilS         Int       @default(35100) @map("na_miste_do")
 
   @@map("mcvv_info")
 }
@@ -285,6 +288,8 @@ model RegistrationLine {
   note           String?   @map("poznamka") @db.VarChar(128)
   created        DateTime? @map("created")
   author         String?   @map("autor") @db.VarChar(64)
+  /// Dohláška v kanceláři (#378): řádek prodejky se startovným tohoto běžce (mcvv_sale_line.id).
+  saleLineId     Int?      @map("prodejka_radek_id")
 
   runner       Runner       @relation(fields: [runnerId], references: [id])
   club         Club         @relation(fields: [clubId, year], references: [id, year])
@@ -384,6 +389,11 @@ enum UserRole {
   race_office
   /// „Startér“: obrazovka startu `/start` pro jeden koridor (mcvv_user.start_corridor).
   starter
+  /// „Resultboard“: jen obrazovky výsledků v cíli `/resultboard`, bez administrace.
+  resultboard
+  /// „Předstartér“ (#379): mobilní obrazovka `/predstarter` pro jednu frontu koridoru
+  /// (mcvv_user.start_corridor), označuje připravené stejným záznamem startu jako startér.
+  prestarter
 }
 
 /// Application accounts (hashed passwords). Not the legacy `users` table.
@@ -401,7 +411,7 @@ model User {
   /// Přiřazená stanoviště splitmakera (kódy splitů, např. "1" nebo "13", "0" = start); null = žádné.
   /// Admin a organizer zapisují na všechna stanoviště bez ohledu na tohle pole.
   splitStations   String?   @map("split_stations") @db.VarChar(8)
-  /// Koridor startéra: 1 = čísla 1 … st_druhy_od − 1, 2 = od st_druhy_od; null = nepřiřazen.
+  /// Koridor startéra a předstartéra: 1 = čísla 1 … st_druhy_od − 1, 2 = od st_druhy_od; null = nepřiřazen.
   startCorridor   Int?      @map("start_corridor") @db.TinyInt
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -1032,7 +1042,7 @@ model StartCheck {
   /// Okamžik startu podle zařízení (po korekci hodin) nebo ručního zápisu admina. Startér a
   /// automatické doplnění ze splitu sem píšou plánovaný start ze startovky (ten platí).
   startedAt   DateTime  @map("started_at") @db.DateTime(3)
-  /// web | admin | starter | split
+  /// web | admin | starter | prestart (předstartér, #379) | split
   source      String    @db.VarChar(8)
   userId      Int?      @map("user_id")
   createdAt   DateTime  @default(now()) @map("created_at") @db.DateTime(3)
@@ -1066,7 +1076,7 @@ model StartCheckEntry {
   startedAt  DateTime? @map("started_at") @db.DateTime(3)
   /// Odchylka od plánovaného startu v sekundách (jen pro zobrazení, nikde se nepočítá).
   offsetS    Int?      @map("offset_s")
-  /// web | admin | starter | split
+  /// web | admin | starter | prestart (předstartér, #379) | split
   source     String    @db.VarChar(8)
   /// create | correct | delete; startér: mark | unmark | ontime | late; split: auto
   action     String    @db.VarChar(8)
@@ -1214,7 +1224,9 @@ model SaleItem {
 }
 
 /// Prodejka závodní kanceláře (#207). VS = rok + 9 + pořadí na 5 míst (např. 2026900001),
-/// nikdy se nepotká s VS přihlášky (rok + 1–9999). Částka a řádky se po vytvoření nemění.
+/// nikdy se nepotká s VS přihlášky (rok + 1–9999). Otevřená prodejka (#378, `checkoutAt` null)
+/// je košík: přidávají se do ní dohlášky i položky ceníku. Po uzavření k platbě se částka
+/// a řádky nemění (úprava jen po návratu do košíku, dokud je nezaplacená).
 model Sale {
   id             Int       @id @default(autoincrement())
   year           Int       @map("rok") @db.SmallInt
@@ -1246,6 +1258,8 @@ model Sale {
   locale         String?   @map("jazyk") @db.VarChar(2)
   /// Kdy naposledy odešla účtenka e-mailem (do fronty).
   receiptSentAt  DateTime? @map("uctenka_odeslana_at")
+  /// Uzavřeno k platbě (#378): null = otevřený košík (bez QR a platby), jinak čas „K platbě“.
+  checkoutAt     DateTime? @map("k_platbe_at")
 
   lines SaleLine[]
 
@@ -1258,13 +1272,16 @@ model Sale {
 
 /// Řádek prodejky se snímkem názvu a ceny (pozdější změna ceníku historii nemění).
 model SaleLine {
-  id        Int    @id @default(autoincrement())
-  saleId    Int    @map("prodejka_id")
-  itemId    Int?   @map("polozka_id")
-  name      String @map("nazev") @db.VarChar(80)
-  unitPrice Int    @map("cena")
-  quantity  Int    @map("kusy") @db.SmallInt
-  lineTotal Int    @map("castka")
+  id        Int     @id @default(autoincrement())
+  saleId    Int     @map("prodejka_id")
+  itemId    Int?    @map("polozka_id")
+  name      String  @map("nazev") @db.VarChar(80)
+  unitPrice Int     @map("cena")
+  quantity  Int     @map("kusy") @db.SmallInt
+  lineTotal Int     @map("castka")
+  /// Řádek dohlášky (#222/#378): startovné jednoho běžce přihlášky prodejky (vazba z
+  /// `RegistrationLine.saleLineId`); false = položka ceníku (merch).
+  entry     Boolean @default(false) @map("dohlaska")
 
   sale Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
   item SaleItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)

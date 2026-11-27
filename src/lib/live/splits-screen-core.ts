@@ -154,6 +154,8 @@ export function relativeTime(input: {
   intervalS: number;
   /** První číslo 2. startu z modelu ročníku (st_druhy_od, výchozí 601). */
   secondStartFrom: number;
+  /** Posun nuly pořadatelů vůči nule ročníku (#382). */
+  organizerShiftSeconds?: number;
   bib: number;
   punchedAt: number;
   /** Čas potvrzený serverem (sekundy), pokud ho server vrátil. */
@@ -162,7 +164,13 @@ export function relativeTime(input: {
   startLimitS?: number;
 }): RelativeTime {
   const estimate = typeof input.serverTime !== "number";
-  const planned = startInstant(input.zero, input.bib, input.intervalS, input.secondStartFrom);
+  const planned = startInstant(
+    input.zero,
+    input.bib,
+    input.intervalS,
+    input.secondStartFrom,
+    input.organizerShiftSeconds ?? 0,
+  );
   const diffMs = input.punchedAt - planned.getTime();
   // stejné zaokrouhlení jako server: start na celé sekundy, mezičas dolů (legacy `time() − start`)
   const local = input.atStart ? Math.round(diffMs / 1000) : Math.floor(diffMs / 1000);

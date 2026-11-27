@@ -97,6 +97,7 @@ export async function loadOnlineSnapshot(
                 r.bib,
                 ctx.intervalS,
                 ctx.secondStartFrom,
+                ctx.organizerShiftSeconds,
               ),
               ctx.startLimitS,
             )

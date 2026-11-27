@@ -18,8 +18,9 @@ import {
   legacyAllows,
   legacyGuard,
   overrideKey,
+  screenAllowsFor,
+  splitAllowsFor,
   v2Allows,
-  v2HasAdminHome,
   type AccessLevel,
   type Overrides,
   type SectionId,
@@ -34,7 +35,8 @@ import {
 } from "@/lib/admin/view-as-core";
 import { REQUEST_PATH_HEADER } from "@/lib/auth/admin-gate";
 import { loginHref } from "@/lib/auth/login-next";
-import { hasAdminHome, isUserRole, type UserRole } from "@/lib/auth/roles";
+import { adminLevelOf } from "@/lib/admin/admin-level";
+import { isUserRole, type AdminAccess, type UserRole } from "@/lib/auth/roles";
 import { safeNext } from "@/lib/auth/safe-next";
 import { getSession, type SessionUser } from "@/lib/auth/session";
 import { usableSessionSecret } from "@/lib/auth/session-token";
@@ -103,6 +105,26 @@ async function readFlag(): Promise<boolean> {
   }
 }
 
+/** Role účtu z `mcvv_user_role` a matice oprávnění (jen při zapnutém flagu). */
+async function loadGrants(
+  session: SessionUser,
+): Promise<{ grants: StaffRole[]; overrides: Map<string, StoredLevel> }> {
+  const [rows, matrix] = await Promise.all([
+    prisma.userRoleGrant.findMany({ where: { userId: session.id }, select: { role: true } }),
+    prisma.roleSection.findMany({ select: { role: true, sectionId: true, level: true } }),
+  ]);
+  const stored = rows.map((row) => row.role).filter(isStaffRoleCode);
+  // Účet, který v nové tabulce ještě nemá řádky, dostane role odvozené ze sloupce role.
+  const grants = stored.length ? stored : grantsFromLegacyRole(session.role);
+  const overrides = new Map<string, StoredLevel>();
+  for (const row of matrix) {
+    if (row.level === "none" || row.level === "read" || row.level === "write") {
+      overrides.set(overrideKey(row.role, row.sectionId), row.level);
+    }
+  }
+  return { grants, overrides };
+}
+
 export const getAccess = cache(async (): Promise<Access> => {
   const session = await getSession();
   const v2 = session ? await readFlag() : false;
@@ -127,19 +149,7 @@ export const getAccess = cache(async (): Promise<Access> => {
     return { session, v2: false, grants: [], overrides: new Map() };
   }
   try {
-    const [rows, matrix] = await Promise.all([
-      prisma.userRoleGrant.findMany({ where: { userId: session.id }, select: { role: true } }),
-      prisma.roleSection.findMany({ select: { role: true, sectionId: true, level: true } }),
-    ]);
-    const stored = rows.map((row) => row.role).filter(isStaffRoleCode);
-    // Účet, který v nové tabulce ještě nemá řádky, dostane role odvozené ze sloupce role.
-    const grants = stored.length ? stored : grantsFromLegacyRole(session.role);
-    const overrides = new Map<string, StoredLevel>();
-    for (const row of matrix) {
-      if (row.level === "none" || row.level === "read" || row.level === "write") {
-        overrides.set(overrideKey(row.role, row.sectionId), row.level);
-      }
-    }
+    const { grants, overrides } = await loadGrants(session);
     // Náhled se zapnutým flagem: jen admin (role admin v mcvv_user_role nebo ve sloupci).
     const view =
       grants.includes("admin") || session.role === "admin"
@@ -188,14 +198,58 @@ export function allowsFor(access: Access): (id: SectionId, level: AccessLevel) =
   return (id, level) => can(access, id, level);
 }
 
+/**
+ * Přístup k mezičasům: při zapnutém v2 (nebo v náhledu) stejné jako `allowsFor`.
+ * Při vypnutém v2 dočte granty z `mcvv_user_role`, aby účet s Mezičasy jako další
+ * rolí nebo Šéf trati měl stejný přístup jako se zapnutým flagem.
+ */
+export async function splitAllows(
+  access: Access,
+): Promise<(id: SectionId, level: AccessLevel) => boolean> {
+  if (!access.session) return () => false;
+  if (access.v2 || access.preview) return allowsFor(access);
+  try {
+    const { grants } = await loadGrants(access.session);
+    return splitAllowsFor({ v2: false, role: access.session.role, grants });
+  } catch (error) {
+    console.error("[access] split grants read failed – using legacy roles", error);
+    return allowsFor(access);
+  }
+}
+
 /** Má účet kolečko a rozcestník administrace? */
 export function canOpenAdmin(access: Access): boolean {
-  if (!access.session) return false;
-  if (!access.v2) {
-    if (access.preview) return access.preview.legacyRoles.some(hasAdminHome);
-    return hasAdminHome(access.session.role);
+  return adminLevel(access) !== "none";
+}
+
+/**
+ * Úroveň přístupu do administrace pro kolečko, layout i cíl po přihlášení (jedno rozhodnutí,
+ * aby se /admin a přihlášení nepřehazovaly ve smyčce).
+ */
+export function adminLevel(access: Access): AdminAccess {
+  return adminLevelOf({
+    v2: access.v2,
+    role: access.session?.role ?? null,
+    grants: access.grants,
+    overrides: access.overrides,
+    previewLegacyRoles: !access.v2 && access.preview ? access.preview.legacyRoles : undefined,
+  });
+}
+
+/**
+ * Úroveň přístupu účtu, který se právě přihlásil (cookie v tomto requestu ještě neplatí):
+ * role a přepínač se čtou z DB. Při chybě DB dnešní role podle sloupce.
+ */
+export async function loginAdminLevel(user: SessionUser): Promise<AdminAccess> {
+  const v2 = await readFlag();
+  if (!v2) return adminLevelOf({ v2: false, role: user.role, grants: [] });
+  try {
+    const { grants, overrides } = await loadGrants(user);
+    return adminLevelOf({ v2: true, role: user.role, grants, overrides });
+  } catch (error) {
+    console.error("[access] role grants read failed – using legacy roles", error);
+    return adminLevelOf({ v2: false, role: user.role, grants: [] });
   }
-  return v2HasAdminHome(access.grants, access.overrides);
 }
 
 /**
@@ -276,5 +330,24 @@ export async function realAdminSession(): Promise<{
   } catch (error) {
     console.error("[access] admin grant read failed", error);
     return null;
+  }
+}
+
+/**
+ * Rozcestníky a obrazovky mimo /admin (mezičasy, předstartér #379): při zapnutém v2 (nebo
+ * v náhledu) stejné jako `allowsFor`. Při vypnutém v2 dočte granty z `mcvv_user_role`, aby
+ * účet s Mezičasy / Předstartérem jako další rolí měl stejný přístup jako se zapnutým flagem.
+ */
+export async function screenAllows(
+  access: Access,
+): Promise<(id: SectionId, level: AccessLevel) => boolean> {
+  if (!access.session) return () => false;
+  if (access.v2 || access.preview) return allowsFor(access);
+  try {
+    const { grants } = await loadGrants(access.session);
+    return screenAllowsFor({ v2: false, role: access.session.role, grants });
+  } catch (error) {
+    console.error("[access] screen grants read failed – using legacy roles", error);
+    return allowsFor(access);
   }
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Link, type Locale } from "@/i18n/routing";
-import { canAccess, requireSection } from "@/lib/admin/access";
+import { getAccess, requireSection, screenAllows } from "@/lib/admin/access";
 import type { SectionId } from "@/lib/admin/permissions";
 import type { AdminNavHref, AdminNavLabel } from "@/lib/admin/sections";
 
@@ -16,6 +16,7 @@ const TILES: readonly {
   label: AdminNavLabel;
   hint:
     | "screensStarterHint"
+    | "screensPrestarterHint"
     | "screensSplitsHint"
     | "screensFinishHint"
     | "screensSpeakerHint"
@@ -26,6 +27,12 @@ const TILES: readonly {
     href: "/start",
     label: "starter",
     hint: "screensStarterHint",
+  },
+  {
+    id: "screens.prestarter",
+    href: "/predstarter",
+    label: "prestarter",
+    hint: "screensPrestarterHint",
   },
   {
     id: "screens.splits",
@@ -64,12 +71,13 @@ export default async function AdminScreensPage({ params }: PageProps) {
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
   await requireSection("screens", "read");
+  const allows = await screenAllows(await getAccess());
   const copy = await getTranslations({ locale, namespace: "Admin" });
   const nav = await getTranslations({ locale, namespace: "AdminNav" });
 
   const cards = [];
   for (const tile of TILES) {
-    if (await canAccess(tile.id, "read")) {
+    if (allows(tile.id, "read")) {
       cards.push(tile);
     }
   }

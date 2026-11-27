@@ -14,9 +14,10 @@ import {
 } from "./ingest-core";
 import { conflictStillCurrent } from "./manual-core";
 import type { RaceContext } from "./race-context";
+import { webSplitNote } from "./splits-warning-core";
 import { startInstant } from "./start-time";
 import { autoMarkStart } from "./starter";
-import { isSplitCode, webAuthor } from "./stations";
+import { FINISH_SPLIT, isSplitCode, webAuthor } from "./stations";
 
 type Tx = Prisma.TransactionClient;
 
@@ -157,7 +158,13 @@ async function applyWebEntry(
   const punchedAt = entry.punchedAt;
   const check = checkPunch(
     punchedAt,
-    startInstant(ctx.zero, entry.bib, ctx.intervalS, ctx.secondStartFrom),
+    startInstant(
+      ctx.zero,
+      entry.bib,
+      ctx.intervalS,
+      ctx.secondStartFrom,
+      ctx.organizerShiftSeconds,
+    ),
     now,
   );
   if (!check.ok) {
@@ -173,6 +180,19 @@ async function applyWebEntry(
     });
     return storedResult(row);
   }
+  const [known, startRow, finishRow] = await Promise.all([
+    knownBib(tx, ctx.year, entry.bib),
+    tx.startCheck.findUnique({
+      where: { year_bib: { year: ctx.year, bib: entry.bib } },
+      select: { bib: true },
+    }),
+    entry.split === FINISH_SPLIT
+      ? Promise.resolve(null)
+      : tx.split.findUnique({
+          where: { bib_year_split: { bib: entry.bib, year: ctx.year, split: FINISH_SPLIT } },
+          select: { bib: true },
+        }),
+  ]);
   const written = await writeSplit(
     tx,
     { year: ctx.year, split: entry.split, bib: entry.bib, time: check.time, author, now },
@@ -192,10 +212,13 @@ async function applyWebEntry(
       ctx,
     );
   }
-  const notes = [
-    (await knownBib(tx, ctx.year, entry.bib)) ? null : "unknown-bib",
-    written.existingTime !== undefined ? `existing=${written.existingTime}` : null,
-  ].filter(Boolean);
+  const note = webSplitNote({
+    knownBib: known,
+    hadStart: startRow !== null,
+    alreadyFinished: finishRow !== null,
+    station: entry.split,
+    existingTime: written.existingTime,
+  });
   const row = await tx.splitEntry.create({
     data: {
       ...base,
@@ -204,7 +227,7 @@ async function applyWebEntry(
       punchedAt: new Date(punchedAt),
       replaces: original?.entryKey ?? null,
       outcome: written.outcome,
-      note: notes.length > 0 ? notes.join(";") : null,
+      note,
     },
   });
   return { ...storedResult(row), existingTime: written.existingTime };

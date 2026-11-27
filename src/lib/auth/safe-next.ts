@@ -6,12 +6,14 @@
  * - an allowlist of public pages (e.g. `/prihlasky`, `/navod`).
  * The locale prefix (`/cs`, `/en`) is stripped; the result is a locale-less path.
  */
-import { adminPathAllowed, type AdminAccess } from "./roles";
+import { adminAccess, adminPathAllowed, type AdminAccess, type UserRole } from "./roles";
 
 export const ADMIN_PATH = /^\/admin(?:\/[\w.-]+)*$/;
 const SAFE_QUERY = /^[\w.=&-]*$/;
 /** Detail konverzace (odkaz z e-mailového upozornění). */
 export const THREAD_PATH = /^\/zpravy\/(\d{1,9})$/;
+/** Obrazovka jedné TV v cíli (`/resultboard/1` … `/resultboard/4`). */
+export const RESULTBOARD_TV_PATH = /^\/resultboard\/([1-4])$/;
 
 export const USER_NEXT_PATHS = [
   "/",
@@ -31,6 +33,8 @@ export const USER_NEXT_PATHS = [
   "/mezicasy/speaker",
   "/cil",
   "/start",
+  "/predstarter",
+  "/resultboard",
   "/kancelar",
   "/kancelar/prodejky",
   "/kancelar/polozky",
@@ -94,6 +98,7 @@ export function safeNext(raw: unknown): string | null {
   const allowed =
     ADMIN_PATH.test(parsed.path) ||
     THREAD_PATH.test(parsed.path) ||
+    RESULTBOARD_TV_PATH.test(parsed.path) ||
     (USER_NEXT_PATHS as readonly string[]).includes(parsed.path);
   if (!allowed) {
     return null;
@@ -110,6 +115,7 @@ export type LoginTarget =
   | { kind: "admin"; next: string }
   | { kind: "user"; path: UserNextPath; query: string }
   | { kind: "thread"; id: string }
+  | { kind: "resultboard"; tv: string; query: string }
   | { kind: "home" }
   | { kind: "default" };
 
@@ -136,10 +142,30 @@ export function loginTarget(next: string | null, access: boolean | AdminAccess):
       if (thread) {
         return { kind: "thread", id: thread[1]! };
       }
+      const tv = RESULTBOARD_TV_PATH.exec(path);
+      if (tv) {
+        return { kind: "resultboard", tv: tv[1]!, query };
+      }
       if ((USER_NEXT_PATHS as readonly string[]).includes(path) && path !== "/") {
         return { kind: "user", path: path as UserNextPath, query };
       }
     }
   }
   return level === "none" ? { kind: "default" } : { kind: "home" };
+}
+
+/**
+ * Jako `loginTarget`, ale výchozí cíl bere v potaz roli: účet Resultboard bez použitelného
+ * `next` jde na `/resultboard`, ne na přihlášky.
+ */
+export function postLoginTarget(
+  next: string | null,
+  role: UserRole,
+  level: AdminAccess = adminAccess(role),
+): LoginTarget {
+  const target = loginTarget(next, level);
+  if (role !== "resultboard") return target;
+  if (target.kind === "resultboard") return target;
+  if (target.kind === "user" && target.path === "/resultboard") return target;
+  return { kind: "user", path: "/resultboard", query: "" };
 }

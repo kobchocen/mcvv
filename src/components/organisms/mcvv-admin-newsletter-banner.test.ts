@@ -78,9 +78,10 @@ test("selected preset: thumbnail under the select and banner in the e-mail previ
   assert.doesNotMatch(html, /unsaved-notice/, "saved state needs no hint");
 });
 
-test("no banner: no image in the preview and a clear note under the select", () => {
+test("no banner: default official-logo header and a clear note under the select", () => {
   const html = page({ choice: "", alt: "", link: "" });
-  assert.doesNotMatch(srcdoc(html), /<img /);
+  assert.doesNotMatch(srcdoc(html), /\/images\/newsletter\//);
+  assert.match(srcdoc(html), /mcvv-logo-barevne-na-tmave\.png/);
   assert.match(html, /Bez banneru – e-mail začne výchozí tmavou hlavičkou MCVV/);
   assert.match(html, /Bez banneru v hlavičce\./);
 });
@@ -126,7 +127,8 @@ test("a new local file is previewed before upload (data: URL in the sandboxed if
 test("an unsaved banner that would fail to save keeps the saved one and says why", () => {
   const empty = { choice: "", alt: "", link: "" };
   const html = unsaved(empty, { ...empty, uploadSrc: "blob:http://x/1" });
-  assert.doesNotMatch(srcdoc(html), /<img /);
+  assert.doesNotMatch(srcdoc(html), /\/images\/newsletter\//);
+  assert.match(srcdoc(html), /mcvv-logo-barevne-na-tmave\.png/);
   assert.match(html, /Banner z formuláře nejde uložit: Banner musí mít alt text/);
 });
 

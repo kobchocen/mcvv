@@ -14,28 +14,22 @@ import {
   parseMatrixForm,
   planMatrixChange,
   resetChanges,
+  splitAllowsFor,
   splitScope,
   starterScope,
   v2Allows,
   defaultLevel,
+  staffCookieFromGrants,
   v2HasAdminHome,
   type AccessLevel,
 } from "@/lib/admin/permissions";
 import { ADMIN_SECTIONS } from "@/lib/admin/sections";
-import { hasAdminHome, isStaffRole, type UserRole } from "@/lib/auth/roles";
+import { hasAdminHome, isStaffRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
 import { stationsForScope, allowedStationsFor } from "@/lib/live/assignment-core";
 import { starterAccess, starterAccessFor } from "@/lib/live/starter-api-core";
 import { grantsFromLegacyRole, STAFF_ROLES } from "@/lib/auth/staff-roles";
 
-const ROLES: UserRole[] = [
-  "registrar",
-  "organizer",
-  "admin",
-  "timing",
-  "splitmaker",
-  "race_office",
-  "starter",
-];
+const ROLES: UserRole[] = [...USER_ROLES];
 const LEVELS: AccessLevel[] = ["read", "write"];
 
 describe("permissions engine – ekvivalence s dnešními rolemi", () => {
@@ -89,11 +83,15 @@ describe("permissions engine – ekvivalence s dnešními rolemi", () => {
       assert.ok(item.id in SECTION_RULES, `sekce ${item.id} chybí v SECTION_RULES`);
       if (!item.allowed) continue;
       for (const role of ROLES) {
-        assert.equal(
-          legacyAllows(role, item.id as keyof typeof SECTION_RULES, "read"),
-          item.allowed(role),
-          `${role} ${item.id}`,
-        );
+        const canRead = legacyAllows(role, item.id as keyof typeof SECTION_RULES, "read");
+        const inNav: boolean = item.allowed(role);
+        // Role Resultboard smí otevřít /resultboard, ale v administraci se nesmí objevit.
+        if (role === "resultboard" && item.id === "screens.resultboard") {
+          assert.equal(canRead, true, `${role} ${item.id} read`);
+          assert.equal(inNav, false, `${role} ${item.id} nav`);
+          continue;
+        }
+        assert.equal(canRead, inNav, `${role} ${item.id}`);
       }
     }
   });
@@ -111,6 +109,13 @@ describe("permissions engine – ekvivalence s dnešními rolemi", () => {
       return best;
     };
     for (const role of STAFF_ROLES) {
+      if (role === "resultboard") {
+        assert.equal(defaultLevel(role, "screens"), "none");
+        assert.equal(defaultLevel(role, "screens.resultboard"), "read");
+        assert.equal(defaultLevel(role, "screens.speaker"), "none");
+        assert.equal(defaultLevel(role, "raceOffice"), "none");
+        continue;
+      }
       assert.equal(defaultLevel(role, "screens"), maxOf(role, screenChildren), `screens ${role}`);
       assert.equal(defaultLevel(role, "raceOffice"), maxOf(role, officeChildren), `office ${role}`);
     }
@@ -179,6 +184,77 @@ describe("screens outside /admin (P5) – flag off = today", () => {
   }
 });
 
+describe("splitAllowsFor – Mezičasy jako další role (v1 i v2)", () => {
+  const stations = [
+    { code: "1", name: "1,3 km" },
+    { code: "3", name: "2,7 km" },
+  ] as unknown as Parameters<typeof stationsForScope>[2];
+
+  it("v1: Startér s grantem Mezičasy smí zapisovat na přiřazené stanoviště", () => {
+    const allows = splitAllowsFor({
+      v2: false,
+      role: "starter",
+      grants: ["starter", "splitmaker"],
+    });
+    assert.equal(allows("screens.splits", "read"), true);
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: false, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), "1", stations), [stations[0]]);
+    assert.deepEqual(stationsForScope(splitScope(allows), null, stations), []);
+  });
+
+  it("v1: Startér bez grantu Mezičasy mezičasy nezapisuje", () => {
+    const allows = splitAllowsFor({ v2: false, role: "starter", grants: ["starter"] });
+    assert.equal(allows("screens.splits", "read"), false);
+    assert.equal(allows("screens.splits", "write"), false);
+    assert.deepEqual(splitScope(allows), { all: false, own: false });
+  });
+
+  it("v2: Startér + Mezičasy stejně jako sjednocení grantů", () => {
+    const allows = splitAllowsFor({
+      v2: true,
+      role: "starter",
+      grants: ["starter", "splitmaker"],
+    });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: false, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), "3", stations), [stations[1]]);
+  });
+
+  it("v1: jen hlavní role Mezičasy se nezmění", () => {
+    const allows = splitAllowsFor({ v2: false, role: "splitmaker", grants: ["splitmaker"] });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: false, own: true });
+  });
+});
+
+describe("course_chief default split write on all stations", () => {
+  const stations = [
+    { code: "1", name: "1,3 km" },
+    { code: "3", name: "2,7 km" },
+  ] as unknown as Parameters<typeof stationsForScope>[2];
+
+  it("default matrix grants write on screens.splits and all stations", () => {
+    assert.equal(defaultLevel("course_chief", "screens.splits"), "write");
+    assert.equal(defaultLevel("course_chief", "screens"), "write");
+    assert.equal(defaultLevel("course_chief", "raceControl.live"), "read");
+  });
+
+  it("v2: Šéf trati zapisuje na všechna stanoviště bez přiřazení", () => {
+    const allows = splitAllowsFor({ v2: true, role: "registrar", grants: ["course_chief"] });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: true, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), null, stations), stations);
+  });
+
+  it("v1: grant Šéf trati má stejný rozsah i při vypnutém flagu", () => {
+    const allows = splitAllowsFor({ v2: false, role: "registrar", grants: ["course_chief"] });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: true, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), "1", stations), stations);
+  });
+});
+
 describe("permissions editor (P8)", () => {
   it("editable cells exclude admin, overview and admin-only sections", () => {
     assert.ok(!EDITABLE_ROLES.includes("admin"));
@@ -231,5 +307,30 @@ describe("permissions editor (P8)", () => {
     }
     const overrides = new Map([[overrideKey("organizer_legacy", "permissions"), "write" as const]]);
     assert.equal(v2Allows(["organizer_legacy"], "permissions", "read", overrides), false);
+  });
+
+  it("the matrix includes Resultboard as an editable column", () => {
+    assert.ok(EDITABLE_ROLES.includes("resultboard"));
+    assert.equal(defaultLevel("resultboard", "screens.resultboard"), "read");
+    assert.equal(v2Allows(["resultboard"], "screens.resultboard", "write"), false);
+    for (const id of SECTION_IDS) {
+      if (id === "screens.resultboard") continue;
+      assert.equal(defaultLevel("resultboard", id), "none", id);
+    }
+  });
+});
+
+describe("staff cookie (permissions v2 + Resultboard)", () => {
+  it("does not mark a Resultboard-only account as staff", () => {
+    assert.equal(v2HasAdminHome(["resultboard"]), false);
+    assert.equal(staffCookieFromGrants("resultboard", ["resultboard"]), false);
+    assert.equal(staffCookieFromGrants("registrar", ["resultboard"]), false);
+  });
+
+  it("still marks a registrar with v2 admin roles as staff", () => {
+    assert.equal(staffCookieFromGrants("registrar", ["entries"]), true);
+    assert.equal(staffCookieFromGrants("registrar", ["speaker", "resultboard"]), true);
+    assert.equal(staffCookieFromGrants("organizer", ["organizer_legacy"]), false);
+    assert.equal(staffCookieFromGrants("registrar", []), false);
   });
 });

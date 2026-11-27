@@ -1,4 +1,5 @@
 import { isStaffRole, type UserRole } from "@/lib/auth/roles";
+import type { StaffRole } from "@/lib/auth/staff-roles";
 
 import { FINISH_SPLIT, isStationCode, type Station } from "./stations";
 
@@ -27,6 +28,17 @@ export function assignmentFromForm(picked: readonly string[], stations: Station[
   return formatAssignment(picked.filter((code) => offered.has(code)));
 }
 
+/**
+ * Má účet roli Mezičasy? Platí hlavní sloupec `mcvv_user.role` i grant v `mcvv_user_role`,
+ * a to při zapnutém i vypnutém `permissions.v2`.
+ */
+export function hasSplitmakerRole(
+  role: UserRole,
+  grants: readonly StaffRole[] | readonly string[] = [],
+): boolean {
+  return role === "splitmaker" || grants.includes("splitmaker");
+}
+
 /** Stanoviště, na která smí účet zapisovat (pro /mezicasy i pro server). */
 export function allowedStationsFor(
   role: UserRole,
@@ -53,4 +65,28 @@ export function stationsForScope(
   if (!scope.own) return [];
   const codes = new Set(parseAssignment(assigned));
   return stations.filter((station) => codes.has(station.code));
+}
+
+/**
+ * Které stanoviště otevřít na obrazovce Mezičasy.
+ * Splitmaker má obrazovku přibitou na přiřazené stanoviště (právě jedno);
+ * kdyby jich měl víc, bere se platný `?split=` nebo první přiřazené.
+ * Admin/pořadatel (allStations) nemá přepínač; použije `?split=`, jinak uložené,
+ * jinak první ze seznamu.
+ */
+export function resolveSplitStation(input: {
+  allowed: readonly { code: string }[];
+  allStations: boolean;
+  urlCode?: string | null;
+  savedCode?: string | null;
+}): string | null {
+  const codes = input.allowed.map((station) => station.code);
+  const has = (code?: string | null): code is string => !!code && codes.includes(code);
+  if (!input.allStations) {
+    if (has(input.urlCode)) return input.urlCode;
+    return codes[0] ?? null;
+  }
+  if (has(input.urlCode)) return input.urlCode;
+  if (has(input.savedCode)) return input.savedCode;
+  return codes[0] ?? null;
 }

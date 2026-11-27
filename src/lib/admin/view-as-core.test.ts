@@ -61,6 +61,7 @@ describe("view as role (cookie)", () => {
   it("maps the preview to a single column role", () => {
     assert.equal(viewAsSessionRole("legacy", ["splitmaker", "timing"]), "timing");
     assert.equal(viewAsSessionRole("legacy", ["organizer", "starter"]), "organizer");
+    assert.equal(viewAsSessionRole("legacy", ["resultboard"]), "resultboard");
     assert.equal(viewAsSessionRole("v2", ["speaker"]), "registrar");
     assert.equal(viewAsSessionRole("v2", ["organizer_legacy", "speaker"]), "organizer");
   });

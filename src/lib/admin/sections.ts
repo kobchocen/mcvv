@@ -12,12 +12,14 @@
  * (`requireStaff`, `requireAdmin` …). Čisté funkce bez frameworku, testované.
  */
 import {
+  canAccessPrestarter,
   canAccessRaceDay,
   canAccessScreens,
   canAccessSplits,
   canAccessStarter,
   canManageSaleItems,
   canUseCashDesk,
+  canViewResultboardScreen,
   canViewSpeakerScreen,
   hasAdminHome,
   isStaffRole,
@@ -46,6 +48,7 @@ export type AdminNavLabel =
   | "course"
   | "screens"
   | "starter"
+  | "prestarter"
   | "splits"
   | "speaker"
   | "resultboard"
@@ -107,6 +110,7 @@ export type AdminNavHref =
   | "/admin/obrazovky"
   | "/cil"
   | "/start"
+  | "/predstarter"
   | "/mezicasy"
   | "/mezicasy/speaker"
   | "/resultboard"
@@ -271,6 +275,13 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
             allowed: canAccessStarter,
           },
           {
+            id: "screens.prestarter",
+            label: "prestarter",
+            href: "/predstarter",
+            external: true,
+            allowed: canAccessPrestarter,
+          },
+          {
             id: "screens.splits",
             label: "splits",
             href: "/mezicasy",
@@ -296,7 +307,7 @@ export const ADMIN_SECTIONS: readonly AdminGroup[] = [
             label: "resultboard",
             href: "/resultboard",
             external: true,
-            allowed: canViewSpeakerScreen,
+            allowed: (role) => canViewResultboardScreen(role) && hasAdminHome(role),
           },
         ],
       },

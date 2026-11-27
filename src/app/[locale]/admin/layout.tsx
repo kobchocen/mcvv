@@ -9,6 +9,7 @@ import {
 } from "@/components/organisms";
 import { can, canOpenAdmin, getAccess } from "@/lib/admin/access";
 import { McvvAdminViewAsBar } from "@/components/organisms/mcvv-admin-view-as";
+import { viewAsBarCopy } from "@/lib/admin/view-as-bar";
 import { isSectionId } from "@/lib/admin/permissions";
 import { togglePin } from "@/lib/admin/pin-actions";
 import { defaultPins, storedPins } from "@/lib/admin/pins";
@@ -16,7 +17,7 @@ import { navTree, visibleSectionsBy } from "@/lib/admin/sections";
 import { staffUnreadCount } from "@/lib/messages/store";
 import { withFooterYear, type McvvHomepageContent } from "@/components/templates";
 import { prisma } from "@/lib/db/client";
-import { type Locale } from "@/i18n/routing";
+import { redirect, type Locale } from "@/i18n/routing";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -29,6 +30,12 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   setRequestLocale(locale);
   const access = await getAccess();
   const session = access.session;
+  if (session && !canOpenAdmin(access)) {
+    // Přihlášený účet bez rozcestníku: rovnou pryč, ne prázdná stránka s klientským
+    // přesměrováním na přihlášení (to by ho poslalo zpět sem). Resultboard na své obrazovky,
+    // závodník na přihlášky (stejně jako výchozí cíl po přihlášení).
+    redirect({ href: session.role === "resultboard" ? "/resultboard" : "/prihlasky", locale });
+  }
   if (!session || !canOpenAdmin(access)) {
     return (
       <Suspense fallback={null}>
@@ -70,23 +77,9 @@ export default async function AdminLayout({ children, params }: LayoutProps) {
   });
   // Náhled očima jiné role: viditelný pruh s ukončením (role podle režimu náhledu).
   let viewAsBar: ReactNode = null;
-  if (access.preview) {
-    const usersCopy = await getTranslations({ locale, namespace: "AdminUsers" });
-    const viewCopy = await getTranslations({ locale, namespace: "AdminViewAs" });
-    const preview = access.preview;
-    const labels = preview.roles.map((role) =>
-      usersCopy.has(`${preview.mode === "v2" ? "staffRole" : "role"}_${role}`)
-        ? usersCopy(`${preview.mode === "v2" ? "staffRole" : "role"}_${role}` as "role_admin")
-        : role,
-    );
-    viewAsBar = (
-      <McvvAdminViewAsBar
-        locale={locale}
-        title={viewCopy("barTitle", { roles: labels.join(", ") })}
-        readOnly={viewCopy("barReadOnly")}
-        stop={viewCopy("stop")}
-      />
-    );
+  const barCopy = await viewAsBarCopy(access.preview, locale);
+  if (barCopy) {
+    viewAsBar = <McvvAdminViewAsBar locale={locale} {...barCopy} />;
   }
   const brand = home.raw("brand") as McvvHomepageContent["brand"];
   const nav = home.raw("nav") as McvvHomepageContent["nav"];

@@ -1,7 +1,12 @@
 import cs from "@/i18n/locales/cs/common.json";
 import en from "@/i18n/locales/en/common.json";
 
-import { formatClock, type StartModel } from "./start-time";
+import {
+  formatClock,
+  showsOrganizerZeroInHeader,
+  withOrganizerZeroLine,
+  type StartModel,
+} from "./start-time";
 import type { StartListPdfLabels } from "./startlist-pdf";
 
 export type StartListPdfLocale = "cs" | "en";
@@ -51,15 +56,10 @@ export function startListPdfLabels(
   return {
     brandTop: brand.top,
     brandBottom: brand.bottom,
-    brandMark: brand.mark,
     title: fill(messages.pdfTitle, { year: input.year }),
     edition: fill(messages.pdfEdition, { n: input.editionNumber }),
     raceDay,
-    model: fill(messages.pdfModel, {
-      zero: formatClock(input.model.zeroSeconds),
-      interval: input.model.intervalSeconds,
-      second: input.model.secondStartFrom,
-    }),
+    model: startListPdfModelLine(messages, input.model, input.year),
     count: fill(messages.pdfCount, { count: input.count }),
     legend: fill(messages.pdfLegend, { offset: input.model.secondStartFrom - 1 }),
     colTime: messages.colTime,
@@ -72,4 +72,22 @@ export function startListPdfLabels(
     page: (page, pages) => fill(messages.pdfPage, { page, pages }),
     empty: messages.pdfEmpty,
   };
+}
+
+/** Řádek modelu v hlavičce tiskové startovky, včetně nuly pořadatelů když platí. */
+export function startListPdfModelLine(
+  messages: Pick<Messages, "pdfModel" | "pdfOrganizerZero">,
+  model: StartModel,
+  year: number,
+): string {
+  const base = fill(messages.pdfModel, {
+    zero: formatClock(model.zeroSeconds),
+    interval: model.intervalSeconds,
+    second: model.secondStartFrom,
+  });
+  if (!showsOrganizerZeroInHeader(model, year)) return base;
+  return withOrganizerZeroLine(
+    base,
+    fill(messages.pdfOrganizerZero, { organizerZero: formatClock(model.organizerZeroSeconds) }),
+  );
 }

@@ -10,9 +10,7 @@ import {
 import { useRouter } from "@/i18n/routing";
 import { defaultCategory, eligibleCategoriesFor } from "@/lib/entries/category";
 import { HOME_COUNTRY } from "@/lib/runner/nationality";
-import { createOnsiteEntryAction, suggestOnsiteBibAction } from "@/lib/sales/actions";
-import { onsiteReceiptEmail } from "@/lib/sales/onsite-core";
-import { RECEIPT_LOCALES } from "@/lib/sales/receipt-mail";
+import { addOnsiteRunnerAction, suggestOnsiteBibAction } from "@/lib/sales/actions";
 
 type OnsiteCategory = { id: string; name: string; sex: string; age: number; fee: number };
 
@@ -24,16 +22,20 @@ const label = "grid gap-1 text-sm";
  * Pokladna – dohláška na místě (#222): údaje běžce, kategorie a startovní číslo. Číslo systém
  * navrhne (nejbližší volné ve startovní řadě kategorie), pokladní ho smí přepsat; nechaný
  * návrh se při uložení vybere znovu pod zámkem (souběžné pokladny). Vytvoří přihlášku
- * s rezervovaným číslem a prodejku s cenou termínu „na místě“; pak detail prodejky s QR.
+ * s rezervovaným číslem a řádek otevřené prodejky (košíku, #378) s cenou termínu „na místě“.
+ * K platbě se nepřechází – formulář se vyprázdní pro dalšího běžce stejné prodejky.
  */
 export function McvvOnsiteEntryForm({
   year,
   categories,
   nationality,
+  saleId,
 }: {
   year: number;
   categories: OnsiteCategory[];
   nationality: NationalityField;
+  /** Otevřená prodejka (košík); null = první přidání založí novou. */
+  saleId: number | null;
 }) {
   const t = useTranslations("CashDesk");
   const router = useRouter();
@@ -41,11 +43,8 @@ export function McvvOnsiteEntryForm({
   const [sex, setSex] = useState<"" | "M" | "F">("");
   const [categoryId, setCategoryId] = useState("");
   const [error, setError] = useState<string | null>(null);
-  // Účtenka (#223): předvyplněná e-mailem běžce, dokud ji pokladní nezmění nebo nesmaže.
-  const [entryEmail, setEntryEmail] = useState("");
-  const [receiptOverride, setReceiptOverride] = useState<string | null>(null);
-  const [receiptLang, setReceiptLang] = useState("cs");
-  const receiptEmail = onsiteReceiptEmail(entryEmail, receiptOverride);
+  const [added, setAdded] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
   const [pending, startTransition] = useTransition();
 
   const eligible = useMemo(() => {
@@ -81,25 +80,37 @@ export function McvvOnsiteEntryForm({
 
   const submit = (form: HTMLFormElement) => {
     setError(null);
+    setAdded(null);
     const data = new FormData(form);
     const value = (key: string) => String(data.get(key) ?? "");
     startTransition(async () => {
-      const result = await createOnsiteEntryAction({
-        firstName: value("firstName"),
-        lastName: value("lastName"),
-        birthYear: value("birthYear"),
-        sex: value("sex"),
-        categoryId: selected?.id ?? "",
-        clubName: value("clubName"),
-        nationality: value("nationality") || HOME_COUNTRY,
-        bib: value("bib"),
-        bibAuto: bibAuto ? "1" : "0",
-        email: value("email"),
-        receiptEmail,
-        receiptLocale: receiptLang,
-      });
+      const result = await addOnsiteRunnerAction(
+        {
+          firstName: value("firstName"),
+          lastName: value("lastName"),
+          birthYear: value("birthYear"),
+          sex: value("sex"),
+          categoryId: selected?.id ?? "",
+          clubName: value("clubName"),
+          nationality: value("nationality") || HOME_COUNTRY,
+          bib: value("bib"),
+          bibAuto: bibAuto ? "1" : "0",
+          email: value("email"),
+        },
+        saleId,
+      );
       if (result.ok) {
-        router.push({ pathname: "/kancelar/prodejky/[id]", params: { id: String(result.saleId) } });
+        // Další běžec do stejné prodejky: formulář vyprázdnit, košík nahoře se obnoví.
+        setAdded(t("cartAddedRunner", { name: result.runnerName, bib: result.bib }));
+        setBirthYear("");
+        setSex("");
+        setCategoryId("");
+        setBib("");
+        setSuggested(null);
+        lastSuggested.current = "";
+        setFormKey((key) => key + 1);
+        router.refresh();
+        document.getElementById("kosik")?.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
       setError(
@@ -111,11 +122,16 @@ export function McvvOnsiteEntryForm({
   };
 
   return (
-    <details className="border border-race-line/60 bg-race-surface" data-testid="onsite-entry">
+    <details
+      className="border border-race-line/60 bg-race-surface"
+      data-testid="onsite-entry"
+      open={saleId != null ? true : undefined}
+    >
       <summary className="cursor-pointer select-none px-4 py-3 font-display text-lg font-semibold">
         {t("onsiteTitle")}
       </summary>
       <form
+        key={formKey}
         className="grid gap-3 border-t border-race-line/60 p-4"
         onSubmit={(event) => {
           event.preventDefault();
@@ -197,44 +213,8 @@ export function McvvOnsiteEntryForm({
           </label>
           <label className={label}>
             {t("onsiteEmail")}
-            <input
-              name="email"
-              type="email"
-              maxLength={128}
-              className={input}
-              autoComplete="off"
-              value={entryEmail}
-              onChange={(event) => setEntryEmail(event.target.value)}
-            />
-          </label>
-          <label className={label}>
-            {t("onsiteReceiptEmail")}
-            <span className="grid grid-cols-[1fr_auto] gap-2">
-              <input
-                type="email"
-                inputMode="email"
-                maxLength={128}
-                className={input}
-                autoComplete="off"
-                value={receiptEmail}
-                onChange={(event) => setReceiptOverride(event.target.value)}
-                placeholder={t("receiptEmailPlaceholder")}
-                data-testid="onsite-receipt-email"
-              />
-              <select
-                value={receiptLang}
-                onChange={(event) => setReceiptLang(event.target.value)}
-                aria-label={t("receiptLocale")}
-                className="h-12 border border-race-line/60 bg-race-deep px-2 text-base"
-              >
-                {RECEIPT_LOCALES.map((code) => (
-                  <option key={code} value={code}>
-                    {code.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            </span>
-            <span className="text-xs text-race-muted">{t("onsiteReceiptEmailHint")}</span>
+            <input name="email" type="email" maxLength={128} className={input} autoComplete="off" />
+            <span className="text-xs text-race-muted">{t("onsiteEmailHint")}</span>
           </label>
         </div>
         <label className={`${label} sm:max-w-xs`}>
@@ -261,6 +241,15 @@ export function McvvOnsiteEntryForm({
         {error ? (
           <p role="alert" className="text-sm font-semibold text-red-600 dark:text-red-400">
             {error}
+          </p>
+        ) : null}
+        {added ? (
+          <p
+            role="status"
+            className="border border-emerald-500/60 bg-emerald-500/10 p-2 text-sm font-semibold"
+            data-testid="onsite-added"
+          >
+            {added}
           </p>
         ) : null}
         <button

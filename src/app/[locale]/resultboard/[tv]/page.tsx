@@ -5,9 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import QRCode from "qrcode";
 
 import { McvvResultboard } from "@/components/organisms/mcvv-resultboard";
+import { McvvResultboardForbidden } from "@/components/organisms/mcvv-resultboard-forbidden";
 import type { Locale } from "@/i18n/routing";
-import { canAccess } from "@/lib/admin/access";
-import { getSession } from "@/lib/auth/session";
 import { onlineResultsCache } from "@/lib/live/online-results";
 import type { OnlineWire } from "@/lib/live/online-results-core";
 import {
@@ -15,6 +14,7 @@ import {
   resultboardTestCache,
   type ResultboardInfo,
 } from "@/lib/live/resultboard";
+import { requireResultboardAccess } from "@/lib/live/resultboard-access";
 import { parseMonitorParam } from "@/lib/live/resultboard-core";
 import { siteUrl } from "@/lib/site/url";
 
@@ -46,19 +46,24 @@ async function qrFor(url: string): Promise<string> {
 }
 
 /**
- * Resultboard `/resultboard/<n>` – TV v cíli (náhrada OFB, #188). Veřejné bez přihlášení
- * (Q134), noindex. První vykreslení ze sdílených cache (stejný snímek jako
- * `/vysledky/online`), dál klient polluje. `?test=1` jen pro přihlášené pořadatele (Q135).
+ * Resultboard `/resultboard/<n>` – TV v cíli (náhrada OFB, #188). Jen přihlášení
+ * s `screens.resultboard` (jako speaker); noindex. První vykreslení ze sdílených cache
+ * (stejný snímek jako `/vysledky/online`), dál klient polluje. `?test=1` je pořád
+ * jen pro stejné oprávnění (Q135). Veřejnost má živé výsledky na `/vysledky/online`.
  */
 export default async function ResultboardPage({ params, searchParams }: PageProps) {
-  const { locale, tv: tvParam } = await params;
-  setRequestLocale(locale as Locale);
+  const { locale: requestedLocale, tv: tvParam } = await params;
+  const locale = requestedLocale as Locale;
+  setRequestLocale(locale);
   const tv = parseMonitorParam(tvParam);
   if (tv === null) notFound();
   const query = await searchParams;
   const wantsTest = query.test === "1";
-  const session = wantsTest ? await getSession() : null;
-  const test = wantsTest && session !== null && (await canAccess("screens.resultboard", "read"));
+  const next = wantsTest ? `/resultboard/${tv}?test=1` : `/resultboard/${tv}`;
+  if (!(await requireResultboardAccess(locale, next))) {
+    return <McvvResultboardForbidden locale={locale} />;
+  }
+  const test = wantsTest;
   const online = `${siteUrl()}/vysledky/online`;
   const [cached, info, qrSvg] = await Promise.all([
     test ? resultboardTestCache.get() : onlineResultsCache.get(),

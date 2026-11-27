@@ -8,10 +8,11 @@
  *   vždy vše; odchylky z `mcvv_role_section` mají přednost).
  *
  * Výchozí úrovně rolí převedených ze starého sloupce (`organizer_legacy`, `splitmaker`,
- * `starter`, `race_office`) se odvozují z `legacy` – test ekvivalence hlídá, že po převodu
+ * `starter`, `prestarter`, `race_office`) se odvozují z `legacy` – test ekvivalence hlídá, že po převodu
  * nikdo nezíská ani neztratí přístup. Čisté funkce bez frameworku a DB.
  */
 import {
+  canAccessPrestarter,
   canAccessRaceDay,
   canAccessScreens,
   canAccessSplits,
@@ -19,6 +20,7 @@ import {
   canManageSaleItems,
   canMarkSalePaidBank,
   canUseCashDesk,
+  canViewResultboardScreen,
   canViewSpeakerScreen,
   hasAdminHome,
   isStaffRole,
@@ -37,7 +39,9 @@ export type LegacyGuard =
   | "raceday"
   | "splits"
   | "starter"
+  | "prestarter"
   | "speaker"
+  | "resultboard"
   | "cashDesk"
   | "saleItems"
   | "bankPaid"
@@ -50,7 +54,9 @@ export const LEGACY_PREDICATES: Record<LegacyGuard, (role: UserRole) => boolean>
   raceday: canAccessRaceDay,
   splits: canAccessSplits,
   starter: canAccessStarter,
+  prestarter: canAccessPrestarter,
   speaker: canViewSpeakerScreen,
+  resultboard: canViewResultboardScreen,
   cashDesk: canUseCashDesk,
   saleItems: canManageSaleItems,
   bankPaid: canMarkSalePaidBank,
@@ -84,11 +90,13 @@ export const SECTION_RULES = {
   "raceControl.course": { read: "raceday", write: "raceday" },
   screens: { read: "screens", write: "screens" },
   "screens.starter": { read: "starter", write: "starter" },
+  /** Předstartér (#379): fronta koridoru na mobilu, stejný záznam startu jako startér. */
+  "screens.prestarter": { read: "prestarter", write: "prestarter" },
   "screens.splits": { read: "splits", write: "splits" },
   /** Cíl (#252): stanice Stopky a Čísla. */
   "screens.finish": { read: "raceday", write: "raceday" },
   "screens.speaker": { read: "speaker", write: "speaker" },
-  "screens.resultboard": { read: "speaker", write: "speaker" },
+  "screens.resultboard": { read: "resultboard", write: "speaker" },
   raceOffice: { read: "cashDesk", write: "cashDesk" },
   "raceOffice.cash": { read: "cashDesk", write: "cashDesk" },
   "raceOffice.sales": { read: "cashDesk", write: "cashDesk" },
@@ -135,7 +143,9 @@ const DERIVED_FROM_LEGACY: Partial<Record<StaffRole, UserRole>> = {
   organizer_legacy: "organizer",
   splitmaker: "splitmaker",
   starter: "starter",
+  prestarter: "prestarter",
   race_office: "race_office",
+  resultboard: "resultboard",
 };
 
 type Matrix = Partial<Record<SectionId, AccessLevel>>;
@@ -201,6 +211,7 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.officialCheck": "read",
     "raceControl.course": "write",
     "screens.starter": "write",
+    "screens.prestarter": "write",
     "screens.finish": "write",
     "screens.splits": "write",
     "screens.speaker": "read",
@@ -231,9 +242,9 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.overview": "read",
     "raceControl.course": "read",
     "raceControl.live": "read",
-    "screens.splits": "read",
+    "screens.splits": "write",
     "screens.speaker": "read",
-    screens: "read",
+    screens: "write",
   },
 };
 
@@ -291,8 +302,18 @@ export function v2Allows(
 }
 
 /** Má účet nějakou sekci (= kolečko a /admin)? */
+/** Kolečko a rozcestník `/admin`: právo číst přehled, ne jen kioskovou obrazovku. */
 export function v2HasAdminHome(grants: readonly StaffRole[], overrides?: Overrides): boolean {
-  return grants.length > 0 && SECTION_IDS.some((id) => v2Allows(grants, id, "read", overrides));
+  return v2Allows(grants, "overview", "read", overrides);
+}
+
+/**
+ * Příznak `staff` v cookie (P5): účet podle sloupce role do administrace nesmí, ale jeho
+ * v2 granty mu otevírají rozcestník. Samotná role Resultboard grant má, rozcestník ne.
+ */
+export function staffCookieFromGrants(role: UserRole, grants: readonly StaffRole[]): boolean {
+  if (hasAdminHome(role)) return false;
+  return v2HasAdminHome(grants);
 }
 
 type Allows = (id: SectionId, level: AccessLevel) => boolean;
@@ -302,9 +323,57 @@ export function splitScope(allows: Allows): { all: boolean; own: boolean } {
   return { all: allows("raceControl.live", "read"), own: allows("screens.splits", "write") };
 }
 
+/**
+ * Přístup k mezičasům podle role i grantů. Při zapnutém v2 platí engine.
+ * Při vypnutém v2 (PROD) bere u `screens.splits` a `raceControl.live` i granty
+ * z `mcvv_user_role`, aby účet se Startérem + Mezičasy nebo Šéf trati neztratil přístup.
+ */
+export function splitAllowsFor(input: {
+  v2: boolean;
+  role: UserRole;
+  grants: readonly StaffRole[];
+  overrides?: Overrides;
+}): Allows {
+  const { v2, role, grants, overrides } = input;
+  if (v2) return (id, level) => v2Allows(grants, id, level, overrides);
+  return (id, level) => {
+    if (legacyAllows(role, id, level)) return true;
+    if (id === "screens.splits" || id === "raceControl.live") {
+      return v2Allows(grants, id, level);
+    }
+    return false;
+  };
+}
+
 /** Rozsah obrazovky startéra: libovolný koridor (řízení startu), nebo jen přiřazený. */
 export function starterScope(allows: Allows): { any: boolean; own: boolean } {
   return { any: allows("raceControl.start", "read"), own: allows("screens.starter", "read") };
+}
+
+/**
+ * Rozsah obrazovky předstartéra (#379): libovolný koridor s přepínačem (řízení startu),
+ * nebo jen přiřazený koridor (role Předstartér).
+ */
+export function prestarterScope(allows: Allows): { any: boolean; own: boolean } {
+  return { any: allows("raceControl.start", "read"), own: allows("screens.prestarter", "write") };
+}
+
+/**
+ * Obrazovky mimo /admin podle role i grantů: mezičasy (`splitAllowsFor`) a předstartér (#379).
+ * Při zapnutém v2 platí engine. Při vypnutém v2 (PROD) bere u `screens.prestarter` i granty
+ * z `mcvv_user_role`, aby účet s Předstartérem jako další rolí (např. vedle Startéra)
+ * obrazovku otevřel.
+ */
+export function screenAllowsFor(input: {
+  v2: boolean;
+  role: UserRole;
+  grants: readonly StaffRole[];
+  overrides?: Overrides;
+}): Allows {
+  const split = splitAllowsFor(input);
+  if (input.v2) return split;
+  return (id, level) =>
+    split(id, level) || (id === "screens.prestarter" && v2Allows(input.grants, id, level));
 }
 
 // ---------------------------------------------------------------------------

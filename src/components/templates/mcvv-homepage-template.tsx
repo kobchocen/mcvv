@@ -15,7 +15,8 @@ import {
 import type { McvvHomepageContent } from "@/components/templates/mcvv-homepage-content";
 import { getTranslations } from "next-intl/server";
 
-import { adminAccess, getSession } from "@/lib/auth/session";
+import { canOpenAdmin, getAccess } from "@/lib/admin/access";
+import { getSession } from "@/lib/auth/session";
 import { adminHomeHref } from "@/lib/auth/roles";
 import { getHomeCounts } from "@/lib/home/cached";
 import { currentRaceYear } from "@/lib/entries/year";
@@ -128,7 +129,7 @@ export async function McvvHomepageTemplate({
             ? {
                 name: session.name,
                 email: session.email,
-                staff: adminAccess(session.role) !== "none",
+                staff: canOpenAdmin(await getAccess()),
                 adminHref: adminHomeHref(),
                 starter:
                   session.role === "starter"
@@ -136,7 +137,14 @@ export async function McvvHomepageTemplate({
                         href: "/start",
                         label: (await getTranslations({ locale, namespace: "Starter" }))("navLink"),
                       }
-                    : null,
+                    : session.role === "prestarter"
+                      ? {
+                          href: "/predstarter",
+                          label: (await getTranslations({ locale, namespace: "Prestarter" }))(
+                            "navLink",
+                          ),
+                        }
+                      : null,
                 messages: await getUnreadCount(),
               }
             : null

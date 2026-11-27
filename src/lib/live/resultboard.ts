@@ -84,9 +84,10 @@ export const resultboardInfoCache = createBodyCache(
   RESULTBOARD_CONFIG_POLL_MS,
 );
 
-export const RESULTBOARD_INFO_CACHE_CONTROL = "public, max-age=30, s-maxage=30";
+/** HTTP cache jen pro přihlášené obrazovky; dřív bylo public kvůli Q134. */
+export const RESULTBOARD_INFO_CACHE_CONTROL = "private, no-cache";
 
-/** Snímek pro `?test=1` (jen přihlášení pořadatelé): jako veřejný, ale včetně testu. */
+/** Snímek pro `?test=1` (jen přihlášení pořadatelé): jako ostrý, ale včetně testu. */
 export const resultboardTestCache = createBodyCache(
   async () => encodeOnline(await loadOnlineSnapshot(new Date(), { includeTest: true })),
   ONLINE_RESULTS_CACHE_MS,

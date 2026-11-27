@@ -17,7 +17,8 @@ import { slotFee, slotOf } from "@/lib/slots/core";
 import { BIB_LOCK } from "@/lib/slots/late-paid";
 import { categoryFeeGroup, loadSlots } from "@/lib/slots/load";
 
-import { saleVs, SALE_NUMBER_MAX } from "./core";
+import { onsiteEntryAmount, saleLinesTotal } from "./cart-core";
+import { saleVs, SALE_LINES_MAX, SALE_NUMBER_MAX } from "./core";
 import { receiptLocale } from "./receipt-mail";
 import { suggestOnsiteBib, type OnsiteBibSuggestion } from "./onsite-bib-core";
 import {
@@ -29,10 +30,11 @@ import {
 } from "./onsite-core";
 
 /**
- * Dohláška na místě (#222): prodejka v pokladně založí přihlášku s jedním běžcem, rezervuje
- * ručně zadané startovní číslo (řádek zamčený ve startovce) a prodejku s přihláškou propojí.
- * Zaplacení prodejky = platba přihlášky (mcvv_platba, autor „pokladna“), storno nezaplacené
- * prodejky = zrušení přihlášky a uvolnění čísla i běžce.
+ * Dohláška na místě (#222, košík #378): každý běžec je řádek otevřené prodejky (košíku). První
+ * dohláška košíku založí přihlášku typu O, další běžci jsou její další řádky (jedna přihláška
+ * s více běžci, rozhodnutí Pavla 26. 11.). Číslo se rezervuje hned (řádek zamčený ve startovce).
+ * Zaplacení prodejky = platba přihlášky ve výši startovného (bez merche, mcvv_platba, autor
+ * „pokladna“), storno nezaplacené prodejky = zrušení přihlášky a uvolnění všech čísel i běžců.
  */
 
 type Tx = Prisma.TransactionClient;
@@ -46,19 +48,26 @@ export type OnsiteEntryError =
   | "bib_champion"
   | "no_bib"
   | "full"
-  | "busy";
+  | "busy"
+  /** Košík mezitím někdo uzavřel k platbě, zaplatil nebo stornoval. */
+  | "cart_closed"
+  | "too_many";
 
 export type CreateOnsiteEntryResult =
   | {
       ok: true;
       saleId: number;
       vs: string;
+      /** Aktuální součet košíku po přidání běžce. */
       total: number;
       registrationId: number;
       bib: number;
       outsideCategory: boolean;
       /** Číslo vybral systém (návrh nejbližšího volného), ne pokladní ručně. */
       bibAuto: boolean;
+      runnerName: string;
+      /** Prodejka (košík) vznikla tímto přidáním. */
+      created: boolean;
     }
   | { ok: false; error: OnsiteEntryError };
 
@@ -94,10 +103,15 @@ export async function loadOnsiteEntryOptions(year: number) {
   };
 }
 
-export async function createOnsiteEntry(
+/**
+ * Přidá dohlášku do košíku `saleId` (null = založí nový košík). Vše pod zámkem čísel (GET_LOCK)
+ * jako dřív: rezervace čísla, řádek přihlášky, řádek prodejky a přepočet součtu košíku.
+ */
+export async function addOnsiteRunnerToCart(
   session: SessionUser,
   year: number,
   input: OnsiteEntryInput,
+  saleId: number | null,
 ): Promise<CreateOnsiteEntryResult> {
   const slot = slotOf(await loadSlots(year), "onsite");
   if (!slot) return { ok: false, error: "no_slot" };
@@ -109,13 +123,19 @@ export async function createOnsiteEntry(
   // Startovné na místě: cena termínu (Q314), bez slev zdarma (ty platí jen v early/standardu, Q301).
   const fee = slotFee(slot, await categoryFeeGroup(category.id), category.entryFee);
 
-  const runner = await resolveRunner({
-    firstName: input.firstName,
-    lastName: input.lastName,
-    birthYear: input.birthYear,
-    sex: input.sex,
-    nationality: input.nationality,
-  });
+  // Dvě pokladny zakládající nového běžce stejného ročníku narození a pohlaví mohou souběžně
+  // spočítat stejné id (P2002) – zopakovat, další pokus už id druhé pokladny vidí.
+  const runner = await withTxRetry(
+    () =>
+      resolveRunner({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        birthYear: input.birthYear,
+        sex: input.sex,
+        nationality: input.nationality,
+      }),
+    { attempts: 4 },
+  );
   if ("error" in runner) return { ok: false, error: "ambiguous" };
   const already = await prisma.registrationLine.findFirst({
     where: { year, runnerId: runner.id },
@@ -123,7 +143,7 @@ export async function createOnsiteEntry(
   });
   if (already) return { ok: false, error: "runner_taken" };
   const [club, settings] = await Promise.all([
-    resolveClub(input.clubName, year),
+    withTxRetry(() => resolveClub(input.clubName, year), { attempts: 4 }),
     loadStartSettings(year),
   ]);
   const range = settings.ranges.find((row) => row.categoryId === category.id) ?? null;
@@ -133,9 +153,10 @@ export async function createOnsiteEntry(
   const auto = input.bib === undefined || input.bibAuto;
   const author = actorName(session);
   const email = input.email ? input.email.toLowerCase() : null;
-  // Účtenka (#223): e-mail z formuláře (předvyplněný e-mailem běžce, pokladní ho může změnit
-  // nebo smazat). Zaplacení prodejky pak účtenku na tento e-mail pošle automaticky.
-  const receiptEmail = normalizeEmail(input.receiptEmail);
+  // Účtenka (#223): zaplacení prodejky pošle účtenku na e-mail košíku automaticky.
+  // E-mail běžce (nebo zvlášť zadaný) se uloží ke košíku, pokud ještě žádný nemá; v košíku ho
+  // pokladní může před platbou změnit nebo smazat.
+  const receiptEmail = normalizeEmail(input.receiptEmail) ?? normalizeEmail(input.email);
   const receipt = {
     email: receiptEmail,
     locale: receiptEmail ? receiptLocale(input.receiptLocale) : null,
@@ -159,8 +180,9 @@ export async function createOnsiteEntry(
               await tx.$queryRaw`
               SELECT cislo FROM mcvv_prihlaska_radek WHERE rok = ${year} AND cislo > 0
               LOCK IN SHARE MODE`;
-              return await createInTx(tx, {
+              return await addRunnerInTx(tx, {
                 session,
+                saleId,
                 year,
                 author,
                 email,
@@ -199,10 +221,11 @@ export async function createOnsiteEntry(
   }
 }
 
-async function createInTx(
+async function addRunnerInTx(
   tx: Tx,
   ctx: {
     session: SessionUser;
+    saleId: number | null;
     year: number;
     author: string;
     email: string | null;
@@ -220,6 +243,41 @@ async function createInTx(
   },
 ): Promise<CreateOnsiteEntryResult> {
   const { year, runner } = ctx;
+  // Košík: řádek prodejky zamknout dřív než cokoli měnit (souběžné přidání do stejného košíku).
+  let cart: {
+    id: number;
+    vs: string;
+    registrationId: number | null;
+    email: string | null;
+    lines: number;
+  } | null = null;
+  if (ctx.saleId != null) {
+    await tx.$queryRaw`SELECT id FROM mcvv_sale WHERE id = ${ctx.saleId} FOR UPDATE`;
+    const found = await tx.sale.findUnique({
+      where: { id: ctx.saleId },
+      select: {
+        id: true,
+        year: true,
+        vs: true,
+        status: true,
+        checkoutAt: true,
+        registrationId: true,
+        email: true,
+        _count: { select: { lines: true } },
+      },
+    });
+    if (!found || found.year !== year || found.status !== "unpaid" || found.checkoutAt != null) {
+      return { ok: false, error: "cart_closed" };
+    }
+    if (found._count.lines >= SALE_LINES_MAX) return { ok: false, error: "too_many" };
+    cart = {
+      id: found.id,
+      vs: found.vs,
+      registrationId: found.registrationId,
+      email: found.email,
+      lines: found._count.lines,
+    };
+  }
   // Souběh: běžec mohl být mezitím přihlášen jinou pokladnou nebo z webu.
   const again = await tx.registrationLine.findFirst({
     where: { year, runnerId: runner.id },
@@ -242,47 +300,93 @@ async function createInTx(
   const check = checkOnsiteBib(bib, taken, ctx.champions, ctx.range);
   if (!check.ok) return check;
 
-  const maxSale = await tx.sale.aggregate({ where: { year }, _max: { number: true } });
-  const saleNumber = (maxSale._max.number ?? 0) + 1;
-  if (saleNumber > SALE_NUMBER_MAX) return { ok: false, error: "full" };
-  const vs = saleVs(year, saleNumber);
-
-  const maxReg = await tx.registration.aggregate({ where: { year }, _max: { id: true } });
-  const id = nextRegistrationId(maxReg._max.id);
   const now = new Date();
-  await tx.registration.create({
+  let created = false;
+  if (!cart) {
+    const maxSale = await tx.sale.aggregate({ where: { year }, _max: { number: true } });
+    const saleNumber = (maxSale._max.number ?? 0) + 1;
+    if (saleNumber > SALE_NUMBER_MAX) return { ok: false, error: "full" };
+    const vs = saleVs(year, saleNumber);
+    const sale = await tx.sale.create({
+      data: {
+        year,
+        number: saleNumber,
+        vs,
+        total: 0,
+        status: "unpaid",
+        createdById: ctx.session.id,
+        createdByName: ctx.author,
+        email: ctx.receipt.email,
+        locale: ctx.receipt.locale,
+        checkoutAt: null,
+      },
+      select: { id: true },
+    });
+    cart = { id: sale.id, vs, registrationId: null, email: ctx.receipt.email, lines: 0 };
+    created = true;
+    await writeAudit(
+      {
+        actor: actor(ctx.session),
+        action: "sale.created",
+        target: `sale:${sale.id}`,
+        detail: { vs, total: 0, open: true },
+      },
+      tx,
+    );
+  }
+
+  let id = cart.registrationId;
+  if (id == null) {
+    // První dohláška košíku založí přihlášku typu O; další běžci budou její další řádky.
+    const maxReg = await tx.registration.aggregate({ where: { year }, _max: { id: true } });
+    id = nextRegistrationId(maxReg._max.id);
+    await tx.registration.create({
+      data: {
+        year,
+        id,
+        email: ctx.email,
+        name: runner.name.slice(0, 128),
+        type: "O",
+        status: nextStatus(ENTRY_STATUS.empty, 1, ctx.fee, 0),
+        author: ctx.author.slice(0, 64),
+        created: now,
+        note: `Dohláška na místě, prodejka ${cart.vs}`,
+      },
+    });
+    const meta = {
+      slot: "onsite" as const,
+      feeAdult: ctx.slot.feeAdult,
+      feeYouth: ctx.slot.feeYouth,
+    };
+    // upsert: případný osiřelý záznam smazané přihlášky se stejným číslem se přepíše.
+    await tx.registrationMeta.upsert({
+      where: { year_id: { year, id } },
+      create: { year, id, updatedAt: now, ...meta },
+      update: {
+        ...meta,
+        updatedAt: now,
+        refundedAt: null,
+        reminder1At: null,
+        reminder2At: null,
+        standardPayMailAt: null,
+        autoCancelledAt: null,
+        submittedAt: null,
+        payUntil: null,
+      },
+    });
+  }
+  const lineName = onsiteSaleLineName(ONSITE_SALE_LINE_LABEL, runner.name, ctx.category.name, bib);
+  const saleLine = await tx.saleLine.create({
     data: {
-      year,
-      id,
-      email: ctx.email,
-      name: runner.name.slice(0, 128),
-      type: "O",
-      status: nextStatus(ENTRY_STATUS.empty, 1, ctx.fee, 0),
-      author: ctx.author.slice(0, 64),
-      created: now,
-      note: `Dohláška na místě, prodejka ${vs}`,
+      saleId: cart.id,
+      itemId: null,
+      entry: true,
+      name: lineName,
+      unitPrice: ctx.fee,
+      quantity: 1,
+      lineTotal: ctx.fee,
     },
-  });
-  const meta = {
-    slot: "onsite" as const,
-    feeAdult: ctx.slot.feeAdult,
-    feeYouth: ctx.slot.feeYouth,
-  };
-  // upsert: případný osiřelý záznam smazané přihlášky se stejným číslem se přepíše.
-  await tx.registrationMeta.upsert({
-    where: { year_id: { year, id } },
-    create: { year, id, updatedAt: now, ...meta },
-    update: {
-      ...meta,
-      updatedAt: now,
-      refundedAt: null,
-      reminder1At: null,
-      reminder2At: null,
-      standardPayMailAt: null,
-      autoCancelledAt: null,
-      submittedAt: null,
-      payUntil: null,
-    },
+    select: { id: true },
   });
   await tx.registrationLine.create({
     data: {
@@ -295,39 +399,52 @@ async function createInTx(
       entryFee: ctx.fee,
       author: ctx.author.slice(0, 64),
       created: now,
+      saleLineId: saleLine.id,
     },
   });
+  if (cart.registrationId != null) {
+    // Další běžec stejné přihlášky: stav podle počtu řádků a startovného (zatím nic nezaplaceno).
+    const [registration, regLines] = await Promise.all([
+      tx.registration.findUnique({
+        where: { year_id: { year, id } },
+        select: { status: true, email: true },
+      }),
+      tx.registrationLine.findMany({
+        where: { year, registrationId: id },
+        select: { entryFee: true },
+      }),
+    ]);
+    const fee = regLines.reduce((sum, line) => sum + (line.entryFee ?? 0), 0);
+    await tx.registration.update({
+      where: { year_id: { year, id } },
+      data: {
+        status: nextStatus(registration?.status, regLines.length, fee, 0),
+        ...(registration?.email == null && ctx.email ? { email: ctx.email } : {}),
+      },
+    });
+    await tx.registrationMeta.updateMany({ where: { year, id }, data: { updatedAt: now } });
+  }
   // Ručně zadané číslo je zamčené, aby ho návrh startovky nepřečísloval.
   await tx.startLineMeta.upsert({
     where: { year_runnerId: { year, runnerId: runner.id } },
     update: { locked: true },
     create: { year, runnerId: runner.id, locked: true },
   });
-  const sale = await tx.sale.create({
+  const all = await tx.saleLine.findMany({
+    where: { saleId: cart.id },
+    select: { lineTotal: true },
+  });
+  const total = saleLinesTotal(all);
+  await tx.sale.update({
+    where: { id: cart.id },
     data: {
-      year,
-      number: saleNumber,
-      vs,
-      total: ctx.fee,
-      status: "unpaid",
-      createdById: ctx.session.id,
-      createdByName: ctx.author,
+      total,
       registrationId: id,
-      email: ctx.receipt.email,
-      locale: ctx.receipt.locale,
-      lines: {
-        create: [
-          {
-            itemId: null,
-            name: onsiteSaleLineName(ONSITE_SALE_LINE_LABEL, runner.name, ctx.category.name, bib),
-            unitPrice: ctx.fee,
-            quantity: 1,
-            lineTotal: ctx.fee,
-          },
-        ],
-      },
+      // Účtenka (#223): první zadaný e-mail košíku; v košíku ho pokladní může před platbou změnit.
+      ...(cart.email == null && ctx.receipt.email
+        ? { email: ctx.receipt.email, locale: ctx.receipt.locale }
+        : {}),
     },
-    select: { id: true },
   });
   const onsite = {
     registrationId: id,
@@ -344,9 +461,16 @@ async function createInTx(
   await writeAudit(
     {
       actor: actor(ctx.session),
-      action: "sale.created",
-      target: `sale:${sale.id}`,
-      detail: { vs, total: ctx.fee, onsite },
+      action: "sale.line_added",
+      target: `sale:${cart.id}`,
+      detail: {
+        vs: cart.vs,
+        lineId: saleLine.id,
+        name: lineName,
+        price: ctx.fee,
+        total,
+        onsite,
+      },
     },
     tx,
   );
@@ -360,7 +484,7 @@ async function createInTx(
         auto: "onsite",
         bibAuto: ctx.auto,
         registrationId: id,
-        saleId: sale.id,
+        saleId: cart.id,
         outsideCategory: check.outsideCategory,
       },
     },
@@ -368,13 +492,15 @@ async function createInTx(
   );
   return {
     ok: true,
-    saleId: sale.id,
-    vs,
-    total: ctx.fee,
+    saleId: cart.id,
+    vs: cart.vs,
+    total,
     registrationId: id,
     bib,
     outsideCategory: check.outsideCategory,
     bibAuto: ctx.auto,
+    runnerName: runner.name,
+    created,
   };
 }
 
@@ -405,27 +531,34 @@ export async function suggestOnsiteBibFor(
 }
 
 /**
- * Prodejka dohlášky právě zaplacena (hotově, ručně převodem nebo spárováním z Fio): platba
- * přihlášky ve výši prodejky. Volat ve stejné transakci jako změnu stavu prodejky, ať platba
- * vznikne právě jednou. Stav přihlášky přepočítá `recalculateRegistrationStatus` po transakci.
+ * Prodejka s dohláškou právě zaplacena (hotově, ručně převodem nebo spárováním z Fio): platba
+ * přihlášky ve výši startovného – jen řádky dohlášek, ne merch (#378). Volat ve stejné transakci
+ * jako změnu stavu prodejky, ať platba vznikne právě jednou. Stav přihlášky přepočítá
+ * `recalculateRegistrationStatus` po transakci.
  */
 export async function payOnsiteRegistrationInTx(
   tx: Tx,
-  sale: { year: number; registrationId: number | null; total: number },
+  sale: { id: number; year: number; registrationId: number | null; total: number },
   paidAt: Date,
-): Promise<number | null> {
+): Promise<{ paymentId: number; amount: number } | null> {
   if (sale.registrationId == null) return null;
+  const lines = await tx.saleLine.findMany({
+    where: { saleId: sale.id },
+    select: { entry: true, lineTotal: true },
+  });
+  const amount = onsiteEntryAmount(sale, lines);
+  if (amount == null) return null;
   const payment = await tx.payment.create({
     data: {
       year: sale.year,
       registrationId: toPaymentRegistrationId(sale.registrationId),
       date: paidAt,
-      amount: sale.total,
+      amount,
       author: ONSITE_PAYMENT_AUTHOR,
     },
     select: { id: true },
   });
-  return payment.id;
+  return { paymentId: payment.id, amount };
 }
 
 /**
@@ -460,4 +593,57 @@ export async function releaseOnsiteRegistrationInTx(
     categoryId,
     clubId,
   }));
+}
+
+/**
+ * Odebrání jednoho běžce z otevřeného košíku (#378): podle řádku prodejky najde jeho řádek
+ * přihlášky (`saleLineId`), smaže ho i zámek ve
+ * startovce (číslo se uvolní). Když přihláška zůstane bez běžců, zruší se. Vrací uvolněný řádek
+ * pro audit, nebo null, pokud běžec v přihlášce už není.
+ */
+export async function releaseOnsiteRunnerInTx(
+  tx: Tx,
+  year: number,
+  registrationId: number,
+  saleLineId: number,
+): Promise<{
+  released: { runnerId: string; bib: number | null; categoryId: string; clubId: string } | null;
+  remaining: number;
+}> {
+  const line = await tx.registrationLine.findFirst({
+    where: { year, registrationId, saleLineId },
+    select: { runnerId: true, bib: true, categoryId: true, clubId: true },
+  });
+  if (line) {
+    await tx.startLineMeta.deleteMany({ where: { year, runnerId: line.runnerId } });
+    await tx.registrationLine.deleteMany({
+      where: { year, registrationId, runnerId: line.runnerId },
+    });
+  }
+  const rest = await tx.registrationLine.findMany({
+    where: { year, registrationId },
+    select: { entryFee: true },
+  });
+  const now = new Date();
+  if (rest.length === 0) {
+    await tx.registration.updateMany({
+      where: { year, id: registrationId },
+      data: { status: ENTRY_STATUS.cancelled },
+    });
+  } else {
+    const registration = await tx.registration.findUnique({
+      where: { year_id: { year, id: registrationId } },
+      select: { status: true },
+    });
+    const fee = rest.reduce((sum, row) => sum + (row.entryFee ?? 0), 0);
+    await tx.registration.updateMany({
+      where: { year, id: registrationId },
+      data: { status: nextStatus(registration?.status, rest.length, fee, 0) },
+    });
+  }
+  await tx.registrationMeta.updateMany({
+    where: { year, id: registrationId },
+    data: { updatedAt: now },
+  });
+  return { released: line, remaining: rest.length };
 }

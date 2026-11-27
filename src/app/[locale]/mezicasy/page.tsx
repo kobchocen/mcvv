@@ -6,15 +6,24 @@ import { McvvTestRunBanner } from "@/components/organisms/mcvv-test-run-banner";
 import { Link, redirect, type Locale } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/session";
 import { getAssignedStations } from "@/lib/live/assignment";
-import { stationsForScope } from "@/lib/live/assignment-core";
+import { resolveSplitStation, stationsForScope } from "@/lib/live/assignment-core";
 import { getStations } from "@/lib/live/race-context";
+import { loadFieldSnapshot } from "@/lib/live/splits-field";
 import { getLiveRaceContext } from "@/lib/testmode/run";
 import { withStart } from "@/lib/live/stations";
-import { allowsFor, can, getAccess } from "@/lib/admin/access";
+import { getAccess, splitAllows } from "@/lib/admin/access";
 import { splitScope } from "@/lib/admin/permissions";
 import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
-type PageProps = Readonly<{ params: Promise<{ locale: string }> }>;
+type PageProps = Readonly<{
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ split?: string | string[] }>;
+}>;
+
+function firstQuery(value?: string | string[]): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
@@ -23,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /** Webový klient pro zadávání mezičasů na kontrolách 1,3 km a 2,7 km (#121) a evidenci startu (#203). */
-export default async function SplitsPage({ params }: PageProps) {
+export default async function SplitsPage({ params, searchParams }: PageProps) {
   const { locale: requestedLocale } = await params;
   const locale = requestedLocale as Locale;
   setRequestLocale(locale);
@@ -34,7 +43,8 @@ export default async function SplitsPage({ params }: PageProps) {
     return null;
   }
   const t = await getTranslations({ locale, namespace: "Splits" });
-  if (!can(access, "screens.splits", "read")) {
+  const allows = await splitAllows(access);
+  if (!allows("screens.splits", "read")) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
         <div className="mx-auto max-w-md">
@@ -57,11 +67,7 @@ export default async function SplitsPage({ params }: PageProps) {
   ]);
   // Splitmaker vidí jen přiřazená stanoviště (server zápis na jiné odmítne).
   // Start (#203) je vestavěné stanoviště: evidence, kdo odstartoval (jen evidence).
-  const stations = stationsForScope(
-    splitScope(allowsFor(access)),
-    assigned,
-    withStart(allStations),
-  );
+  const stations = stationsForScope(splitScope(allows), assigned, withStart(allStations));
   if (stations.length === 0) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
@@ -78,18 +84,43 @@ export default async function SplitsPage({ params }: PageProps) {
       </main>
     );
   }
+  const scope = splitScope(allows);
+  const query = await searchParams;
+  const urlCode = firstQuery(query.split);
+  const initialStation =
+    resolveSplitStation({
+      allowed: stations,
+      allStations: scope.all,
+      urlCode,
+    }) ?? stations[0].code;
+  const urlStation =
+    resolveSplitStation({
+      allowed: stations,
+      allStations: true,
+      urlCode,
+    }) === urlCode
+      ? urlCode
+      : null;
+
+  const field = await loadFieldSnapshot(ctx.year, initialStation, allStations);
+
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
       <McvvTestModeBanner locale={locale as Locale} ctx={ctx} />
       <McvvTestRunBanner locale={locale} />
       <McvvSplitsClient
         stations={stations}
+        initialStation={initialStation}
+        urlStation={urlStation}
+        canChooseStation={scope.all}
+        initialField={field.counts}
+        initialBibs={field.bibs}
         year={ctx.year}
         userId={session.id}
-        userName={session.name}
         zeroIso={ctx.zero.toISOString()}
         intervalS={ctx.intervalS}
         secondStartFrom={ctx.secondStartFrom}
+        organizerShiftSeconds={ctx.organizerShiftSeconds}
         zeroOverridden={ctx.zeroOverridden}
         startLimitS={ctx.startLimitS}
         locale={locale}

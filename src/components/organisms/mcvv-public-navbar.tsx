@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
-import { adminAccess, getSession } from "@/lib/auth/session";
+import { canOpenAdmin, getAccess } from "@/lib/admin/access";
+import { getSession } from "@/lib/auth/session";
 import { adminHomeHref } from "@/lib/auth/roles";
 import { getUnreadCount } from "@/lib/messages/store";
 
@@ -17,7 +18,12 @@ export async function McvvPublicNavbar({
   const starter =
     session?.role === "starter"
       ? { href: "/start" as const, label: (await getTranslations("Starter"))("navLink") }
-      : null;
+      : session?.role === "prestarter"
+        ? {
+            href: "/predstarter" as const,
+            label: (await getTranslations("Prestarter"))("navLink"),
+          }
+        : null;
   return (
     <McvvNavbar
       content={content}
@@ -28,7 +34,8 @@ export async function McvvPublicNavbar({
           ? {
               name: session.name,
               email: session.email,
-              staff: adminAccess(session.role) !== "none",
+              // Stejné rozhodnutí jako layout /admin (DB role, při permissions.v2 engine).
+              staff: canOpenAdmin(await getAccess()),
               adminHref: adminHomeHref(),
               starter,
               messages,

@@ -7,7 +7,14 @@ import { routing, type Locale } from "@/i18n/routing";
 import { CloudflareWebAnalytics } from "@/components/atoms/cloudflare-web-analytics";
 import { HtmlLang } from "@/components/atoms/html-lang";
 import { env } from "@/lib/env";
-import { ogAlternateLocales, ogLocale, SITE_NAME, siteDescription } from "@/lib/site/seo";
+import {
+  defaultOgImage,
+  ogAlternateLocales,
+  ogLocale,
+  SITE_NAME,
+  siteDescription,
+} from "@/lib/site/seo";
+import { siteUrl } from "@/lib/site/url";
 import { AppProviders } from "@/providers";
 
 type LocaleLayoutProps = Readonly<{
@@ -32,6 +39,13 @@ export async function generateMetadata({
       description,
       locale: ogLocale(locale),
       alternateLocale: ogAlternateLocales(locale),
+      images: [defaultOgImage(siteUrl())],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: SITE_NAME,
+      description,
+      images: [defaultOgImage(siteUrl()).url],
     },
   };
 }

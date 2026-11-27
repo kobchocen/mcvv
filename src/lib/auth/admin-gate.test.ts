@@ -56,10 +56,18 @@ test("an unsafe query is dropped but the path is kept", () => {
   assert.equal(loginUrl("cs", null), "/cs/prihlaseni");
 });
 
-test("an account without admin access is redirected, staff and timing pass", () => {
+test("any valid session passes the proxy, the role is checked in the DB by the layout", () => {
+  // Stará cookie z doby, kdy byl účet registrar, ale v DB už má roli mezičasy (Pavel 26. 11.):
+  // dřív 307 na přihlášení → přihlášení zpět na /admin → smyčka a prázdná stránka.
+  assert.deepEqual(adminGate({ ...base, pathname: "/cs/admin", cookieRole: "registrar" }), {
+    kind: "pass",
+    requestPath: "/admin",
+  });
+  assert.equal(adminGate({ ...base, pathname: "/cs/admin", cookieRole: null }).kind, "redirect");
+  // Resultboard proxy pustí taky; z adminu ho podle role v DB pošle pryč layout (na /resultboard).
   assert.equal(
-    adminGate({ ...base, pathname: "/cs/admin", cookieRole: "registrar" }).kind,
-    "redirect",
+    adminGate({ ...base, pathname: "/cs/admin", cookieRole: "resultboard" }).kind,
+    "pass",
   );
   assert.deepEqual(adminGate({ ...base, pathname: "/cs/admin", cookieRole: "organizer" }), {
     kind: "pass",
@@ -94,13 +102,10 @@ test("other pages are not touched", () => {
   });
 });
 
-test("staff cookie flag (P5) lets a registrar with new roles through, old cookies unchanged", () => {
+test("staff cookie flag (P5) no longer matters: a valid session passes, no session never", () => {
   const page = { ...base, pathname: "/cs/admin" };
-  assert.equal(adminGate({ ...page, cookieRole: "registrar" }).kind, "redirect");
-  assert.equal(
-    adminGate({ ...page, cookieRole: "registrar", cookieStaff: false }).kind,
-    "redirect",
-  );
-  assert.equal(adminGate({ ...page, cookieRole: "registrar", cookieStaff: true }).kind, "pass");
-  assert.equal(adminGate({ ...page, cookieRole: null, cookieStaff: true }).kind, "redirect");
+  for (const cookieStaff of [undefined, false, true]) {
+    assert.equal(adminGate({ ...page, cookieRole: "registrar", cookieStaff }).kind, "pass");
+    assert.equal(adminGate({ ...page, cookieRole: null, cookieStaff }).kind, "redirect");
+  }
 });

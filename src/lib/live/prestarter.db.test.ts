@@ -64,7 +64,7 @@ describe("pre-starter role and shared start marks (database)", { skip }, () => {
     });
     await db.club.create({ data: { id: CLUB, year: YEAR, name: "Test" } });
     await db.registration.create({ data: { year: YEAR, id: 1 } });
-    const bibs = [5, 6, 7, 601];
+    const bibs = [5, 6, 7, 8, 9, 601];
     await db.runner.createMany({
       data: bibs.map((bib) => ({ id: runnerId(bib), name: `Test ${bib}` })),
     });
@@ -261,6 +261,62 @@ describe("pre-starter role and shared start marks (database)", { skip }, () => {
     assert.equal(row, null);
   });
 
+  it("confirms a late start like the starter (Pavel 27. 11.: smí všechno jako startér)", async () => {
+    const now = Date.now();
+    const past = { ...plan, zero: new Date(now - 3_600_000) };
+    const [r] = await starter.applyStarterEntries(
+      [tap(8, "late", now - 200)],
+      past,
+      { id: ids.pre },
+      1,
+      new Date(now),
+      starter.PRESTARTER_SOURCE,
+    );
+    assert.equal(r?.outcome, "applied");
+    const row = await db.startCheck.findUnique({ where: { year_bib: { year: YEAR, bib: 8 } } });
+    assert.equal(row?.source, "prestart");
+    assert.equal(row?.late, true);
+    assert.ok(row?.realStartAt, "real start time is stored for information");
+    const planned = past.zero.getTime() + 7 * 15_000;
+    assert.equal(row?.startedAt.getTime(), planned, "results still use the planned start");
+  });
+
+  it("takes over a split auto-mark and a starter's mark when tapping later", async () => {
+    const now = Date.now();
+    await db.startCheck.create({
+      data: {
+        year: YEAR,
+        bib: 9,
+        startedAt: new Date(now),
+        source: "split",
+        notMarked: true,
+        corridor: 1,
+      },
+    });
+    const past = { ...plan, zero: new Date(now - 3_600_000) };
+    let [r] = await starter.applyStarterEntries(
+      [tap(9, "late", now - 300)],
+      past,
+      { id: ids.st },
+      1,
+      new Date(now),
+    );
+    assert.equal(r?.outcome, "applied");
+    [r] = await starter.applyStarterEntries(
+      [tap(9, "late", now - 100)],
+      past,
+      { id: ids.pre },
+      1,
+      new Date(now),
+      starter.PRESTARTER_SOURCE,
+    );
+    assert.equal(r?.outcome, "applied");
+    const row = await db.startCheck.findUnique({ where: { year_bib: { year: YEAR, bib: 9 } } });
+    assert.equal(row?.source, "prestart");
+    assert.equal(row?.userId, ids.pre);
+    assert.equal(row?.notMarked, false);
+  });
+
   it("loads the snapshot with pre-starter marks for the starter screen", async () => {
     const now = Date.now();
     await starter.applyStarterEntries(
@@ -274,7 +330,7 @@ describe("pre-starter role and shared start marks (database)", { skip }, () => {
     const snapshot = await starter.loadStarterSnapshot({ ...plan, zeroOverridden: false }, 1);
     assert.deepEqual(
       snapshot.runners.map((runner) => runner.bib),
-      [5, 6, 7],
+      [5, 6, 7, 8, 9],
     );
     const mark = snapshot.marks.find((item) => item.bib === 7);
     assert.equal(mark?.source, "prestart");

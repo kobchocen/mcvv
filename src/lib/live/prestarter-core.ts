@@ -5,6 +5,10 @@
  * (`mcvv_start_check`) jako startér, se zdrojem `prestart` a stejnou prioritou (platí pozdější
  * ťuknutí, admin vždy vyhraje). Vidí a označuje jen frontu svého koridoru – pole „Jiné číslo“
  * nemá (Pavel 26. 11.).
+ *
+ * Ve svém koridoru smí všechno jako startér (Pavel 27. 11.): zrušit i označení od startéra,
+ * odstartovat v červené fázi a potvrdit pozdní start z „Neodstartovali“. Proto obě obrazovky
+ * sdílejí `tapAction` / `decideStarterWrite` bez výjimek pro zdroj `prestart`.
  */
 import type { UserRole } from "@/lib/auth/roles";
 import type { StaffRole } from "@/lib/auth/staff-roles";

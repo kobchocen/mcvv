@@ -7,20 +7,22 @@ import { redirect } from "@/i18n/routing";
 import { formInt, formString } from "@/lib/admin/parse";
 import { currentRaceYear } from "@/lib/entries/year";
 import { HOME_COUNTS_TAG } from "@/lib/home/summary-core";
-import { normalizeEmail } from "@/lib/newsletter/core";
 
 import { parseSaleItemInput } from "./core";
 import { cashDeskActionSession, saleStatusSection } from "./guard";
-import { createOnsiteEntry, suggestOnsiteBibFor, type CreateOnsiteEntryResult } from "./onsite";
-import { parseOnsiteEntryInput, type OnsiteEntryField } from "./onsite-core";
 import {
-  changeSaleStatus,
-  createSale,
-  createSaleItem,
-  sendSaleReceipt,
-  updateSaleItem,
-  type CreateSaleResult,
-} from "./sales";
+  addMerchToCart,
+  changeCartLine,
+  closeCartForPayment,
+  reopenCart,
+  type AddMerchResult,
+  type CartLineResult,
+  type CheckoutResult,
+} from "./cart";
+import { isCartLineOp } from "./cart-core";
+import { addOnsiteRunnerToCart, suggestOnsiteBibFor, type CreateOnsiteEntryResult } from "./onsite";
+import { parseOnsiteEntryInput, type OnsiteEntryField } from "./onsite-core";
+import { changeSaleStatus, createSaleItem, sendSaleReceipt, updateSaleItem } from "./sales";
 
 function revalidate() {
   revalidatePath("/[locale]/kancelar", "layout");
@@ -48,12 +50,20 @@ const ONSITE_FIELDS = [
   "receiptLocale",
 ] as const;
 
+/** Id košíku z klienta: kladné celé číslo, jinak null (= založit nový košík). */
+function cartId(value: unknown): number | null {
+  const id = typeof value === "number" ? value : Number(value);
+  return Number.isInteger(id) && id > 0 && id < 1_000_000_000 ? id : null;
+}
+
 /**
- * Pokladna: dohláška na místě (#222) – založí přihlášku s ručně zadaným číslem a prodejku
- * s cenou termínu „na místě“, propojené spolu.
+ * Pokladna: dohláška na místě (#222) do otevřeného košíku (#378) – rezervuje číslo, přidá
+ * běžce do přihlášky košíku (první založí přihlášku i košík) a řádek prodejky s cenou termínu
+ * „na místě“. K platbě se nepřechází.
  */
-export async function createOnsiteEntryAction(
+export async function addOnsiteRunnerAction(
   input: Partial<Record<(typeof ONSITE_FIELDS)[number], string>>,
+  saleId: number | null,
 ): Promise<
   | CreateOnsiteEntryResult
   | { ok: false; error: "forbidden" }
@@ -69,7 +79,7 @@ export async function createOnsiteEntryAction(
   const parsed = parseOnsiteEntryInput(raw);
   if (!parsed.ok) return parsed;
   const { year } = await currentRaceYear();
-  const result = await createOnsiteEntry(session, year, parsed.data);
+  const result = await addOnsiteRunnerToCart(session, year, parsed.data, cartId(saleId));
   if (result.ok) {
     revalidate();
     revalidateEntries();
@@ -90,24 +100,59 @@ export async function suggestOnsiteBibAction(
   return suggestion ? { bib: suggestion.bib, outsideCategory: suggestion.outsideCategory } : null;
 }
 
-/** Pokladna: vytvořit prodejku z vybraných položek (ceny počítá server). */
-export async function createSaleAction(input: {
+/** Pokladna: položky ceníku do otevřeného košíku (ceny počítá server z ceníku). */
+export async function addMerchAction(input: {
   lines: ReadonlyArray<{ itemId: number; quantity: number }>;
-  email?: string;
-  locale?: string;
-}): Promise<CreateSaleResult | { ok: false; error: "forbidden" | "invalid_email" }> {
+  saleId: number | null;
+}): Promise<AddMerchResult | { ok: false; error: "forbidden" }> {
   const session = await cashDeskActionSession();
   if (!session) return { ok: false, error: "forbidden" };
   const lines = Array.isArray(input?.lines) ? input.lines.slice(0, 100) : [];
   const { year } = await currentRaceYear();
-  const email = typeof input?.email === "string" ? input.email.trim().slice(0, 128) : "";
-  if (email && !normalizeEmail(email)) return { ok: false, error: "invalid_email" };
-  const result = await createSale(
+  const result = await addMerchToCart(
     session,
     year,
     lines.map((l) => ({ itemId: Number(l?.itemId), quantity: Number(l?.quantity) })),
-    { email, locale: typeof input?.locale === "string" ? input.locale : null },
+    cartId(input?.saleId),
   );
+  if (result.ok) revalidate();
+  return result;
+}
+
+/** Pokladna: +/− kus merche nebo odebrání řádku (u dohlášky uvolní jen číslo toho běžce). */
+export async function changeCartLineAction(input: {
+  saleId: number;
+  lineId: number;
+  op: string;
+}): Promise<CartLineResult | { ok: false; error: "forbidden" }> {
+  const session = await cashDeskActionSession();
+  if (!session) return { ok: false, error: "forbidden" };
+  const saleId = cartId(input?.saleId);
+  const lineId = cartId(input?.lineId);
+  if (!saleId || !lineId || !isCartLineOp(input?.op)) return { ok: false, error: "not_found" };
+  const result = await changeCartLine(session, saleId, lineId, input.op);
+  if (result.ok) {
+    revalidate();
+    if (result.released != null) revalidateEntries();
+  }
+  return result;
+}
+
+/** Pokladna: „K platbě“ – uzavře košík, uloží e-mail účtenky; klient pak otevře detail s QR. */
+export async function checkoutCartAction(input: {
+  saleId: number;
+  email?: string;
+  locale?: string;
+}): Promise<CheckoutResult | { ok: false; error: "forbidden" }> {
+  const session = await cashDeskActionSession();
+  if (!session) return { ok: false, error: "forbidden" };
+  const saleId = cartId(input?.saleId);
+  if (!saleId) return { ok: false, error: "cart_closed" };
+  const email = typeof input?.email === "string" ? input.email.trim().slice(0, 128) : "";
+  const result = await closeCartForPayment(session, saleId, {
+    email,
+    locale: typeof input?.locale === "string" ? input.locale : null,
+  });
   if (result.ok) revalidate();
   return result;
 }
@@ -148,6 +193,19 @@ export async function markSalePaidBank(formData: FormData): Promise<void> {
 
 export async function cancelSale(formData: FormData): Promise<void> {
   await changeStatus(formData, "cancelled");
+}
+
+/** Detail prodejky: nezaplacenou prodejku vrátit do košíku k úpravám (#378). */
+export async function reopenCartAction(formData: FormData): Promise<void> {
+  const session = await cashDeskActionSession();
+  const id = formInt(formData, "id");
+  if (!id) return;
+  if (!session) return toSale(id, { chyba: "forbidden" });
+  const result = await reopenCart(session, id);
+  revalidate();
+  if (result !== "ok") return toSale(id, { chyba: result });
+  const locale = await getLocale();
+  redirect({ href: { pathname: "/kancelar", query: { prodejka: String(id) } }, locale });
 }
 
 async function toItems(query: Record<string, string>): Promise<never> {

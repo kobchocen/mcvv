@@ -15,8 +15,10 @@ import {
   cancelSale,
   markSalePaidBank,
   markSalePaidCash,
+  reopenCartAction,
   sendSaleReceiptAction,
 } from "@/lib/sales/actions";
+import { cartTotals, isSaleAwaitingPayment, isSaleOpen } from "@/lib/sales/cart-core";
 import { RECEIPT_LOCALES } from "@/lib/sales/receipt-mail";
 import { saleQrMessage } from "@/lib/sales/core";
 import { cashDeskPageSession } from "@/lib/sales/guard";
@@ -39,9 +41,19 @@ const when = (d: Date | null) =>
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 const FLASH_OK = new Set(["paid_cash", "paid_bank", "cancelled", "receipt"]);
-const FLASH_ERR = new Set(["forbidden", "not_found", "not_unpaid", "invalid_email", "no_email"]);
+const FLASH_ERR = new Set([
+  "forbidden",
+  "not_found",
+  "not_unpaid",
+  "not_closed",
+  "invalid_email",
+  "no_email",
+]);
 
-/** Detail prodejky (#207): QR platba, stav, „Zaplaceno hotově“, storno. */
+/**
+ * Detail prodejky (#207): QR platba, stav, „Zaplaceno hotově“, storno. Rozpracovaná prodejka
+ * (košík, #378) QR ani platbu neukazuje – jen odkaz zpět do pokladny a storno.
+ */
 export default async function SaleDetailPage({ params, searchParams }: PageProps) {
   const { locale, id } = await params;
   setRequestLocale(locale as Locale);
@@ -55,14 +67,17 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
   const ok = one(query.ok);
   const err = one(query.chyba);
   const unpaid = sale.status === "unpaid";
-  const qr = unpaid
+  const open = isSaleOpen(sale);
+  const awaiting = isSaleAwaitingPayment(sale);
+  const totals = cartTotals(sale.lines);
+  const qr = awaiting
     ? await spdPaymentQrSvg({ amount: sale.total, vs: sale.vs, message: saleQrMessage(sale.vs) })
     : null;
   const btn = "h-14 w-full font-display text-lg font-bold";
 
   return (
     <main className="min-h-screen bg-race-deep text-foreground">
-      {unpaid ? <McvvPollRefresh intervalMs={15_000} /> : null}
+      {awaiting ? <McvvPollRefresh intervalMs={15_000} /> : null}
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-3 pb-10 pt-4">
         <McvvCashDeskNav session={session} active="sales" />
         {FLASH_OK.has(ok) ? (
@@ -93,7 +108,7 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
                 className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${saleStatusClass(sale.status)}`}
                 data-testid="sale-status"
               >
-                {t(`status_${sale.status}`)}
+                {t(open ? "status_open" : `status_${sale.status}`)}
               </span>
             </div>
             <p
@@ -102,6 +117,19 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
             >
               {czk(sale.total)}
             </p>
+            {totals.runners > 0 && totals.merch > 0 ? (
+              <p className="text-sm text-race-muted" data-testid="sale-split">
+                {t("cartSplit", { entries: czk(totals.entries), merch: czk(totals.merch) })}
+              </p>
+            ) : null}
+            {open ? (
+              <p
+                className="border border-amber-500/60 bg-amber-500/10 p-2 text-sm"
+                data-testid="sale-open"
+              >
+                {t("saleOpenHint")}
+              </p>
+            ) : null}
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
               <dt className="text-race-muted">{t("vs")}</dt>
               <dd className="font-mono text-lg font-semibold" data-testid="sale-vs">
@@ -185,64 +213,91 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
           </table>
         </section>
 
-        <form
-          action={sendSaleReceiptAction}
-          className="grid gap-2 border border-race-line/60 bg-race-surface p-3"
-          data-testid="sale-receipt"
-        >
-          <input type="hidden" name="id" value={sale.id} />
-          <label className="text-sm font-semibold" htmlFor="receipt-email">
-            {t("receiptTitle")}
-          </label>
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <input
-              id="receipt-email"
-              name="email"
-              type="email"
-              maxLength={128}
-              defaultValue={sale.email ?? ""}
-              placeholder={t("receiptEmailPlaceholder")}
-              className="h-11 border border-race-line/60 bg-race-deep px-2 text-sm"
-            />
-            <select
-              name="locale"
-              defaultValue={sale.locale ?? "cs"}
-              aria-label={t("receiptLocale")}
-              className="h-11 border border-race-line/60 bg-race-deep px-2 text-sm"
-            >
-              {RECEIPT_LOCALES.map((code) => (
-                <option key={code} value={code}>
-                  {code.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </div>
-          {sale.receiptSentAt ? (
-            <p className="text-xs text-race-muted">
-              {t("receiptSent", { at: when(sale.receiptSentAt) })}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            className="h-11 border border-race-line bg-race-surface text-sm font-semibold"
+        {open ? null : (
+          <form
+            action={sendSaleReceiptAction}
+            className="grid gap-2 border border-race-line/60 bg-race-surface p-3"
+            data-testid="sale-receipt"
           >
-            {sale.receiptSentAt ? t("receiptResend") : t("receiptSend")}
-          </button>
-        </form>
+            <input type="hidden" name="id" value={sale.id} />
+            <label className="text-sm font-semibold" htmlFor="receipt-email">
+              {t("receiptTitle")}
+            </label>
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <input
+                id="receipt-email"
+                name="email"
+                type="email"
+                maxLength={128}
+                defaultValue={sale.email ?? ""}
+                placeholder={t("receiptEmailPlaceholder")}
+                className="h-11 border border-race-line/60 bg-race-deep px-2 text-sm"
+              />
+              <select
+                name="locale"
+                defaultValue={sale.locale ?? "cs"}
+                aria-label={t("receiptLocale")}
+                className="h-11 border border-race-line/60 bg-race-deep px-2 text-sm"
+              >
+                {RECEIPT_LOCALES.map((code) => (
+                  <option key={code} value={code}>
+                    {code.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {sale.receiptSentAt ? (
+              <p className="text-xs text-race-muted">
+                {t("receiptSent", { at: when(sale.receiptSentAt) })}
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              className="h-11 border border-race-line bg-race-surface text-sm font-semibold"
+            >
+              {sale.receiptSentAt ? t("receiptResend") : t("receiptSend")}
+            </button>
+          </form>
+        )}
+
+        {open ? (
+          <Link
+            href={{ pathname: "/kancelar", query: { prodejka: String(sale.id) } }}
+            className={`${btn} flex items-center justify-center bg-race-accent-solid text-white hover:bg-race-accent-solid-hover`}
+            data-testid="sale-continue"
+          >
+            {t("cartContinue")}
+          </Link>
+        ) : null}
 
         {unpaid ? (
           <section className="grid gap-3" aria-label={t("actions")}>
-            <form action={markSalePaidCash}>
-              <input type="hidden" name="id" value={sale.id} />
-              <button
-                type="submit"
-                className={`${btn} bg-emerald-700 text-white hover:bg-emerald-800`}
-                data-testid="mark-cash"
-              >
-                {t("markCash")}
-              </button>
-            </form>
-            {(await canAccess("raceOffice.bankPaid", "write")) ? (
+            {awaiting ? (
+              <form action={markSalePaidCash}>
+                <input type="hidden" name="id" value={sale.id} />
+                <button
+                  type="submit"
+                  className={`${btn} bg-emerald-700 text-white hover:bg-emerald-800`}
+                  data-testid="mark-cash"
+                >
+                  {t("markCash")}
+                </button>
+              </form>
+            ) : null}
+            {awaiting ? (
+              <form action={reopenCartAction} className="grid gap-1">
+                <input type="hidden" name="id" value={sale.id} />
+                <button
+                  type="submit"
+                  className="h-11 border border-race-line bg-race-surface text-sm font-semibold"
+                  data-testid="sale-reopen"
+                >
+                  {t("cartReopen")}
+                </button>
+                <span className="text-xs text-race-muted">{t("cartReopenHint")}</span>
+              </form>
+            ) : null}
+            {awaiting && (await canAccess("raceOffice.bankPaid", "write")) ? (
               <form action={markSalePaidBank} className="grid gap-2 border border-race-line/60 p-3">
                 <input type="hidden" name="id" value={sale.id} />
                 <label className="text-xs text-race-muted" htmlFor="note">
@@ -282,13 +337,15 @@ export default async function SaleDetailPage({ params, searchParams }: PageProps
           </section>
         ) : null}
 
-        <Link
-          href="/kancelar"
-          className={`${btn} flex items-center justify-center bg-race-accent-solid text-white hover:bg-race-accent-solid-hover`}
-          data-testid="new-sale"
-        >
-          {t("newSale")}
-        </Link>
+        {open ? null : (
+          <Link
+            href="/kancelar"
+            className={`${btn} flex items-center justify-center bg-race-accent-solid text-white hover:bg-race-accent-solid-hover`}
+            data-testid="new-sale"
+          >
+            {t("newSale")}
+          </Link>
+        )}
       </div>
     </main>
   );

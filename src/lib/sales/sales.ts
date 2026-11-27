@@ -14,14 +14,7 @@ import { siteUrl } from "@/lib/site/url";
 
 import { receiptLocale, renderSaleReceipt } from "./receipt-mail";
 
-import {
-  buildSaleLines,
-  pragueDayRange,
-  saleVs,
-  SALE_NUMBER_MAX,
-  type SaleFilter,
-  type SaleItemPrice,
-} from "./core";
+import { pragueDayRange, type SaleFilter } from "./core";
 import { payOnsiteRegistrationInTx, releaseOnsiteRegistrationInTx } from "./onsite";
 
 /**
@@ -44,92 +37,12 @@ export async function listSaleItems(year: number, options: { activeOnly?: boolea
   });
 }
 
-export type CreateSaleResult =
-  | { ok: true; id: number; vs: string; total: number }
-  | { ok: false; error: "empty" | "quantity" | "item" | "too_many" | "full" | "busy" };
+export type SaleChangeResult = "ok" | "forbidden" | "not_found" | "not_unpaid" | "not_closed";
 
 /**
- * Vytvoří prodejku: ceny a názvy jen z ceníku ročníku (nikdy z klienta), pořadí
- * = max + 1 v transakci; souběh dvou pokladen řeší unikát (rok, cislo) + opakování.
+ * Nezaplacená → zaplacená hotově / ručně převodem (kdo a kdy), nebo storno. Zaplatit jde jen
+ * prodejku uzavřenou k platbě (#378); otevřený košík jde jen stornovat.
  */
-export async function createSale(
-  session: SessionUser,
-  year: number,
-  requested: ReadonlyArray<{ itemId: number; quantity: number }>,
-  /** Volitelný e-mail a jazyk účtenky (#223); neplatný e-mail se neuloží. */
-  receipt: { email?: string | null; locale?: string | null } = {},
-): Promise<CreateSaleResult> {
-  const receiptEmail = normalizeEmail(receipt.email);
-  const items: SaleItemPrice[] = await listSaleItems(year);
-  const built = buildSaleLines(requested, items);
-  if (!built.ok) return built;
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    // Krátké náhodné čekání před opakováním, ať se souběžné pokladny rozestoupí.
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 10 + Math.random() * 40 * attempt));
-    try {
-      return await prisma.$transaction(async (db) => {
-        const max = await db.sale.aggregate({ where: { year }, _max: { number: true } });
-        const number = (max._max.number ?? 0) + 1;
-        if (number > SALE_NUMBER_MAX) return { ok: false as const, error: "full" as const };
-        const vs = saleVs(year, number);
-        const sale = await db.sale.create({
-          data: {
-            year,
-            number,
-            vs,
-            total: built.total,
-            status: "unpaid",
-            createdById: session.id,
-            createdByName: actorName(session),
-            email: receiptEmail,
-            locale: receiptEmail ? receiptLocale(receipt.locale) : null,
-            lines: {
-              create: built.lines.map((line) => ({
-                itemId: line.itemId,
-                name: line.name,
-                unitPrice: line.unitPrice,
-                quantity: line.quantity,
-                lineTotal: line.lineTotal,
-              })),
-            },
-          },
-          select: { id: true },
-        });
-        await writeAudit(
-          {
-            actor: actor(session),
-            action: "sale.created",
-            target: `sale:${sale.id}`,
-            detail: {
-              vs,
-              total: built.total,
-              lines: built.lines.map((l) => ({
-                name: l.name,
-                quantity: l.quantity,
-                price: l.unitPrice,
-              })),
-            },
-          },
-          db,
-        );
-        return { ok: true as const, id: sale.id, vs, total: built.total };
-      });
-    } catch (error) {
-      // P2002 = obsazené pořadí (souběh), P2034 = konflikt / deadlock transakce → zkusit znovu.
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        (error.code === "P2002" || error.code === "P2034")
-      )
-        continue;
-      throw error;
-    }
-  }
-  return { ok: false, error: "busy" };
-}
-
-export type SaleChangeResult = "ok" | "forbidden" | "not_found" | "not_unpaid";
-
-/** Nezaplacená → zaplacená hotově / ručně převodem (kdo a kdy), nebo storno. */
 export async function changeSaleStatus(
   session: SessionUser,
   id: number,
@@ -156,14 +69,29 @@ export async function applySaleStatusChange(
   const result = await prisma.$transaction(async (db) => {
     const sale = await db.sale.findUnique({
       where: { id },
-      select: { id: true, year: true, vs: true, total: true, registrationId: true },
+      select: {
+        id: true,
+        year: true,
+        vs: true,
+        total: true,
+        status: true,
+        checkoutAt: true,
+        registrationId: true,
+      },
     });
     if (!sale) return { status: "not_found" as const };
+    if (to !== "cancelled" && sale.status === "unpaid" && sale.checkoutAt == null) {
+      return { status: "not_closed" as const };
+    }
     const data =
       to === "cancelled"
         ? { status: to, cancelledAt: now, cancelledBy: name }
         : { status: to, paidAt: now, paidByName: name, paidById: session.id };
-    const changed = await db.sale.updateMany({ where: { id, status: "unpaid" }, data });
+    // Podmíněný zápis: platit jen uzavřenou prodejku (souběh s „Zpět do košíku“).
+    const changed = await db.sale.updateMany({
+      where: { id, status: "unpaid", ...(to === "cancelled" ? {} : { checkoutAt: { not: null } }) },
+      data,
+    });
     if (changed.count !== 1) return { status: "not_unpaid" as const };
     // Dohláška na místě (#222): platba přihlášky, nebo storno přihlášky a uvolnění čísla.
     let onsite: Prisma.InputJsonValue | undefined;
@@ -181,14 +109,25 @@ export async function applySaleStatusChange(
           db,
         );
       } else {
-        const paymentId = await payOnsiteRegistrationInTx(db, sale, now);
-        onsite = { registrationId: sale.registrationId, paymentId };
+        // Platba přihlášky jen ve výši startovného (řádky dohlášek), merch zůstává jen v prodejce.
+        const payment = await payOnsiteRegistrationInTx(db, sale, now);
+        const paymentId = payment?.paymentId ?? null;
+        const amount = payment?.amount ?? 0;
+        onsite = { registrationId: sale.registrationId, paymentId, amount };
         await writeAudit(
           {
             actor: actor(session),
             action: "payment.created",
             target: entryTarget(sale.year, sale.registrationId),
-            detail: { paymentId, amount: sale.total, saleId: id, vs: sale.vs, source: to },
+            detail: {
+              paymentId,
+              amount,
+              merch: sale.total - amount,
+              saleTotal: sale.total,
+              saleId: id,
+              vs: sale.vs,
+              source: to,
+            },
           },
           db,
         );
@@ -269,7 +208,15 @@ export async function recentSales(year: number, take = 8) {
     where: { year },
     orderBy: { id: "desc" },
     take,
-    select: { id: true, vs: true, total: true, status: true, createdAt: true, createdByName: true },
+    select: {
+      id: true,
+      vs: true,
+      total: true,
+      status: true,
+      checkoutAt: true,
+      createdAt: true,
+      createdByName: true,
+    },
   });
 }
 

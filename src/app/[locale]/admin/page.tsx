@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { can, getAccess, requireSection, splitAllows, type Access } from "@/lib/admin/access";
+import { can, getAccess, requireSection, screenAllows, type Access } from "@/lib/admin/access";
 import { raceDayTiles } from "@/lib/admin/raceday-home";
 import { requireStaff } from "@/lib/admin/staff";
 import { adminAccess } from "@/lib/auth/roles";
@@ -92,8 +92,9 @@ export default async function AdminPage({ params }: PageProps) {
 /** Rozcestník pro role dne závodu bez plné administrace. */
 async function RaceDayHome({ locale, access }: { locale: Locale; access: Access }) {
   const copy = await getTranslations({ locale, namespace: "Admin" });
-  // Flag vypnutý: can() = canAccessRaceDay / canAccessSplits / canAccessStarter / canUseCashDesk.
-  const tiles = raceDayTiles(await splitAllows(access)).map((tile) => ({
+  // Flag vypnutý: can() = canAccessRaceDay / canAccessSplits / canAccessStarter / canUseCashDesk,
+  // Mezičasy a Předstartér i jako další role z mcvv_user_role (#379).
+  const tiles = raceDayTiles(await screenAllows(access)).map((tile) => ({
     href: tile.href,
     title: copy(tile.key),
   }));

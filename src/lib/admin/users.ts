@@ -11,6 +11,7 @@ import { writeAudit } from "@/lib/audit/log";
 import { isUserRole, validateRoleChange, type RoleChangeError } from "@/lib/auth/roles";
 import { isStaffRoleCode, validateGrantsChange } from "@/lib/auth/staff-roles";
 import { prisma } from "@/lib/db/client";
+import { hasStartCorridorRole } from "@/lib/live/prestarter-core";
 import { parseCorridor } from "@/lib/live/starter-core";
 import { redirect } from "@/i18n/routing";
 
@@ -194,8 +195,9 @@ function backQuery(back: string): Record<string, string> {
 }
 
 /**
- * Přiřazení startovního koridoru účtu s rolí Startér (jen admin). Prázdná hodnota koridor
- * odebere (startér pak obrazovku /start neotevře). Změna se zapíše do auditu.
+ * Přiřazení startovního koridoru účtu s rolí Startér nebo Předstartér (jen admin). Prázdná
+ * hodnota koridor odebere (startér pak obrazovku /start, předstartér /predstarter neotevře).
+ * Změna se zapíše do auditu.
  */
 export async function changeStartCorridor(formData: FormData): Promise<void> {
   const actor = await requireSection("users", "write");
@@ -210,15 +212,21 @@ export async function changeStartCorridor(formData: FormData): Promise<void> {
     ok = await prisma.$transaction(async (tx) => {
       const target = await tx.user.findUnique({
         where: { id: userId },
-        select: { id: true, email: true, role: true, startCorridor: true },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          startCorridor: true,
+          roleGrants: { select: { role: true } },
+        },
       });
       if (!target) return false;
-      // Startér podle sloupce role, nebo (P5) s rolí Startér v mcvv_user_role.
+      // Startér nebo předstartér (#379) podle sloupce role, nebo s rolí v mcvv_user_role.
       if (
-        target.role !== "starter" &&
-        !(await tx.userRoleGrant.findUnique({
-          where: { userId_role: { userId: target.id, role: "starter" } },
-        }))
+        !hasStartCorridorRole(
+          target.role,
+          target.roleGrants.map((row) => row.role),
+        )
       ) {
         return false;
       }

@@ -11,6 +11,8 @@ import type { RaceContext } from "./race-context";
 import { checkStartPunch, START_OWNING } from "./start-check-core";
 import {
   corridorOf,
+  PRESTARTER_SOURCE,
+  STARTER_SOURCE,
   decideAutoMark,
   decideStarterWrite,
   dnsWindowFromSetting,
@@ -23,6 +25,7 @@ import {
   STARTER_RED_PHASE_KEY,
   STARTER_SOUND_KEY,
   type Corridor,
+  type DeviceSource,
   type StarterAction,
   type StarterSettings,
 } from "./starter-core";
@@ -40,7 +43,7 @@ export type StarterPlan = Pick<
   "year" | "zero" | "intervalS" | "secondStartFrom" | "organizerShiftSeconds"
 >;
 
-export const STARTER_SOURCE = "starter";
+export { PRESTARTER_SOURCE, STARTER_SOURCE };
 export const SPLIT_SOURCE = "split";
 
 export async function loadStarterSettings(): Promise<StarterSettings> {
@@ -140,6 +143,7 @@ async function applyStarterEntry(
   user: { id: number },
   allowed: Corridor | null,
   now: Date,
+  source: DeviceSource,
 ): Promise<StarterResult> {
   const previous = await tx.startCheckEntry.findUnique({ where: { entryKey: entry.id } });
   if (previous) {
@@ -169,7 +173,7 @@ async function applyStarterEntry(
         bib: entry.bib,
         startedAt: planned,
         offsetS: offsetSeconds(tapAt.getTime(), planned.getTime()),
-        source: STARTER_SOURCE,
+        source,
         action: entry.action,
         outcome,
         note,
@@ -206,7 +210,7 @@ async function applyStarterEntry(
     entry.action === "late" && isLateStart(tapAt.getTime(), planned.getTime(), plan.intervalS);
   const data = {
     startedAt: planned,
-    source: STARTER_SOURCE,
+    source,
     userId: user.id,
     markedAt: tapAt,
     notMarked: false,
@@ -232,8 +236,10 @@ async function applyStarterEntry(
 }
 
 /**
- * Dávka ťuknutí ze zařízení startéra (offline fronta). Idempotentní podle klientského UUID;
- * `allowed` = koridor účtu startéra (admin / pořadatel null = libovolný).
+ * Dávka ťuknutí ze zařízení startéra nebo předstartéra (offline fronta). Idempotentní podle
+ * klientského UUID; `allowed` = koridor účtu (admin / pořadatel na obrazovce startéra null =
+ * libovolný). `source` odliší zařízení v záznamu startu i v deníku (kdo ťukl), priorita je
+ * u obou stejná – platí pozdější ťuknutí.
  */
 export async function applyStarterEntries(
   entries: StarterEntry[],
@@ -241,11 +247,12 @@ export async function applyStarterEntries(
   user: { id: number },
   allowed: Corridor | null,
   now = new Date(),
+  source: DeviceSource = STARTER_SOURCE,
 ): Promise<StarterResult[]> {
   const results: StarterResult[] = [];
   for (const entry of entries) {
     const run = () =>
-      prisma.$transaction((tx) => applyStarterEntry(tx, entry, plan, user, allowed, now));
+      prisma.$transaction((tx) => applyStarterEntry(tx, entry, plan, user, allowed, now, source));
     try {
       results.push(await run());
     } catch (error) {

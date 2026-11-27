@@ -18,6 +18,7 @@ import {
   legacyAllows,
   legacyGuard,
   overrideKey,
+  screenAllowsFor,
   splitAllowsFor,
   v2Allows,
   type AccessLevel,
@@ -329,5 +330,24 @@ export async function realAdminSession(): Promise<{
   } catch (error) {
     console.error("[access] admin grant read failed", error);
     return null;
+  }
+}
+
+/**
+ * Rozcestníky a obrazovky mimo /admin (mezičasy, předstartér #379): při zapnutém v2 (nebo
+ * v náhledu) stejné jako `allowsFor`. Při vypnutém v2 dočte granty z `mcvv_user_role`, aby
+ * účet s Mezičasy / Předstartérem jako další rolí měl stejný přístup jako se zapnutým flagem.
+ */
+export async function screenAllows(
+  access: Access,
+): Promise<(id: SectionId, level: AccessLevel) => boolean> {
+  if (!access.session) return () => false;
+  if (access.v2 || access.preview) return allowsFor(access);
+  try {
+    const { grants } = await loadGrants(access.session);
+    return screenAllowsFor({ v2: false, role: access.session.role, grants });
+  } catch (error) {
+    console.error("[access] screen grants read failed – using legacy roles", error);
+    return allowsFor(access);
   }
 }

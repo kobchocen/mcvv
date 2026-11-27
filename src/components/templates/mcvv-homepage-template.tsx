@@ -137,7 +137,14 @@ export async function McvvHomepageTemplate({
                         href: "/start",
                         label: (await getTranslations({ locale, namespace: "Starter" }))("navLink"),
                       }
-                    : null,
+                    : session.role === "prestarter"
+                      ? {
+                          href: "/predstarter",
+                          label: (await getTranslations({ locale, namespace: "Prestarter" }))(
+                            "navLink",
+                          ),
+                        }
+                      : null,
                 messages: await getUnreadCount(),
               }
             : null

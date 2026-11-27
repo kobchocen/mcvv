@@ -14,6 +14,8 @@
  *   koridor (`mcvv_user.start_corridor`).
  * - `resultboard` – obrazovky výsledků v cíli: žádná administrace, jen
  *   `/resultboard` (rozcestník a TV). Po přihlášení sem účet rovnou dorazí.
+ * - `prestarter` – předstartér (#379): žádná administrace, jen mobilní obrazovka
+ *   `/predstarter` pro přiřazený koridor (`mcvv_user.start_corridor`, stejné pole jako startér).
  *
  * Oprávnění se vynucují na serveru (stránky, server actions, route handlery) přes
  * `src/lib/admin/staff.ts`; tady je jen jejich definice, aby šla testovat.
@@ -28,6 +30,7 @@ export const USER_ROLES = [
   "race_office",
   "starter",
   "resultboard",
+  "prestarter",
 ] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
@@ -55,6 +58,14 @@ export function canAccessStarter(role: UserRole): boolean {
   return role === "starter" || isStaffRole(role);
 }
 
+/**
+ * Obrazovka předstartéra `/predstarter` (#379): předstartér (svůj koridor), pořadatel a admin
+ * (přepínač koridoru).
+ */
+export function canAccessPrestarter(role: UserRole): boolean {
+  return role === "prestarter" || isStaffRole(role);
+}
+
 /** Obrazovka pro speakera s průběžnými výsledky (#188, Q73): jen admin nebo pořadatel. */
 export function canViewSpeakerScreen(role: UserRole): boolean {
   return isStaffRole(role);
@@ -69,6 +80,7 @@ export function canViewResultboardScreen(role: UserRole): boolean {
 export function canAccessScreens(role: UserRole): boolean {
   return (
     canAccessStarter(role) ||
+    canAccessPrestarter(role) ||
     canAccessSplits(role) ||
     canAccessRaceDay(role) ||
     canViewSpeakerScreen(role)
@@ -164,7 +176,8 @@ export function adminPathAllowed(access: AdminAccess, path: string): boolean {
 
 /**
  * Přihlášení bez ověřeného e-mailu smí jen plný staff (účty zakládá seed).
- * Nové omezené role (`timing`, `splitmaker`, `race_office`, `starter`, `resultboard`) ověřený e-mail potřebují stejně jako `registrar`.
+ * Nové omezené role (`timing`, `splitmaker`, `race_office`, `starter`, `resultboard`,
+ * `prestarter`) ověřený e-mail potřebují stejně jako `registrar`.
  */
 export function requiresVerifiedEmail(role: UserRole): boolean {
   return !isStaffRole(role);

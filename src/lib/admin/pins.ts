@@ -24,6 +24,7 @@ export const DEFAULT_PINS: Record<StaffRole, readonly SectionId[]> = {
   chief_referee: ["raceControl.official", "raceControl.live", "afterRace"],
   course_chief: ["raceControl.course", "raceControl.overview", "screens.splits"],
   starter: ["screens.starter"],
+  prestarter: ["screens.prestarter"],
   splitmaker: ["screens.splits"],
   race_office: ["raceOffice.cash", "raceOffice.sales"],
   resultboard: ["screens.resultboard"],

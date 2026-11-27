@@ -13,6 +13,7 @@ import { isUserRole, USER_ROLES, type UserRole } from "@/lib/auth/roles";
 import { isStaffRoleCode, STAFF_ROLES, type StaffRole } from "@/lib/auth/staff-roles";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/format/date";
+import { hasStartCorridorRole } from "@/lib/live/prestarter-core";
 import { getRaceContext } from "@/lib/live/race-context";
 import { Link, type Locale } from "@/i18n/routing";
 
@@ -114,14 +115,14 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
         _count: { _all: true },
       })
     : [];
-  // Víc rolí na účet (P5): jen při zapnutém permissions.v2, jinak se stránka nemění.
-  const grantRows =
-    access.v2 && users.length
-      ? await prisma.userRoleGrant.findMany({
-          where: { userId: { in: users.map((user) => user.id) } },
-          select: { userId: true, role: true },
-        })
-      : [];
+  // Víc rolí na účet (P5): formulář jen při zapnutém permissions.v2. Granty se čtou vždy,
+  // aby šel přiřadit koridor i Startérovi / Předstartérovi jako další roli (#379).
+  const grantRows = users.length
+    ? await prisma.userRoleGrant.findMany({
+        where: { userId: { in: users.map((user) => user.id) } },
+        select: { userId: true, role: true },
+      })
+    : [];
   const grantsByUser = new Map<number, StaffRole[]>();
   for (const row of grantRows) {
     if (!isStaffRoleCode(row.role)) continue;
@@ -341,7 +342,7 @@ export default async function AdminUsersPage({ params, searchParams }: PageProps
                         </form>
                       </details>
                     ) : null}
-                    {user.role === "starter" || grantsByUser.get(user.id)?.includes("starter") ? (
+                    {hasStartCorridorRole(user.role, grantsByUser.get(user.id)) ? (
                       <form
                         action={changeStartCorridor}
                         className="mt-2 flex flex-wrap items-center gap-2"

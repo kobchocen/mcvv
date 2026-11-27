@@ -62,6 +62,7 @@ export function viewAsSessionRole(mode: ViewAsMode, roles: readonly string[]): U
     "timing",
     "race_office",
     "starter",
+    "prestarter",
     "splitmaker",
     "resultboard",
   ] as const) {

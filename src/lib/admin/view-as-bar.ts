@@ -26,3 +26,8 @@ export async function viewAsBarCopy(
     stop: viewCopy("stop"),
   };
 }
+
+/** Výška rezervy pod plovoucí lištou (výška lišty + odstup `bottom`). */
+export function viewAsFloatingSpacePx(height: number, bottomOffset: number): number {
+  return Math.ceil(Math.max(0, height) + Math.max(0, bottomOffset));
+}

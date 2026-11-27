@@ -6,6 +6,7 @@ import { test } from "node:test";
 
 import { McvvViewAsFloatingBar } from "./mcvv-admin-view-as";
 import { VIEW_AS_ROUTE } from "@/lib/admin/view-as-core";
+import { viewAsFloatingSpacePx } from "@/lib/admin/view-as-bar";
 
 const props = {
   locale: "cs",
@@ -47,11 +48,27 @@ test("the bar renders only during an active admin preview", () => {
   assert.match(copy, /if \(!preview\) return null;/);
 });
 
-test("entries layout reserves space under the floating preview bar, resultboard does not", () => {
+test("entries layout reserves a viewport inset under the floating preview bar, resultboard does not", () => {
   const entries = readFileSync("src/app/[locale]/prihlasky/layout.tsx", "utf8");
   assert.ok(entries.includes("reserveSpace"));
+  assert.match(entries, /<McvvViewAsOutsideAdmin[^>]*reserveSpace[\s\S]*\{children\}/);
   const outside = readFileSync("src/components/organisms/mcvv-view-as-outside-admin.tsx", "utf8");
   assert.ok(outside.includes("McvvViewAsFloatingReserve"));
+  assert.ok(outside.includes("{children}"));
+  const reserve = readFileSync(
+    "src/components/organisms/mcvv-view-as-floating-reserve.tsx",
+    "utf8",
+  );
+  assert.ok(reserve.includes("h-dvh"));
+  assert.ok(reserve.includes("view-as-preview-shell"));
+  assert.ok(reserve.includes("scrollPaddingBottom") || reserve.includes("scroll-pb-"));
   const resultboard = readFileSync("src/app/[locale]/resultboard/layout.tsx", "utf8");
   assert.ok(!resultboard.includes("reserveSpace"));
+});
+
+test("preview bar space is the bar height plus its bottom offset", () => {
+  assert.equal(viewAsFloatingSpacePx(88, 12), 100);
+  assert.equal(viewAsFloatingSpacePx(56.4, 12), 69);
+  assert.equal(viewAsFloatingSpacePx(0, 0), 0);
+  assert.equal(viewAsFloatingSpacePx(-8, 12), 12);
 });

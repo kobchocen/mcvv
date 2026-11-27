@@ -9,9 +9,8 @@ type LayoutProps = Readonly<{ children: ReactNode; params: Promise<{ locale: str
 export default async function EntriesLayout({ children, params }: LayoutProps) {
   const { locale } = await params;
   return (
-    <>
+    <McvvViewAsOutsideAdmin locale={locale as Locale} reserveSpace>
       {children}
-      <McvvViewAsOutsideAdmin locale={locale as Locale} reserveSpace />
-    </>
+    </McvvViewAsOutsideAdmin>
   );
 }

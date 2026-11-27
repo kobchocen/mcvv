@@ -1,14 +1,17 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
+
+import { viewAsFloatingSpacePx } from "@/lib/admin/view-as-bar";
 
 /**
- * Rezervuje místo na konci stránky podle výšky plovoucí lišty náhledu, aby
- * nepřekrývala obsah (třeba pole Ročník na /prihlasky). Na resultboardu se
- * nepřipojuje — tam lišta nesmí posouvat televizní rozvržení.
+ * Když je aktivní náhled, zmenší první viewport o výšku plovoucí lišty, aby
+ * nepřekrývala obsah (třeba pole Ročník na /prihlasky). Obsah se posouvá
+ * ve zbývajícím prostoru; lišta zůstává `fixed` a nemění se. Na resultboardu
+ * se nepřipojuje — tam lišta nesmí posouvat televizní rozvržení.
  */
-export function McvvViewAsFloatingReserve() {
-  const [height, setHeight] = useState(0);
+export function McvvViewAsFloatingReserve({ children }: Readonly<{ children: ReactNode }>) {
+  const [space, setSpace] = useState(0);
 
   useLayoutEffect(() => {
     const el = document.querySelector<HTMLElement>("[data-testid=view-as-floating]");
@@ -17,7 +20,7 @@ export function McvvViewAsFloatingReserve() {
     }
     const update = () => {
       const bottom = Number.parseFloat(getComputedStyle(el).bottom) || 0;
-      setHeight(Math.ceil(el.getBoundingClientRect().height + bottom));
+      setSpace(viewAsFloatingSpacePx(el.getBoundingClientRect().height, bottom));
     };
     update();
     const ro = new ResizeObserver(update);
@@ -31,10 +34,22 @@ export function McvvViewAsFloatingReserve() {
 
   return (
     <div
-      aria-hidden
-      data-testid="view-as-floating-space"
-      className="pointer-events-none print:hidden h-36"
-      style={height > 0 ? { height } : undefined}
-    />
+      data-testid="view-as-preview-shell"
+      className="flex h-dvh flex-col overflow-hidden print:block print:h-auto print:overflow-visible"
+    >
+      <div
+        data-testid="view-as-preview-scroll"
+        className="min-h-0 flex-1 overflow-auto overscroll-contain scroll-pb-36 print:overflow-visible"
+        style={space > 0 ? { scrollPaddingBottom: space } : undefined}
+      >
+        {children}
+      </div>
+      <div
+        aria-hidden
+        data-testid="view-as-floating-space"
+        className="pointer-events-none h-36 shrink-0 bg-race-deep print:hidden"
+        style={space > 0 ? { height: space } : undefined}
+      />
+    </div>
   );
 }

@@ -524,3 +524,28 @@ export function publicLateOffset(
 export function countsAsStartRecord(row: { source: string }): boolean {
   return row.source !== "split";
 }
+
+// ---------------------------------------------------------------------------
+// Startovka a přepnutí koridoru (#379, STG 27. 11.): odpověď na dotaz pro předchozí koridor
+// může dorazit až po přepnutí. Obrazovka proto zobrazí jen startovku koridoru ze štítku
+// a zastaralou odpověď zahodí (spolu s AbortController v klientu).
+
+/** Startovka, kterou smí obrazovka zobrazit pro daný koridor (jinak nic). */
+export function snapshotForCorridor<T extends { corridor: number }>(
+  snapshot: T | null | undefined,
+  corridor: number,
+): T | null {
+  return snapshot && snapshot.corridor === corridor ? snapshot : null;
+}
+
+/**
+ * Přijmout odpověď startovky? Jen když dotaz nebyl zrušený (přepnutím koridoru) a odpověď
+ * patří koridoru, který obrazovka právě ukazuje.
+ */
+export function acceptsSnapshot(
+  data: { corridor: number },
+  shownCorridor: number,
+  aborted = false,
+): boolean {
+  return !aborted && data.corridor === shownCorridor;
+}

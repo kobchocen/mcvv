@@ -90,12 +90,16 @@
   gap: 8px;
 }
 .corr {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
   padding: 5px 9px;
   border-radius: 8px;
   background: #fff !important;
   color: #07210e !important;
   font-size: 15px;
   font-weight: 800;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .corr:disabled {
@@ -106,14 +110,14 @@
   font-size: 13px;
   font-weight: 600;
 }
+/* „PŘEDSTARTÉR“ se nikdy neořízne – ustoupí rozsah koridoru ve štítku (STG 27. 11.). */
 .role {
-  overflow: hidden;
+  flex: none;
   color: var(--accent);
   font-family: var(--font-oswald), "Oswald", sans-serif;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -121,6 +125,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: none;
   margin-left: auto;
   padding: 5px 8px;
   border-radius: 8px;
@@ -249,6 +254,8 @@
   text-align: left;
 }
 .bib {
+  overflow: hidden;
+  white-space: nowrap;
   font-size: clamp(30px, 6dvh, 50px);
   font-weight: 900;
   letter-spacing: -1px;
@@ -278,9 +285,18 @@
   font-weight: 500;
 }
 .cd {
+  max-width: 132px;
   font-size: clamp(22px, 3.6dvh, 30px);
   font-weight: 800;
   text-align: right;
+  white-space: nowrap;
+}
+/* Odpočet nad hodinu („za 3 h 34 min“, datum): menší, ať nerozhází řádek (STG 27. 11.). */
+.cdLong {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  text-overflow: ellipsis;
 }
 .zNow {
   background: var(--green) !important;
@@ -305,6 +321,10 @@
 }
 .markedTag {
   display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 2px 7px;
   border-radius: 6px;
   background: var(--marked);

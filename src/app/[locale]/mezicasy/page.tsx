@@ -11,7 +11,7 @@ import { getStations } from "@/lib/live/race-context";
 import { loadFieldSnapshot } from "@/lib/live/splits-field";
 import { getLiveRaceContext } from "@/lib/testmode/run";
 import { withStart } from "@/lib/live/stations";
-import { allowsFor, can, getAccess } from "@/lib/admin/access";
+import { getAccess, splitAllows } from "@/lib/admin/access";
 import { splitScope } from "@/lib/admin/permissions";
 import { McvvTestModeBanner } from "@/components/molecules/mcvv-test-mode-banner";
 
@@ -43,7 +43,8 @@ export default async function SplitsPage({ params, searchParams }: PageProps) {
     return null;
   }
   const t = await getTranslations({ locale, namespace: "Splits" });
-  if (!can(access, "screens.splits", "read")) {
+  const allows = await splitAllows(access);
+  if (!allows("screens.splits", "read")) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
         <div className="mx-auto max-w-md">
@@ -66,11 +67,7 @@ export default async function SplitsPage({ params, searchParams }: PageProps) {
   ]);
   // Splitmaker vidí jen přiřazená stanoviště (server zápis na jiné odmítne).
   // Start (#203) je vestavěné stanoviště: evidence, kdo odstartoval (jen evidence).
-  const stations = stationsForScope(
-    splitScope(allowsFor(access)),
-    assigned,
-    withStart(allStations),
-  );
+  const stations = stationsForScope(splitScope(allows), assigned, withStart(allStations));
   if (stations.length === 0) {
     return (
       <main className="min-h-screen bg-race-deep px-4 py-16 text-foreground">
@@ -87,7 +84,7 @@ export default async function SplitsPage({ params, searchParams }: PageProps) {
       </main>
     );
   }
-  const scope = splitScope(allowsFor(access));
+  const scope = splitScope(allows);
   const query = await searchParams;
   const urlCode = firstQuery(query.split);
   const initialStation =

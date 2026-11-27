@@ -41,3 +41,27 @@ export function isBibSubmitKey(key: string): boolean {
 export function isBibBackspaceKey(key: string): boolean {
   return key === "⌫" || key === "Backspace";
 }
+
+type BibKeyTarget = {
+  id?: string;
+  tagName?: string;
+  isContentEditable?: boolean;
+} | null;
+
+/**
+ * Hardware Escape clears the bib field on desktop and phone layouts, unless
+ * another text field (e.g. an in-list edit) is focused.
+ */
+export function isBibClearEvent(event: {
+  key: string;
+  target?: BibKeyTarget | EventTarget;
+}): boolean {
+  if (event.key !== "Escape") return false;
+  const el = event.target as BibKeyTarget | undefined;
+  if (!el || typeof el !== "object") return true;
+  const tag = "tagName" in el && el.tagName ? String(el.tagName).toUpperCase() : "";
+  const editable = Boolean("isContentEditable" in el && el.isContentEditable);
+  const isField = editable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+  if (!isField) return true;
+  return el.id === "bib";
+}

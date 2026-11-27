@@ -11,7 +11,7 @@ import { RateLimiter } from "@/lib/live/rate-limit";
 import { applyStartEntries, rejectStartEntries } from "@/lib/live/start-check";
 import { partitionStartEntries } from "@/lib/live/start-check-core";
 import { withStart } from "@/lib/live/stations";
-import { allowsFor, can, getAccess } from "@/lib/admin/access";
+import { getAccess, splitAllows } from "@/lib/admin/access";
 import { splitScope } from "@/lib/admin/permissions";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
   if (!session)
     return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noStore });
   const access = await getAccess();
-  if (!can(access, "screens.splits", "write")) {
+  const allows = await splitAllows(access);
+  if (!allows("screens.splits", "write")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: noStore });
   }
   if (!limiter.take(`u${session.id}`)) {
@@ -66,9 +67,7 @@ export async function POST(request: NextRequest) {
   }
   // Splitmaker smí jen na přiřazená stanoviště; admin a organizer (řízení závodu) na všechna.
   const allowed = new Set(
-    stationsForScope(splitScope(allowsFor(access)), assigned, stations).map(
-      (station) => station.code,
-    ),
+    stationsForScope(splitScope(allows), assigned, stations).map((station) => station.code),
   );
   try {
     const ctx = await getLiveRaceContext();

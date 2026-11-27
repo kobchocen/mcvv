@@ -2376,7 +2376,7 @@
     "dnsGraceFallback": "Lhůta DNS bez stanice Start",
     "dnsGraceFallbackHint": "Použije se, dokud v ročníku (nebo testu) není jediný záznam stanice Start – např. když Start nikdo neobsluhuje. Prázdné = výchozí 30 min.",
     "splitmakersTitle": "Splitmakeři a stanoviště",
-    "splitmakersIntro": "Účty s rolí splitmaker (roli nastavíte v Uživatelích). Splitmaker vidí na /mezicasy jen přiřazená stanoviště a server zápis na jiné odmítne. Bez přiřazení nezapisuje nic. Admin a organizer smí na všechna.",
+    "splitmakersIntro": "Účty s rolí splitmaker (roli nastavíte v Uživatelích). Splitmaker vidí na /mezicasy jen přiřazená stanoviště a server zápis na jiné odmítne. Bez přiřazení nezapisuje nic. Admin, pořadatel a šéf trati smí na všechna.",
     "splitmakersEmpty": "Žádný účet nemá roli splitmaker.",
     "splitmakerNone": "bez stanoviště – nezapisuje",
     "openStartCheck": "Evidence startu (kdo odstartoval)",

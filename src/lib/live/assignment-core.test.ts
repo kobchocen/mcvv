@@ -5,6 +5,7 @@ import {
   allowedStationsFor,
   assignmentFromForm,
   formatAssignment,
+  hasSplitmakerRole,
   parseAssignment,
   resolveSplitStation,
 } from "./assignment-core";
@@ -102,4 +103,15 @@ test("resolveSplitStation: admin uses URL, then saved, then the first allowed", 
     resolveSplitStation({ allowed: withStart, allStations: true, urlCode: null, savedCode: null }),
     "0",
   );
+});
+
+test("hasSplitmakerRole: primary column or grant, v1 and v2", () => {
+  assert.equal(hasSplitmakerRole("splitmaker"), true);
+  assert.equal(hasSplitmakerRole("splitmaker", []), true);
+  assert.equal(hasSplitmakerRole("starter", ["starter", "splitmaker"]), true);
+  assert.equal(hasSplitmakerRole("starter", ["splitmaker"]), true);
+  assert.equal(hasSplitmakerRole("starter", ["starter"]), false);
+  assert.equal(hasSplitmakerRole("admin", []), false);
+  assert.equal(hasSplitmakerRole("registrar"), false);
+  assert.equal(hasSplitmakerRole("registrar", ["course_chief"]), false);
 });

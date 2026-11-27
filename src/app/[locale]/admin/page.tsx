@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { allowsFor, can, getAccess, requireSection, type Access } from "@/lib/admin/access";
+import { can, getAccess, requireSection, splitAllows, type Access } from "@/lib/admin/access";
 import { raceDayTiles } from "@/lib/admin/raceday-home";
 import { requireStaff } from "@/lib/admin/staff";
 import { adminAccess } from "@/lib/auth/roles";
@@ -93,7 +93,7 @@ export default async function AdminPage({ params }: PageProps) {
 async function RaceDayHome({ locale, access }: { locale: Locale; access: Access }) {
   const copy = await getTranslations({ locale, namespace: "Admin" });
   // Flag vypnutý: can() = canAccessRaceDay / canAccessSplits / canAccessStarter / canUseCashDesk.
-  const tiles = raceDayTiles(allowsFor(access)).map((tile) => ({
+  const tiles = raceDayTiles(await splitAllows(access)).map((tile) => ({
     href: tile.href,
     title: copy(tile.key),
   }));

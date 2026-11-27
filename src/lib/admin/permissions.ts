@@ -235,9 +235,9 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.overview": "read",
     "raceControl.course": "read",
     "raceControl.live": "read",
-    "screens.splits": "read",
+    "screens.splits": "write",
     "screens.speaker": "read",
-    screens: "read",
+    screens: "write",
   },
 };
 
@@ -314,6 +314,28 @@ type Allows = (id: SectionId, level: AccessLevel) => boolean;
 /** Rozsah zápisu mezičasů: všechna stanoviště (řízení závodu), nebo jen přiřazená. */
 export function splitScope(allows: Allows): { all: boolean; own: boolean } {
   return { all: allows("raceControl.live", "read"), own: allows("screens.splits", "write") };
+}
+
+/**
+ * Přístup k mezičasům podle role i grantů. Při zapnutém v2 platí engine.
+ * Při vypnutém v2 (PROD) bere u `screens.splits` a `raceControl.live` i granty
+ * z `mcvv_user_role`, aby účet se Startérem + Mezičasy nebo Šéf trati neztratil přístup.
+ */
+export function splitAllowsFor(input: {
+  v2: boolean;
+  role: UserRole;
+  grants: readonly StaffRole[];
+  overrides?: Overrides;
+}): Allows {
+  const { v2, role, grants, overrides } = input;
+  if (v2) return (id, level) => v2Allows(grants, id, level, overrides);
+  return (id, level) => {
+    if (legacyAllows(role, id, level)) return true;
+    if (id === "screens.splits" || id === "raceControl.live") {
+      return v2Allows(grants, id, level);
+    }
+    return false;
+  };
 }
 
 /** Rozsah obrazovky startéra: libovolný koridor (řízení startu), nebo jen přiřazený. */

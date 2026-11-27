@@ -18,6 +18,7 @@ import {
   legacyAllows,
   legacyGuard,
   overrideKey,
+  splitAllowsFor,
   v2Allows,
   type AccessLevel,
   type Overrides,
@@ -194,6 +195,25 @@ export async function canAccess(id: SectionId, level: AccessLevel): Promise<bool
 /** `can` jako callback pro čisté funkce (`splitScope`, `starterScope`). */
 export function allowsFor(access: Access): (id: SectionId, level: AccessLevel) => boolean {
   return (id, level) => can(access, id, level);
+}
+
+/**
+ * Přístup k mezičasům: při zapnutém v2 (nebo v náhledu) stejné jako `allowsFor`.
+ * Při vypnutém v2 dočte granty z `mcvv_user_role`, aby účet s Mezičasy jako další
+ * rolí nebo Šéf trati měl stejný přístup jako se zapnutým flagem.
+ */
+export async function splitAllows(
+  access: Access,
+): Promise<(id: SectionId, level: AccessLevel) => boolean> {
+  if (!access.session) return () => false;
+  if (access.v2 || access.preview) return allowsFor(access);
+  try {
+    const { grants } = await loadGrants(access.session);
+    return splitAllowsFor({ v2: false, role: access.session.role, grants });
+  } catch (error) {
+    console.error("[access] split grants read failed – using legacy roles", error);
+    return allowsFor(access);
+  }
 }
 
 /** Má účet kolečko a rozcestník administrace? */

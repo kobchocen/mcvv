@@ -2279,6 +2279,7 @@
     "bibPlaceholder": "bib",
     "submit": "Record",
     "backspace": "Delete digit",
+    "clearInput": "Clear",
     "stampOnly": "⏱ Stamp without bib (fill in later)",
     "drafts": "{count} without bib",
     "saved": "{bib} recorded at {time}",

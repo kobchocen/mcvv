@@ -2279,6 +2279,7 @@
     "bibPlaceholder": "číslo",
     "submit": "Zapsat",
     "backspace": "Smazat číslici",
+    "clearInput": "Vymazat",
     "stampOnly": "⏱ Razítko bez čísla (doplním)",
     "drafts": "{count} bez čísla",
     "saved": "{bib} zapsáno v {time}",

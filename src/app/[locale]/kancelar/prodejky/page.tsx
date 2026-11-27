@@ -10,6 +10,7 @@ import { Link, type Locale } from "@/i18n/routing";
 import { currentRaceYear } from "@/lib/entries/year";
 import { dailySummary, parseSaleFilter, pragueDay, SALE_STATUSES } from "@/lib/sales/core";
 import { cashDeskPageSession } from "@/lib/sales/guard";
+import { isSaleOpen } from "@/lib/sales/cart-core";
 import { listSales } from "@/lib/sales/sales";
 
 type PageProps = Readonly<{
@@ -216,7 +217,7 @@ export default async function SalesListPage({ params, searchParams }: PageProps)
                     <span
                       className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${saleStatusClass(sale.status)}`}
                     >
-                      {t(`status_${sale.status}`)}
+                      {t(isSaleOpen(sale) ? "status_open" : `status_${sale.status}`)}
                     </span>
                     {sale.paidAt ? (
                       <div className="mt-1 text-[11px] text-race-muted">

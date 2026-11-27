@@ -235,9 +235,9 @@ const NEW_ROLE_DEFAULTS: Partial<Record<StaffRole, Matrix>> = {
     "raceControl.overview": "read",
     "raceControl.course": "read",
     "raceControl.live": "read",
-    "screens.splits": "read",
+    "screens.splits": "write",
     "screens.speaker": "read",
-    screens: "read",
+    screens: "write",
   },
 };
 

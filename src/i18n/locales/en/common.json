@@ -2376,7 +2376,7 @@
     "dnsGraceFallback": "DNS grace without the Start station",
     "dnsGraceFallbackHint": "Used until the year (or test) has a single Start record – e.g. when nobody operates the Start. Empty = default 30 min.",
     "splitmakersTitle": "Split operators and stations",
-    "splitmakersIntro": "Accounts with the splitmaker role (set the role under Users). An operator sees only the assigned stations on /mezicasy and the server rejects entries for other ones. Without an assignment nothing can be entered. Admins and organizers may use all stations.",
+    "splitmakersIntro": "Accounts with the splitmaker role (set the role under Users). An operator sees only the assigned stations on /mezicasy and the server rejects entries for other ones. Without an assignment nothing can be entered. Admins, organizers and the course chief may use all stations.",
     "splitmakersEmpty": "No account has the splitmaker role.",
     "splitmakerNone": "no station – cannot enter",
     "openStartCheck": "Start check (who started)",

@@ -228,6 +228,33 @@ describe("splitAllowsFor – Mezičasy jako další role (v1 i v2)", () => {
   });
 });
 
+describe("course_chief default split write on all stations", () => {
+  const stations = [
+    { code: "1", name: "1,3 km" },
+    { code: "3", name: "2,7 km" },
+  ] as unknown as Parameters<typeof stationsForScope>[2];
+
+  it("default matrix grants write on screens.splits and all stations", () => {
+    assert.equal(defaultLevel("course_chief", "screens.splits"), "write");
+    assert.equal(defaultLevel("course_chief", "screens"), "write");
+    assert.equal(defaultLevel("course_chief", "raceControl.live"), "read");
+  });
+
+  it("v2: Šéf trati zapisuje na všechna stanoviště bez přiřazení", () => {
+    const allows = splitAllowsFor({ v2: true, role: "registrar", grants: ["course_chief"] });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: true, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), null, stations), stations);
+  });
+
+  it("v1: grant Šéf trati má stejný rozsah i při vypnutém flagu", () => {
+    const allows = splitAllowsFor({ v2: false, role: "registrar", grants: ["course_chief"] });
+    assert.equal(allows("screens.splits", "write"), true);
+    assert.deepEqual(splitScope(allows), { all: true, own: true });
+    assert.deepEqual(stationsForScope(splitScope(allows), "1", stations), stations);
+  });
+});
+
 describe("permissions editor (P8)", () => {
   it("editable cells exclude admin, overview and admin-only sections", () => {
     assert.ok(!EDITABLE_ROLES.includes("admin"));

@@ -6,6 +6,7 @@ import {
   BIB_KEYPAD_KEYS,
   bibInputMode,
   isBibBackspaceKey,
+  isBibClearEvent,
   isBibSubmitKey,
 } from "./splits-input";
 
@@ -54,4 +55,21 @@ test("on-screen keypad puts backspace bottom-left and Enter bottom-right", () =>
   assert.equal(isBibBackspaceKey(BIB_KEYPAD_KEYS[9]), true);
   assert.equal(isBibBackspaceKey("⌫"), true);
   assert.equal(isBibBackspaceKey("Enter"), false);
+});
+
+test("isBibClearEvent: Escape clears unless another text field is focused", () => {
+  assert.equal(isBibClearEvent({ key: "Escape" }), true);
+  assert.equal(isBibClearEvent({ key: "Escape", target: { tagName: "BUTTON" } }), true);
+  assert.equal(isBibClearEvent({ key: "Escape", target: { id: "bib", tagName: "INPUT" } }), true);
+  assert.equal(
+    isBibClearEvent({ key: "Escape", target: { id: "edit-bib", tagName: "INPUT" } }),
+    false,
+  );
+  assert.equal(isBibClearEvent({ key: "Escape", target: { tagName: "TEXTAREA" } }), false);
+  assert.equal(isBibClearEvent({ key: "Escape", target: { isContentEditable: true } }), false);
+  assert.equal(
+    isBibClearEvent({ key: "Backspace", target: { id: "bib", tagName: "INPUT" } }),
+    false,
+  );
+  assert.equal(isBibClearEvent({ key: "Enter" }), false);
 });

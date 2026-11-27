@@ -40,6 +40,7 @@ import {
   BIB_KEYPAD_KEYS,
   bibInputMode,
   isBibBackspaceKey,
+  isBibClearEvent,
   isBibSubmitKey,
 } from "@/lib/live/splits-input";
 import type { FieldCounts } from "@/lib/live/splits-field-core";
@@ -179,6 +180,18 @@ export function McvvSplitsClient({
     if (coarsePointer) el.setAttribute("virtualkeyboardpolicy", "manual");
     else el.removeAttribute("virtualkeyboardpolicy");
   }, [coarsePointer]);
+
+  // Escape on a hardware keyboard clears the bib on both layouts, even when
+  // focus is on the on-screen keypad (shared with the desktop field handler).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isBibClearEvent(event)) return;
+      event.preventDefault();
+      setInput("");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!desktop) return;
@@ -675,7 +688,7 @@ export function McvvSplitsClient({
               value={input}
               onChange={(event) => setInput(event.target.value.replace(/\D/g, "").slice(0, 3))}
               onKeyDown={(event) => {
-                if (event.key === "Escape") {
+                if (isBibClearEvent(event)) {
                   event.preventDefault();
                   setInput("");
                   return;
